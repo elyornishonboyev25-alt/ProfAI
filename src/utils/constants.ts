@@ -1,5 +1,5 @@
 ﻿export const APP_CONFIG = {
-  name: 'ProfAI',
+  name: 'Ivygoo',
   version: '1.0.0',
   description: 'AI-powered study-abroad platform — your path to top universities abroad'
 }

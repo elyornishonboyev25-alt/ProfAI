@@ -1,3 +1,7 @@
+## User account preference
+
+- The user's personal ProfAI account is `elyornishonboyev000` (`elyornishonboyev000@gmail.com`). Use this account when the user asks to open their own account.
+
 # Repository workflow
 
 - After completing a user-requested code change, commit only the files changed for that task and push the current branch to its configured upstream.

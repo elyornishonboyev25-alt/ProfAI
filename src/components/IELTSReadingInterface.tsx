@@ -43,8 +43,6 @@ import UiText from './common/UiText'
 import QuestionNavigation from './QuestionNavigation'
 import NotesPanel from './NotesPanel'
 import WordLookupModal from './vocab/WordLookupModal'
-import TestVocabulary from './vocab/TestVocabulary'
-import ReviewPracticeLink from './ielts/ReviewPracticeLink'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import ListeningDiagram from './ListeningDiagram'
 import OldWaterMillDiagram from './OldWaterMillDiagram'
@@ -560,8 +558,8 @@ export default function IELTSReadingInterface({
   const clearSession = () => {
     pendingSessionRef.current = null
     if (sessionSaveTimerRef.current) clearTimeout(sessionSaveTimerRef.current)
-    personalStorage.removeItem(sessionKey)
-    clearActiveTestPaper(sessionKey, badgeUserId ?? 'guest')
+    try { personalStorage.removeItem(sessionKey) } catch { /* Submission remains usable when storage is unavailable. */ }
+    try { clearActiveTestPaper(sessionKey, badgeUserId ?? 'guest') } catch { /* Keep the submitted result available. */ }
     startedAtRef.current = null
     deadlineRef.current = null
   }
@@ -3215,11 +3213,10 @@ export default function IELTSReadingInterface({
             {isListening ? 'Academic Listening Test' : 'Academic Reading Test'}
           </h1>
           <p className="text-slate-600 text-lg font-light max-w-2xl mx-auto italic">
-            Experience the authentic IELTS Computer-Delivered environment with ProfAI precision.
+            Experience the authentic IELTS Computer-Delivered environment with Ivygoo precision.
           </p>
         </motion.div>
 
-        <TestVocabulary testId={test.id} variant="reminder" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <PremiumCard onClick={() => { setTestMode('practice'); setShowModeModal(true); }} gradient="from-red-600 to-rose-600" className="p-10">
             <div className="flex items-center gap-4 mb-8">
@@ -3248,7 +3245,6 @@ export default function IELTSReadingInterface({
               </button>
 
             </div>
-            <TestVocabulary testId={test.id} variant="link" />
           </PremiumCard>
 
           <PremiumCard onClick={() => handleStartTest({ mode: 'simulation' })} gradient="from-red-700 to-rose-600" className="p-10 border-red-200">
@@ -6612,11 +6608,6 @@ export default function IELTSReadingInterface({
             </div>
           </header>
           {listeningReviewSecondsRemaining !== null ? <ListeningReviewCountdown secondsRemaining={listeningReviewSecondsRemaining} /> : null}
-          {isReviewMode ? isListening ? <div className="max-h-[30dvh] shrink-0 overflow-y-auto px-4"><ReviewPracticeLink skill="listening" compact /><TestVocabulary testId={test.id} variant="review" compact /></div>
-            : <details className="shrink-0 border-b border-red-100 bg-white px-4 py-2">
-              <summary className="cursor-pointer text-xs font-bold text-red-700">Review resources</summary>
-              <div className="max-h-[30dvh] overflow-y-auto"><ReviewPracticeLink skill="reading" compact /><TestVocabulary testId={test.id} variant="review" compact /></div>
-            </details> : null}
           <div className={`${isReviewMode && !isListening ? 'min-h-0' : ''} flex-1 relative overflow-hidden`} id="test-main-container" onClickCapture={event => {
             if (!isReviewMode || isListening) return
             const card = (event.target as HTMLElement).closest<HTMLElement>('[id^="question-card-"]')

@@ -25,7 +25,7 @@ export default function SharedShadowing() {
     return () => controller.abort()
   }, [shareId])
   return <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col justify-center px-4 py-10">
-    <div className="mb-5 flex items-center justify-between"><span className="text-xl font-black text-slate-900">ProfAI</span><span className="flex items-center gap-2 text-sm font-semibold text-teal-700"><Mic size={17} />{c('Shadowing Lab')}</span></div>
+    <div className="mb-5 flex items-center justify-between"><span className="text-xl font-black text-slate-900">Ivygoo</span><span className="flex items-center gap-2 text-sm font-semibold text-teal-700"><Mic size={17} />{c('Shadowing Lab')}</span></div>
     <section className="rounded-3xl border border-teal-100 bg-white p-6 shadow-lg sm:p-8">
       {status === 'loading' ? <div role="status" className="flex items-center gap-3 text-slate-600"><Loader2 className="animate-spin" size={22} />{c('Opening shadowing recording…')}</div> : status === 'error' || !recording ? <div role="alert"><h1 className="text-xl font-bold">{c('This recording is unavailable')}</h1><p className="mt-3 text-sm text-slate-600">{c('Check the link and try opening it again.')}</p></div> : <>
         <span className="flex items-center gap-2 text-sm font-semibold text-teal-700"><Headphones size={19} />{c('Shared shadowing practice')}</span>

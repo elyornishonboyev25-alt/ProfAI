@@ -1,12 +1,11 @@
 import { Link } from 'react-router-dom'
-import { Mail, Phone, Send, MapPin, Instagram } from 'lucide-react'
+import { Mail, Phone, Send, MapPin } from 'lucide-react'
 import { Reveal } from '@/components/fx'
 import { useCopy } from '@/i18n/interface'
 
 const socials = [
   { label: 'Email', href: 'mailto:elyornishonboyev000@gmail.com', icon: Mail },
-  { label: 'Telegram', href: 'https://t.me/Prof_AI', icon: Send },
-  { label: 'Instagram', href: 'https://instagram.com/proff_ai', icon: Instagram },
+  { label: 'Telegram', href: 'https://t.me/nishonboyev7', icon: Send },
   { label: 'Phone', href: 'tel:+998774813060', icon: Phone },
 ]
 
@@ -23,7 +22,7 @@ export default function Footer() {
         <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-4 lg:px-8">
           <div>
             <h3 className="text-lg font-black tracking-tight text-slate-900">
-              Prof<span className="text-gradient-red">AI</span>
+              Ivy<span className="text-gradient-red">goo</span>
             </h3>
             <p className="mt-3 text-sm leading-6 text-slate-600">
               {c('Your all-in-one platform to study abroad — exam prep, English skills and admission guidance that take you to top universities worldwide.')}
@@ -85,24 +84,13 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="https://t.me/Prof_AI"
+                  href="https://t.me/nishonboyev7"
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-2 transition-colors hover:text-blue-700"
                 >
                   <Send className="h-3.5 w-3.5 text-blue-500" />
-                  t.me/Prof_AI
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://instagram.com/proff_ai"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-2 transition-colors hover:text-blue-700"
-                >
-                  <Instagram className="h-3.5 w-3.5 text-blue-500" />
-                  @proff_ai
+                  t.me/nishonboyev7
                 </a>
               </li>
               <li className="inline-flex items-center gap-2">
@@ -115,7 +103,7 @@ export default function Footer() {
       </Reveal>
 
       <div className="border-t border-blue-100 py-4 text-center text-sm text-slate-500">
-        &copy; {currentYear} ProfAI. {c('All rights reserved.')}
+        &copy; {currentYear} Ivygoo. {c('All rights reserved.')}
       </div>
     </footer>
   )

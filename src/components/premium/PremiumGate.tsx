@@ -27,7 +27,7 @@ type PremiumGateProps = {
 export default function PremiumGate({
   locked,
   title = 'Premium feature',
-  description = 'This section is part of ProfAI Premium. Subscribe to unlock full access.',
+  description = 'This section is part of Ivygoo Premium. Subscribe to unlock full access.',
   eyebrow = 'Premium only',
   perks,
   fullBleed = false,

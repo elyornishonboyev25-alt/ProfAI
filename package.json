@@ -1,5 +1,5 @@
 {
-  "name": "profai",
+  "name": "ivygoo",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -42,6 +42,7 @@
     "validate:vocabulary": "npm run sync:sat-vocabulary && node scripts/validate-vocabulary.mjs",
     "test:university-requirements": "node scripts/test-listening-parts-ui.mjs scripts/tests/university-requirements.tsx",
     "test:auth-session": "node scripts/test-auth-session.mjs",
+    "test:result-resilience": "node scripts/test-account-data.mjs && node scripts/test-account-storage-failures.mjs && node scripts/test-account-deletion.mjs && node scripts/test-listening-parts-ui.mjs scripts/tests/account-data-sync-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/listening-results-recovery-ui.tsx && node backend/scripts/account-data.test.mjs",
     "test:account-usage": "node scripts/test-auth-session.mjs && node scripts/test-listening-parts-ui.mjs scripts/tests/account-usage-ui.tsx",
     "test:owner-access": "node scripts/test-owner-access.mjs",
     "test:educational-media": "node scripts/test-educational-media.mjs",
@@ -58,7 +59,9 @@
     "validate:sat-questionbank": "node scripts/validate-sat-questionbank.mjs",
     "validate:sat-math-answers": "node scripts/validate-sat-math-answers.mjs",
     "test:billing-ui": "node scripts/test-listening-parts-ui.mjs scripts/tests/billing-pricing-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/billing-trial-access-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/billing-access-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/listening-billing-ui.tsx",
-    "test:account-deletion": "node scripts/test-account-deletion.mjs && node backend/scripts/account-deletion.test.mjs && node backend/scripts/account-deletion-runtime.test.mjs"
+    "test:account-deletion": "node scripts/test-account-deletion.mjs && node backend/scripts/account-deletion.test.mjs && node backend/scripts/account-deletion-runtime.test.mjs",
+    "start:web": "node scripts/serve-web.mjs",
+    "test:web-server": "node --test scripts/tests/web-server.test.mjs"
   },
   "dependencies": {
     "@heroicons/react": "^2.1.5",

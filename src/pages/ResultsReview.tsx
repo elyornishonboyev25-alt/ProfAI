@@ -1,7 +1,6 @@
 import IELTSReadingInterface from '@/components/IELTSReadingInterface'
-import TestVocabulary from '@/components/vocab/TestVocabulary'
-import ReviewPracticeLink from '@/components/ielts/ReviewPracticeLink'
 import UiText from '@/components/common/UiText'
+import ResultBoundary from '@/components/ielts/ResultBoundary'
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Eye, EyeOff, RotateCcw } from 'lucide-react'
@@ -46,21 +45,28 @@ const EMPTY_ANALYSIS: ReadingAnalysisReport = {
 }
 
 export default function ResultsReview() {
+  return <ResultBoundary><ResultsReviewContent /></ResultBoundary>
+}
+
+function ResultsReviewContent() {
   const navigate = useNavigate()
   const location = useLocation()
   const { testId } = useParams<{ testId: string }>()
   const user = useAuthStore((state) => state.user)
 
   const state = (location.state as ReviewLocationState) || {}
-  const sessionState = useMemo(() => (testId ? loadReviewState(testId) : null), [testId])
+  const sessionState = useMemo(() => (testId ? loadReviewState(testId) : null), [testId, user?.id])
   const fallbackEntry = useMemo(
-    () => getReadingAnalysisHistory(user?.id).find((entry) => entry.testId === testId),
+    () => {
+      try { return getReadingAnalysisHistory(user?.id).find((entry) => entry.testId === testId) }
+      catch { return undefined }
+    },
     [testId, user?.id],
   )
 
   const result = state.result ?? sessionState?.result ?? fallbackEntry?.resultPayload
   const storedTest = state.test ?? sessionState?.test
-  const catalogTest = resolveIeltsTestById(result?.testId ?? fallbackEntry?.testId ?? testId ?? '')
+  const catalogTest = resolveIeltsTestById(result?.testId ?? fallbackEntry?.testId ?? testId ?? '', result)
   // Stable question IDs allow saved answers to use corrected prompts and keys.
   const test = catalogTest ?? storedTest ?? undefined
   const resolvedTestId = result?.testId ?? test?.id ?? testId ?? ''
@@ -214,8 +220,6 @@ export default function ResultsReview() {
       </header>
 
       <main className="mx-auto w-full max-w-7xl px-4 py-5 pb-8 sm:px-6">
-        <TestVocabulary testId={resolvedTestId} variant="review" />
-        <ReviewPracticeLink skill={skill} />
         <section className="surface-card p-4 sm:p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>

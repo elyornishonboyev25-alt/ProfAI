@@ -55,7 +55,7 @@ export default function Home() {
     {
       name: 'Sarah Johnson',
       role: 'SAT Student',
-      content: 'ProfAI helped me improve my SAT score by 200 points. The adaptive learning system is amazing!',
+      content: 'Ivygoo helped me improve my SAT score by 200 points. The adaptive learning system is amazing!',
       rating: 5
     },
     {
@@ -157,7 +157,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Why Choose ProfAI?
+              Why Choose Ivygoo?
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
               Experience the future of test preparation with our innovative features.
@@ -276,7 +276,7 @@ export default function Home() {
             Ready to Start Your Journey?
           </h2>
           <p className="text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
-            Join thousands of students who are already improving their scores with ProfAI.
+            Join thousands of students who are already improving their scores with Ivygoo.
           </p>
           <Link
             to="/tests"

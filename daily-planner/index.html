@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <title>Rejalar</title>
+  <style>
+    :root { color-scheme: light; --ink: #111; --line: #ededed; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #fff; color: var(--ink); font-family: 'Segoe UI', Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+    button, textarea, input { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible { outline: 2px solid var(--ink); outline-offset: 5px; }
+    .app { min-height: 100vh; }
+    .days { position: fixed; inset: 0 auto 0 0; width: 140px; padding: 50px 18px; border-right: 1px solid var(--line); overflow-y: auto; }
+    .day { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 8px; min-height: 34px; padding: 8px; margin-bottom: 5px; border: 0; border-radius: 3px; background: none; font-size: 12px; font-weight: 600; text-align: left; }
+    .day:hover { background: #f6f6f6; }
+    .day[aria-current="page"] { font-weight: 700; background: #f1f1f1; }
+    .day small { font-size: 10px; font-weight: 600; color: #555; font-variant-numeric: tabular-nums; }
+    main { margin-left: 140px; padding: 50px 44px 32px; }
+    .workspace-grid { display: grid; grid-template-columns: minmax(0, 760px) 264px; gap: clamp(36px, 4vw, 72px); max-width: 1180px; margin: 0 auto; align-items: start; }
+    .sheet { min-width: 0; }
+    .heading { display: flex; align-items: center; justify-content: space-between; gap: 28px; padding: 0 0 22px; margin-bottom: 20px; border-bottom: 1px solid var(--line); }
+    h1 { font-size: 20px; font-weight: 700; letter-spacing: -.5px; margin: 0; white-space: nowrap; }
+    h1 small { font-size: 11px; font-weight: 600; letter-spacing: 0; margin-left: 8px; color: #555; }
+    .analytics { position: sticky; top: 50px; padding: 4px 0 0 28px; border-left: 1px solid var(--line); min-width: 0; }
+    .completion { display: flex; flex-direction: column; align-items: stretch; gap: 23px; }
+    .ring { position: relative; width: 116px; height: 116px; flex: 0 0 116px; margin: 0 auto; }
+    .ring svg { display: block; width: 100%; height: 100%; transform: rotate(-90deg); }
+    .ring circle { fill: none; stroke-width: 7; }
+    .ring-track { stroke: #ebebeb; }
+    .ring-value { stroke: var(--ink); stroke-linecap: round; stroke-dasharray: 226.195; stroke-dashoffset: 226.195; transition: stroke-dashoffset .45s ease; }
+    .percentage { position: absolute; inset: 0; display: grid; place-items: center; font-size: 23px; font-weight: 750; letter-spacing: -.6px; font-variant-numeric: tabular-nums; }
+    .legend { display: grid; gap: 12px; }
+    .legend-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+    .legend-label { display: flex; align-items: center; gap: 7px; color: #555; font-size: 11px; }
+    .legend-label i { width: 7px; height: 7px; background: var(--ink); border-radius: 50%; }
+    .legend-row:last-child i { background: #ebebeb; border: 1px solid #ccc; }
+    .legend-row strong { font-size: 17px; line-height: 1; font-weight: 700; letter-spacing: -.4px; font-variant-numeric: tabular-nums; }
+    .history { min-width: 0; border-top: 1px solid var(--line); padding-top: 23px; margin-top: 26px; }
+    .history-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 14px; }
+    .history-heading h2 { font-size: 11px; font-weight: 650; margin: 0; }
+    .history-heading span { color: #666; font-size: 10px; }
+    .history-plot { display: flex; height: 100px; position: relative; }
+    .chart-axis { flex: 0 0 22px; display: flex; flex-direction: column; justify-content: space-between; height: 77px; padding-bottom: 2px; color: #777; font-size: 9px; font-variant-numeric: tabular-nums; }
+    .bars { flex: 1; min-width: 0; display: flex; justify-content: space-around; background: repeating-linear-gradient(to top, transparent 0, transparent 34px, #eee 34px, #eee 35px); background-size: 100% 70px; background-repeat: no-repeat; background-position: 0 5px; }
+    .bar { display: flex; align-items: center; flex-direction: column; justify-content: flex-end; flex: 1; min-width: 0; height: 100px; border: 0; padding: 0; background: transparent; }
+    .bar:focus-visible { outline-offset: 1px; }
+    .bar-column { display: flex; align-items: flex-end; position: relative; width: 18px; min-height: 1px; background: #e8e8e8; border-radius: 2px 2px 0 0; }
+    .bar-fill { display: block; width: 100%; background: var(--ink); border-radius: 2px 2px 0 0; transition: height .3s; }
+    .bar-label { height: 25px; padding-top: 9px; font-size: 9px; white-space: nowrap; color: #666; }
+    .bar[aria-current="date"] .bar-label { color: var(--ink); font-weight: 700; }
+    .chart-tooltip { position: absolute; bottom: 108px; left: 50%; z-index: 5; width: 148px; padding: 11px 12px; border: 1px solid var(--ink); border-radius: 4px; background: var(--ink); color: white; text-align: left; pointer-events: none; opacity: 0; transform: translate(-50%, 4px); transition: opacity .15s, transform .15s; }
+    .bar:hover .chart-tooltip, .bar:focus-visible .chart-tooltip { opacity: 1; transform: translate(-50%, 0); }
+    .chart-tooltip strong { display: block; margin-bottom: 5px; font-size: 11px; }
+    .chart-tooltip span { display: block; font-size: 10px; line-height: 1.7; }
+    .chart-tooltip b { display: block; margin-top: 5px; font-size: 18px; font-weight: 700; }
+    .task { position: relative; display: flex; align-items: flex-start; gap: 14px; padding: 12px 0; }
+    .task.drag-placeholder { opacity: .2; }
+    .drag-ghost { position: fixed; z-index: 10; margin: 0; padding-inline: 12px; background: white; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 8px 24px #00000012; pointer-events: none; }
+    body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select: none !important; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+    .check { appearance: none; -webkit-appearance: none; flex: 0 0 17px; width: 17px; height: 17px; border: 1.4px solid var(--ink); border-radius: 2px; background: white; margin: 6px 0 0; cursor: pointer; transition: background .15s, transform .2s; }
+    .check:checked { background: var(--ink); transform: rotate(-4deg); }
+    .check:checked::after { content: ''; display: block; width: 4px; height: 8px; margin: 1px 0 0 4px; border: solid white; border-width: 0 1.7px 1.7px 0; transform: rotate(45deg); }
+    .check:disabled { cursor: default; }
+    .writing { position: relative; flex: 1; min-width: 0; }
+    .text, .mirror { font-family: inherit; font-size: 18px; font-weight: 650; line-height: 1.6; letter-spacing: -.2px; overflow-wrap: anywhere; white-space: pre-wrap; }
+    .text { display: block; width: 100%; border: 0; padding: 0; resize: none; background: transparent; outline: none; overflow: hidden; border-radius: 0; }
+    .text::placeholder { color: #777; font-weight: 600; }
+    .writing:focus-within::after { content: ''; position: absolute; bottom: 0; left: 0; width: 24px; height: 1px; background: #bbb; }
+    .mirror { position: absolute; inset: 0; color: transparent; pointer-events: none; }
+    .mirror span { background: linear-gradient(var(--ink), var(--ink)) left 57% / 0% 2px no-repeat; box-decoration-break: clone; -webkit-box-decoration-break: clone; transition: background-size .4s cubic-bezier(.2,.7,.3,1); }
+    .completed .mirror span { background-size: 100% 2px; }
+    .completed .text { color: #666; }
+    .add { display: inline-flex; align-items: center; gap: 9px; margin: 15px 0 0 1px; padding: 9px 0; border: 0; background: transparent; font-size: 11px; font-weight: 650; color: #555; }
+    .add:hover { color: var(--ink); }
+    .add svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 1.7; fill: none; }
+    .error { position: fixed; bottom: 20px; left: 210px; right: 32px; margin: 0; font-size: 12px; padding: 12px 16px; background: white; border: 1px solid var(--ink); }
+    .desktop-only { display: none; }
+    @media (max-width: 1190px) { main { padding-inline: 30px; } .workspace-grid { grid-template-columns: minmax(0, 1fr) 224px; gap: 30px; } .analytics { padding-left: 22px; } .bar-label { font-size: 8px; } .bar-column { width: 14px; } }
+    @media (max-height: 600px) { main { padding-top: 30px; padding-bottom: 24px; } .days { padding-top: 30px; } .analytics { top: 30px; } .ring { width: 84px; height: 84px; flex-basis: 84px; } .completion { gap: 14px; } .legend { gap: 9px; } .history { margin-top: 18px; padding-top: 17px; } }
+    @media (max-width: 1023px) { .app { display: none; } .desktop-only { display: grid; place-items: center; min-height: 100vh; margin: 0; padding: 30px; text-align: center; font-size: 15px; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <nav class="days" id="days" aria-label="Kunlar"></nav>
+    <main>
+      <div class="workspace-grid">
+      <div class="sheet">
+        <header class="heading">
+          <h1><span id="date"></span><small id="year"></small></h1>
+        </header>
+        <div id="tasks" aria-label="Kunlik rejalar"></div>
+        <button class="add" id="add"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Reja qo‘shish</button>
+      </div>
+        <aside class="analytics" aria-label="Rejalarning bajarilish grafigi">
+          <div class="completion">
+            <div class="ring" id="progress" role="progressbar" aria-label="Bajarilgan rejalar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><svg viewBox="0 0 88 88" aria-hidden="true"><circle class="ring-track" cx="44" cy="44" r="36"/><circle class="ring-value" id="ring-value" cx="44" cy="44" r="36"/></svg><span class="percentage" id="percentage" aria-hidden="true">0%</span></div>
+            <div class="legend" aria-live="polite" aria-atomic="true"><div class="legend-row"><span class="legend-label">Jami rejalar</span><strong id="total">0</strong></div><div class="legend-row"><span class="legend-label"><i aria-hidden="true"></i>Belgilangan</span><strong id="done">0</strong></div><div class="legend-row"><span class="legend-label"><i aria-hidden="true"></i>Belgilanmagan</span><strong id="remaining">0</strong></div></div>
+          </div>
+          <div class="history" aria-label="Kunlar bo‘yicha bajarilgan rejalar">
+            <div class="history-heading"><h2>Kunlar bo‘yicha</h2><span id="history-range"></span></div>
+            <div class="history-plot"><div class="chart-axis" aria-hidden="true"><span id="axis-max">0</span><span id="axis-mid">0</span><span>0</span></div><div class="bars" id="history-bars"></div></div>
+          </div>
+        </aside>
+      </div>
+    </main>
+    <p class="error" id="error" role="alert" hidden></p>
+    <div class="sr-only" id="reorder-status" role="status" aria-live="polite"></div>
+  </div>
+  <p class="desktop-only">Kompyuterda oching.</p>
+  <script>
+    (() => {
+      'use strict';
+      // Keep the original key and schema so existing desktop plans stay intact.
+      const STORAGE_KEY = 'kun-notebook-v1';
+      const MONTHS = ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr'];
+      const $ = id => document.getElementById(id);
+      const pad = n => String(n).padStart(2, '0');
+      const localDay = (date = new Date()) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+      const parseDay = key => new Date(`${key}T12:00:00`);
+      const formatDay = key => { const date = parseDay(key); return `${date.getDate()} ${MONTHS[date.getMonth()]}`; };
+      const validDay = key => typeof key === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(key) && !Number.isNaN(parseDay(key).getTime()) && localDay(parseDay(key)) === key;
+      const uid = () => globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      let today = localDay(), selected = today, notebook, storageUnreadable = false;
+      let drag = null, press = null, chartSignature = '';
+      function showError(message) { $('error').textContent = message; $('error').hidden = false; }
+      function validate(value) {
+        if (!value || value.version !== 1 || !validDay(value.started) || !value.days || typeof value.days !== 'object' || Array.isArray(value.days)) throw new Error('Invalid notebook');
+        const result = {version: 1, started: value.started, days: {}};
+        if (Object.keys(value.days).length > 10000) throw new Error('Too many days');
+        for (const [key, day] of Object.entries(value.days)) {
+          if (!validDay(key) || key < value.started || !day || !Array.isArray(day.tasks) || day.tasks.length > 2000) throw new Error('Invalid day');
+          const ids = new Set();
+          result.days[key] = {tasks: day.tasks.map(task => {
+            if (!task || typeof task.id !== 'string' || !task.id || ids.has(task.id) || typeof task.text !== 'string' || task.text.length > 10000 || typeof task.done !== 'boolean') throw new Error('Invalid task');
+            ids.add(task.id);
+            return {id: task.id, text: task.text, done: task.done};
+          })};
+        }
+        return result;
+      }
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        notebook = saved ? validate(JSON.parse(saved)) : {version: 1, started: today, days: {}};
+      } catch {
+        storageUnreadable = true;
+        notebook = {version: 1, started: today, days: {}};
+        showError('Saqlangan rejalar ochilmadi. Asl ma’lumotlar o‘zgartirilmadi; bu oynadagi yangi yozuvlar saqlanmaydi.');
+      }
+      if (today < notebook.started) notebook.started = today;
+      function ensureDay(key) { if (!notebook.days[key]) notebook.days[key] = {tasks: []}; }
+      ensureDay(today);
+      const tasks = () => notebook.days[selected].tasks;
+      function counts(key) {
+        const items = (notebook.days[key]?.tasks || []).filter(task => task.text.trim());
+        return {total: items.length, done: items.filter(task => task.done).length};
+      }
+      function save() {
+        if (storageUnreadable) return;
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(notebook)); $('error').hidden = true; }
+        catch { showError('O‘zgarishlar saqlanmadi. Brauzer xotirasida joy yoki saqlash ruxsatini tekshiring.'); }
+      }
+      function renderDays() {
+        const nav = $('days'), scroll = nav.scrollTop;
+        const keys = Object.keys(notebook.days).filter(key => key >= notebook.started && key <= today).sort().reverse();
+        nav.replaceChildren();
+        for (const key of keys) {
+          const stats = counts(key), button = document.createElement('button'); button.className = 'day';
+          button.setAttribute('aria-current', key === selected ? 'page' : 'false');
+          button.setAttribute('aria-label', `${formatDay(key)}, ${parseDay(key).getFullYear()}: ${stats.total} reja, ${stats.done} bajarilgan`);
+          const label = document.createElement('span'); label.textContent = key === today ? 'Bugun' : formatDay(key);
+          const count = document.createElement('small'); count.textContent = stats.total ? `${stats.done}/${stats.total}` : '';
+          button.append(label, count); button.onclick = () => selectDay(key); nav.append(button);
+        }
+        nav.scrollTop = scroll;
+      }
+      function renderHistory() {
+        const dates = [];
+        for (let offset = 6; offset >= 0; offset--) {
+          const date = parseDay(today); date.setDate(date.getDate() - offset);
+          const key = localDay(date); if (key >= notebook.started) dates.push(key);
+        }
+        const series = dates.map(key => ({key, ...counts(key)}));
+        const signature = JSON.stringify([selected, series]);
+        if (signature === chartSignature) return;
+        chartSignature = signature;
+        const max = Math.max(2, Math.ceil(Math.max(...series.map(item => item.total)) / 2) * 2);
+        $('axis-max').textContent = max; $('axis-mid').textContent = max / 2;
+        $('history-range').textContent = dates.length === 1 ? 'Bugun' : `Oxirgi ${dates.length} kun`;
+        const yesterday = parseDay(today); yesterday.setDate(yesterday.getDate() - 1);
+        $('history-bars').replaceChildren(...series.map(({key, total, done}) => {
+          const percent = total ? Math.round(done / total * 100) : 0;
+          const button = document.createElement('button'); button.className = 'bar'; button.dataset.day = key;
+          if (key === selected) button.setAttribute('aria-current', 'date');
+          button.setAttribute('aria-label', `${formatDay(key)}, ${parseDay(key).getFullYear()}: ${total} rejadan ${done} belgilangan, ${total - done} belgilanmagan, ${percent}%`);
+          const column = document.createElement('span'); column.className = 'bar-column'; column.style.height = `${total / max * 70}px`;
+          const fill = document.createElement('span'); fill.className = 'bar-fill'; fill.style.height = `${total ? done / total * 100 : 0}%`; column.append(fill);
+          const label = document.createElement('span'); label.className = 'bar-label';
+          label.textContent = key === today ? 'Bugun' : key === localDay(yesterday) ? 'Kecha' : `${parseDay(key).getDate()}/${parseDay(key).getMonth() + 1}`;
+          const tooltip = document.createElement('span'); tooltip.className = 'chart-tooltip'; tooltip.setAttribute('aria-hidden', 'true');
+          tooltip.innerHTML = `<strong>${formatDay(key)}, ${parseDay(key).getFullYear()}</strong><span>${done} / ${total} belgilangan</span><span>${total - done} ta belgilanmagan</span><b>${percent}%</b>`;
+          button.append(column, label, tooltip);
+          button.onclick = () => { selectDay(key); save(); };
+          return button;
+        }));
+      }
+      function updateSummary() {
+        const {total, done} = counts(selected), percent = total ? Math.round(done / total * 100) : 0;
+        $('total').textContent = total; $('done').textContent = done; $('remaining').textContent = total - done;
+        $('percentage').textContent = `${percent}%`;
+        $('ring-value').style.strokeDashoffset = 226.195 * (1 - (total ? done / total : 0));
+        $('progress').setAttribute('aria-valuenow', percent);
+        $('progress').setAttribute('aria-valuetext', `${total} rejadan ${done} tasi bajarilgan — ${percent}%`);
+        renderDays(); renderHistory();
+      }
+      function clearPress() { if (press) clearTimeout(press.timer); press = null; }
+      function moveDrag() {
+        if (!drag) return;
+        drag.ghost.style.top = `${drag.y - drag.offset}px`;
+        const others = Array.from($('tasks').children).filter(row => row !== drag.row);
+        const next = others.find(row => { const rect = row.getBoundingClientRect(); return drag.y < rect.top + rect.height / 2; });
+        if (next !== drag.row.nextElementSibling) $('tasks').insertBefore(drag.row, next || null);
+      }
+      function startDrag(row, pointerId, y, capture) {
+        if (drag || !row.isConnected) return;
+        clearPress();
+        const rect = row.getBoundingClientRect(), ghost = row.cloneNode(true);
+        ghost.classList.add('drag-ghost'); ghost.classList.remove('drag-placeholder'); ghost.setAttribute('aria-hidden', 'true');
+        ghost.style.width = `${rect.width}px`; ghost.style.left = `${rect.left}px`; ghost.style.top = `${rect.top}px`;
+        ghost.querySelectorAll('input,textarea,button').forEach(element => { element.tabIndex = -1; });
+        document.body.append(ghost);
+        drag = {row, ghost, pointerId, capture, y, offset: y - rect.top, key: selected, order: tasks().map(task => task.id), frame: 0};
+        row.classList.add('drag-placeholder'); document.body.classList.add('is-dragging');
+        document.activeElement?.blur(); window.getSelection()?.removeAllRanges();
+        try { capture.setPointerCapture(pointerId); } catch {}
+        const scroll = () => {
+          if (!drag) return;
+          const speed = drag.y < 65 ? -Math.ceil((65 - drag.y) / 5) : drag.y > innerHeight - 65 ? Math.ceil((drag.y - innerHeight + 65) / 5) : 0;
+          if (speed) { window.scrollBy(0, speed); moveDrag(); }
+          drag.frame = requestAnimationFrame(scroll);
+        };
+        drag.frame = requestAnimationFrame(scroll);
+      }
+      function finishDrag(cancel = false) {
+        clearPress(); if (!drag) return;
+        const state = drag; drag = null; cancelAnimationFrame(state.frame);
+        state.ghost.remove(); state.row.classList.remove('drag-placeholder'); document.body.classList.remove('is-dragging');
+        try { if (state.capture.hasPointerCapture(state.pointerId)) state.capture.releasePointerCapture(state.pointerId); } catch {}
+        if (cancel || selected !== state.key) {
+          const rows = new Map(Array.from($('tasks').children).map(row => [row.dataset.id, row]));
+          state.order.forEach(id => { const row = rows.get(id); if (row) $('tasks').append(row); });
+          return;
+        }
+        const byId = new Map(tasks().map(task => [task.id, task]));
+        notebook.days[selected].tasks = Array.from($('tasks').children).map(row => byId.get(row.dataset.id));
+        save();
+        $('reorder-status').textContent = `Reja ${tasks().findIndex(task => task.id === state.row.dataset.id) + 1}-o‘ringa ko‘chirildi.`;
+      }
+      document.addEventListener('pointermove', event => {
+        if (press && press.pointerId === event.pointerId && Math.hypot(event.clientX - press.x, event.clientY - press.y) > 6) clearPress();
+        if (!drag || drag.pointerId !== event.pointerId) return;
+        event.preventDefault(); drag.y = event.clientY; moveDrag();
+      }, {passive: false});
+      document.addEventListener('pointerup', event => { if (press?.pointerId === event.pointerId) clearPress(); if (drag?.pointerId === event.pointerId) finishDrag(); });
+      document.addEventListener('pointercancel', () => finishDrag(true));
+      document.addEventListener('keydown', event => { if (event.key === 'Escape' && (drag || press)) { event.preventDefault(); finishDrag(true); } });
+      window.addEventListener('blur', () => finishDrag(true));
+      function resize(input) { input.style.height = 'auto'; input.style.height = `${input.scrollHeight}px`; }
+      function pasteTasks(event, task, input) {
+        const text = event.clipboardData?.getData('text/plain');
+        if (!text || !/[\r\n]/.test(text)) return;
+        event.preventDefault();
+        const lines = text.split(/\r\n|\r|\n/).map(line => line.trim()).filter(Boolean);
+        if (!lines.length) return;
+        lines[0] = input.value.slice(0, input.selectionStart) + lines[0];
+        lines[lines.length - 1] += input.value.slice(input.selectionEnd);
+        if (tasks().length + lines.length - 1 > 2000 || lines.some(line => line.length > 10000)) { showError('Matn juda uzun. Uni kichikroq qismlarga bo‘lib joylang.'); return; }
+        const index = tasks().indexOf(task);
+        task.text = lines[0]; task.done = false;
+        const added = lines.slice(1).map(line => ({id: uid(), text: line, done: false}));
+        tasks().splice(index + 1, 0, ...added);
+        save(); renderTasks(); updateSummary(); focusTask(added.length ? added[added.length - 1].id : task.id);
+      }
+      function createRow(task) {
+        const row = document.createElement('div'); row.className = `task${task.done ? ' completed' : ''}`; row.dataset.id = task.id;
+        const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.className = 'check'; checkbox.checked = task.done; checkbox.disabled = !task.text.trim(); checkbox.setAttribute('aria-label', 'Reja bajarildi');
+        const writing = document.createElement('div'); writing.className = 'writing';
+        const input = document.createElement('textarea'); input.className = 'text'; input.rows = 1; input.maxLength = 10000; input.value = task.text; input.placeholder = 'Reja yozing…'; input.spellcheck = false; input.setAttribute('aria-label', 'Reja matni');
+        const mirror = document.createElement('div'); mirror.className = 'mirror'; mirror.setAttribute('aria-hidden', 'true');
+        const strike = document.createElement('span'); strike.textContent = task.text; mirror.append(strike);
+        row.addEventListener('pointerdown', event => {
+          if (event.button !== 0 || event.target.closest('.check')) return;
+          clearPress();
+          press = {pointerId: event.pointerId, x: event.clientX, y: event.clientY, timer: setTimeout(() => startDrag(row, event.pointerId, event.clientY, row), 330)};
+        });
+        input.addEventListener('keydown', event => {
+          if (!event.altKey || !['ArrowUp', 'ArrowDown'].includes(event.key) || drag) return;
+          event.preventDefault(); const index = tasks().indexOf(task), target = index + (event.key === 'ArrowUp' ? -1 : 1);
+          if (target < 0 || target >= tasks().length) return;
+          tasks().splice(index, 1); tasks().splice(target, 0, task); save(); renderTasks();
+          focusTask(task.id);
+          $('reorder-status').textContent = `Reja ${target + 1}-o‘ringa ko‘chirildi.`;
+        });
+        input.addEventListener('input', () => {
+          task.text = input.value; strike.textContent = task.text;
+          if (!task.text.trim()) { task.done = false; checkbox.checked = false; row.classList.remove('completed'); }
+          checkbox.disabled = !task.text.trim(); resize(input); save(); updateSummary();
+        });
+        input.addEventListener('paste', event => pasteTasks(event, task, input));
+        input.addEventListener('keydown', event => {
+          if (event.isComposing) return;
+          if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); if (task.text.trim()) addTask(task.id); }
+          if (event.key === 'Backspace' && !input.value && tasks().length > 1) {
+            event.preventDefault(); const index = tasks().indexOf(task), nextFocus = tasks()[index - 1] || tasks()[index + 1];
+            tasks().splice(index, 1); save(); renderTasks(); focusTask(nextFocus.id);
+          }
+        });
+        checkbox.addEventListener('change', () => { task.done = checkbox.checked; row.classList.toggle('completed', task.done); save(); updateSummary(); });
+        writing.append(mirror, input); row.append(checkbox, writing); return row;
+      }
+      function renderTasks() {
+        if (!tasks().length) tasks().push({id: uid(), text: '', done: false});
+        $('tasks').replaceChildren(...tasks().map(createRow));
+        $('tasks').querySelectorAll('textarea').forEach(resize);
+      }
+      function focusTask(id) {
+        const row = Array.from($('tasks').children).find(element => element.dataset.id === id);
+        if (row) { const input = row.querySelector('textarea'); input.focus(); input.selectionStart = input.selectionEnd = input.value.length; }
+      }
+      function addTask(afterId = null) {
+        const index = afterId ? tasks().findIndex(task => task.id === afterId) + 1 : tasks().length;
+        const existing = afterId ? tasks()[index] : tasks()[tasks().length - 1];
+        if (existing && !existing.text.trim()) { focusTask(existing.id); return; }
+        if (tasks().length >= 2000) { showError('Bir kun uchun 2000 ta reja chegarasiga yetdingiz.'); return; }
+        const task = {id: uid(), text: '', done: false}; tasks().splice(index, 0, task);
+        save(); renderTasks(); focusTask(task.id);
+      }
+      function selectDay(key) {
+        finishDrag(true);
+        ensureDay(key); selected = key;
+        $('date').textContent = formatDay(selected); $('year').textContent = parseDay(selected).getFullYear();
+        renderTasks(); updateSummary();
+      }
+      function checkNewDay() {
+        const current = localDay();
+        if (current !== today) { today = current; if (today < notebook.started) notebook.started = today; ensureDay(today); selectDay(today); save(); }
+      }
+      $('add').onclick = () => addTask();
+      window.addEventListener('focus', checkNewDay);
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) checkNewDay(); });
+      setInterval(checkNewDay, 15000);
+      let resizeTimer;
+      window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => document.querySelectorAll('.text').forEach(resize), 100); });
+      window.addEventListener('storage', event => {
+        if (event.key !== STORAGE_KEY || !event.newValue) return;
+        finishDrag(true);
+        try { notebook = validate(JSON.parse(event.newValue)); ensureDay(today); selectDay(notebook.days[selected] ? selected : today); }
+        catch { showError('Boshqa oynadagi o‘zgarishlar ochilmadi.'); }
+      });
+      selectDay(today); save();
+    })();
+  </script>
+</body>
+</html>

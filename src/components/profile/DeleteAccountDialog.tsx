@@ -79,7 +79,7 @@ export default function DeleteAccountDialog({
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-[0.18em] text-error-600">Permanent action</p>
                     <h2 id="delete-account-title" className="mt-1 text-2xl font-black tracking-tight text-slate-950">
-                      Delete your ProfAI account?
+                      Delete your Ivygoo account?
                     </h2>
                   </div>
                 </div>

@@ -1,10 +1,10 @@
 import { accountStorageFor } from '@/utils/accountStorage'
-import TestVocabulary from '@/components/vocab/TestVocabulary'
-import ReviewPracticeLink from '@/components/ielts/ReviewPracticeLink'
 import UiText from '@/components/common/UiText'
+import ResultBoundary from '@/components/ielts/ResultBoundary'
+import { downloadTestResult } from '@/utils/downloadTestResult'
 import { waitForIeltsClassSync } from '@/features/learningCenter/ieltsResultSync'
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
   BookOpen,
@@ -34,7 +34,8 @@ import {
   evaluateReadingAnswers,
   formatQuestionTypeLabel,
 } from '@/utils/ieltsUtils'
-import { saveReadingAnalysisHistory } from '@/utils/readingAnalysisStorage'
+import { getReadingAnalysisHistory, saveReadingAnalysisHistory } from '@/utils/readingAnalysisStorage'
+import { loadReviewState, saveReviewState } from '@/utils/resultsReviewState'
 import { resolveIeltsTestById } from '@/utils/ieltsTestCatalog'
 import { createSharedResult } from '@/lib/sharedResultsApi'
 import { useToastStore } from '@/store/toastStore'
@@ -82,20 +83,37 @@ function formatSpentTime(value: number): string {
 }
 
 export default function Results() {
+  return <ResultBoundary><ResultsContent /></ResultBoundary>
+}
+
+function ResultsContent() {
   const location = useLocation()
   const navigate = useNavigate()
+  const { testId } = useParams<{ testId: string }>()
   const authUser = useAuthStore((state) => state.user)
-  const { result, test: storedTest, mock, from } = (location.state as ResultLocationState) || {}
-  const test = storedTest?.module === 'Listening' || storedTest?.module === 'Reading'
-    ? resolveIeltsTestById(storedTest.id, result) ?? storedTest
-    : storedTest
+  const state = (location.state as ResultLocationState) || {}
+  const restored = useMemo(() => {
+    if (state.result && state.test) return null
+    const saved = testId ? loadReviewState(testId) : null
+    if (saved) return saved
+    try {
+      const entry = getReadingAnalysisHistory(authUser?.id).find(item => item.testId === testId)
+      return entry ? { result: entry.resultPayload } : null
+    } catch { return null }
+  }, [testId, authUser?.id, state.result, state.test])
+  const result = state.result ?? restored?.result
+  const storedTest = state.test ?? (restored && 'test' in restored ? restored.test : undefined)
+  const { mock, from } = state
+  const test = useMemo(() => storedTest?.module === 'Listening' || storedTest?.module === 'Reading' || !storedTest
+    ? resolveIeltsTestById(result?.testId ?? testId ?? '', result) ?? storedTest
+    : storedTest, [storedTest, result, testId])
 
   const [showCorrectAnswers, setShowCorrectAnswers] = useState(false)
   const [sharingResult, setSharingResult] = useState(false)
   const pushToast = useToastStore((state) => state.pushToast)
 
   const hasPayload = Boolean(result && test)
-  const resolvedTestId = result?.testId ?? test?.id ?? ''
+  const resolvedTestId = result?.testId ?? test?.id ?? testId ?? ''
   const isListeningTest = `${resolvedTestId} ${test?.title ?? ''} ${test?.module ?? ''}`.toLowerCase().includes('listening')
   const testType = isListeningTest ? 'listening' : 'reading'
   const catalogPath = `/ielts/${testType}/tests`
@@ -174,37 +192,40 @@ export default function Results() {
       },
     }
 
-    saveReadingAnalysisHistory({
-      userId: authUser?.id,
-      attemptKey: `${result.testId}-${result.date}`,
-      savedAt: result.date,
-      testId: result.testId,
-      testTitle: test.title,
-      score: persistedResultPayload.score,
-      bandScore: effectiveBandScore,
-      isPartial: Boolean(result.isPartial),
-      accuracy: analysis.summary.accuracy,
-      correctAnswers: analysis.summary.correctAnswers,
-      totalQuestions: analysis.summary.totalQuestions,
-      incorrectAnswers: analysis.summary.incorrectAnswers,
-      skippedAnswers: analysis.summary.skippedAnswers,
-      timeSpent: result.timeSpent,
-      sectionSummaries: analysis.sectionSummaries,
-      focusAreas,
-      incorrectQuestions: analysis.questionResults
-        .filter((question) => question.status !== 'correct')
-        .map((question) => ({
-          questionId: question.questionId,
-          displayNumber: question.displayNumber,
-          partNumber: question.partNumber,
-          prompt: question.prompt,
-          paragraphLabel: question.paragraphLabel,
-          location: question.location,
-          typeLabel: formatQuestionTypeLabel(question.questionType),
-        })),
-      questionResults: analysis.questionResults,
-      resultPayload: persistedResultPayload,
-    })
+    saveReviewState(result.testId, { result, test })
+    try {
+      saveReadingAnalysisHistory({
+        userId: authUser?.id,
+        attemptKey: `${result.testId}-${result.date}`,
+        savedAt: result.date,
+        testId: result.testId,
+        testTitle: test.title,
+        score: persistedResultPayload.score,
+        bandScore: effectiveBandScore,
+        isPartial: Boolean(result.isPartial),
+        accuracy: analysis.summary.accuracy,
+        correctAnswers: analysis.summary.correctAnswers,
+        totalQuestions: analysis.summary.totalQuestions,
+        incorrectAnswers: analysis.summary.incorrectAnswers,
+        skippedAnswers: analysis.summary.skippedAnswers,
+        timeSpent: result.timeSpent,
+        sectionSummaries: analysis.sectionSummaries,
+        focusAreas,
+        incorrectQuestions: analysis.questionResults
+          .filter((question) => question.status !== 'correct')
+          .map((question) => ({
+            questionId: question.questionId,
+            displayNumber: question.displayNumber,
+            partNumber: question.partNumber,
+            prompt: question.prompt,
+            paragraphLabel: question.paragraphLabel,
+            location: question.location,
+            typeLabel: formatQuestionTypeLabel(question.questionType),
+          })),
+        questionResults: analysis.questionResults,
+        resultPayload: persistedResultPayload,
+      })
+    } catch { /* Saving history must never replace a completed result with an error page. */ }
   }, [activeSections, analysis, authUser?.id, effectiveBandScore, result, test])
 
   useEffect(() => {
@@ -218,13 +239,17 @@ export default function Results() {
     const isListeningModule = moduleLabel.includes('listening')
     const syncScope = isListeningModule ? 'listening' : 'reading'
     const syncKey = `smarttest-${syncScope}-sync:${authUser?.id ?? 'guest'}:${attemptKey}`
-    if (accountStorageFor(authUser?.id ?? 'guest').getItem(syncKey) === 'ok') return
+    try {
+      if (accountStorageFor(authUser?.id ?? 'guest').getItem(syncKey) === 'ok') return
+    } catch { /* Still try the idempotent server sync without browser storage. */ }
 
     const syncAttempt = async () => {
       try {
         await waitForIeltsClassSync(result.testId, result.date)
         if (useAuthStore.getState().user?.id !== authUser?.id) return
-        if (accountStorageFor(authUser?.id ?? 'guest').getItem(syncKey) === 'ok') return
+        try {
+          if (accountStorageFor(authUser?.id ?? 'guest').getItem(syncKey) === 'ok') return
+        } catch { /* The server also deduplicates completed attempts. */ }
         await apiClient.post(isListeningModule ? '/tests/listening-sync' : '/tests/reading-sync', {
           externalAttemptKey: attemptKey,
           externalTestId: result.testId,
@@ -334,9 +359,9 @@ export default function Results() {
         <AnimatedBackground />
         <div className="relative z-10 w-full max-w-lg rounded-3xl border border-red-200 bg-white/95 p-8 text-center shadow-[0_24px_52px_rgba(220,38,38,0.16)]">
           <h1 className="text-3xl font-black text-slate-900"> <UiText text={"No Results Found"} /> </h1>
-          <p className="mt-2 text-sm text-slate-600"> <UiText text={"Open the reading test and submit at least one attempt."} /> </p>
-          <Link to="/ielts/reading/tests" className="arena-primary-btn mt-6">
-             <UiText text={"Return to Reading Tests"} /> </Link>
+          <p className="mt-2 text-sm text-slate-600"> <UiText text={isListeningTest ? 'Open the listening test and submit at least one attempt.' : 'Open the reading test and submit at least one attempt.'} /> </p>
+          <Link to={catalogPath} className="arena-primary-btn mt-6">
+             <UiText text={isListeningTest ? 'Return to Listening Tests' : 'Return to Reading Tests'} /> </Link>
         </div>
       </div>
     )
@@ -366,8 +391,6 @@ export default function Results() {
         </header>
 
         <main className="mx-auto w-full max-w-7xl px-4 py-8 pb-12 sm:px-6">
-          <TestVocabulary testId={resolvedTestId} variant="review" />
-          <ReviewPracticeLink skill={testType} />
           <Reveal>
           <section className="relative premium-hero p-6 sm:p-8">
             <Burst count={24} play={analysis.summary.accuracy >= 80} />
@@ -528,6 +551,9 @@ export default function Results() {
                   className="arena-primary-btn mt-4 justify-center py-2.5 text-sm"
                 >
                   <Share2 className="mr-2 h-4 w-4" /> {sharingResult ? 'Creating secure link…' : 'Share result'}
+                </button>
+                <button type="button" className="mt-3 rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold" onClick={() => downloadTestResult(result)}>
+                  <UiText text="Download result" />
                 </button>
               </aside>
             </Reveal>

@@ -544,7 +544,7 @@ export default function AccountProfile() {
       setFlashToast({
         type: 'success',
         title: 'Account deleted',
-        message: 'Your ProfAI account and personal learning data were permanently removed.',
+        message: 'Your Ivygoo account and personal learning data were permanently removed.',
       })
       window.location.replace('/login')
     } catch (error) {

@@ -22,7 +22,7 @@ async function bootstrap() {
   })
 
   const server = httpServer.listen(env.PORT, () => {
-    console.log(`ProfAI API running on http://localhost:${env.PORT}`)
+    console.log(`Ivygoo API running on http://localhost:${env.PORT}`)
     console.log('Speaking signaling WebSocket ready at /ws/speaking')
   })
 

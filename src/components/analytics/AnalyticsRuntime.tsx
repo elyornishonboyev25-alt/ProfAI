@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
-import AnalyticsConsentBanner from '@/components/analytics/AnalyticsConsentBanner'
 import {
   analyticsPreferenceEvents,
   captureAppSession,
@@ -63,5 +62,6 @@ export default function AnalyticsRuntime() {
     trackCurrentPath()
   }, [pathname])
 
-  return <AnalyticsConsentBanner />
+  // No entrance banner. Visitors without an explicit saved opt-in stay untracked.
+  return null
 }

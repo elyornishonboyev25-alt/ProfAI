@@ -27,7 +27,7 @@ export function Sidebar({ concealed = false, collapsed = false, onToggle }: { co
   }, [concealed])
   return <aside ref={ref} aria-hidden={concealed} className={`profai-sidebar liquid-sidebar ${concealed ? 'liquid-sidebar-concealed' : ''} ${collapsed ? 'liquid-sidebar-collapsed' : ''}`}>
     <div className="liquid-sidebar-heading">
-      <NavLink to="/dashboard" className="liquid-brand-link" aria-label="ProfAI"><BrandLockup iconSize={44} subtitle={c('Your next chapter')} /></NavLink>
+      <NavLink to="/dashboard" className="liquid-brand-link" aria-label="Ivygoo"><BrandLockup iconSize={44} subtitle={c('Your next chapter')} /></NavLink>
       <button type="button" className="liquid-sidebar-toggle" onClick={onToggle} aria-label={c(collapsed ? 'Expand sidebar' : 'Collapse sidebar')} aria-expanded={!collapsed} title={c(collapsed ? 'Expand sidebar' : 'Collapse sidebar')}>
         <span className="liquid-sidebar-toggle-icon" aria-hidden="true">
           <PanelLeftClose className="liquid-sidebar-toggle-close" size={20} strokeWidth={1.9} />
@@ -55,7 +55,7 @@ export function Sidebar({ concealed = false, collapsed = false, onToggle }: { co
       <LanguageSelector />
       <NavLink to="/account" className={`liquid-account ${premiumMember ? 'is-premium-member' : ''}`}>
         <ProfileAvatar src={user?.avatarUrl} name={user?.fullName} className={`liquid-avatar ${premiumMember ? 'premium-member-avatar' : ''}`} />
-        <span><strong>{user?.fullName || 'ProfAI'}</strong>{premiumMember ? <CrownBadge size="sm" /> : <small>{c('Account settings')}</small>}</span><Settings size={17} />
+        <span><strong>{user?.fullName || 'Ivygoo'}</strong>{premiumMember ? <CrownBadge size="sm" /> : <small>{c('Account settings')}</small>}</span><Settings size={17} />
       </NavLink>
     </div>
   </aside>

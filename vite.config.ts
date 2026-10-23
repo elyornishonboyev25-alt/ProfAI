@@ -10,7 +10,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'prompt',
       injectRegister: 'script-defer',
-      includeAssets: ['logo.svg'],
+      includeAssets: ['logo.svg', 'favicon.svg', 'apple-touch-icon.png'],
       workbox: {
         // HTML must always come from the server. Precaching index.html can leave
         // an older deployment pointing at JavaScript chunks that no longer
@@ -25,20 +25,19 @@ export default defineConfig({
         importScripts: ['/sw-cleanup.js'],
       },
       manifest: {
-        name: 'ProfAI',
-        short_name: 'ProfAI',
+        name: 'Ivygoo',
+        short_name: 'Ivygoo',
         description: 'IELTS, SAT and university applications in one learning workspace.',
         lang: 'en',
+        id: '/',
+        start_url: '/',
+        scope: '/',
         theme_color: '#ffffff',
         background_color: '#ffffff',
         display: 'standalone',
         icons: [
-          {
-            src: 'logo.svg',
-            sizes: '120x120',
-            type: 'image/svg+xml',
-            purpose: 'any'
-          }
+          { src: '/ivygoo-icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: '/ivygoo-icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
         ]
       }
     })

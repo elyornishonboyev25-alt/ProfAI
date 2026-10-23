@@ -59,3 +59,9 @@
   .sat-bank-run-navigation button svg { display: none; }
   .sat-bank-run-navigator { left: 12px; }
 }
+
+.sat-bank-run-viewport { background: #fff; }
+.sat-bank-run-meta,
+.sat-bank-run-viewport > div:last-child,
+.sat-bank-run-viewport > p { max-width: 860px; margin-left: auto; margin-right: auto; }
+.sat-bank-run-viewport .sat-exam-canvas.sat-bank-canvas { border-radius: 0; overflow: visible; }

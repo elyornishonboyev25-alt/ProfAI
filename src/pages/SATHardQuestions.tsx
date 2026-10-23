@@ -75,7 +75,7 @@ function HardWorkspace({ userId }: { userId: string }) {
       <header className="hard-hero">
         <div className="hard-hero-copy"><span className="hard-eyebrow"><Flame size={16} /> SAT CHALLENGE COLLECTION</span>
           <h1>Hard questions.<br /><span>Clear breakthroughs.</span></h1>
-          <p>Go deeper, one question at a time. Advanced questions from the ProfAI test catalog, grouped by topic with instant explanations.</p>
+          <p>Go deeper, one question at a time. Advanced questions from the Ivygoo test catalog, grouped by topic with instant explanations.</p>
           <div className="hard-hero-tags"><span><CheckCircle2 size={15} /> Instant feedback</span><span>Untimed practice</span><span>Progress autosaves</span></div>
         </div>
         <div className="hard-subjects" aria-label="Choose question subject">
@@ -101,7 +101,7 @@ function HardWorkspace({ userId }: { userId: string }) {
             <button type="button" aria-pressed={Boolean(state?.bookmarked)} aria-label={state?.bookmarked ? 'Remove bookmark' : 'Bookmark question'} onClick={() => update(active.key, { bookmarked: !state?.bookmarked })}><Bookmark size={17} fill={state?.bookmarked ? 'currentColor' : 'none'} /></button>
           </div>
           <article className="hard-question" key={active.key}>
-            <header><span>{question.domain}</span><h3 ref={questionHeading} tabIndex={-1}>{question.skill}</h3><small>From ProfAI SAT test {active.testNumber} · Hard</small></header>
+            <header><span>{question.domain}</span><h3 ref={questionHeading} tabIndex={-1}>{question.skill}</h3><small>From Ivygoo SAT test {active.testNumber} · Hard</small></header>
             <div className={`hard-question-body ${!math ? 'english' : ''}`}>
               <div className="hard-passage">
                 {question.visual && <SATVisual asset={question.visual.asset} alt={question.visual.alt} className="hard-visual" imageClassName="max-h-[26rem] max-w-full object-contain" />}

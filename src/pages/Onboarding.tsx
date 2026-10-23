@@ -438,7 +438,7 @@ export default function Onboarding() {
             className="flex items-center gap-2.5 rounded-2xl px-2 py-1.5 transition hover:bg-blue-50/80"
           >
             <BrandMark size={40} className="shadow-[0_10px_22px_rgba(37,99,235,0.32)]" />
-            <span className="text-sm font-black tracking-tight text-slate-900">ProfAI</span>
+            <span className="text-sm font-black tracking-tight text-slate-900">Ivygoo</span>
           </button>
           <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white/85 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.14em] text-blue-700 shadow-sm backdrop-blur">
             <Sparkles className="h-3 w-3" />
@@ -539,7 +539,7 @@ export default function Onboarding() {
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center justify-between gap-2">
                               <div>
-                                <p className="text-sm font-black text-slate-900">Your ProfAI identity</p>
+                                <p className="text-sm font-black text-slate-900">Your Ivygoo identity</p>
                                 <p className="text-[11px] text-slate-500">Your initials appear until you upload a photo.</p>
                               </div>
                               <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-blue-200 bg-white px-3 py-2 text-[11px] font-black text-blue-700 shadow-sm transition hover:bg-blue-50">

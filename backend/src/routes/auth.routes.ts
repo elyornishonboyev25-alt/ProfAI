@@ -166,13 +166,13 @@ async function sanitizeUser(user: {
 }
 
 function deriveFullNameFromEmail(email: string) {
-  const localPart = email.split('@')[0] || 'ProfAI Learner'
+  const localPart = email.split('@')[0] || 'Ivygoo Learner'
   const cleaned = localPart
     .replace(/[._-]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
 
-  if (!cleaned) return 'ProfAI Learner'
+  if (!cleaned) return 'Ivygoo Learner'
 
   return cleaned
     .split(' ')
@@ -269,12 +269,6 @@ router.post(
       return res.status(409).json({
         message: 'This Gmail is already registered. Sign in to continue with the same account.',
         code: 'ACCOUNT_EXISTS',
-      })
-    }
-    if (purpose === 'SIGN_IN' && !existingUser) {
-      return res.status(404).json({
-        message: 'No account found for this email. Create an account to get started.',
-        code: 'ACCOUNT_NOT_FOUND',
       })
     }
 
@@ -506,13 +500,6 @@ router.post(
   validateBody(emailLoginSchema),
   asyncHandler(async (req, res) => {
     const email = normalizeEmail(req.body.email)
-    const user = await prisma.user.findUnique({
-      where: { email },
-      include: { profile: { select: { onboardingCompletedAt: true } } },
-    })
-    if (!user) {
-      return res.status(404).json({ message: 'No account found for this email. Create an account to get started.', code: 'ACCOUNT_NOT_FOUND' })
-    }
     const verification = await validateVerificationCode(email, 'SIGN_IN', req.body.verificationCode)
     if (!verification.ok) {
       return res.status(400).json({
@@ -523,6 +510,15 @@ router.post(
       })
     }
 
+    // A verified Gmail opens the same account, preserving its ID and saved progress.
+    // Only a consumed sign-in code can create a new account.
+    const existing = await prisma.user.findUnique({ where: { email }, include: { profile: { select: { onboardingCompletedAt: true } } } })
+    const user = existing ?? await prisma.user.upsert({
+      where: { email }, update: {},
+      create: { email, fullName: deriveFullNameFromEmail(email), passwordHash: await hashPassword(crypto.randomBytes(32).toString('hex')) },
+      include: { profile: { select: { onboardingCompletedAt: true } } },
+    })
+
     const tokens = await issueAuthTokens({
       userId: user.id,
       role: user.role,
@@ -531,7 +527,7 @@ router.post(
       deviceId: requestDeviceId(req),
       method: 'EMAIL_CODE',
     })
-    return res.json({ user: await sanitizeUser(user), ...tokens })
+    return res.json({ user: await sanitizeUser(user), ...tokens, isNewUser: !existing })
   }),
 )
 
@@ -605,6 +601,9 @@ router.post(
       },
     })
 
+    if (!existingUser && !identity.email.endsWith('@gmail.com')) {
+      return res.status(400).json({ message: 'Use your personal @gmail.com address.', code: 'GMAIL_REQUIRED' })
+    }
     if (!existingUser && !allowCreate) {
       return res.status(404).json({
         message: 'No account found for this Google email. Create an account to get started.',
@@ -662,6 +661,7 @@ router.post(
     return res.status(existingUser ? 200 : 201).json({
       user: await sanitizeUser(user),
       ...tokens,
+      isNewUser: !existingUser,
     })
   }),
 )

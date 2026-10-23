@@ -15,6 +15,8 @@ import DesmosDrawer from '@/components/sat/DesmosDrawer'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import { allQuestions, reviewQuestions, questionKey, readHistory, difficulty, loadBankSession, saveBankSession, type Result } from '@/features/sat/bankPractice'
 import SATQuestionCanvas from '@/components/sat/SATQuestionCanvas'
+import SATBankSelect from '@/components/sat/SATBankSelect'
+import { bankDomain, bankSkill } from '@/features/sat/bankTopics'
 import SATRichText from '@/components/sat/SATRichText'
 import { getSATReviewTests } from '@/features/sat/catalog'
 import { loadSATAttempt, loadSATAttemptHistory } from '@/features/sat/attemptStorage'
@@ -88,10 +90,15 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
   const [section, setSection] = useState(
     ['math', 'reading-writing'].includes(params.get('section') ?? '')
       ? params.get('section')!
-      : 'all',
+      : 'math',
   )
   const [domain, setDomain] = useState('all')
-  const [skill, setSkill] = useState(params.get('skill') ?? 'all')
+  const [skill, setSkill] = useState(() => {
+    const requested = params.get('skill')
+    const question = allQuestions.find(row => row.question.section === section &&
+      (row.question.skill === requested || bankSkill(row.question) === requested))?.question
+    return question ? bankSkill(question) : 'all'
+  })
   const [level, setLevel] = useState('all')
   const [status, setStatus] = useState(
     ['unanswered', 'incorrect', 'marked'].includes(params.get('status') ?? '') ? params.get('status')! : 'all',
@@ -194,9 +201,9 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
         ...new Set(
           allQuestions
             .filter(
-              (row) => section === 'all' || row.question.section === section,
+              (row) => row.question.section === section,
             )
-            .map((row) => row.question.domain),
+            .map((row) => bankDomain(row.question.domain)),
         ),
       ].sort(),
     [section],
@@ -208,10 +215,10 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
           allQuestions
             .filter(
               (row) =>
-                (section === 'all' || row.question.section === section) &&
-                (domain === 'all' || row.question.domain === domain),
+                (row.question.section === section) &&
+                (domain === 'all' || bankDomain(row.question.domain) === domain),
             )
-            .map((row) => row.question.skill),
+            .map((row) => bankSkill(row.question)),
         ),
       ].sort(),
     [section, domain],
@@ -222,13 +229,13 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
         const question = row.question
         const prior = latest.get(row.key)
         return (
-          (section === 'all' || question.section === section) &&
-          (domain === 'all' || question.domain === domain) &&
-          (skill === 'all' || question.skill === skill) &&
+          question.section === section &&
+          (domain === 'all' || bankDomain(question.domain) === domain) &&
+          (skill === 'all' || bankSkill(question) === skill) &&
           (level === 'all' || difficulty(question.difficulty) === level) &&
           (status === 'all' ||
             (status === 'unanswered' && !prior) ||
-            (status === 'incorrect' && prior?.correct === false) ||
+            (status === 'incorrect' && prior?.correct === false && prior.answer !== '') ||
             (status === 'marked' && markedKeys.has(row.key)))
         )
       }),
@@ -237,7 +244,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
   const skillStats = useMemo(() => {
     const stats = new Map<string, { correct: number; total: number }>()
     for (const item of [...mockHistory, ...history]) {
-      const key = `${item.section}:${item.skill}`
+      const key = `${item.section}:${bankSkill({ section: item.section as 'math' | 'reading-writing', domain: item.domain, skill: item.skill })}`
       const row = stats.get(key) ?? { correct: 0, total: 0 }
       row.total++
       if (item.correct) row.correct++
@@ -249,6 +256,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
       .slice(0, 5)
   }, [history, mockHistory])
   const start = () => {
+    if (!filtered.length) return
     if (activeSet && !window.confirm('Start a new set and replace your unfinished practice?')) return
     const priority = (row: (typeof allQuestions)[number]) =>
       latest.get(row.key)?.correct === false ? 0 : latest.has(row.key) ? 2 : 1
@@ -270,9 +278,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
       setError('Your practice could not be started. Free up browser storage and try again.')
     }
   }
-  const mathVisible = historyView
-    ? review?.row?.question.section === 'math'
-    : section !== 'reading-writing'
+  const mathVisible = historyView && review?.row?.question.section === 'math'
   useEffect(() => {
     setCalculatorOpen(false)
   }, [mathVisible, historyView, reviewId])
@@ -288,11 +294,11 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
     </button>
   ) : null
   const reset = () => {
-    setSection('all')
     setDomain('all')
     setSkill('all')
     setLevel('all')
     setStatus('all')
+    setError('')
   }
   return (
     <main className="workspace-page sat-bank-page">
@@ -435,8 +441,9 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                         </p>
                         <div className="sat-bank-question">
                           <SATQuestionCanvas
+                            practiceLayout
                             key={`${reviewId}-${review.number}`}
-                            question={review.row.question}
+                            question={{ ...review.row.question, number: review.number }}
                             answer={review.result.answer ?? ''}
                             onAnswer={() => {}}
                             strokes={review.result.highlights ?? []}
@@ -599,8 +606,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
             <section className="sat-bank-panel">
               <div className="sat-bank-panel-title">
                 <h2>Build a question set</h2>
-                <span>{filtered.length} matching</span>
-                {calculatorButton}
+                <span role="status" aria-live="polite">{filtered.length} matching</span>
               </div>
               {activeSet ? (
                 <div className="sat-bank-resume" role="status">
@@ -613,89 +619,25 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
               ) : null}
               {error ? <p role="alert" className="sat-bank-alert">{error}</p> : null}
               <div className="sat-bank-filters">
-                <label>
-                  Section
-                  <select
-                    value={section}
-                    onChange={(event) => {
-                      setSection(event.target.value)
-                      setDomain('all')
-                      setSkill('all')
-                    }}
-                  >
-                    <option value="all">Math + Reading & Writing</option>
-                    <option value="math">Math</option>
-                    <option value="reading-writing">Reading & Writing</option>
-                  </select>
-                </label>
-                <label>
-                  Domain / topic
-                  <select
-                    value={domain}
-                    onChange={(event) => {
-                      setDomain(event.target.value)
-                      setSkill('all')
-                    }}
-                  >
-                    <option value="all">All domains</option>
-                    {domains.map((value) => (
-                      <option key={value} value={value}>
-                        {value}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  Skill / question type
-                  <select
-                    value={skill}
-                    onChange={(event) => setSkill(event.target.value)}
-                  >
-                    <option value="all">All skills</option>
-                    {skills.map((value) => (
-                      <option key={value} value={value}>
-                        {value}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  Difficulty
-                  <select
-                    value={level}
-                    onChange={(event) => setLevel(event.target.value)}
-                  >
-                    <option value="all">All levels</option>
-                    <option>Easy</option>
-                    <option>Medium</option>
-                    <option>Hard</option>
-                  </select>
-                </label>
-                <label>
-                  Progress
-                  <select
-                    value={status}
-                    onChange={(event) => setStatus(event.target.value)}
-                  >
-                    <option value="all">All questions</option>
-                    <option value="unanswered">Not attempted</option>
-                    <option value="incorrect">Previously incorrect</option>
-                    <option value="marked">Marked for Review</option>
-                  </select>
-                </label>
-                <label>
-                  Questions in set
-                  <select
-                    value={count}
-                    onChange={(event) => setCount(Number(event.target.value))}
-                  >
-                    {[4, 6, 10, 15, 20, 30].map((value) => (
-                      <option key={value} value={value}>
-                        {value}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <SATBankSelect label="Section" value={section}
+                  options={[{ value: 'math', label: 'Math' }, { value: 'reading-writing', label: 'Reading & Writing' }]}
+                  onChange={value => { setSection(value); setDomain('all'); setSkill('all'); setError('') }} />
+                <SATBankSelect label="Domain / topic" value={domain}
+                  options={[{ value: 'all', label: 'All domains' }, ...domains.map(value => ({ value, label: value }))]}
+                  onChange={value => { setDomain(value); setSkill('all') }} />
+                <SATBankSelect label="Skill / question type" value={skill}
+                  options={[{ value: 'all', label: 'All skills' }, ...skills.map(value => ({ value, label: value }))]}
+                  onChange={setSkill} />
+                <SATBankSelect label="Difficulty" value={level}
+                  options={['all', 'Easy', 'Medium', 'Hard'].map(value => ({ value, label: value === 'all' ? 'All levels' : value }))}
+                  onChange={setLevel} />
+                <SATBankSelect label="Progress" value={status}
+                  options={[{ value: 'all', label: 'All questions' }, { value: 'unanswered', label: 'Not attempted' },
+                    { value: 'incorrect', label: 'Previously incorrect' }, { value: 'marked', label: 'Marked for Review' }]}
+                  onChange={setStatus} />
+                <SATBankSelect label="Questions in set" value={String(count)}
+                  options={[4, 6, 10, 15, 20, 30].map(value => ({ value: String(value), label: String(value) }))}
+                  onChange={value => setCount(Number(value))} />
               </div>
               {!filtered.length ? (
                 <p role="status" className="sat-bank-alert">
@@ -705,15 +647,19 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                   </button>
                 </p>
               ) : null}
+              <div className="sat-bank-build-actions">
               <button
                 type="button"
                 className="sat-bank-primary"
                 onClick={start}
                 disabled={!filtered.length}
               >
-                Start {Math.min(count, filtered.length)} questions{' '}
+                Start {Math.min(count, filtered.length)} {Math.min(count, filtered.length) === 1 ? 'question' : 'questions'}{' '}
                 <ArrowRight size={17} />
               </button>
+              <button type="button" className="sat-bank-reset" onClick={reset}>Reset filters</button>
+              </div>
+              <p className="sat-bank-muted">Untimed practice · Answers save automatically · Review explanations after finishing</p>
             </section>
             <aside className="sat-bank-panel">
               <div className="sat-bank-panel-title">

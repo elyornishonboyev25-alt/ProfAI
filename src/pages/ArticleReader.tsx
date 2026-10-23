@@ -401,10 +401,10 @@ export default function ArticleReader() {
           <main className="min-w-0 space-y-5">
             <header className="article-reader-glass article-reader-header-glass flex min-h-[7rem] items-center justify-between gap-5 rounded-[2.35rem] px-5 py-4 sm:px-8 lg:px-10">
               <div className="flex min-w-0 items-center gap-5 lg:gap-10">
-                <Link to="/dashboard" className="flex shrink-0 items-center gap-2.5" aria-label="ProfAI home">
+                <Link to="/dashboard" className="flex shrink-0 items-center gap-2.5" aria-label="Ivygoo home">
                   <img src="/logo.svg" alt="" className="h-14 w-14 drop-shadow-[0_12px_18px_rgba(220,38,38,0.32)] sm:h-[4.6rem] sm:w-[4.6rem]" />
                   <span className="hidden text-[2.55rem] font-black tracking-[-0.05em] text-slate-900 sm:inline">
-                    Prof<span className="text-red-600">AI</span>
+                    Ivy<span className="text-red-600">goo</span>
                   </span>
                 </Link>
 

@@ -30,6 +30,7 @@ import {
 } from '@/utils/ieltsTrackCatalog'
 import { resolveGeneratedTrackTest } from '@/utils/generatedIeltsTests'
 import { resolveIeltsTestById } from '@/utils/ieltsTestCatalog'
+import { saveReviewState } from '@/utils/resultsReviewState'
 import { fullMockLaunchState, getFullMockPendingSection, getFullMockSectionRedirect, saveFullMockSectionResult, type MockSectionKey } from '@/utils/ieltsMockCatalog'
 
 type TestLaunchPreset = {
@@ -209,6 +210,9 @@ function TestInterfaceContent() {
     // Inside a Full Mock, a section counts as done only when its test is actually
     // submitted — which is exactly here, in the completion handler.
     const result = results as TestResult
+    // Retain the submitted answers before navigation unmounts the test and its
+    // draft is cleared, even if rendering Results subsequently fails.
+    if (testData && !isReviewLaunch) saveReviewState(result.testId, { result, test: testData })
     if (!isReviewLaunch && useAuthStore.getState().user && testData && (type === 'reading' || type === 'listening')) {
       const assignmentId = new URLSearchParams(location.search).get('assignmentId') ?? undefined
       void syncIeltsClassResult(type, testData, result, assignmentId).catch((failure) => {

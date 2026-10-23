@@ -6,6 +6,7 @@ import SATRichText from './SATRichText'
 import SATSourceContent from './SATSourceContent'
 import SATVisual from './SATVisual'
 import SATTextHighlights from './SATTextHighlights'
+import './SATQuestionCanvas.css'
 
 type Props = {
   question: SATQuestion
@@ -21,6 +22,7 @@ type Props = {
   readOnly?: boolean
   answerState?: 'correct' | 'incorrect'
   practicePanel?: ReactNode
+  practiceLayout?: boolean
 }
 
 // Preserve drawings in existing in-progress attempts; new highlights use text ranges.
@@ -45,6 +47,7 @@ export default function SATQuestionCanvas({
   answerState,
   readOnly = false,
   practicePanel,
+  practiceLayout = false,
 }: Props) {
   const [eliminatorOpen, setEliminatorOpen] = useState(false)
   const { context, task } = useMemo(() => splitSATPrompt(question.prompt), [question.prompt])
@@ -52,8 +55,8 @@ export default function SATQuestionCanvas({
 
   return (
     <SATTextHighlights key={question.id} strokes={strokes} onChange={onChange} enabled={highlightAvailable}>
-    <div className={`sat-exam-canvas grid min-h-full min-w-0 bg-[#f7f8fa] ${hasSeparateSource ? 'md:grid-cols-2' : 'grid-cols-1'}`}>
-      {hasSeparateSource ? <section className="relative min-w-0 border-b border-slate-300 px-5 py-5 md:border-b-0 md:border-r md:px-8 xl:px-10">
+    <div className={`sat-exam-canvas ${practiceLayout ? 'sat-bank-canvas' : ''} grid min-h-full min-w-0 bg-[#f7f8fa] ${hasSeparateSource && !practiceLayout ? 'md:grid-cols-2' : 'grid-cols-1'}`}>
+      {hasSeparateSource ? <section className="sat-question-source relative min-w-0 border-b border-slate-300 px-5 py-5 md:border-b-0 md:border-r md:px-8 xl:px-10">
         <HighlightLayer
           surface="passage"
           strokes={strokes}
@@ -84,13 +87,13 @@ export default function SATQuestionCanvas({
         </div>
       </section> : null}
 
-      <section className="relative min-w-0 bg-[#f7f8fa]">
+      <section className="sat-question-panel relative min-w-0 bg-[#f7f8fa]">
         <HighlightLayer
           surface="question"
           strokes={strokes}
         />
-        <div className="flex min-h-[3.6rem] items-stretch bg-[#ededed]">
-          <span className="flex w-12 shrink-0 items-center justify-center bg-black font-serif text-xl font-bold text-white sm:w-14">
+        <div className="sat-question-toolbar flex min-h-[3.6rem] items-stretch bg-[#ededed]">
+          <span className="sat-question-number flex w-12 shrink-0 items-center justify-center bg-black font-serif text-xl font-bold text-white sm:w-14">
             {question.number}
           </span>
           <button
@@ -98,7 +101,7 @@ export default function SATQuestionCanvas({
             onClick={onToggleFlag}
             aria-pressed={flagged}
             disabled={readOnly}
-            className={`flex flex-1 items-center gap-2 px-4 text-left font-serif text-sm font-bold transition sm:text-base ${flagged ? 'text-[#3d4fd2]' : 'text-slate-600 hover:text-slate-950'}`}
+            className={`sat-question-bookmark flex flex-1 items-center gap-2 px-4 text-left font-serif text-sm font-bold transition sm:text-base ${flagged ? 'text-[#3d4fd2]' : 'text-slate-600 hover:text-slate-950'}`}
           >
             <Bookmark className={`h-5 w-5 ${flagged ? 'fill-[#3d4fd2]' : 'fill-slate-500'}`} />
             {readOnly ? 'Answer review' : flagged ? 'Marked for Review' : 'Mark for Review'}
@@ -116,9 +119,9 @@ export default function SATQuestionCanvas({
             </svg>
           </button> : null}
         </div>
-        <div className="h-[3px] bg-[repeating-linear-gradient(90deg,#ad3e5d_0_34px,transparent_34px_41px,#ead5c8_41px_75px,transparent_75px_82px,#21176b_82px_116px,transparent_116px_123px,#5e8c68_123px_157px,transparent_157px_164px)]" />
+        {!practiceLayout ? <div className="h-[3px] bg-[repeating-linear-gradient(90deg,#ad3e5d_0_34px,transparent_34px_41px,#ead5c8_41px_75px,transparent_75px_82px,#21176b_82px_116px,transparent_116px_123px,#5e8c68_123px_157px,transparent_157px_164px)]" /> : null}
 
-        <div className={`mx-auto px-5 py-4 sm:px-8 ${hasSeparateSource ? 'max-w-[42rem]' : 'max-w-[44rem]'}`}>
+        <div className={`sat-question-body mx-auto px-5 py-4 sm:px-8 ${hasSeparateSource ? 'max-w-[42rem]' : 'max-w-[44rem]'}`}>
           {!hasSeparateSource && question.visual ? <figure className="mx-auto mb-4 w-fit max-w-full rounded-xl border border-slate-300 bg-white p-2.5"><SATVisual asset={question.visual.asset} alt={question.visual.alt} className="mx-auto" imageClassName="sat-exam-visual mx-auto w-auto max-w-full object-contain" /></figure> : null}
           <div data-sat-highlight-block={hasSeparateSource ? undefined : "context"}>{!hasSeparateSource && (question.sourceContent?.context ? <SATSourceContent html={question.sourceContent.context} className="mb-4 font-serif text-[17px] leading-[1.5] text-[#171717] sm:text-[18px]" /> : !question.sourceContent && context ? <SATRichText text={context} className="mb-4 font-serif text-[17px] leading-[1.5] text-[#171717] sm:text-[18px]" /> : null)}</div>
           <div data-sat-highlight-block="task">{question.sourceContent ? (

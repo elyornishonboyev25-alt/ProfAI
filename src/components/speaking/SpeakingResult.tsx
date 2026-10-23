@@ -12,10 +12,7 @@ import {
 import type { ExaminerTurn, SpeakingEvaluation } from '@/services/speakingAI'
 import { Burst } from '@/components/fx'
 import BandGauge from './BandGauge'
-import TestVocabulary from '@/components/vocab/TestVocabulary'
-import ReviewPracticeLink from '@/components/ielts/ReviewPracticeLink'
 import ImprovedResponse from '@/components/ielts/ImprovedResponse'
-import { speakingVocabularyTestId } from '@/utils/ieltsTestVocabulary'
 
 const CRITERIA: Array<{ key: keyof SpeakingEvaluation; label: string }> = [
   { key: 'fluencyBand', label: 'Fluency & Coherence' },
@@ -52,7 +49,6 @@ export default function SpeakingResult({
   onRetry,
   onRegrade,
   onExit,
-  hideVocabularyReview = false,
   embedded = false,
   onImprovedAnswers,
 }: {
@@ -68,7 +64,6 @@ export default function SpeakingResult({
   onImprovedAnswers?: (answers: NonNullable<SpeakingEvaluation['improvedAnswers']>) => void
 }) {
   const stats = evaluation.stats
-  const vocabularyTestId = speakingVocabularyTestId(modeLabel)
   const unavailable = evaluation.source === 'offline'
 
   return (
@@ -103,8 +98,6 @@ export default function SpeakingResult({
 
       <p className="mt-3 text-center text-xs leading-5 text-slate-500">{unavailable ? 'No band was awarded. Your answers are available for another assessment.' : evaluation.assessmentMode === 'audio' ? 'IELTS-style practice estimate using your answers and recordings. Four criteria carry equal weight. This is not an official IELTS score.' : 'This estimate uses your transcribed answers. Pronunciation was not assessed; it needs audio or examiner review.'}</p>
       <p className="mt-2 text-center"><a href="https://ielts.org/cdn/ielts-guides/ielts-speaking-band-descriptors.pdf" target="_blank" rel="noreferrer" className="text-xs font-semibold text-red-700 underline">Official IELTS Speaking descriptors</a></p>
-      {!hideVocabularyReview ? <TestVocabulary testId={vocabularyTestId} variant="review" /> : null}
-      {!embedded && <ReviewPracticeLink skill="speaking" />}
       {evaluation.source === 'offline' && onRegrade && !reviewMode ? <div className="surface-card mt-4 p-4 text-center"><p className="mb-3 text-sm text-slate-600">Your answers are kept in this session. Retry AI feedback without taking the test again.</p><button onClick={onRegrade} className="speaking-record-button"><Sparkles className="h-4 w-4" /> Retry AI feedback</button></div> : null}
 
       {/* Criteria gauges */}

@@ -496,7 +496,7 @@ export default function SATMockRun() {
   const sectionNumber = currentModule.section === 'reading-writing' ? 1 : 2
   const moduleNumber = currentModule.id.endsWith('1') ? 1 : 2
   const sectionTitle = currentModule.section === 'reading-writing' ? 'Reading and Writing' : 'Math'
-  const learnerName = user?.fullName || 'ProfAI Student'
+  const learnerName = user?.fullName || 'Ivygoo Student'
 
   return (
     <main className="flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-[#f7f8fa] text-[#151515]">

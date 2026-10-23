@@ -2,6 +2,7 @@ import { accountStorageFor } from '@/utils/accountStorage'
 import FullMockSectionGate from '@/components/ielts/FullMockSectionGate'
 import { readActiveTestPaper } from '@/utils/activeTestPaper'
 import UiText from '@/components/common/UiText'
+import BrandPageLoader from '@/components/common/BrandPageLoader'
 import { useAuthStore } from '@/store/authStore'
 import { useToastStore } from '@/store/toastStore'
 import { useListeningStartAccess } from '@/features/billing/useListeningStartAccess'
@@ -279,11 +280,7 @@ function TestInterfaceContent() {
   }
 
   if (loading || loadedRoute !== `${type}:${id}`) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    )
+    return <BrandPageLoader compact label="Opening page" />
   }
 
   if (trackTestComingSoon) {

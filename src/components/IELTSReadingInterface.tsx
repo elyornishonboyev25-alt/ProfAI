@@ -40,6 +40,7 @@ import Timer from './Timer'
 import { useListeningAutoSubmit } from '../hooks/useListeningAutoSubmit'
 import ListeningReviewCountdown from './ListeningReviewCountdown'
 import UiText from './common/UiText'
+import BrandPageLoader from './common/BrandPageLoader'
 import QuestionNavigation from './QuestionNavigation'
 import NotesPanel from './NotesPanel'
 import WordLookupModal from './vocab/WordLookupModal'
@@ -7260,24 +7261,9 @@ export default function IELTSReadingInterface({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[119] flex items-center justify-center bg-slate-900/45 p-4 backdrop-blur-sm"
+            className="fixed inset-0 z-[119] flex items-center justify-center bg-white p-4"
           >
-            <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 8, scale: 0.96 }}
-              className="w-full max-w-md rounded-[28px] border border-red-100 bg-[linear-gradient(160deg,#fff_0%,#fff8f8_52%,#fffaf8_100%)] p-8 text-center shadow-[0_38px_80px_rgba(220,38,38,0.28)]"
-            >
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-red-200 bg-white shadow-[0_12px_28px_rgba(220,38,38,0.22)]">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                  className="h-10 w-10 rounded-full border-4 border-red-100 border-t-red-500"
-                />
-              </div>
-              <p className="text-3xl font-black text-slate-900">Your results are almost here</p>
-              <p className="mt-2 text-sm text-slate-600">Finalizing score report and review insights...</p>
-            </motion.div>
+            <BrandPageLoader compact label="Your results are almost here" detail="Finalizing score report and review insights..." />
           </motion.div>
         )}
       </AnimatePresence>

@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState, type KeyboardEvent } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { BookOpenText, Headphones, Layers3, Mic2, PenLine } from 'lucide-react'
+import BrandPageLoader from '@/components/common/BrandPageLoader'
 const IELTSSectionTests = lazy(() => import('./IELTSSectionTests'))
 const IELTSWritingTests = lazy(() => import('./IELTSWritingTests'))
 const IELTSSpeakingTests = lazy(() => import('./IELTSSpeakingTests'))
@@ -61,7 +62,7 @@ export default function IELTSTestLibrary() {
           </div>
         </div>
         <div id="ielts-test-panel" role="tabpanel" tabIndex={0} aria-labelledby={`ielts-tab-${activeSkill}`} className="mt-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300">
-          <Suspense fallback={<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-label="Loading IELTS tests">{Array.from({ length: 6 }, (_, index) => <div key={index} className="h-40 animate-pulse rounded-[1.5rem] border border-white bg-white/75" />)}</div>}>
+          <Suspense fallback={<BrandPageLoader compact label="Opening page" />}>
             {activeSkill === 'listening' && <IELTSSectionTests sectionOverride="listening" embedded />}
             {activeSkill === 'reading' && <IELTSSectionTests sectionOverride="reading" embedded />}
             {activeSkill === 'writing' && <IELTSWritingTests embedded />}

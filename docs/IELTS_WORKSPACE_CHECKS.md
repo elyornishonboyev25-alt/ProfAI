@@ -16,7 +16,7 @@ The refinements apply to the shared Reading and Listening interface, including p
 | 10. Timer appearance | Compact tabular digits and a small clock control. |
 | 11. Hide time | The clock hides/reveals digits while the same mounted timer and original deadline keep running. The mandatory Listening answer-review countdown remains visible. |
 | 12. Return to the tab | A valid lease stays visible while verification runs. An expired lease retains the mounted attempt while access is rechecked; answers and audio position are retained. |
-| 13. Loading consistency | Plain HTML boot, route/session loaders, billing checks and test launch use the same restrained logo/spinner treatment. |
+| 13. Loading consistency | Plain HTML boot, route/session loaders, IELTS catalog, test loading, billing checks, test launch and score preparation use the same restrained logo/spinner treatment. |
 | 14. Account verification | Transient verification failures retry. Shared token refresh has a 10-second timeout, preserves credentials on temporary failure, and permits the next request to recover. Confirmed invalid sessions and device conflicts remain enforced. |
 | 15. Responsiveness | The immutable paper is saved once per attempt rather than per keystroke; session writes are batched and flushed on blur, suspension, exit or reload. |
 | 16. Catalog coverage | Shared components cover the full Reading/Listening catalogs; audits exercise saved reviews as well as new attempts. |

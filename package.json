@@ -11,6 +11,8 @@
     "validate:speaking": "node scripts/validate-speaking-bank.mjs",
     "test:speaking-ui": "node scripts/test-listening-parts-ui.mjs scripts/tests/speaking-ui.tsx",
     "test:ielts-review": "node scripts/test-listening-parts-ui.mjs scripts/tests/ielts-review-improvements-ui.tsx",
+    "test:ielts-workspace": "node scripts/test-listening-parts-ui.mjs scripts/tests/ielts-workspace-ui.tsx",
+    "test:ielts-workspace-browser": "node scripts/test-ielts-workspace-browser.mjs",
     "test:ai-coach-ui": "node scripts/test-listening-parts-ui.mjs scripts/tests/realtime-coach.tsx",
     "test:coach-studio": "node scripts/test-listening-parts-ui.mjs scripts/tests/coach-studio.tsx",
     "test:speaking-browser": "node scripts/test-speaking-browser.mjs",

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import BrandPageLoader from '@/components/common/BrandPageLoader'
 import { apiClient, ApiError } from '@/lib/apiClient'
@@ -12,6 +12,7 @@ export default function AccountUsageBoundary({ children }: { children: ReactNode
   const usage = useAccountUsageStore()
   const [retry, setRetry] = useState(0)
   const [signingOut, setSigningOut] = useState(false)
+  const verifiedOwner = useRef<string>()
   const { i18n } = useTranslation()
   const text = accountUsageText(i18n.language)
 
@@ -20,8 +21,10 @@ export default function AccountUsageBoundary({ children }: { children: ReactNode
     const controller = new AbortController()
     let running = false
     const check = async () => {
-      if (running || document.hidden || useAuthStore.getState().user?.id !== owner) return
+      if (controller.signal.aborted || running || document.hidden || useAuthStore.getState().user?.id !== owner) return
       running = true
+      const previous = useAccountUsageStore.getState()
+      if (previous.owner === owner && previous.status === 'active' && previous.validUntil <= Date.now()) previous.setUsage(owner, 'checking')
       // Use the request start time so a delayed response cannot extend access
       // past the server's lease. Stop offline usage before that lease expires.
       const startedAt = Date.now()
@@ -30,7 +33,22 @@ export default function AccountUsageBoundary({ children }: { children: ReactNode
       controller.signal.addEventListener('abort', abort, { once: true })
       const timeout = window.setTimeout(abort, 12_000)
       try {
-        await apiClient.post('/auth/activity/heartbeat', { refreshToken: useAuthStore.getState().refreshToken }, { expectedUserId: owner, signal: requestController.signal })
+        // Retry short network/server interruptions inside the same bounded request window.
+        for (let attempt = 0; ; attempt++) {
+          try {
+            await apiClient.post('/auth/activity/heartbeat', { refreshToken: useAuthStore.getState().refreshToken }, { expectedUserId: owner, signal: requestController.signal })
+            break
+          } catch (error) {
+            const transient = !(error instanceof ApiError) || error.status >= 500 || error.status === 408 || error.status === 429
+            if (!transient || attempt >= 2 || requestController.signal.aborted) throw error
+            await new Promise<void>(resolve => {
+              const done = () => { window.clearTimeout(delay); requestController.signal.removeEventListener('abort', done); resolve() }
+              const delay = window.setTimeout(done, 400 * (attempt + 1))
+              requestController.signal.addEventListener('abort', done, { once: true })
+            })
+            if (requestController.signal.aborted) throw error
+          }
+        }
         if (!controller.signal.aborted && useAuthStore.getState().user?.id === owner) {
           useAccountUsageStore.getState().setUsage(owner, 'active', startedAt + 90_000)
         }
@@ -50,7 +68,7 @@ export default function AccountUsageBoundary({ children }: { children: ReactNode
     const timer = window.setInterval(() => { void check() }, 30_000)
     const expiry = window.setInterval(() => {
       const current = useAccountUsageStore.getState()
-      if (current.owner === owner && current.status === 'active' && current.validUntil <= Date.now()) current.setUsage(owner, 'unavailable')
+      if (!document.hidden && !running && current.owner === owner && current.status === 'active' && current.validUntil <= Date.now()) void check()
     }, 1000)
     document.addEventListener('visibilitychange', check)
     window.addEventListener('online', check)
@@ -77,11 +95,18 @@ export default function AccountUsageBoundary({ children }: { children: ReactNode
   }, [])
 
   if (!hydrated) return <BrandPageLoader label={text.checking} />
-  if (!owner) return <>{children}</>
+  if (!owner) { verifiedOwner.current = undefined; return <>{children}</> }
   const status = usage.owner === owner ? usage.status : 'checking'
-  if (status === 'active' && usage.validUntil > Date.now()) return <>{children}</>
-  if (status === 'checking') return <BrandPageLoader label={text.checking} />
+  const allowed = status === 'active' && usage.validUntil > Date.now()
+  if (allowed) verifiedOwner.current = owner
+  if (status === 'blocked') verifiedOwner.current = undefined
+  // An expired lease still gates access, but must not destroy the running test,
+  // audio position or sync state when a background tab becomes visible again.
+  const retained = allowed || verifiedOwner.current === owner
   return (
+    <>
+    {retained && <div key={owner} data-account-workspace aria-hidden={!allowed || undefined} hidden={!allowed} ref={node => { if (node) node.inert = !allowed }} style={{ display: allowed ? 'contents' : 'none' }}>{children}</div>}
+    {!allowed && (status === 'checking' || status === 'active' ? <BrandPageLoader compact label={text.checking} /> : (
     <main className="flex min-h-screen items-center justify-center bg-slate-50 px-6 dark:bg-slate-950">
       <section className="max-w-lg rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900" role="alert">
         <h1 className="text-xl font-bold text-slate-900 dark:text-white">{status === 'blocked' ? text.blocked : text.unavailable}</h1>
@@ -92,5 +117,7 @@ export default function AccountUsageBoundary({ children }: { children: ReactNode
         </div>
       </section>
     </main>
+    ))}
+    </>
   )
 }

@@ -75,6 +75,7 @@ export async function run() {
         const audio = element.querySelector('audio')!
         audio.currentTime = 123
         await act(async () => audio.dispatchEvent(new window.Event('timeupdate')))
+        await act(async () => window.dispatchEvent(new window.Event('pagehide')))
         const before = JSON.parse(storage.getItem(key)!)
         assert.ok(Object.values(before.answers).includes('Preserved answer'))
         assert.equal(before.audioCurrentTime, 123)

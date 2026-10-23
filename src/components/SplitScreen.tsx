@@ -58,7 +58,8 @@ export default function SplitScreen({
   useEffect(() => {
     if (!isDragging) return undefined
 
-    const handleMouseMove = (event: MouseEvent) => {
+    let frame: number | undefined
+    const handlePointerMove = (event: PointerEvent) => {
       const container = containerRef.current
       if (!container) return
 
@@ -66,60 +67,78 @@ export default function SplitScreen({
       if (rect.width <= 0) return
       const nextPercent = ((event.clientX - rect.left) / rect.width) * 100
       livePercentRef.current = clamp(nextPercent, MIN_LEFT_PERCENT, MAX_LEFT_PERCENT)
-      applySplitPercent(livePercentRef.current)
+      if (frame === undefined) frame = window.requestAnimationFrame(() => {
+        applySplitPercent(livePercentRef.current)
+        frame = undefined
+      })
     }
 
-    const handleMouseUp = () => {
+    const handlePointerUp = () => {
       setLeftPercent(livePercentRef.current)
       setIsDragging(false)
     }
 
-    window.addEventListener('mousemove', handleMouseMove)
-    window.addEventListener('mouseup', handleMouseUp)
+    window.addEventListener('pointermove', handlePointerMove)
+    window.addEventListener('pointerup', handlePointerUp)
+    window.addEventListener('pointercancel', handlePointerUp)
+    window.addEventListener('blur', handlePointerUp)
+    const previousCursor = document.body.style.cursor
+    const previousSelection = document.body.style.userSelect
     document.body.style.cursor = 'col-resize'
     document.body.style.userSelect = 'none'
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove)
-      window.removeEventListener('mouseup', handleMouseUp)
-      document.body.style.cursor = ''
-      document.body.style.userSelect = ''
+      window.removeEventListener('pointermove', handlePointerMove)
+      window.removeEventListener('pointerup', handlePointerUp)
+      window.removeEventListener('pointercancel', handlePointerUp)
+      window.removeEventListener('blur', handlePointerUp)
+      if (frame !== undefined) window.cancelAnimationFrame(frame)
+      document.body.style.cursor = previousCursor
+      document.body.style.userSelect = previousSelection
     }
   }, [isDragging])
 
   return (
     <div
       ref={containerRef}
-      className={`flex ${fillHeight ? 'h-full min-h-0' : 'h-[calc(100vh-64px)]'} flex-col overflow-hidden lg:flex-row ${className}`}
+      className={`ielts-split-view flex ${fillHeight ? 'h-full min-h-0' : 'h-[calc(100vh-64px)]'} flex-col overflow-hidden lg:flex-row ${className}`}
     >
       <div
         ref={leftPaneRef}
-        className="h-1/2 overflow-y-auto border-b border-red-100 bg-white lg:h-full lg:border-b-0"
+        className="ielts-split-pane min-h-0 min-w-0 h-1/2 overflow-hidden border-b border-red-100 bg-white lg:h-full lg:border-b-0"
       >
         {left}
       </div>
 
-      <div className="relative hidden w-2 cursor-col-resize items-center justify-center bg-gradient-to-b from-red-50/45 via-white to-red-50/45 lg:flex">
-        <div className="h-full w-px bg-red-200/80" />
-        <button
-          type="button"
-          onMouseDown={(event) => {
+      <div
+          role="separator"
+          tabIndex={0}
+          aria-orientation="vertical"
+          aria-valuemin={MIN_LEFT_PERCENT}
+          aria-valuemax={MAX_LEFT_PERCENT}
+          aria-valuenow={Math.round(leftPercent)}
+          aria-label="Resize split view"
+          onPointerDown={(event) => {
             event.preventDefault()
+            livePercentRef.current = leftPercent
             setIsDragging(true)
           }}
-          className={`absolute left-1/2 top-1/2 z-10 flex h-7 w-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-red-200 bg-white shadow-[0_10px_18px_rgba(220,38,38,0.18)] transition ${
-            isDragging ? 'scale-105 border-red-400 shadow-[0_14px_22px_rgba(220,38,38,0.24)]' : 'hover:scale-105 hover:border-red-300'
-          }`}
-          aria-label="Resize split view"
-          title="Drag to resize"
+          onKeyDown={event => {
+            const next = event.key === 'ArrowLeft' ? leftPercent - 2 : event.key === 'ArrowRight' ? leftPercent + 2 : event.key === 'Home' ? MIN_LEFT_PERCENT : event.key === 'End' ? MAX_LEFT_PERCENT : event.key === 'Enter' ? 50 : null
+            if (next === null) return
+            event.preventDefault()
+            setLeftPercent(clamp(next, MIN_LEFT_PERCENT, MAX_LEFT_PERCENT))
+          }}
+          onDoubleClick={() => setLeftPercent(50)}
+          className={`ielts-split-handle relative hidden w-3 shrink-0 cursor-col-resize touch-none items-center justify-center lg:flex ${isDragging ? 'is-dragging' : ''}`}
+          title="Drag or use arrow keys to resize. Double-click to reset."
         >
-          <span className="text-[11px] font-black text-slate-500">&lt;&gt;</span>
-        </button>
+          <span aria-hidden="true" />
       </div>
 
       <div
         ref={rightPaneRef}
-        className="h-1/2 flex-1 overflow-y-auto bg-white lg:h-full"
+        className="ielts-split-pane min-h-0 min-w-0 h-1/2 flex-1 overflow-hidden bg-white lg:h-full"
       >
         {right}
       </div>

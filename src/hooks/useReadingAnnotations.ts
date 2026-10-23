@@ -50,7 +50,12 @@ export function useReadingAnnotations(shell: RefObject<HTMLDivElement>, key: str
     const saveScroll = () => {
       try { storage.setItem(`${key}:scroll`, JSON.stringify(containers.map(container => ({ top: container.scrollTop, left: container.scrollLeft })))) } catch { /* Keep the viewport usable. */ }
     }
-    containers.forEach(container => container.addEventListener('scroll', saveScroll, { passive: true }))
+    let scrollTimer: number | undefined
+    const scheduleScroll = () => {
+      window.clearTimeout(scrollTimer)
+      scrollTimer = window.setTimeout(() => { saveScroll(); scrollTimer = undefined }, 200)
+    }
+    containers.forEach(container => container.addEventListener('scroll', scheduleScroll, { passive: true }))
     const save = () => {
       const marks = containers.map(container => Array.from(container.querySelectorAll<HTMLElement>('[data-reading-mark="1"]')).map(node => {
         const range = document.createRange()
@@ -61,15 +66,20 @@ export function useReadingAnnotations(shell: RefObject<HTMLDivElement>, key: str
     }
     const observer = new window.MutationObserver(save)
     containers.forEach(container => observer.observe(container, { subtree: true, childList: true, attributes: true, attributeFilter: ['data-note', 'data-mark-type'] }))
-    window.addEventListener('pagehide', save)
-    window.addEventListener('beforeunload', save)
+    const flush = () => {
+      save()
+      if (scrollTimer !== undefined) { window.clearTimeout(scrollTimer); saveScroll(); scrollTimer = undefined }
+    }
+    window.addEventListener('pagehide', flush)
+    window.addEventListener('beforeunload', flush)
     return () => {
       // Consume pending edits before switching to another section.
       if (observer.takeRecords().length) save()
       observer.disconnect()
-      containers.forEach(container => container.removeEventListener('scroll', saveScroll))
-      window.removeEventListener('pagehide', save)
-      window.removeEventListener('beforeunload', save)
+      if (scrollTimer !== undefined) { window.clearTimeout(scrollTimer); saveScroll() }
+      containers.forEach(container => container.removeEventListener('scroll', scheduleScroll))
+      window.removeEventListener('pagehide', flush)
+      window.removeEventListener('beforeunload', flush)
     }
   }, [shell, key, owner, active])
 }

@@ -75,6 +75,7 @@ export async function run() {
       Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!.call(input, 'physical health')
       input.dispatchEvent(new window.Event('input', { bubbles: true }))
     })
+    await act(async () => window.dispatchEvent(new window.Event('pagehide')))
     const saved = JSON.parse(accountStorageFor('guest').getItem(`ielts_test_session_${test.id}`)!)
     assert.equal(saved.answers['rd26-q19'], 'physical health', `${mode}: input is stored against its question ID`)
     await act(async () => root.unmount())
@@ -93,10 +94,10 @@ export async function run() {
   await act(async () => root.render(<IELTSReadingInterface test={endings} launchPreset={{ mode: 'practice' }} onComplete={() => {}} onExit={() => {}} />))
   await act(async () => { await new Promise(resolve => setTimeout(resolve, 2300)) })
   const card = container.querySelector('#question-card-day22-q12')!
-  await act(async () => card.querySelector<HTMLButtonElement>('button')!.click())
-  const choice = [...card.querySelectorAll('button')].find(button => button.textContent === 'C')!
-  assert.ok(choice, 'space-labelled sentence endings show a compact letter choice')
-  await act(async () => choice.click())
+  const choice = card.querySelector<HTMLSelectElement>('select')!
+  assert.ok(choice?.querySelector('option[value="C"]'), 'space-labelled sentence endings show a compact letter choice')
+  await act(async () => { choice.value = 'C'; choice.dispatchEvent(new window.Event('change', { bubbles: true })) })
+  await act(async () => window.dispatchEvent(new window.Event('pagehide')))
   assert.equal(JSON.parse(accountStorageFor('guest').getItem(`ielts_test_session_${endings.id}`)!).answers['day22-q12'], 'C', 'dropdown stores its letter, not a whole sentence')
   await act(async () => root.unmount())
   console.log('PASS: sentence-ending dropdown stores the correct option letter')

@@ -48,7 +48,7 @@ const QuestionNavigation = memo(function QuestionNavigation({
         [sections])
 
     return (
-        <div className="border-t border-red-100 bg-white p-3 backdrop-blur-xl transition-colors duration-300">
+        <div className="ielts-question-navigation border-t border-red-100 bg-white p-3">
             <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 md:flex-row">
                 <div className="mask-linear-fade no-scrollbar flex w-full flex-1 items-center gap-3 overflow-x-auto overflow-y-hidden pb-1">
                     {sections.map((section, idx) => {
@@ -85,7 +85,7 @@ const QuestionNavigation = memo(function QuestionNavigation({
                                 `}
                                 onClick={() => !isActive && onSectionChange(idx)}
                             >
-                                <div className={`flex items-center gap-2 whitespace-nowrap px-4 py-2.5 ${isActive ? 'border-r border-red-100 bg-red-50/50' : ''}`}>
+                                <button type="button" aria-label={`Go to Part ${section.partNumber}`} aria-pressed={isActive} onClick={event => { event.stopPropagation(); onSectionChange(idx) }} className={`flex items-center gap-2 whitespace-nowrap px-4 py-2.5 ${isActive ? 'border-r border-red-100 bg-red-50/50' : ''}`}>
                                     <span className={`text-sm font-bold ${isActive ? 'text-slate-900' : 'text-slate-500'}`}>
                                         Part {section.partNumber}
                                     </span>
@@ -98,7 +98,7 @@ const QuestionNavigation = memo(function QuestionNavigation({
                                             {flaggedInSection}
                                         </span>
                                     ) : null}
-                                </div>
+                                </button>
 
                                 {isActive && (
                                     <div className="no-scrollbar flex items-center gap-1.5 overflow-x-auto overflow-y-hidden p-2">
@@ -122,6 +122,8 @@ const QuestionNavigation = memo(function QuestionNavigation({
                                             return (
                                                 <button type="button"
                                                     key={`${questionId}-${localIndex}`}
+                                                    aria-label={`Question ${questionNumber}${isAnswered ? ', answered' : ', unanswered'}${isFlagged ? ', bookmarked' : ''}`}
+                                                    aria-current={isCurrent ? 'step' : undefined}
                                                     onClick={(event) => {
                                                         event.stopPropagation()
                                                         onNavigate(globalIndex)
@@ -129,15 +131,12 @@ const QuestionNavigation = memo(function QuestionNavigation({
                                                     className={`
                                                         relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold transition-all
                                                         ${isCurrent
-                                                            ? 'z-10 scale-110 border-red-600 bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-[0_8px_20px_rgba(220,38,38,0.26)]'
+                                                            ? 'z-10 border-red-600 bg-red-600 text-white'
                                                             : isAnswered
                                                                 ? 'border-red-200 bg-red-50 text-red-600'
                                                                 : 'border-red-100 bg-white text-slate-500 hover:border-red-300'}
                                                     `}
                                                 >
-                                                    {isCurrent && (
-                                                        <span aria-hidden className="absolute inset-0 -z-10 animate-ping rounded-full bg-red-400/40 [animation-duration:1.6s]" />
-                                                    )}
                                                     {questionNumber}
                                                     {isFlagged && (
                                                         <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full border-2 border-white bg-amber-500" />
@@ -161,6 +160,8 @@ const QuestionNavigation = memo(function QuestionNavigation({
                                 : 'border-red-100 bg-white text-slate-400 hover:bg-red-50 hover:text-red-500'
                                 }`}
                             title="Flag Question"
+                            aria-label="Bookmark current question"
+                            aria-pressed={flagged.includes(currentQuestionIndex)}
                         >
                             <FlagIcon className="h-4 w-4" />
                         </button>
@@ -169,6 +170,7 @@ const QuestionNavigation = memo(function QuestionNavigation({
                     <button type="button"
                         onClick={() => onNavigate(Math.max(0, currentQuestionIndex - 1))}
                         disabled={currentQuestionIndex === 0}
+                        aria-label="Previous question"
                         className="flex h-9 w-9 items-center justify-center rounded-lg border border-red-100 bg-white text-slate-600 shadow-sm hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         <ChevronLeftIcon className="h-4 w-4" />
@@ -177,6 +179,7 @@ const QuestionNavigation = memo(function QuestionNavigation({
                     <button type="button"
                         onClick={() => onNavigate(Math.min(totalQuestions - 1, currentQuestionIndex + 1))}
                         disabled={currentQuestionIndex >= totalQuestions - 1}
+                        aria-label="Next question"
                         className="flex h-9 items-center gap-1 rounded-lg bg-gradient-to-r from-red-600 to-rose-600 px-4 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(220,38,38,0.3)] transition-colors hover:from-red-500 hover:to-rose-500 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         <span>Next</span>

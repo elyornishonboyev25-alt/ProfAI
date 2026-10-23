@@ -13,6 +13,7 @@ export async function run() {
   const post = apiClient.post
   const container = document.getElementById('root')!
   const root = createRoot(container)
+  const workspaceVisible = () => Boolean(container.querySelector('[data-account-workspace]:not([hidden])'))
   let mode: 'pending' | 'blocked' | 'allowed' | 'offline' = 'pending'
   let resolve: (() => void) | undefined
   let heartbeatCount = 0
@@ -29,7 +30,7 @@ export async function run() {
   useAuthStore.getState().setHydrated(true)
   useAccountUsageStore.getState().resetUsage()
   try {
-    await act(async () => { root.render(<AccountUsageBoundary><p>Protected saved test</p></AccountUsageBoundary>) })
+    await act(async () => { root.render(<AccountUsageBoundary><p>Protected saved test</p><input aria-label="Draft answer" defaultValue="Unsaved answer" /></AccountUsageBoundary>) })
     assert.equal(container.textContent?.includes('Protected saved test'), false, 'Cached routes cannot mount before server verification')
     mode = 'blocked'
     await act(async () => { resolve?.(); await new Promise(done => setTimeout(done, 10)) })
@@ -39,17 +40,24 @@ export async function run() {
     mode = 'allowed'
     await act(async () => { (container.querySelector('button') as HTMLButtonElement).click(); await new Promise(done => setTimeout(done, 10)) })
     assert.ok(container.textContent?.includes('Protected saved test'), 'Retry resumes once the active device releases access')
+    const draft = container.querySelector<HTMLInputElement>('input')!
+    draft.value = 'Keep the latest answer'
     mode = 'offline'
     await act(async () => {
       useAccountUsageStore.getState().setUsage('usage-ui', 'active', Date.now() - 1)
       await new Promise(done => setTimeout(done, 1100))
     })
-    assert.equal(container.textContent?.includes('Protected saved test'), false, 'Offline cached work is gated when the verification expires')
-    await act(async () => { (container.querySelector('button') as HTMLButtonElement).click(); await new Promise(done => setTimeout(done, 10)) })
+    assert.equal(workspaceVisible(), false, 'Offline cached work is hidden and inert when the verification expires')
+    assert.equal(container.querySelector('[data-account-workspace]')?.getAttribute('aria-hidden'), 'true')
+    await act(async () => { await new Promise(done => setTimeout(done, 1300)) })
+    await act(async () => { (container.querySelector('button') as HTMLButtonElement).click(); await new Promise(done => setTimeout(done, 1300)) })
     assert.ok(container.textContent?.includes('tekshirib bo‘lmadi'))
     mode = 'allowed'
     await act(async () => { (container.querySelector('button') as HTMLButtonElement).click(); await new Promise(done => setTimeout(done, 10)) })
     assert.ok(container.textContent?.includes('Protected saved test'), 'A timed-out or failed request does not prevent the next retry')
+    assert.equal(workspaceVisible(), true)
+    assert.equal(container.querySelector('input'), draft, 'Verification must not remount the test')
+    assert.equal(draft.value, 'Keep the latest answer', 'Temporary connectivity failures retain in-memory answers')
     await act(async () => { useAccountUsageStore.getState().setUsage('usage-ui', 'blocked') })
     await act(async () => { (container.querySelectorAll('button')[1] as HTMLButtonElement).click(); await new Promise(done => setTimeout(done, 10)) })
     assert.equal(useAuthStore.getState().user, null, 'Blocked device can sign out')

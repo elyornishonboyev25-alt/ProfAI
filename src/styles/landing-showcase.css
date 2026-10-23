@@ -8,6 +8,7 @@
   --lx-line: rgba(124, 132, 146, .24);
   --lx-glass: linear-gradient(140deg, rgba(255, 255, 255, .78) 0%, rgba(240, 242, 246, .55) 48%, rgba(222, 226, 233, .5) 100%);
   --lx-glass-edge: rgba(255, 255, 255, .9);
+  --lx-glass-solid: linear-gradient(140deg, rgba(255, 255, 255, .9) 0%, rgba(244, 245, 248, .78) 48%, rgba(230, 233, 238, .74) 100%);
   --lx-shadow: 0 30px 70px -28px rgba(25, 32, 46, .32), 0 6px 18px -6px rgba(25, 32, 46, .1), inset 0 1px 0 #fff, inset 0 -1px 0 rgba(118, 127, 142, .16);
   --lx-red-fill: linear-gradient(135deg, #ec2846 0%, #cf1230 52%, #a40e25 100%);
   --lx-red-glow: 0 16px 34px -10px rgba(206, 18, 46, .62), inset 0 1px 0 rgba(255, 255, 255, .45), inset 0 -2px 0 rgba(110, 6, 22, .25);
@@ -23,11 +24,8 @@
 /* The route entrance animation leaves a transform that would trap fixed header, rail and backdrop. */
 .arena-route:has(> .lx-page) { animation: none; transform: none; }
 
-/* Scroll snapping: every chapter stops before the next one on desktop screens. */
-/* Wheel and keyboard paging is handled in Landing.tsx; proximity snapping helps touch and scrollbar drags. */
-html.lx-snap { scroll-snap-type: y proximity; }
-.lx-screen { scroll-snap-align: start; }
-.lx-feature, .lx-inside { scroll-snap-stop: always; }
+/* Scrolling stays native. Chapters below the fold skip rendering until they approach the viewport. */
+.lx-screen:not(.lx-hero) { content-visibility: auto; contain-intrinsic-size: auto 100vh; }
 
 /* Silver studio backdrop */
 .lx-backdrop { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
@@ -38,16 +36,15 @@ html.lx-snap { scroll-snap-type: y proximity; }
     radial-gradient(ellipse at 88% 92%, rgba(255, 255, 255, .8) 0%, transparent 45%),
     linear-gradient(160deg, #f2f3f5 0%, #dfe2e7 46%, #eceef1 100%);
 }
-.lx-backdrop i { position: absolute; border-radius: 50%; filter: blur(70px); opacity: .55; animation: lx-drift 22s ease-in-out infinite alternate; }
-.lx-backdrop i:nth-child(1) { width: 46vw; height: 30vw; right: -12vw; top: 6vh; background: radial-gradient(circle, rgba(232, 28, 58, .32), transparent 68%); }
-.lx-backdrop i:nth-child(2) { width: 38vw; height: 26vw; left: -14vw; bottom: -6vh; background: radial-gradient(circle, rgba(222, 22, 50, .22), transparent 70%); animation-delay: -8s; }
-.lx-backdrop i:nth-child(3) { width: 60vw; height: 14vw; left: 20vw; top: 44vh; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .9), transparent); filter: blur(40px); transform: rotate(-14deg); animation-delay: -14s; }
-@keyframes lx-drift { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(-4vw, 3vh, 0) scale(1.12); } }
+.lx-backdrop i { position: absolute; border-radius: 50%; opacity: .55; }
+.lx-backdrop i:nth-child(1) { width: 46vw; height: 30vw; right: -12vw; top: 6vh; background: radial-gradient(closest-side, rgba(232, 28, 58, .3), rgba(232, 28, 58, .12) 55%, transparent); }
+.lx-backdrop i:nth-child(2) { width: 38vw; height: 26vw; left: -14vw; bottom: -6vh; background: radial-gradient(closest-side, rgba(222, 22, 50, .2), rgba(222, 22, 50, .08) 55%, transparent); }
+.lx-backdrop i:nth-child(3) { width: 60vw; height: 14vw; left: 20vw; top: 44vh; background: radial-gradient(closest-side, rgba(255, 255, 255, .85), transparent); transform: rotate(-14deg); }
 
 .lx-progress { position: fixed; z-index: 70; top: 0; left: 0; right: 0; height: 3px; transform-origin: 0 50%; background: linear-gradient(90deg, #a40e25, #ef2b4a, #ff8090); box-shadow: 0 0 14px rgba(239, 43, 74, .6); }
 
 .lx-page main { position: relative; z-index: 1; }
-.lx-glass { border: 1px solid var(--lx-glass-edge); background: var(--lx-glass); box-shadow: var(--lx-shadow); -webkit-backdrop-filter: blur(24px) saturate(165%); backdrop-filter: blur(24px) saturate(165%); }
+.lx-glass { border: 1px solid var(--lx-glass-edge); background: var(--lx-glass-solid, var(--lx-glass)); box-shadow: var(--lx-shadow); -webkit-backdrop-filter: blur(24px) saturate(165%); backdrop-filter: blur(24px) saturate(165%); }
 
 /* Buttons and type helpers */
 .lx-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; padding: 0 28px; border: 1px solid transparent; border-radius: 14px; font-size: 16px; font-weight: 650; letter-spacing: .005em; white-space: nowrap; overflow: hidden; transition: transform .25s ease, box-shadow .25s ease, background .25s ease; }
@@ -75,7 +72,7 @@ html.lx-snap { scroll-snap-type: y proximity; }
 
 /* Header */
 .lx-header { position: fixed; z-index: 60; top: 12px; left: 0; right: 0; padding: 0 var(--lx-gutter); pointer-events: none; }
-.lx-nav { pointer-events: auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; width: min(1320px, 100%); min-height: 72px; margin: 0 auto; padding: 10px 12px 10px 22px; border: 1px solid var(--lx-glass-edge); border-radius: 22px; background: linear-gradient(140deg, rgba(255, 255, 255, .72), rgba(236, 238, 242, .5)); box-shadow: 0 18px 44px -20px rgba(25, 32, 46, .32), inset 0 1px 0 #fff; -webkit-backdrop-filter: blur(26px) saturate(170%); backdrop-filter: blur(26px) saturate(170%); transition: box-shadow .3s ease, background .3s ease; }
+.lx-nav { pointer-events: auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; width: min(1320px, 100%); min-height: 72px; margin: 0 auto; padding: 10px 12px 10px 22px; border: 1px solid var(--lx-glass-edge); border-radius: 22px; background: linear-gradient(140deg, rgba(255, 255, 255, .72), rgba(236, 238, 242, .5)); box-shadow: 0 18px 44px -20px rgba(25, 32, 46, .32), inset 0 1px 0 #fff; -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%); transition: box-shadow .3s ease, background .3s ease; }
 .lx-header.is-scrolled .lx-nav { background: linear-gradient(140deg, rgba(255, 255, 255, .86), rgba(236, 238, 242, .72)); box-shadow: 0 22px 50px -20px rgba(25, 32, 46, .4), inset 0 1px 0 #fff; }
 .lx-logo { display: inline-flex; align-items: center; gap: 9px; color: var(--lx-ink); }
 .lx-logo > span { font-size: 25px; font-weight: 800; letter-spacing: -.05em; }
@@ -263,6 +260,8 @@ html.lx-snap { scroll-snap-type: y proximity; }
 .lx-footer nav :is(button, a):hover { color: var(--lx-red-deep); background: rgba(255, 255, 255, .6); }
 .lx-footer p { grid-column: 1 / -1; margin: 0; color: #6a717d; font-size: 12px; }
 
+/* Only the fixed header and mobile menu keep a live backdrop blur; everywhere else it repainted on every scroll frame. */
+.lx-page :where(*):not(.lx-nav, .lx-mobile-menu) { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
 .lx-page :is(button, a):focus-visible { outline: 3px solid rgba(211, 19, 47, .55); outline-offset: 3px; }
 
 /* Responsive */
@@ -324,6 +323,6 @@ html.lx-snap { scroll-snap-type: y proximity; }
   .lx-feature-copy h2 { margin-bottom: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .lx-backdrop i, .lx-float, .lx-float-shot, .lx-scroll-cue span, .lx-hotspot.is-active::before, .lx-hotspot.is-active::after { animation: none; }
+  .lx-float, .lx-float-shot, .lx-scroll-cue span, .lx-hotspot.is-active::before, .lx-hotspot.is-active::after { animation: none; }
   .lx-tour-frame .lx-browser-view img, .lx-hotspot, .lx-step-body { transition: none; }
 }

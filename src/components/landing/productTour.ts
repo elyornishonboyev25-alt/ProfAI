@@ -25,10 +25,10 @@ export const tourFeatures: TourFeature[] = [
     body: ['Targets, weekly rhythm, scores and rank stay together, so every session starts with a clear next step.', 'Maqsadlar, haftalik ritm, ballar va reyting bir joyda — har bir mashg‘ulot aniq keyingi qadam bilan boshlanadi.', 'Цели, недельный ритм, баллы и рейтинг собраны вместе — каждое занятие начинается с понятного следующего шага.'],
     alt: ['Ivygoo learning dashboard with target progress, weekly activity and leaderboard', 'Maqsad, haftalik faollik va reyting ko‘rsatilgan Ivygoo boshqaruv paneli', 'Панель Ivygoo с прогрессом к цели, недельной активностью и рейтингом'],
     steps: [
-      { x: 32, y: 44, title: ['Target ring', 'Maqsad halqasi', 'Кольцо цели'], body: ['See how close you are to your IELTS and SAT goals.', 'IELTS va SAT maqsadingizga qanchalik yaqinligingizni ko‘ring.', 'Видно, насколько вы близки к целям IELTS и SAT.'] },
-      { x: 59, y: 48, title: ['Live stats', 'Jonli statistika', 'Живая статистика'], body: ['Study time, completed practice, average score and rank.', 'O‘qish vaqti, bajarilgan mashqlar, o‘rtacha ball va o‘rin.', 'Время занятий, выполненная практика, средний балл и место.'] },
-      { x: 59, y: 76, title: ['Weekly rhythm', 'Haftalik ritm', 'Недельный ритм'], body: ['A daily chart shows how consistently you study.', 'Kunlik grafik qanchalik muntazam o‘qiyotganingizni ko‘rsatadi.', 'Дневной график показывает, насколько регулярно вы учитесь.'] },
-      { x: 87, y: 40, title: ['Leaderboard', 'Reyting', 'Рейтинг'], body: ['Compare XP with learners preparing beside you.', 'Siz bilan birga tayyorlanayotganlar bilan XPni solishtiring.', 'Сравнивайте XP с теми, кто готовится рядом с вами.'] },
+      { x: 31, y: 40, title: ['Target ring', 'Maqsad halqasi', 'Кольцо цели'], body: ['See how close you are to your IELTS and SAT goals.', 'IELTS va SAT maqsadingizga qanchalik yaqinligingizni ko‘ring.', 'Видно, насколько вы близки к целям IELTS и SAT.'] },
+      { x: 60, y: 44, title: ['Live stats', 'Jonli statistika', 'Живая статистика'], body: ['Study time, completed practice, average score and rank.', 'O‘qish vaqti, bajarilgan mashqlar, o‘rtacha ball va o‘rin.', 'Время занятий, выполненная практика, средний балл и место.'] },
+      { x: 58, y: 72, title: ['Weekly rhythm', 'Haftalik ritm', 'Недельный ритм'], body: ['A daily chart shows how consistently you study.', 'Kunlik grafik qanchalik muntazam o‘qiyotganingizni ko‘rsatadi.', 'Дневной график показывает, насколько регулярно вы учитесь.'] },
+      { x: 87, y: 35, title: ['Leaderboard', 'Reyting', 'Рейтинг'], body: ['Compare XP with learners preparing beside you.', 'Siz bilan birga tayyorlanayotganlar bilan XPni solishtiring.', 'Сравнивайте XP с теми, кто готовится рядом с вами.'] },
     ],
   },
   {

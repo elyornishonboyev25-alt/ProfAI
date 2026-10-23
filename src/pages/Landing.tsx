@@ -57,85 +57,6 @@ function useCountUp(target: number, active: boolean) {
   return value
 }
 
-/** Desktop wheel/keyboard paging: one gesture moves exactly one chapter, and a
- * chapter taller than the viewport scrolls natively until its edge is reached. */
-function useChapterPaging() {
-  const reducedMotion = useReducedMotion()
-  useEffect(() => {
-    const media = window.matchMedia('(min-width: 900px) and (min-height: 620px) and (pointer: fine)')
-    let locked = false
-    let lastWheel = 0
-    let swallowMomentum = false
-    let unlockTimer = 0
-
-    const chapterTops = () => [...document.querySelectorAll<HTMLElement>('[data-lx-screen]')].map(element => {
-      const top = element.getBoundingClientRect().top + window.scrollY
-      return { top, bottom: top + element.offsetHeight }
-    })
-    const blocked = (target: EventTarget | null) => !media.matches || document.body.style.overflow === 'hidden' ||
-      (target instanceof Element && Boolean(target.closest('[role="dialog"], input, textarea, select, [contenteditable="true"]')))
-
-    // Returns true when the gesture was handled as a chapter jump (or clamped to a chapter edge).
-    const page = (direction: 1 | -1, distance: number) => {
-      const chapters = chapterTops()
-      const y = window.scrollY
-      const viewport = window.innerHeight
-      let index = 0
-      chapters.forEach((chapter, position) => { if (chapter.top <= y + 4) index = position })
-      const current = chapters[index]
-      const remainingBelow = current.bottom - (y + viewport)
-      const remainingAbove = y - current.top
-      // A sliver under ~90px is not worth its own stop; move straight to the next chapter.
-      if (direction > 0 && remainingBelow > 90) {
-        if (distance < remainingBelow) return false
-        window.scrollTo({ top: current.bottom - viewport, behavior: 'auto' })
-        swallowMomentum = true
-        return true
-      }
-      if (direction < 0 && remainingAbove > 90) {
-        if (distance < remainingAbove) return false
-        window.scrollTo({ top: current.top, behavior: 'auto' })
-        swallowMomentum = true
-        return true
-      }
-      const next = chapters[index + direction]
-      if (!next) return false
-      const nextHeight = next.bottom - next.top
-      const target = direction < 0 && nextHeight > viewport + 90 ? next.bottom - viewport : next.top
-      locked = true
-      swallowMomentum = true
-      window.scrollTo({ top: target, behavior: reducedMotion ? 'auto' : 'smooth' })
-      window.clearTimeout(unlockTimer)
-      unlockTimer = window.setTimeout(() => { locked = false }, reducedMotion ? 120 : 850)
-      return true
-    }
-
-    const onWheel = (event: WheelEvent) => {
-      if (event.ctrlKey || blocked(event.target) || Math.abs(event.deltaY) < Math.abs(event.deltaX)) return
-      const now = performance.now()
-      const gap = now - lastWheel
-      lastWheel = now
-      if (gap > 260) swallowMomentum = false
-      if (locked || swallowMomentum) { event.preventDefault(); return }
-      if (Math.abs(event.deltaY) < 2) return
-      const distance = Math.abs(event.deltaMode === 1 ? event.deltaY * 32 : event.deltaY)
-      if (page(event.deltaY > 0 ? 1 : -1, distance)) event.preventDefault()
-    }
-    const onKey = (event: KeyboardEvent) => {
-      if (event.altKey || event.ctrlKey || event.metaKey || blocked(event.target)) return
-      const forward = ['PageDown', 'ArrowDown'].includes(event.key) || (event.key === ' ' && !event.shiftKey)
-      const backward = ['PageUp', 'ArrowUp'].includes(event.key) || (event.key === ' ' && event.shiftKey)
-      if (!forward && !backward) return
-      if (event.key === ' ' && event.target instanceof Element && event.target.closest('button, a')) return
-      if (locked) { event.preventDefault(); return }
-      if (page(forward ? 1 : -1, event.key.startsWith('Page') || event.key === ' ' ? window.innerHeight : 80)) event.preventDefault()
-    }
-    window.addEventListener('wheel', onWheel, { passive: false })
-    window.addEventListener('keydown', onKey)
-    return () => { window.removeEventListener('wheel', onWheel); window.removeEventListener('keydown', onKey); window.clearTimeout(unlockTimer) }
-  }, [reducedMotion])
-}
-
 /** One full-viewport chapter. The page pages between these on larger screens. */
 function Screen({ id, label, className = '', children }: { id: string; label: string; className?: string; children: ReactNode }) {
   return <section id={id} data-lx-screen={label} className={`lx-screen ${className}`}>{children}</section>
@@ -174,9 +95,9 @@ function Hero({ onStart, onExplore }: { onStart: () => void; onExplore: () => vo
       </div>
       <motion.div className="lx-hero-stage" initial={reducedMotion ? false : { opacity: 0, rotateY: -18, rotateX: 8, y: 50 }} animate={{ opacity: 1, rotateY: -6, rotateX: 3, y: 0 }} transition={{ duration: 1.1, delay: .15, ease: EASE }}>
         <BrowserFrame src="/assets/landing/dashboard-ivygoo.jpg" alt={t(['Ivygoo learning dashboard', 'Ivygoo boshqaruv paneli', 'Панель Ivygoo'])} address="ivygoo.com/dashboard" eager />
-        <div className="lx-float lx-float-a"><Target size={17} /><span><small>{t(['Target score', 'Maqsadli ball', 'Целевой балл'])}</small><strong>IELTS 7.5</strong></span></div>
-        <div className="lx-float lx-float-b"><svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="18" /><circle cx="22" cy="22" r="18" pathLength="100" strokeDasharray="89 100" /></svg><span><strong>89%</strong><small>{t(['Toward target', 'Maqsad sari', 'К цели'])}</small></span></div>
-        <div className="lx-float lx-float-c"><Flame size={17} /><span><strong>18</strong><small>{t(['day streak', 'kunlik seriya', 'дней подряд'])}</small></span></div>
+        <div className="lx-float lx-float-a"><Target size={17} /><span><small>{t(['Target score', 'Maqsadli ball', 'Целевой балл'])}</small><strong>IELTS 8.5</strong></span></div>
+        <div className="lx-float lx-float-b"><svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="18" /><circle cx="22" cy="22" r="18" pathLength="100" strokeDasharray="93 100" /></svg><span><strong>93%</strong><small>{t(['Toward target', 'Maqsad sari', 'К цели'])}</small></span></div>
+        <div className="lx-float lx-float-c"><Flame size={17} /><span><strong>46</strong><small>{t(['day streak', 'kunlik seriya', 'дней подряд'])}</small></span></div>
       </motion.div>
     </div>
     <div className="lx-exam-cards">
@@ -300,19 +221,13 @@ function ScrollRail({ label }: { label: string }) {
   useEffect(() => {
     const elements = [...document.querySelectorAll<HTMLElement>('[data-lx-screen]')]
     setScreens(elements.map(element => ({ id: element.id, label: element.dataset.lxScreen ?? '' })))
-    // Pinned chapters are several screens tall, so pick the chapter crossing the upper part of the viewport.
-    let frame = 0
-    const update = () => {
-      frame = 0
-      const line = window.innerHeight * .45
-      const passed = elements.filter(element => element.getBoundingClientRect().top <= line)
-      const current = passed[passed.length - 1] ?? elements[0]
-      if (current) setActive(current.id)
-    }
-    const onScroll = () => { if (!frame) frame = window.requestAnimationFrame(update) }
-    update()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => { window.removeEventListener('scroll', onScroll); window.cancelAnimationFrame(frame) }
+    // The chapter crossing a thin band at 45% of the viewport is the current one.
+    const observer = new IntersectionObserver(entries => {
+      const crossing = entries.find(entry => entry.isIntersecting)
+      if (crossing) setActive(crossing.target.id)
+    }, { rootMargin: '-45% 0px -54% 0px' })
+    elements.forEach(element => observer.observe(element))
+    return () => observer.disconnect()
   }, [label])
   return <nav className="lx-rail" aria-label={label}>
     {screens.map(screen => <a key={screen.id} href={`#${screen.id}`} className={active === screen.id ? 'is-active' : ''} aria-current={active === screen.id ? 'true' : undefined}><span>{screen.label}</span><i /></a>)}
@@ -329,15 +244,14 @@ export default function Landing() {
   const [scrolled, setScrolled] = useState(false)
   const { scrollYProgress } = useScroll()
   const progress = useSpring(scrollYProgress, { stiffness: 140, damping: 30, mass: .3 })
-  useChapterPaging()
 
   useEffect(() => {
-    const root = document.documentElement
-    root.classList.add('lx-snap')
-    const update = () => setScrolled(window.scrollY > 16)
+    let frame = 0
+    const update = () => { frame = 0; setScrolled(window.scrollY > 16) }
+    const onScroll = () => { if (!frame) frame = window.requestAnimationFrame(update) }
     update()
-    window.addEventListener('scroll', update, { passive: true })
-    return () => { root.classList.remove('lx-snap'); window.removeEventListener('scroll', update) }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => { window.removeEventListener('scroll', onScroll); window.cancelAnimationFrame(frame) }
   }, [])
   const start = () => navigate('/register')
   const scrollTo = (id: string) => {

@@ -1,756 +1,385 @@
 import UiText from '@/components/common/UiText'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import {
-  Activity,
-  ArrowDownRight,
+  ArrowDownWideNarrow,
   ArrowUpRight,
-  Award,
+  ArrowUpWideNarrow,
   BookOpen,
   BrainCircuit,
-  CheckCircle2,
-  Flame,
-  Sparkles,
-  Target,
-  TrendingUp,
+  CalendarDays,
+  ChevronRight,
+  Clock3,
+  FileSearch,
+  Headphones,
+  Layers3,
+  Mic,
+  PenLine,
+  Search,
+  Sigma,
   Trophy,
-  Zap,
 } from 'lucide-react'
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  PolarAngleAxis,
-  PolarGrid,
-  Radar,
-  RadarChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
 import { apiClient } from '@/lib/apiClient'
 import { useAsyncData } from '@/hooks/useAsyncData'
-import type { AuthUser, ProfileOverview } from '@/types/platform'
-import { Skeleton } from '@/components/common/Skeleton'
+import type { ProfileOverview } from '@/types/platform'
 import { useAuthStore, type AuthState } from '@/store/authStore'
-import { AnimatedBar, CountUp, ProgressRing, Reveal, Stagger, StaggerItem, XPGem } from '@/components/fx'
-import { ArenaMetricMark } from '@/components/ui/ArenaMetricMark'
-import { mergeLocalProfilePerformance } from '@/utils/localProfilePerformance'
-import '@/styles/profile-recent-attempts.css'
-import '@/components/achievements/achievements.css'
-import { BrandMark } from '@/components/brand/BrandLogo'
+import { useSpeakingStore } from '@/store/speakingStore'
+import { Reveal } from '@/components/fx'
+import { useCopy } from '@/i18n/interface'
+import WritingResultModal from '@/components/WritingResultModal'
+import SpeakingResult from '@/components/speaking/SpeakingResult'
+import type { WritingAnalysisEntry } from '@/utils/writingAnalysisStorage'
+import type { SpeakingSessionRecord } from '@/store/speakingStore'
+import { getResultsHistory, type ResultRecord, type ResultSkill } from '@/utils/resultsHistory'
+import '@/styles/my-results.css'
 
-function CompactSkeletonCard() {
-  return <Skeleton className="h-28 w-full rounded-2xl" />
+type FilterKey = 'all' | ResultSkill
+
+const SKILL_FILTERS: Array<{ key: FilterKey; exam: string; label: string; icon: typeof BookOpen }> = [
+  { key: 'all', exam: 'IELTS + SAT', label: 'All results', icon: Layers3 },
+  { key: 'reading', exam: 'IELTS', label: 'Reading', icon: BookOpen },
+  { key: 'listening', exam: 'IELTS', label: 'Listening', icon: Headphones },
+  { key: 'writing', exam: 'IELTS', label: 'Writing', icon: PenLine },
+  { key: 'speaking', exam: 'IELTS', label: 'Speaking', icon: Mic },
+  { key: 'sat', exam: 'SAT', label: 'Digital SAT', icon: Sigma },
+]
+
+const SKILL_ICONS: Record<ResultSkill, typeof BookOpen> = {
+  reading: BookOpen,
+  listening: Headphones,
+  writing: PenLine,
+  speaking: Mic,
+  sat: Sigma,
 }
 
-function buildEmptyWeeklyActivity(now = new Date()): ProfileOverview['weeklyActivity'] {
-  return Array.from({ length: 7 }, (_, index) => {
-    const date = new Date(now)
-    date.setHours(12, 0, 0, 0)
-    date.setDate(date.getDate() - (6 - index))
-    return {
-      date: date.toISOString(),
-      label: date.toLocaleDateString('en-US', { weekday: 'short' }),
-      testsCompleted: 0,
-      questionsAnswered: 0,
-      xpEarned: 0,
-      studyMinutes: 0,
-      active: false,
-    }
-  })
+function formatDuration(seconds: number | null) {
+  if (!seconds) return null
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  if (hours) return `${hours}h ${String(minutes).padStart(2, '0')}m`
+  if (minutes) return `${minutes}m ${String(Math.round(seconds % 60)).padStart(2, '0')}s`
+  return `${Math.round(seconds)}s`
 }
 
-const guestProfilePreview: ProfileOverview = {
-  profile: {
-    id: 'guest-preview',
-    fullName: 'Guest Learner',
-    email: 'preview@profai.app',
-    level: 1,
-    xp: 0,
-    currentStreak: 0,
-    longestStreak: 0,
-    memberSince: new Date().toISOString(),
-  },
-  stats: {
-    totalAttempts: 0,
-    averageScore: 0,
-    averageAccuracy: 0,
-    totalXpFromAttempts: 0,
-  },
-  levelProgress: {
-    currentLevelThreshold: 0,
-    nextLevelThreshold: 200,
-    xpIntoCurrent: 0,
-    levelSpan: 200,
-    progressPercent: 0,
-  },
-  competitive: {
-    rank: 0,
-    previousRank: 0,
-    rankDelta: 0,
-    rankTrend: 'same',
-    division: 'BRONZE',
-    divisionLabel: 'Bronze',
-    rankScore: 0,
-    uniqueTests: 0,
-    validatedAttempts: 0,
-    discardedAttempts: 0,
-    integrityScore: 100,
-    breakdown: {
-      accuracy: 0,
-      speedEfficiency: 0,
-      consistencyScore: 0,
-      engagementScore: 0,
-      inactivityDays: 0,
-      inactivityPenalty: 0,
-      activityDecay: 0,
-      difficultyMultiplier: 1,
-      normalizedDifficulty: 0,
-      improvementDelta: 0,
-      validatedAttempts: 0,
-      discardedAttempts: 0,
-      integrityScore: 100,
-      rankScore: 0,
-    },
-  },
-  skillAnalytics: {
-    overall: {
-      skillPower: 0,
-      percentile: 0,
-      projectedSatScore: 0,
-      projectedPercentScore: 0,
-      growthRate: 0,
-      totalUsers: 0,
-    },
-    radar: [
-      { category: 'IELTS', label: 'Reading', attempts: 0, accuracy: 0, speed: 0, consistency: 0, skillPower: 0 },
-      { category: 'IELTS', label: 'Listening', attempts: 0, accuracy: 0, speed: 0, consistency: 0, skillPower: 0 },
-      { category: 'IELTS', label: 'Writing', attempts: 0, accuracy: 0, speed: 0, consistency: 0, skillPower: 0 },
-      { category: 'IELTS', label: 'Speaking', attempts: 0, accuracy: 0, speed: 0, consistency: 0, skillPower: 0 },
-      { category: 'SAT', label: 'SAT Math', attempts: 0, accuracy: 0, speed: 0, consistency: 0, skillPower: 0 },
-      { category: 'SAT', label: 'SAT R/W', attempts: 0, accuracy: 0, speed: 0, consistency: 0, skillPower: 0 },
-    ],
-    trackBreakdown: [
-      { key: 'IELTS_READING', label: 'IELTS Reading', group: 'IELTS', attempts: 0, accuracy: 0, speed: 0, consistency: 0, skillPower: 0 },
-      { key: 'IELTS_LISTENING', label: 'IELTS Listening', group: 'IELTS', attempts: 0, accuracy: 0, speed: 0, consistency: 0, skillPower: 0 },
-      { key: 'IELTS_WRITING', label: 'IELTS Writing', group: 'IELTS', attempts: 0, accuracy: 0, speed: 0, consistency: 0, skillPower: 0 },
-      { key: 'IELTS_SPEAKING', label: 'IELTS Speaking', group: 'IELTS', attempts: 0, accuracy: 0, speed: 0, consistency: 0, skillPower: 0 },
-      { key: 'SAT_MATH', label: 'SAT Math', group: 'SAT', attempts: 0, accuracy: 0, speed: 0, consistency: 0, skillPower: 0 },
-      { key: 'SAT_READING_WRITING', label: 'SAT Reading/Writing', group: 'SAT', attempts: 0, accuracy: 0, speed: 0, consistency: 0, skillPower: 0 },
-    ],
-    distribution: {
-      mean: 0,
-      standardDeviation: 0,
-      userSkillPower: 0,
-      curve: [],
-    },
-    xpMomentum: [
-      { label: 'W1', xp: 0, score: 0, accuracy: 0 },
-      { label: 'W2', xp: 0, score: 0, accuracy: 0 },
-      { label: 'W3', xp: 0, score: 0, accuracy: 0 },
-      { label: 'W4', xp: 0, score: 0, accuracy: 0 },
-    ],
-    insights: [
-      {
-        id: 'guest-tip-register',
-        type: 'tip',
-        title: 'Sign up to unlock analytics',
-        message: 'Create an account to start tracking real XP, accuracy, and ranking on this dashboard.',
-      },
-    ],
-  },
-  weeklyActivity: buildEmptyWeeklyActivity(),
-  achievements: [],
-  recentAttempts: [],
-}
-
-// When the live /profile/overview call is unavailable, fall back to a complete overview
-// built from the signed-in user so the page always renders — real XP, level and
-// streak up top, with zeroed analytics that show friendly empty states.
-function buildProfileFallback(user: AuthUser | null): ProfileOverview {
-  if (!user) return guestProfilePreview
-  const xp = Math.max(0, user.xp ?? 0)
-  const level = Math.max(1, user.level ?? 1)
-  const span = 200
-  const intoCurrent = xp % span
-  return {
-    ...guestProfilePreview,
-    profile: {
-      id: user.id,
-      fullName: user.fullName,
-      email: user.email,
-      level,
-      xp,
-      currentStreak: user.currentStreak ?? 0,
-      longestStreak: user.currentStreak ?? 0,
-      memberSince: new Date().toISOString(),
-    },
-    levelProgress: {
-      currentLevelThreshold: level * span - span,
-      nextLevelThreshold: level * span,
-      xpIntoCurrent: intoCurrent,
-      levelSpan: span,
-      progressPercent: Math.round((intoCurrent / span) * 100),
-    },
-    weeklyActivity: buildEmptyWeeklyActivity(),
-  }
-}
-
-const tickStyle = { fill: '#64748B', fontSize: 11 }
-const gridColor = '#DBEAFE'
-const tooltipStyle = {
-  borderRadius: 12,
-  borderColor: '#BFDBFE',
-  boxShadow: '0 14px 30px rgba(15,23,42,0.12)',
-  fontSize: 12,
-  fontWeight: 600,
-}
-
-function safePercent(value: number) {
-  if (!Number.isFinite(value)) return 0
-  return Math.min(100, Math.max(0, value))
-}
-
-function safeCount(value: number) {
-  if (!Number.isFinite(value)) return 0
-  return Math.max(0, Math.round(value))
-}
-
-function ChartEmpty({ label, hint = 'Complete a scored practice to see this fill in.' }: { label: string; hint?: string }) {
-  return (
-    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-2xl bg-gradient-to-b from-white/40 to-white/70 text-center backdrop-blur-[1px]">
-      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
-        <Activity className="h-5 w-5" />
-      </span>
-      <p className="mt-2 text-sm font-bold text-slate-600">{label}</p>
-      <p className="text-[11px] text-slate-400">{hint}</p>
-    </div>
-  )
+function bestScore(records: ResultRecord[]) {
+  return records.reduce<ResultRecord | null>((best, record) => (
+    record.score && (!best?.score || Number(record.score.value) > Number(best.score.value)) ? record : best
+  ), null)
 }
 
 export default function Profile() {
   const navigate = useNavigate()
+  const { c, language } = useCopy()
   const user = useAuthStore((state: AuthState) => state.user)
   const userId = user?.id
-  const isGuestPreview = !user
-  const { data: fetchedData, loading, error, refetch } = useAsyncData<ProfileOverview | null>(
+  const speakingSessions = useSpeakingStore((state) => state.sessions)
+  const { data: overview } = useAsyncData<ProfileOverview | null>(
     () => (userId ? apiClient.get('/profile/overview') : Promise.resolve(null)),
     [userId],
   )
-  // Always resolve to a usable overview so the page never goes blank.
-  const fallbackData = fetchedData ?? buildProfileFallback(user)
-  const data = useMemo(
-    () => (user ? mergeLocalProfilePerformance(fallbackData, user.id) : fallbackData),
-    [fallbackData, user],
-  )
-  const hasSkillActivity = data?.skillAnalytics.trackBreakdown.some((item) => item.attempts > 0) ?? false
-  const hasXpHistory = data?.skillAnalytics.xpMomentum.some((item) => item.xp > 0) ?? false
-  const hasWeeklyActivity = data?.weeklyActivity.some((item) => item.active || item.xpEarned > 0 || (item.studyMinutes ?? 0) > 0) ?? false
-  const averageAccuracy = safePercent(data?.stats.averageAccuracy ?? 0)
-  const averageScore = safePercent(data?.stats.averageScore ?? 0)
-  const radarData = useMemo(
-    () => data?.skillAnalytics.radar.map((metric) => ({ ...metric, skillPower: safePercent(metric.skillPower) })) ?? [],
-    [data],
-  )
-  const weeklyActivity = useMemo(
-    () => data?.weeklyActivity.map((day) => ({
-      ...day,
-      xpEarned: safeCount(day.xpEarned),
-      studyMinutes: safeCount(day.studyMinutes ?? 0),
-    })) ?? [],
-    [data],
+  const [filter, setFilter] = useState<FilterKey>('all')
+  const [query, setQuery] = useState('')
+  const [newestFirst, setNewestFirst] = useState(true)
+  const [writingEntry, setWritingEntry] = useState<WritingAnalysisEntry | null>(null)
+  const [speakingEntry, setSpeakingEntry] = useState<SpeakingSessionRecord | null>(null)
+  const [historyVersion, setHistoryVersion] = useState(0)
+
+  // Results saved in another tab or synced in the background appear without a reload.
+  useEffect(() => {
+    const refresh = () => setHistoryVersion((version) => version + 1)
+    window.addEventListener('storage', refresh)
+    window.addEventListener('smarttest:attempt-submitted', refresh)
+    return () => {
+      window.removeEventListener('storage', refresh)
+      window.removeEventListener('smarttest:attempt-submitted', refresh)
+    }
+  }, [])
+
+  const records = useMemo(
+    () => getResultsHistory(userId, speakingSessions, overview?.recentAttempts ?? []),
+    // historyVersion re-reads browser storage after external writes.
+    [userId, speakingSessions, overview?.recentAttempts, historyVersion],
   )
 
-  const xpToNext = useMemo(() => {
-    if (!data) return 0
-    return safeCount(data.levelProgress.nextLevelThreshold - data.profile.xp)
-  }, [data])
+  const dateLocale = language === 'uz' ? 'uz-UZ' : language === 'ru' ? 'ru-RU' : 'en-GB'
+  const ieltsRecords = records.filter((record) => record.exam === 'IELTS')
+  const satRecords = records.filter((record) => record.exam === 'SAT')
+  const bestIelts = bestScore(ieltsRecords)
+  const bestSat = bestScore(satRecords.filter((record) => record.score?.label === 'SAT score'))
+  const latest = records[records.length - 1] ?? null
 
-  const heroMetrics = useMemo(() => {
-    if (!data) return []
-    return [
-      {
-        label: 'Total XP',
-        value: safeCount(data.profile.xp),
-        format: (v: number) => v.toLocaleString('en-US'),
-        icon: Zap,
-        tone: 'amber' as const,
-      },
-      {
-        label: 'Tests Completed',
-        value: safeCount(data.stats.totalAttempts),
-        format: (v: number) => v.toString(),
-        icon: Activity,
-        tone: 'blue' as const,
-      },
-      {
-        label: 'Average Accuracy',
-        value: averageAccuracy,
-        format: (v: number) => `${v.toFixed(1)}%`,
-        icon: Target,
-        tone: 'indigo' as const,
-      },
-      {
-        label: 'Streak',
-        value: safeCount(data.profile.currentStreak),
-        format: (v: number) => `${v} d`,
-        icon: Flame,
-        tone: 'red' as const,
-      },
-    ]
-  }, [averageAccuracy, data])
+  const filterSummaries = useMemo(() => SKILL_FILTERS.map((item) => {
+    const matching = item.key === 'all' ? records : records.filter((record) => record.skill === item.key)
+    const lastScored = [...matching].reverse().find((record) => record.score)
+    return { ...item, count: matching.length, latestScore: item.key === 'all' ? null : lastScored?.score ?? null }
+  }), [records])
 
-  const ieltsSkills = useMemo(
-    () => data?.skillAnalytics.trackBreakdown.filter((item) => item.group === 'IELTS') ?? [],
-    [data],
-  )
-  const satSkills = useMemo(
-    () => data?.skillAnalytics.trackBreakdown.filter((item) => item.group === 'SAT') ?? [],
-    [data],
-  )
+  const visible = useMemo(() => {
+    const needle = query.trim().toLowerCase()
+    const filtered = records.filter((record) => (
+      (filter === 'all' || record.skill === filter)
+      && (!needle || `${record.title} ${record.skillLabel} ${record.exam}`.toLowerCase().includes(needle))
+    ))
+    return newestFirst ? filtered.reverse() : filtered
+  }, [filter, newestFirst, query, records])
+
+  const groups = useMemo(() => {
+    const byMonth = new Map<string, { label: string; items: ResultRecord[] }>()
+    visible.forEach((record) => {
+      const date = new Date(record.completedAt)
+      const key = `${date.getFullYear()}-${date.getMonth()}`
+      if (!byMonth.has(key)) {
+        byMonth.set(key, { label: date.toLocaleDateString(dateLocale, { month: 'long', year: 'numeric' }), items: [] })
+      }
+      byMonth.get(key)!.items.push(record)
+    })
+    return [...byMonth.values()]
+  }, [dateLocale, visible])
+
+  const openAnalysis = (record: ResultRecord) => {
+    const target = record.analyze
+    if (!target) return
+    if (target.type === 'writing') setWritingEntry(target.entry)
+    else if (target.type === 'speaking') setSpeakingEntry(target.entry)
+    else if (target.type === 'sat') navigate(`/sat/mistakes?attempt=${encodeURIComponent(target.attemptId)}`)
+    else navigate(`/results/${target.testId}`, { state: { result: target.result } })
+  }
+
+  const formatDate = (time: number) => new Date(time).toLocaleDateString(dateLocale, { day: 'numeric', month: 'short', year: 'numeric' })
+  const formatTime = (time: number) => new Date(time).toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' })
 
   return (
-    <div className="performance-studio workspace-page premium-page-stage relative min-h-screen w-full overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
+    <div className="my-results workspace-page relative min-h-screen w-full overflow-x-clip px-4 py-8 sm:px-6 lg:px-8">
       <div className="relative mx-auto w-full max-w-7xl">
-      {error && <div className="liquid-inline-error mb-5" role="alert"><span><UiText text="Unable to refresh your activity." /></span><button onClick={() => void refetch()}><UiText text="Try again" /></button></div>}
-      <Reveal>
-        <section className="premium-hero relative overflow-hidden border border-white/90 bg-[radial-gradient(circle_at_15%_10%,rgba(255,255,255,.98),transparent_38%),radial-gradient(circle_at_92%_80%,rgba(254,226,226,.55),transparent_40%),linear-gradient(125deg,#fff,#f2f7ff)] p-6 shadow-[0_28px_70px_rgba(30,64,175,.12)] sm:p-9">
-
-          {loading ? (
-            <>
-              <Skeleton className="h-8 w-64" />
-              <Skeleton className="mt-3 h-4 w-80" />
-            </>
-          ) : data ? (
-            <div className="relative grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] xl:items-center">
-              <div>
-                <div className="premium-top-controls">
-                  <span className="premium-top-chip">
-                    <Trophy className="h-3.5 w-3.5" />
-                     <UiText text={"Performance Studio"} /> </span>
-                </div>
-                <h1 className="premium-section-title mt-4">
-                   <UiText text={"Your learning"} /> <span className="arena-title-accent-red"> <UiText text={"progress."} /> </span>
-                </h1>
-                <p className="premium-section-subtitle">
-                   <UiText text={"Track your XP, ranking, and skill power. Earn XP on every test — higher scores on harder tests rank you higher."} /> </p>
-                <div className="results-actions"><button className="liquid-button primary" onClick={() => navigate('/test-preparation')}> <UiText text={"Start practicing"} /> <ArrowUpRight size={16} /></button><button className="liquid-button secondary" onClick={() => navigate('/review-mistakes')}> <UiText text={"Review mistakes"} /> <BrainCircuit size={16} /></button></div>
-                <div className="mt-4 flex flex-wrap items-center gap-3">
-                  <button type="button" onClick={() => navigate('/leaderboard')} className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-bold text-red-700 transition hover:bg-red-100"><Trophy className="h-4 w-4" /> View leaderboard <ArrowUpRight className="h-3.5 w-3.5" /></button>
-                  <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-3 py-1.5">
-                    <Award className="h-4 w-4 text-amber-600" />
-                    <span className="text-sm font-bold text-amber-700">
-                       <UiText text={"Level"} /> <CountUp value={data.profile.level} />
-                    </span>
-                  </div>
-                  {data.competitive && data.competitive.rank > 0 ? (
-                    <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-3 py-1.5">
-                      <Trophy className="h-4 w-4 text-blue-600" />
-                      <span className="text-sm font-bold text-blue-700">
-                         <UiText text={"Rank #"} /> <CountUp value={data.competitive.rank} />
-                      </span>
-                      {data.competitive.rankTrend === 'up' && data.competitive.rankDelta !== 0 ? (
-                        <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
-                          <ArrowUpRight className="h-3 w-3" />+{Math.abs(data.competitive.rankDelta)}
-                        </span>
-                      ) : data.competitive.rankTrend === 'down' && data.competitive.rankDelta !== 0 ? (
-                        <span className="inline-flex items-center gap-0.5 rounded-full bg-indigo-100 px-1.5 py-0.5 text-[10px] font-bold text-indigo-700">
-                          <ArrowDownRight className="h-3 w-3" />-{Math.abs(data.competitive.rankDelta)}
-                        </span>
-                      ) : null}
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-
-              {/* XP gem progress card */}
-              <div className="rounded-3xl">
-                <div className="relative overflow-hidden rounded-3xl border border-red-100/80 bg-gradient-to-br from-white via-red-50/30 to-blue-50/60 p-6 shadow-[0_18px_44px_rgba(37,99,235,0.12)]">
-                  <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400/60 to-transparent" />
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-600"> <UiText text={"XP Vault"} /> </p>
-                      <p className="mt-1 text-4xl font-black tracking-tight text-slate-900">
-                        <CountUp value={data.profile.xp} />
-                      </p>
-                      <p className="mt-1 text-[11px] font-medium text-slate-500"> <UiText text={"Total XP earned"} /> </p>
-                    </div>
-                    <XPGem size={64} />
-                  </div>
-
-                  <div className="mt-4">
-                    <div className="mb-1.5 flex items-center justify-between text-[11px] font-semibold text-slate-600">
-                      <span> <UiText text={"Level"} /> {data.profile.level}</span>
-                      <span>{xpToNext}  <UiText text={"XP to L"} /> {data.profile.level + 1}</span>
-                    </div>
-                    <AnimatedBar value={data.levelProgress.progressPercent} height={9} />
-                  </div>
-                </div>
+        <Reveal>
+          <section className="mr-glass mr-hero">
+            <div className="mr-hero-copy">
+              <span className="mr-chip"><FileSearch aria-hidden="true" /><UiText text="My Results" /></span>
+              <h1 className="mr-title">
+                <UiText text="Every result." /> <span><UiText text="One clear record." /></span>
+              </h1>
+              <p className="mr-subtitle">
+                <UiText text="Every IELTS and SAT test you finish is saved here in order. Open any result to analyze it question by question." />
+              </p>
+              <div className="mr-hero-actions">
+                <button type="button" className="mr-button primary" onClick={() => navigate('/test-preparation')}>
+                  <UiText text="Start practicing" /> <ArrowUpRight aria-hidden="true" />
+                </button>
+                <button type="button" className="mr-button" onClick={() => navigate('/review-mistakes')}>
+                  <UiText text="Review mistakes" /> <BrainCircuit aria-hidden="true" />
+                </button>
+                <button type="button" className="mr-button ghost" onClick={() => navigate('/leaderboard')}>
+                  <Trophy aria-hidden="true" /> <UiText text="Leaderboard" />
+                </button>
               </div>
             </div>
-          ) : null}
-        </section>
-      </Reveal>
 
-      {isGuestPreview ? (
-        <Reveal className="mt-6">
-          <button
-            type="button"
-            onClick={() => navigate('/register')}
-            className="interactive-lift flex w-full items-center gap-3 rounded-2xl border border-blue-200/80 bg-gradient-to-r from-blue-50 via-white to-indigo-50 p-4 text-left shadow-[0_10px_24px_rgba(37,99,235,0.1)]"
-          >
-            <ArenaMetricMark icon={Sparkles} tone="blue" size="sm" />
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-black text-slate-900"> <UiText text={"Preview mode"} /> </span>
-              <span className="block text-[12px] text-slate-500"> <UiText text={"Create an account to track real XP, ranking and saved attempts."} /> </span>
-            </span>
-            <ArrowUpRight className="h-5 w-5 shrink-0 text-blue-500" />
-          </button>
-        </Reveal>
-      ) : null}
-
-      {/* ── Hero metrics ────────────────────────────────────────── */}
-      <Stagger className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {loading
-          ? Array.from({ length: 4 }).map((_, index) => <CompactSkeletonCard key={index} />)
-          : heroMetrics.map((card) => {
-            const Icon = card.icon
-            return (
-              <StaggerItem key={card.label} className="h-full">
-                  <article className="performance-metric-card group relative h-full overflow-hidden rounded-[1.75rem] border border-white/90 bg-white/80 p-5 shadow-[0_18px_48px_rgba(30,64,175,.08),inset_0_1px_0_white] transition-shadow hover:shadow-[0_24px_56px_rgba(30,64,175,.13)]">
-                    <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(125deg,rgba(255,255,255,.7),transparent_48%,rgba(219,234,254,.22))]" />
-                    <div className="flex items-center justify-between">
-                      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">{card.label}</p>
-                      <ArenaMetricMark icon={Icon} tone={card.tone} />
-                    </div>
-                    <p className="relative mt-4 text-[2rem] font-black leading-none tracking-tight text-slate-900">
-                      {card.label === 'Average Accuracy' ? (
-                        <CountUp value={card.value} decimals={1} suffix="%" />
-                      ) : card.label === 'Streak' ? (
-                        <CountUp value={card.value} suffix=" d" />
-                      ) : (
-                        <CountUp value={card.value} />
-                      )}
-                    </p>
-                    <div className="relative mt-2.5 inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-400">
-                      <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
-                       <UiText text={"Live data"} /> </div>
-                  </article>
-              </StaggerItem>
-            )
-          })}
-      </Stagger>
-
-      {/* ── Skill matrix radar + Average accuracy ring ─────────── */}
-      <section className="mt-6 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-        <Reveal>
-          <article className="surface-card relative overflow-hidden p-6">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-blue-400/55 to-transparent" />
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <ArenaMetricMark icon={BrainCircuit} tone="blue" size="sm" />
-                <h2 className="text-lg font-black tracking-tight text-slate-900"> <UiText text={"Skill Matrix"} /> </h2>
+            <dl className="mr-record">
+              <div className="mr-record-total">
+                <dt><UiText text="Tests completed" /></dt>
+                <dd>{records.length}</dd>
+                <span>{ieltsRecords.length} IELTS · {satRecords.length} SAT</span>
               </div>
-              <span className="rounded-full border border-blue-100 bg-blue-50 px-2.5 py-0.5 text-[10px] font-bold text-blue-700">
-                IELTS + SAT
+              <div>
+                <dt><UiText text="Best IELTS band" /></dt>
+                <dd>{bestIelts?.score?.value ?? '—'}</dd>
+                <span>{bestIelts ? c(bestIelts.skillLabel) : c('No IELTS result yet')}</span>
+              </div>
+              <div>
+                <dt><UiText text="Best SAT score" /></dt>
+                <dd>{bestSat?.score?.value ?? '—'}</dd>
+                <span>{bestSat ? '/ 1600' : c('No full SAT yet')}</span>
+              </div>
+              <div>
+                <dt><UiText text="Last test" /></dt>
+                <dd className="is-date">{latest ? formatDate(latest.completedAt) : '—'}</dd>
+                <span>{latest ? `${latest.exam} · ${c(latest.skillLabel)}` : c('Nothing saved yet')}</span>
+              </div>
+            </dl>
+          </section>
+        </Reveal>
+
+        {!user ? (
+          <Reveal className="mt-5">
+            <button type="button" className="mr-glass mr-guest" onClick={() => navigate('/register')}>
+              <span>
+                <strong><UiText text="Preview mode" /></strong>
+                <small><UiText text="Create an account to save every result and analyze it later." /></small>
               </span>
-            </div>
+              <ArrowUpRight aria-hidden="true" />
+            </button>
+          </Reveal>
+        ) : null}
 
-            {loading ? (
-              <Skeleton className="mt-4 h-72 w-full rounded-2xl" />
-            ) : data ? (
-              <div className="mt-4 grid gap-4 sm:grid-cols-[1fr_1fr]">
-                <div className="relative h-64">
-                  {!hasSkillActivity ? <ChartEmpty label="No scored skill data yet" /> : null}
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart data={radarData}>
-                      <PolarGrid stroke="#BFDBFE" />
-                      <PolarAngleAxis dataKey="label" tick={{ fill: '#64748B', fontSize: 10 }} />
-                      <Radar
-                        name="Skill Power"
-                        dataKey="skillPower"
-                        stroke="#DC2626"
-                        fill="#EF4444"
-                        fillOpacity={0.26}
-                        isAnimationActive={false}
-                      />
-                      <Tooltip contentStyle={tooltipStyle} />
-                    </RadarChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="space-y-3">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-blue-700"> <UiText text={"IELTS Tracks"} /> </p>
-                  {ieltsSkills.map((skill) => (
-                    <div key={skill.key}>
-                      <div className="mb-1 flex items-center justify-between">
-                        <span className="text-[12px] font-semibold text-slate-700">{skill.label}</span>
-                        <span className="text-[11px] font-bold text-slate-900">{safePercent(skill.skillPower).toFixed(1)}</span>
-                      </div>
-                      <AnimatedBar value={safePercent(skill.skillPower)} height={6} />
-                    </div>
-                  ))}
-                  <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.14em] text-blue-700"> <UiText text={"SAT Tracks"} /> </p>
-                  {satSkills.map((skill) => (
-                    <div key={skill.key}>
-                      <div className="mb-1 flex items-center justify-between">
-                        <span className="text-[12px] font-semibold text-slate-700">{skill.label}</span>
-                        <span className="text-[11px] font-bold text-slate-900">{safePercent(skill.skillPower).toFixed(1)}</span>
-                      </div>
-                      <AnimatedBar value={safePercent(skill.skillPower)} height={6} from="#334155" to="#0F172A" track="rgba(51,65,85,0.13)" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-          </article>
-        </Reveal>
-
-        <Reveal delay={0.08}>
-          <article className="surface-card relative overflow-hidden p-6">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-indigo-400/55 to-transparent" />
-            <div className="flex items-center gap-2">
-              <ArenaMetricMark icon={Target} tone="indigo" size="sm" />
-              <h2 className="text-lg font-black tracking-tight text-slate-900"> <UiText text={"Accuracy Score"} /> </h2>
-            </div>
-
-            {loading ? (
-              <Skeleton className="mt-4 h-56 w-full rounded-2xl" />
-            ) : data ? (
-              <div className="mt-4 flex flex-col items-center">
-                <ProgressRing value={averageAccuracy} size={170} stroke={14}>
-                  <div className="text-center">
-                    <p className="text-3xl font-black tracking-tight text-slate-900">
-                      <CountUp value={averageAccuracy} decimals={1} suffix="%" />
-                    </p>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500"> <UiText text={"Avg accuracy"} /> </p>
-                  </div>
-                </ProgressRing>
-                <div className="mt-5 grid w-full grid-cols-2 gap-3">
-                  <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-3 text-center">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-blue-600"> <UiText text={"Avg Score"} /> </p>
-                    <p className="mt-1 text-lg font-black text-slate-900">
-                      <CountUp value={averageScore} decimals={1} suffix="%" />
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-amber-100 bg-amber-50/60 p-3 text-center">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-amber-700"> <UiText text={"Test XP only"} /> </p>
-                    <p className="mt-1 inline-flex items-center gap-1 text-lg font-black text-slate-900">
-                      <Zap className="h-4 w-4 fill-amber-400 text-amber-500" />
-                      <CountUp value={data.stats.totalXpFromAttempts} />
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ) : null}
-          </article>
-        </Reveal>
-      </section>
-
-      {/* ── XP Momentum ─────────────────────────────────────────── */}
-      <Reveal className="mt-6">
-        <article className="surface-card relative overflow-hidden p-6">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-blue-400/55 to-transparent" />
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <ArenaMetricMark icon={TrendingUp} tone="blue" size="sm" />
-              <div>
-                <h2 className="text-lg font-black tracking-tight text-slate-900"> <UiText text={"XP Momentum"} /> </h2>
-                <p className="text-[11px] font-medium text-slate-500"> <UiText text={"Cumulative XP earned over recent attempts"} /> </p>
-              </div>
-            </div>
+        <Reveal className="mt-6">
+          <div className="mr-filters" role="tablist" aria-label={c('Filter results')}>
+            {filterSummaries.map((item) => {
+              const Icon = item.icon
+              const active = filter === item.key
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  className={`mr-glass mr-filter${active ? ' is-active' : ''}`}
+                  onClick={() => setFilter(item.key)}
+                >
+                  <span className="mr-filter-icon"><Icon aria-hidden="true" /></span>
+                  <span className="mr-filter-copy">
+                    <small>{item.exam}</small>
+                    <strong>{c(item.label)}</strong>
+                  </span>
+                  <span className="mr-filter-meta">
+                    <b>{item.count}</b>
+                    <small>{item.latestScore ? `${c('Latest')} ${item.latestScore.value}` : c(item.count === 1 ? 'result' : 'results')}</small>
+                  </span>
+                </button>
+              )
+            })}
           </div>
-
-          {loading ? (
-            <Skeleton className="mt-4 h-72 w-full rounded-2xl" />
-          ) : data ? (
-            <div className="relative mt-4 h-72 w-full">
-              {!hasXpHistory ? <ChartEmpty label="No XP history yet" hint="Study or complete a scored practice to build this chart." /> : null}
-              <ResponsiveContainer>
-                <AreaChart data={data.skillAnalytics.xpMomentum} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="xpGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#EF4444" stopOpacity={0.36} />
-                      <stop offset="100%" stopColor="#EF4444" stopOpacity={0.02} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
-                  <XAxis dataKey="label" tick={tickStyle} axisLine={false} tickLine={false} />
-                  <YAxis tick={tickStyle} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={tooltipStyle} />
-                  <Area
-                    type="monotone"
-                    dataKey="xp"
-                    stroke="#DC2626"
-                    strokeWidth={2.5}
-                    fill="url(#xpGradient)"
-                    isAnimationActive={false}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          ) : null}
-        </article>
-      </Reveal>
-
-      {/* ── Weekly activity + Achievements ──────────────────────── */}
-      <section className="mt-6 grid gap-6 lg:grid-cols-[1.35fr_0.65fr]">
-        <Reveal>
-          <article className="surface-card relative overflow-hidden p-6">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-indigo-400/55 to-transparent" />
-            <div className="flex items-center gap-2">
-              <ArenaMetricMark icon={Activity} tone="indigo" size="sm" />
-              <div>
-                <h2 className="text-lg font-black tracking-tight text-slate-900"> <UiText text={"Weekly Activity"} /> </h2>
-                <p className="text-[11px] font-medium text-slate-500"> <UiText text={"Practice, focused study time and XP earned each day"} /> </p>
-              </div>
-            </div>
-            {loading ? (
-              <Skeleton className="mt-4 h-64 w-full rounded-2xl" />
-            ) : data ? (
-              <div className="relative mt-4 h-64 w-full">
-                {!hasWeeklyActivity ? <ChartEmpty label="No activity this week" hint="Active learning minutes will appear here automatically." /> : null}
-                <ResponsiveContainer>
-                  <BarChart data={weeklyActivity}>
-                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
-                    <XAxis dataKey="label" axisLine={false} tickLine={false} tick={tickStyle} />
-                    <YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={tickStyle} />
-                    <Tooltip cursor={{ fill: 'rgba(220,38,38,0.05)' }} contentStyle={tooltipStyle} />
-                    <Bar dataKey="xpEarned" radius={[10, 10, 4, 4]} fill="url(#weeklyXpGradient)" isAnimationActive={false} />
-                    <Bar dataKey="studyMinutes" name="Study minutes" radius={[10, 10, 4, 4]} fill="#334155" isAnimationActive={false} />
-                    <defs>
-                      <linearGradient id="weeklyXpGradient" x1="0" x2="0" y1="0" y2="1">
-                        <stop offset="0%" stopColor="#F87171" />
-                        <stop offset="100%" stopColor="#B91C1C" />
-                      </linearGradient>
-                    </defs>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            ) : null}
-          </article>
         </Reveal>
 
-        <Reveal delay={0.08}>
-          <article className="surface-card relative overflow-hidden p-6">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-red-400/55 to-transparent" />
-            <div className="flex items-center gap-2">
-              <ArenaMetricMark icon={Sparkles} tone="red" size="sm" />
-              <h2 className="text-lg font-black tracking-tight text-slate-900"> <UiText text={"Achievements"} /> </h2>
-            </div>
-            {loading ? (
-              <div className="mt-4 space-y-3">
-                <Skeleton className="h-14 w-full" />
-                <Skeleton className="h-14 w-full" />
+        <Reveal className="mt-6">
+          <section className="mr-glass mr-list" aria-labelledby="mr-list-title">
+            <header className="mr-list-head">
+              <div>
+                <p className="mr-eyebrow"><UiText text="Results history" /></p>
+                <h2 id="mr-list-title">
+                  {c(SKILL_FILTERS.find((item) => item.key === filter)?.label ?? 'All results')}
+                  <span>{visible.length}</span>
+                </h2>
               </div>
-            ) : data?.achievements.length ? (
-              <Stagger className="mt-4 space-y-2.5">
-                {data.achievements.slice(0, 5).map((entry) => (
-                  <StaggerItem key={entry.achievement.id}>
-                    <div className="achievement-glass flex items-start gap-2.5 rounded-2xl p-3">
-                      <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white bg-gradient-to-br from-white to-slate-200 shadow-sm">
-                        <BrandMark size={34} />
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-bold text-slate-900">{entry.achievement.title}</p>
-                        <p className="mt-0.5 line-clamp-2 text-[11px] text-slate-500">{entry.achievement.description}</p>
-                      </div>
-                      {entry.achievement.xpReward > 0 ? (
-                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-700">
-                          <Zap className="h-3 w-3 fill-red-400 text-red-500" />+{entry.achievement.xpReward}
-                        </span>
-                      ) : (
-                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
-                          <CheckCircle2 className="h-3 w-3" />  <UiText text={"Earned"} /> </span>
-                      )}
-                    </div>
-                  </StaggerItem>
+              <div className="mr-tools">
+                <label className="mr-search">
+                  <Search aria-hidden="true" />
+                  <input
+                    type="search"
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder={c('Search tests')}
+                    aria-label={c('Search tests')}
+                  />
+                </label>
+                <button type="button" className="mr-sort" onClick={() => setNewestFirst((value) => !value)}>
+                  {newestFirst ? <ArrowDownWideNarrow aria-hidden="true" /> : <ArrowUpWideNarrow aria-hidden="true" />}
+                  {c(newestFirst ? 'Newest first' : 'Oldest first')}
+                </button>
+              </div>
+            </header>
+
+            {groups.length ? (
+              <div className="mr-groups">
+                {groups.map((group) => (
+                  <div key={group.label} className="mr-group">
+                    <h3 className="mr-group-title">
+                      <CalendarDays aria-hidden="true" />
+                      <span>{group.label}</span>
+                      <small>{group.items.length}</small>
+                    </h3>
+                    <ol className="mr-rows">
+                      {group.items.map((record) => {
+                        const Icon = SKILL_ICONS[record.skill]
+                        const duration = formatDuration(record.durationSec)
+                        return (
+                          <li key={record.id} className={`mr-row tone-${record.tone}`}>
+                            <span className="mr-seq" aria-label={`${c('Result')} ${record.sequence}`}>#{record.sequence}</span>
+                            <span className={`mr-mark is-${record.exam.toLowerCase()}`}>
+                              <Icon aria-hidden="true" />
+                              <small>{record.exam}</small>
+                            </span>
+                            <div className="mr-row-main">
+                              <p className="mr-row-kind">
+                                {record.exam} · {c(record.skillLabel)}
+                                {record.partial ? <span className="mr-tag"><UiText text="Partial" /></span> : null}
+                                {record.id.startsWith('server-') ? <span className="mr-tag is-muted"><UiText text="Synced" /></span> : null}
+                              </p>
+                              <h4 title={record.title}>{record.title}</h4>
+                              <p className="mr-row-meta">
+                                <span><CalendarDays aria-hidden="true" />{formatDate(record.completedAt)} · {formatTime(record.completedAt)}</span>
+                                {duration ? <span><Clock3 aria-hidden="true" />{duration}</span> : null}
+                              </p>
+                            </div>
+                            <ul className="mr-stats">
+                              {record.stats.map((stat) => (
+                                <li key={stat.label} className={stat.emphasis ? `is-${stat.emphasis}` : undefined}>
+                                  <small>{c(stat.label)}</small>
+                                  <b>{stat.value}</b>
+                                </li>
+                              ))}
+                            </ul>
+                            <div className="mr-score">
+                              {record.score ? (
+                                <>
+                                  <b>{record.score.value}</b>
+                                  <small>{c(record.score.label)}</small>
+                                </>
+                              ) : (
+                                <>
+                                  <b className="is-empty">—</b>
+                                  <small>{c(record.partial ? 'Not scored' : 'Practice')}</small>
+                                </>
+                              )}
+                            </div>
+                            <button
+                              type="button"
+                              className="mr-analyze"
+                              disabled={!record.analyze}
+                              title={record.analyze ? undefined : c('Detailed answers are saved on the device where this test was taken.')}
+                              onClick={() => openAnalysis(record)}
+                            >
+                              <UiText text="Analyze" />
+                              <ChevronRight aria-hidden="true" />
+                            </button>
+                          </li>
+                        )
+                      })}
+                    </ol>
+                  </div>
                 ))}
-              </Stagger>
+              </div>
             ) : (
-              <div className="achievement-glass mt-4 flex flex-col items-center justify-center rounded-2xl px-4 py-8 text-center">
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-red-600">
-                  <Sparkles className="h-5 w-5" />
-                </span>
-                <p className="mt-3 text-sm font-bold text-slate-700"> <UiText text={"No achievements yet"} /> </p>
-                <p className="mt-1 text-xs text-slate-500"> <UiText text={"Complete tests to unlock badges and bonus XP."} /> </p>
+              <div className="mr-empty">
+                <span><FileSearch aria-hidden="true" /></span>
+                <p>{c(records.length ? 'No results match this view' : 'No results yet')}</p>
+                <small>
+                  {c(records.length
+                    ? 'Try another skill or clear the search.'
+                    : 'Finish an IELTS or SAT test and its result will appear here, ready to analyze.')}
+                </small>
+                {records.length ? (
+                  <button type="button" className="mr-button" onClick={() => { setFilter('all'); setQuery('') }}>
+                    <UiText text="Show all results" />
+                  </button>
+                ) : (
+                  <button type="button" className="mr-button primary" onClick={() => navigate('/test-preparation')}>
+                    <UiText text="Browse tests" /> <ArrowUpRight aria-hidden="true" />
+                  </button>
+                )}
               </div>
             )}
-          </article>
+          </section>
         </Reveal>
-      </section>
-
-      {/* ── Recent attempts ─────────────────────────────────────── */}
-      <Reveal className="mt-6">
-        <article className="surface-card recent-attempts-panel relative overflow-hidden p-5 sm:p-7">
-          <header className="recent-attempts-heading">
-            <div className="flex min-w-0 items-center gap-3">
-              <ArenaMetricMark icon={Activity} tone="red" size="sm" />
-              <div>
-                <p className="recent-attempts-eyebrow">YOUR ACTIVITY</p>
-                <h2 className="mt-1 text-xl font-black tracking-[-.04em] text-slate-950 sm:text-2xl"><UiText text="Recent Attempts" /></h2>
-              </div>
-            </div>
-            {data?.recentAttempts.length ? <span className="recent-attempts-count">Latest {Math.min(data.recentAttempts.length, 6)} results</span> : null}
-          </header>
-
-          {loading ? (
-            <div className="mt-6 space-y-3">
-              <Skeleton className="h-16 w-full" />
-              <Skeleton className="h-16 w-full" />
-            </div>
-          ) : data?.recentAttempts.length ? (
-            <Stagger className="mt-6 grid gap-4 lg:grid-cols-2">
-              {data.recentAttempts.slice(0, 6).map((attempt) => {
-                const isSat = attempt.test.category.toUpperCase().includes('SAT')
-                const examName = isSat ? 'SAT' : 'IELTS'
-                const ExamIcon = isSat ? Target : BookOpen
-
-                return (
-                  <StaggerItem key={attempt.id}>
-                    <div className={`recent-attempt-card ${isSat ? 'is-sat' : 'is-ielts'}`}>
-                      <div className="recent-attempt-main">
-                        <span className="recent-attempt-icon" aria-label={`${examName} result`}>
-                          <ExamIcon aria-hidden="true" />
-                          <span>{examName}</span>
-                        </span>
-                        <div className="recent-attempt-details">
-                          <p className="recent-attempt-category">{examName} <span>·</span> {attempt.test.difficulty}</p>
-                          <h3 className="recent-attempt-title" title={attempt.test.title}>{attempt.test.title}</h3>
-                        </div>
-                        <span className="recent-attempt-score"><small>RESULT</small>{safePercent(attempt.percentage).toFixed(1)}%</span>
-                      </div>
-                      <div className="recent-attempt-progress" role="progressbar" aria-label={`${examName}: ${attempt.test.title} score`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={safePercent(attempt.percentage)}>
-                        <span style={{ width: `${safePercent(attempt.percentage)}%` }} />
-                      </div>
-                      <div className="recent-attempt-footer"><time dateTime={attempt.completedAt}>{new Date(attempt.completedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</time><span className="recent-attempt-xp"><Zap className="h-3.5 w-3.5" />+{attempt.xpEarned} XP</span></div>
-                    </div>
-                  </StaggerItem>
-                )
-              })}
-            </Stagger>
-          ) : (
-            <div className="recent-attempts-empty mt-4 flex flex-col items-center justify-center px-4 py-10 text-center">
-              <span className="recent-attempts-empty-icon flex h-12 w-12 items-center justify-center rounded-xl">
-                <Activity className="h-5 w-5" />
-              </span>
-              <p className="mt-3 text-sm font-bold text-slate-700"> <UiText text={"No attempts yet"} /> </p>
-              <p className="mt-1 text-xs text-slate-500"> <UiText text={"Complete a test to start earning XP and build your history."} /> </p>
-              <button
-                type="button"
-                onClick={() => navigate('/test-preparation')}
-                className="recent-attempts-cta interactive-lift mt-4 inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-bold text-white"
-              >
-                 <UiText text={"Browse tests"} /> <ArrowUpRight className="h-4 w-4" />
-              </button>
-            </div>
-          )}
-        </article>
-      </Reveal>
       </div>
+
+      {writingEntry ? <WritingResultModal entry={writingEntry} onClose={() => setWritingEntry(null)} /> : null}
+
+      {speakingEntry?.evaluation ? createPortal(
+        <div className="fixed inset-0 z-[250] overflow-y-auto bg-slate-950/60 p-3 backdrop-blur-sm sm:p-6" role="dialog" aria-modal="true" aria-label={c('Speaking review')}>
+          <div className="mx-auto max-w-5xl rounded-3xl bg-gradient-to-br from-white via-red-50 to-white py-6 shadow-2xl">
+            <SpeakingResult
+              evaluation={speakingEntry.evaluation}
+              transcript={speakingEntry.transcript}
+              modeLabel={speakingEntry.modeLabel}
+              reviewMode
+              onRetry={() => {}}
+              onExit={() => setSpeakingEntry(null)}
+            />
+          </div>
+        </div>,
+        document.body,
+      ) : null}
     </div>
   )
 }

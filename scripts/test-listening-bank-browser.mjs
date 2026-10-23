@@ -2,10 +2,12 @@ import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
 import { createServer } from 'node:http'
 import { createRequire } from 'node:module'
-import { mkdtemp, readFile, readdir, rm, mkdir, writeFile } from 'node:fs/promises'
+import { mkdtemp, readFile, rm, mkdir, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve, sep } from 'node:path'
 import { build } from 'esbuild'
+import postcss from 'postcss'
+import tailwindcss from 'tailwindcss'
 
 const requireBackend = createRequire(new URL('../backend/package.json', import.meta.url))
 const WebSocket = requireBackend('ws')
@@ -14,36 +16,36 @@ const artifacts = resolve('tmp/listening-bank-audit')
 await mkdir(artifacts, { recursive: true })
 const bundle = await build({
   stdin: { loader: 'tsx', resolveDir: process.cwd(), contents: `
-    import React from 'react'; import {createRoot} from 'react-dom/client';
+    import React from 'react'; import {createRoot} from 'react-dom/client'; import {MemoryRouter} from 'react-router-dom';
+    import './src/i18n'; import {accountStorageFor} from './src/utils/accountStorage';
     import Interface from './src/components/IELTSReadingInterface';
     import {mockListeningTests as tests} from './src/data/listeningPassages';
     const root=createRoot(document.getElementById('root'));let version=0;
-    window.tests=tests;
+    window.tests=tests;window.ownedStorage=accountStorageFor('guest');
     window.mount=(index,review=true,part=null)=>{
       const test=tests[index];const answers=Object.fromEntries(test.sections.flatMap(s=>s.questions.map(q=>[q.id,Array.isArray(q.correctAnswer)?q.correctAnswer[0]:q.correctAnswer.split(/[\\/;|]/)[0].trim()])));
-      for(const s of test.sections)for(const b of s.groups.flatMap(g=>g.blocks))if(b.kind==='multi-mcq'){
-        const pool=[...new Set(b.blanks.flatMap(n=>test.sections.flatMap(s=>s.questions).find(q=>q.number===n).correctAnswer.split(/[\\/;|]/).map(s=>s.trim())))];
+      for(const s of test.sections)for(const b of (s.groups??[]).flatMap(g=>g.blocks))if(b.kind==='multi-mcq'){
+        const pool=[...new Set(b.blanks.flatMap(n=>{const key=test.sections.flatMap(s=>s.questions).find(q=>q.number===n).correctAnswer;return (Array.isArray(key)?key:key.split(/[\\/;|]/)).map(s=>s.trim());}))];
         b.blanks.forEach((n,i)=>answers[test.sections.flatMap(s=>s.questions).find(q=>q.number===n).id]=pool[i]);
       }
       const result={testId:test.id,date:'2026-10-04',score:9,correctAnswers:40,totalQuestions:40,timeSpent:1800,answers,
         detailedBreakdown:{activeSectionIds:part?[test.sections[part-1].id]:test.sections.map(s=>s.id)}};
       window.currentTest=test;window.expectedAnswers=answers;window.completed=[];
-      root.render(<Interface key={++version} test={test} reviewPayload={review?{result,showCorrectAnswers:true}:undefined} launchPreset={review?undefined:{mode:'practice'}} onComplete={r=>window.completed.push(r)} onExit={()=>{}}/>);
+      root.render(<MemoryRouter key={++version}><Interface test={test} reviewPayload={review?{result,showCorrectAnswers:true}:undefined} launchPreset={review?undefined:{mode:'practice'}} onComplete={r=>window.completed.push(r)} onExit={()=>{}}/></MemoryRouter>);
     };
     window.mount(0);
   ` },
-  bundle: true, write: false, format: 'iife', tsconfig: 'tsconfig.json', loader: { '.jpg': 'dataurl', '.png': 'dataurl' },
+  bundle: true, write: false, outfile: 'tmp/listening-bank-fixture.js', format: 'iife', tsconfig: 'tsconfig.json', loader: { '.jpg': 'dataurl', '.png': 'dataurl' },
   define: { 'process.env.NODE_ENV': '"production"', 'import.meta.env': '{}' },
 })
-const cssName = (await readdir('dist/assets')).find(name => name.startsWith('index-') && name.endsWith('.css'))
-assert.ok(cssName, 'Run npm run build first')
-const css = await readFile(`dist/assets/${cssName}`)
+const css = (await postcss([tailwindcss()]).process(await readFile('src/index.css', 'utf8'), { from: 'src/index.css' })).css
+  + bundle.outputFiles.filter(file => file.path.endsWith('.css')).map(file => file.text).join('\n')
 const publicRoot = resolve('public')
 const server = createServer(async (req, res) => {
   try {
-    if (req.url === '/') { res.setHeader('Content-Type', 'text/html'); res.end('<meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/style.css"><div id="root"></div><script src="/fixture.js"></script>') }
-    else if (req.url === '/fixture.js') { res.setHeader('Content-Type', 'text/javascript'); res.end(bundle.outputFiles[0].text) }
-    else if (req.url === '/style.css') { res.setHeader('Content-Type', 'text/css'); res.end(css) }
+    if (req.url === '/') { res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.end('<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/style.css"><div id="root"></div><script src="/fixture.js"></script>') }
+    else if (req.url === '/fixture.js') { res.setHeader('Content-Type', 'text/javascript; charset=utf-8'); res.end(bundle.outputFiles.find(file => file.path.endsWith('.js')).text) }
+    else if (req.url === '/style.css') { res.setHeader('Content-Type', 'text/css; charset=utf-8'); res.end(css) }
     else {
       const path = resolve(publicRoot, '.' + decodeURIComponent(new URL(req.url, 'http://localhost').pathname))
       if (!path.startsWith(publicRoot + sep)) { res.writeHead(403); res.end(); return }
@@ -72,6 +74,7 @@ try {
   await new Promise(resolve => socket.once('open', resolve))
   let nextId = 0
   const pending = new Map()
+  const exceptions = []
   const send = (method, params = {}) => new Promise((resolve, reject) => {
     const id = ++nextId
     const timer = setTimeout(() => { pending.delete(id); reject(new Error(method + ' timed out')) }, 120000)
@@ -79,6 +82,7 @@ try {
   })
   socket.on('message', data => {
     const message = JSON.parse(data), call = pending.get(message.id)
+    if (message.method === 'Runtime.exceptionThrown') exceptions.push(message.params.exceptionDetails)
     if (!call) return
     clearTimeout(call.timer); pending.delete(message.id)
     if (message.error) call.reject(message.error); else call.resolve(message.result)
@@ -93,8 +97,9 @@ try {
       if (await evaluate(`Boolean(${expression})`)) return
       await new Promise(resolve => setTimeout(resolve, 75))
     }
-    assert.fail(expression)
+    assert.fail(expression + ': ' + JSON.stringify(exceptions))
   }
+  await send('Runtime.enable')
   await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}` })
   await until('window.tests && document.querySelector(".reading-pane")')
   const failures = []
@@ -142,7 +147,8 @@ try {
   await evaluate(`document.querySelector('input[placeholder="2"]').focus()`)
   await send('Input.insertText', { text: 'New Zealander' })
   assert.equal(await evaluate(`document.querySelector('input[placeholder="1"]').value`), 'edwinari')
-  assert.equal(await evaluate('JSON.parse(localStorage.getItem("ielts_test_session_ielts-listening-4")).answers["lt4-q2"]'), 'New Zealander')
+  await evaluate('window.dispatchEvent(new Event("pagehide"))')
+  assert.equal(await evaluate('JSON.parse(window.ownedStorage.getItem("ielts_test_session_ielts-listening-4")).answers["lt4-q2"]'), 'New Zealander')
   for (const width of [1440, 390]) {
     await send('Emulation.setDeviceMetricsOverride', { width, height: 1000, deviceScaleFactor: 1, mobile: width === 390 })
     await evaluate(`document.querySelector('input[placeholder="1"]').focus();document.querySelector('input[placeholder="1"]').scrollIntoView({block:'center'})`)

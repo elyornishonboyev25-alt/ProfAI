@@ -22,10 +22,19 @@ async function main() {
     return pending
   } } }
   let fetchHandler
+  let captureRefreshTimeout = false
+  let nextRefreshTimer = 100000
+  const refreshTimeouts = new Map()
+  const scheduleTimeout = (fn, ms) => {
+    if (captureRefreshTimeout && ms === 10000) { const id = ++nextRefreshTimer; refreshTimeouts.set(id, fn); return id }
+    return setTimeout(fn, ms)
+  }
+  const cancelTimeout = id => { if (!refreshTimeouts.delete(id)) clearTimeout(id) }
   function tab() {
     const module = { exports: {} }
     vm.runInNewContext(bundle.outputFiles[0].text, {
-      module, exports: module.exports, console, Headers, Response, navigator,
+      module, exports: module.exports, console, Headers, Response, navigator, AbortController,
+      setTimeout: scheduleTimeout, clearTimeout: cancelTimeout,
       window: { localStorage, addEventListener() {} },
       fetch: (...args) => fetchHandler(...args),
     })
@@ -90,6 +99,37 @@ async function main() {
   delayed.resolve(json(401))
   await slow
   assert.equal(rotations, 1, 'Delayed 401 reuses the already refreshed session')
+
+  seed()
+  const staleAccessResponse = deferred()
+  fetchHandler = async (url, options) => {
+    assert.ok(!url.endsWith('/auth/refresh'), 'A newer access token can be retried without rotating the same refresh token')
+    return options.headers.get('Authorization') === 'Bearer access-renewed' ? json(200, { ok: true }) : staleAccessResponse.promise
+  }
+  const staleAccessRequest = a.apiClient.get('/stale-access')
+  a.useAuthStore.getState().setSession({ ...session('old'), accessToken: 'access-renewed' })
+  staleAccessResponse.resolve(json(401))
+  assert.deepEqual(await staleAccessRequest, { ok: true })
+
+  seed()
+  captureRefreshTimeout = true
+  const refreshStarted = deferred()
+  fetchHandler = async (url, options) => {
+    if (!url.endsWith('/auth/refresh')) return json(401)
+    refreshStarted.resolve()
+    return new Promise((_resolve, reject) => options.signal.addEventListener('abort', () => reject(new Error('Refresh timed out')), { once: true }))
+  }
+  const stalledRequest = a.apiClient.get('/protected')
+  await refreshStarted.promise
+  assert.equal(refreshTimeouts.size, 1, 'The shared refresh has a bounded timeout')
+  for (const fn of refreshTimeouts.values()) fn()
+  await assert.rejects(stalledRequest, /temporarily unavailable/)
+  assert.equal(a.useAuthStore.getState().refreshToken, 'refresh-old', 'Timeout preserves the session')
+  assert.equal(refreshTimeouts.size, 0)
+  captureRefreshTimeout = false
+  fetchHandler = async (url, options) => url.endsWith('/auth/refresh') ? json(200, session('new'))
+    : options.headers.get('Authorization') === 'Bearer access-new' ? json(200, { ok: true }) : json(401)
+  assert.deepEqual(await a.apiClient.get('/protected'), { ok: true }, 'A timed-out shared refresh cannot poison subsequent requests')
 
   seed(); rotations = 0
   const deviceIds = new Set()

@@ -136,10 +136,14 @@ try {
   }
   assert.deepEqual(exceptions, [], 'No browser runtime errors')
 } finally {
+  if (socket?.readyState === WebSocket.OPEN) await new Promise(resolve => {
+    socket.send(JSON.stringify({ id: 999999, method: 'Browser.close' }))
+    setTimeout(resolve, 500)
+  })
   socket?.close()
   browser.kill()
   await Promise.race([exited, new Promise(resolve => setTimeout(resolve, 3000))])
   await new Promise(resolve => server.close(resolve))
   assert.ok(resolve(directory).startsWith(resolve(tmpdir()) + sep))
-  await rm(directory, { recursive: true, force: true })
+  await rm(directory, { recursive: true, force: true, maxRetries: 15, retryDelay: 200 })
 }

@@ -5,6 +5,7 @@ import { useAccountAccess } from './useAccountAccess'
 import AccountGate from './AccountGate'
 import { useBillingText } from './copy'
 import type { AccessFeature } from './catalog'
+import BrandPageLoader from '@/components/common/BrandPageLoader'
 export default function AccessGate({ feature, resource, children, onCancel, onUnlocked }: {
   feature: AccessFeature; resource: string; children?: ReactNode; onCancel?: () => void; onUnlocked?: () => void
 }) {
@@ -28,5 +29,5 @@ export default function AccessGate({ feature, resource, children, onCancel, onUn
   if (unlocked && access?.active) return <>{children}</>
   // The server also allows selected free media lessons without a plan.
   if (unlocked && (feature === 'podcast' || feature === 'shadowing')) return <>{children}</>
-  return <AccountGate>{error ? <div className="billing-access-wrap"><div className="billing-error" role="alert">{error}<button onClick={() => setRetry(n => n + 1)}>{text('Retry', 'Qayta urinish', 'Повторить')}</button>{onCancel && <button onClick={onCancel}>{text('Back', 'Orqaga', 'Назад')}</button>}</div></div> : <p role="status">{text('Checking your access…', 'Kirish huquqi tekshirilmoqda…', 'Проверяем доступ…')}</p>}</AccountGate>
+  return <AccountGate>{error ? <div className="billing-access-wrap"><div className="billing-error" role="alert">{error}<button onClick={() => setRetry(n => n + 1)}>{text('Retry', 'Qayta urinish', 'Повторить')}</button>{onCancel && <button onClick={onCancel}>{text('Back', 'Orqaga', 'Назад')}</button>}</div></div> : <BrandPageLoader compact label={text('Checking your access…', 'Kirish huquqi tekshirilmoqda…', 'Проверяем доступ…')} />}</AccountGate>
 }

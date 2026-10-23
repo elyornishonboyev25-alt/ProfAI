@@ -119,7 +119,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       const latest = useAuthStore.getState()
       if ((result === 'refreshed' || result === 'superseded') &&
           latest.user?.id === authState.user?.id && latest.accessToken &&
-          latest.refreshToken !== authState.refreshToken) {
+          (latest.accessToken !== authState.accessToken || latest.refreshToken !== authState.refreshToken)) {
         return request<T>(path, { ...options, expectedUserId: owner, retryOnUnauthorized: false })
       }
       if (result === 'unavailable') {
@@ -157,12 +157,17 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 }
 
 async function refreshSession(refreshToken: string): Promise<RefreshResult> {
+  // A stalled shared refresh must not leave every request (including account
+  // verification) waiting forever. Keep credentials and retry after a timeout.
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 10_000)
   try {
     const payload = await request<AuthResponse>('/auth/refresh', {
       method: 'POST',
       auth: false,
       retryOnUnauthorized: false,
       body: { refreshToken },
+      signal: controller.signal,
     })
 
     syncStoredSession()
@@ -184,6 +189,8 @@ async function refreshSession(refreshToken: string): Promise<RefreshResult> {
       return 'rejected'
     }
     return 'unavailable'
+  } finally {
+    clearTimeout(timeout)
   }
 }
 

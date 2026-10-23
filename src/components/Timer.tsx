@@ -52,6 +52,7 @@ export default function Timer({
       }
       if (newTime <= 0 && !finished) {
         finished = true
+        window.clearInterval(timer)
         onTimeUpRef.current?.()
       }
     }

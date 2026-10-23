@@ -42,6 +42,41 @@ export async function run() {
     assert.ok(container.textContent?.includes('Protected saved test'), 'Retry resumes once the active device releases access')
     const draft = container.querySelector<HTMLInputElement>('input')!
     draft.value = 'Keep the latest answer'
+    const actualNow = Date.now
+    let clock = actualNow(), hidden = false
+    const hiddenDescriptor = Object.getOwnPropertyDescriptor(document, 'hidden')
+    Object.defineProperty(document, 'hidden', { configurable: true, get: () => hidden })
+    Date.now = () => clock
+    try {
+      // Return within the lease: background verification must not hide the test.
+      hidden = true
+      await act(async () => document.dispatchEvent(new window.Event('visibilitychange')))
+      mode = 'pending'
+      hidden = false
+      await act(async () => document.dispatchEvent(new window.Event('visibilitychange')))
+      assert.equal(workspaceVisible(), true, 'Returning to a verified tab has no blocking loading screen')
+      assert.equal(container.querySelector('input'), draft)
+      mode = 'allowed'
+      await act(async () => { resolve?.(); await new Promise(done => setTimeout(done, 10)) })
+      // Return after suspension: gate the expired lease, retain the mounted attempt.
+      hidden = true
+      clock += 91_000
+      await act(async () => document.dispatchEvent(new window.Event('visibilitychange')))
+      mode = 'pending'
+      hidden = false
+      await act(async () => document.dispatchEvent(new window.Event('visibilitychange')))
+      assert.equal(workspaceVisible(), false)
+      assert.equal(container.querySelector('input'), draft, 'A suspended tab retains its live test while reconnecting')
+      mode = 'allowed'
+      await act(async () => { resolve?.(); await new Promise(done => setTimeout(done, 10)) })
+      assert.equal(workspaceVisible(), true)
+      assert.equal(container.querySelector('input'), draft)
+      assert.equal(draft.value, 'Keep the latest answer')
+    } finally {
+      Date.now = actualNow
+      if (hiddenDescriptor) Object.defineProperty(document, 'hidden', hiddenDescriptor)
+      else Reflect.deleteProperty(document, 'hidden')
+    }
     mode = 'offline'
     await act(async () => {
       useAccountUsageStore.getState().setUsage('usage-ui', 'active', Date.now() - 1)

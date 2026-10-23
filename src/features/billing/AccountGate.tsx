@@ -5,6 +5,7 @@ import { useAuthStore } from '@/store/authStore'
 import { useAccountAccess } from './useAccountAccess'
 import { useBillingStore } from './store'
 import { useBillingText } from './copy'
+import BrandPageLoader from '@/components/common/BrandPageLoader'
 import './billing.css'
 export default function AccountGate({ children, classes = false }: { children: ReactNode; classes?: boolean }) {
   const user = useAuthStore(s => s.user)
@@ -14,7 +15,7 @@ export default function AccountGate({ children, classes = false }: { children: R
   const paid = access?.active && access.kind !== 'TRIAL'
   const allowed = classes ? paid && (userId === user?.id ? wallet?.canJoinClass : user?.canJoinClass) : access?.active
   if (user && allowed) return <>{children}</>
-  if (user && !access && !error) return <div className="billing-access-wrap" role="status">{text('Checking your access…', 'Kirish huquqi tekshirilmoqda…', 'Проверяем доступ…')}</div>
+  if (user && !access && !error) return <BrandPageLoader compact label={text('Checking your access…', 'Kirish huquqi tekshirilmoqda…', 'Проверяем доступ…')} />
   return <section className="billing-access-wrap"><div className="billing-glass billing-access-panel">
     <span className="billing-icon"><LockKeyhole size={26} /></span>
     <p className="billing-eyebrow">IVYGOO PREMIUM</p>

@@ -95,7 +95,7 @@ function Hero({ onStart, onExplore }: { onStart: () => void; onExplore: () => vo
         </motion.div>
       </div>
       <motion.div className="lx-hero-stage" initial={reducedMotion ? false : { opacity: 0, rotateY: -18, rotateX: 8, y: 50 }} animate={{ opacity: 1, rotateY: -6, rotateX: 3, y: 0 }} transition={{ duration: 1.1, delay: .15, ease: EASE }}>
-        <BrowserFrame src="/assets/landing/dashboard-ivygoo.jpg" alt={t(['Ivygoo learning dashboard', 'Ivygoo boshqaruv paneli', 'Панель Ivygoo'])} address="ivygoo.com/dashboard" eager />
+        <BrowserFrame src="/assets/landing/dashboard-ivygoo-v2.jpg" alt={t(['Ivygoo learning dashboard', 'Ivygoo boshqaruv paneli', 'Панель Ivygoo'])} address="ivygoo.com/dashboard" eager />
         <div className="lx-float lx-float-a"><Target size={17} /><span><small>{t(['Target score', 'Maqsadli ball', 'Целевой балл'])}</small><strong>IELTS 8.5</strong></span></div>
         <div className="lx-float lx-float-b"><svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="18" /><circle cx="22" cy="22" r="18" pathLength="100" strokeDasharray="93 100" /></svg><span><strong>93%</strong><small>{t(['Toward target', 'Maqsad sari', 'К цели'])}</small></span></div>
         <div className="lx-float lx-float-c"><Flame size={17} /><span><strong>46</strong><small>{t(['day streak', 'kunlik seriya', 'дней подряд'])}</small></span></div>

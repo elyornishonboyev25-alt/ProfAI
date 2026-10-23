@@ -18,7 +18,7 @@ export type TourFeature = {
 
 export const tourFeatures: TourFeature[] = [
   {
-    id: 'dashboard', route: '/register', image: '/assets/landing/dashboard-ivygoo.jpg', address: 'ivygoo.com/dashboard',
+    id: 'dashboard', route: '/register', image: '/assets/landing/dashboard-ivygoo-v2.jpg', address: 'ivygoo.com/dashboard',
     label: ['Dashboard', 'Boshqaruv paneli', 'Панель'],
     kicker: ['YOUR COMMAND CENTER', 'SIZNING BOSHQARUV MARKAZINGIZ', 'ВАШ ЦЕНТР УПРАВЛЕНИЯ'],
     title: ['See your whole preparation on one screen.', 'Butun tayyorgarligingiz bitta ekranda.', 'Вся подготовка на одном экране.'],

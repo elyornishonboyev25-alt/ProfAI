@@ -127,18 +127,23 @@ const LANGUAGE_KEY = 'profai-language'
 // 'user' once the visitor picks a language; until then it follows their country.
 const LANGUAGE_SOURCE_KEY = 'profai-language-source'
 const UZBEK_TIME_ZONES = new Set(['Asia/Tashkent', 'Asia/Samarkand'])
+// Countries where Russian is an official or everyday shared language: Russia, Belarus, Kazakhstan, Kyrgyzstan,
+// Tajikistan, Turkmenistan, Azerbaijan and Armenia. Ukraine, Georgia, Moldova and the Baltic states stay English.
+const RUSSIAN_COUNTRIES = new Set(['RU', 'BY', 'KZ', 'KG', 'TJ', 'TM', 'AZ', 'AM'])
 const RUSSIAN_TIME_ZONES = new Set([
   'Europe/Moscow', 'Europe/Kaliningrad', 'Europe/Samara', 'Europe/Volgograd', 'Europe/Saratov', 'Europe/Ulyanovsk',
   'Europe/Astrakhan', 'Europe/Kirov', 'Asia/Yekaterinburg', 'Asia/Omsk', 'Asia/Novosibirsk', 'Asia/Barnaul',
   'Asia/Tomsk', 'Asia/Novokuznetsk', 'Asia/Krasnoyarsk', 'Asia/Irkutsk', 'Asia/Chita', 'Asia/Yakutsk', 'Asia/Khandyga',
   'Asia/Vladivostok', 'Asia/Ust-Nera', 'Asia/Magadan', 'Asia/Sakhalin', 'Asia/Srednekolymsk', 'Asia/Kamchatka', 'Asia/Anadyr',
+  'Europe/Minsk', 'Asia/Almaty', 'Asia/Qostanay', 'Asia/Qyzylorda', 'Asia/Aqtobe', 'Asia/Aqtau', 'Asia/Atyrau', 'Asia/Oral',
+  'Asia/Bishkek', 'Asia/Dushanbe', 'Asia/Ashgabat', 'Asia/Baku', 'Asia/Yerevan',
 ])
 
 function readStorage(key: string) {
   try { return localStorage.getItem(key) } catch { return null }
 }
 function countryLanguage(country: string): Language {
-  return country === 'UZ' ? 'uz' : country === 'RU' ? 'ru' : 'en'
+  return country === 'UZ' ? 'uz' : RUSSIAN_COUNTRIES.has(country) ? 'ru' : 'en'
 }
 /** Instant first guess from the device time zone, so the first paint is already in the likely language. */
 function timeZoneLanguage(): Language {

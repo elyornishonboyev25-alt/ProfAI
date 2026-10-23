@@ -1,238 +1,57 @@
-import { useEffect, useRef, useState } from 'react'
+﻿import { useEffect, useRef, useState } from 'react'
 import { Loader2 } from 'lucide-react'
-import { motion } from 'framer-motion'
-import { useMotionPreferences } from '@/hooks/useMotionPreferences'
-import { apiClient } from '@/lib/apiClient'
+import { connectGoogleIdentity } from '@/lib/googleIdentity'
 import { useCopy } from '@/i18n/interface'
 
-type GoogleCredentialResponse = {
-  credential: string
-}
+type Props = { mode: 'signin' | 'signup'; disabled?: boolean; onCredential: (credential: string) => Promise<void> | void }
 
-type GoogleInitializeOptions = {
-  client_id: string
-  callback: (response: GoogleCredentialResponse) => void
-  ux_mode?: 'popup' | 'redirect'
-  auto_select?: boolean
-  context?: 'signin' | 'signup' | 'use'
-  itp_support?: boolean
-  use_fedcm_for_prompt?: boolean
-}
-
-type GoogleRenderButtonOptions = {
-  locale?: string
-  type?: 'standard' | 'icon'
-  theme?: 'outline' | 'filled_blue' | 'filled_black'
-  size?: 'large' | 'medium' | 'small'
-  text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin'
-  shape?: 'rectangular' | 'pill' | 'circle' | 'square'
-  logo_alignment?: 'left' | 'center'
-  width?: number
-}
-
-type GoogleIdentityApi = {
-  accounts: {
-    id: {
-      initialize: (options: GoogleInitializeOptions) => void
-      renderButton: (parent: HTMLElement, options: GoogleRenderButtonOptions) => void
-      prompt: () => void
-    }
-  }
-}
-
-declare global {
-  interface Window {
-    google?: GoogleIdentityApi
-  }
-}
-
-type GoogleAuthButtonProps = {
-  mode: 'signin' | 'signup'
-  disabled?: boolean
-  onCredential: (idToken: string) => Promise<void> | void
-}
-
-type GoogleConfigResponse = {
-  enabled: boolean
-  clientId: string | null
-}
-
-const SCRIPT_ID = 'google-identity-script'
-
-export default function GoogleAuthButton({ mode, disabled = false, onCredential }: GoogleAuthButtonProps) {
+export default function GoogleAuthButton({ mode, disabled = false, onCredential }: Props) {
   const { c, language } = useCopy()
-  const { minimalMotion } = useMotionPreferences()
-  const frontendGoogleClientId = (import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '').trim()
-  const [googleClientId, setGoogleClientId] = useState(frontendGoogleClientId)
-  const [isResolvingClientId, setIsResolvingClientId] = useState(false)
-  const [setupMessage, setSetupMessage] = useState('')
-  const [isProcessing, setIsProcessing] = useState(false)
-  const containerRef = useRef<HTMLDivElement | null>(null)
-  const onCredentialRef = useRef(onCredential)
-
-  useEffect(() => {
-    onCredentialRef.current = onCredential
-  }, [onCredential])
-
+  const container = useRef<HTMLDivElement>(null)
+  const handler = useRef(onCredential)
+  handler.current = onCredential
+  const [loading, setLoading] = useState(true)
+  const [processing, setProcessing] = useState(false)
+  const [error, setError] = useState('')
+  const [retry, setRetry] = useState(0)
+  useEffect(() => { if (container.current) container.current.inert = disabled || processing }, [disabled, processing])
   useEffect(() => {
     let canceled = false
-
-    if (frontendGoogleClientId) {
-      setGoogleClientId(frontendGoogleClientId)
-      setSetupMessage('')
-      return () => {
-        canceled = true
+    let release: (() => void) | undefined
+    let observer: ResizeObserver | undefined
+    setLoading(true); setError('')
+    void connectGoogleIdentity(async credential => {
+      if (canceled || disabled) return
+      setProcessing(true); setError('')
+      try { await handler.current(credential) }
+      catch (failure) { if (!canceled) setError(failure instanceof Error ? failure.message : 'Google sign-in failed') }
+      finally { if (!canceled) setProcessing(false) }
+    }).then(connection => {
+      if (canceled) { connection.release(); return }
+      release = connection.release
+      let lastWidth = 0
+      const render = () => {
+        const parent = container.current
+        if (!parent) return
+        const width = Math.max(200, Math.min(400, Math.floor(parent.clientWidth || 300)))
+        if (width === lastWidth) return
+        lastWidth = width; parent.replaceChildren()
+        connection.api.renderButton(parent, { locale: language === 'ru' ? 'ru' : 'en', type: 'standard', theme: 'outline', size: 'large', shape: 'pill', logo_alignment: 'left', text: 'continue_with', width })
       }
-    }
+      render()
+      if (typeof ResizeObserver !== 'undefined' && container.current) { observer = new ResizeObserver(render); observer.observe(container.current) }
+      setLoading(false)
+    }).catch(failure => {
+      if (!canceled) { setError(failure instanceof Error ? failure.message : 'Google sign-in failed'); setLoading(false) }
+    })
+    return () => { canceled = true; release?.(); observer?.disconnect() }
+  }, [language, mode, disabled, retry])
 
-    const resolveClientId = async () => {
-      setIsResolvingClientId(true)
-      try {
-        const payload = await apiClient.get<GoogleConfigResponse>('/auth/google/config', { auth: false })
-        if (canceled) return
-        const resolved = (payload.clientId ?? '').trim()
-        if (payload.enabled && resolved) {
-          setGoogleClientId(resolved)
-          setSetupMessage('')
-          return
-        }
-        setGoogleClientId('')
-        setSetupMessage('Google Sign-In setup incomplete. Set GOOGLE_CLIENT_ID (backend) or VITE_GOOGLE_CLIENT_ID (frontend).')
-      } catch {
-        if (!canceled) {
-          setGoogleClientId('')
-          setSetupMessage('Google Sign-In setup failed. Backend /auth/google/config endpoint is unavailable.')
-        }
-      } finally {
-        if (!canceled) {
-          setIsResolvingClientId(false)
-        }
-      }
-    }
-
-    void resolveClientId()
-
-    return () => {
-      canceled = true
-    }
-  }, [frontendGoogleClientId])
-
-  useEffect(() => {
-    if (!googleClientId) {
-      return
-    }
-
-    let canceled = false
-
-    const initGoogleButton = () => {
-      if (canceled || !window.google?.accounts?.id || !containerRef.current) return
-
-      const buttonContainer = containerRef.current
-      buttonContainer.innerHTML = ''
-
-      window.google.accounts.id.initialize({
-        client_id: googleClientId,
-        ux_mode: 'popup',
-        auto_select: false,
-        context: mode,
-        itp_support: true,
-        use_fedcm_for_prompt: true,
-        callback: async (response: GoogleCredentialResponse) => {
-          if (!response.credential || canceled) {
-            return
-          }
-
-          setSetupMessage('')
-          setIsProcessing(true)
-          try {
-            await onCredentialRef.current(response.credential)
-          } catch (error) {
-            const message = error instanceof Error ? error.message : 'Google sign-in failed.'
-            setSetupMessage(message)
-          } finally {
-            if (!canceled) {
-              setIsProcessing(false)
-            }
-          }
-        },
-      })
-
-      const renderWidth = Math.max(230, Math.min(400, buttonContainer.clientWidth || 260))
-      window.google.accounts.id.renderButton(buttonContainer, {
-        locale: language === 'ru' ? 'ru' : 'en',
-        theme: 'outline',
-        size: 'large',
-        shape: 'pill',
-        logo_alignment: 'left',
-        text: mode === 'signup' ? 'signup_with' : 'continue_with',
-        width: renderWidth,
-      })
-
-      setSetupMessage('')
-    }
-
-    const existingScript = document.getElementById(SCRIPT_ID) as HTMLScriptElement | null
-    if (window.google?.accounts?.id) {
-      initGoogleButton()
-      return () => {
-        canceled = true
-      }
-    }
-
-    const script = existingScript ?? document.createElement('script')
-    if (!existingScript) {
-      script.id = SCRIPT_ID
-      script.src = `https://accounts.google.com/gsi/client?hl=${language === 'ru' ? 'ru' : 'en'}`
-      script.async = true
-      script.defer = true
-      document.head.appendChild(script)
-    }
-
-    const handleLoad = () => initGoogleButton()
-    const handleError = () => {
-      if (!canceled) {
-        setSetupMessage('Google script could not be loaded. Check internet connection.')
-      }
-    }
-
-    script.addEventListener('load', handleLoad)
-    script.addEventListener('error', handleError)
-
-    return () => {
-      canceled = true
-      script.removeEventListener('load', handleLoad)
-      script.removeEventListener('error', handleError)
-    }
-  }, [googleClientId, mode, language])
-
-  return (
-    <div className="space-y-2">
-      <div className="relative mx-auto flex w-full items-center justify-center overflow-hidden rounded-full">
-        {googleClientId ? (
-          <motion.div
-            initial={minimalMotion ? false : { opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: minimalMotion ? 0.12 : 0.2, ease: [0.22, 1, 0.36, 1] }}
-            ref={containerRef}
-            className="flex min-h-[42px] w-full items-center justify-center"
-          />
-        ) : (
-          <div className="flex min-h-[42px] w-full items-center justify-center rounded-full border border-dashed border-blue-200 bg-blue-50/45 px-4 py-2 text-center text-[11px] font-semibold text-blue-700">
-            {c(isResolvingClientId ? 'Connecting to Google...' : 'Google sign-in is currently unavailable. Use your email instead.')}
-          </div>
-        )}
-
-        {(disabled || isProcessing || isResolvingClientId) ? (
-          <div className="absolute inset-0 flex items-center justify-center rounded-full bg-white/85 backdrop-blur-[1px]">
-            <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold text-slate-700">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              {c('Connecting...')}
-            </span>
-          </div>
-        ) : null}
-      </div>
-
-      {setupMessage ? <p className="text-center text-xs text-error-600">{c('Google sign-in could not connect. Please try again or use your email.')}</p> : null}
+  return <div className="ivygoo-google-access" aria-busy={loading || processing}>
+    <div className="ivygoo-google-button-wrap">
+      <div ref={container} className="ivygoo-google-button" />
+      {(loading || processing) && <div className="ivygoo-google-loading" role="status"><Loader2 size={16} className="animate-spin" />{c('Connecting to Google...')}</div>}
     </div>
-  )
+    {error && <div className="ivygoo-google-error" role="alert"><p>{c(error)}</p><button type="button" disabled={disabled || processing} onClick={() => setRetry(value => value + 1)}>{c('Try again')}</button></div>}
+  </div>
 }

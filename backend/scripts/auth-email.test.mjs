@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import crypto from 'node:crypto'
 import { after, beforeEach, test } from 'node:test'
 import express from 'express'
+import { OAuth2Client } from 'google-auth-library'
 
 // Set test configuration before loading env.ts. No real database or email calls.
 Object.assign(process.env, {
@@ -9,6 +10,7 @@ Object.assign(process.env, {
   ACCESS_TOKEN_SECRET: 'test-access-secret-at-least-24-characters',
   REFRESH_TOKEN_SECRET: 'test-refresh-secret-at-least-24-characters',
   RESEND_API_KEY: 'test-email-provider-key',
+  GOOGLE_CLIENT_ID: 'test-google-client.apps.googleusercontent.com',
 })
 let codes = []
 let users = []
@@ -17,6 +19,12 @@ let tokens = []
 let sessions = []
 let providerFails = false
 let revoked = false
+let googleIdentity = { email: 'learner@gmail.com', email_verified: true, name: 'Learner', picture: 'https://example.com/avatar.png' }
+const realVerifyGoogle = OAuth2Client.prototype.verifyIdToken
+OAuth2Client.prototype.verifyIdToken = async options => {
+  assert.equal(options.audience, 'test-google-client.apps.googleusercontent.com')
+  return { getPayload: () => googleIdentity }
+}
 const matches = (row, where) => Object.entries(where).every(([key, value]) => {
   if (value && typeof value === 'object' && !(value instanceof Date)) {
     return (!('gt' in value) || row[key] > value.gt) && (!('lt' in value) || row[key] < value.lt)
@@ -107,8 +115,53 @@ beforeEach(() => {
   codes = []; users = []; sent = []; tokens = []; sessions = []; revoked = false; providerFails = false
   env.RESEND_API_KEY = 'test-email-provider-key'
   authRateLimit.resetKey('127.0.0.1')
+  googleIdentity = { email: 'learner@gmail.com', email_verified: true, name: 'Learner', picture: 'https://example.com/avatar.png' }
 })
-after(async () => { globalThis.fetch = realFetch; await new Promise((resolve) => server.close(resolve)) })
+after(async () => { globalThis.fetch = realFetch; OAuth2Client.prototype.verifyIdToken = realVerifyGoogle; await new Promise((resolve) => server.close(resolve)) })
+
+test('Google quick signup creates a Gmail account without a password and reuses it on return', async () => {
+  const first = await post('/google', { idToken: 'verified-test-token', allowCreate: true })
+  assert.equal(first.status, 201)
+  assert.equal(first.body.isNewUser, true)
+  assert.ok(first.body.accessToken)
+  assert.equal(first.body.user.passwordHash, undefined)
+  assert.equal(users.length, 1)
+  users[0].xp = 450
+  const second = await post('/google', { idToken: 'verified-test-token', allowCreate: true })
+  assert.equal(second.status, 200)
+  assert.equal(second.body.isNewUser, false)
+  assert.equal(second.body.user.id, first.body.user.id)
+  assert.equal(second.body.user.xp, 450)
+  assert.equal(users.length, 1)
+})
+
+test('Google uses the existing password/code account and preserves its saved identity', async () => {
+  const user = await globalThis.prisma.user.create({ data: { email, fullName: 'Existing Learner', passwordHash: 'existing-hash', xp: 725, profile: { onboardingCompletedAt: new Date() } } })
+  const result = await post('/google', { idToken: 'verified-test-token', allowCreate: true })
+  assert.equal(result.status, 200)
+  assert.equal(result.body.user.id, user.id)
+  assert.equal(result.body.user.xp, 725)
+  assert.equal(result.body.user.fullName, 'Existing Learner')
+  assert.equal(result.body.user.onboardingCompleted, true)
+  assert.equal(users[0].passwordHash, 'existing-hash')
+  assert.equal(users.length, 1)
+})
+
+test('Google rejects unverified identities and restricts new accounts to Gmail', async () => {
+  googleIdentity.email_verified = false
+  assert.equal((await post('/google', { idToken: 'unverified-test-token' })).status, 401)
+  googleIdentity.email_verified = true
+  googleIdentity.email = 'learner@company.example'
+  const rejected = await post('/google', { idToken: 'verified-test-token' })
+  assert.equal(rejected.status, 400)
+  assert.equal(rejected.body.code, 'GMAIL_REQUIRED')
+  assert.equal(users.length, 0)
+  // Existing Google identities remain accessible after the migration.
+  const existing = await globalThis.prisma.user.create({ data: { email: googleIdentity.email, fullName: 'Existing Learner' } })
+  const result = await post('/google', { idToken: 'verified-test-token' })
+  assert.equal(result.status, 200)
+  assert.equal(result.body.user.id, existing.id)
+})
 
 test('email is delivered through provider, stored hashed, and never returned to browser', async () => {
   await globalThis.prisma.user.create({ data: { email, fullName: 'Learner' } })

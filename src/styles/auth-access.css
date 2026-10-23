@@ -1,0 +1,40 @@
+/* Keep the original showcase and its score graphs; refine only account access. */
+html:has(.auth-access-page) { overflow-y: auto; }
+.app-shell .auth-access-page { height: auto; min-height: 100svh; overflow: visible; padding: 24px clamp(14px,2.4vw,42px); padding-bottom: 24px !important; }
+.auth-access-page .auth-cinema-shell { height: auto; max-height: none; min-height: min(920px,calc(100svh - 48px)); }
+.auth-access-page .auth-cinema-form-side { display: flex; align-items: center; justify-content: center; overflow: visible; padding: clamp(30px,3vw,54px) clamp(26px,3.1vw,54px); }
+.auth-access-page .auth-cinema-form-inner { flex: 1; min-width: 0; width: 100%; max-width: 470px; }
+.auth-access-page .auth-cinema-lockup { display: flex; align-items: center; gap: 12px; margin: 0 auto 25px; width: fit-content; }
+.auth-access-page .auth-cinema-lockup-icon { display: grid; place-items: center; width: 58px; height: 58px; border: 1px solid #e1e9f2; border-radius: 19px; }
+.auth-access-page .auth-cinema-lockup strong { display: block; font-size: 31px; font-weight: 900; letter-spacing: -.05em; line-height: 1; }
+.auth-access-page .auth-cinema-lockup small { display: block; margin-top: 6px; font-size: 11px; font-weight: 650; }
+.auth-access-page .auth-cinema-intro { margin: 24px 0; }
+.auth-access-page .auth-cinema-intro h1 { font-size: clamp(32px,2.8vw,43px); margin: 12px 0 10px; }
+.auth-access-page .auth-cinema-intro p { font-size: 13px; line-height: 1.7; }
+.auth-access-page .gmail-code-steps { margin-bottom: 21px; }
+.auth-access-page .gmail-code-form label { font-size: 12px; }
+.auth-access-page .gmail-code-input-wrap { min-height: 58px; border-radius: 17px; background: rgba(255,255,255,.92); border-color: #d9e2ef; }
+.auth-access-page .gmail-code-input-wrap input { font-size: 15px; }
+.auth-access-page .gmail-code-hint { font-size: 11px; color: #758196; }
+.auth-access-page .gmail-code-otp input { font-size: 27px; }
+.auth-access-page .gmail-code-submit { min-height: 54px; font-size: 14px; border-radius: 17px; margin-top: 22px; background: linear-gradient(120deg,#ef4652,#ca263b); box-shadow: 0 12px 25px rgba(208,38,60,.18),inset 0 1px 0 #ffffff70; }
+.auth-access-page .gmail-code-delivery,.auth-access-page .gmail-code-timing { font-size: 11px; }
+.auth-access-page .gmail-code-timing { flex-wrap: wrap; }
+.auth-access-page .gmail-code-recipient button { min-height: 32px; }
+.auth-access-page .auth-cinema-divider { display: flex; align-items: center; gap: 14px; margin: 24px 0 16px; font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #8997a9; }
+.auth-access-page .auth-cinema-divider > span { height: 1px; flex: 1; background: #dce3ed; }
+.ivygoo-google-access { width: 100%; }
+.ivygoo-google-button-wrap { position: relative; min-width: 0; width: 100%; min-height: 44px; display: flex; align-items: center; justify-content: center; }
+.ivygoo-google-button { flex: 1; min-width: 0; min-height: 44px; width: 100%; max-width: 400px; display: flex; align-items: center; justify-content: center; }
+.ivygoo-google-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 8px; background: #fbfcfe; border: 1px solid #dce2e9; border-radius: 24px; color: #637086; font-size: 12px; }
+.ivygoo-google-error { margin-top: 10px; text-align: center; color: #a52c40; font-size: 12px; line-height: 1.6; }
+.ivygoo-google-error button { min-height: 32px; font-weight: 750; text-decoration: underline; text-underline-offset: 3px; }
+.auth-access-account-note { margin-top: 20px; text-align: center; color: #6e7c90; font-size: 11px; line-height: 1.7; }
+.auth-access-page .auth-cinema-privacy { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 12px; color: #8591a3; font-size: 10px; }
+.auth-access-page .auth-showcase-brand-icon img { width: 70%; height: 70%; object-fit: contain; }
+.auth-access-page :is(a,button,input):focus-visible { outline: 2px solid #bf3349; outline-offset: 4px; }
+.auth-access-page input:focus-visible { outline: none; }
+@media(max-width:1100px) and (min-width:901px) { .auth-access-page .auth-cinema-form-side { padding: 28px 25px; }.auth-access-page .auth-cinema-intro h1 { font-size: 32px; }.auth-access-page .auth-showcase-v2 { padding: 28px; }.auth-access-page .auth-showcase-intro,.auth-access-page .auth-showcase-features { padding-left: 16px; }.auth-access-page .auth-showcase-brand { margin-left: 16px; } }
+@media(max-width:900px) { .auth-access-page .auth-cinema-shell { grid-template-rows: auto auto; min-height: 0; max-width: 580px; }.auth-access-page .auth-cinema-form-side { overflow: visible; padding: 30px clamp(22px,6vw,42px); }.auth-access-page .auth-showcase-layout { min-height: 0; }.auth-access-page .auth-showcase-v2 { min-height: 170px; max-height: none; }.auth-access-page .auth-cinema-lockup { display: none; }.auth-access-page .auth-cinema-intro { margin: 22px 0; } }
+@media(max-width:480px) { .app-shell .auth-access-page { padding: 12px; padding-bottom: 18px !important; }.auth-access-page .auth-cinema-shell { border-radius: 25px; }.auth-access-page .auth-showcase-v2 { padding: 20px 23px; }.auth-access-page .auth-cinema-intro h1 { font-size: 31px; }.auth-access-page .auth-cinema-intro > span { font-size: 8px; letter-spacing: .09em; }.auth-access-page .gmail-code-input-wrap input { font-size: 16px; }.auth-access-page .gmail-code-otp input { font-size: 25px; }.auth-access-page .auth-cinema-privacy { flex-wrap: wrap; text-align: center; } }
+@media(prefers-reduced-motion:reduce) { .auth-access-page * { animation: none !important; transition: none !important; } }

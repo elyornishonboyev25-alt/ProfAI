@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { ArrowRight, ArrowUpRight, Check, ChevronDown, Flame, Menu, Send, ShieldCheck, Sparkles, Target, X } from 'lucide-react'
 import { BrandMark } from '@/components/brand/BrandLogo'
 import LanguageSelector from '@/components/layout/LanguageSelector'
+import GoogleOneTap from '@/components/auth/GoogleOneTap'
 import Testimonials from '@/components/landing/Testimonials'
 import { SilverIeltsObject, SilverSatObject } from '@/components/landing/SilverObjects'
 import { tourFeatures, type Copy, type TourFeature } from '@/components/landing/productTour'
@@ -267,6 +268,7 @@ export default function Landing() {
   ]
 
   return <div className="landing-arena-page lx-page">
+    <GoogleOneTap />
     <motion.div className="lx-progress" style={{ scaleX: progress }} aria-hidden="true" />
     <div className="lx-backdrop" aria-hidden="true"><i /><i /><i /></div>
     <header className={`lx-header ${scrolled ? 'is-scrolled' : ''}`}>

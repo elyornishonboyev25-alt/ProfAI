@@ -21,8 +21,12 @@ Both public sign-in and account creation use the same Gmail code flow. The
 browser never sends a password. Requesting a code does not create a user;
 successful verification reuses the existing email identity or creates one new
 account. Existing password hashes, progress and account IDs remain intact.
-The public form has no password or Google sign-in alternative. Legacy API
-endpoints remain compatible while older browser versions finish updating.
+The public form has no password fields. Google sign-in is an additional option
+on both account forms, and the guest homepage requests Google's own One Tap
+chooser after 2.5 seconds, at most once per tab session. Google/browser settings
+determine whether the chooser is eligible to appear; no account picker is
+imitated by the app. Legacy API endpoints remain compatible while older browser
+versions finish updating.
 
 ## Owner account setup
 

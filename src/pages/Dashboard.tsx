@@ -1,4 +1,5 @@
 import UiText from '@/components/common/UiText'
+import '@/styles/dashboard-learning.css'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -457,7 +458,7 @@ export default function Dashboard() {
               <h2 className="mt-1 text-xl font-black text-slate-950"> <UiText text={"Pick up where you left off"} /> </h2>
             </div>
           </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          <div className="dashboard-learning-grid">
             {learningCards.map((card) => {
               const Icon = card.icon
               const metric = localMetrics?.learning[card.key as DashboardLearningKey] ?? {
@@ -472,12 +473,12 @@ export default function Dashboard() {
                     <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-red-700"><Icon className="h-4 w-4" /></span>
                     <span className="text-[10px] font-black text-red-600">{metric.progress}%</span>
                   </div>
-                  <h3 className="mt-3 text-sm font-black text-slate-900"><UiText text={card.title} /></h3>
+                  <h3 id={`learning-${card.key}`} className="mt-3 text-sm font-black text-slate-900"><UiText text={card.title} /></h3>
                   <p className="mt-0.5 text-[11px] font-medium text-slate-500">{metric.detail}</p>
-                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-200/75">
+                  <div className="dashboard-learning-progress mt-3 h-1.5 overflow-hidden rounded-full bg-slate-200/75" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={metric.progress} aria-labelledby={`learning-${card.key}`}>
                     <div className="h-full rounded-full bg-gradient-to-r from-rose-900 via-red-600 to-rose-300" style={{ width: `${metric.progress}%` }} />
                   </div>
-                  <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-black text-slate-700 transition group-hover:text-red-700">
+                  <span className="dashboard-learning-action mt-3 inline-flex items-center gap-1 text-[11px] font-black text-slate-700 transition group-hover:text-red-700">
                      <UiText text={"Continue"} /> <ArrowRight className="h-3 w-3" />
                   </span>
                 </button>

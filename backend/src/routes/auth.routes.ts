@@ -601,6 +601,9 @@ router.post(
       },
     })
 
+    if (!existingUser && !identity.email.endsWith('@gmail.com')) {
+      return res.status(400).json({ message: 'Use your personal @gmail.com address.', code: 'GMAIL_REQUIRED' })
+    }
     if (!existingUser && !allowCreate) {
       return res.status(404).json({
         message: 'No account found for this Google email. Create an account to get started.',
@@ -658,6 +661,7 @@ router.post(
     return res.status(existingUser ? 200 : 201).json({
       user: await sanitizeUser(user),
       ...tokens,
+      isNewUser: !existingUser,
     })
   }),
 )

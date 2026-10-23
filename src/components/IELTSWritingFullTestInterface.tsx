@@ -401,7 +401,7 @@ export default function IELTSWritingFullTestInterface({
               {fullTest.title}
             </h1>
             <p className="mx-auto max-w-2xl text-lg font-light italic text-slate-600">
-              Experience the authentic IELTS Computer-Delivered environment with ProfAI precision.
+              Experience the authentic IELTS Computer-Delivered environment with Ivygoo precision.
             </p>
           </motion.div>
 

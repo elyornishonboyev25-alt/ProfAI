@@ -38,7 +38,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
       return (
         <div className="mx-auto my-16 w-full max-w-2xl rounded-2xl border border-red-200 bg-red-50 p-8 text-center">
           <h2 className="text-2xl font-semibold text-red-700">
-            <UiText text={this.state.staleBuild ? 'Updating ProfAI' : 'Something went wrong'} />
+            <UiText text={this.state.staleBuild ? 'Updating Ivygoo' : 'Something went wrong'} />
           </h2>
           <p className="mt-3 text-sm text-red-600">
             <UiText text={this.state.staleBuild

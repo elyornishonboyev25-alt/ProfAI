@@ -115,7 +115,7 @@ function SectionIntro({ owner, mockId, testId, section, from, children }: {
     <main className="full-mock-intro">
       <header className="full-mock-intro-header">
         <button type="button" onClick={() => navigate(`/mock/ielts/${mockId}`, { state: { from } })}><ArrowLeft size={17} /> Exam overview</button>
-        <span>PROFAI <b>IELTS ACADEMIC</b><small>{candidate}</small></span>
+        <span>IVYGOO <b>IELTS ACADEMIC</b><small>{candidate}</small></span>
         {fullscreen.supported && <button type="button" onClick={() => void fullscreen.enter()} disabled={fullscreen.isFullscreen}><Maximize2 size={17} /> {fullscreen.isFullscreen ? 'Full screen' : 'Enter full screen'}</button>}
       </header>
       <div className="full-mock-intro-content">
@@ -167,7 +167,7 @@ function SectionIntro({ owner, mockId, testId, section, from, children }: {
             setEnded(false)
             void video.current.play().catch(() => setPlaying(false))
           }}><span>{formatTime(mediaInfo.scenes[n].start)}</span>{item.title}</button></li>)}</ol>
-          <small>{section === 'listening' || section === 'reading' ? 'Recorded in the ProfAI IELTS test screen' : 'Original ProfAI walkthrough'} · AI-generated English narration</small>
+          <small>{section === 'listening' || section === 'reading' ? 'Recorded in the Ivygoo IELTS test screen' : 'Original Ivygoo walkthrough'} · AI-generated English narration</small>
         </aside>
         </div>
         <div className="full-mock-intro-actions">

@@ -12,6 +12,7 @@ import './styles/liquid.css'
 import './styles/liquid-completion.css'
 import './styles/workspace-refinement.css'
 import './styles/ielts-exam-workspace.css'
+import './styles/ivygoo-glass.css'
 import { startBuildFreshnessMonitor } from './utils/buildFreshness.ts'
 import { recoverFromStaleBuild } from './utils/staleBuildRecovery.ts'
 

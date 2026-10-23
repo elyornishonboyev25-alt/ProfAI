@@ -102,7 +102,7 @@ const assignmentSchema = z.object({
   description: z.string().trim().max(1000).optional(),
   kind: z.nativeEnum(LearningAssignmentKind),
   examTrack: z.nativeEnum(LearningCenterExamTrack),
-  routePath: z.string().trim().startsWith('/').max(300).refine((value) => !value.startsWith('//') && !value.includes('\\'), { message: 'Use a local ProfAI destination.' }),
+  routePath: z.string().trim().startsWith('/').max(300).refine((value) => !value.startsWith('//') && !value.includes('\\'), { message: 'Use a local Ivygoo destination.' }),
   targetScore: z.string().trim().max(40).optional(),
   dueAt: z.string().datetime(),
   groupId: z.string().trim().min(1).max(191).optional(),
@@ -806,7 +806,7 @@ router.post(
       const generated = await generateAiText({
         userId: req.user!.id,
         purpose: 'center_performance_analysis',
-        systemPrompt: 'You are ProfAI Learning Center intelligence. Return strict JSON with headline, summary, priorities (2-4 short strings), and tone (positive, neutral, warning). Base every claim only on supplied metrics. Never diagnose personality or invent topics.',
+        systemPrompt: 'You are Ivygoo Learning Center intelligence. Return strict JSON with headline, summary, priorities (2-4 short strings), and tone (positive, neutral, warning). Base every claim only on supplied metrics. Never diagnose personality or invent topics.',
         userMessage: JSON.stringify({ student: { ...summary, id: undefined, fullName: 'Student' }, recentResults: results.slice(-12) }),
         maxOutputTokens: 520,
       })
@@ -962,7 +962,7 @@ router.post(
       ? await prisma.user.findUnique({ where: { email: payload.email.toLowerCase() }, select: { id: true } })
       : payload.nickname ? await prisma.user.findFirst({ where: { nickname: { equals: payload.nickname.replace(/^@/, ''), mode: 'insensitive' } }, select: { id: true } }) : null
     if (payload.nickname && !existingUser) return res.status(404).json({ message: 'No user has this nickname.' })
-    if (payload.role === LearningCenterRole.ADMIN && !existingUser) return res.status(404).json({ message: 'Administrator must already have a ProfAI account.' })
+    if (payload.role === LearningCenterRole.ADMIN && !existingUser) return res.status(404).json({ message: 'Administrator must already have a Ivygoo account.' })
     if (existingUser) {
       await requireClassPlan(existingUser.id)
       if (payload.role === LearningCenterRole.TEACHER || payload.role === LearningCenterRole.ADMIN) await requireTeacherPlan(existingUser.id)

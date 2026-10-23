@@ -22,7 +22,7 @@ const translation = {
     lightMode: 'Light Mode',
   },
   home: {
-    title: 'ProfAI',
+    title: 'Ivygoo',
     subtitle: 'Your Path to Top Universities Abroad',
     description: 'One AI-powered platform to study abroad — SAT & IELTS prep, English skills, university research and step-by-step admission guidance, all in one place.',
     getStarted: 'Get Started',

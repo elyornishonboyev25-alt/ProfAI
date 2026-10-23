@@ -19,9 +19,9 @@ const ZOOM = 1.18
 const STEP_MS = 4200
 const faqs = [
   { question: 'Can I prepare for both IELTS and SAT?', answer: 'Yes. Both exam arenas live in one account, with practice, full tests, results and review.' },
-  { question: 'Is ProfAI free to use?', answer: 'Start for free with 7 days of AI, IELTS and SAT. After your one-time trial, Student is $3/month and Teacher is $5/month. Classes require a paid plan. Saved results and vocabulary stay available.' },
-  { question: 'Does ProfAI support IELTS General Training?', answer: 'Yes. IELTS Academic and General Training preparation are both available.' },
-  { question: 'Does ProfAI submit university applications?', answer: 'No. ProfAI helps you prepare and organize your plan. You submit applications through each university’s official process.' },
+  { question: 'Is Ivygoo free to use?', answer: 'Start for free with 7 days of AI, IELTS and SAT. After your one-time trial, Student is $3/month and Teacher is $5/month. Classes require a paid plan. Saved results and vocabulary stay available.' },
+  { question: 'Does Ivygoo support IELTS General Training?', answer: 'Yes. IELTS Academic and General Training preparation are both available.' },
+  { question: 'Does Ivygoo submit university applications?', answer: 'No. Ivygoo helps you prepare and organize your plan. You submit applications through each university’s official process.' },
 ]
 const insideStats: { value: number; suffix?: string; label: Copy }[] = [
   { value: 30, label: ['IELTS full mock exams', 'IELTS to‘liq mock imtihonlari', 'полных пробных IELTS'] },
@@ -173,7 +173,7 @@ function Hero({ onStart, onExplore }: { onStart: () => void; onExplore: () => vo
         </motion.div>
       </div>
       <motion.div className="lx-hero-stage" initial={reducedMotion ? false : { opacity: 0, rotateY: -18, rotateX: 8, y: 50 }} animate={{ opacity: 1, rotateY: -6, rotateX: 3, y: 0 }} transition={{ duration: 1.1, delay: .15, ease: EASE }}>
-        <BrowserFrame src="/assets/landing/dashboard.webp" alt={t(['ProfAI learning dashboard', 'ProfAI boshqaruv paneli', 'Панель ProfAI'])} address="profai.uz/dashboard" eager />
+        <BrowserFrame src="/assets/landing/dashboard.webp" alt={t(['Ivygoo learning dashboard', 'Ivygoo boshqaruv paneli', 'Панель Ivygoo'])} address="ivygoo.com/dashboard" eager />
         <div className="lx-float lx-float-a"><Target size={17} /><span><small>{t(['Target score', 'Maqsadli ball', 'Целевой балл'])}</small><strong>IELTS 7.5</strong></span></div>
         <div className="lx-float lx-float-b"><svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="18" /><circle cx="22" cy="22" r="18" pathLength="100" strokeDasharray="89 100" /></svg><span><strong>89%</strong><small>{t(['Toward target', 'Maqsad sari', 'К цели'])}</small></span></div>
         <div className="lx-float lx-float-c"><Flame size={17} /><span><strong>18</strong><small>{t(['day streak', 'kunlik seriya', 'дней подряд'])}</small></span></div>
@@ -208,12 +208,12 @@ function Inside() {
   const t = useLandingText()
   const ref = useRef<HTMLDivElement>(null)
   const inView = useInView(ref, { amount: .35, once: true })
-  return <Screen id="inside" label={t(['Inside ProfAI', 'ProfAI ichida', 'Внутри ProfAI'])} className="lx-inside">
+  return <Screen id="inside" label={t(['Inside Ivygoo', 'Ivygoo ichida', 'Внутри Ivygoo'])} className="lx-inside">
     <div ref={ref} className="lx-inside-inner">
       <motion.div className="lx-section-head" initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : undefined} transition={{ duration: .8, ease: EASE }}>
-        <span className="lx-kicker"><Sparkles size={15} /> {t(['INSIDE PROFAI', 'PROFAI ICHIDA', 'ВНУТРИ PROFAI'])}</span>
+        <span className="lx-kicker"><Sparkles size={15} /> {t(['INSIDE IVYGOO', 'IVYGOO ICHIDA', 'ВНУТРИ IVYGOO'])}</span>
         <h2>{t(['Everything you need.', 'Kerakli hamma narsa.', 'Всё, что нужно.'])} <em>{t(['Nothing you don’t.', 'Ortiqcha hech narsa yo‘q.', 'Ничего лишнего.'])}</em></h2>
-        <p>{t(['Scroll through the real product. Each screen below is taken from ProfAI and shows exactly what you will use.', 'Haqiqiy platforma bo‘ylab aylaning. Quyidagi har bir ekran ProfAI’dan olingan va aynan nimadan foydalanishingizni ko‘rsatadi.', 'Пролистайте настоящий продукт. Каждый экран ниже взят из ProfAI и показывает то, чем вы будете пользоваться.'])}</p>
+        <p>{t(['Scroll through the real product. Each screen below is taken from Ivygoo and shows exactly what you will use.', 'Haqiqiy platforma bo‘ylab aylaning. Quyidagi har bir ekran Ivygoo’dan olingan va aynan nimadan foydalanishingizni ko‘rsatadi.', 'Пролистайте настоящий продукт. Каждый экран ниже взят из Ivygoo и показывает то, чем вы будете пользоваться.'])}</p>
       </motion.div>
       <div className="lx-stat-grid">{insideStats.map((stat, index) => <StatCard key={index} value={stat.value} label={t(stat.label)} index={index} active={inView} />)}</div>
       <motion.div className="lx-chapter-chips" initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : undefined} transition={{ delay: .6, duration: .8 }}>
@@ -357,7 +357,7 @@ export default function Landing() {
     <div className="lx-backdrop" aria-hidden="true"><i /><i /><i /></div>
     <header className={`lx-header ${scrolled ? 'is-scrolled' : ''}`}>
       <div className="lx-nav">
-        <button type="button" className="lx-logo" aria-label={c('ProfAI home')} onClick={() => scrollTo('top')}><BrandMark size={36} /><span>Prof<span>AI</span></span></button>
+        <button type="button" className="lx-logo" aria-label={c('Ivygoo home')} onClick={() => scrollTo('top')}><BrandMark size={36} /><span>Ivy<span>goo</span></span></button>
         <nav className="lx-nav-links" aria-label={c('Main navigation')}>{navItems.map(({ label, id }) => <button type="button" key={id} onClick={() => scrollTo(id)}>{label}</button>)}</nav>
         <div className="lx-nav-actions">
           <div className="lx-language"><LanguageSelector /></div>
@@ -383,7 +383,7 @@ export default function Landing() {
           <div className="lx-faq-intro">
             <span className="lx-kicker"><ShieldCheck size={15} /> {c('GOOD TO KNOW')}</span>
             <h2>{c('Questions before you begin?')}</h2>
-            <p>{c('Get a clear picture of what ProfAI offers, then take your first step.')}</p>
+            <p>{c('Get a clear picture of what Ivygoo offers, then take your first step.')}</p>
             <a href={SUPPORT_TELEGRAM} target="_blank" rel="noopener noreferrer" className="lx-support"><Send size={16} /> {c('Contact support')} <ArrowUpRight size={16} /></a>
           </div>
           <div className="lx-faq-list">{faqs.map(({ question, answer }, index) => <div className={`lx-faq-item${openFaq === index ? ' is-open' : ''}`} key={question}>
@@ -396,9 +396,9 @@ export default function Landing() {
           <button type="button" onClick={start} className="lx-btn lx-btn-light">{c('Get started free')} <ArrowRight size={19} /></button>
         </div>
         <footer className="lx-footer">
-          <div className="lx-footer-brand"><BrandMark size={30} /><strong>Prof<span>AI</span></strong><small>{c('Preparation and planning for the journey ahead.')}</small></div>
+          <div className="lx-footer-brand"><BrandMark size={30} /><strong>Ivy<span>goo</span></strong><small>{c('Preparation and planning for the journey ahead.')}</small></div>
           <nav aria-label={c('Footer navigation')}>{navItems.map(({ label, id }) => <button type="button" key={id} onClick={() => scrollTo(id)}>{label}</button>)}<a href={SUPPORT_TELEGRAM} target="_blank" rel="noopener noreferrer">Telegram</a></nav>
-          <p>© {new Date().getFullYear()} ProfAI. {c('All rights reserved.')} · {c('Independent platform · Not affiliated with IELTS, College Board or any university.')}</p>
+          <p>© {new Date().getFullYear()} Ivygoo. {c('All rights reserved.')} · {c('Independent platform · Not affiliated with IELTS, College Board or any university.')}</p>
         </footer>
       </Screen>
     </main>

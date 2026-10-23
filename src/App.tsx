@@ -588,7 +588,7 @@ function App() {
                           <AnimatedRoute>
                             <PremiumOnly
                               title="Vocabulary Arena is Premium"
-                              description="Grow your word power with the Articles and My-Words vocabulary tracks on ProfAI Premium."
+                              description="Grow your word power with the Articles and My-Words vocabulary tracks on Ivygoo Premium."
                               perks={['Articles & My-Words tracks', 'Spaced practice activities', 'AI vocabulary help']}
                             >
                               <Vocabulary />
@@ -602,7 +602,7 @@ function App() {
                           <AnimatedRoute>
                             <PremiumOnly
                               title="Vocabulary Arena is Premium"
-                              description="Grow your word power with the Articles and My-Words vocabulary tracks on ProfAI Premium."
+                              description="Grow your word power with the Articles and My-Words vocabulary tracks on Ivygoo Premium."
                               perks={['Articles & My-Words tracks', 'Spaced practice activities', 'AI vocabulary help']}
                             >
                               <Vocabulary />

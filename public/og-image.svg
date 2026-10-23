@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#f4f5f8"/><stop offset="1" stop-color="#dce1e9"/></linearGradient><linearGradient id="red" x2="1" y2="1"><stop stop-color="#a91c31"/><stop offset="1" stop-color="#e74a5c"/></linearGradient></defs>
+<rect width="1200" height="630" fill="url(#bg)"/><circle cx="1180" cy="0" r="420" fill="#c9243b" opacity=".045"/>
+<rect x="24" y="24" width="1152" height="582" rx="32" fill="white" fill-opacity=".5" stroke="white"/>
+<svg x="910" y="62" width="190" height="190" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="ivygoo"><title>ivygoo</title><defs>
+  <linearGradient id="mlstem" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#3a414c"/><stop offset=".22" stop-color="#6b7380"/><stop offset=".38" stop-color="#a7afba"/><stop offset=".56" stop-color="#4a515d"/><stop offset=".85" stop-color="#1c2027"/><stop offset="1" stop-color="#363c46"/>
+  </linearGradient>
+  <linearGradient id="mlleaf" x1="0.15" y1="0" x2=".85" y2="1">
+    <stop offset="0" stop-color="#ff6f7e"/><stop offset=".42" stop-color="#e2293f"/><stop offset="1" stop-color="#9c152b"/>
+  </linearGradient>
+  <linearGradient id="mlgloss" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".7" stop-color="#fff" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="mlspec" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fff" stop-opacity="0.55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="mlcrim" x1="0" y1="0" x2="1" y2=".6">
+    <stop offset="0" stop-color="#a91c31"/><stop offset=".65" stop-color="#d62c43"/><stop offset="1" stop-color="#e74a5c"/>
+  </linearGradient></defs><g transform="translate(14.058 3.043) scale(0.5797)">
+  <rect x="35" y="59" width="30" height="91" rx="15" fill="url(#mlstem)"/>
+  <rect x="35.5" y="59.5" width="29" height="90" rx="14.5" fill="none" stroke="#fff" stroke-opacity="0.22" stroke-width="1"/>
+  <rect x="40" y="64" width="5" height="70" rx="2.5" fill="url(#mlspec)"/>
+  <path d="M53 54C45.5 31 65.5 11.5 93.5 12.5C95.5 40.5 74.5 58.5 53 54Z" fill="url(#mlleaf)"/>
+  <path d="M53 54C45.5 31 65.5 11.5 93.5 12.5C76 22 62 36 53 54Z" fill="url(#mlgloss)"/>
+  <path d="M55.6 51.3C64 40 76 27 90.4 15.6" fill="none" stroke="#ffd9de" stroke-opacity=".85" stroke-width="1.7" stroke-linecap="round"/>
+  <path d="M53 54C45.5 31 65.5 11.5 93.5 12.5C95.5 40.5 74.5 58.5 53 54Z" fill="none" stroke="#fff" stroke-opacity=".4" stroke-width=".8"/></g></svg>
+
+<g font-family="Segoe UI,Arial,sans-serif"><text x="76" y="126" font-size="62" font-weight="800" fill="#20242c">Ivy<tspan fill="#c9243b">goo</tspan></text>
+<text x="80" y="177" font-size="22" fill="#5b6473">YOUR NEXT CHAPTER STARTS HERE</text>
+<text x="76" y="294" font-size="65" font-weight="800" fill="#20242c">IELTS. SAT.</text>
+<text x="76" y="374" font-size="65" font-weight="800" fill="#20242c">A bigger future.</text>
+<text x="80" y="436" font-size="26" fill="#5b6473">Exam practice, English skills and study-abroad planning.</text>
+<rect x="78" y="491" width="195" height="57" rx="28" fill="url(#red)"/><text x="175" y="528" text-anchor="middle" font-size="23" font-weight="700" fill="white">ivygoo.com</text>
+<text x="1100" y="527" text-anchor="end" font-size="22" fill="#5b6473">Prepare. Practice. Progress.</text></g></svg>

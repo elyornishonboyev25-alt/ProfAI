@@ -86,7 +86,7 @@ export default function OverviewView({ slug }: { slug: string }) {
         <CenterPanel className="bg-[radial-gradient(circle_at_90%_0%,rgba(207,214,223,.7),transparent_48%),linear-gradient(145deg,#fff,#f3f4f6_62%,#fff0f1)] p-5 text-slate-950 sm:p-6">
           <div className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-red-200/30 blur-2xl" />
           <div className="relative flex items-center justify-between"><span className="grid h-11 w-11 place-items-center rounded-2xl border border-red-100 bg-white/80"><BrainCircuit className="h-5 w-5 text-red-700" /></span><span className="rounded-full border border-red-100 bg-red-50/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[.14em] text-red-700">Live intelligence</span></div>
-          <h2 className="relative mt-5 text-2xl font-bold tracking-[-.04em]">ProfAI Performance Signal</h2>
+          <h2 className="relative mt-5 text-2xl font-bold tracking-[-.04em]">Ivygoo Performance Signal</h2>
           <p className="relative mt-2 text-sm leading-6 text-slate-600">Every score, completion and learning streak is translated into an actionable teaching signal.</p>
           <div className="relative mt-6 space-y-3">
             <Signal label="Assignment completion" value={`${data.metrics.assignmentsCompleted}%`} icon={CheckCircle2} />

@@ -54,7 +54,7 @@ export default function AnalyticsConsentBanner() {
         </span>
         <div className="min-w-0 flex-1">
           <h2 id="analytics-consent-title" className="text-base font-black tracking-tight text-slate-950">
-            Help us improve ProfAI
+            Help us improve Ivygoo
           </h2>
           <p className="mt-1 text-xs font-medium leading-5 text-slate-600 sm:text-sm">
             With your permission, anonymous product analytics help us improve the university journey. Replay masks all text and inputs, and never runs on sensitive account or writing screens.

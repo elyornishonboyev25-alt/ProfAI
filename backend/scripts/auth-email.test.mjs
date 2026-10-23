@@ -117,6 +117,7 @@ test('email is delivered through provider, stored hashed, and never returned to 
   assert.equal(result.body.delivered, true)
   assert.equal(result.body.developmentCode, undefined)
   assert.deepEqual(sent[0].to, [email])
+  assert.match(sent[0].from, /^Ivygoo </)
   assert.notEqual(codes[0].codeHash, deliveredCode())
   assert.equal(codes[0].codeHash.length, 64)
   assert.equal((await request()).status, 429)
@@ -136,22 +137,42 @@ test('verified new Gmail creates one account through the create-account flow', a
   assert.equal(tokens.length, 1)
 })
 
-test('sign-in cannot create an account or send a sign-in code to an unknown Gmail', async () => {
+test('both entry flows create a new account only after Gmail code verification', async () => {
   const response = await request()
-  assert.equal(response.status, 404)
-  assert.equal(response.body.code, 'ACCOUNT_NOT_FOUND')
+  assert.equal(response.status, 202)
+  assert.equal(sent.length, 1)
+  assert.equal(users.length, 0)
+  const code = deliveredCode()
+  const wrong = code === '000000' ? '000001' : '000000'
+  assert.equal((await post('/email/login', { email, verificationCode: wrong })).status, 400)
+  assert.equal(users.length, 0)
+  const result = await post('/email/login', { email, verificationCode: code })
+  assert.equal(result.status, 200)
+  assert.equal(result.body.isNewUser, true)
+  assert.equal(users.length, 1)
+  assert.ok(result.body.accessToken)
+  assert.equal(result.body.user.passwordHash, undefined)
+  assert.equal((await post('/email/login', { email, verificationCode: code })).status, 400)
+  assert.equal(users.length, 1)
+})
+
+test('new and existing access only accepts personal Gmail addresses', async () => {
+  assert.equal((await post('/verification/request', { email: 'learner@example.com', purpose: 'SIGN_IN' })).status, 400)
+  assert.equal((await post('/email/login', { email: 'learner@example.com', verificationCode: '123456' })).status, 400)
   assert.equal(sent.length, 0)
   assert.equal(users.length, 0)
 })
 
 test('existing account identity and progress survive code sign-in', async () => {
-  const user = await globalThis.prisma.user.create({ data: { email, fullName: 'Learner', xp: 450, profile: { onboardingCompletedAt: new Date() } } })
+  const user = await globalThis.prisma.user.create({ data: { email, fullName: 'Learner', passwordHash: 'existing-password-hash', xp: 450, profile: { onboardingCompletedAt: new Date() } } })
   await request()
   const result = await post('/email/login', { email, verificationCode: deliveredCode() })
   assert.equal(result.status, 200)
   assert.equal(result.body.user.id, user.id)
   assert.equal(result.body.user.xp, 450)
   assert.equal(result.body.user.onboardingCompleted, true)
+  assert.equal(result.body.isNewUser, false)
+  assert.equal(users[0].passwordHash, 'existing-password-hash')
   assert.equal(users.length, 1)
 })
 

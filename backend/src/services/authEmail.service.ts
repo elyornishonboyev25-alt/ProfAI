@@ -4,29 +4,29 @@ export type AuthCodePurpose = 'REGISTER' | 'RESET_PASSWORD' | 'SIGN_IN'
 
 function emailCopy(purpose: AuthCodePurpose, code: string) {
   const isRegistration = purpose === 'REGISTER'
-  const title = purpose === 'SIGN_IN' ? 'Sign in to ProfAI' : isRegistration ? 'Confirm your ProfAI account' : 'Reset your ProfAI password'
+  const title = purpose === 'SIGN_IN' ? 'Sign in to Ivygoo' : isRegistration ? 'Confirm your Ivygoo account' : 'Reset your Ivygoo password'
   const lead = purpose === 'SIGN_IN'
-    ? 'Use this verification code to sign in or create your ProfAI account.'
+    ? 'Use this verification code to sign in or create your Ivygoo account.'
     : isRegistration
-    ? 'Use this verification code to finish creating your ProfAI account.'
-    : 'Use this verification code to choose a new ProfAI password.'
+    ? 'Use this verification code to finish creating your Ivygoo account.'
+    : 'Use this verification code to choose a new Ivygoo password.'
 
   return {
-    subject: `${code} is your ProfAI verification code`,
+    subject: `${code} is your Ivygoo verification code`,
     text: `${title}\n\n${lead}\n\nVerification code: ${code}\n\nThis code expires in 10 minutes. If you did not request it, you can ignore this email.`,
     html: `<!doctype html>
       <html lang="en">
-        <body style="margin:0;background:#f3f7ff;font-family:Inter,Arial,sans-serif;color:#0f172a">
+        <body style="margin:0;background:#edf0f5;font-family:Inter,Arial,sans-serif;color:#0f172a">
           <div style="max-width:560px;margin:0 auto;padding:36px 18px">
-            <div style="overflow:hidden;border:1px solid #dbeafe;border-radius:28px;background:#ffffff;box-shadow:0 22px 60px rgba(37,99,235,.12)">
-              <div style="height:5px;background:linear-gradient(90deg,#2563eb,#ef3333,#c5162e)"></div>
+            <div style="overflow:hidden;border:1px solid #e0e5ed;border-radius:28px;background:#ffffff;box-shadow:0 22px 60px rgba(47,57,76,.10)">
+              <div style="height:5px;background:linear-gradient(90deg,#dfe4ed,#bb2c44,#9c2038)"></div>
               <div style="padding:34px">
-                <div style="display:inline-block;border-radius:12px;background:#eff6ff;padding:8px 12px;font-size:12px;font-weight:800;letter-spacing:.12em;color:#1d4ed8">PROFAI SECURITY</div>
+                <div style="display:inline-block;border-radius:12px;background:#f8edf0;padding:8px 12px;font-size:12px;font-weight:800;letter-spacing:.12em;color:#a7213a">IVYGOO SECURITY</div>
                 <h1 style="margin:22px 0 8px;font-size:28px;line-height:1.15">${title}</h1>
                 <p style="margin:0;color:#64748b;font-size:15px;line-height:1.7">${lead}</p>
-                <div style="margin:26px 0;border:1px solid #bfdbfe;border-radius:20px;background:#f8fbff;padding:22px;text-align:center">
+                <div style="margin:26px 0;border:1px solid #d5dce6;border-radius:20px;background:#f4f6fa;padding:22px;text-align:center">
                   <div style="font-size:12px;font-weight:800;letter-spacing:.16em;color:#64748b">VERIFICATION CODE</div>
-                  <div style="margin-top:10px;font-size:38px;font-weight:900;letter-spacing:.22em;color:#1d4ed8">${code}</div>
+                  <div style="margin-top:10px;font-size:38px;font-weight:900;letter-spacing:.22em;color:#a7213a">${code}</div>
                 </div>
                 <p style="margin:0;color:#64748b;font-size:13px;line-height:1.6">This code expires in 10 minutes and can be used only once. Never share it with anyone.</p>
               </div>
@@ -43,6 +43,8 @@ export async function sendAuthCode(email: string, code: string, purpose: AuthCod
   }
 
   const copy = emailCopy(purpose, code)
+  // Keep the verified sending address while using the public product name.
+  const senderAddress = env.AUTH_EMAIL_FROM.match(/<([^>]+)>/)?.[1] || env.AUTH_EMAIL_FROM.trim()
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     signal: AbortSignal.timeout(15_000),
@@ -51,7 +53,7 @@ export async function sendAuthCode(email: string, code: string, purpose: AuthCod
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: env.AUTH_EMAIL_FROM,
+      from: `Ivygoo <${senderAddress}>`,
       to: [email],
       subject: copy.subject,
       text: copy.text,

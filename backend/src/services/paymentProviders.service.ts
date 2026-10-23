@@ -44,7 +44,7 @@ export async function checkoutUrl(order: PaymentRequest) {
   const form = new URLSearchParams({ mode: 'payment', success_url: `${returnUrl}&payment=returned`, cancel_url: `${returnUrl}&payment=canceled`,
     client_reference_id: order.id, 'metadata[order_id]': order.id,
     'line_items[0][price_data][currency]': 'usd', 'line_items[0][price_data][unit_amount]': String(order.amountMinor),
-    'line_items[0][price_data][product_data][name]': `ProfAI ${order.plan}`, 'line_items[0][quantity]': '1' })
+    'line_items[0][price_data][product_data][name]': `Ivygoo ${order.plan}`, 'line_items[0][quantity]': '1' })
   const response = await fetch('https://api.stripe.com/v1/checkout/sessions', { method: 'POST',
     headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`, 'Content-Type': 'application/x-www-form-urlencoded', 'Idempotency-Key': order.id },
     body: form, signal: AbortSignal.timeout(20000) })

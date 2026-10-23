@@ -27,7 +27,7 @@ function findDiagram(src: string) {
   if (embedded) return embedded
   try {
     // Results/history may retain the public URL from an older test snapshot.
-    const path = new URL(src, 'https://www.profai.uz').pathname
+    const path = new URL(src, 'https://ivygoo.com').pathname
     return diagrams.find(diagram => diagram.path === path)
   } catch {
     return undefined

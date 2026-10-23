@@ -1,4 +1,4 @@
-// Landing product tour. Every screen uses a real ProfAI screenshot from
+// Landing product tour. Every screen uses a real Ivygoo screenshot from
 // public/assets/landing; hotspot x/y are percentages of that screenshot.
 export type Copy = readonly [en: string, uz: string, ru: string]
 export type TourStep = { title: Copy; body: Copy; x: number; y: number }
@@ -18,12 +18,12 @@ export type TourFeature = {
 
 export const tourFeatures: TourFeature[] = [
   {
-    id: 'dashboard', route: '/register', image: '/assets/landing/dashboard.webp', address: 'profai.uz/dashboard',
+    id: 'dashboard', route: '/register', image: '/assets/landing/dashboard.webp', address: 'ivygoo.com/dashboard',
     label: ['Dashboard', 'Boshqaruv paneli', 'Панель'],
     kicker: ['YOUR COMMAND CENTER', 'SIZNING BOSHQARUV MARKAZINGIZ', 'ВАШ ЦЕНТР УПРАВЛЕНИЯ'],
     title: ['See your whole preparation on one screen.', 'Butun tayyorgarligingiz bitta ekranda.', 'Вся подготовка на одном экране.'],
     body: ['Targets, weekly rhythm, scores and rank stay together, so every session starts with a clear next step.', 'Maqsadlar, haftalik ritm, ballar va reyting bir joyda — har bir mashg‘ulot aniq keyingi qadam bilan boshlanadi.', 'Цели, недельный ритм, баллы и рейтинг собраны вместе — каждое занятие начинается с понятного следующего шага.'],
-    alt: ['ProfAI learning dashboard with target progress, weekly activity and leaderboard', 'Maqsad, haftalik faollik va reyting ko‘rsatilgan ProfAI boshqaruv paneli', 'Панель ProfAI с прогрессом к цели, недельной активностью и рейтингом'],
+    alt: ['Ivygoo learning dashboard with target progress, weekly activity and leaderboard', 'Maqsad, haftalik faollik va reyting ko‘rsatilgan Ivygoo boshqaruv paneli', 'Панель Ivygoo с прогрессом к цели, недельной активностью и рейтингом'],
     steps: [
       { x: 32, y: 44, title: ['Target ring', 'Maqsad halqasi', 'Кольцо цели'], body: ['See how close you are to your IELTS and SAT goals.', 'IELTS va SAT maqsadingizga qanchalik yaqinligingizni ko‘ring.', 'Видно, насколько вы близки к целям IELTS и SAT.'] },
       { x: 59, y: 48, title: ['Live stats', 'Jonli statistika', 'Живая статистика'], body: ['Study time, completed practice, average score and rank.', 'O‘qish vaqti, bajarilgan mashqlar, o‘rtacha ball va o‘rin.', 'Время занятий, выполненная практика, средний балл и место.'] },
@@ -32,7 +32,7 @@ export const tourFeatures: TourFeature[] = [
     ],
   },
   {
-    id: 'reading', route: '/ielts', image: '/assets/landing/reading.webp', address: 'profai.uz/ielts/reading',
+    id: 'reading', route: '/ielts', image: '/assets/landing/reading.webp', address: 'ivygoo.com/ielts/reading',
     label: ['IELTS Reading', 'IELTS Reading', 'IELTS Reading'],
     kicker: ['IELTS READING', 'IELTS READING', 'IELTS READING'],
     title: ['The real computer-delivered exam, rehearsed.', 'Haqiqiy kompyuterdagi imtihon — oldindan mashq qilib.', 'Настоящий компьютерный экзамен — заранее.'],
@@ -46,7 +46,7 @@ export const tourFeatures: TourFeature[] = [
     ],
   },
   {
-    id: 'listening', route: '/ielts', image: '/assets/landing/listening.webp', address: 'profai.uz/ielts/listening',
+    id: 'listening', route: '/ielts', image: '/assets/landing/listening.webp', address: 'ivygoo.com/ielts/listening',
     label: ['IELTS Listening', 'IELTS Listening', 'IELTS Listening'],
     kicker: ['IELTS LISTENING', 'IELTS LISTENING', 'IELTS LISTENING'],
     title: ['Hear it once. Answer like it counts.', 'Bir marta eshiting. Haqiqiydek javob bering.', 'Слушайте один раз. Отвечайте как на экзамене.'],
@@ -60,7 +60,7 @@ export const tourFeatures: TourFeature[] = [
     ],
   },
   {
-    id: 'writing', route: '/ielts', image: '/assets/landing/writing.webp', address: 'profai.uz/ielts/writing',
+    id: 'writing', route: '/ielts', image: '/assets/landing/writing.webp', address: 'ivygoo.com/ielts/writing',
     label: ['IELTS Writing', 'IELTS Writing', 'IELTS Writing'],
     kicker: ['IELTS WRITING · AI FEEDBACK', 'IELTS WRITING · AI BAHO', 'IELTS WRITING · ОЦЕНКА AI'],
     title: ['Write with the task right beside you.', 'Topshiriq yoningizda turgan holda yozing.', 'Пишите, когда задание прямо перед вами.'],
@@ -74,7 +74,7 @@ export const tourFeatures: TourFeature[] = [
     ],
   },
   {
-    id: 'speaking', route: '/ielts', image: '/assets/landing/speaking.webp', address: 'profai.uz/ielts/speaking',
+    id: 'speaking', route: '/ielts', image: '/assets/landing/speaking.webp', address: 'ivygoo.com/ielts/speaking',
     label: ['IELTS Speaking', 'IELTS Speaking', 'IELTS Speaking'],
     kicker: ['IELTS SPEAKING · AI EXAMINER', 'IELTS SPEAKING · AI IMTIHONCHI', 'IELTS SPEAKING · AI-ЭКЗАМЕНАТОР'],
     title: ['Practise with an examiner who really listens.', 'Sizni chindan tinglaydigan imtihonchi bilan mashq qiling.', 'Практикуйтесь с экзаменатором, который слушает.'],
@@ -88,7 +88,7 @@ export const tourFeatures: TourFeature[] = [
     ],
   },
   {
-    id: 'mocks', route: '/ielts', image: '/assets/landing/mock.webp', address: 'profai.uz/mock/ielts',
+    id: 'mocks', route: '/ielts', image: '/assets/landing/mock.webp', address: 'ivygoo.com/mock/ielts',
     label: ['Full mocks', 'To‘liq mocklar', 'Полные пробники'],
     kicker: ['IELTS FULL MOCK EXAMS', 'IELTS TO‘LIQ MOCK IMTIHONLAR', 'ПОЛНЫЕ ПРОБНЫЕ IELTS'],
     title: ['Thirty full mocks. Four skills. One sitting.', '30 ta to‘liq mock. 4 ko‘nikma. Bir o‘tirishda.', '30 полных пробников. 4 навыка. Один подход.'],
@@ -102,7 +102,7 @@ export const tourFeatures: TourFeature[] = [
     ],
   },
   {
-    id: 'sat', route: '/sat', image: '/assets/landing/sat-run.webp', address: 'profai.uz/sat/mock',
+    id: 'sat', route: '/sat', image: '/assets/landing/sat-run.webp', address: 'ivygoo.com/sat/mock',
     float: { image: '/assets/landing/sat-arena.webp', alt: ['SAT Arena with full mocks and question bank', 'To‘liq mocklar va savollar banki bilan SAT Arena', 'SAT Arena с пробниками и банком вопросов'] },
     label: ['Digital SAT', 'Digital SAT', 'Digital SAT'],
     kicker: ['DIGITAL SAT', 'DIGITAL SAT', 'DIGITAL SAT'],
@@ -117,7 +117,7 @@ export const tourFeatures: TourFeature[] = [
     ],
   },
   {
-    id: 'vocabulary', route: '/register', image: '/assets/landing/vocab.webp', address: 'profai.uz/vocabulary',
+    id: 'vocabulary', route: '/register', image: '/assets/landing/vocab.webp', address: 'ivygoo.com/vocabulary',
     label: ['Vocabulary', 'Lug‘at', 'Словарь'],
     kicker: ['VOCABULARY ARENA', 'LUG‘AT ARENASI', 'АРЕНА СЛОВАРЯ'],
     title: ['Thousands of words, learned in context.', 'Minglab so‘zlar — kontekst ichida.', 'Тысячи слов — в контексте.'],
@@ -131,7 +131,7 @@ export const tourFeatures: TourFeature[] = [
     ],
   },
   {
-    id: 'nova', route: '/register', image: '/assets/landing/aitutor.webp', address: 'profai.uz/ai-tutor',
+    id: 'nova', route: '/register', image: '/assets/landing/aitutor.webp', address: 'ivygoo.com/ai-tutor',
     label: ['Nova AI coach', 'Nova AI murabbiy', 'AI-коуч Nova'],
     kicker: ['NOVA · AI COACH', 'NOVA · AI MURABBIY', 'NOVA · AI-КОУЧ'],
     title: ['Ask anything. Hear the answer.', 'Istalgan savolni bering. Javobni eshiting.', 'Спросите что угодно. Услышьте ответ.'],
@@ -145,7 +145,7 @@ export const tourFeatures: TourFeature[] = [
     ],
   },
   {
-    id: 'listen-speak', route: '/register', image: '/assets/landing/podcast.webp', address: 'profai.uz/podcast',
+    id: 'listen-speak', route: '/register', image: '/assets/landing/podcast.webp', address: 'ivygoo.com/podcast',
     float: { image: '/assets/landing/shadowing.webp', alt: ['Shadowing lab for listening, repeating and recording', 'Tinglash, takrorlash va yozib olish uchun Shadowing lab', 'Shadowing lab: слушайте, повторяйте и записывайте'] },
     label: ['Podcasts & shadowing', 'Podkast va shadowing', 'Подкасты и шэдоуинг'],
     kicker: ['PODCASTS & SHADOWING', 'PODKAST VA SHADOWING', 'ПОДКАСТЫ И ШЭДОУИНГ'],
@@ -160,7 +160,7 @@ export const tourFeatures: TourFeature[] = [
     ],
   },
   {
-    id: 'admissions', route: '/register', image: '/assets/landing/universities.webp', address: 'profai.uz/admission',
+    id: 'admissions', route: '/register', image: '/assets/landing/universities.webp', address: 'ivygoo.com/admission',
     label: ['Admissions', 'Qabul', 'Поступление'],
     kicker: ['UNIVERSITY ADMISSIONS', 'UNIVERSITETGA QABUL', 'ПОСТУПЛЕНИЕ В УНИВЕРСИТЕТ'],
     title: ['From your score to your shortlist.', 'Balingizdan — universitetlar ro‘yxatigacha.', 'От балла — к списку университетов.'],

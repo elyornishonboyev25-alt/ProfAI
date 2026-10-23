@@ -2,7 +2,7 @@
 import { TRACK_META, TIER_NAME, formatAchievementScore, tierForAchievement, type SkillTrackKey } from './badgeMeta'
 import './achievements.css'
 
-// One minted crest for every exam, with the official ProfAI mark.
+// One minted crest for every exam, with the official Ivygoo mark.
 const METAL = {
   6: ['#fff0db', '#d8a178', '#87502d', '#f0c6a4'],
   7: ['#fff8dc', '#e8bd65', '#8c591b', '#f8dfa0'],

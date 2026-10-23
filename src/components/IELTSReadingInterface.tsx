@@ -3179,7 +3179,7 @@ export default function IELTSReadingInterface({
             {isListening ? 'Academic Listening Test' : 'Academic Reading Test'}
           </h1>
           <p className="text-slate-600 text-lg font-light max-w-2xl mx-auto italic">
-            Experience the authentic IELTS Computer-Delivered environment with ProfAI precision.
+            Experience the authentic IELTS Computer-Delivered environment with Ivygoo precision.
           </p>
         </motion.div>
 

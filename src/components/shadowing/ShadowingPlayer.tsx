@@ -351,7 +351,7 @@ export default function ShadowingPlayer({ video, onBack }: Props) {
         setShareLink(url)
       }
       if (navigator.share) {
-        try { await navigator.share({ title: video.title, text: c('My shadowing practice on ProfAI'), url }); return }
+        try { await navigator.share({ title: video.title, text: c('My shadowing practice on Ivygoo'), url }); return }
         catch (error) { if (error instanceof DOMException && error.name === 'AbortError') return }
       }
       try { await navigator.clipboard.writeText(url); setShareStatus(c('Link copied')) }

@@ -63,6 +63,11 @@ const envSchema = z.object({
   AI_VOICE_MAX_MINUTES: z.coerce.number().int().min(1).max(60).default(20),
   AI_WEB_SEARCH_ENABLED: z.enum(['true', 'false']).default('false').transform((value) => value === 'true'),
   AI_WEB_SEARCH_MODEL: z.string().default('gpt-4.1-mini'),
+  TELEGRAM_BOT_TOKEN: z.string().default(''),
+  TELEGRAM_BOT_USERNAME: z.string().default('IvyGoo_bot'),
+  TELEGRAM_WEBHOOK_URL: z.string().default(''),
+  TELEGRAM_WEBHOOK_SECRET: z.string().default(''),
+  TELEGRAM_SITE_URL: z.string().default(''),
 })
 
 export const env = envSchema.parse(process.env)

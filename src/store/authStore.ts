@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware'
 import type { AuthUser } from '@/types/platform'
 import { isPremiumUser } from '@/utils/premiumAccess'
+import { claimPendingReferral } from '@/utils/referralCapture'
 import { useAccountUsageStore } from '@/store/accountUsageStore'
 
 // Safari can expose localStorage while temporarily throwing on access (private
@@ -75,7 +76,7 @@ export const useAuthStore = create<AuthState>()(
         accessToken: null,
         refreshToken: null,
         hydrated: false,
-        setSession: ({ user, accessToken, refreshToken }: { user: AuthUser; accessToken: string; refreshToken: string }) =>
+        setSession: ({ user, accessToken, refreshToken }: { user: AuthUser; accessToken: string; refreshToken: string }) => {
           set({
             user: {
               ...user,
@@ -83,7 +84,10 @@ export const useAuthStore = create<AuthState>()(
             },
             accessToken,
             refreshToken,
-          }),
+          })
+          // A friend's invitation link is applied once the visitor has an account.
+          void claimPendingReferral()
+        },
         updateUserProgress: ({ xp, level, currentStreak }: { xp?: number; level?: number; currentStreak?: number }) =>
           set((state) => {
             if (!state.user) return {}

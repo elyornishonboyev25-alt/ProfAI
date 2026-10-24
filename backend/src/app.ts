@@ -32,6 +32,7 @@ import guestDiagnosticRoutes from './routes/guestDiagnostic.routes.js'
 import learningCentersRoutes from './routes/learningCenters.routes.js'
 import supportRoutes from './routes/support.routes.js'
 import billingRoutes from './routes/billing.routes.js'
+import { referralRoutes, telegramRoutes, telegramWebhookRoutes } from './routes/telegram.routes.js'
 import { paymentCallbacks, stripeCallback } from './routes/paymentCallbacks.routes.js'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -83,6 +84,8 @@ app.use('/api/v1/account-data', requireAuth, apiRateLimit, express.json({ limit:
 
 app.use(express.json({ limit: '1mb' }))
 app.use(express.urlencoded({ extended: false }))
+// Telegram delivers updates from its own servers; keep it outside the per-IP API limiter.
+app.use('/api/v1/telegram', telegramWebhookRoutes)
 app.use(apiRateLimit)
 
 app.use('/api/v1/health', healthRoutes)
@@ -102,6 +105,8 @@ app.use('/api/v1/learning-centers', learningCentersRoutes)
 app.use('/api/v1/support', supportRoutes)
 app.use('/api/v1/billing', billingRoutes)
 app.use('/api/v1/billing/callbacks', paymentCallbacks)
+app.use('/api/v1/telegram', telegramRoutes)
+app.use('/api/v1/referrals', referralRoutes)
 
 app.get('/googleea0efe504503609e.html', (_req, res) => {
   res.type('html').send('google-site-verification: googleea0efe504503609e.html')

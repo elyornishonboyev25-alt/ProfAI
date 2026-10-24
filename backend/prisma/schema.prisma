@@ -172,6 +172,12 @@ model User {
   premiumGrant                        PremiumGrant?
   paymentRequests                     PaymentRequest[]
   billingSubscriptions                BillingSubscription[]
+  referralCode                        String?                              @unique
+  telegramLink                        TelegramLink?
+  telegramLinkCodes                   TelegramLinkCode[]
+  referralsMade                       Referral[]                           @relation("ReferralInviter")
+  referralReceived                    Referral?                            @relation("ReferralInvitee")
+  referralRewards                     ReferralReward[]
 
   @@index([xp, level])
   @@index([createdAt])
@@ -1211,4 +1217,51 @@ model AccountLearningData {
   user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, key])
+}
+
+model TelegramLink {
+  userId      String    @id
+  chatId      String    @unique
+  username    String?
+  dailyWord   Boolean   @default(true)
+  streakAlert Boolean   @default(true)
+  lastWordAt  DateTime?
+  lastAlertAt DateTime?
+  linkedAt    DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model TelegramLinkCode {
+  code      String   @id
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Referral {
+  id          String    @id @default(cuid())
+  inviterId   String
+  inviteeId   String    @unique
+  qualifiedAt DateTime?
+  createdAt   DateTime  @default(now())
+  inviter     User      @relation("ReferralInviter", fields: [inviterId], references: [id], onDelete: Cascade)
+  invitee     User      @relation("ReferralInvitee", fields: [inviteeId], references: [id], onDelete: Cascade)
+
+  @@index([inviterId, qualifiedAt])
+}
+
+model ReferralReward {
+  id        String   @id @default(cuid())
+  userId    String
+  kind      String
+  tier      Int
+  days      Int
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, kind, tier])
 }

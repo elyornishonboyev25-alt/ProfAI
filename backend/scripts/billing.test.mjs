@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createHash, createHmac } from 'node:crypto'
-import { BILLING_PRODUCTS, PLAN_QUOTAS, billingProduct, extendBillingExpiry } from '../dist/utils/billingCatalog.js'
+import { BILLING_PRODUCTS, PLAN_QUOTAS, PLAN_MONTHLY_USD, GROUP_MONTHLY_USD, billingProduct, extendBillingExpiry } from '../dist/utils/billingCatalog.js'
 process.env.DATABASE_URL ||= 'postgresql://test:test@localhost:5432/test'
 process.env.ACCESS_TOKEN_SECRET ||= 'billing-test-access-secret-only'
 process.env.REFRESH_TOKEN_SECRET ||= 'billing-test-refresh-secret-only'
@@ -60,13 +60,16 @@ prisma.$transaction = work => {
 for (const model of ['user', 'premiumGrant', 'billingSubscription', 'featureUsage', 'resourceUnlock']) Object.assign(prisma[model], tx[model])
 const active = audience => ({ audience, startsAt: new Date(Date.now() - 60000), expiresAt: new Date(Date.now() + 60000) })
 
-test('Pro is $6 and Max is $12 a month, with 3- and 12-month savings and no legacy products for sale', () => {
-  assert.equal(billingProduct('PRO_1').amountUsd, 600)
-  assert.equal(billingProduct('MAX_1').amountUsd, 1200)
-  assert.equal(billingProduct('PRO_3').amountUsd, 1620)
-  assert.equal(billingProduct('MAX_3').amountUsd, 3240)
-  assert.equal(billingProduct('PRO_12').amountUsd, 5760)
-  assert.equal(billingProduct('MAX_12').amountUsd, 11520)
+test('each Pro, Max and group price is one cent lower, including complete 3- and 12-month plans', () => {
+  assert.equal(billingProduct('PRO_1').amountUsd, 599)
+  assert.equal(billingProduct('MAX_1').amountUsd, 1199)
+  assert.equal(billingProduct('PRO_3').amountUsd, 1619)
+  assert.equal(billingProduct('MAX_3').amountUsd, 3239)
+  assert.equal(billingProduct('PRO_12').amountUsd, 5759)
+  assert.equal(billingProduct('MAX_12').amountUsd, 11519)
+  assert.equal(PLAN_MONTHLY_USD.PRO, billingProduct('PRO_1').amountUsd)
+  assert.equal(PLAN_MONTHLY_USD.MAX, billingProduct('MAX_1').amountUsd)
+  assert.deepEqual(GROUP_MONTHLY_USD, { PRO: 499, MAX: 999 })
   for (const retired of ['STUDENT_1', 'TEACHER_1', 'LEARNER_1', 'COINS_150']) assert.equal(billingProduct(retired), undefined)
   assert.equal(BILLING_PRODUCTS.length, 6)
   assert.equal(extendBillingExpiry(1, null, new Date('2027-01-31T12:00:00Z')).toISOString(), '2027-02-28T12:00:00.000Z')
@@ -176,7 +179,7 @@ test('UZS checkout converts the complete USD invoice and binds the displayed amo
   }
   const max = billingProduct('MAX_1')
   const quote = createPaymentQuote(max, rate, now)
-  assert.equal(quote.amountUzs, 157200)
+  assert.equal(quote.amountUzs, 157069)
   assert.throws(() => verifyPaymentQuote(quote.token, billingProduct('PRO_1'), now), error => error.code === 'QUOTE_EXPIRED')
   const [payload, signature] = quote.token.split('.')
   const forged = JSON.parse(Buffer.from(payload, 'base64url').toString()); forged.amountUzs = 1
@@ -271,12 +274,12 @@ test('Click rejects forged and unprepared callbacks and fulfills a signed order 
 test('Stripe requires a signed event with exact USD amount and credits replay only once', async () => {
   reset(); env.AUTOMATED_BILLING_ENABLED = true; env.STRIPE_SECRET_KEY = 'test-secret'; env.STRIPE_WEBHOOK_SECRET = 'test-webhook'
   const product = billingProduct('MAX_1')
-  state.order = { id: 'stripe-order', userId: 'u', ...product, plan: product.code, currency: 'USD', method: 'STRIPE', amountMinor: 599,
+  state.order = { id: 'stripe-order', userId: 'u', ...product, plan: product.code, currency: 'USD', method: 'STRIPE', amountMinor: product.amountUsd,
     status: 'PENDING', wheelSpinId: null, providerId: 'STRIPE:cs_test_order' }
   const app = express(); app.post('/stripe', express.raw({ type: 'application/json' }), stripeCallback)
   app.use((error, req, res, next) => res.status(500).json({ message: error.message }))
   const server = app.listen(0, '127.0.0.1'); await new Promise(resolve => server.once('listening', resolve))
-  const send = async (amount = 599, signed = true, paid = true) => {
+  const send = async (amount = product.amountUsd, signed = true, paid = true) => {
     const raw = JSON.stringify({ type: 'checkout.session.completed', data: { object: { id: 'cs_test_order', client_reference_id: 'stripe-order',
       currency: 'usd', amount_total: amount, payment_status: paid ? 'paid' : 'unpaid' } } })
     const timestamp = Math.floor(Date.now() / 1000)
@@ -285,8 +288,8 @@ test('Stripe requires a signed event with exact USD amount and credits replay on
       'Stripe-Signature': signed ? `t=${timestamp},v1=${signature}` : 'invalid' }, body: raw })
   }
   try {
-    assert.equal((await send(599, false)).status, 400)
-    assert.equal((await send(599, true, false)).status, 200)
+    assert.equal((await send(product.amountUsd, false)).status, 400)
+    assert.equal((await send(product.amountUsd, true, false)).status, 200)
     assert.equal(state.subscriptions.length, 0)
     assert.equal((await send(1)).status, 500)
     assert.equal((await send()).status, 200)

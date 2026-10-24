@@ -110,7 +110,7 @@ export default function Membership() {
       <div className="billing-section-heading"><h2 id="billing-plans-title">{text('Choose a plan', 'Tarifni tanlang', 'Выберите тариф')}</h2><PlanDuration months={months} onChange={value => { setMonths(value); setSelected(null) }} /></div>
       {catalogError && <div role="alert" className="billing-error">{catalogError}<button onClick={() => void loadCatalog()}>{text('Reload plans', 'Qayta yuklash', 'Обновить тарифы')}</button></div>}
       <PricingCards products={products} months={months} onChoose={choose} disabled={busy || !catalog} discountPercent={wheelPercent} />
-      <p className="billing-plan-footnote">{text('Free $0 · Pro $6/month · Max $12/month. Pay once for the period you choose — no auto-renewal.', 'Free $0 · Pro $6/oy · Max $12/oy. Tanlangan muddat uchun bir marta to‘laysiz — avtomatik uzaytirilmaydi.', 'Free $0 · Pro $6/мес. · Max $12/мес. Разовая оплата за выбранный срок — без автопродления.')}</p>
+      <p className="billing-plan-footnote">{text('Free $0 · Pro $5.99/month · Max $11.99/month. Pay once for the period you choose — no auto-renewal.', 'Free $0 · Pro $5.99/oy · Max $11.99/oy. Tanlangan muddat uchun bir marta to‘laysiz — avtomatik uzaytirilmaydi.', 'Free $0 · Pro $5.99/мес. · Max $11.99/мес. Разовая оплата за выбранный срок — без автопродления.')}</p>
     </section>
 
     <PlanComparison currentTier={user ? access?.tier : undefined} />

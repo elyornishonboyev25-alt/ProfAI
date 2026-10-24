@@ -8,21 +8,21 @@ const copy = {
     "label": "Free forever · no card",
     "title": "IELTS, SAT and AI every month · $0",
     "open": "See what Free includes",
-    "detail": "Start for free. No card required. Every month: 4 tests, 1 full mock and AI Writing & Speaking checks. Upgrade to Pro ($6) or Max ($12) any time.",
+    "detail": "Start for free. No card required. Every month: 4 tests, 1 full mock and AI Writing & Speaking checks. Upgrade to Pro ($5.99) or Max ($11.99) any time.",
     "action": "Start for free"
   },
   "uz": {
     "label": "Doimiy bepul · karta kerak emas",
     "title": "Har oy IELTS, SAT va AI · $0",
     "open": "Free tarifda nimalar bor",
-    "detail": "Bepul boshlang. Karta kerak emas. Har oy: 4 ta test, 1 ta to‘liq mock, Writing va Speaking AI tahlili. Istalgan vaqtda Pro ($6) yoki Max ($12) ga o‘ting.",
+    "detail": "Bepul boshlang. Karta kerak emas. Har oy: 4 ta test, 1 ta to‘liq mock, Writing va Speaking AI tahlili. Istalgan vaqtda Pro ($5.99) yoki Max ($11.99) ga o‘ting.",
     "action": "Bepul boshlang"
   },
   "ru": {
     "label": "Бесплатно навсегда · без карты",
     "title": "IELTS, SAT и AI каждый месяц · $0",
     "open": "Что входит в Free",
-    "detail": "Начните бесплатно, без карты. Каждый месяц: 4 теста, 1 полный пробный экзамен и AI-разборы Writing и Speaking. Перейдите на Pro ($6) или Max ($12) в любой момент.",
+    "detail": "Начните бесплатно, без карты. Каждый месяц: 4 теста, 1 полный пробный экзамен и AI-разборы Writing и Speaking. Перейдите на Pro ($5.99) или Max ($11.99) в любой момент.",
     "action": "Начать бесплатно"
   }
 } as const

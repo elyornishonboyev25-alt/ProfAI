@@ -69,11 +69,11 @@ So'ng frontend'ni qayta deploy qiling.
 | Narsa | Qoida |
 |---|---|
 | Free | $0, doimiy. Har oy: 4 test, 1 mock, 2 Writing + 2 Speaking AI tahlil, 15 AI xabar |
-| Pro | $6/oy (3 oy −10%, 12 oy −20%). Cheksiz test, 4 mock, 30+30 AI tahlil, classga qo'shilish |
-| Max | $12/oy. Cheksiz mock, 150+150 AI tahlil, class yaratish |
+| Pro | $5.99/oy, $16.19/3 oy, $57.59/12 oy. Cheksiz test, 4 mock, 30+30 AI tahlil, classga qo'shilish |
+| Max | $11.99/oy, $32.39/3 oy, $115.19/12 oy. Cheksiz mock, 150+150 AI tahlil, class yaratish |
 | Baraban | Faqat kanal obunachilari, har Telegram hisob **1 marta**. Har 10 aylantirishda: 1×50%, 1×25%, 1×20%, 4×15%, 2×10%, 1×5% (tartib tasodifiy) |
 | 50% chegirma | 10 daqiqa amal qiladi, qolganlari 24 soat. Ishlatilmasa ham shu 10 talik blokda qaytib kelmaydi |
-| Guruh | 5+ kishi: Pro $5, Max $10 kishi boshiga. Botda `/group`. Har bir a'zo botga start berib, kanalga obuna bo'ladi; barabandan chegirmasi hisobga qo'shiladi |
+| Guruh | 5+ kishi: Pro $4.99, Max $9.99 kishi boshiga. Botda `/group`. Har bir a'zo botga start berib, kanalga obuna bo'ladi; barabandan chegirmasi hisobga qo'shiladi |
 | Do'st taklifi | Do'st havola orqali ro'yxatdan o'tib, botga start berib, kanalga obuna bo'lsa: taklif qilganga **+3 kun**, 5/10/25 do'stda qo'shimcha bonus |
 
 Barcha limitlar `backend/src/utils/billingCatalog.ts` (`PLAN_QUOTAS`), baraban `backend/src/services/wheel.service.ts` (`WHEEL_BLOCK`) ichida.

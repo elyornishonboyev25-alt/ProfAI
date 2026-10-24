@@ -31,7 +31,7 @@ export async function accountOverview(userId: string, tx: Tx = prisma, now = new
   return { access, tier: access.tier, subscriptions, canJoinClass: access.active, canCreateClass: access.tier === 'MAX' }
 }
 function limitMessage(feature: AccessFeature, tier: PlanTier) {
-  if (tier === 'FREE') return `You have used this month's free ${feature} allowance. Upgrade to Pro ($6/month) or Max ($12/month) to continue.`
+  if (tier === 'FREE') return `You have used this month's free ${feature} allowance. Upgrade to Pro ($5.99/month) or Max ($11.99/month) to continue.`
   return `You have reached this month's ${feature} limit on your plan. Upgrade to Max for more.`
 }
 /** Spends one unit of a monthly allowance, or refuses when it is used up. */
@@ -58,10 +58,10 @@ export async function requireStudyAccess(userId: string) {
   await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { id: true } })
 }
 export async function requireClassPlan(userId: string) {
-  if (!(await accountOverview(userId)).canJoinClass) throw new BillingError('CLASS_PLAN_REQUIRED', 'Joining classes requires an active Pro ($6/month) or Max ($12/month) plan.', 403)
+  if (!(await accountOverview(userId)).canJoinClass) throw new BillingError('CLASS_PLAN_REQUIRED', 'Joining classes requires an active Pro ($5.99/month) or Max ($11.99/month) plan.', 403)
 }
 export async function requireTeacherPlan(userId: string) {
-  if (!(await accountOverview(userId)).canCreateClass) throw new BillingError('TEACHER_PLAN_REQUIRED', 'Class creation requires an active Max plan ($12/month).', 403)
+  if (!(await accountOverview(userId)).canCreateClass) throw new BillingError('TEACHER_PLAN_REQUIRED', 'Class creation requires an active Max plan ($11.99/month).', 403)
 }
 export function validateResource(feature: AccessFeature, resource: string) {
   const patterns: Partial<Record<AccessFeature, RegExp>> = {

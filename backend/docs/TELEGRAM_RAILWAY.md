@@ -69,8 +69,8 @@ So'ng frontend'ni qayta deploy qiling.
 | Narsa | Qoida |
 |---|---|
 | Free | $0, doimiy. Har oy: 4 test, 1 mock, 2 Writing + 2 Speaking AI tahlil, 15 AI xabar |
-| Pro | $5.99/oy, $15.99/3 oy (11% tejam), $54.99/12 oy (23.5% tejam). Cheksiz test, 4 mock, 30+30 AI tahlil, classga qo'shilish |
-| Max | $11.99/oy, $29.99/3 oy (16.6% tejam), $109.99/12 oy (23.6% tejam). Cheksiz mock, 150+150 AI tahlil, class yaratish |
+| Pro | $5.99/oy, $15.99/3 oy (11% tejam), $54.99/12 oy (24% tejam). Cheksiz test, 4 mock, 30+30 AI tahlil, classga qo'shilish |
+| Max | $11.99/oy, $29.99/3 oy (17% tejam), $109.99/12 oy (24% tejam). Cheksiz mock, 150+150 AI tahlil, class yaratish |
 | Baraban | Faqat kanal obunachilari, har Telegram hisob **1 marta**. Har 10 aylantirishda: 1×50%, 1×25%, 1×20%, 4×15%, 2×10%, 1×5% (tartib tasodifiy) |
 | 50% chegirma | 10 daqiqa amal qiladi, qolganlari 24 soat. Ishlatilmasa ham shu 10 talik blokda qaytib kelmaydi |
 | Guruh | 5+ kishi: Pro $4.99, Max $9.99 kishi boshiga. Botda `/group`. Har bir a'zo botga start berib, kanalga obuna bo'ladi; barabandan chegirmasi hisobga qo'shiladi |

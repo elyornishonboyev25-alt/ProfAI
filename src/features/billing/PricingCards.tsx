@@ -69,11 +69,12 @@ export default function PricingCards({ months, onChoose, disabled = false, produ
       if (!product) return null
       const Icon = card.icon
       const price = discountedAmount(product.amountUsd, discountPercent)
+      const saving = Math.round(product.discount)
       const current = tier === card.audience
       return <article key={card.audience} className={`billing-glass billing-plan ${card.featured ? 'billing-plan-featured' : 'plans-card-max'} ${current ? 'is-current' : ''}`}>
         {card.featured && <span className="billing-plan-recommendation"><Sparkles size={13} aria-hidden="true" />{text('Most popular', 'Eng ko‘p tanlanadi', 'Самый популярный')}</span>}
         <div className="billing-plan-top"><span className="billing-icon"><Icon size={24} /></span>
-          {discountPercent > 0 ? <span className="plans-discount-chip">−{discountPercent}% 🎡</span> : product.discount > 0 && <span className="billing-saving">{text(`Save ${product.discount}%`, `${product.discount}% tejang`, `Экономия ${product.discount}%`)}</span>}
+          {discountPercent > 0 ? <span className="plans-discount-chip">−{discountPercent}% 🎡</span> : saving > 0 && <span className="billing-saving">{text(`Save ${saving}%`, `${saving}% tejang`, `Экономия ${saving}%`)}</span>}
         </div>
         <h3>{card.title}</h3><p className="billing-plan-description">{card.description}</p>
         <div className="billing-plan-price">

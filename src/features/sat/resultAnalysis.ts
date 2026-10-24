@@ -124,6 +124,25 @@ export function analyzeSATResult(test: SATTestDefinition, attempt: SATAttempt) {
       ),
     }))
     .filter((row) => row.total > 0)
+  const skillMap = new Map<string, { section: SATSection; domain: string; skill: string; questions: SATQuestion[] }>()
+  questions.forEach((question) => {
+    const domain = bankDomain(question.domain)
+    const key = `${question.section}:${domain}:${question.skill}`
+    const row = skillMap.get(key) ?? { section: question.section, domain, skill: question.skill, questions: [] }
+    row.questions.push(question)
+    skillMap.set(key, row)
+  })
+  const skills = [...skillMap.entries()].map(([key, row]) => ({
+    key,
+    section: row.section,
+    domain: row.domain,
+    skill: row.skill,
+    ...counts(row.questions, attempt),
+  }))
+  const prioritySkills = [...skills]
+    .filter((row) => row.correct < row.total)
+    .sort((a, b) => b.total - b.correct - (a.total - a.correct) || a.percent - b.percent)
+  const answered = questions.length - report.unanswered
   const complete = isSATTestComplete(test)
   const score = !submitted || !complete ? null : sections.length === 1 ? sections[0].score : report.midpoint
   const range = sections.length === 1 ? sections[0].range : report.totalRange
@@ -136,6 +155,11 @@ export function analyzeSATResult(test: SATTestDefinition, attempt: SATAttempt) {
     strongest,
     modules,
     difficulty,
+    skills,
+    prioritySkills,
+    answered,
+    completion: questions.length ? Math.round((answered / questions.length) * 100) : 0,
+    answeredAccuracy: answered ? Math.round((report.correct / answered) * 100) : 0,
     submitted,
     complete,
     score,

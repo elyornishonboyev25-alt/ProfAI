@@ -44,7 +44,10 @@ export async function run() {
   assert.equal(analysis.report.correct, 1)
   assert.equal(analysis.report.incorrect, 1)
   assert.equal(analysis.report.unanswered, 96)
-  for (const rows of [analysis.sections, analysis.domains, analysis.modules, analysis.difficulty]) {
+  assert.equal(analysis.answered, 2)
+  assert.equal(analysis.answeredAccuracy, 50)
+  assert.equal(analysis.completion, 2)
+  for (const rows of [analysis.sections, analysis.domains, analysis.modules, analysis.difficulty, analysis.skills]) {
     assert.equal(
       rows.reduce((sum, row) => sum + row.total, 0),
       98,
@@ -85,7 +88,11 @@ export async function run() {
     mode: 'exam',
   })
   const page = new window.DOMParser().parseFromString(html, 'text/html')
-  assert.equal(page.querySelectorAll('script, img').length, 0, 'Report values cannot inject executable HTML')
+  assert.equal(page.querySelectorAll('script').length, 0, 'Report values cannot inject executable HTML')
+  assert.equal(page.querySelectorAll('img').length, 1, 'Only the original Ivygoo brand artwork is included')
+  assert.ok(page.querySelector('.report-brand img')!.getAttribute('src')!.endsWith('/brand/ivygoo-horizontal.png'))
+  assert.equal(page.querySelectorAll('.module-table tbody tr').length, analysis.modules.length)
+  assert.equal(page.querySelectorAll('.focus-grid > div').length, Math.min(2, analysis.prioritySkills.length))
   assert.equal(page.querySelector('.identity strong')!.textContent, 'Aziza O‘ktamova <script>bad()</script>')
   assert.equal(page.querySelector('.test-title')!.textContent, 'Test <img src=x onerror="bad()">')
   assert.equal(page.querySelectorAll('.domain').length, analysis.domains.length)

@@ -20,13 +20,14 @@ import {analyzeSATResult} from './src/features/sat/resultAnalysis'; import {buil
 useAuthStore.setState({user:null}); useBadgeStore.setState({awardIfEligible:()=>({celebrated:false,tier:null})});
 const root=createRoot(document.getElementById('root')); let run=0;
 window.show=(kind='full')=>{
- const test=kind==='legacy'?getSATReviewTests().find(t=>t.id==='may-2026-us-v1'):getSATSectionTest(8,kind==='math'?'math':kind==='reading'?'reading-writing':null);
- const attempt=createSATAttempt(test.id,test.modules,'exam'); const questions=test.modules.flatMap(m=>m.questions);
- questions.forEach((q,i)=>{if(kind==='perfect'||i%9>1)attempt.answers[q.id]=q.correctAnswer;else if(i%9===1)attempt.answers[q.id]='wrong'});
+ const test=kind==='legacy'?getSATReviewTests().find(t=>t.id==='may-2026-us-v1'):getSATSectionTest(kind==='math3'?3:8,(kind==='math'||kind==='math3')?'math':kind==='reading'?'reading-writing':null);
+ const attempt=createSATAttempt(test.id,test.modules,kind==='math3'?'practice':'exam'); const questions=test.modules.flatMap(m=>m.questions);
+ questions.forEach((q,i)=>{if(kind==='math3'){if(i<9)attempt.answers[q.id]=q.correctAnswer;else if(i<33)attempt.answers[q.id]='wrong'}else if(kind==='perfect'||i%9>1)attempt.answers[q.id]=q.correctAnswer;else if(i%9===1)attempt.answers[q.id]='wrong'});
  attempt.status=kind==='unfinished'?'active':'submitted';attempt.submittedAt=kind==='unfinished'?undefined:Date.parse('2026-10-24T14:00:00Z');attempt.updatedAt=attempt.submittedAt??Date.parse('2026-10-24T14:00:00Z');
- attempt.moduleElapsedSeconds=Object.fromEntries(test.modules.map((m,i)=>[m.id,1500+i*60]));attempt.moduleStartedAt=Object.fromEntries(test.modules.map((m,i)=>[m.id,1000+i*1500000]));
+ attempt.moduleElapsedSeconds=Object.fromEntries(test.modules.map((m,i)=>[m.id,kind==='math3'?56:1500+i*60]));attempt.moduleStartedAt=Object.fromEntries(test.modules.map((m,i)=>[m.id,1000+i*1500000]));
  attempt.notes[questions[1].id]='Check the evidence before choosing an answer.';attempt.flagged=[questions[1].id];
  window.expected=analyzeSATResult(test,attempt);window.reportHtml=buildSATReportHtml({analysis:window.expected,title:test.title,candidate:'Aziza O‘ktamova <script>window.injected=true</script>',timestamp:attempt.updatedAt,mode:attempt.mode});
+ if(kind==='math3')window.mathReportHtml=buildSATReportHtml({analysis:window.expected,title:test.title,candidate:'Ivygoo learner',timestamp:attempt.updatedAt,mode:attempt.mode});
  root.render(<MemoryRouter key={++run}><SATReview test={test} attempt={attempt} onStartAgain={()=>{}} /></MemoryRouter>);
 };window.show();`
 const bundle = await build({
@@ -163,13 +164,16 @@ try {
   await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/` })
   await until('window.expected && document.querySelector(".sr-total-number")')
   await mkdir(artifacts, { recursive: true })
-  for (const [width, height] of [
-    [1440, 1050],
-    [1024, 900],
-    [768, 1024],
-    [390, 844],
-    [320, 740],
-  ]) {
+  const viewports = process.env.SAT_REPORT_ONLY
+    ? []
+    : [
+        [1440, 1050],
+        [1024, 900],
+        [768, 1024],
+        [390, 844],
+        [320, 740],
+      ]
+  for (const [width, height] of viewports) {
     await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: width < 640 })
     await evaluate('window.show()')
     await until('document.querySelector("#sat-result-panel-scores")')
@@ -186,7 +190,15 @@ try {
       const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true })
       await writeFile(join(artifacts, `${width}-${tab}.png`), Buffer.from(shot.data, 'base64'))
     }
-    await evaluate('document.querySelector(".sr-question-number.is-correct").click()')
+    assert.equal(
+      await evaluate('document.querySelectorAll(".sr-answer-table tbody tr").length'),
+      await evaluate('window.expected.questions.length'),
+    )
+    assert.equal(
+      await evaluate('document.querySelectorAll(".sr-answer-table tr[data-status=unanswered]").length'),
+      await evaluate('window.expected.report.unanswered'),
+    )
+    await evaluate('document.querySelector(".sr-answer-table tr[data-status=correct] button").click()')
     await until('document.querySelector("article").textContent.includes("Your answer · Correct")')
     assert.ok((await layout()).content <= width + 1, `${width}px: selected correct answer stays readable`)
     await evaluate('document.querySelectorAll(".sr-review-filters button")[1].click()')
@@ -201,10 +213,16 @@ try {
     )
     await clickTab('domains')
     await evaluate('document.querySelector(".sr-domain-card button").click()')
-    await until('document.querySelector(".sr-domain-filter")')
+    await until('document.querySelector(".sr-answer-table")')
     assert.equal(
       await evaluate('document.querySelector("#sat-result-tab-questions").getAttribute("aria-selected")'),
       'true',
+    )
+    await clickTab('questions')
+    assert.equal(
+      await evaluate('document.querySelectorAll(".sr-answer-table tbody tr").length'),
+      await evaluate('window.expected.questions.length'),
+      'Question review always reopens with all questions, clearing previous domain/status filters',
     )
     console.log(
       `PASS ${width}px: four tabs, exact totals, no horizontal overflow, missed-question and domain navigation`,
@@ -218,7 +236,7 @@ try {
   )
   await until('document.querySelector("#sat-result-panel-performance")')
   assert.equal(await evaluate('document.activeElement.id'), 'sat-result-tab-performance')
-  for (const kind of ['math', 'reading', 'legacy', 'unfinished', 'perfect']) {
+  for (const kind of ['math', 'reading', 'legacy', 'unfinished', 'perfect', 'math3']) {
     await evaluate(`window.show('${kind}')`)
     await until('document.querySelector("#sat-result-panel-scores")')
     assert.equal(
@@ -231,6 +249,33 @@ try {
     )
     assert.equal(await evaluate('document.querySelector(".sr-download button").disabled'), kind === 'unfinished')
     if (kind === 'legacy') assert.equal(await evaluate('window.expected.sections.find(s=>s.id==="math").score'), null)
+    if (kind === 'math3') {
+      assert.equal(await evaluate('window.expected.report.correct'), 9)
+      assert.equal(await evaluate('window.expected.report.incorrect'), 24)
+      assert.equal(await evaluate('window.expected.report.unanswered'), 11)
+      for (const width of [1440, 390, 320]) {
+        await send('Emulation.setDeviceMetricsOverride', {
+          width,
+          height: width > 640 ? 1050 : 844,
+          deviceScaleFactor: 1,
+          mobile: width < 640,
+        })
+        assert.ok((await layout()).content <= width + 1, `${width}px Math section fits`)
+        await new Promise((resolve) => setTimeout(resolve, 280))
+        const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true })
+        await writeFile(join(artifacts, `${width}-math3-scores.png`), Buffer.from(shot.data, 'base64'))
+      }
+      await clickTab('questions')
+      assert.equal(await evaluate('document.querySelectorAll(".sr-answer-table tbody tr").length'), 44)
+      await send('Emulation.setDeviceMetricsOverride', {
+        width: 1440,
+        height: 1050,
+        deviceScaleFactor: 1,
+        mobile: false,
+      })
+      const shot = await send('Page.captureScreenshot', { format: 'png' })
+      await writeFile(join(artifacts, '1440-math3-questions.png'), Buffer.from(shot.data, 'base64'))
+    }
     if (kind === 'perfect') {
       assert.equal(
         await evaluate('document.querySelector(".sr-focus-card h2").textContent'),
@@ -269,18 +314,39 @@ try {
   await reportClient.send('Page.setDocumentContent', { frameId: frame.frameTree.frame.id, html: unicodeHtml })
   assert.equal(await reportEval('window.injected'), undefined)
   assert.ok((await reportEval('document.querySelector(".identity strong").textContent')).includes('O‘ktamova <script>'))
+  await reportClient.send('Runtime.evaluate', {
+    expression: 'Promise.all(Array.from(document.images, image => image.decode()))',
+    awaitPromise: true,
+  })
+  assert.equal(
+    await reportEval('document.querySelector(".report-brand img").naturalWidth'),
+    1672,
+    'Original Ivygoo logo loads before printing',
+  )
   const pdf = await reportClient.send('Page.printToPDF', {
     printBackground: true,
     preferCSSPageSize: true,
     displayHeaderFooter: false,
   })
   const pdfBytes = Buffer.from(pdf.data, 'base64')
+  await writeFile(join(artifacts, 'ivygoo-sat-report.pdf'), pdfBytes)
+  if ((pdfBytes.toString('latin1').match(/\/Type\s*\/Page\b/g) || []).length !== 1) {
+    await reportClient.send('Emulation.setEmulatedMedia', { media: 'print' })
+    console.log(
+      'Report print layout:',
+      await reportEval(
+        'Array.from(document.querySelector(".sheet").children, node => ({class:node.className,height:node.getBoundingClientRect().height,margin:getComputedStyle(node).margin}))',
+      ),
+    )
+    await reportClient.send('Emulation.setEmulatedMedia', { media: 'screen' })
+    const shot = await reportClient.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true })
+    await writeFile(join(artifacts, 'report-overflow.png'), Buffer.from(shot.data, 'base64'))
+  }
   assert.equal(
     (pdfBytes.toString('latin1').match(/\/Type\s*\/Page\b/g) || []).length,
     1,
     'The A4 report fits one page, including its Ivygoo footer',
   )
-  await writeFile(join(artifacts, 'ivygoo-sat-report.pdf'), pdfBytes)
   await reportClient.send('Emulation.setDeviceMetricsOverride', {
     width: 1000,
     height: 1250,
@@ -298,6 +364,32 @@ try {
     })
     assert.equal(await reportEval('document.documentElement.scrollWidth<=innerWidth+1'), true)
   }
+  const mathHtml = await evaluate('window.mathReportHtml')
+  await reportClient.send('Page.setDocumentContent', { frameId: frame.frameTree.frame.id, html: mathHtml })
+  await reportClient.send('Runtime.evaluate', {
+    expression: 'Promise.all(Array.from(document.images, image => image.decode()))',
+    awaitPromise: true,
+  })
+  const mathPdf = await reportClient.send('Page.printToPDF', {
+    printBackground: true,
+    preferCSSPageSize: true,
+    displayHeaderFooter: false,
+  })
+  const mathBytes = Buffer.from(mathPdf.data, 'base64')
+  assert.equal(
+    (mathBytes.toString('latin1').match(/\/Type\s*\/Page\b/g) || []).length,
+    1,
+    'The section report also fits A4',
+  )
+  await writeFile(join(artifacts, 'ivygoo-math-report.pdf'), mathBytes)
+  await reportClient.send('Emulation.setDeviceMetricsOverride', {
+    width: 1000,
+    height: 1300,
+    deviceScaleFactor: 1,
+    mobile: false,
+  })
+  const mathShot = await reportClient.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true })
+  await writeFile(join(artifacts, 'math-report.png'), Buffer.from(mathShot.data, 'base64'))
   reportClient.ws.close()
   console.log(
     'PASS section-only, unavailable modules, unfinished and perfect attempts; keyboard tabs; blocked popup recovery; real report tab; Unicode and HTML escaping; PDF print and mobile report',

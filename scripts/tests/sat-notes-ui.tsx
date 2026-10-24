@@ -79,6 +79,7 @@ export async function run() {
   root = createRoot(container)
   await render()
   await act(async () => container.querySelector<HTMLButtonElement>('#sat-result-tab-questions')!.click())
+  await act(async () => [...container.querySelectorAll<HTMLButtonElement>('.sr-review-view button')][1].click())
   assert.match(container.textContent!, /Your test-day notes.*Second note/s, 'Submitted review renders saved note cards')
   await act(async () => root.unmount())
   console.log('SAT notes: legacy compatibility, visible cards, multiple notes, edit, delete, cancel, reload, question isolation and submitted review passed.')

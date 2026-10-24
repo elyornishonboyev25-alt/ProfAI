@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
+import { ChevronRight, Trophy } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useAccountDataRevision } from '@/hooks/useAccountDataRevision'
 import { getFullMockAttempts, getFullMockById, type FullMockAttempt } from '@/utils/ieltsMockCatalog'
 import FullMockResults from './FullMockResults'
+import '@/styles/mistake-labs.css'
 
 export default function FullMockAttemptHistory() {
   const owner = useAuthStore(state => state.user?.id ?? 'guest')
@@ -24,18 +26,24 @@ export default function FullMockAttemptHistory() {
   }, [selected])
   if (!attempts.length) return null
   const mock = selected ? getFullMockById(selected.mockId) : null
-  return <section className="glass-surface p-5" aria-label="Full mock attempt history">
-    <h2 className="text-xl font-black text-slate-900">Full mock results</h2>
-    <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+  return <section className="mlab-card mlab-section" aria-label="Full mock attempt history">
+    <div className="mlab-section-head">
+      <div>
+        <span className="mlab-eyebrow"><Trophy size={14} aria-hidden="true" />IELTS full mocks</span>
+        <h2>Full mock results</h2>
+      </div>
+      <span className="mlab-count">{attempts.length}</span>
+    </div>
+    <div className="mlab-tile-grid">
       {attempts.map((attempt, index) => <button type="button" key={`${attempt.mockId}:${attempt.completedAt}:${index}`}
-        className="rounded-xl border border-emerald-100 bg-white p-4 text-left" onClick={() => {
+        className="mlab-tile" onClick={() => {
           if (!attempt.archived) { navigate(`/mock/ielts/${attempt.mockId}`); return }
           setSelected(attempt)
         }}>
-        <strong className="block">Full Mock {getFullMockById(attempt.mockId)?.index}</strong>
-        <span className="block text-xs text-slate-500">{new Date(attempt.completedAt).toLocaleString()}</span>
-        <span className="mt-2 block text-sm font-bold text-emerald-700">4/4 completed · {attempt.overallBand === null ? 'Assessment pending' : `Band ${attempt.overallBand.toFixed(1)}`}</span>
-        <span className="mt-2 block text-sm font-bold text-red-700">Review{attempt.archived ? ' previous attempt' : ''}</span>
+        <strong>Full Mock {getFullMockById(attempt.mockId)?.index}</strong>
+        <time dateTime={attempt.completedAt}>{new Date(attempt.completedAt).toLocaleString()}</time>
+        <span className="mlab-tile-band">4/4 completed <b>{attempt.overallBand === null ? 'Assessment pending' : `Band ${attempt.overallBand.toFixed(1)}`}</b></span>
+        <span className="mlab-row-cta">Review{attempt.archived ? ' previous attempt' : ''}<ChevronRight aria-hidden="true" /></span>
       </button>)}
     </div>
     {selected && mock && createPortal(<div role="dialog" aria-modal="true" aria-label="Saved full mock result" className="fixed inset-0 z-[270] overflow-y-auto bg-white">

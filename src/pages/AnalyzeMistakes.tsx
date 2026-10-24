@@ -3,6 +3,7 @@ import FullMockAttemptHistory from '@/components/ielts/FullMockAttemptHistory'
 import { useAccountDataRevision } from '@/hooks/useAccountDataRevision'
 import { recoverSpeakingDayHistory } from '@/utils/speakingDayHistory'
 import UiText from '@/components/common/UiText'
+import '@/styles/mistake-labs.css'
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
@@ -451,149 +452,153 @@ export default function AnalyzeMistakes() {
 
   return (
     <>
-      <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-7 sm:px-6 lg:px-8">
-        <div className="relative mx-auto w-full max-w-6xl space-y-5">
-        <MistakeLabNavigation />
-        <FullMockAttemptHistory />
+      <div className="workspace-page mlab">
+        <div className="mlab-shell">
         <Reveal>
-        <section className="glass-surface p-6 sm:p-8">
-          <button type="button" onClick={() => navigate('/review-mistakes')} className="route-back-button">
-            <ArrowLeft className="h-3.5 w-3.5" /><UiText text="Review mistakes" />
-          </button>
-          <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
+        <section className="mlab-card mlab-hero">
+          <div className="mlab-hero-top">
+            <button type="button" onClick={() => navigate('/review-mistakes')} className="mlab-back">
+              <ArrowLeft aria-hidden="true" /><UiText text="Review mistakes" />
+            </button>
+            <MistakeLabNavigation />
+          </div>
+          <div className="mlab-hero-body">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-red-600">IELTS</p>
-              <h1 className="mt-1 text-4xl font-black tracking-tight text-slate-950"><UiText text="IELTS Mistake Lab" /></h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600"><UiText text="Review Listening, Reading, Writing and Speaking feedback." /></p>
+              <span className="mlab-eyebrow">IELTS</span>
+              <h1><UiText text="IELTS Mistake Lab" /></h1>
+              <p><UiText text="Review Listening, Reading, Writing and Speaking feedback." /></p>
             </div>
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500 to-rose-700 text-white shadow-[0_14px_30px_rgba(220,38,38,.25)]"><BrainCircuit className="h-6 w-6" /></span>
+            <span className="mlab-hero-mark" aria-hidden="true"><BrainCircuit /></span>
           </div>
         </section>
         </Reveal>
-        <section className="grid gap-3 sm:grid-cols-3">
+        <section className="mlab-stats">
           {[
-            { label: 'Saved attempts', value: attempts.length.toString(), icon: CheckCircle2 },
-            { label: 'Reading accuracy', value: readingHistory.length ? `${insights.averageAccuracy.toFixed(0)}%` : '—', icon: Target },
-            { label: 'Weakest area', value: insights.weakest, icon: TriangleAlert },
-          ].map(({ label, value, icon: Icon }) => (
-            <article key={label} className="glass-surface p-4">
-              <Icon className="h-4 w-4 text-red-600" />
-              <p className="mt-3 text-[10px] font-black uppercase tracking-wider text-slate-500"><UiText text={label} /></p>
-              <p className="mt-1 text-2xl font-black text-slate-950">{value}</p>
+            { label: 'Saved attempts', value: attempts.length.toString(), icon: CheckCircle2, text: false },
+            { label: 'Reading accuracy', value: readingHistory.length ? `${insights.averageAccuracy.toFixed(0)}%` : '—', icon: Target, text: false },
+            { label: 'Weakest area', value: insights.weakest, icon: TriangleAlert, text: true },
+          ].map(({ label, value, icon: Icon, text }) => (
+            <article key={label} className="mlab-card mlab-stat">
+              <span className="mlab-stat-icon"><Icon aria-hidden="true" /></span>
+              <div>
+                <p className="mlab-stat-label"><UiText text={label} /></p>
+                <p className={`mlab-stat-value${text ? ' is-text' : ''}`} title={value}>{value}</p>
+              </div>
             </article>
           ))}
         </section>
-        <section className="glass-surface p-5 sm:p-6">
+        <FullMockAttemptHistory />
+        <section className="mlab-card mlab-section">
           {error ? (
-            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>
+            <div className="mlab-alert mlab-gap-bottom">{error}</div>
           ) : null}
 
-          <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(260px,0.6fr)]">
-            <div className="space-y-4">
-              <article className="rounded-2xl border border-slate-200 bg-white/88 p-5">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="flex items-center gap-2 text-sm font-black text-slate-950">
-                      <BarChart3 className="h-4 w-4 text-red-600" />
-                       <UiText text={"Accuracy by question type"} /> </p>
-                    <p className="mt-1 text-xs text-slate-500"> <UiText text={"Aggregated from your saved Reading reviews."} /> </p>
-                  </div>
-                </div>
-                {insights.focusAreas.length ? (
-                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                    {insights.focusAreas.map((area) => (
-                      <div key={area.label} className="rounded-xl border border-slate-100 bg-slate-50/75 p-3">
-                        <div className="flex items-center justify-between gap-2 text-xs">
-                          <b className="truncate text-slate-800">{area.label}</b>
-                          <span className="font-black text-red-600">{area.accuracy.toFixed(0)}%</span>
-                        </div>
-                        <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${Math.max(4, area.accuracy)}%` }}
-                            className="h-full rounded-full bg-gradient-to-r from-red-800 via-red-500 to-rose-400"
-                          />
-                        </div>
-                        <p className="mt-1.5 text-[10px] font-bold text-slate-500">{area.incorrect}  <UiText text={"recurring errors"} /> </p>
+          <div className="mlab-insights">
+            <article className="mlab-panel">
+              <p className="mlab-panel-title">
+                <BarChart3 aria-hidden="true" />
+                <UiText text={"Accuracy by question type"} />
+              </p>
+              <p className="mlab-panel-note"><UiText text={"Aggregated from your saved Reading reviews."} /></p>
+              {insights.focusAreas.length ? (
+                <div className="mlab-focus-grid">
+                  {insights.focusAreas.map((area) => (
+                    <div key={area.label} className="mlab-focus">
+                      <div className="mlab-focus-head">
+                        <b>{area.label}</b>
+                        <span>{area.accuracy.toFixed(0)}%</span>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="mt-4 rounded-xl bg-slate-50 p-4 text-xs text-slate-500"> <UiText text={"Finish an IELTS Reading test to unlock question-type analytics."} /> </p>
-                )}
-              </article>
-            </div>
+                      <div className="mlab-meter">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.max(4, area.accuracy)}%` }}
+                        />
+                      </div>
+                      <small>{area.incorrect} <UiText text={"recurring errors"} /></small>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="mlab-empty mlab-gap-top">
+                  <span className="mlab-empty-icon"><BarChart3 aria-hidden="true" /></span>
+                  <p><UiText text={"Finish an IELTS Reading test to unlock question-type analytics."} /></p>
+                </div>
+              )}
+            </article>
 
-            <aside className="practice-priorities">
-              <span className="priority-eyebrow"><Sparkles size={15} /><UiText text="Practice priorities" /></span>
+            <aside className="mlab-priorities">
+              <span className="mlab-eyebrow"><Sparkles size={14} aria-hidden="true" /><UiText text="Practice priorities" /></span>
               <h2><UiText text="What to work on next" /></h2>
               <p><UiText text="Based on your saved mistakes. Review a weak area, then practise Reading." /></p>
-              {insights.focusAreas.length ? <ol className="priority-list">{insights.focusAreas.slice(0,3).map((area,index)=><li key={area.label}><span>{index+1}</span><div><strong>{area.label}</strong><small>{area.incorrect} <UiText text="recurring errors" /> · {area.accuracy.toFixed(0)}%</small></div></li>)}</ol> : <p className="my-6"><UiText text="Start with a Reading test to discover your practice priorities." /></p>}
-              <button className="liquid-button primary w-full mt-5" onClick={() => navigate('/ielts/reading/tests')}><UiText text="Practice Reading" /><ExternalLink size={15} /></button>
-              {insights.latestReading && <button className="liquid-button secondary w-full mt-3" onClick={() => openReview(buildReadingAttempt(insights.latestReading!))}><UiText text="Review your answers" /></button>}
+              {insights.focusAreas.length ? <ol className="mlab-priority-list">{insights.focusAreas.slice(0,3).map((area,index)=><li key={area.label}><span>{index+1}</span><div><strong>{area.label}</strong><small>{area.incorrect} <UiText text="recurring errors" /> · {area.accuracy.toFixed(0)}%</small></div></li>)}</ol> : <p><UiText text="Start with a Reading test to discover your practice priorities." /></p>}
+              <div className="mlab-priorities-actions">
+                <button type="button" className="mlab-button is-primary" onClick={() => navigate('/ielts/reading/tests')}><UiText text="Practice Reading" /><ExternalLink aria-hidden="true" /></button>
+                {insights.latestReading && <button type="button" className="mlab-button" onClick={() => openReview(buildReadingAttempt(insights.latestReading!))}><UiText text="Review your answers" /></button>}
+              </div>
             </aside>
           </div>
 
           {insights.latestReading?.incorrectQuestions.length ? (
-            <section className="mt-5 rounded-2xl border border-slate-200 bg-white/88 p-5">
-              <div className="flex flex-wrap items-center justify-between gap-3">
+            <section className="mlab-panel mlab-gap-top">
+              <div className="mlab-section-head">
                 <div>
-                  <h2 className="text-sm font-black text-slate-950"> <UiText text={"Latest Reading answer review"} /> </h2>
-                  <p className="mt-1 text-xs text-slate-500">{insights.latestReading.testTitle}  <UiText text={"· incorrect and skipped answers"} /> </p>
+                  <h2 className="mlab-panel-title"><UiText text={"Latest Reading answer review"} /></h2>
+                  <p className="mlab-panel-note">{insights.latestReading.testTitle} <UiText text={"· incorrect and skipped answers"} /></p>
                 </div>
                 <button
+                  type="button"
                   onClick={() => openReview(buildReadingAttempt(insights.latestReading!))}
-                  className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 text-xs font-black text-red-700"
+                  className="mlab-button"
                 >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                   <UiText text={"Open full review"} /> </button>
+                  <ExternalLink aria-hidden="true" />
+                  <UiText text={"Open full review"} />
+                </button>
               </div>
-              <div className="mt-4 space-y-2">
+              <div className="mlab-list">
                 {insights.latestReading.incorrectQuestions.slice(0, 5).map((question) => (
-                  <div key={question.questionId} className="grid gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-100 text-red-600">
-                      <XCircle className="h-4 w-4" />
-                    </span>
+                  <div key={question.questionId} className="mlab-question">
+                    <span><XCircle size={16} aria-hidden="true" /></span>
                     <div className="min-w-0">
-                      <p className="truncate text-xs font-black text-slate-900">Q{question.displayNumber}. {question.prompt}</p>
-                      <p className="mt-1 text-[10px] font-bold text-slate-500"> <UiText text={"Part"} /> {question.partNumber} · {question.typeLabel}</p>
+                      <p>Q{question.displayNumber}. {question.prompt}</p>
+                      <small><UiText text={"Part"} /> {question.partNumber} · {question.typeLabel}</small>
                     </div>
-                    <span className="rounded-full border border-red-200 bg-white px-2.5 py-1 text-[10px] font-black text-red-700"> <UiText text={"Needs review"} /> </span>
+                    <span className="mlab-chip is-accent"><UiText text={"Needs review"} /></span>
                   </div>
                 ))}
               </div>
             </section>
           ) : null}
-
         </section>
-        <section className="glass-surface p-5 sm:p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-xl font-black text-slate-950"><UiText text="Your IELTS review queue" /></h2>
-            <button type="button" onClick={() => setConfirmState({ type: 'clear-all', backendCount: backendAttemptCount, localCount: localAttemptCount })} disabled={clearableAttemptCount === 0 || isClearingAll} className="inline-flex items-center gap-1 rounded-xl border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-45">
-              <Trash2 className="h-3.5 w-3.5" />{isClearingAll ? 'Clearing...' : `Clear All (${clearableAttemptCount})`}
+        <section className="mlab-card mlab-section">
+          <div className="mlab-section-head">
+            <div>
+              <span className="mlab-eyebrow"><Clock3 size={14} aria-hidden="true" />IELTS</span>
+              <h2><UiText text="Your IELTS review queue" /></h2>
+            </div>
+            <button type="button" onClick={() => setConfirmState({ type: 'clear-all', backendCount: backendAttemptCount, localCount: localAttemptCount })} disabled={clearableAttemptCount === 0 || isClearingAll} className="mlab-button is-danger">
+              <Trash2 aria-hidden="true" />{isClearingAll ? 'Clearing...' : `Clear All (${clearableAttemptCount})`}
             </button>
           </div>
-          <div className="mt-5 space-y-2.5">
+          <div className="mlab-list">
             {loading ? (
-              <div className="rounded-2xl border border-red-100 bg-white p-4 text-sm text-slate-500"> <UiText text={"Loading attempts..."} /> </div>
+              <div className="mlab-empty"><p><UiText text={"Loading attempts..."} /></p></div>
             ) : attempts.length === 0 ? (
-              <div className="rounded-2xl border border-red-100 bg-white p-4 text-sm text-slate-500">
-                 <UiText text={"No attempts found yet. Complete a test and submit to populate this page."} /> </div>
+              <div className="mlab-empty">
+                <span className="mlab-empty-icon"><BrainCircuit aria-hidden="true" /></span>
+                <p><UiText text={"No attempts found yet. Complete a test and submit to populate this page."} /></p>
+              </div>
             ) : (
               attempts.map((attempt) => {
                 const isDeleting = busyAttemptId === attempt.id
 
                 return (
-                  <article
-                    key={attempt.id}
-                    className="rounded-2xl border border-slate-100 bg-white p-3 sm:p-4"
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-3">
+                  <article key={attempt.id} className="mlab-row">
+                    <div className="mlab-row-main">
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-red-600">{attempt.category}</p>
-                        <h2 className="mt-1 text-base font-bold text-slate-900">{attempt.title}</h2>
-                        <p className="mt-1 inline-flex items-center gap-1 text-xs text-slate-500">
-                          <Clock3 className="h-3.5 w-3.5" />
+                        <p className="mlab-row-category">{attempt.category}</p>
+                        <div className="mlab-row-title"><strong>{attempt.title}</strong></div>
+                        <p className="mlab-row-meta">
+                          <Clock3 aria-hidden="true" />
                           {new Date(attempt.savedAt).toLocaleString('en-US', {
                             month: 'short',
                             day: 'numeric',
@@ -603,29 +608,26 @@ export default function AnalyzeMistakes() {
                         </p>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">
-                          {attempt.score}
-                        </span>
-                        <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700">
-                          {attempt.accuracy}
-                        </span>
-                        <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600">
-                          {attempt.mistakes}
-                        </span>
+                      <div className="mlab-row-actions">
+                        <span className="mlab-chip is-accent">{attempt.score}</span>
+                        <span className="mlab-chip">{attempt.accuracy}</span>
+                        <span className="mlab-chip">{attempt.mistakes}</span>
                         <button
+                          type="button"
                           onClick={() => openReview(attempt)}
                           disabled={!attempt.reviewable || isDeleting || isClearingAll}
-                          className="inline-flex items-center gap-1 rounded-xl border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-45"
+                          className="mlab-button is-primary"
                         >
-                          <ExternalLink className="h-3.5 w-3.5" />
-                           <UiText text={"Review"} /> </button>
+                          <ExternalLink aria-hidden="true" />
+                          <UiText text={"Review"} />
+                        </button>
                         <button
+                          type="button"
                           onClick={() => setConfirmState({ type: 'delete', attempt })}
                           disabled={isDeleting || isClearingAll}
-                          className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-red-200 hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-45"
+                          className="mlab-button"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2 aria-hidden="true" />
                           {isDeleting ? 'Deleting...' : 'Delete'}
                         </button>
                       </div>

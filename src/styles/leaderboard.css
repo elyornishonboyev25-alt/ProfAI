@@ -1159,3 +1159,34 @@ html[data-effects='reduced'] .leaderboard-studio .leaderboard-glass {
     outline: 2px solid Highlight;
   }
 }
+
+/* Same silver glass and crimson finish as the exam hubs and Mistake Labs. */
+.leaderboard-studio {
+  --lb-ink: #1d222b;
+  --lb-muted: #5b6472;
+  --lb-red: #c9243b;
+}
+.leaderboard-studio .leaderboard-glass {
+  border-color: rgba(255, 255, 255, .88);
+  border-radius: 24px;
+  background: linear-gradient(132deg, rgba(255, 255, 255, .78), rgba(240, 242, 246, .56) 48%, rgba(214, 219, 228, .46));
+  box-shadow: 0 14px 36px rgba(39, 46, 60, .08), 0 2px 5px rgba(39, 46, 60, .03), inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 -1px 0 rgba(110, 121, 139, .12);
+  backdrop-filter: blur(18px) saturate(115%);
+  -webkit-backdrop-filter: blur(18px) saturate(115%);
+}
+.leaderboard-studio .leaderboard-hero::before {
+  background: radial-gradient(ellipse at 100% 0%, rgba(201, 36, 59, .11), transparent 46%);
+}
+.app-shell .leaderboard-studio .leaderboard-table tr.is-premium-member > :is(td, th) {
+  background: rgba(255, 249, 236, .5);
+}
+.leaderboard-studio .leaderboard-table tbody tr.is-current > * {
+  background: rgba(253, 238, 241, .7);
+}
+@media (max-width: 700px) {
+  .leaderboard-studio .leaderboard-glass {
+    border-radius: 20px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+}

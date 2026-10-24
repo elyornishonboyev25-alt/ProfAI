@@ -368,7 +368,10 @@ export function scoreSATModules(
     readingWritingRange,
     mathRange,
     totalRange,
-    midpoint: Math.round((totalRange[0] + totalRange[1]) / 20) * 10,
+    // Round each section to SAT's 10-point steps before adding them. Rounding
+    // the combined range can disagree with the two displayed section scores.
+    midpoint: Math.round((readingWritingRange[0] + readingWritingRange[1]) / 20) * 10
+      + Math.round((mathRange[0] + mathRange[1]) / 20) * 10,
     percent: Math.round((correct / questions.length) * 100),
   }
 }

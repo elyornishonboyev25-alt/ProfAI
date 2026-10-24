@@ -12,6 +12,8 @@ import { SAT_TEST_CATALOG, getSATSectionTest, getSATReviewTests } from '../../sr
 import { createSATAttempt, scoreSATModules } from '../../src/features/sat/practiceTest4'
 import { loadSATAttemptHistory, saveSATAttempt, saveSATAttemptToHistory } from '../../src/features/sat/attemptStorage'
 import { useBadgeStore } from '../../src/store/badgeStore'
+import { accountStorage } from '../../src/utils/accountStorage'
+import '../../src/i18n'
 
 const container = document.getElementById('root')!
 let root: ReturnType<typeof createRoot>
@@ -28,7 +30,7 @@ async function render(path = '/sat/mistakes', content = <SATMistakes />) {
     </MemoryRouter></StrictMode>,
   ))
 }
-const button = (text: string) => [...container.querySelectorAll('button')].find((node) => node.textContent?.trim() === text)
+const button = (text: string) => [...container.querySelectorAll('button')].find((node) => node.textContent?.trim() === text || (node.closest('.sr-review-filters') && node.firstChild?.textContent === text))
 async function click(node: HTMLElement | null | undefined) {
   assert.ok(node, 'Expected an interactive element')
   await act(async () => node.click())
@@ -109,7 +111,7 @@ export async function run() {
   saveSATAttemptToHistory(old, 'submitted')
   const newer = { ...old, attemptId: 'newer-result', submittedAt: 2000, answers: Object.fromEntries(questions.map((q) => [q.id, q.correctAnswer])) }
   saveSATAttempt(newer)
-  const currentRaw = localStorage.getItem(`profai:sat:${test.id}:attempt:v1`)
+  const currentRaw = accountStorage.getItem(`profai:sat:${test.id}:attempt:v1`)
 
   await render()
   assert.equal(rows().length, 2)
@@ -119,17 +121,19 @@ export async function run() {
   assert.match(text(), /Mistakes to review97/)
   await click(rows()[1])
   assert.match(text(), /Question navigator/)
-  assert.match(text(), /Correct1\/98/)
-  assert.match(text(), /Time used10m 5s/)
-  assert.match(text(), /R&W Module 11m 5s/)
-  assert.match(text(), /Math Module 24m 0s/)
+  assert.match(text(), /Correct 1\/98/)
+  await click(container.querySelector('#sat-result-tab-performance'))
+  assert.match(text(), /10m 5s total/)
+  assert.match(container.querySelector('.sr-module-row')!.textContent!, /R&W Module 1.*1m 5s/)
+  assert.match([...container.querySelectorAll('.sr-module-row')].at(-1)!.textContent!, /Math Module 2.*4m 0s/)
+  await click(container.querySelector('#sat-result-tab-questions'))
   assert.match(text(), /Saved note from the older attempt/)
   assert.match(container.querySelector('[data-location]')!.textContent!, /attempt=older-result/)
   assert.ok(!button('Start fresh'))
-  assert.equal(localStorage.getItem(`profai:sat:${test.id}:attempt:v1`), currentRaw)
+  assert.equal(accountStorage.getItem(`profai:sat:${test.id}:attempt:v1`), currentRaw)
   const reviewPath = container.querySelector('[data-location]')!.textContent!
   await render(reviewPath)
-  assert.match(text(), /Correct1\/98/)
+  assert.match(text(), /Correct 1\/98/)
   await click(button('correct'))
   assert.equal(container.querySelectorAll('aside button[class*="w-full"]').length, 1)
   await click(container.querySelector('aside button[class*="w-full"]'))
@@ -141,7 +145,7 @@ export async function run() {
   await click(button('Back to SAT Mistake Lab'))
   assert.equal(rows().length, 2)
   await click(rows()[0])
-  assert.match(text(), /Correct98\/98/)
+  assert.match(text(), /Correct 98\/98/)
   assert.equal(badgeCalls, 0, 'Reviewing history must not award badges or write to the profile')
   await click(button('Back to SAT Mistake Lab'))
 
@@ -170,8 +174,9 @@ export async function run() {
   const sectionRow = rows().find((row) => row.textContent!.includes('· Math'))!
   const range = sectionRow.textContent!.match(/Estimated Math(\d+–\d+) \/ 800/)![1]
   await click(sectionRow)
-  assert.match(text(), /Correct20\/44/)
-  assert.ok(text().includes(`Estimated Math range${range}`))
+  assert.match(text(), /Correct 20\/44/)
+  await click(container.querySelector('#sat-result-tab-scores'))
+  assert.equal(container.querySelector('.sr-total-range strong')!.textContent, range)
 
   const oldMath = getSATSectionTest(1, 'math')
   const lowMathAttempt = {
@@ -192,7 +197,7 @@ export async function run() {
   const legacyAnswers = Object.fromEntries(legacyNine.modules.flatMap((module) => module.questions).map((q) => [q.id, q.correctAnswer]))
   saveSATAttemptToHistory({ ...old, attemptId: 'legacy-nine', testId: legacyNine.id, answers: legacyAnswers }, 'submitted')
   await render('/sat/mistakes?attempt=legacy-nine')
-  assert.match(text(), /Correct76\/76/)
+  assert.match(text(), /Correct 76\/76/)
   assert.match(text(), /Math Module 2 is unavailable/)
   assert.doesNotMatch(text(), /Estimated SAT range/)
 
@@ -216,7 +221,7 @@ export async function run() {
   await render('/mock/sat/1/run', <SATMockRun />)
   assert.match(text(), /Section 1, Module 2/)
   assert.match(container.querySelector('button[title="Hide timer"]')!.textContent!, /32:00/)
-  let stored = JSON.parse(localStorage.getItem(`profai:sat:${runTest.id}:attempt:v1`)!)
+  let stored = JSON.parse(accountStorage.getItem(`profai:sat:${runTest.id}:attempt:v1`)!)
   assert.equal(stored.status, 'active')
   assert.equal(stored.currentModuleIndex, 1)
   await render('/empty', <div />)
@@ -227,9 +232,9 @@ export async function run() {
   exam.moduleDeadlines.math2 = Date.now() - 1
   saveSATAttempt(exam)
   await render('/mock/sat/1/run', <SATMockRun />)
-  stored = JSON.parse(localStorage.getItem(`profai:sat:${runTest.id}:attempt:v1`)!)
+  stored = JSON.parse(accountStorage.getItem(`profai:sat:${runTest.id}:attempt:v1`)!)
   assert.equal(stored.status, 'submitted')
-  assert.match(text(), /Personal score report/)
+  assert.match(text(), /Your personal score report/)
   await render('/empty', <div />)
   Object.defineProperty(document, 'fullscreenElement', { value: null, configurable: true })
   let practice = createSATAttempt(runTest.id, runTest.modules, 'practice')
@@ -242,7 +247,7 @@ export async function run() {
   await click(button('Finish module'))
   await click(button('Continue to next module'))
   assert.match(container.querySelector('button[title="Hide timer"]')!.textContent!, /00:00/)
-  stored = JSON.parse(localStorage.getItem(`profai:sat:${runTest.id}:attempt:v1`)!)
+  stored = JSON.parse(accountStorage.getItem(`profai:sat:${runTest.id}:attempt:v1`)!)
   assert.equal(stored.currentModuleIndex, 1)
   assert.ok(stored.moduleElapsedSeconds.rw1 >= 65)
   await act(async () => root.unmount())

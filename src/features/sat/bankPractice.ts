@@ -110,6 +110,22 @@ export type BankSession = {
   createdAt: string
 }
 const sessionKey = (userId: string) => `profai:sat:question-bank:${userId}:active:v1`
+const attemptedKey = (userId: string) => `profai:sat:question-bank:${userId}:attempted:v1`
+
+// Keep answered questions attempted even when an unfinished set is replaced.
+// Completed history remains separate so draft answers do not become past mistakes.
+export function readAttemptedKeys(userId: string): Set<string> {
+  const keys = new Set<string>()
+  const add = (key: string) => keys.add(reviewQuestions.get(key)?.key ?? key)
+  try {
+    const data: unknown = JSON.parse(accountStorageFor(userId).getItem(attemptedKey(userId)) ?? '[]')
+    if (Array.isArray(data)) data.forEach(key => { if (typeof key === 'string') add(key) })
+  } catch { /* Saved session answers still count if the progress record is damaged. */ }
+  const session = loadBankSession(userId)
+  session?.keys.forEach(key => { if (session.answers[key]?.trim()) add(key) })
+  return keys
+}
+
 export function loadBankSession(userId: string): BankSession | null {
   try {
     const data = JSON.parse(accountStorageFor(userId ?? 'guest').getItem(sessionKey(userId)) ?? 'null')
@@ -133,6 +149,11 @@ export function loadBankSession(userId: string): BankSession | null {
   }
 }
 export function saveBankSession(userId: string, session: BankSession) {
+  const attempted = readAttemptedKeys(userId)
+  session.keys.forEach(key => {
+    if (session.answers[key]?.trim()) attempted.add(reviewQuestions.get(key)?.key ?? key)
+  })
+  if (attempted.size) accountStorageFor(userId).setItem(attemptedKey(userId), JSON.stringify([...attempted]))
   accountStorageFor(userId ?? 'guest').setItem(sessionKey(userId), JSON.stringify({ ...session, questions: session.questions ?? Object.fromEntries(session.keys.flatMap(key => {
     const row = reviewQuestions.get(key)
     return row ? [[key, row]] : []

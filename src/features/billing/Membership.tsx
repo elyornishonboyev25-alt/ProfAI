@@ -107,7 +107,7 @@ export default function Membership() {
     {!!wallet?.subscriptions.length && <div className="billing-active-plans">{wallet.subscriptions.map(plan => <span key={plan.audience}><CheckCircle2 size={15} />{productLabel(plan.plan, text)} · {text('until', 'gacha', 'до')} {new Date(plan.expiresAt).toLocaleDateString()}</span>)}</div>}
 
     <section aria-labelledby="billing-plans-title">
-      <div className="billing-section-heading"><h2 id="billing-plans-title">{text('Choose a plan', 'Tarifni tanlang', 'Выберите тариф')}</h2><PlanDuration months={months} onChange={value => { setMonths(value); setSelected(null) }} /></div>
+      <div className="billing-section-heading"><h2 id="billing-plans-title">{text('Choose a plan', 'Tarifni tanlang', 'Выберите тариф')}</h2><PlanDuration products={products} months={months} onChange={value => { setMonths(value); setSelected(null) }} /></div>
       {catalogError && <div role="alert" className="billing-error">{catalogError}<button onClick={() => void loadCatalog()}>{text('Reload plans', 'Qayta yuklash', 'Обновить тарифы')}</button></div>}
       <PricingCards products={products} months={months} onChoose={choose} disabled={busy || !catalog} discountPercent={wheelPercent} />
       <p className="billing-plan-footnote">{text('Free $0 · Pro $5.99/month · Max $11.99/month. Pay once for the period you choose — no auto-renewal.', 'Free $0 · Pro $5.99/oy · Max $11.99/oy. Tanlangan muddat uchun bir marta to‘laysiz — avtomatik uzaytirilmaydi.', 'Free $0 · Pro $5.99/мес. · Max $11.99/мес. Разовая оплата за выбранный срок — без автопродления.')}</p>

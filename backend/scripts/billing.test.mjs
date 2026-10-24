@@ -60,13 +60,14 @@ prisma.$transaction = work => {
 for (const model of ['user', 'premiumGrant', 'billingSubscription', 'featureUsage', 'resourceUnlock']) Object.assign(prisma[model], tx[model])
 const active = audience => ({ audience, startsAt: new Date(Date.now() - 60000), expiresAt: new Date(Date.now() + 60000) })
 
-test('each Pro, Max and group price is one cent lower, including complete 3- and 12-month plans', () => {
+test('Pro and Max have fixed period prices and savings based on their current monthly prices', () => {
   assert.equal(billingProduct('PRO_1').amountUsd, 599)
   assert.equal(billingProduct('MAX_1').amountUsd, 1199)
-  assert.equal(billingProduct('PRO_3').amountUsd, 1619)
-  assert.equal(billingProduct('MAX_3').amountUsd, 3239)
-  assert.equal(billingProduct('PRO_12').amountUsd, 5759)
-  assert.equal(billingProduct('MAX_12').amountUsd, 11519)
+  assert.equal(billingProduct('PRO_3').amountUsd, 1599)
+  assert.equal(billingProduct('MAX_3').amountUsd, 2999)
+  assert.equal(billingProduct('PRO_12').amountUsd, 5499)
+  assert.equal(billingProduct('MAX_12').amountUsd, 10999)
+  assert.deepEqual(BILLING_PRODUCTS.map(product => product.discount), [0, 11, 23.5, 0, 16.6, 23.6])
   assert.equal(PLAN_MONTHLY_USD.PRO, billingProduct('PRO_1').amountUsd)
   assert.equal(PLAN_MONTHLY_USD.MAX, billingProduct('MAX_1').amountUsd)
   assert.deepEqual(GROUP_MONTHLY_USD, { PRO: 499, MAX: 999 })

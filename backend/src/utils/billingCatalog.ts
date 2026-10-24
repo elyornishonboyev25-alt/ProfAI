@@ -7,18 +7,21 @@ export type AccessFeature = 'test' | 'mock' | 'writing' | 'speaking' | 'voice' |
 export const BILLING_PERIODS = [1, 3, 12] as const
 export type BillingProduct = { code: string; audience: BillingAudience; months: number; amountUsd: number; discount: number }
 
-const BASE_MONTHLY_USD = { PRO: 600, MAX: 1200 } as const
-export const PLAN_MONTHLY_USD: Record<'PRO' | 'MAX', number> = { PRO: BASE_MONTHLY_USD.PRO - 1, MAX: BASE_MONTHLY_USD.MAX - 1 }
+export const PLAN_MONTHLY_USD: Record<'PRO' | 'MAX', number> = { PRO: 599, MAX: 1199 }
+const PLAN_PRICES_USD = {
+  PRO: { 1: PLAN_MONTHLY_USD.PRO, 3: 1599, 12: 5499 },
+  MAX: { 1: PLAN_MONTHLY_USD.MAX, 3: 2999, 12: 10999 },
+} as const
 // Groups of five or more people pay this per person for one month.
 export const GROUP_MONTHLY_USD: Record<'PRO' | 'MAX', number> = { PRO: 499, MAX: 999 }
 export const GROUP_MIN_SIZE = 5
 export const GROUP_MAX_SIZE = 20
 
 export const BILLING_PRODUCTS: BillingProduct[] = (['PRO', 'MAX'] as const).flatMap(audience => BILLING_PERIODS.map(months => {
-  const discount = months === 12 ? 20 : months === 3 ? 10 : 0
-  // Reduce each complete plan price by one cent after applying its period savings.
-  return { code: `${audience}_${months}`, audience, months,
-    amountUsd: Math.round(BASE_MONTHLY_USD[audience] * months * (100 - discount) / 100) - 1, discount }
+  const amountUsd = PLAN_PRICES_USD[audience][months]
+  // Display savings against paying the current monthly price, rounded to one decimal.
+  const discount = Math.round((1 - amountUsd / (PLAN_MONTHLY_USD[audience] * months)) * 1000) / 10
+  return { code: `${audience}_${months}`, audience, months, amountUsd, discount }
 }))
 
 /** Monthly allowance per plan; `null` means no monthly limit. */

@@ -10,6 +10,7 @@ interface TimerProps {
   showWarning?: boolean // Show red color when time is low
   variant?: 'default' | 'readingCompact'
   syncIntervalSeconds?: number
+  deadline?: number | null
 }
 
 export default function Timer({
@@ -20,6 +21,7 @@ export default function Timer({
   showWarning = true,
   variant = 'default',
   syncIntervalSeconds = 1,
+  deadline,
 }: TimerProps) {
   const [displayTime, setDisplayTime] = useState(timeLeft)
   const liveTimeRef = useRef(timeLeft)
@@ -38,22 +40,30 @@ export default function Timer({
     if (!isActive || liveTimeRef.current <= 0) return
 
     const syncEvery = Math.max(1, Math.round(syncIntervalSeconds))
-    const timer = window.setInterval(() => {
-      const newTime = Math.max(0, liveTimeRef.current - 1)
+    const endsAt = deadline ?? Date.now() + liveTimeRef.current * 1000
+    let finished = false
+    const tick = () => {
+      const newTime = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000))
       liveTimeRef.current = newTime
       setDisplayTime(newTime)
 
       if (newTime <= 0 || newTime % syncEvery === 0) {
         setTimeLeftRef.current(newTime)
       }
-      if (newTime <= 0) {
+      if (newTime <= 0 && !finished) {
+        finished = true
         window.clearInterval(timer)
         onTimeUpRef.current?.()
       }
-    }, 1000)
+    }
+    const timer = window.setInterval(tick, 1000)
+    document.addEventListener('visibilitychange', tick)
 
-    return () => window.clearInterval(timer)
-  }, [isActive, syncIntervalSeconds])
+    return () => {
+      window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', tick)
+    }
+  }, [isActive, syncIntervalSeconds, deadline])
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -75,7 +85,7 @@ export default function Timer({
     <div className={`
       flex items-center space-x-2 px-4 py-2 rounded-lg font-mono font-semibold transition-colors
       ${isLowTime
-        ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 animate-pulse'
+        ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
         : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700'
       }
     `}>

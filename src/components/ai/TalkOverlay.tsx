@@ -11,7 +11,7 @@ import { useCopy } from '@/i18n/interface'
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
-// Immersive, full-screen "talk to ProfAI" experience. Mounted once at the app root so
+// Immersive, full-screen "talk to Ivygoo" experience. Mounted once at the app root so
 // it keeps running while the learner navigates. Can be docked to the corner (animated
 // via a shared layoutId) and re-expanded — it never stops listening or speaking.
 function StandardTalkOverlay({ tutor }: { tutor: AiTutorController }) {
@@ -101,7 +101,7 @@ function StandardTalkOverlay({ tutor }: { tutor: AiTutorController }) {
           <CoachMascot state={voiceState} level={voiceLevel} size={44} />
         </motion.span>
         <span className="text-left">
-          <span className="block text-xs font-black text-slate-900">Nova · ProfAI</span>
+          <span className="block text-xs font-black text-slate-900">Nova · Ivygoo</span>
           <span className="block text-[10px] font-semibold text-red-500">{status}</span>
         </span>
         <span
@@ -320,15 +320,15 @@ export function TalkOverlay() {
     : t('Listening', 'Tinglayapti', 'Слушает')
 
   if (docked) return <div className="fixed bottom-5 right-5 z-[200] flex items-center rounded-full border border-red-200 bg-white p-2 shadow-xl">
-    <button onClick={() => setDocked(false)} className="flex items-center gap-2 pr-3" aria-label={t('Expand voice', 'Ovozni kengaytirish', 'Развернуть голосовой чат')}><CoachMascot state={tutor.voiceState} level={tutor.voiceLevel} size={44} /><span className="text-left text-xs font-bold">Nova · ProfAI<span className="block text-[10px] font-medium text-slate-500">{status}</span></span></button>
+    <button onClick={() => setDocked(false)} className="flex items-center gap-2 pr-3" aria-label={t('Expand voice', 'Ovozni kengaytirish', 'Развернуть голосовой чат')}><CoachMascot state={tutor.voiceState} level={tutor.voiceLevel} size={44} /><span className="text-left text-xs font-bold">Nova · Ivygoo<span className="block text-[10px] font-medium text-slate-500">{status}</span></span></button>
     <button onClick={end} className="flex h-10 w-10 items-center justify-center rounded-full text-slate-500 hover:bg-red-50" aria-label={t('End voice', 'Suhbatni tugatish', 'Завершить разговор')}><X size={18} /></button>
   </div>
 
-  return <div ref={dialog} role="dialog" aria-modal="true" aria-label="ProfAI voice" className="coach-voice-stage fixed inset-0 z-[200] overflow-y-auto bg-slate-950 text-white">
+  return <div ref={dialog} role="dialog" aria-modal="true" aria-label="Ivygoo voice" className="coach-voice-stage fixed inset-0 z-[200] overflow-y-auto bg-slate-950 text-white">
     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(159,18,57,.28),transparent_65%)]" />
     <div className="relative mx-auto flex min-h-full max-w-3xl flex-col items-center px-5 pb-10 pt-5 text-center">
       <div className="flex w-full items-center justify-between gap-3">
-        <span className="text-sm font-bold">Nova · ProfAI <span className="ml-1 text-slate-400">{t('Voice', 'Ovozli suhbat', 'Голосовой чат')}</span></span>
+        <span className="text-sm font-bold">Nova · Ivygoo <span className="ml-1 text-slate-400">{t('Voice', 'Ovozli suhbat', 'Голосовой чат')}</span></span>
         <div className="flex gap-2"><button onClick={() => setDocked(true)} className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 hover:bg-white/10" aria-label={t('Minimize', 'Kichraytirish', 'Свернуть')}><Minimize2 size={18} /></button><button onClick={end} className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 hover:bg-white/10" aria-label={t('End voice', 'Suhbatni tugatish', 'Завершить разговор')}><X size={20} /></button></div>
       </div>
       <div className="mb-7 mt-8 flex flex-wrap justify-center gap-2" role="group" aria-label={t('Conversation mode', 'Suhbat rejimi', 'Режим разговора')}>

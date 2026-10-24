@@ -17,6 +17,7 @@ const rows = Array.from(
   { length: 25 },
   (_, index) =>
     ({
+      premium: index === 0,
       rank: index + 1,
       previousRank: index + 1,
       rankDelta: 0,
@@ -89,6 +90,9 @@ export async function run() {
       ),
     )
     await flush()
+    assert.ok(container.querySelector('.leaderboard-podium-card.is-premium-member .premium-identity-badge'), 'Premium is visible on the podium')
+    assert.ok(container.querySelector('tbody tr.is-premium-member .premium-identity-badge'), 'Premium is visible in the rankings')
+    assert.ok(!container.querySelectorAll('tbody tr')[1].querySelector('.premium-identity-badge'), 'Free learners have no Premium badge')
     assert.equal(
       container.querySelectorAll('tbody tr').length,
       20,

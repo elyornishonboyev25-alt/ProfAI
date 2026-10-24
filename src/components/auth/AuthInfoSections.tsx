@@ -5,9 +5,9 @@ import { BrandMark } from '@/components/brand/BrandLogo'
 
 const faqs = [
   { question: 'Can I prepare for both IELTS and SAT?', answer: 'Yes. Both exam arenas live in one account, with practice, full tests, results and review.' },
-  { question: 'Is ProfAI free to use?', answer: 'Start for free with 7 days of AI, IELTS and SAT. After your one-time trial, Student is $3/month and Teacher is $5/month. Classes require a paid plan. Saved results and vocabulary stay available.' },
-  { question: 'Does ProfAI support IELTS General Training?', answer: 'Yes. IELTS Academic and General Training preparation are both available.' },
-  { question: 'Does ProfAI submit university applications?', answer: 'No. ProfAI helps you prepare and organize your plan. You submit applications through each university’s official process.' },
+  { question: 'Is Ivygoo free to use?', answer: 'Start for free with 7 days of AI, IELTS and SAT. After your one-time trial, Student is $3/month and Teacher is $5/month. Classes require a paid plan. Saved results and vocabulary stay available.' },
+  { question: 'Does Ivygoo support IELTS General Training?', answer: 'Yes. IELTS Academic and General Training preparation are both available.' },
+  { question: 'Does Ivygoo submit university applications?', answer: 'No. Ivygoo helps you prepare and organize your plan. You submit applications through each university’s official process.' },
 ]
 
 export default function AuthInfoSections() {
@@ -18,8 +18,8 @@ export default function AuthInfoSections() {
       <div className="auth-info-faq-intro">
         <span className="auth-info-eyebrow"><ShieldCheck size={14} /> GOOD TO KNOW</span>
         <h2 id="auth-faq-title">Questions before<br />you begin?</h2>
-        <p>Get a clear picture of what ProfAI offers, then take your first step.</p>
-        <a href="mailto:support@profai.uz" className="auth-info-support">Contact support <ArrowUpRight size={16} /></a>
+        <p>Get a clear picture of what Ivygoo offers, then take your first step.</p>
+        <a href="mailto:elyornishonboyev000@gmail.com" className="auth-info-support">Contact support <ArrowUpRight size={16} /></a>
       </div>
       <div className="auth-info-faq-list">
         {faqs.map(({ question, answer }, index) => <div className="auth-info-faq-item" key={question}>
@@ -40,7 +40,7 @@ export default function AuthInfoSections() {
 
     <footer className="auth-info-footer">
       <div className="auth-info-footer-main">
-        <div><div className="auth-info-footer-logo"><BrandMark size={35} /><strong>Prof<span>AI</span></strong></div><p>Preparation and planning for the journey ahead.</p></div>
+        <div><div className="auth-info-footer-logo"><BrandMark size={35} /><strong>Ivy<span>goo</span></strong></div><p>Preparation and planning for the journey ahead.</p></div>
         <nav aria-label="Footer navigation">
           <Link to="/test-preparation">IELTS &amp; SAT</Link>
           <a href="#auth-showcase">How it works</a>
@@ -49,7 +49,7 @@ export default function AuthInfoSections() {
           <Link to="/login#sign-in">Sign in</Link>
         </nav>
       </div>
-      <div className="auth-info-footer-bottom"><span>© {new Date().getFullYear()} ProfAI. All rights reserved.</span><span>Independent platform · Not affiliated with IELTS, College Board or any university.</span></div>
+      <div className="auth-info-footer-bottom"><span>© {new Date().getFullYear()} Ivygoo. All rights reserved.</span><span>Independent platform · Not affiliated with IELTS, College Board or any university.</span></div>
     </footer>
   </div>
 }

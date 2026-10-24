@@ -8,6 +8,7 @@
   --lx-line: rgba(124, 132, 146, .24);
   --lx-glass: linear-gradient(140deg, rgba(255, 255, 255, .78) 0%, rgba(240, 242, 246, .55) 48%, rgba(222, 226, 233, .5) 100%);
   --lx-glass-edge: rgba(255, 255, 255, .9);
+  --lx-glass-solid: linear-gradient(140deg, rgba(255, 255, 255, .9) 0%, rgba(244, 245, 248, .78) 48%, rgba(230, 233, 238, .74) 100%);
   --lx-shadow: 0 30px 70px -28px rgba(25, 32, 46, .32), 0 6px 18px -6px rgba(25, 32, 46, .1), inset 0 1px 0 #fff, inset 0 -1px 0 rgba(118, 127, 142, .16);
   --lx-red-fill: linear-gradient(135deg, #ec2846 0%, #cf1230 52%, #a40e25 100%);
   --lx-red-glow: 0 16px 34px -10px rgba(206, 18, 46, .62), inset 0 1px 0 rgba(255, 255, 255, .45), inset 0 -2px 0 rgba(110, 6, 22, .25);
@@ -23,11 +24,8 @@
 /* The route entrance animation leaves a transform that would trap fixed header, rail and backdrop. */
 .arena-route:has(> .lx-page) { animation: none; transform: none; }
 
-/* Scroll snapping: every chapter stops before the next one on desktop screens. */
-/* Wheel and keyboard paging is handled in Landing.tsx; proximity snapping helps touch and scrollbar drags. */
-html.lx-snap { scroll-snap-type: y proximity; }
-.lx-screen { scroll-snap-align: start; }
-.lx-feature, .lx-inside { scroll-snap-stop: always; }
+/* Scrolling stays native. Chapters below the fold skip rendering until they approach the viewport. */
+.lx-screen:not(.lx-hero) { content-visibility: auto; contain-intrinsic-size: auto 100vh; }
 
 /* Silver studio backdrop */
 .lx-backdrop { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
@@ -38,16 +36,15 @@ html.lx-snap { scroll-snap-type: y proximity; }
     radial-gradient(ellipse at 88% 92%, rgba(255, 255, 255, .8) 0%, transparent 45%),
     linear-gradient(160deg, #f2f3f5 0%, #dfe2e7 46%, #eceef1 100%);
 }
-.lx-backdrop i { position: absolute; border-radius: 50%; filter: blur(70px); opacity: .55; animation: lx-drift 22s ease-in-out infinite alternate; }
-.lx-backdrop i:nth-child(1) { width: 46vw; height: 30vw; right: -12vw; top: 6vh; background: radial-gradient(circle, rgba(232, 28, 58, .32), transparent 68%); }
-.lx-backdrop i:nth-child(2) { width: 38vw; height: 26vw; left: -14vw; bottom: -6vh; background: radial-gradient(circle, rgba(222, 22, 50, .22), transparent 70%); animation-delay: -8s; }
-.lx-backdrop i:nth-child(3) { width: 60vw; height: 14vw; left: 20vw; top: 44vh; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .9), transparent); filter: blur(40px); transform: rotate(-14deg); animation-delay: -14s; }
-@keyframes lx-drift { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(-4vw, 3vh, 0) scale(1.12); } }
+.lx-backdrop i { position: absolute; border-radius: 50%; opacity: .55; }
+.lx-backdrop i:nth-child(1) { width: 46vw; height: 30vw; right: -12vw; top: 6vh; background: radial-gradient(closest-side, rgba(232, 28, 58, .3), rgba(232, 28, 58, .12) 55%, transparent); }
+.lx-backdrop i:nth-child(2) { width: 38vw; height: 26vw; left: -14vw; bottom: -6vh; background: radial-gradient(closest-side, rgba(222, 22, 50, .2), rgba(222, 22, 50, .08) 55%, transparent); }
+.lx-backdrop i:nth-child(3) { width: 60vw; height: 14vw; left: 20vw; top: 44vh; background: radial-gradient(closest-side, rgba(255, 255, 255, .85), transparent); transform: rotate(-14deg); }
 
 .lx-progress { position: fixed; z-index: 70; top: 0; left: 0; right: 0; height: 3px; transform-origin: 0 50%; background: linear-gradient(90deg, #a40e25, #ef2b4a, #ff8090); box-shadow: 0 0 14px rgba(239, 43, 74, .6); }
 
 .lx-page main { position: relative; z-index: 1; }
-.lx-glass { border: 1px solid var(--lx-glass-edge); background: var(--lx-glass); box-shadow: var(--lx-shadow); -webkit-backdrop-filter: blur(24px) saturate(165%); backdrop-filter: blur(24px) saturate(165%); }
+.lx-glass { border: 1px solid var(--lx-glass-edge); background: var(--lx-glass-solid, var(--lx-glass)); box-shadow: var(--lx-shadow); -webkit-backdrop-filter: blur(24px) saturate(165%); backdrop-filter: blur(24px) saturate(165%); }
 
 /* Buttons and type helpers */
 .lx-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; padding: 0 28px; border: 1px solid transparent; border-radius: 14px; font-size: 16px; font-weight: 650; letter-spacing: .005em; white-space: nowrap; overflow: hidden; transition: transform .25s ease, box-shadow .25s ease, background .25s ease; }
@@ -75,7 +72,7 @@ html.lx-snap { scroll-snap-type: y proximity; }
 
 /* Header */
 .lx-header { position: fixed; z-index: 60; top: 12px; left: 0; right: 0; padding: 0 var(--lx-gutter); pointer-events: none; }
-.lx-nav { pointer-events: auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; width: min(1320px, 100%); min-height: 72px; margin: 0 auto; padding: 10px 12px 10px 22px; border: 1px solid var(--lx-glass-edge); border-radius: 22px; background: linear-gradient(140deg, rgba(255, 255, 255, .72), rgba(236, 238, 242, .5)); box-shadow: 0 18px 44px -20px rgba(25, 32, 46, .32), inset 0 1px 0 #fff; -webkit-backdrop-filter: blur(26px) saturate(170%); backdrop-filter: blur(26px) saturate(170%); transition: box-shadow .3s ease, background .3s ease; }
+.lx-nav { pointer-events: auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; width: min(1320px, 100%); min-height: 72px; margin: 0 auto; padding: 10px 12px 10px 22px; border: 1px solid var(--lx-glass-edge); border-radius: 22px; background: linear-gradient(140deg, rgba(255, 255, 255, .72), rgba(236, 238, 242, .5)); box-shadow: 0 18px 44px -20px rgba(25, 32, 46, .32), inset 0 1px 0 #fff; -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%); transition: box-shadow .3s ease, background .3s ease; }
 .lx-header.is-scrolled .lx-nav { background: linear-gradient(140deg, rgba(255, 255, 255, .86), rgba(236, 238, 242, .72)); box-shadow: 0 22px 50px -20px rgba(25, 32, 46, .4), inset 0 1px 0 #fff; }
 .lx-logo { display: inline-flex; align-items: center; gap: 9px; color: var(--lx-ink); }
 .lx-logo > span { font-size: 25px; font-weight: 800; letter-spacing: -.05em; }
@@ -233,6 +230,32 @@ html.lx-snap { scroll-snap-type: y proximity; }
 .lx-page .landing-review-avatar { background: linear-gradient(140deg, #f6f7f9, #d6dae0); color: var(--lx-red-deep); box-shadow: inset 0 1px 0 #fff, 0 0 0 1px rgba(124, 132, 146, .2); }
 .lx-page .landing-reviews-marquee { -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
 
+/* Compact testimonial wall: narrower cards, quieter type, the wall stays inside the page column. */
+.lx-page .landing-reviews-heading { align-items: flex-end; margin-bottom: clamp(18px, 3vh, 28px); }
+.lx-page .landing-reviews-heading h2 { margin-top: 10px; font-size: clamp(30px, 2.9vw, 44px); }
+.lx-page .landing-reviews-heading p { margin-top: 8px; color: var(--lx-muted); font-size: 15px; }
+.lx-page .landing-reviews-heading > .landing-button { min-height: 44px; padding: 0 20px; border-radius: 12px; font-size: 14px; }
+.lx-page .landing-reviews-marquee { left: auto; width: 100%; transform: none; }
+.lx-page .landing-reviews-marquee-lane { padding-block: 4px 10px; }
+.lx-page .landing-reviews-marquee-lane + .landing-reviews-marquee-lane { margin-top: 4px; }
+.lx-page .landing-reviews-marquee-group { gap: 14px; padding-right: 14px; }
+.lx-page .landing-reviews-marquee-card { width: clamp(268px, 21vw, 304px); }
+.lx-page .landing-review-card, .lx-page .landing-reviews-marquee-card .landing-review-card { min-height: 0; padding: 16px 18px 14px; border-radius: 16px; box-shadow: 0 14px 30px -22px rgba(25, 32, 46, .45), inset 0 1px 0 #fff; }
+.lx-page .landing-review-card-top { color: rgba(211, 19, 47, .55); }
+.lx-page .landing-review-card-top svg { width: 18px; height: 18px; }
+.lx-page .landing-review-card-top span { padding: 3px 7px; border-radius: 6px; color: var(--lx-red-deep); background: rgba(211, 19, 47, .08); font-size: 9.5px; letter-spacing: .06em; }
+.lx-page .landing-review-stars { margin-top: 8px; }
+.lx-page .landing-review-text, .lx-page .landing-reviews-marquee-card .landing-review-text { display: -webkit-box; margin-top: 8px; overflow: hidden; color: #2b303a; font-size: 13.5px; font-weight: 450; line-height: 1.55; -webkit-box-orient: vertical; -webkit-line-clamp: 4; }
+.lx-page .landing-review-more { min-height: 0; margin-top: 6px; color: var(--lx-red); font-size: 12px; font-weight: 700; text-decoration: none; }
+.lx-page .landing-review-more::after { content: ' →'; }
+.lx-page .landing-review-more:hover { text-decoration: underline; text-underline-offset: 3px; }
+.lx-page .landing-review-progress { gap: 6px; margin-top: 10px; padding: 4px 8px; border-color: rgba(211, 19, 47, .14); border-radius: 8px; background: rgba(255, 255, 255, .7); font-size: 12px; }
+.lx-page .landing-review-progress svg { width: 13px; height: 13px; }
+.lx-page .landing-review-progress small { padding-left: 6px; color: var(--lx-muted); font-size: 10px; font-weight: 650; }
+.lx-page .landing-review-author { gap: 9px; margin-top: 12px; padding-top: 11px; border-top-color: rgba(124, 132, 146, .16); }
+.lx-page .landing-review-avatar { width: 30px; height: 30px; border-radius: 50%; font-size: 11px; }
+.lx-page .landing-review-author strong { color: var(--lx-ink); font-size: 12.5px; font-weight: 700; }
+
 .lx-final { justify-content: flex-start; gap: clamp(20px, 3vh, 32px); padding-bottom: 28px; }
 .lx-faq { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: clamp(24px, 4vw, 60px); width: min(1320px, 100%); margin: 0 auto; padding: clamp(24px, 3.4vw, 46px); border-radius: 28px; }
 .lx-faq-intro h2 { margin: 14px 0 12px; font-size: clamp(30px, 3.2vw, 48px); font-weight: 750; letter-spacing: -.04em; line-height: 1.05; }
@@ -263,6 +286,8 @@ html.lx-snap { scroll-snap-type: y proximity; }
 .lx-footer nav :is(button, a):hover { color: var(--lx-red-deep); background: rgba(255, 255, 255, .6); }
 .lx-footer p { grid-column: 1 / -1; margin: 0; color: #6a717d; font-size: 12px; }
 
+/* Only the fixed header and mobile menu keep a live backdrop blur; everywhere else it repainted on every scroll frame. */
+.lx-page :where(*):not(.lx-nav, .lx-mobile-menu) { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
 .lx-page :is(button, a):focus-visible { outline: 3px solid rgba(211, 19, 47, .55); outline-offset: 3px; }
 
 /* Responsive */
@@ -324,6 +349,6 @@ html.lx-snap { scroll-snap-type: y proximity; }
   .lx-feature-copy h2 { margin-bottom: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .lx-backdrop i, .lx-float, .lx-float-shot, .lx-scroll-cue span, .lx-hotspot.is-active::before, .lx-hotspot.is-active::after { animation: none; }
+  .lx-float, .lx-float-shot, .lx-scroll-cue span, .lx-hotspot.is-active::before, .lx-hotspot.is-active::after { animation: none; }
   .lx-tour-frame .lx-browser-view img, .lx-hotspot, .lx-step-body { transition: none; }
 }

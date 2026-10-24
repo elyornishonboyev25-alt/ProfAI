@@ -20,7 +20,7 @@ import { env } from '../config/env.js'
 import { requireAuth } from '../middleware/auth.js'
 import { accountOverview } from '../services/billing.service.js'
 import { sendAuthCode, type AuthCodePurpose } from '../services/authEmail.service.js'
-import { createAuthSession, requestDeviceId } from '../services/authActivity.service.js'
+import { AuthSessionError, assertDeviceAvailable, createAuthSession, requestDeviceId, DEVICE_USAGE_WINDOW_MS } from '../services/authActivity.service.js'
 import activityRoutes from './authActivity.routes.js'
 
 const router = Router()
@@ -166,13 +166,13 @@ async function sanitizeUser(user: {
 }
 
 function deriveFullNameFromEmail(email: string) {
-  const localPart = email.split('@')[0] || 'ProfAI Learner'
+  const localPart = email.split('@')[0] || 'Ivygoo Learner'
   const cleaned = localPart
     .replace(/[._-]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
 
-  if (!cleaned) return 'ProfAI Learner'
+  if (!cleaned) return 'Ivygoo Learner'
 
   return cleaned
     .split(' ')
@@ -189,12 +189,29 @@ async function issueAuthTokens(args: {
   deviceId: string
   method: string
   sessionId?: string | null
+  previousTokenId?: string
 }) {
   const expiresAt = getTokenExpiryDate(env.REFRESH_TOKEN_EXPIRES_IN)
   return prisma.$transaction(async (tx) => {
+    if (args.sessionId) {
+      await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${args.userId} FOR UPDATE`
+      const current = await tx.authSession.findUnique({ where: { id: args.sessionId } })
+      if (!current || current.userId !== args.userId || current.endedAt || current.expiresAt <= new Date()) {
+        throw new AuthSessionError(401, 'SESSION_EXPIRED', 'This session has ended. Please sign in again.')
+      }
+      if (!args.deviceId.startsWith('unknown-') && current.deviceId !== args.deviceId) {
+        throw new AuthSessionError(401, 'SESSION_DEVICE_MISMATCH', 'Please sign in on this device.')
+      }
+      await assertDeviceAvailable(args.userId, current.deviceId, tx)
+    }
     const session = args.sessionId
-      ? await tx.authSession.update({ where: { id: args.sessionId }, data: { expiresAt } })
+      ? await tx.authSession.update({ where: { id: args.sessionId }, data: { expiresAt, usageUntil: new Date(Date.now() + DEVICE_USAGE_WINDOW_MS) } })
       : await createAuthSession({ ...args, expiresAt }, tx)
+    if (args.previousTokenId) {
+      // Admission and rotation commit together, so rejection keeps the old token.
+      const claimed = await tx.refreshToken.updateMany({ where: { id: args.previousTokenId, revokedAt: null, expiresAt: { gt: new Date() } }, data: { revokedAt: new Date() } })
+      if (claimed.count !== 1) throw new AuthSessionError(401, 'SESSION_EXPIRED', 'Refresh token expired or revoked.')
+    }
     const accessToken = signAccessToken({ sub: args.userId, role: args.role, sid: session.id })
     const refreshToken = signRefreshToken({ sub: args.userId, tokenId: generateTokenId() })
     await tx.refreshToken.create({ data: {
@@ -252,12 +269,6 @@ router.post(
       return res.status(409).json({
         message: 'This Gmail is already registered. Sign in to continue with the same account.',
         code: 'ACCOUNT_EXISTS',
-      })
-    }
-    if (purpose === 'SIGN_IN' && !existingUser) {
-      return res.status(404).json({
-        message: 'No account found for this email. Create an account to get started.',
-        code: 'ACCOUNT_NOT_FOUND',
       })
     }
 
@@ -489,13 +500,6 @@ router.post(
   validateBody(emailLoginSchema),
   asyncHandler(async (req, res) => {
     const email = normalizeEmail(req.body.email)
-    const user = await prisma.user.findUnique({
-      where: { email },
-      include: { profile: { select: { onboardingCompletedAt: true } } },
-    })
-    if (!user) {
-      return res.status(404).json({ message: 'No account found for this email. Create an account to get started.', code: 'ACCOUNT_NOT_FOUND' })
-    }
     const verification = await validateVerificationCode(email, 'SIGN_IN', req.body.verificationCode)
     if (!verification.ok) {
       return res.status(400).json({
@@ -506,6 +510,15 @@ router.post(
       })
     }
 
+    // A verified Gmail opens the same account, preserving its ID and saved progress.
+    // Only a consumed sign-in code can create a new account.
+    const existing = await prisma.user.findUnique({ where: { email }, include: { profile: { select: { onboardingCompletedAt: true } } } })
+    const user = existing ?? await prisma.user.upsert({
+      where: { email }, update: {},
+      create: { email, fullName: deriveFullNameFromEmail(email), passwordHash: await hashPassword(crypto.randomBytes(32).toString('hex')) },
+      include: { profile: { select: { onboardingCompletedAt: true } } },
+    })
+
     const tokens = await issueAuthTokens({
       userId: user.id,
       role: user.role,
@@ -514,7 +527,7 @@ router.post(
       deviceId: requestDeviceId(req),
       method: 'EMAIL_CODE',
     })
-    return res.json({ user: await sanitizeUser(user), ...tokens })
+    return res.json({ user: await sanitizeUser(user), ...tokens, isNewUser: !existing })
   }),
 )
 
@@ -588,6 +601,9 @@ router.post(
       },
     })
 
+    if (!existingUser && !identity.email.endsWith('@gmail.com')) {
+      return res.status(400).json({ message: 'Use your personal @gmail.com address.', code: 'GMAIL_REQUIRED' })
+    }
     if (!existingUser && !allowCreate) {
       return res.status(404).json({
         message: 'No account found for this Google email. Create an account to get started.',
@@ -645,6 +661,7 @@ router.post(
     return res.status(existingUser ? 200 : 201).json({
       user: await sanitizeUser(user),
       ...tokens,
+      isNewUser: !existingUser,
     })
   }),
 )
@@ -704,11 +721,6 @@ router.post(
       return res.status(401).json({ message: 'Refresh token expired or revoked.' })
     }
 
-    await prisma.refreshToken.update({
-      where: { id: stored.id },
-      data: { revokedAt: new Date() },
-    })
-
     const tokens = await issueAuthTokens({
       userId: stored.user.id,
       role: stored.user.role,
@@ -717,6 +729,7 @@ router.post(
       deviceId: requestDeviceId(req),
       method: 'RESTORED',
       sessionId: stored.sessionId,
+      previousTokenId: stored.id,
     })
 
     return res.json({
@@ -728,24 +741,35 @@ router.post(
 
 router.post(
   '/logout',
-  requireAuth,
+  authRateLimit,
   validateBody(logoutSchema),
   asyncHandler(async (req, res) => {
     const { refreshToken } = req.body
 
-    const stored = await prisma.refreshToken.findUnique({ where: { tokenHash: hashToken(refreshToken) } })
-    if (stored?.userId === req.user!.id && stored.sessionId) {
-      await prisma.authSession.updateMany({ where: { id: stored.sessionId, userId: req.user!.id, endedAt: null }, data: { endedAt: new Date() } })
+    // A valid refresh credential can sign out its own browser even when its
+    // access token has expired and another device currently owns usage.
+    let payload
+    try { payload = verifyRefreshToken(refreshToken) } catch {
+      throw new AuthSessionError(401, 'SESSION_EXPIRED', 'Invalid refresh token.')
     }
-    await prisma.refreshToken.updateMany({
-      where: {
-        userId: req.user!.id,
-        tokenHash: hashToken(refreshToken),
-        revokedAt: null,
-      },
-      data: {
-        revokedAt: new Date(),
-      },
+    await prisma.$transaction(async tx => {
+      await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${payload.sub} FOR UPDATE`
+      const stored = await tx.refreshToken.findUnique({ where: { tokenHash: hashToken(refreshToken) } })
+      if (!stored || stored.userId !== payload.sub || stored.revokedAt || stored.expiresAt <= new Date()) {
+        throw new AuthSessionError(401, 'SESSION_EXPIRED', 'Refresh token expired or revoked.')
+      }
+      if (stored.sessionId) {
+        const session = await tx.authSession.findUnique({ where: { id: stored.sessionId } })
+        if (session?.userId === payload.sub) {
+          if (!session.deviceId.startsWith('unknown-') && session.deviceId !== req.get('X-Device-Id')?.toLowerCase()) {
+            throw new AuthSessionError(401, 'SESSION_DEVICE_MISMATCH', 'Please sign out on that device.')
+          }
+          await tx.authSession.updateMany({ where: { deviceId: session.deviceId, userId: payload.sub, endedAt: null }, data: { endedAt: new Date() } })
+        }
+      }
+      await tx.refreshToken.updateMany({
+        where: { id: stored.id, revokedAt: null }, data: { revokedAt: new Date() },
+      })
     })
 
     return res.status(204).send()

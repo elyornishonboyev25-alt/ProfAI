@@ -53,7 +53,7 @@ export const premiumCopy = {
     submitFailed: 'Could not submit the receipt. Please try again.',
     cancelFailed: 'Could not cancel the request. Please try again.',
     copyFailed: 'Could not copy the card number. Please copy it manually.',
-    telegramMessage: 'Hello. This is my ProfAI Premium payment. Order: {order}. Email: {email}. Plan: {plan}. Amount: {amount}. I am sending the payment receipt.',
+    telegramMessage: 'Hello. This is my Ivygoo Premium payment. Order: {order}. Email: {email}. Plan: {plan}. Amount: {amount}. I am sending the payment receipt.',
   },
   ru: {
     back: 'Назад',
@@ -109,7 +109,7 @@ export const premiumCopy = {
     submitFailed: 'Не удалось отправить чек. Попробуйте ещё раз.',
     cancelFailed: 'Не удалось отменить запрос. Попробуйте ещё раз.',
     copyFailed: 'Не удалось скопировать номер карты. Скопируйте его вручную.',
-    telegramMessage: 'Здравствуйте. Оплата ProfAI Premium. Заказ: {order}. Email: {email}. Тариф: {plan}. Сумма: {amount}. Отправляю чек об оплате.',
+    telegramMessage: 'Здравствуйте. Оплата Ivygoo Premium. Заказ: {order}. Email: {email}. Тариф: {plan}. Сумма: {amount}. Отправляю чек об оплате.',
   },
   uz: {
     back: 'Orqaga',
@@ -165,7 +165,7 @@ export const premiumCopy = {
     submitFailed: 'So‘rov yuborilmadi. Qayta urinib ko‘ring.',
     cancelFailed: 'So‘rov bekor qilinmadi. Qayta urinib ko‘ring.',
     copyFailed: 'Karta raqamini nusxalab bo‘lmadi. Uni qo‘lda ko‘chiring.',
-    telegramMessage: 'Assalomu alaykum. ProfAI Premium to‘lovi. Buyurtma: {order}. Email: {email}. Tarif: {plan}. Summa: {amount}. To‘lov chekini yuboryapman.',
+    telegramMessage: 'Assalomu alaykum. Ivygoo Premium to‘lovi. Buyurtma: {order}. Email: {email}. Tarif: {plan}. Summa: {amount}. To‘lov chekini yuboryapman.',
   },
 } as const
 

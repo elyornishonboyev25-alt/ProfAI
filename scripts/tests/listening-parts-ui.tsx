@@ -1,11 +1,15 @@
 import React, { act, StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import assert from 'node:assert/strict'
-import IELTSReadingInterface from '../../src/components/IELTSReadingInterface'
 import { listeningFullTest10 } from '../../src/data/listeningFullTest10'
 import { evaluateReadingAnswers } from '../../src/utils/ieltsUtils'
+import { MemoryRouter } from 'react-router-dom'
+import ReadingInterface from '../../src/components/IELTSReadingInterface'
+import { accountStorageFor } from '../../src/utils/accountStorage'
 
 const container = document.getElementById('root')!
+const storage = accountStorageFor('guest')
+const IELTSReadingInterface = (props: React.ComponentProps<typeof ReadingInterface>) => <MemoryRouter><ReadingInterface {...props} /></MemoryRouter>
 const sessionKey = 'ielts_test_session_ielts-listening-10'
 const legacy = { testMode: 'practice', selectedParts: [0, 1, 2], customTime: 60, answers: { 'lt10-q1': 'month' } }
 
@@ -17,7 +21,7 @@ export async function run() {
     { name: 'legacy single-part choice', session: { ...legacy, selectedParts: [3] }, count: 1 },
   ]) {
     localStorage.clear()
-    if (scenario.session) localStorage.setItem(sessionKey, JSON.stringify(scenario.session))
+    if (scenario.session) storage.setItem(sessionKey, JSON.stringify(scenario.session))
     const root = createRoot(container)
     await act(async () => root.render(<StrictMode><IELTSReadingInterface test={listeningFullTest10} onComplete={() => {}} onExit={() => {}} /></StrictMode>))
     const practice = [...container.querySelectorAll('h3')].find((element) => element.textContent === 'Practice Mode')
@@ -25,7 +29,7 @@ export async function run() {
     await act(async () => practice.click())
     assert.ok(container.textContent!.includes(`${scenario.count} Selected`), scenario.name)
     if (scenario.name === 'legacy three-part default') {
-      const migrated = JSON.parse(localStorage.getItem(sessionKey)!)
+      const migrated = JSON.parse(storage.getItem(sessionKey)!)
       assert.deepEqual(migrated.selectedParts, [0, 1, 2, 3])
       assert.equal(migrated.answers['lt10-q1'], 'month')
       const start = [...container.querySelectorAll('button')].find((element) => element.textContent?.includes('Start Training Session'))
@@ -40,7 +44,8 @@ export async function run() {
       for (let number = 31; number <= 40; number++) {
         assert.ok(container.querySelector(`input[placeholder="${number}"]`), `Question ${number} renders`)
       }
-      const saved = JSON.parse(localStorage.getItem(sessionKey)!)
+      await act(async () => window.dispatchEvent(new window.Event('pagehide')))
+      const saved = JSON.parse(storage.getItem(sessionKey)!)
       assert.equal(saved.partsSelectionVersion, 2)
       assert.deepEqual(saved.selectedParts, [0, 1, 2, 3])
     }
@@ -52,9 +57,14 @@ export async function run() {
     { mode: 'simulation' as const },
     { mode: 'practice' as const, partIndex: 4 },
   ]) {
-    localStorage.setItem(sessionKey, JSON.stringify({ ...legacy, partsSelectionVersion: 2 }))
+    storage.setItem(sessionKey, JSON.stringify({ ...legacy, partsSelectionVersion: 2 }))
     const root = createRoot(container)
     await act(async () => root.render(<StrictMode><IELTSReadingInterface test={listeningFullTest10} launchPreset={preset} onComplete={() => {}} onExit={() => {}} /></StrictMode>))
+    if (preset.partIndex) {
+      assert.ok(container.querySelector('[role="dialog"]'), 'Focused parts require a mode choice before starting')
+      const start = [...container.querySelectorAll('button')].find(element => element.textContent?.includes('Start Training Session'))!
+      await act(async () => start.click())
+    }
     await act(async () => { await new Promise((resolve) => setTimeout(resolve, 2400)) })
     assert.match(container.textContent!, preset.partIndex ? /0\/10 answered/ : /0\/40 answered/)
     assert.ok([...container.querySelectorAll('span')].some((element) => element.textContent === 'Part 4'))

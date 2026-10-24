@@ -78,7 +78,7 @@ export default function NotFound() {
             <ArrowLeft className="mr-2 h-4 w-4" />
              <UiText text={"Test Preparation"} /> </Link>
           <a
-            href="mailto:support@profai.uz?subject=ProfAI%20404%20report"
+            href="mailto:elyornishonboyev000@gmail.com?subject=Ivygoo%20404%20report"
             className="interactive-lift inline-flex items-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 transition hover:border-blue-200 hover:text-blue-700"
           >
             <MessageCircleWarning className="mr-2 h-4 w-4" />

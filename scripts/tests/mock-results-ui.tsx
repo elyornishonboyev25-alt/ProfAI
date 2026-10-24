@@ -25,7 +25,7 @@ export async function run() {
     for (const [index, section] of mock.sections.entries()) {
       await act(async () => saveFullMockSectionResult(mock.id, section.key, {
         band: bands[section.key], testId: section.launchPath!.split('/').pop()!, completedAt: '2026-10-07T06:00:00Z',
-        ...(section.key === 'reading' || section.key === 'listening' ? { result: { testId: section.launchPath!.split('/').pop()!, date: '2026-10-07', score: bands[section.key], correctAnswers: 32, totalQuestions: 40, answers: {}, timeSpent: 1800 } as TestResult } : { review: [{ label: 'Your response', response: 'Saved response text', feedback: 'Saved feedback text' }] }),
+        ...(section.key === 'reading' || section.key === 'listening' ? { result: { testId: section.launchPath!.split('/').pop()!, date: '2026-10-07', score: bands[section.key], correctAnswers: 32, totalQuestions: 40, answers: {}, timeSpent: 1800 } as TestResult } : { review: [{ label: section.key === 'speaking' ? 'Your answer' : 'Task 1', response: 'Saved response text', feedback: 'Saved feedback text', improvedVersion: `Improved ${section.key} response` }, ...(section.key === 'writing' ? [{ label: 'Task 2', response: 'My second essay', improvedVersion: 'Improved second essay' }] : [])] }),
       }))
       if (index < 3) {
         assert.ok(element.querySelector('.mock-run-band')?.textContent?.includes('—'), 'scores stay hidden before all four sections finish')
@@ -34,10 +34,21 @@ export async function run() {
     }
     assert.ok(element.querySelector('.mock-run-band')?.textContent?.startsWith('7.5'), 'overall uses existing nearest-half-band calculation')
     assert.deepEqual([...element.querySelectorAll('.mock-run-skill-band')].map(node => node.firstChild?.textContent), ['7.0', '8.0', '6.5', '7.5'])
-    assert.equal(element.querySelector('[role="progressbar"]')?.getAttribute('aria-valuenow'), '100')
-    assert.equal(element.querySelectorAll('.mock-run-review').length, 2)
-    assert.equal(element.querySelectorAll('.mock-run-section-review details').length, 2)
+    assert.equal(element.querySelectorAll('[role="tab"]').length, 4)
+    assert.equal(element.querySelectorAll('.mock-run-review').length, 1)
+    assert.ok(element.querySelector('[role="tabpanel"]')?.textContent?.includes('32'))
+    assert.equal(element.querySelector('a[href="/podcast"]'), null, 'Completed-test reviews retain the current design without practice promotions')
+    await act(async () => element.querySelector<HTMLButtonElement>('#result-tab-reading')!.click())
+    assert.equal(element.querySelector('a[href="/articles"]'), null)
+    await act(async () => element.querySelector<HTMLButtonElement>('#result-tab-writing')!.click())
+    assert.equal(element.querySelector('[role="tabpanel"]')?.getAttribute('aria-labelledby'), 'result-tab-writing')
     assert.ok(element.textContent?.includes('Saved response text'))
+    for (const text of ['Improved writing response', 'Improved second essay']) assert.ok(element.textContent?.includes(text))
+    await act(async () => element.querySelector<HTMLButtonElement>('#result-tab-speaking')!.click())
+    assert.equal(element.querySelector('a[href="/shadowing-lab"]'), null)
+    assert.ok(element.textContent?.includes('Improved speaking response'))
+    assert.ok([...element.querySelectorAll('.mock-run-section-review details')].every(details => details.hasAttribute('open')))
+    await act(async () => element.querySelector<HTMLButtonElement>('#result-tab-listening')!.click())
     await act(async () => element.querySelector<HTMLButtonElement>('.mock-run-review')!.click())
     assert.ok(element.textContent?.includes('Review opened'))
     assert.ok((reviewState as { reviewPayload?: { result?: TestResult } }).reviewPayload?.result)

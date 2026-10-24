@@ -31,7 +31,7 @@ export default function ShadowingLab() {
     requestRef.current?.abort()
     const controller = new AbortController()
     requestRef.current = controller
-    setActive(guidedShadowing(item))
+    setActive(current => current?.youtubeId === id ? current : guidedShadowing(item))
     setLoadingCaptions(true)
     try {
       const video = await getShadowingVideo(id, controller.signal)
@@ -41,18 +41,25 @@ export default function ShadowingLab() {
   }, [])
   useEffect(() => { if (plannedVideo) void openVideo(plannedVideo) }, [plannedVideo, openVideo])
   useEffect(() => () => requestRef.current?.abort(), [])
+  const closeVideo = () => {
+    requestRef.current?.abort()
+    setLoadingCaptions(false)
+    setActive(null)
+    if (plannedVideo) setParams(current => { const next = new URLSearchParams(current); next.delete('video'); return next }, { replace: true })
+  }
+  const visiblePage = Math.min(page, Math.max(1, Math.ceil(filtered.length / LIBRARY_PAGE_SIZE)))
   if (active) return <div className="workspace-page learning-page shadowing-studio">
     {loadingCaptions && <p className="learning-caption-status" role="status">{c('Checking for a synced transcript')}</p>}
     {!loadingCaptions && !active.captions?.length && !active.segments.length && <div className="mb-4"><button type="button" className="learning-secondary" onClick={() => void openVideo(active.youtubeId)}>{c('Retry captions')}</button></div>}
-    <AccessGate key={active.youtubeId} feature="shadowing" resource={`shadowing:${active.youtubeId}`} onCancel={() => setActive(null)} onUnlocked={() => void openVideo(active.youtubeId)}><ShadowingPlayer key={active.youtubeId} video={active} onBack={() => { requestRef.current?.abort(); setLoadingCaptions(false); setActive(null); if (plannedVideo) setParams({}, { replace: true }) }} /></AccessGate>
+    <AccessGate key={active.youtubeId} feature="shadowing" resource={`shadowing:${active.youtubeId}`} onCancel={closeVideo} onUnlocked={() => void openVideo(active.youtubeId)}><ShadowingPlayer key={active.youtubeId} video={active} onBack={closeVideo} /></AccessGate>
   </div>
-  return <div className="workspace-page learning-page"><div className="learning-frame">
+  return <div className="workspace-page learning-page shadowing-library"><div className="learning-frame">
     <header className="learning-hero">
       <div className="learning-hero-copy">
         <Link to="/academic-skills" className="learning-back"><ArrowLeft size={16} />{c('Academic Skills')}</Link>
         <p className="learning-eyebrow"><AudioLines size={16} />{c('Shadowing Lab')}</p>
         <h1>{c('Find your rhythm.')}<br /><span>{c('Make English your own.')}</span></h1>
-        <p className="learning-intro">{c('Natural speech from actors and motivational speakers.')}</p>
+        <p className="learning-intro">{c('Short, clear English for pronunciation, rhythm and everyday conversations.')}</p>
         <div className="learning-hero-actions"><a href="#shadowing-library" className="learning-primary"><Mic size={17} />{c('Start shadowing')}<ArrowRight size={16} /></a></div>
         <div className="learning-trust"><ShieldCheck size={15} />{c('Original voices. Short clips. Real English.')}<span>•</span>{SHADOWING_CATALOG.length} {c('lessons')}<span>•</span>{c('Up to 2 minutes')}</div>
       </div>
@@ -62,12 +69,12 @@ export default function ShadowingLab() {
     <section id="shadowing-library" className="learning-library">
       <div className="learning-section-heading"><div><p className="learning-eyebrow">{c('Your daily speaking practice')}</p><h2>{c('Shadowing library')}</h2></div><span className="learning-count">{filtered.length} / {SHADOWING_CATALOG.length} {c('lessons')}</span></div>
       <LibraryControls query={query} onQuery={setQuery} level={level} onLevel={setLevel} category={category} onCategory={setCategory} categories={categories} />
-      <div className="learning-card-grid">{filtered.slice((page - 1) * LIBRARY_PAGE_SIZE, page * LIBRARY_PAGE_SIZE).map(item => <button key={item.youtubeId} type="button" onClick={() => void openVideo(item.youtubeId)} className="learning-card">
+      <div className="learning-card-grid">{filtered.slice((visiblePage - 1) * LIBRARY_PAGE_SIZE, visiblePage * LIBRARY_PAGE_SIZE).map(item => <button key={item.youtubeId} type="button" onClick={() => void openVideo(item.youtubeId)} className="learning-card">
         <div className="learning-card-image"><img src={item.thumbnailUrl} alt="" loading="lazy" onError={event => { event.currentTarget.style.visibility = 'hidden' }} /><span className="learning-card-duration"><Clock size={12} />{formatClock(item.durationSec)}</span><span className="learning-card-level">{item.cefr}</span><span className="learning-card-play"><Mic size={23} /></span></div>
         <div className="learning-card-copy"><p className="learning-card-category">{c(item.category)}</p><h3>{item.title}</h3><p className="learning-card-source">{item.source}</p><p className="learning-card-focus">{c(item.focus)}</p><span className="learning-card-action">{c('Practise this lesson')}<ArrowRight size={15} /></span></div>
       </button>)}</div>
       {!filtered.length && <div className="learning-empty"><p>{c('No matching lessons')}{query ? `: “${query}”` : ''}</p><button type="button" className="learning-secondary" onClick={() => { setQuery(''); setLevel('All'); setCategory('All') }}>{c('Reset filters')}</button></div>}
-      <LibraryPagination page={page} total={filtered.length} onPage={setPage} />
+      <LibraryPagination page={visiblePage} total={filtered.length} onPage={setPage} />
     </section>
   </div></div>
 }

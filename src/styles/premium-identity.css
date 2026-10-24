@@ -1,0 +1,56 @@
+/* A shared visual identity for active Premium members across the workspace. */
+.app-shell .premium-member-avatar,
+.app-shell .account-profile-avatar-frame.premium-member-avatar,
+.app-shell .community-learner-card.is-premium-member .community-avatar-ring.premium-member-avatar {
+  border-color: #f5c76d;
+  box-shadow: 0 0 0 3px #f5c76d, 0 8px 24px rgb(180 115 20 / 20%);
+}
+
+.app-shell .premium-member-hero,
+.app-shell .account-profile-page .account-profile-hero.premium-member-hero {
+  border: 1px solid #edcc88;
+  background:
+    radial-gradient(circle at 95% 5%, rgb(253 218 143 / 38%), transparent 45%),
+    linear-gradient(125deg, #fffdf7, #fff9eb 60%, #fff3d6);
+  box-shadow: 0 18px 50px rgb(159 107 27 / 12%), inset 0 1px 0 #fff;
+}
+
+.app-shell .community-learner-card.is-premium-member,
+.app-shell .leaderboard-podium-card.is-premium-member,
+.app-shell .liquid-account.is-premium-member {
+  border: 1px solid #edcc88;
+  background: linear-gradient(135deg, #fffdf7, #fff5df);
+}
+
+.app-shell .leaderboard-table tr.is-premium-member > :is(td, th) {
+  background: rgb(255 244 216 / 65%);
+}
+
+.app-shell .liquid-account.is-premium-member > span {
+  min-width: 0;
+}
+
+.app-shell .liquid-account.is-premium-member > span > .premium-identity-badge {
+  width: fit-content;
+  margin-top: 4px;
+}
+
+.app-shell .liquid-sidebar-collapsed .liquid-account > span:nth-child(2) {
+  display: none;
+}
+
+.premium-identity-badge {
+  flex-shrink: 0;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.app-shell .leaderboard-podium-name > .premium-identity-badge {
+  display: inline-flex;
+  color: #b45309;
+  margin-right: 6px;
+}
+
+.app-shell .leaderboard-learner p > .premium-identity-badge {
+  margin-left: 6px;
+}

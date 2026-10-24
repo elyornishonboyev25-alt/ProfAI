@@ -132,7 +132,7 @@ export function scoreGuestDiagnostic(answers: GuestDiagnosticAnswers): GuestDiag
     overallScore,
     readinessLabel,
     summary: overallScore >= 65
-      ? 'You have a useful foundation. ProfAI can now organize the gaps into a focused university journey.'
+      ? 'You have a useful foundation. Ivygoo can now organize the gaps into a focused university journey.'
       : 'You are early enough to make smart changes. Start with the priorities below and build evidence step by step.',
     categories,
     priorities,

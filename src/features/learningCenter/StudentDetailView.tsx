@@ -73,7 +73,7 @@ export default function StudentDetailView({ slug, studentId, canManage }: { slug
         <ProgressChart results={data.results} />
         <CenterPanel className={`p-5 sm:p-6 ${activeInsight.tone === 'warning' ? 'ring-1 ring-red-100' : ''}`}>
           <div className="flex items-center justify-between"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-red-800 to-red-500 text-white shadow-lg shadow-red-500/20"><BrainCircuit className="h-5 w-5" /></span>{canManage && <button type="button" disabled={analyzing} onClick={() => void analyze()} className="inline-flex items-center gap-1.5 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-red-700 hover:bg-red-100 disabled:opacity-60"><RefreshCw className={`h-3.5 w-3.5 ${analyzing ? 'animate-spin' : ''}`} />{analyzing ? 'Analyzing' : 'Refresh AI'}</button>}</div>
-          <p className="mt-5 text-[10px] font-bold uppercase tracking-[.2em] text-red-700">ProfAI performance analysis</p>
+          <p className="mt-5 text-[10px] font-bold uppercase tracking-[.2em] text-red-700">Ivygoo performance analysis</p>
           <h2 className="mt-1 text-xl font-bold tracking-[-.03em] text-slate-950">{activeInsight.headline}</h2>
           <p aria-live="polite" className="mt-2 text-xs font-semibold text-slate-500">{analysisNote}</p>
           <p className="mt-3 text-sm font-medium leading-6 text-slate-600">{activeInsight.summary}</p>

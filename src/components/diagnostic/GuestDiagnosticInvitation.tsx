@@ -106,7 +106,7 @@ export default function GuestDiagnosticInvitation({ onStart }: { onStart: () => 
                   </button>
                   <button type="button" onClick={close} className="min-h-12 rounded-2xl px-5 text-sm font-black text-slate-500 transition hover:bg-white/70 hover:text-slate-900">Maybe later</button>
                 </div>
-                <p className="mt-5 text-[10px] font-semibold leading-5 text-slate-400">Planning guidance only. ProfAI never invents admission probabilities or guarantees an outcome.</p>
+                <p className="mt-5 text-[10px] font-semibold leading-5 text-slate-400">Planning guidance only. Ivygoo never invents admission probabilities or guarantees an outcome.</p>
               </div>
 
               <div className="relative hidden min-h-[34rem] overflow-hidden border-l border-white/80 bg-slate-950 lg:block">

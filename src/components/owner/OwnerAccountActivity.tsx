@@ -79,7 +79,7 @@ export default function OwnerAccountActivity({ language, reload }: { language: O
   const maxPage = Math.max(1, Math.ceil((data?.total ?? 0) / 20))
   return <section className="owner-activity" aria-labelledby="account-activity-title">
     <div className="owner-activity-heading">
-      <div><p className="owner-eyebrow">PROFAI · {t('Owner dashboard')}</p><h2 id="account-activity-title">{t('Account activity')}</h2><p>{t('Devices and sign-in history, visible only to owners.')}</p></div>
+      <div><p className="owner-eyebrow">IVYGOO · {t('Owner dashboard')}</p><h2 id="account-activity-title">{t('Account activity')}</h2><p>{t('Devices and sign-in history, visible only to owners.')}</p></div>
       <span className={`owner-live ${error ? 'is-stale' : ''}`}><span />{t('Auto-refresh every 30 seconds')}</span>
     </div>
     <div className="owner-activity-metrics">{metrics.map(metric => <button key={metric.label} type="button" onClick={() => {

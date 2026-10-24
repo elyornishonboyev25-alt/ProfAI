@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { act } from 'react'
+import { StrictMode, act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import TestInterface from '@/pages/TestInterface'
@@ -33,14 +33,15 @@ export async function run() {
   const mount = async (pathname: string, state: unknown) => {
     if (root) await act(async () => root!.unmount())
     root = createRoot(element)
-    await act(async () => root!.render(<MemoryRouter initialEntries={[{ pathname, state }]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    const tree = <MemoryRouter initialEntries={[{ pathname, state }]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Location /><Routes>
         <Route path="/test/:type/:id" element={<TestInterface />} />
         <Route path="/ielts/writing/test/:id" element={<IELTSWritingTest />} />
         <Route path="/ielts/speaking/test/:id" element={<IELTSSpeakingTest />} />
         <Route path="/mock/ielts/:mockId" element={<MockIELTSRun />} />
       </Routes>
-    </MemoryRouter>))
+    </MemoryRouter>
+    await act(async () => root!.render(pathname.endsWith('/writing-full-1') ? <StrictMode>{tree}</StrictMode> : tree))
     await flush()
   }
   const click = async (label: string) => {
@@ -72,16 +73,26 @@ export async function run() {
       accountStorage.setItem(practiceKey, JSON.stringify({ [writing.tasks[0].id]: 'Old practice response' }))
       accountStorage.setItem(`${practiceKey}:session`, JSON.stringify({ timerEnabled: true, deadline: Date.now() - 60_000 }))
       await mount(mock.sections[0].launchPath!, fullMockLaunchState(mock.id, 'listening'))
-      await click('Play')
+      assert.ok(element.querySelector('.full-mock-intro'), 'Listening instructions precede the runner')
+      assert.equal(element.querySelector('audio'), null, 'Test audio cannot start during the intro')
+      await click('Skip video & start')
+      assert.equal(element.textContent?.includes('To continue, click Play.'), false, 'A fresh full mock starts Listening audio automatically')
       assert.equal(element.querySelector('.ielts-exam-timer'), null)
       await submitObjective()
       assert.equal(path, mock.sections[1].launchPath, `${mock.id}: Listening → Reading`)
       assert.equal(getFullMockResults(mock.id).listening?.band, 0, 'Unanswered Listening has band 0')
+      assert.ok(element.querySelector('.full-mock-intro'), 'Reading instructions appear at the automatic transition')
+      assert.equal(element.querySelector('.ielts-exam-timer'), null, 'Reading time is not consumed by instructions')
+      await click('Skip video & start')
       assert.ok(element.querySelector('.ielts-exam-timer')?.textContent?.includes('60:00'), 'Reading starts with its own full time')
       await submitObjective()
       assert.equal(path, mock.sections[2].launchPath, `${mock.id}: Reading → Writing, never Speaking`)
       assert.equal(getFullMockResults(mock.id).reading?.band, 0, 'Unanswered Reading has band 0')
+      assert.ok(element.querySelector('.full-mock-intro'), 'Writing instructions appear before either task')
+      await click('Skip video & start')
       assert.ok(element.querySelector('textarea'), 'Writing opens automatically')
+      assert.equal(element.textContent?.includes('Practice Mode'), false, 'Full mock Writing has no practice chooser, including StrictMode')
+      assert.equal(element.textContent?.includes('Simulation Mode'), false, 'Full mock Writing has no simulation chooser')
       assert.equal(element.querySelector('textarea')!.value, '', 'Old practice does not leak into the full mock')
       assert.equal(getFullMockResults(mock.id).writing, undefined, 'Expired practice cannot submit mock Writing')
       assert.equal(getFullMockSectionRedirect(mock.id, 'speaking', mock.sections[3].launchPath!), mock.sections[2].launchPath, 'Speaking is blocked until Writing finishes')
@@ -99,6 +110,8 @@ export async function run() {
         await click('Retry')
       }
       assert.equal(path, mock.sections[3].launchPath, `${mock.id}: Writing → Speaking`)
+      assert.ok(element.querySelector('.full-mock-intro'), 'Speaking also has its own intro')
+      await click('Skip video & start')
       assert.equal(getFullMockResults(mock.id).writing?.review?.length, 2)
       assert.equal(getFullMockResults(mock.id).writing?.band, 7)
       assert.equal(useBadgeStore.getState().records.length, 0, 'No skill band badge before all four sections finish')

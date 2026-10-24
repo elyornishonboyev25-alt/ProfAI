@@ -1,8 +1,20 @@
 // Apply only the changes made on this device, preserving independent changes
 // from another device. History arrays are matched by their stable attempt IDs.
-export function mergeAccountData(current: string | null, base: string | null, value: string | null): string | null {
-  if (current === base || value === null) return value
+export function mergeAccountData(current: string | null, base: string | null, value: string | null, key?: string): string | null {
+  if (value === null) return value
   if (value === base) return current
+  if (current && key?.startsWith('smarttest-completed-')) {
+    try {
+      const saved = JSON.parse(current), incoming = JSON.parse(value)
+      const savedDate = Date.parse(saved?.result?.date), incomingDate = Date.parse(incoming?.result?.date)
+      if (saved?.result?.testId === incoming?.result?.testId && Number.isFinite(savedDate) && Number.isFinite(incomingDate)) {
+        // Completed attempts are whole snapshots. Merging answer maps from
+        // separate submissions creates a result that the user never submitted.
+        return savedDate > incomingDate ? current : value
+      }
+    } catch { /* Other account data retains the existing merge behavior. */ }
+  }
+  if (current === base) return value
   try {
     const parse = (raw: string | null) => raw === null ? undefined : JSON.parse(raw)
     return JSON.stringify(merge(parse(current), parse(base), parse(value)))

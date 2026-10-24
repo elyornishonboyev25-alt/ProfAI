@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware'
 import type { AuthUser } from '@/types/platform'
 import { isPremiumUser } from '@/utils/premiumAccess'
+import { useAccountUsageStore } from '@/store/accountUsageStore'
 
 // Safari can expose localStorage while temporarily throwing on access (private
 // browsing, storage pressure, or a damaged value). Zustand otherwise skips its
@@ -47,54 +48,73 @@ export type AuthState = {
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (
-      set: (
-        partial:
-          | Partial<AuthState>
-          | ((state: AuthState) => Partial<AuthState>),
-      ) => void,
-    ) => ({
-      user: null,
-      accessToken: null,
-      refreshToken: null,
-      hydrated: false,
-      setSession: ({ user, accessToken, refreshToken }: { user: AuthUser; accessToken: string; refreshToken: string }) =>
-        set({
-          user: {
-            ...user,
-            premium: isPremiumUser(user),
-          },
-          accessToken,
-          refreshToken,
-        }),
-      updateUserProgress: ({ xp, level, currentStreak }: { xp?: number; level?: number; currentStreak?: number }) =>
-        set((state) => {
-          if (!state.user) return {}
-          return {
-            user: {
-              ...state.user,
-              xp: xp ?? state.user.xp,
-              level: level ?? state.user.level,
-              currentStreak: currentStreak ?? state.user.currentStreak,
-            },
+    (rawSet, get, api) => {
+      // Storage events can arrive after a background tab updates profile/XP.
+      // Adopt the latest credentials before every non-session write, including
+      // direct setState calls, so that write cannot persist a revoked token.
+      const guard = (write: typeof rawSet): typeof rawSet => ((partial, replace) => {
+        const explicitSession = typeof partial !== 'function' &&
+          ('accessToken' in partial || 'refreshToken' in partial)
+        if (!explicitSession) {
+          const current = get()
+          const saved = readStoredSession()
+          if (current && saved && (saved.accessToken !== current.accessToken || saved.refreshToken !== current.refreshToken)) {
+            if (saved.user?.id !== current.user?.id || !saved.accessToken) useAccountUsageStore.getState().resetUsage()
+            rawSet(saved)
+            // A queued update belongs to the account that initiated it.
+            if (saved.user?.id !== current.user?.id) return
           }
-        }),
-      setUserNickname: (nickname: string) =>
-        set((state) => (state.user ? { user: { ...state.user, nickname } } : {})),
-      setUserAvatar: (avatarUrl: string | null) =>
-        set((state) => (state.user ? { user: { ...state.user, avatarUrl } } : {})),
-      setUserFullName: (fullName: string) =>
-        set((state) => (state.user ? { user: { ...state.user, fullName } } : {})),
-      setOnboardingCompleted: (completed: boolean) =>
-        set((state) => (state.user ? { user: { ...state.user, onboardingCompleted: completed } } : {})),
-      clearSession: () =>
-        set({
-          user: null,
-          accessToken: null,
-          refreshToken: null,
-        }),
-      setHydrated: (value: boolean) => set({ hydrated: value }),
-    }),
+        }
+        if (replace === true) write(partial as AuthState, true)
+        else write(partial, false)
+      }) as typeof rawSet
+      const set = guard(rawSet)
+      api.setState = guard(api.setState)
+      return {
+        user: null,
+        accessToken: null,
+        refreshToken: null,
+        hydrated: false,
+        setSession: ({ user, accessToken, refreshToken }: { user: AuthUser; accessToken: string; refreshToken: string }) =>
+          set({
+            user: {
+              ...user,
+              premium: isPremiumUser(user),
+            },
+            accessToken,
+            refreshToken,
+          }),
+        updateUserProgress: ({ xp, level, currentStreak }: { xp?: number; level?: number; currentStreak?: number }) =>
+          set((state) => {
+            if (!state.user) return {}
+            return {
+              user: {
+                ...state.user,
+                xp: xp ?? state.user.xp,
+                level: level ?? state.user.level,
+                currentStreak: currentStreak ?? state.user.currentStreak,
+              },
+            }
+          }),
+        setUserNickname: (nickname: string) =>
+          set((state) => (state.user ? { user: { ...state.user, nickname } } : {})),
+        setUserAvatar: (avatarUrl: string | null) =>
+          set((state) => (state.user ? { user: { ...state.user, avatarUrl } } : {})),
+        setUserFullName: (fullName: string) =>
+          set((state) => (state.user ? { user: { ...state.user, fullName } } : {})),
+        setOnboardingCompleted: (completed: boolean) =>
+          set((state) => (state.user ? { user: { ...state.user, onboardingCompleted: completed } } : {})),
+        clearSession: () => {
+          useAccountUsageStore.getState().resetUsage()
+          set({
+            user: null,
+            accessToken: null,
+            refreshToken: null,
+          })
+        },
+        setHydrated: (value: boolean) => set({ hydrated: value }),
+      }
+    },
     {
       // v2 intentionally invalidates old browser sessions once. This rolls every
       // existing learner through the new login + one-time onboarding contract.
@@ -118,25 +138,35 @@ export const useAuthStore = create<AuthState>()(
   ),
 )
 
-// Refresh tokens rotate after use. Other tabs must adopt the replacement before
-// sending requests, otherwise they will try to reuse an already revoked token.
-export function syncStoredSession() {
+type StoredSession = Pick<AuthState, 'user' | 'accessToken' | 'refreshToken'>
+
+function readStoredSession(): StoredSession | null {
   try {
     const raw = resilientLocalStorage.getItem('smart-test-pro-auth-v2')
-    if (typeof raw !== 'string') return
-    const saved = JSON.parse(raw).state as Pick<AuthState, 'user' | 'accessToken' | 'refreshToken'>
+    if (typeof raw !== 'string') return null
+    const saved = JSON.parse(raw).state as StoredSession
     if (!saved || !(saved.accessToken === null || typeof saved.accessToken === 'string') ||
-        !(saved.refreshToken === null || typeof saved.refreshToken === 'string')) return
-    const current = useAuthStore.getState()
-    if (saved.accessToken === current.accessToken && saved.refreshToken === current.refreshToken) return
-    useAuthStore.setState({
+        !(saved.refreshToken === null || typeof saved.refreshToken === 'string')) return null
+    return {
       user: saved.user ? { ...saved.user, premium: isPremiumUser(saved.user) } : null,
       accessToken: saved.accessToken,
       refreshToken: saved.refreshToken,
-    })
+    }
   } catch {
     // Unavailable or damaged storage must not destroy the in-memory session.
+    return null
   }
+}
+
+// Refresh tokens rotate after use. Other tabs must adopt the replacement before
+// sending requests, otherwise they will try to reuse an already revoked token.
+export function syncStoredSession() {
+  const saved = readStoredSession()
+  if (!saved) return
+  const current = useAuthStore.getState()
+  if (saved.accessToken === current.accessToken && saved.refreshToken === current.refreshToken) return
+  if (saved.user?.id !== current.user?.id || !saved.accessToken) useAccountUsageStore.getState().resetUsage()
+  useAuthStore.setState(saved)
 }
 
 if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {

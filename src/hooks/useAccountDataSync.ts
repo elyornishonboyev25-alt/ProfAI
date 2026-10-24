@@ -3,36 +3,13 @@ import { getReadingAnalysisHistory } from '@/utils/readingAnalysisStorage'
 import { getWritingAnalysisHistory } from '@/utils/writingAnalysisStorage'
 import { loadActivityLog, loadOnboardingProfile, loadWeeklyPlan } from '@/utils/weeklyPlanner'
 import { useEffect, useState } from 'react'
-import { apiClient } from '@/lib/apiClient'
 import { useAuthStore } from '@/store/authStore'
-import { ACCOUNT_DATA_EVENT, applyAccountData, getAccountMutations, migrateOwnedAccountData } from '@/utils/accountStorage'
+import { ACCOUNT_DATA_EVENT, migrateOwnedAccountData } from '@/utils/accountStorage'
+import { syncAccountData, type AccountSyncFailures } from '@/utils/accountDataSync'
 
 export function useAccountDataSync(owner: string | undefined) {
   const [loaded, setLoaded] = useState<string | undefined>()
   const [revision, setRevision] = useState(0)
-  useEffect(() => {
-    if (!owner) return
-    let running = false
-    const controller = new AbortController()
-    const heartbeat = async () => {
-      if (running || document.visibilityState === 'hidden' || useAuthStore.getState().user?.id !== owner) return
-      running = true
-      try {
-        await apiClient.post('/auth/activity/heartbeat', { refreshToken: useAuthStore.getState().refreshToken }, { expectedUserId: owner, signal: controller.signal })
-      } catch { /* Presence is best effort; the next heartbeat retries. */ }
-      finally { running = false }
-    }
-    void heartbeat()
-    const timer = window.setInterval(() => { void heartbeat() }, 30_000)
-    document.addEventListener('visibilitychange', heartbeat)
-    window.addEventListener('online', heartbeat)
-    return () => {
-      controller.abort()
-      window.clearInterval(timer)
-      document.removeEventListener('visibilitychange', heartbeat)
-      window.removeEventListener('online', heartbeat)
-    }
-  }, [owner])
   useEffect(() => {
     if (!owner) return
     try {
@@ -46,46 +23,52 @@ export function useAccountDataSync(owner: string | undefined) {
     } catch { /* Browser storage can be unavailable; still allow server sync. */ }
     let cancelled = false
     let running = false
+    let activeController: AbortController | undefined
+    const failures: AccountSyncFailures = new Map()
     const isCurrent = () => !cancelled && useAuthStore.getState().user?.id === owner
     const sync = async () => {
-      if (running || !isCurrent()) return
+      if (running || document.hidden || !isCurrent()) return
       running = true
       let changed = false
       const controller = new AbortController()
+      activeController = controller
       const timeout = window.setTimeout(() => controller.abort(), 12_000)
       try {
-        for (const [key, mutation] of getAccountMutations(owner)) {
-          if (!isCurrent()) return
-          const entry = await apiClient.put<{ key: string; value: string | null }>('/account-data', { key, ...mutation }, { expectedUserId: owner, signal: controller.signal })
-          if (!isCurrent()) return
-          changed = applyAccountData(owner, entry.key, entry.value, mutation) || changed
-        }
-        const { entries } = await apiClient.get<{ entries: { key: string; value: string | null }[] }>('/account-data', { expectedUserId: owner, signal: controller.signal })
+        changed = await syncAccountData(owner, { signal: controller.signal, isCurrent, failures })
         if (!isCurrent()) return
-        for (const entry of entries) changed = applyAccountData(owner, entry.key, entry.value) || changed
         restoreSpeakingAccount(owner)
         if (changed) setRevision((value) => value + 1)
       } catch { /* Keep account-scoped offline data and retry on focus/online. */ }
       finally {
         window.clearTimeout(timeout)
         running = false
+        activeController = undefined
         if (isCurrent()) setLoaded(owner)
       }
     }
     let debounce: number | undefined
-    const schedule = () => { window.clearTimeout(debounce); debounce = window.setTimeout(() => { void sync() }, 1500) }
+    // Continuous autosaves must not keep postponing uploads forever.
+    const schedule = () => {
+      if (debounce !== undefined) return
+      debounce = window.setTimeout(() => { debounce = undefined; void sync() }, 1500)
+    }
     void sync()
     const timer = window.setInterval(schedule, 30_000)
     window.addEventListener(ACCOUNT_DATA_EVENT, schedule)
     window.addEventListener('focus', schedule)
     window.addEventListener('online', schedule)
+    window.addEventListener('storage', schedule)
+    document.addEventListener('visibilitychange', schedule)
     return () => {
       cancelled = true
+      activeController?.abort()
       window.clearInterval(timer)
       window.clearTimeout(debounce)
       window.removeEventListener(ACCOUNT_DATA_EVENT, schedule)
       window.removeEventListener('focus', schedule)
       window.removeEventListener('online', schedule)
+      window.removeEventListener('storage', schedule)
+      document.removeEventListener('visibilitychange', schedule)
     }
   }, [owner])
   return { ready: !owner || loaded === owner, revision }

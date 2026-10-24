@@ -1,3 +1,4 @@
+import { saveActiveTestPaper } from '@/utils/activeTestPaper'
 import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
@@ -48,10 +49,10 @@ const modeCards = [
     eyebrow: 'True test simulation',
     title: 'Exam Mode',
     description:
-      'Official module timing with a protected fullscreen environment and integrity monitoring.',
+      'Official module timing in fullscreen or windowed mode. Leaving ends the attempt and discards your answers.',
     icon: ShieldCheck,
     color: 'red',
-    points: ['Fullscreen required', 'Strict module timer', '30-second recovery window'],
+    points: ['Optional fullscreen', 'Strict module timer', 'Answers discarded on exit'],
   },
 ] as const
 
@@ -67,10 +68,9 @@ export default function MockSAT() {
   const fromMockCatalog = (location.state as { from?: string } | null)?.from === '/sat/mocks'
   const backPath = section ? `/sat/${section}` : fromMockCatalog ? '/sat/mocks' : '/sat'
   const isSectionPractice = Boolean(section)
-  const { supported: fullscreenSupported, enter } = useFullscreen()
+  const { enter } = useFullscreen()
   const [selectedMode, setSelectedMode] = useState<SATMode>(diagnostic ? 'exam' : 'practice')
   const [existingAttempt, setExistingAttempt] = useState(() => loadSATAttempt(test.id))
-  const [fullscreenError, setFullscreenError] = useState('')
 
   useEffect(() => {
     setExistingAttempt(loadSATAttempt(test.id))
@@ -82,23 +82,12 @@ export default function MockSAT() {
   )
 
   const openRunner = async (mode: SATMode, resume = false) => {
-    setFullscreenError('')
-    if (mode === 'exam') {
-      if (!fullscreenSupported) {
-        setFullscreenError('Exam Mode requires a browser with fullscreen support.')
-        return
-      }
-      await enter()
-      const webkitDocument = document as Document & { webkitFullscreenElement?: Element | null }
-      if (!document.fullscreenElement && !webkitDocument.webkitFullscreenElement) {
-        setFullscreenError('Fullscreen permission was not granted. Allow it to start Exam Mode.')
-        return
-      }
-    }
+    if (mode === 'exam') await enter()
 
     if (!resume) {
       const attempt = createSATAttempt(test.id, test.modules, mode)
       saveSATAttempt(attempt)
+      saveActiveTestPaper(`profai:sat:${test.id}:attempt:v1`, test)
     }
     navigate(`/sat/mock/${test.mockId}/run${sectionQuery}`)
   }
@@ -258,12 +247,6 @@ export default function MockSAT() {
                 )
               })}
             </div>
-
-            {fullscreenError ? (
-              <p role="alert" className="mt-3 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-[11px] font-bold text-blue-700">
-                {fullscreenError}
-              </p>
-            ) : null}
 
             {activeAttempt ? (
               <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50/85 p-3.5">

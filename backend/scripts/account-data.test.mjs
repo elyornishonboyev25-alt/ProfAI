@@ -33,8 +33,10 @@ const bundled = await build({
   plugins: [{ name: 'test-database', setup(builder) {
     builder.onResolve({ filter: /\/lib\/prisma\.js$/ }, () => ({ path: 'test-prisma', namespace: 'test' }))
     builder.onResolve({ filter: /\/config\/env\.js$/ }, () => ({ path: 'test-env', namespace: 'test' }))
+    builder.onResolve({ filter: /\/services\/authActivity\.service\.js$/ }, () => ({ path: 'test-session', namespace: 'test' }))
     builder.onLoad({ filter: /.*/, namespace: 'test' }, ({ path }) => ({ contents: path === 'test-prisma'
       ? 'export const prisma = globalThis.prisma'
+      : path === 'test-session' ? 'export async function acquireSessionUsage(owner, sid) { if (sid !== owner + "-session") throw new Error("Invalid test session") }'
       : `export const env = { ACCESS_TOKEN_SECRET: ${JSON.stringify(secret)} }` }))
   } }],
 })
@@ -47,7 +49,7 @@ app.use((error, _req, res, _next) => res.status(500).json({ message: error.messa
 const server = app.listen(0, '127.0.0.1')
 await new Promise((resolve) => server.once('listening', resolve))
 const url = `http://127.0.0.1:${server.address().port}/account-data`
-const token = (owner) => jwt.sign({ sub: owner, role: 'USER' }, secret)
+const token = (owner) => jwt.sign({ sub: owner, role: 'USER', sid: `${owner}-session` }, secret)
 async function call(owner, method = 'GET', body) {
   const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json', ...(owner ? { Authorization: `Bearer ${token(owner)}` } : {}) }, body: body === undefined ? undefined : JSON.stringify(body) })
   return { status: response.status, body: await response.json() }
@@ -71,5 +73,14 @@ try {
   assert.equal(JSON.parse((await call('alice')).body.entries[0].value).length, 3)
   await call('alice', 'PUT', { key: 'history', base: JSON.stringify(result), value: null })
   assert.equal((await call('alice')).body.entries[0].value, null, 'Deletion is retained as a tombstone for other devices')
+  const resultKey = 'smarttest-completed-result:ielts-listening-3'
+  const snapshot = (date, answers) => JSON.stringify({ result: { testId: 'ielts-listening-3', date, answers } })
+  const latest = snapshot('2026-10-21T10:00:00Z', { q1: 'B', q2: 'C' })
+  const older = snapshot('2026-10-20T10:00:00Z', { q1: 'A', q3: 'D' })
+  await call('alice', 'PUT', { key: resultKey, base: null, value: latest })
+  assert.equal((await call('alice', 'PUT', { key: resultKey, base: null, value: older })).body.value, latest, 'An older device cannot replace or merge into a newer completed attempt')
+  const newer = snapshot('2026-10-22T10:00:00Z', { q1: 'D' })
+  assert.equal((await call('alice', 'PUT', { key: resultKey, base: older, value: newer })).body.value, newer, 'A new submission replaces the whole snapshot without inheriting skipped answers from an older attempt')
   console.log('Authenticated account API: isolation, forged-owner rejection, two-device concurrent merge and deletion passed.')
+  console.log('PASS: completed results remain whole snapshots and the newest attempt wins across devices')
 } finally { await new Promise((resolve) => server.close(resolve)) }

@@ -3,6 +3,7 @@ import { syncStoredSession, useAuthStore } from '@/store/authStore'
 import type { AuthUser } from '@/types/platform'
 import { notifyXpAward } from '@/store/xpNotificationStore'
 import { deviceIdentity } from '@/lib/deviceIdentity'
+import { useAccountUsageStore } from '@/store/accountUsageStore'
 
 const configuredApiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL
 const API_BASE_URL = configuredApiUrl?.replace(/\/$/, '') ?? '/api/v1'
@@ -39,7 +40,7 @@ export class ApiError extends Error {
   }
 }
 
-type RefreshResult = 'refreshed' | 'rejected' | 'unavailable' | 'superseded'
+type RefreshResult = 'refreshed' | 'rejected' | 'unavailable' | 'superseded' | 'blocked'
 
 const refreshInFlight = new Map<string, Promise<RefreshResult>>()
 
@@ -76,7 +77,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   const requestHeaders = new Headers(headers)
   requestHeaders.set('Content-Type', 'application/json')
-  if (path.startsWith('/auth/')) requestHeaders.set('X-Device-Id', deviceIdentity())
+  if (auth || path.startsWith('/auth/')) requestHeaders.set('X-Device-Id', deviceIdentity())
 
   if (auth && authState.accessToken) {
     requestHeaders.set('Authorization', `Bearer ${authState.accessToken}`)
@@ -118,11 +119,14 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       const latest = useAuthStore.getState()
       if ((result === 'refreshed' || result === 'superseded') &&
           latest.user?.id === authState.user?.id && latest.accessToken &&
-          latest.refreshToken !== authState.refreshToken) {
+          (latest.accessToken !== authState.accessToken || latest.refreshToken !== authState.refreshToken)) {
         return request<T>(path, { ...options, expectedUserId: owner, retryOnUnauthorized: false })
       }
       if (result === 'unavailable') {
         throw new Error('Backend is temporarily unavailable. Your session is saved and will retry automatically.')
+      }
+      if (result === 'blocked') {
+        throw new ApiError('This account is being used on another device.', 409, 'ACCOUNT_IN_USE')
       }
     }
 
@@ -133,6 +137,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   if (!response.ok) {
     const payload = await response.json().catch(() => ({ message: 'Unexpected API error.' }))
+    if (auth && owner && payload.code === 'ACCOUNT_IN_USE') useAccountUsageStore.getState().setUsage(owner, 'blocked')
     if (['PREMIUM_REQUIRED', 'CLASS_PLAN_REQUIRED', 'TEACHER_PLAN_REQUIRED'].includes(payload.code)) window.dispatchEvent(new CustomEvent('profai:premium-required', { detail: payload.message }))
     throw new ApiError(payload.message ?? 'API request failed.', response.status, payload.code)
   }
@@ -152,12 +157,17 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 }
 
 async function refreshSession(refreshToken: string): Promise<RefreshResult> {
+  // A stalled shared refresh must not leave every request (including account
+  // verification) waiting forever. Keep credentials and retry after a timeout.
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 10_000)
   try {
     const payload = await request<AuthResponse>('/auth/refresh', {
       method: 'POST',
       auth: false,
       retryOnUnauthorized: false,
       body: { refreshToken },
+      signal: controller.signal,
     })
 
     syncStoredSession()
@@ -167,6 +177,11 @@ async function refreshSession(refreshToken: string): Promise<RefreshResult> {
   } catch (error) {
     syncStoredSession()
     if (useAuthStore.getState().refreshToken !== refreshToken) return 'superseded'
+    if (error instanceof ApiError && error.code === 'ACCOUNT_IN_USE') {
+      const owner = useAuthStore.getState().user?.id
+      if (owner) useAccountUsageStore.getState().setUsage(owner, 'blocked')
+      return 'blocked'
+    }
     if (error instanceof ApiError && error.status === 401) {
       const owner = useAuthStore.getState().user?.id
       useAuthStore.getState().clearSession()
@@ -174,6 +189,8 @@ async function refreshSession(refreshToken: string): Promise<RefreshResult> {
       return 'rejected'
     }
     return 'unavailable'
+  } finally {
+    clearTimeout(timeout)
   }
 }
 

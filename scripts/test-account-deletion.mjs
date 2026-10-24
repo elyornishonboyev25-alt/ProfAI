@@ -40,7 +40,7 @@ function tab() {
   const module = { exports: {} }
   const window = { localStorage, sessionStorage, addEventListener() {}, dispatchEvent() {} }
   vm.runInNewContext(bundle.outputFiles[0].text, { module, exports: module.exports, window, console,
-    Event, CustomEvent: Event, BroadcastChannel: Channel, Headers, Response,
+    Event, CustomEvent: Event, BroadcastChannel: Channel, Headers, Response, AbortController, setTimeout, clearTimeout,
     fetch: async (url) => {
       if (url.endsWith('/auth/refresh')) refreshCalls++
       else if (expiredAccess) return new Response('{}', { status: 401 })

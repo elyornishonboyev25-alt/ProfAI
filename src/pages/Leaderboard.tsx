@@ -1,3 +1,4 @@
+import CrownBadge from '@/components/fx/CrownBadge'
 import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowDownRight,
@@ -377,7 +378,7 @@ export default function Leaderboard() {
                   {podium.map((row) => (
                     <article
                       key={row.userId}
-                      className={`leaderboard-podium-card leaderboard-glass is-rank-${row.rank}`}
+                      className={`leaderboard-podium-card leaderboard-glass is-rank-${row.rank} ${row.premium ? 'is-premium-member' : ''}`}
                     >
                       <div className="leaderboard-podium-top">
                         <span className="leaderboard-place">
@@ -403,6 +404,7 @@ export default function Leaderboard() {
                         </div>
                         <div className="leaderboard-podium-name">
                           <h3 title={row.fullName}>{row.fullName}</h3>
+                          {row.premium ? <CrownBadge size="sm" /> : null}
                           <span>
                             {row.isCurrentUser ? (
                               <UiText text="YOU" />
@@ -528,7 +530,7 @@ export default function Leaderboard() {
                         {visibleRows.map((row) => (
                           <tr
                             key={row.userId}
-                            className={row.isCurrentUser ? 'is-current' : ''}
+                            className={`${row.isCurrentUser ? 'is-current' : ''} ${row.premium ? 'is-premium-member' : ''}`}
                           >
                             <td>
                               <span
@@ -543,6 +545,7 @@ export default function Leaderboard() {
                                 <div>
                                   <p title={row.fullName}>
                                     {row.fullName}
+                                    {row.premium ? <CrownBadge size="sm" /> : null}
                                     {row.isCurrentUser && (
                                       <span className="leaderboard-you">
                                         <UiText text="YOU" />

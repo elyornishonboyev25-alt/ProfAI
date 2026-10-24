@@ -40,7 +40,7 @@ export default function PasswordRecoveryDialog({ open, initialEmail = '', onClos
     if (busy) return
     const normalized = email.trim().toLowerCase()
     if (!/^[^\s@]+@gmail\.com$/i.test(normalized)) {
-      pushToast({ type: 'error', title: 'Gmail required', message: 'Enter the Gmail address used for your ProfAI account.' })
+      pushToast({ type: 'error', title: 'Gmail required', message: 'Enter the Gmail address used for your Ivygoo account.' })
       return
     }
 

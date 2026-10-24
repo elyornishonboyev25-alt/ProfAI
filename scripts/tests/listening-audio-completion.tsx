@@ -153,6 +153,8 @@ export async function run() {
     const partialTest = { ...base, continuousAudioUrl: undefined, sections: base.sections.map((section, index) => ({ ...section, audioUrl: `/practice-part-${index}.mp3` })) }
     const partialRoot = createRoot(container)
     await act(async () => partialRoot.render(<IELTSReadingInterface test={partialTest} launchPreset={{ mode: 'practice', partIndex: 2 }} onComplete={() => assert.fail('Partial practice submitted early')} onExit={() => {}} />))
+    assert.ok(container.querySelector('[role="dialog"]'), 'Part selection opens setup before audio can start')
+    await click('Start Training Session')
     await delay(2400)
     await click('Play')
     assert.equal(container.querySelector('audio')?.getAttribute('src'), '/practice-part-1.mp3', 'Part selection uses the existing one-based part number')

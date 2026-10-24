@@ -270,3 +270,9 @@ html:has(.app-shell-ai-tutor) { overflow-y:hidden; scrollbar-gutter:auto; }
 .app-shell .workspace-page.podcast-library > .podcast-aurora {
   display: none;
 }
+
+/* Slightly smaller interface icons without changing layout or click targets. */
+.app-shell svg.lucide {
+  scale: .9;
+  transform-origin: center;
+}

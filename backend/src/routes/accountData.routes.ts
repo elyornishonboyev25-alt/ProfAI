@@ -23,7 +23,7 @@ router.put('/', validateBody(z.object({
     // Serialize read/merge/write for this account across devices.
     await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${userId} FOR UPDATE`
     const current = await tx.accountLearningData.findUnique({ where: { userId_key: { userId, key } } })
-    const merged = mergeAccountData(current?.value ?? null, base, value)
+    const merged = mergeAccountData(current?.value ?? null, base, value, key)
     return tx.accountLearningData.upsert({
       where: { userId_key: { userId, key } },
       create: { userId, key, value: merged }, update: { value: merged }, select: { key: true, value: true },

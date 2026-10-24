@@ -120,7 +120,7 @@ export default function AuthShowcasePanelV2({ mode }: { mode: 'login' | 'registe
   })
 
   return (
-    <aside id="auth-showcase" className="auth-cinema-showcase auth-showcase-v2" aria-label={mode === 'register' ? 'ProfAI account features' : 'ProfAI sign in features'}>
+    <aside id="auth-showcase" className="auth-cinema-showcase auth-showcase-v2" aria-label={mode === 'register' ? 'Ivygoo account features' : 'Ivygoo sign in features'}>
       <div className="auth-showcase-grid" aria-hidden="true" />
       <div className="auth-showcase-arc auth-showcase-arc-top" aria-hidden="true" />
       <div className="auth-showcase-arc auth-showcase-arc-bottom" aria-hidden="true" />
@@ -130,7 +130,7 @@ export default function AuthShowcasePanelV2({ mode }: { mode: 'login' | 'registe
       <div className="auth-showcase-layout" key={mode}>
         <motion.div className="auth-showcase-brand" {...reveal(.08, 18)}>
           <span className="auth-showcase-brand-icon"><BrandMark size={49} /></span>
-          <div><strong>Prof<span>AI</span></strong><small>{c('Your next chapter')}</small></div>
+          <div><strong>Ivy<span>goo</span></strong><small>{c('Your next chapter')}</small></div>
         </motion.div>
 
         <div className="auth-showcase-content">

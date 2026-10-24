@@ -13,7 +13,7 @@ const { default: router } = await import('../dist/routes/learningCenters.routes.
 const { default: testsRouter } = await import('../dist/routes/tests.routes.js')
 const { default: dashboardRouter } = await import('../dist/routes/dashboard.routes.js')
 const { prisma } = await import('../dist/lib/prisma.js')
-const { signAccessToken } = await import('../dist/utils/jwt.js')
+const { fixtureAccessToken: signAccessToken, installSessionFixtures } = await import('./helpers/authSessions.mjs')
 const { summarizeStudent, normalizeTestAttempt } = await import('../dist/services/learningCenterAnalytics.service.js')
 
 const center = { id: 'center', name: 'Academy', slug: 'academy', city: 'Tashkent', logoUrl: null, coverUrl: null, createdById: 'owner', _count: { members: 4, groups: 1 } }
@@ -58,9 +58,12 @@ const defaults = {
   'learningCenterAssignmentSubmission.updateMany': () => ({ count: 1 }),
   'learningCenterTeacherNote.findMany': () => [],
   'learningCenterTeacherNote.create': ({ data }) => ({ id: 'note', ...data, author: { id: data.authorId, fullName: 'Alex Teacher', avatarUrl: null } }),
-  'user.findUnique': ({ where }) => where.email ? { id: 'new-user' } : { email: where.id + '@example.test' },
+  'user.findUnique': ({ where }) => where.email ? { id: 'new-user' } : { id: where.id, role: 'USER', email: where.id + '@example.test' },
   'user.findFirst': () => ({ id: 'new-user' }),
-  'user.findUniqueOrThrow': () => ({ role: 'ADMIN' }),
+  'user.findUniqueOrThrow': () => ({ role: 'ADMIN', email: 'class@example.test', nickname: null }),
+  'premiumGrant.findUnique': () => null,
+  'billingSubscription.findMany': () => [],
+  'freeTrial.findUnique': () => null,
   'user.findMany': ({ where }) => where.id.in.includes('learner') ? [identity] : [],
   'testAttempt.findMany': () => [],
   'testAttempt.findFirst': () => ({ id: 'existing-attempt' }),
@@ -89,6 +92,7 @@ before(async () => {
     }
   }
   prisma.$transaction = async callback => { assert.equal(typeof callback, 'function'); return callback(prisma) }
+  installSessionFixtures(prisma)
   prisma.$queryRaw = async () => []
   prisma.$connect = async () => { throw new Error('Database connections forbidden in fixtures') }
   const app = express()

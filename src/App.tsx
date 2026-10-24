@@ -11,8 +11,10 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { AnimatedBackground } from '@/components/AnimatedBackground'
 import Footer from '@/components/Footer'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
+import AccountUsageBoundary from '@/components/auth/AccountUsageBoundary'
 import { isPublicAccountRoute } from '@/utils/accountAccess'
 import PremiumRoute from '@/components/auth/PremiumRoute'
+import SATBrowserExitGuard from '@/components/sat/SATBrowserExitGuard'
 import BillingBoundary from '@/features/billing/BillingBoundary'
 import BillingNotice from '@/features/billing/BillingNotice'
 import PremiumOnly from '@/components/premium/PremiumOnly'
@@ -44,6 +46,7 @@ const AcademicSkills = lazy(() => import('@/pages/AcademicSkills'))
 const SAT = lazy(() => import('@/pages/SAT'))
 const SATSection = lazy(() => import('@/pages/SATSection'))
 const SATQuestionBankRun = lazy(() => import('@/pages/SATQuestionBankRun'))
+const SATHardQuestions = lazy(() => import('@/pages/SATHardQuestions'))
 const SATQuestionBank = lazy(() => import('@/pages/SATQuestionBank'))
 const SATMistakes = lazy(() => import('@/pages/SATMistakes'))
 const SATCalculator = lazy(() => import('@/pages/SATCalculator'))
@@ -111,35 +114,6 @@ function xpSourceForActivity(activityKey: ReturnType<typeof routeToActivityKey>)
 }
 
 function RouteLoader() {
-  const { pathname } = useLocation()
-  const user = useAuthStore((state) => state.user)
-
-  if (pathname === '/dashboard' || (pathname === '/' && user)) {
-    return (
-      <div className="dashboard-route-loader workspace-page profai-dashboard min-h-screen px-3 pb-24 pt-3 sm:px-5 sm:pt-5 lg:px-5 lg:pb-5" role="status" aria-label="Opening dashboard">
-        <div className="dashboard-main-shell mx-auto max-w-[98rem]">
-          <div className="dashboard-entrance-header dashboard-loader-header flex items-center justify-between gap-4 px-1 pb-5">
-            <div className="flex min-w-0 items-center gap-4">
-              <span className="dashboard-loader-avatar" />
-              <span className="dashboard-loader-copy"><i /><b /><em /></span>
-              <span className="dashboard-loader-streak dashboard-loader-block hidden sm:block" />
-            </div>
-            <div className="flex gap-2.5"><span className="dashboard-loader-action dashboard-loader-block" /><span className="dashboard-loader-action dashboard-loader-block" /></div>
-          </div>
-          <div className="dashboard-entrance-grid dashboard-loader-grid grid gap-4 xl:grid-cols-[17.5rem_minmax(30rem,1fr)_18rem]">
-            <span className="dashboard-loader-target dashboard-loader-block" />
-            <div className="dashboard-loader-center min-w-0 space-y-4">
-              <div className="dashboard-loader-stats grid grid-cols-2 gap-3"><span className="dashboard-loader-block" /><span className="dashboard-loader-block" /><span className="dashboard-loader-block" /><span className="dashboard-loader-block" /></div>
-              <span className="dashboard-loader-chart dashboard-loader-block" />
-            </div>
-            <div className="dashboard-loader-rail space-y-4"><span className="dashboard-loader-leaderboard dashboard-loader-block" /><span className="dashboard-loader-achievement dashboard-loader-block" /></div>
-          </div>
-          <div className="dashboard-entrance-learning dashboard-loader-learning mt-4"><span className="dashboard-loader-block" /><span className="dashboard-loader-block" /><div className="dashboard-loader-learning-cards grid gap-3 sm:grid-cols-2 xl:grid-cols-5"><span className="dashboard-loader-block" /><span className="dashboard-loader-block" /><span className="dashboard-loader-block" /><span className="dashboard-loader-block" /><span className="dashboard-loader-block" /></div></div>
-        </div>
-      </div>
-    )
-  }
-
   return <BrandPageLoader compact label="Opening page" />
 }
 
@@ -300,7 +274,12 @@ function App() {
     /^\/tests\/[^/]+\/attempt$/.test(pathname) ||
     isSatTestRoute
   const isClassicTestMode = pathname.startsWith('/test/') || pathname.startsWith('/results/') || pathname.startsWith('/shared/')
-  const isTestMode = isCustomTestMode || isClassicTestMode
+  const fullMockState = location.state as { mock?: { id?: string }; reviewPayload?: unknown } | null
+  const isFullMockExam = /^\/mock\/ielts\/[^/]+$/.test(pathname) || (
+    Boolean(fullMockState?.mock?.id) && !fullMockState?.reviewPayload &&
+    (/^\/test\/(listening|reading)\//.test(pathname) || /^\/ielts\/(writing|speaking)\/test\//.test(pathname))
+  )
+  const isTestMode = isCustomTestMode || isClassicTestMode || isFullMockExam
   const isCommunityPeopleMode = pathname === '/community'
   const isLiveCommunityMode = pathname === '/community'
 
@@ -472,12 +451,12 @@ function App() {
         <WorkspaceFrame showSidebar={showSidebar} isAiTutorMode={isAiTutorMode} isVocabularyPracticeMode={isVocabularyPracticeMode}>
             {!isGuestExperience && !isTestMode && !isAuthPage && !isLearningCenterMode && pathname !== '/onboarding' && pathname !== '/focus' && <WorkspaceToolbar />}
             <div
-              className={`flex flex-col ${isAiTutorMode || isVocabularyPracticeMode
+              className={`flex flex-col ${isFullMockExam ? 'full-mock-exam-shell' : ''} ${isAiTutorMode || isVocabularyPracticeMode
                 ? 'min-h-0 flex-1 overflow-hidden'
                 : isTestMode
                   ? location.pathname.startsWith('/results/')
                     ? 'min-h-full min-h-screen overflow-y-auto'
-                    : 'min-h-full min-h-[calc(100vh-80px)]'
+                    : isFullMockExam ? 'min-h-full min-h-screen' : 'min-h-full min-h-[calc(100vh-80px)]'
                   : 'min-h-full min-h-screen'
               }`}
             >
@@ -553,13 +532,14 @@ function App() {
                       />
                       <Route path="/sat" element={<AnimatedRoute><SAT /></AnimatedRoute>} />
                       <Route path="/sat/question-bank/run/:setId" element={<SATQuestionBankRun />} />
+                      <Route path="/sat/hard-questions" element={<AnimatedRoute><SATHardQuestions /></AnimatedRoute>} />
                       <Route path="/sat/question-bank" element={<AnimatedRoute><SATQuestionBank /></AnimatedRoute>} />
                       <Route path="/sat/mistakes" element={<AnimatedRoute><SATMistakes /></AnimatedRoute>} />
                       <Route
                         path="/sat/mock/:mockId/run"
                         element={
                           <PremiumRoute>
-                            <SATMockRun />
+                            <SATBrowserExitGuard><SATMockRun /></SATBrowserExitGuard>
                           </PremiumRoute>
                         }
                       />
@@ -579,7 +559,7 @@ function App() {
                           <AnimatedRoute>
                             <PremiumOnly
                               title="Vocabulary Arena is Premium"
-                              description="Grow your word power with the Articles and My-Words vocabulary tracks on ProfAI Premium."
+                              description="Grow your word power with the Articles and My-Words vocabulary tracks on Ivygoo Premium."
                               perks={['Articles & My-Words tracks', 'Spaced practice activities', 'AI vocabulary help']}
                             >
                               <Vocabulary />
@@ -593,7 +573,7 @@ function App() {
                           <AnimatedRoute>
                             <PremiumOnly
                               title="Vocabulary Arena is Premium"
-                              description="Grow your word power with the Articles and My-Words vocabulary tracks on ProfAI Premium."
+                              description="Grow your word power with the Articles and My-Words vocabulary tracks on Ivygoo Premium."
                               perks={['Articles & My-Words tracks', 'Spaced practice activities', 'AI vocabulary help']}
                             >
                               <Vocabulary />
@@ -890,4 +870,6 @@ function App() {
   )
 }
 
-export default App
+export default function VerifiedApp() {
+  return <AccountUsageBoundary><App /></AccountUsageBoundary>
+}

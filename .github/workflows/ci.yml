@@ -23,6 +23,12 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
+      - name: Install backend dependencies for result recovery regressions
+        run: npm ci --prefix backend
+
+      - name: Check result recovery and account sync
+        run: npm run test:result-resilience
+
       - name: Build frontend
         run: npm run build
 

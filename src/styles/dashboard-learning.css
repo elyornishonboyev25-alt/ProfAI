@@ -1,0 +1,4 @@
+/* Keep the heading inside the rounded section without restyling its cards. */
+.profai-dashboard .dashboard-entrance-learning > div:first-child {
+  padding-inline: 1rem;
+}

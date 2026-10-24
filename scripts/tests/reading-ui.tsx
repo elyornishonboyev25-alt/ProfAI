@@ -75,6 +75,7 @@ export async function run() {
       Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!.call(input, 'physical health')
       input.dispatchEvent(new window.Event('input', { bubbles: true }))
     })
+    await act(async () => window.dispatchEvent(new window.Event('pagehide')))
     const saved = JSON.parse(accountStorageFor('guest').getItem(`ielts_test_session_${test.id}`)!)
     assert.equal(saved.answers['rd26-q19'], 'physical health', `${mode}: input is stored against its question ID`)
     await act(async () => root.unmount())
@@ -93,10 +94,10 @@ export async function run() {
   await act(async () => root.render(<IELTSReadingInterface test={endings} launchPreset={{ mode: 'practice' }} onComplete={() => {}} onExit={() => {}} />))
   await act(async () => { await new Promise(resolve => setTimeout(resolve, 2300)) })
   const card = container.querySelector('#question-card-day22-q12')!
-  await act(async () => card.querySelector<HTMLButtonElement>('button')!.click())
-  const choice = [...card.querySelectorAll('button')].find(button => button.textContent === 'C')!
-  assert.ok(choice, 'space-labelled sentence endings show a compact letter choice')
-  await act(async () => choice.click())
+  const choice = card.querySelector<HTMLSelectElement>('select')!
+  assert.ok(choice?.querySelector('option[value="C"]'), 'space-labelled sentence endings show a compact letter choice')
+  await act(async () => { choice.value = 'C'; choice.dispatchEvent(new window.Event('change', { bubbles: true })) })
+  await act(async () => window.dispatchEvent(new window.Event('pagehide')))
   assert.equal(JSON.parse(accountStorageFor('guest').getItem(`ielts_test_session_${endings.id}`)!).answers['day22-q12'], 'C', 'dropdown stores its letter, not a whole sentence')
   await act(async () => root.unmount())
   console.log('PASS: sentence-ending dropdown stores the correct option letter')
@@ -109,9 +110,10 @@ export async function run() {
   }
   saveReviewState(source.id, { test: staleTest, result })
   const reviewRoot = createRoot(container)
-  await act(async () => reviewRoot.render(<MemoryRouter initialEntries={[`/review/${source.id}`]}><Routes><Route path="/review/:testId" element={<ResultsReview />} /></Routes></MemoryRouter>))
+  await act(async () => reviewRoot.render(<MemoryRouter initialEntries={[{ pathname: `/review/${source.id}`, key: 'refresh-stale-prompts', state: { initialQuestionId: 'rd26-q19' } }]}><Routes><Route path="/review/:testId" element={<ResultsReview />} /></Routes></MemoryRouter>))
   assert.ok(!container.textContent!.includes('OBSOLETE REPEATED SUMMARY'), 'saved test snapshots and old analysis prompts use corrected catalog text')
-  assert.ok(compact(container.textContent!).includes(compact(source.sections[1].questions.find(q => q.number === 19)!.text)), 'saved review renders the individual question sentence')
+  assert.ok(container.querySelector('#question-card-rd26-q19'), 'saved review opens the selected question part')
+  assert.ok(compact(container.textContent!).includes(compact(source.sections[1].questions.find(q => q.number === 19)!.text.replace(/_+/g, ''))), 'saved review renders the individual question sentence around its inline input')
   await act(async () => reviewRoot.unmount())
   console.log('PASS: ResultsReview refreshes stale stored prompts while retaining answers')
 }

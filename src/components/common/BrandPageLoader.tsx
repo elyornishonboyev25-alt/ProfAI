@@ -4,22 +4,20 @@ import { useCopy } from '@/i18n/interface'
 export default function BrandPageLoader({
   label = 'Preparing your workspace',
   compact = false,
+  detail,
 }: {
   label?: string
   compact?: boolean
+  detail?: string
 }) {
   const { c } = useCopy()
   return (
     <div className={`relative flex w-full min-w-0 items-center justify-center px-5 ${compact ? 'min-h-[70vh]' : 'min-h-[56vh]'}`} role="status" aria-live="polite">
-      <div className={`route-loader-card relative min-w-0 w-full text-center ${compact ? 'max-w-xs p-5' : 'max-w-sm p-6 sm:p-7'}`}>
-        <div className="relative mx-auto w-fit">
-          <BrandMark size={compact ? 54 : 70} className="relative" />
-        </div>
-        <p className={`${compact ? 'mt-3' : 'mt-4'} text-sm font-black text-slate-950`}>{c(label)}</p>
-        {!compact ? <p className="mt-1 text-xs font-semibold text-slate-500">{c('Syncing your plan and progress.')}</p> : null}
-        <div className={`${compact ? 'mt-4' : 'mt-5'} h-1 overflow-hidden rounded-full bg-slate-200/90`}>
-          <div className="arena-loader-progress h-full w-[42%] rounded-full bg-gradient-to-r from-red-800 via-red-500 to-blue-500" />
-        </div>
+      <div className="flex max-w-sm flex-col items-center gap-3 text-center">
+        <BrandMark size={36} />
+        <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">{c(label)}</p>
+        {detail ? <p className="text-xs text-slate-500">{c(detail)}</p> : null}
+        <span aria-hidden="true" className="h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-red-600 motion-reduce:animate-none" />
       </div>
     </div>
   )

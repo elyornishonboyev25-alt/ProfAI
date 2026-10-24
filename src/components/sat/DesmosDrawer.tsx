@@ -21,6 +21,7 @@ type Props = {
   docked: boolean
   onDockedChange: (docked: boolean) => void
   onClose: () => void
+  allowDocking?: boolean
   workspace?: 'question-bank'
 }
 
@@ -28,8 +29,8 @@ type Point = { x: number; y: number }
 type PanelSize = { width: number; height: number }
 
 const DESMOS_ORIGIN = 'https://www.desmos.com'
-// Keep the complete official calculator contained inside the SAT interface.
-const DESMOS_GRAPHING_URL = `${DESMOS_ORIGIN}/calculator`
+// The official SAT calculator retains expression editing without account/save UI.
+const DESMOS_GRAPHING_URL = `${DESMOS_ORIGIN}/testing/college-board/graphing`
 
 function warmDesmosConnection() {
   if (document.querySelector('link[data-profai-desmos]')) return
@@ -54,7 +55,7 @@ function initialPanelSize(): PanelSize {
   }
 }
 
-export default function DesmosDrawer({ open, preload = false, docked, onDockedChange, onClose, workspace }: Props) {
+export default function DesmosDrawer({ open, preload = false, docked, onDockedChange, onClose, workspace, allowDocking = true }: Props) {
   const [expanded, setExpanded] = useState(false)
   const [dockWidth, setDockWidth] = useState<number | null>(null)
   const dockResizeRef = useRef<{ startX: number; width: number } | null>(null)
@@ -246,7 +247,7 @@ export default function DesmosDrawer({ open, preload = false, docked, onDockedCh
             {expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
           </button>
           {!docked && !expanded ? <button type="button" onClick={resetPosition} aria-label="Reset Desmos position" title="Reset position" className="desmos-control desmos-desktop"><RotateCcw className="h-4 w-4" /></button> : null}
-          <button
+          {allowDocking && <button
             type="button"
             onClick={() => { setExpanded(false); onDockedChange(!docked) }}
             aria-label={docked ? 'Return Desmos to floating window' : 'Dock Desmos on the right'}
@@ -254,7 +255,7 @@ export default function DesmosDrawer({ open, preload = false, docked, onDockedCh
             className={`desmos-desktop desmos-dock-control hidden h-8 w-8 items-center justify-center rounded-full border-2 border-black transition lg:flex ${docked ? 'bg-black text-white' : 'bg-white text-black shadow-[3px_4px_0_#111] hover:-translate-y-0.5'}`}
           >
             <Columns2 className="h-4 w-4" strokeWidth={2.4} />
-          </button>
+          </button>}
           <button type="button" onClick={reloadCalculator} aria-label="Reload Desmos" title="Reload Desmos" className="flex h-8 w-8 items-center justify-center rounded-md text-[#666] transition-colors hover:bg-[#e7e7e7] hover:text-[#222]">
             <RefreshCw className="h-3.5 w-3.5" />
           </button>
@@ -268,7 +269,7 @@ export default function DesmosDrawer({ open, preload = false, docked, onDockedCh
       {workspace && docked && !expanded ? <div
         role="separator" aria-orientation="vertical" aria-label="Resize calculator panel"
         aria-valuemin={320} aria-valuemax={Math.max(320, window.innerWidth - 380)}
-        aria-valuenow={dockWidth ?? Math.round(Math.min(window.innerWidth * .44, 736))}
+        aria-valuenow={dockWidth ?? Math.round(window.innerWidth * .5)}
         tabIndex={open ? 0 : -1} className="desmos-resize-handle"
         title="Drag to resize · Arrow keys adjust width · Double-click to reset"
         onPointerDown={(event) => {

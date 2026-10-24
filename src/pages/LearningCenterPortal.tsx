@@ -43,7 +43,7 @@ export default function LearningCenterPortal() {
 
   return (
     <div className="learning-center lc-portal workspace-page min-h-screen text-slate-900">
-      {!user && <header className="lc-guest-header"><Link to="/dashboard" className="flex items-center gap-3" aria-label="ProfAI home"><BrandMark size={40} /><span className="text-xl font-black tracking-tight">Prof<span className="text-red-600">AI</span></span></Link><Link to="/dashboard" className={secondaryButton}>Student platform <ArrowUpRight className="h-4 w-4" /></Link></header>}
+      {!user && <header className="lc-guest-header"><Link to="/dashboard" className="flex items-center gap-3" aria-label="Ivygoo home"><BrandMark size={40} /><span className="text-xl font-black tracking-tight">Ivy<span className="text-red-600">goo</span></span></Link><Link to="/dashboard" className={secondaryButton}>Student platform <ArrowUpRight className="h-4 w-4" /></Link></header>}
       <main className="lc-portal-main mx-auto max-w-[1640px] px-4 pb-20 pt-5 sm:px-6 lg:px-8 lg:pt-8">
         <header className="lc-portal-header">
           <div className="lc-portal-heading-copy">
@@ -93,7 +93,7 @@ function ClassCard({ workspace }: { workspace: CenterWorkspace }) {
   return (
     <Link to={`/learning-center/${workspace.slug}`} className="lc-portal-class-card" aria-label={`Open ${workspace.name} class`}>
       <div className="lc-portal-class-cover">
-        {workspace.coverUrl ? <img src={workspace.coverUrl} alt="" loading="lazy" /> : <div className="lc-portal-class-art" aria-hidden="true"><span className="lc-class-art-ring" /><GraduationCap size={44} strokeWidth={1.4} /><span className="lc-class-art-wordmark">PROFAI CLASSROOM</span></div>}
+        {workspace.coverUrl ? <img src={workspace.coverUrl} alt="" loading="lazy" /> : <div className="lc-portal-class-art" aria-hidden="true"><span className="lc-class-art-ring" /><GraduationCap size={44} strokeWidth={1.4} /><span className="lc-class-art-wordmark">IVYGOO CLASSROOM</span></div>}
         <span className="lc-portal-role"><ShieldCheck size={12} />{roleLabels[workspace.role]}</span>
       </div>
       <div className="lc-portal-class-body">

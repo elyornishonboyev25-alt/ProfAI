@@ -1,3 +1,4 @@
+import type { SATNote } from './notes'
 import manifestData from '@/data/sat/practiceTest4Manifest.json'
 import explanationsData from '@/data/sat/practiceTest4Explanations.json'
 import questionsData from '@/data/sat/practiceTest4Questions.json'
@@ -64,8 +65,9 @@ export type SATAttempt = {
   currentQuestionIndex: number
   answers: Record<string, string>
   flagged: string[]
-  notes: Record<string, string>
+  notes: Record<string, string | SATNote[]>
   highlights: Record<string, HighlightStroke[]>
+  eliminatedChoices?: Record<string, string[]>
   startedAt: number
   updatedAt: number
   submittedAt?: number

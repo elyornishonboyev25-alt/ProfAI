@@ -1,3 +1,4 @@
+import CrownBadge from '@/components/fx/CrownBadge'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Flame, Gauge, Mic, Search, UserRound } from 'lucide-react'
@@ -97,7 +98,7 @@ export default function SpeakerDirectory() {
             disabled={!s.nickname}
             className="flex items-center gap-3 rounded-2xl border border-red-50 bg-white p-3 text-left transition hover:border-red-200 hover:shadow-[0_10px_24px_rgba(220,38,38,0.1)] disabled:cursor-default disabled:opacity-70"
           >
-            <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-red-50 to-rose-100 text-sm font-bold text-red-700">
+            <div className={`${s.premium ? 'premium-member-avatar' : ''} relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-red-50 to-rose-100 text-sm font-bold text-red-700`}>
               <ProfileAvatar src={s.avatarUrl} name={s.displayName} className="rounded-full" />
               <span
                 className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white ${s.online ? 'bg-emerald-500' : 'bg-slate-300'}`}
@@ -111,6 +112,7 @@ export default function SpeakerDirectory() {
                   <span className="ml-1.5 rounded-full bg-red-100 px-1.5 py-0.5 text-[9px] font-bold text-red-700">YOU</span>
                 ) : null}
               </p>
+              {s.premium ? <CrownBadge size="sm" className="my-1" /> : null}
               <p className="flex flex-wrap items-center gap-2 text-[11px] font-medium text-slate-500">
                 <span className="inline-flex items-center gap-0.5"><Gauge className="h-3 w-3 text-red-500" />{s.averageBand.toFixed(1)}</span>
                 <span className="inline-flex items-center gap-0.5"><Mic className="h-3 w-3 text-rose-500" />{s.totalMinutes}m</span>

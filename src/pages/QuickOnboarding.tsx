@@ -219,7 +219,7 @@ export default function QuickOnboarding() {
     </section>
   }
 
-  return <div className="liquid-onboarding"><header><Link to="/" aria-label="ProfAI"><BrandLockup iconSize={42} /></Link><LanguageSelector /></header>
+  return <div className="liquid-onboarding"><header><Link to="/" aria-label="Ivygoo"><BrandLockup iconSize={42} /></Link><LanguageSelector /></header>
     <main className="glass-surface liquid-onboarding-panel liquid-onboarding-panel--profile">
       <p className="liquid-eyebrow">{step} / 2</p>
       <h1>{c(step === 1 ? 'Make your profile yours.' : 'Where are you now?')}</h1>

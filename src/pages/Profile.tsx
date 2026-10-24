@@ -53,6 +53,8 @@ const SKILL_ICONS: Record<ResultSkill, typeof BookOpen> = {
   sat: Sigma,
 }
 
+const UZ_MONTHS = ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr']
+
 function formatDuration(seconds: number | null) {
   if (!seconds) return null
   const hours = Math.floor(seconds / 3600)
@@ -102,7 +104,10 @@ export default function Profile() {
     [userId, speakingSessions, overview?.recentAttempts, historyVersion],
   )
 
-  const dateLocale = language === 'uz' ? 'uz-UZ' : language === 'ru' ? 'ru-RU' : 'en-GB'
+  // Chrome ships without Uzbek month names (it prints "2026 M09 27"), so Uzbek
+  // dates are composed from UZ_MONTHS and the 24-hour en-GB clock.
+  const dateLocale = language === 'ru' ? 'ru-RU' : 'en-GB'
+  const isUzbek = language === 'uz'
   const ieltsRecords = records.filter((record) => record.exam === 'IELTS')
   const satRecords = records.filter((record) => record.exam === 'SAT')
   const bestIelts = bestScore(ieltsRecords)
@@ -130,12 +135,17 @@ export default function Profile() {
       const date = new Date(record.completedAt)
       const key = `${date.getFullYear()}-${date.getMonth()}`
       if (!byMonth.has(key)) {
-        byMonth.set(key, { label: date.toLocaleDateString(dateLocale, { month: 'long', year: 'numeric' }), items: [] })
+        byMonth.set(key, {
+          label: isUzbek
+            ? `${UZ_MONTHS[date.getMonth()]} ${date.getFullYear()}`
+            : date.toLocaleDateString(dateLocale, { month: 'long', year: 'numeric' }),
+          items: [],
+        })
       }
       byMonth.get(key)!.items.push(record)
     })
     return [...byMonth.values()]
-  }, [dateLocale, visible])
+  }, [dateLocale, isUzbek, visible])
 
   const openAnalysis = (record: ResultRecord) => {
     const target = record.analyze
@@ -146,7 +156,12 @@ export default function Profile() {
     else navigate(`/results/${target.testId}`, { state: { result: target.result } })
   }
 
-  const formatDate = (time: number) => new Date(time).toLocaleDateString(dateLocale, { day: 'numeric', month: 'short', year: 'numeric' })
+  const formatDate = (time: number) => {
+    const date = new Date(time)
+    return isUzbek
+      ? `${date.getDate()}-${UZ_MONTHS[date.getMonth()]}, ${date.getFullYear()}`
+      : date.toLocaleDateString(dateLocale, { day: 'numeric', month: 'short', year: 'numeric' })
+  }
   const formatTime = (time: number) => new Date(time).toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' })
 
   return (

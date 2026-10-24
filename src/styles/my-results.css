@@ -403,11 +403,8 @@
   align-items: center;
   gap: 0.85rem 1rem;
   overflow: hidden;
-  /* Let the browser skip offscreen row layout/paint. Remember measured heights
-     so revisiting rows keeps the scroll position stable; older browsers fall
-     back to the existing grid without changing access to any result. */
-  content-visibility: auto;
-  contain-intrinsic-block-size: auto 16rem;
+  /* No content-visibility here: re-rendering rows as they enter the viewport
+     added layout and paint work to every scroll frame. */
   border: 1px solid rgba(255, 255, 255, 0.95);
   border-radius: 22px;
   background: linear-gradient(160deg, rgba(255, 255, 255, 0.98), rgba(244, 246, 249, 0.92));
@@ -580,7 +577,6 @@
 
 @media (min-width: 1024px) {
   .mr-row {
-    contain-intrinsic-block-size: auto 7.5rem;
     grid-template-columns: 2.6rem auto minmax(0, 1fr) auto auto auto;
     grid-template-areas: 'seq mark main stats score analyze';
     padding: 0.95rem 1.1rem 0.95rem 1.4rem;

@@ -12,7 +12,9 @@
   --arena-shadow: var(--liquid-shadow);
 }
 body { color: var(--liquid-ink); background: #f4f6f8; }
-.app-shell { background: var(--workspace-canvas); background-attachment: fixed; }
+/* The canvas lives on its own fixed layer: `background-attachment: fixed` makes
+   the browser repaint every visible card on each scroll frame. */
+.app-shell::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: var(--workspace-canvas); }
 .app-shell :where(a,button,input:not([type='search']),textarea,select,[role='button']):focus-visible { outline: 3px solid #9e2535; outline-offset: 4px; }
 .glass-control, .app-shell .liquid-sidebar, .liquid-mobile-nav {
   border: 1px solid rgba(255,255,255,.94);

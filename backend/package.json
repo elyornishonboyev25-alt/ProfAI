@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "npm run prisma:generate && tsx watch src/index.ts",
     "build": "npm run prisma:generate && tsc -p tsconfig.json",

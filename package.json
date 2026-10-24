@@ -54,6 +54,7 @@
     "test:sat-vocabulary-sync": "node scripts/test-sat-vocabulary-sync.mjs",
     "test:sat-question-bank-ui": "node scripts/test-sat-mistakes-ui.mjs scripts/tests/sat-question-bank-ui.tsx",
     "test:sat-hard-browser": "node scripts/test-sat-hard-browser.mjs",
+    "test:sat-content-browser": "node scripts/test-sat-content-browser.mjs",
     "test:sat-hard-questions-ui": "node scripts/test-sat-mistakes-ui.mjs scripts/tests/sat-hard-questions-ui.tsx",
     "test:sat-baseline-ui": "node scripts/test-sat-mistakes-ui.mjs scripts/tests/sat-baseline-ui.tsx",
     "test:sat-results": "node scripts/test-sat-mistakes-ui.mjs scripts/tests/sat-results-ui.tsx && node scripts/test-sat-results-browser.mjs",

@@ -1763,7 +1763,7 @@
     "id": "math1-10",
     "moduleId": "math1",
     "number": 10,
-    "prompt": "In the figure shown, triangle CAE is similar to triangle CBD. The measure of angle CBD is 56°, and $AE=22(BD)$. What is the measure of angle CAE?",
+    "prompt": "Triangle CAE is similar to triangle CBD. The measure of angle CBD is 56°, and $AE=22(BD)$. What is the measure of angle CAE?",
     "kind": "multiple-choice",
     "correctAnswer": "B",
     "choices": [
@@ -1811,19 +1811,23 @@
     "choices": [
       {
         "key": "A",
-        "text": "$x: 0,1,2$; $f(x): 0,0,0$"
+        "text": "$x: 0,1,2$; $f(x): 0,0,0$",
+        "html": "<div class=\"sat-source-table\"><table><thead><tr><th scope=\"col\"><i>x</i></th><th scope=\"col\"><i>f(x)</i></th></tr></thead><tbody><tr><td>0</td><td>0</td></tr><tr><td>1</td><td>0</td></tr><tr><td>2</td><td>0</td></tr></tbody></table></div>"
       },
       {
         "key": "B",
-        "text": "$x: 0,1,2$; $f(x): 47,47,47$"
+        "text": "$x: 0,1,2$; $f(x): 47,47,47$",
+        "html": "<div class=\"sat-source-table\"><table><thead><tr><th scope=\"col\"><i>x</i></th><th scope=\"col\"><i>f(x)</i></th></tr></thead><tbody><tr><td>0</td><td>47</td></tr><tr><td>1</td><td>47</td></tr><tr><td>2</td><td>47</td></tr></tbody></table></div>"
       },
       {
         "key": "C",
-        "text": "$x: 0,1,2$; $f(x): 47,48,49$"
+        "text": "$x: 0,1,2$; $f(x): 47,48,49$",
+        "html": "<div class=\"sat-source-table\"><table><thead><tr><th scope=\"col\"><i>x</i></th><th scope=\"col\"><i>f(x)</i></th></tr></thead><tbody><tr><td>0</td><td>47</td></tr><tr><td>1</td><td>48</td></tr><tr><td>2</td><td>49</td></tr></tbody></table></div>"
       },
       {
         "key": "D",
-        "text": "$x: 0,1,2$; $f(x): 0,47,94$"
+        "text": "$x: 0,1,2$; $f(x): 0,47,94$",
+        "html": "<div class=\"sat-source-table\"><table><thead><tr><th scope=\"col\"><i>x</i></th><th scope=\"col\"><i>f(x)</i></th></tr></thead><tbody><tr><td>0</td><td>0</td></tr><tr><td>1</td><td>47</td></tr><tr><td>2</td><td>94</td></tr></tbody></table></div>"
       }
     ],
     "domain": "Math",

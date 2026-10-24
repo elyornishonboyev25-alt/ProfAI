@@ -86,9 +86,9 @@ export default function SATVisual({ asset, alt, className = '', imageClassName =
           type="button"
           aria-label={`Enlarge ${alt}`}
           onClick={() => setOpen(true)}
-          className={`group relative block max-w-full cursor-zoom-in overflow-hidden rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${className}`}
+          className={`group relative block w-[42rem] max-w-full cursor-zoom-in overflow-hidden rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 ${className}`}
         >
-          <img src={displayedAsset} alt={alt} onError={handleLoadError} className={imageClassName} />
+          <img src={displayedAsset} alt={alt} onError={handleLoadError} className={`mx-auto block ${imageClassName}`} />
           <span className="pointer-events-none absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-lg bg-slate-950/75 text-white opacity-0 shadow-lg backdrop-blur transition group-hover:opacity-100 group-focus-visible:opacity-100">
             <Maximize2 className="h-4 w-4" />
           </span>

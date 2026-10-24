@@ -13,6 +13,12 @@ const choices = (a: string, b: string, c: string, d: string): SATStructuredChoic
   { key: 'D', text: d },
 ]
 
+const valueTableChoices = (values: number[][]): SATStructuredChoice[] => values.map((outputs, index) => ({
+  key: 'ABCD'[index],
+  text: `$x$: 1, 2, 3\n$h(x)$: ${outputs.join(', ')}`,
+  html: `<div class="sat-source-table"><table><thead><tr><th scope="col"><i>x</i></th><th scope="col"><i>h(x)</i></th></tr></thead><tbody>${outputs.map((output, row) => `<tr><td>${row + 1}</td><td>${output}</td></tr>`).join('')}</tbody></table></div>`,
+}))
+
 /**
  * PDF text extraction is exact for prose, but mathematical typesetting can split
  * fractions, radicals, exponents, and answer choices into separate glyph runs.
@@ -161,7 +167,7 @@ Which choice most effectively uses data from the graph to illustrate the claim?`
   },
   'math2-8': {
     prompt: '$$h(x) = x^2 - 3$$\n\nWhich table gives three values of $x$ and their corresponding values of $h(x)$ for the given function $h$?',
-    choices: choices('$x$: 1, 2, 3\n$h(x)$: 4, 5, 6', '$x$: 1, 2, 3\n$h(x)$: -2, 1, 6', '$x$: 1, 2, 3\n$h(x)$: -1, 1, 3', '$x$: 1, 2, 3\n$h(x)$: -2, 1, 3'),
+    choices: valueTableChoices([[4, 5, 6], [-2, 1, 6], [-1, 1, 3], [-2, 1, 3]]),
   },
   'math2-9': {
     prompt: 'The function $f$ is defined by $f(x) = 270(0.1)^x$. What is the value of $f(0)$?',

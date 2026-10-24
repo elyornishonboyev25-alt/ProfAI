@@ -58,7 +58,7 @@
 .sat-bank-canvas button[role='radio'][aria-checked='true'] { border-color: #4053d7; background: #edf1ff; }
 .sat-bank-canvas button[role='radio'][aria-checked='true'][class*='border-emerald'] { border-color: #059669; background: #ecfdf5; }
 .sat-bank-canvas button[role='radio'][aria-checked='true'][class*='border-red'] { border-color: #dc2626; background: #fef2f2; }
-.sat-bank-canvas button[role='radio'] > span:last-child { font-weight: 500; }
+.sat-bank-canvas button[role='radio'] > [data-sat-highlight-block] { font-weight: 500; }
 .sat-bank-canvas button:disabled { opacity: 1; }
 .sat-bank-canvas button[role='radio']:disabled[class*='opacity-50'] { opacity: .5; }
 @media (max-width: 640px) {

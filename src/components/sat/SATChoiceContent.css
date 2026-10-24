@@ -1,0 +1,7 @@
+.sat-choice-content { min-width: 0; text-align: left; }
+.sat-choice-content math { margin-inline: 0; }
+.sat-choice-content math[display='block'] { display: inline math; padding: 0; }
+.sat-choice-content .sat-source-content > :first-child { margin-top: 0; }
+.sat-choice-content .sat-source-content table { margin: 0; font-size: 1em; }
+.sat-choice-content .sat-source-content img { margin-left: 0; }
+.sat-choice-content .sat-source-table { max-width: 100%; }

@@ -3,6 +3,7 @@ import { Fragment, type ReactNode } from 'react'
 type Props = {
   text: string
   className?: string
+  inlineMath?: boolean
 }
 
 const MATH_FONT = '"STIX Two Math", "Cambria Math", "Times New Roman", serif'
@@ -10,7 +11,7 @@ const MATH_FONT = '"STIX Two Math", "Cambria Math", "Times New Roman", serif'
 const mathSymbols: Record<string, string> = {
   times: '×', cdot: '·', div: '÷', le: '≤', leq: '≤', ge: '≥', geq: '≥', neq: '≠',
   pm: '±', approx: '≈', parallel: '∥', Rightarrow: '⇒', rightarrow: '→', implies: '⇒',
-  pi: 'π', circ: '°', triangle: '△', angle: '∠', infty: '∞', percent: '%', '%': '%',
+  pi: 'π', ell: 'ℓ', circ: '°', triangle: '△', angle: '∠', infty: '∞', percent: '%', '%': '%',
 }
 
 const mathFunctions = new Set(['sin', 'cos', 'tan', 'cot', 'sec', 'csc', 'log', 'ln'])
@@ -63,6 +64,15 @@ function renderMathExpression(rawValue: string): ReactNode {
   let value = rawValue.trim()
   if (!value) return <mrow />
   if (isWrapped(value, '{', '}')) value = value.slice(1, -1).trim()
+
+  const cases = value.match(/^\\begin\{cases\}([\s\S]+)\\end\{cases\}$/)
+  if (cases) {
+    return <mrow><mo stretchy="true">{'{'}</mo><mtable columnalign="left">
+      {cases[1].split('\\\\').map((row, index) => <mtr key={index}>
+        {row.split('&').map((cell, cellIndex) => <mtd key={cellIndex}>{renderMathExpression(cell)}</mtd>)}
+      </mtr>)}
+    </mtable></mrow>
+  }
 
   const relations = topLevelOperatorIndexes(value, ['\\Rightarrow', '\\rightarrow', '\\implies', '\\leq', '\\geq', '\\neq', '\\approx', '<=', '>=', '≠', '≤', '≥', '=', '<', '>'])
   if (relations.length) {
@@ -284,7 +294,7 @@ function normalizeRichText(text: string) {
     .trim()
 }
 
-export default function SATRichText({ text, className = '' }: Props) {
+export default function SATRichText({ text, className = '', inlineMath = false }: Props) {
   const blocks = normalizeRichText(text).split(/\n\s*\n/).filter((block) => block.trim())
 
   return (
@@ -294,6 +304,7 @@ export default function SATRichText({ text, className = '' }: Props) {
         const spacing = index ? 'mt-4' : ''
         const displayMath = block.match(/^\$\$([\s\S]+)\$\$$/) ?? block.match(/^\$([^$\n]+)\$$/)
         if (displayMath && looksLikeMath(displayMath[1])) {
+          if (inlineMath) return <div key={index} className={`${spacing} overflow-x-auto text-left`}><MathFormula value={displayMath[1]} /></div>
           return <div key={index} className={`${spacing} overflow-x-auto py-1.5 text-center`}><MathFormula value={displayMath[1]} display /></div>
         }
 

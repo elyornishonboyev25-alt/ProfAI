@@ -5,6 +5,7 @@ import { splitSATPrompt } from '@/features/sat/promptLayout'
 import SATRichText from './SATRichText'
 import SATSourceContent from './SATSourceContent'
 import SATVisual from './SATVisual'
+import SATChoiceContent from './SATChoiceContent'
 import SATTextHighlights from './SATTextHighlights'
 import './SATQuestionCanvas.css'
 
@@ -165,10 +166,9 @@ export default function SATQuestionCanvas({
                     }`}>
                       {choice.key}
                     </span>
-                    <span data-sat-highlight-block={`choice-${choice.key}`} className="select-text min-w-0 flex-1 pt-0.5 text-[16px] font-semibold leading-6 sm:text-[17px]">
-                      {choice.image ? <img src={choice.image} alt={`Choice ${choice.key}`} className="mb-2 max-h-48 max-w-full rounded-lg object-contain" /> : null}
-                      {choice.html ? <SATSourceContent html={choice.html} /> : <SATRichText text={choice.text} />}
-                    </span>
+                    <div data-sat-highlight-block={`choice-${choice.key}`} className="select-text min-w-0 flex-1 pt-0.5 text-[16px] font-semibold leading-6 sm:text-[17px]">
+                      <SATChoiceContent choice={choice} />
+                    </div>
                   </button>
                   {!readOnly && onEliminatedChoicesChange && (eliminatorOpen || eliminated) ? <button
                     type="button"

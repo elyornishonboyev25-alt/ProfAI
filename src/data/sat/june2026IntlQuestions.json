@@ -273,7 +273,7 @@
     "id": "rw1-10",
     "moduleId": "rw1",
     "number": 10,
-    "prompt": "couney [3860 | 2ni7 | change ours | Pace change ous |\n\nTrew [ear [se [es [tm\n\nDama [200 | tao [oe eC\nThe table below shows data on the average hours worked per\nperson in four countries in 1950 and 2017. A student is\nexamining the decline in average hours worked. The student\nwants to compare the decline in Finland to other countries\nand finds that           .\n\nWhich choice most effectively uses data from the table to\ncomplete the student's conclusion?",
+    "prompt": "The table below shows data on the average hours worked per\nperson in four countries in 1950 and 2017. A student is\nexamining the decline in average hours worked. The student\nwants to compare the decline in Finland to other countries\nand finds that _______.\n\nWhich choice most effectively uses data from the table to\ncomplete the student's conclusion?",
     "kind": "multiple-choice",
     "correctAnswer": "B",
     "choices": [
@@ -291,13 +291,18 @@
       },
       {
         "key": "D",
-        "text": "though the decline in number of hours worked in Finland and was greater than that in Denmark and Peru, it was Iess than that in Canada."
+        "text": "though the decline in number of hours worked in Finland was greater than that in Denmark and Peru, it was less than that in Canada."
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice B as correct.",
+    "rationale": "Finland’s decline of 394 hours is smaller than Denmark’s 649 and Canada’s 513, but greater than Peru’s 225.",
     "asset": "/sat/june-2026-intl/questions/rw1-10.webp",
     "assetWidth": 1920,
-    "assetHeight": 1080
+    "assetHeight": 1080,
+    "sourceContent": {
+      "context": "<div class=\"sat-source-table\"><table><thead><tr><th scope=\"col\">Country</th><th scope=\"col\">1950</th><th scope=\"col\">2017</th><th scope=\"col\">Change in hours</th><th scope=\"col\">Percent change in hours</th></tr></thead><tbody><tr><td>Peru</td><td>2,157</td><td>1,932</td><td>−225</td><td>−10%</td></tr><tr><td>Canada</td><td>2,209</td><td>1,696</td><td>−513</td><td>−23%</td></tr><tr><td>Denmark</td><td>2,049</td><td>1,400</td><td>−649</td><td>−32%</td></tr><tr><td>Finland</td><td>2,053</td><td>1,659</td><td>−394</td><td>−19%</td></tr></tbody></table></div><p>The table below shows data on the average hours worked per person in four countries in 1950 and 2017. A student is examining the decline in average hours worked. The student wants to compare the decline in Finland to other countries and finds that _______.</p>",
+      "task": "<p>Which choice most effectively uses data from the table to complete the student's conclusion?</p>",
+      "explanation": "<p>The decline in Finland was 394 hours, less than Denmark’s 649 and Canada’s 513, but greater than Peru’s 225. Choice B is correct.</p>"
+    }
   },
   {
     "id": "rw1-11",
@@ -333,31 +338,36 @@
     "id": "rw1-12",
     "moduleId": "rw1",
     "number": 12,
-    "prompt": "momma | | igs | gash rea\n\nDenomination        units (millions of       (millions of           (millions of                issued\ndollars)           dollars)           dollars)\nrr\nA student in an economics class is discussing the financial\nimplications of issuing US coins based on the provided table.\nOne student argues that in 2023, the one-cent coin was the\nleast financially sensible for the US to produce, while another\nstudent argues that the five-cent coin was.\n\nBased on the information in the text and the table, the two\nstudents most likely disagree about the answer to which\nquestion?",
+    "prompt": "A student in an economics class is discussing the financial\nimplications of issuing US coins based on the provided table.\nOne student argues that in 2023, the one-cent coin was the\nleast financially sensible for the US to produce, while another\nstudent argues that the five-cent coin was.\n\nBased on the information in the text and the table, the two\nstudents most likely disagree about the answer to which\nquestion?",
     "kind": "multiple-choice",
     "correctAnswer": "A",
     "choices": [
       {
         "key": "A",
-        "text": "When evaluating the financial implications of issuing a coin, which is more important, the tota seigniorage from issuing that coin or the seigniorage per dollar when issuing that coin?"
+        "text": "When evaluating the financial implications of issuing a coin, which is more important, the total seigniorage from issuing that coin or the seigniorage per dollar when issuing that coin?"
       },
       {
         "key": "B",
-        "text": "If issuing a given coin results in negative seigniorage per dollar issued, can that be changed to positive seigniorage per dollar issuec by reducing the cost of issuing the coin?"
+        "text": "If issuing a given coin results in negative seigniorage per dollar issued, can that be changed to positive seigniorage per dollar issued by reducing the cost of issuing the coin?"
       },
       {
         "key": "C",
-        "text": "When determining whether it makes financial sense to issue a given coin, which is more important, the total value of the units of that coil produced or the gross cost of issuing that coin?"
+        "text": "When determining whether it makes financial sense to issue a given coin, which is more important, the total value of the units of that coin produced or the gross cost of issuing that coin?"
       },
       {
         "key": "D",
         "text": "If issuing a given coin results in positive seigniorage per dollar but not as much as a different coin, does it make financial sense to continue issuing the first coin?"
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice A as correct.",
+    "rationale": "The one-cent coin has the larger loss per dollar issued, while the five-cent coin has the larger total loss.",
     "asset": "/sat/june-2026-intl/questions/rw1-12.webp",
     "assetWidth": 1920,
-    "assetHeight": 2160
+    "assetHeight": 2160,
+    "sourceContent": {
+      "context": "<div class=\"sat-source-table\"><table><thead><tr><th scope=\"col\">Denomination</th><th scope=\"col\">Total value of units (millions of dollars)</th><th scope=\"col\">Gross cost (millions of dollars)</th><th scope=\"col\">Seigniorage (millions of dollars)</th><th scope=\"col\">Seigniorage per $1 issued</th></tr></thead><tbody><tr><td>One-cent</td><td>41.4</td><td>127.4</td><td>−86.0</td><td>−2.08</td></tr><tr><td>Five-cent</td><td>70.8</td><td>163.4</td><td>−92.6</td><td>−1.31</td></tr><tr><td>Ten-cent</td><td>266.6</td><td>141.1</td><td>125.5</td><td>0.47</td></tr><tr><td>Quarter-dollar</td><td>568.4</td><td>264.4</td><td>304.0</td><td>0.53</td></tr></tbody></table></div><p>A student in an economics class is discussing the financial implications of issuing US coins based on the provided table. One student argues that in 2023, the one-cent coin was the least financially sensible for the US to produce, while another student argues that the five-cent coin was.</p>",
+      "task": "<p>Based on the information in the text and the table, the two students most likely disagree about the answer to which question?</p>",
+      "explanation": "<p>The one-cent coin has the larger loss per dollar issued (2.08), while the five-cent coin has the larger total loss (92.6 million dollars). The students disagree about which measure matters more. Choice A is correct.</p>"
+    }
   },
   {
     "id": "rw1-13",
@@ -1623,197 +1633,157 @@
     "id": "math1-1",
     "moduleId": "math1",
     "number": 1,
-    "prompt": "y = —82z + 26\n\ny = 227+ 16\nThe graphs of the equations in the given system of equations intersect at the\npoint (a, b) in the xy-plane. What is a possible value of a?",
+    "prompt": "$$y=-8x+26$$\n\n$$y=2x^2+16$$\n\nThe graphs of the equations in the given system of equations intersect at the point $(a,b)$ in the $xy$-plane. What is a possible value of $a$?",
     "kind": "multiple-choice",
     "correctAnswer": "D",
     "choices": [
       {
         "key": "A",
-        "text": "@ -2",
-        "image": "/sat/june-2026-intl/visuals/math1-01-choice-a.webp"
+        "text": "$-2$"
       },
       {
         "key": "B",
-        "text": "@ 2                          |",
-        "image": "/sat/june-2026-intl/visuals/math1-01-choice-b.webp"
+        "text": "$2$"
       },
       {
         "key": "C",
-        "text": "[© 5",
-        "image": "/sat/june-2026-intl/visuals/math1-01-choice-c.webp"
+        "text": "$5$"
       },
       {
         "key": "D",
-        "text": "[® —",
-        "image": "/sat/june-2026-intl/visuals/math1-01-choice-d.webp"
+        "text": "$-5$"
       }
     ],
     "rationale": "The supplied June 2026 answer key gives choice D.",
     "asset": "/sat/june-2026-intl/questions/math1-01.webp",
     "assetWidth": 1920,
-    "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math1-01-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math1 question 1"
-    }
+    "assetHeight": 1080
   },
   {
     "id": "math1-2",
     "moduleId": "math1",
     "number": 2,
-    "prompt": "In the xy-plane, line k and line are perpendicular and intersect at the point\n(2, 8). If line k is defined by the equation y = mz + b, where m and b are\nconstants and m > 1, which of the following points lies on line £?",
+    "prompt": "In the $xy$-plane, line $k$ and line $\\ell$ are perpendicular and intersect at the point $(2,8)$. If line $k$ is defined by the equation $y=mx+b$, where $m$ and $b$ are constants and $m>1$, which of the following points lies on line $\\ell$?",
     "kind": "multiple-choice",
     "correctAnswer": "A",
     "choices": [
       {
         "key": "A",
-        "text": "[® (38-2)                              |",
-        "image": "/sat/june-2026-intl/visuals/math1-02-choice-a.webp"
+        "text": "$(3,8-\\frac{1}{m})$"
       },
       {
         "key": "B",
-        "text": "[@ (3,842)                              |",
-        "image": "/sat/june-2026-intl/visuals/math1-02-choice-b.webp"
+        "text": "$(3,8+\\frac{1}{m})$"
       },
       {
         "key": "C",
-        "text": "© (3,8-m)                             ]",
-        "image": "/sat/june-2026-intl/visuals/math1-02-choice-c.webp"
+        "text": "$(3,8-m)$"
       },
       {
         "key": "D",
-        "text": "@ (3,8 +m)                                        ]",
-        "image": "/sat/june-2026-intl/visuals/math1-02-choice-d.webp"
+        "text": "$(3,8+m)$"
       }
     ],
     "rationale": "The supplied June 2026 answer key gives choice A.",
     "asset": "/sat/june-2026-intl/questions/math1-02.webp",
     "assetWidth": 1920,
-    "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math1-02-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math1 question 2"
-    }
+    "assetHeight": 1080
   },
   {
     "id": "math1-3",
     "moduleId": "math1",
     "number": 3,
-    "prompt": "Triangle ABC is similar to triangle DEF, where A corresponds to D and C\ncorresponds to F. Angles C and F are right angles. If tan(A) = /3 and\nDF = 53, what is the length of DE?",
+    "prompt": "Triangle $ABC$ is similar to triangle $DEF$, where $A$ corresponds to $D$ and $C$ corresponds to $F$. Angles $C$ and $F$ are right angles. If $\\tan(A)=\\sqrt{3}$ and $DF=53$, what is the length of $DE$?",
     "kind": "multiple-choice",
     "correctAnswer": "D",
     "choices": [
       {
         "key": "A",
-        "text": "@ 5323",
-        "image": "/sat/june-2026-intl/visuals/math1-03-choice-a.webp"
+        "text": "$\\frac{53\\sqrt{3}}{3}$"
       },
       {
         "key": "B",
-        "text": "Choice B",
-        "image": "/sat/june-2026-intl/visuals/math1-03-choice-b.webp"
+        "text": "$\\frac{53\\sqrt{3}}{2}$"
       },
       {
         "key": "C",
-        "text": "© s3v3                        |",
-        "image": "/sat/june-2026-intl/visuals/math1-03-choice-c.webp"
+        "text": "$53\\sqrt{3}$"
       },
       {
         "key": "D",
-        "text": "@ 106                         ]",
-        "image": "/sat/june-2026-intl/visuals/math1-03-choice-d.webp"
+        "text": "$106$"
       }
     ],
     "rationale": "The supplied June 2026 answer key gives choice D.",
     "asset": "/sat/june-2026-intl/questions/math1-03.webp",
     "assetWidth": 1920,
-    "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math1-03-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math1 question 3"
-    }
+    "assetHeight": 1080
   },
   {
     "id": "math1-4",
     "moduleId": "math1",
     "number": 4,
-    "prompt": "An object's speed, in meters per hour, is increasing at a rate of 1, 530 meters per\nhour per second. Which of the following is closest to this rate in feet per second\nsquared? (Use 1 meter = 3.28 feet.)",
+    "prompt": "An object's speed, in meters per hour, is increasing at a rate of 1,530 meters per hour per second. Which of the following is closest to this rate in feet per second squared? (Use 1 meter = 3.28 feet.)",
     "kind": "multiple-choice",
     "correctAnswer": "B",
     "choices": [
       {
         "key": "A",
-        "text": "@ 0.13                                                   ]",
-        "image": "/sat/june-2026-intl/visuals/math1-04-choice-a.webp"
+        "text": "$0.13$"
       },
       {
         "key": "B",
-        "text": "@ 1.39                                                ]",
-        "image": "/sat/june-2026-intl/visuals/math1-04-choice-b.webp"
+        "text": "$1.39$"
       },
       {
         "key": "C",
-        "text": "© 7.77                                                                         ]",
-        "image": "/sat/june-2026-intl/visuals/math1-04-choice-c.webp"
+        "text": "$7.77$"
       },
       {
         "key": "D",
-        "text": "(©) 83.6                                                                               ]",
-        "image": "/sat/june-2026-intl/visuals/math1-04-choice-d.webp"
+        "text": "$83.6$"
       }
     ],
     "rationale": "The supplied June 2026 answer key gives choice B.",
     "asset": "/sat/june-2026-intl/questions/math1-04.webp",
     "assetWidth": 1920,
-    "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math1-04-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math1 question 4"
-    }
+    "assetHeight": 1080
   },
   {
     "id": "math1-5",
     "moduleId": "math1",
     "number": 5,
-    "prompt": "Which equivalent form of the equation f(z) = —3x? + 30a — 48 displays the\nmaximum value of the function as a constant or coefficient?",
+    "prompt": "Which equivalent form of the equation $f(x)=-3x^2+30x-48$ displays the maximum value of the function as a constant or coefficient?",
     "kind": "multiple-choice",
     "correctAnswer": "C",
     "choices": [
       {
         "key": "A",
-        "text": "@ f(x) = —3a(a — 10) — 48                                              ]",
-        "image": "/sat/june-2026-intl/visuals/math1-05-choice-a.webp"
+        "text": "$f(x)=-3x(x-10)-48$"
       },
       {
         "key": "B",
-        "text": "@ F(x) = -3(@ - 8)(2 - 2)                                       ]",
-        "image": "/sat/june-2026-intl/visuals/math1-05-choice-b.webp"
+        "text": "$f(x)=-3(x-8)(x-2)$"
       },
       {
         "key": "C",
-        "text": "(c) f(x) = —3(a — 5)? + 27                                                     ]",
-        "image": "/sat/june-2026-intl/visuals/math1-05-choice-c.webp"
+        "text": "$f(x)=-3(x-5)^2+27$"
       },
       {
         "key": "D",
-        "text": "@ f(x) = —3(ax? — 10x + 16)                                                ]",
-        "image": "/sat/june-2026-intl/visuals/math1-05-choice-d.webp"
+        "text": "$f(x)=-3(x^2-10x+16)$"
       }
     ],
     "rationale": "The supplied June 2026 answer key gives choice C.",
     "asset": "/sat/june-2026-intl/questions/math1-05.webp",
     "assetWidth": 1920,
-    "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math1-05-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math1 question 5"
-    }
+    "assetHeight": 1080
   },
   {
     "id": "math1-6",
     "moduleId": "math1",
     "number": 6,
-    "prompt": "Me ee ee\nThe function f is defined by f(x) = 4(x — 3)(x? — k),\nwhere k is a constant. In the xy-plane, the graph of\n\ny = f(a) passes through the point (—8, 0). What is the\nvalue of f(0)?",
+    "prompt": "The function $f$ is defined by $f(x)=4(x-3)(x^2-k)$, where $k$ is a constant. In the $xy$-plane, the graph of $y=f(x)$ passes through the point $(-8,0)$. What is the value of $f(0)$?",
     "kind": "student-response",
     "correctAnswer": "768",
     "choices": [],
@@ -1821,10 +1791,6 @@
     "asset": "/sat/june-2026-intl/questions/math1-06.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math1-06-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math1 question 6"
-    },
     "acceptedAnswers": [
       "768"
     ]
@@ -1833,45 +1799,37 @@
     "id": "math1-7",
     "moduleId": "math1",
     "number": 7,
-    "prompt": "One of the two equations in a system of linear equations is 32 = 45y — 27. The\nsystem has no solution. Which equation could be the second equation in this\nsystem?",
+    "prompt": "One of the two equations in a system of linear equations is $3x=45y-27$. The system has no solution. Which equation could be the second equation in this system?",
     "kind": "multiple-choice",
     "correctAnswer": "A",
     "choices": [
       {
         "key": "A",
-        "text": "fo z= 15y—8",
-        "image": "/sat/june-2026-intl/visuals/math1-07-choice-a.webp"
+        "text": "$x=15y-8$"
       },
       {
         "key": "B",
-        "text": "fo z= 15y—9                                   ]",
-        "image": "/sat/june-2026-intl/visuals/math1-07-choice-b.webp"
+        "text": "$x=15y-9$"
       },
       {
         "key": "C",
-        "text": "1.1 9 © Y= t+ FB",
-        "image": "/sat/june-2026-intl/visuals/math1-07-choice-c.webp"
+        "text": "$y=\\frac{1}{15}x+\\frac{9}{15}$"
       },
       {
         "key": "D",
-        "text": "@ 32 — 5y = 27",
-        "image": "/sat/june-2026-intl/visuals/math1-07-choice-d.webp"
+        "text": "$3x-5y=27$"
       }
     ],
     "rationale": "The supplied June 2026 answer key gives choice A.",
     "asset": "/sat/june-2026-intl/questions/math1-07.webp",
     "assetWidth": 1920,
-    "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math1-07-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math1 question 7"
-    }
+    "assetHeight": 1080
   },
   {
     "id": "math1-8",
     "moduleId": "math1",
     "number": 8,
-    "prompt": "Me ee\nIn a right triangle PQ R, the right angle is at Q. An\naltitude QS is drawn to the hypotenuse PR. The length\nof PR is 125 cm and the length of PQ is 75 cm. What is\nthe length of QS in centimeters?",
+    "prompt": "In a right triangle $PQR$, the right angle is at $Q$. An altitude $QS$ is drawn to the hypotenuse $PR$. The length of $PR$ is 125 cm and the length of $PQ$ is 75 cm. What is the length of $QS$ in centimeters?",
     "kind": "student-response",
     "correctAnswer": "60",
     "choices": [],
@@ -1879,10 +1837,6 @@
     "asset": "/sat/june-2026-intl/questions/math1-08.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math1-08-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math1 question 8"
-    },
     "acceptedAnswers": [
       "60"
     ]
@@ -1891,83 +1845,67 @@
     "id": "math1-9",
     "moduleId": "math1",
     "number": 9,
-    "prompt": "An object is launched trom a height of 121 feet. A quadratic function 7 models\nthe height of the object ¢ seconds after launch. According to the model, 2\nseconds after launch, it reaches a maximum height of 185 feet. Which equation\ndefines f?",
+    "prompt": "An object is launched from a height of 121 feet. A quadratic function $f$ models the height of the object $t$ seconds after launch. According to the model, 2 seconds after launch, it reaches a maximum height of 185 feet. Which equation defines $f$?",
     "kind": "multiple-choice",
     "correctAnswer": "D",
     "choices": [
       {
         "key": "A",
-        "text": "@ f(t) = —16(t — 185)? + 2                                                ]",
-        "image": "/sat/june-2026-intl/visuals/math1-09-choice-a.webp"
+        "text": "$f(t)=-16(t-185)^2+2$"
       },
       {
         "key": "B",
-        "text": "@ f(t) = —16(t + 2)? — 185                                              ]",
-        "image": "/sat/june-2026-intl/visuals/math1-09-choice-b.webp"
+        "text": "$f(t)=-16(t+2)^2-185$"
       },
       {
         "key": "C",
-        "text": "© f(t) = —64(t — 2)? + 185                                             |",
-        "image": "/sat/june-2026-intl/visuals/math1-09-choice-c.webp"
+        "text": "$f(t)=-64(t-2)^2+185$"
       },
       {
         "key": "D",
-        "text": "fo f(t) = —16(t — 2)? + 185                                             ]",
-        "image": "/sat/june-2026-intl/visuals/math1-09-choice-d.webp"
+        "text": "$f(t)=-16(t-2)^2+185$"
       }
     ],
     "rationale": "The supplied June 2026 answer key gives choice D.",
     "asset": "/sat/june-2026-intl/questions/math1-09.webp",
     "assetWidth": 1920,
-    "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math1-09-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math1 question 9"
-    }
+    "assetHeight": 1080
   },
   {
     "id": "math1-10",
     "moduleId": "math1",
     "number": 10,
-    "prompt": "x* + 302 + q = 43\nIn the given equation, q is a constant. One solution to the given equation is\nBVI | What is the value of q?",
+    "prompt": "$$9x^2+30x+q=43$$\n\nIn the given equation, $q$ is a constant. One solution to the given equation is $\\frac{-5+\\sqrt{14}}{3}$. What is the value of $q$?",
     "kind": "multiple-choice",
     "correctAnswer": "A",
     "choices": [
       {
         "key": "A",
-        "text": "@) 54                          ]",
-        "image": "/sat/june-2026-intl/visuals/math1-10-choice-a.webp"
+        "text": "$54$"
       },
       {
         "key": "B",
-        "text": "@) 43                          ]",
-        "image": "/sat/june-2026-intl/visuals/math1-10-choice-b.webp"
+        "text": "$43$"
       },
       {
         "key": "C",
-        "text": "for                          ]",
-        "image": "/sat/june-2026-intl/visuals/math1-10-choice-c.webp"
+        "text": "$11$"
       },
       {
         "key": "D",
-        "text": "[@ 5                    ]",
-        "image": "/sat/june-2026-intl/visuals/math1-10-choice-d.webp"
+        "text": "$5$"
       }
     ],
     "rationale": "The supplied June 2026 answer key gives choice A.",
     "asset": "/sat/june-2026-intl/questions/math1-10.webp",
     "assetWidth": 1920,
-    "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math1-10-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math1 question 10"
-    }
+    "assetHeight": 1080
   },
   {
     "id": "math1-11",
     "moduleId": "math1",
     "number": 11,
-    "prompt": "————E————    ————    ————    ————    —————    ———\nA right triangular pyramid has exactly s2x edges. Each of\nthese edges is 96 centimeters long. If the surface area of\nthe pyramid is ky/3 square centimeters, what is the value\nof k?",
+    "prompt": "A right triangular pyramid has exactly six edges. Each of these edges is 96 centimeters long. If the surface area of the pyramid is $k\\sqrt{3}$ square centimeters, what is the value of $k$?",
     "kind": "student-response",
     "correctAnswer": "9216",
     "choices": [],
@@ -1975,10 +1913,6 @@
     "asset": "/sat/june-2026-intl/questions/math1-11.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math1-11-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math1 question 11"
-    },
     "acceptedAnswers": [
       "9216"
     ]
@@ -1987,7 +1921,7 @@
     "id": "math1-12",
     "moduleId": "math1",
     "number": 12,
-    "prompt": "a   Pe WidiN LUI NOVICVW\ny=2x-—C\n_                  2\ny = —A(x — 8)\nIn the given system of equations, c is a constant. The\nsystem has two distinct real solutions. What is the\nminimum integer value of c?\nEnter your answer (e.g., 5.566, -5.566, 2/3, -2/3)",
+    "prompt": "$$y=x-c$$\n\n$$y=-4(x-8)^2$$\n\nIn the given system of equations, $c$ is a constant. The system has two distinct real solutions. What is the minimum integer value of $c$?",
     "kind": "student-response",
     "correctAnswer": "8",
     "choices": [],
@@ -1995,10 +1929,6 @@
     "asset": "/sat/june-2026-intl/questions/math1-12.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math1-12-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math1 question 12"
-    },
     "acceptedAnswers": [
       "8"
     ]
@@ -2007,45 +1937,37 @@
     "id": "math1-13",
     "moduleId": "math1",
     "number": 13,
-    "prompt": "9\n—(4—k)=k(2—- =\n> (@ — k) = k(w — =)\nThe equation has no solution, where k is a constant. What is the value of k?",
+    "prompt": "$$\\frac{5}{9}(x-k)=k(x-\\frac{9}{5})$$\n\nThe equation has no solution, where $k$ is a constant. What is the value of $k$?",
     "kind": "multiple-choice",
     "correctAnswer": "D",
     "choices": [
       {
         "key": "A",
-        "text": "Choice A",
-        "image": "/sat/june-2026-intl/visuals/math1-13-choice-a.webp"
+        "text": "$-\\frac{5}{9}$"
       },
       {
         "key": "B",
-        "text": "[® -4                            |",
-        "image": "/sat/june-2026-intl/visuals/math1-13-choice-b.webp"
+        "text": "$-\\frac{9}{5}$"
       },
       {
         "key": "C",
-        "text": "lon",
-        "image": "/sat/june-2026-intl/visuals/math1-13-choice-c.webp"
+        "text": "$\\frac{9}{5}$"
       },
       {
         "key": "D",
-        "text": "[@ $                    |",
-        "image": "/sat/june-2026-intl/visuals/math1-13-choice-d.webp"
+        "text": "$\\frac{5}{9}$"
       }
     ],
     "rationale": "The supplied June 2026 answer key gives choice D.",
     "asset": "/sat/june-2026-intl/questions/math1-13.webp",
     "assetWidth": 1920,
-    "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math1-13-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math1 question 13"
-    }
+    "assetHeight": 1080
   },
   {
     "id": "math1-14",
     "moduleId": "math1",
     "number": 14,
-    "prompt": "ee ee\nFor the cubic function g, the equation g(x) = 2° + ax” + br + chas\nzeros at —2, —7, and 6, where a, 6, and c are integer constants. What\nis the value of a?",
+    "prompt": "For the cubic function $g$, the equation $g(x)=x^3+ax^2+bx+c$ has zeros at $-2$, $-7$, and $6$, where $a$, $b$, and $c$ are integer constants. What is the value of $a$?",
     "kind": "student-response",
     "correctAnswer": "3",
     "choices": [],
@@ -2053,10 +1975,6 @@
     "asset": "/sat/june-2026-intl/questions/math1-14.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math1-14-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math1 question 14"
-    },
     "acceptedAnswers": [
       "3"
     ]
@@ -2065,7 +1983,7 @@
     "id": "math1-15",
     "moduleId": "math1",
     "number": 15,
-    "prompt": "A right triangle ABC has AB vertical and AC horizontal so that\nZBAC = 90°. Point D lies on BC, and segment AD is drawn\nperpendicular to BC (so ZADB = ZADC = 90°). The measure of\nZABD is w’, the measure of ZC'AD is x°, and AD = 178.\n\nIf cos w°? =  _ what is the value of tan 2°?",
+    "prompt": "A right triangle $ABC$ has $AB$ vertical and $AC$ horizontal so that $\\angle BAC=90^\\circ$. Point $D$ lies on $BC$, and segment $AD$ is drawn perpendicular to $BC$ (so $\\angle ADB=\\angle ADC=90^\\circ$). The measure of $\\angle ABD$ is $w^\\circ$, the measure of $\\angle CAD$ is $x^\\circ$, and $AD=178$.\n\nIf $\\cos w^\\circ=\\frac{9}{41}$, what is the value of $\\tan x^\\circ$?",
     "kind": "student-response",
     "correctAnswer": "4.444",
     "choices": [],
@@ -2073,134 +1991,108 @@
     "asset": "/sat/june-2026-intl/questions/math1-15.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math1-15-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math1 question 15"
-    },
     "acceptedAnswers": [
-      "4.444"
+      "40/9",
+      "4.444",
+      "4.4444"
     ],
-    "tolerance": 0.0051
+    "tolerance": 0.0005
   },
   {
     "id": "math1-16",
     "moduleId": "math1",
     "number": 16,
-    "prompt": "A quadratic function f has a vertex at (1, 6) and passes through the point\n(2, 40). If g(x) = f(x + 7), what is the minimum value of g(x)?",
+    "prompt": "A quadratic function $f$ has a vertex at $(1,6)$ and passes through the point $(2,40)$. If $g(x)=f(x+7)$, what is the minimum value of $g(x)$?",
     "kind": "multiple-choice",
     "correctAnswer": "C",
     "choices": [
       {
         "key": "A",
-        "text": "@ -6                         ]",
-        "image": "/sat/june-2026-intl/visuals/math1-16-choice-a.webp"
+        "text": "$-6$"
       },
       {
         "key": "B",
-        "text": "[@ 1                          ]",
-        "image": "/sat/june-2026-intl/visuals/math1-16-choice-b.webp"
+        "text": "$1$"
       },
       {
         "key": "C",
-        "text": "[© 6                   ]",
-        "image": "/sat/june-2026-intl/visuals/math1-16-choice-c.webp"
+        "text": "$6$"
       },
       {
         "key": "D",
-        "text": "@ 40                          ]",
-        "image": "/sat/june-2026-intl/visuals/math1-16-choice-d.webp"
+        "text": "$40$"
       }
     ],
     "rationale": "The supplied June 2026 answer key gives choice C.",
     "asset": "/sat/june-2026-intl/questions/math1-16.webp",
     "assetWidth": 1920,
-    "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math1-16-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math1 question 16"
-    }
+    "assetHeight": 1080
   },
   {
     "id": "math1-17",
     "moduleId": "math1",
     "number": 17,
-    "prompt": "+ 5y = 9\n12z + 30y = 54\nFor each real number 7, which of the following points lies on the graph of each\nequation in the zy-plane for the given system?",
+    "prompt": "$$2x+5y=9$$\n\n$$12x+30y=54$$\n\nFor each real number $r$, which of the following points lies on the graph of each equation in the $xy$-plane for the given system?",
     "kind": "multiple-choice",
     "correctAnswer": "A",
     "choices": [
       {
         "key": "A",
-        "text": "[@ (r,-3r+ By",
-        "image": "/sat/june-2026-intl/visuals/math1-17-choice-a.webp"
+        "text": "$(r,-\\frac{2}{5}r+\\frac{9}{5})$"
       },
       {
         "key": "B",
-        "text": "Choice B",
-        "image": "/sat/june-2026-intl/visuals/math1-17-choice-b.webp"
+        "text": "$(-\\frac{2}{5}r+\\frac{9}{5},r)$"
       },
       {
         "key": "C",
-        "text": "[© (r, $r—$)",
-        "image": "/sat/june-2026-intl/visuals/math1-17-choice-c.webp"
+        "text": "$(r,\\frac{5}{2}r-\\frac{9}{2})$"
       },
       {
         "key": "D",
-        "text": "(D) The lines do not intersect.                                                               |",
-        "image": "/sat/june-2026-intl/visuals/math1-17-choice-d.webp"
+        "text": "The lines do not intersect."
       }
     ],
     "rationale": "The supplied June 2026 answer key gives choice A.",
     "asset": "/sat/june-2026-intl/questions/math1-17.webp",
     "assetWidth": 1920,
-    "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math1-17-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math1 question 17"
-    }
+    "assetHeight": 1080
   },
   {
     "id": "math1-18",
     "moduleId": "math1",
     "number": 18,
-    "prompt": "An exponential model V = 80(R)# gives the estimated number of visitors, V,\nat a theme park t hours after it opened. Based on the model, there were 80\nvisitors at £ = 0, and every 30 minutes the estimated number of visitors\nincreased by 50%. Which of the following equations represents this model for\nt < 3?",
+    "prompt": "An exponential model $V=80(R)^{\\frac{t}{H}}$ gives the estimated number of visitors, $V$, at a theme park $t$ hours after it opened. Based on the model, there were 80 visitors at $t=0$, and every 30 minutes the estimated number of visitors increased by 50%. Which of the following equations represents this model for $t\\leq3$?",
     "kind": "multiple-choice",
     "correctAnswer": "C",
     "choices": [
       {
         "key": "A",
-        "text": "(a) V = 80(1.50)°-",
-        "image": "/sat/june-2026-intl/visuals/math1-18-choice-a.webp"
+        "text": "$V=80(1.50)^{0.5t}$"
       },
       {
         "key": "B",
-        "text": "V = 80(0.50)                                                               |",
-        "image": "/sat/june-2026-intl/visuals/math1-18-choice-b.webp"
+        "text": "$V=80(0.50)^{2t}$"
       },
       {
         "key": "C",
-        "text": "© V = 80(1.50)                                                            |",
-        "image": "/sat/june-2026-intl/visuals/math1-18-choice-c.webp"
+        "text": "$V=80(1.50)^{2t}$"
       },
       {
         "key": "D",
-        "text": "fo V = 80(0.50)*/?                                                           |",
-        "image": "/sat/june-2026-intl/visuals/math1-18-choice-d.webp"
+        "text": "$V=80(0.50)^{\\frac{t}{2}}$"
       }
     ],
     "rationale": "The supplied June 2026 answer key gives choice C.",
     "asset": "/sat/june-2026-intl/questions/math1-18.webp",
     "assetWidth": 1920,
-    "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math1-18-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math1 question 18"
-    }
+    "assetHeight": 1080
   },
   {
     "id": "math1-19",
     "moduleId": "math1",
     "number": 19,
-    "prompt": "” Pa WidaL NH LUI NOVICV\n\nOne of the factors of 2x? + 442? + 2342 is x + b,\nwhere 6 is a positive constant. What is the smallest\npossible value of b?",
+    "prompt": "One of the factors of $2x^3+44x^2+234x$ is $x+b$, where $b$ is a positive constant. What is the smallest possible value of $b$?",
     "kind": "student-response",
     "correctAnswer": "9",
     "choices": [],
@@ -2208,10 +2100,6 @@
     "asset": "/sat/june-2026-intl/questions/math1-19.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math1-19-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math1 question 19"
-    },
     "acceptedAnswers": [
       "9"
     ]
@@ -2220,83 +2108,67 @@
     "id": "math1-20",
     "moduleId": "math1",
     "number": 20,
-    "prompt": "A right square pyramid has a total surface area of 70, 560 square inches, and\nthe combined surface area of the four triangular lateral faces is 38, 160 square\ninches. What is the height, in inches, of this pyramid?",
+    "prompt": "A right square pyramid has a total surface area of 70,560 square inches, and the combined surface area of the four triangular lateral faces is 38,160 square inches. What is the height, in inches, of this pyramid?",
     "kind": "multiple-choice",
     "correctAnswer": "D",
     "choices": [
       {
         "key": "A",
-        "text": "@) 180                         ]",
-        "image": "/sat/june-2026-intl/visuals/math1-20-choice-a.webp"
+        "text": "$180$"
       },
       {
         "key": "B",
-        "text": "@ 106                         ]",
-        "image": "/sat/june-2026-intl/visuals/math1-20-choice-b.webp"
+        "text": "$106$"
       },
       {
         "key": "C",
-        "text": "© 90                          ]",
-        "image": "/sat/june-2026-intl/visuals/math1-20-choice-c.webp"
+        "text": "$90$"
       },
       {
         "key": "D",
-        "text": "@ 56                          ]",
-        "image": "/sat/june-2026-intl/visuals/math1-20-choice-d.webp"
+        "text": "$56$"
       }
     ],
     "rationale": "The supplied June 2026 answer key gives choice D.",
     "asset": "/sat/june-2026-intl/questions/math1-20.webp",
     "assetWidth": 1920,
-    "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math1-20-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math1 question 20"
-    }
+    "assetHeight": 1080
   },
   {
     "id": "math1-21",
     "moduleId": "math1",
     "number": 21,
-    "prompt": "A square map has a side length of 45 inches, and 1 inch on the map represents\nan actual distance of 13 miles. A smaller version of the same map is printed as a\nsquare with the side length 70% shorter than the side length of the original\nmap. On the smaller map, which of the following is closest to the actual distance,\nin miles, represented by 1 inch?",
+    "prompt": "A square map has a side length of 45 inches, and 1 inch on the map represents an actual distance of 13 miles. A smaller version of the same map is printed as a square with the side length 70% shorter than the side length of the original map. On the smaller map, which of the following is closest to the actual distance, in miles, represented by 1 inch?",
     "kind": "multiple-choice",
     "correctAnswer": "D",
     "choices": [
       {
         "key": "A",
-        "text": ") 3.90                                                                               |",
-        "image": "/sat/june-2026-intl/visuals/math1-21-choice-a.webp"
+        "text": "$3.90$"
       },
       {
         "key": "B",
-        "text": "@ 9.10                                                   |",
-        "image": "/sat/june-2026-intl/visuals/math1-21-choice-b.webp"
+        "text": "$9.10$"
       },
       {
         "key": "C",
-        "text": "©  18.57",
-        "image": "/sat/june-2026-intl/visuals/math1-21-choice-c.webp"
+        "text": "$18.57$"
       },
       {
         "key": "D",
-        "text": "fo 43.33",
-        "image": "/sat/june-2026-intl/visuals/math1-21-choice-d.webp"
+        "text": "$43.33$"
       }
     ],
     "rationale": "The supplied June 2026 answer key gives choice D.",
     "asset": "/sat/june-2026-intl/questions/math1-21.webp",
     "assetWidth": 1920,
-    "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math1-21-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math1 question 21"
-    }
+    "assetHeight": 1080
   },
   {
     "id": "math1-22",
     "moduleId": "math1",
     "number": 22,
-    "prompt": "y = 2x” — 12x + 22\ny=—3\nHow many distinct real solutions does\nthe system of equations have?",
+    "prompt": "$$y=2x^2-12x+22$$\n\n$$y=-3$$\n\nHow many distinct real solutions does the system of equations have?",
     "kind": "student-response",
     "correctAnswer": "0",
     "choices": [],
@@ -2304,10 +2176,6 @@
     "asset": "/sat/june-2026-intl/questions/math1-22.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math1-22-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math1 question 22"
-    },
     "acceptedAnswers": [
       "0"
     ]
@@ -2316,83 +2184,67 @@
     "id": "math2-1",
     "moduleId": "math2",
     "number": 1,
-    "prompt": "46 46 46\n\nDp   7   q        Tr        Ss\nThe given equation relates the positive variables p, g,7r, and s. Which of the\nfollowing is equivalent to q?",
+    "prompt": "$$\\frac{46}{p}=\\frac{46}{q}-\\frac{46}{r}-\\frac{46}{s}$$\n\nThe given equation relates the positive variables $p$, $q$, $r$, and $s$. Which of the following is equivalent to $q$?",
     "kind": "multiple-choice",
     "correctAnswer": "A",
     "choices": [
       {
         "key": "A",
-        "text": "(a) g=    prs rs+ps+pr",
-        "image": "/sat/june-2026-intl/visuals/math2-01-choice-a.webp"
+        "text": "$q=\\frac{prs}{rs+ps+pr}$"
       },
       {
         "key": "B",
-        "text": "Choice B",
-        "image": "/sat/june-2026-intl/visuals/math2-01-choice-b.webp"
+        "text": "$q=\\frac{p+r+s}{prs}$"
       },
       {
         "key": "C",
-        "text": "© qgq=ptrt+s                                |",
-        "image": "/sat/june-2026-intl/visuals/math2-01-choice-c.webp"
+        "text": "$q=p+r+s$"
       },
       {
         "key": "D",
-        "text": "_     prs @ q= 46(rs+ps+pr)",
-        "image": "/sat/june-2026-intl/visuals/math2-01-choice-d.webp"
+        "text": "$q=\\frac{prs}{46(rs+ps+pr)}$"
       }
     ],
     "rationale": "The supplied June 2026 answer key gives choice A.",
     "asset": "/sat/june-2026-intl/questions/math2-01.webp",
     "assetWidth": 1920,
-    "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math2-01-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math2 question 1"
-    }
+    "assetHeight": 1080
   },
   {
     "id": "math2-2",
     "moduleId": "math2",
     "number": 2,
-    "prompt": "The equation —2? + ba — 64 = O has no real solutions, where 6 is an integer.\nWhat is the greatest possible value of b?",
+    "prompt": "The equation $-x^2+bx-64=0$ has no real solutions, where $b$ is an integer. What is the greatest possible value of $b$?",
     "kind": "multiple-choice",
     "correctAnswer": "C",
     "choices": [
       {
         "key": "A",
-        "text": "® 17                         ]",
-        "image": "/sat/june-2026-intl/visuals/math2-02-choice-a.webp"
+        "text": "$-17$"
       },
       {
         "key": "B",
-        "text": "@ —16                         ]",
-        "image": "/sat/june-2026-intl/visuals/math2-02-choice-b.webp"
+        "text": "$-16$"
       },
       {
         "key": "C",
-        "text": "[© 15                          ]",
-        "image": "/sat/june-2026-intl/visuals/math2-02-choice-c.webp"
+        "text": "$15$"
       },
       {
         "key": "D",
-        "text": "@ 16                          ]",
-        "image": "/sat/june-2026-intl/visuals/math2-02-choice-d.webp"
+        "text": "$16$"
       }
     ],
     "rationale": "The supplied June 2026 answer key gives choice C.",
     "asset": "/sat/june-2026-intl/questions/math2-02.webp",
     "assetWidth": 1920,
-    "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math2-02-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math2 question 2"
-    }
+    "assetHeight": 1080
   },
   {
     "id": "math2-3",
     "moduleId": "math2",
     "number": 3,
-    "prompt": "Me\nThe exponential function f is defined by f(x) = ab”. If\nf(5) = 7and f(8) = 189, what is the value of f(10)?",
+    "prompt": "The exponential function $f$ is defined by $f(x)=ab^x$. If $f(5)=7$ and $f(8)=189$, what is the value of $f(10)$?",
     "kind": "student-response",
     "correctAnswer": "1701",
     "choices": [],
@@ -2400,10 +2252,6 @@
     "asset": "/sat/june-2026-intl/questions/math2-03.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math2-03-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math2 question 3"
-    },
     "acceptedAnswers": [
       "1701"
     ]
@@ -2412,45 +2260,37 @@
     "id": "math2-4",
     "moduleId": "math2",
     "number": 4,
-    "prompt": "Right rectangular prism X is similar to right rectangular prism Y. The surface\narea of prism X is 59 cm? and the surface area of prism Y is 1,475 cm?. The\nvolume of prism Y is 1, 500 cm®. What is the volume of prism X, in cm*?",
+    "prompt": "Right rectangular prism $X$ is similar to right rectangular prism $Y$. The surface area of prism $X$ is 59 cm² and the surface area of prism $Y$ is 1,475 cm². The volume of prism $Y$ is 1,500 cm³. What is the volume of prism $X$, in cm³?",
     "kind": "multiple-choice",
     "correctAnswer": "A",
     "choices": [
       {
         "key": "A",
-        "text": "@ 12                          ]",
-        "image": "/sat/june-2026-intl/visuals/math2-04-choice-a.webp"
+        "text": "$12$"
       },
       {
         "key": "B",
-        "text": "@) 30                          ]",
-        "image": "/sat/june-2026-intl/visuals/math2-04-choice-b.webp"
+        "text": "$30$"
       },
       {
         "key": "C",
-        "text": "© 60                          |",
-        "image": "/sat/june-2026-intl/visuals/math2-04-choice-c.webp"
+        "text": "$60$"
       },
       {
         "key": "D",
-        "text": "@) 125                         |",
-        "image": "/sat/june-2026-intl/visuals/math2-04-choice-d.webp"
+        "text": "$125$"
       }
     ],
     "rationale": "The supplied June 2026 answer key gives choice A.",
     "asset": "/sat/june-2026-intl/questions/math2-04.webp",
     "assetWidth": 1920,
-    "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math2-04-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math2 question 4"
-    }
+    "assetHeight": 1080
   },
   {
     "id": "math2-5",
     "moduleId": "math2",
     "number": 5,
-    "prompt": "A researcher is studying two species of mites: a predator\nand its prey. At the start of an experiment, there was an\nequal number of individuals of each species. At the end of\none week, the number of prey had increased by 2, 700%\nof its initial population, and the number of predators had\nincreased by 180% of its initial population. The number\nof prey at the end of the week was p% greater than the\nnumber of predators at the end of the week. What is the\nvalue of p?",
+    "prompt": "A researcher is studying two species of mites: a predator and its prey. At the start of an experiment, there was an equal number of individuals of each species. At the end of one week, the number of prey had increased by 2,700% of its initial population, and the number of predators had increased by 180% of its initial population. The number of prey at the end of the week was $p$% greater than the number of predators at the end of the week. What is the value of $p$?",
     "kind": "student-response",
     "correctAnswer": "900",
     "choices": [],
@@ -2458,10 +2298,6 @@
     "asset": "/sat/june-2026-intl/questions/math2-05.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math2-05-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math2 question 5"
-    },
     "acceptedAnswers": [
       "900"
     ]
@@ -2470,45 +2306,37 @@
     "id": "math2-6",
     "moduleId": "math2",
     "number": 6,
-    "prompt": "In a set of four consecutive odd integers, the integers are ordered from least to\ngreatest. The product of 28 and the third odd integer in the set is at most 50 less\nthan the sum of the first and fourth odd integers. If the first integer is x7, what is\nthe greatest possible value of x?",
+    "prompt": "In a set of four consecutive odd integers, the integers are ordered from least to greatest. The product of 28 and the third odd integer in the set is at most 50 less than the sum of the first and fourth odd integers. If the first integer is $x$, what is the greatest possible value of $x$?",
     "kind": "multiple-choice",
     "correctAnswer": "B",
     "choices": [
       {
         "key": "A",
-        "text": "[@ -9                         ]",
-        "image": "/sat/june-2026-intl/visuals/math2-06-choice-a.webp"
+        "text": "$-9$"
       },
       {
         "key": "B",
-        "text": "[@ -7                         ]",
-        "image": "/sat/june-2026-intl/visuals/math2-06-choice-b.webp"
+        "text": "$-7$"
       },
       {
         "key": "C",
-        "text": "© -6                         ]",
-        "image": "/sat/june-2026-intl/visuals/math2-06-choice-c.webp"
+        "text": "$-6$"
       },
       {
         "key": "D",
-        "text": "[@ 5                         ]",
-        "image": "/sat/june-2026-intl/visuals/math2-06-choice-d.webp"
+        "text": "$-5$"
       }
     ],
     "rationale": "The supplied June 2026 answer key gives choice B.",
     "asset": "/sat/june-2026-intl/questions/math2-06.webp",
     "assetWidth": 1920,
-    "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math2-06-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math2 question 6"
-    }
+    "assetHeight": 1080
   },
   {
     "id": "math2-7",
     "moduleId": "math2",
     "number": 7,
-    "prompt": "Mme\nThe equation z(kx — 96) = —8 has two distinct real\nsolutions, where k is an integer. What is the greatest\npossible value of k?",
+    "prompt": "The equation $x(kx-96)=-8$ has two distinct real solutions, where $k$ is an integer. What is the greatest possible value of $k$?",
     "kind": "student-response",
     "correctAnswer": "287",
     "choices": [],
@@ -2516,10 +2344,6 @@
     "asset": "/sat/june-2026-intl/questions/math2-07.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math2-07-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math2 question 7"
-    },
     "acceptedAnswers": [
       "287"
     ]
@@ -2528,7 +2352,7 @@
     "id": "math2-8",
     "moduleId": "math2",
     "number": 8,
-    "prompt": "Mee Oe\nThe perimeter of an equilateral triangle is 876\ncentimeters. The three vertices of the triangle lie ona\ncircle. The radius of the circle is k/3 centimeters. What\nis the value of k?",
+    "prompt": "The perimeter of an equilateral triangle is 876 centimeters. The three vertices of the triangle lie on a circle. The radius of the circle is $k\\sqrt{3}$ centimeters. What is the value of $k$?",
     "kind": "student-response",
     "correctAnswer": "97.33",
     "choices": [],
@@ -2536,12 +2360,11 @@
     "asset": "/sat/june-2026-intl/questions/math2-08.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math2-08-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math2 question 8"
-    },
     "acceptedAnswers": [
-      "97.33"
+      "292/3",
+      "97.33",
+      "97.333",
+      "97.3333"
     ],
     "tolerance": 0.0051
   },
@@ -2549,121 +2372,97 @@
     "id": "math2-9",
     "moduleId": "math2",
     "number": 9,
-    "prompt": "A quadratic function f has a vertex at (4, —6) and passes through the point\n(3, —8). The graph of a second function is defined by g(x) = 5 — f(a). What is\nthe y-coordinate of the y-intercept of the graph of y = g(x)?",
+    "prompt": "A quadratic function $f$ has a vertex at $(4,-6)$ and passes through the point $(3,-8)$. The graph of a second function is defined by $g(x)=5-f(x)$. What is the $y$-coordinate of the $y$-intercept of the graph of $y=g(x)$?",
     "kind": "multiple-choice",
     "correctAnswer": "C",
     "choices": [
       {
         "key": "A",
-        "text": "@ —38                         ]",
-        "image": "/sat/june-2026-intl/visuals/math2-09-choice-a.webp"
+        "text": "$-38$"
       },
       {
         "key": "B",
-        "text": "for                          ]",
-        "image": "/sat/june-2026-intl/visuals/math2-09-choice-b.webp"
+        "text": "$11$"
       },
       {
         "key": "C",
-        "text": "[© 43                          ]",
-        "image": "/sat/june-2026-intl/visuals/math2-09-choice-c.webp"
+        "text": "$43$"
       },
       {
         "key": "D",
-        "text": "@ 81                          ]",
-        "image": "/sat/june-2026-intl/visuals/math2-09-choice-d.webp"
+        "text": "$81$"
       }
     ],
     "rationale": "The supplied June 2026 answer key gives choice C.",
     "asset": "/sat/june-2026-intl/questions/math2-09.webp",
     "assetWidth": 1920,
-    "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math2-09-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math2 question 9"
-    }
+    "assetHeight": 1080
   },
   {
     "id": "math2-10",
     "moduleId": "math2",
     "number": 10,
-    "prompt": "For any positive integer n, the value of an exponential function f(n) is p% less\nthan the value of f(n — 1). If the function is defined by f(x) = 53(0.15)*, what\nis the value of p?",
+    "prompt": "For any positive integer $n$, the value of an exponential function $f(n)$ is $p$% less than the value of $f(n-1)$. If the function is defined by $f(x)=53(0.15)^x$, what is the value of $p$?",
     "kind": "multiple-choice",
     "correctAnswer": "D",
     "choices": [
       {
         "key": "A",
-        "text": "fo 0.15                                                            ]",
-        "image": "/sat/june-2026-intl/visuals/math2-10-choice-a.webp"
+        "text": "$0.15$"
       },
       {
         "key": "B",
-        "text": "@ 15                          ]",
-        "image": "/sat/june-2026-intl/visuals/math2-10-choice-b.webp"
+        "text": "$15$"
       },
       {
         "key": "C",
-        "text": "© 53                          ]",
-        "image": "/sat/june-2026-intl/visuals/math2-10-choice-c.webp"
+        "text": "$53$"
       },
       {
         "key": "D",
-        "text": "@ 85                          ]",
-        "image": "/sat/june-2026-intl/visuals/math2-10-choice-d.webp"
+        "text": "$85$"
       }
     ],
     "rationale": "The supplied June 2026 answer key gives choice D.",
     "asset": "/sat/june-2026-intl/questions/math2-10.webp",
     "assetWidth": 1920,
-    "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math2-10-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math2 question 10"
-    }
+    "assetHeight": 1080
   },
   {
     "id": "math2-11",
     "moduleId": "math2",
     "number": 11,
-    "prompt": "In the zy-plane, the line y = 3x — 14 is tangent to a circle with center (h, 1).\nWhich of the following is a possible value for h if the center lies to the right of\nthe tangent line?",
+    "prompt": "In the $xy$-plane, the line $y=3x-14$ is tangent to a circle with center $(h,1)$. Which of the following is a possible value for $h$ if the center lies to the right of the tangent line?",
     "kind": "multiple-choice",
     "correctAnswer": "D",
     "choices": [
       {
         "key": "A",
-        "text": "[@ 2                   |",
-        "image": "/sat/june-2026-intl/visuals/math2-11-choice-a.webp"
+        "text": "$2$"
       },
       {
         "key": "B",
-        "text": "[@ 3                          |",
-        "image": "/sat/june-2026-intl/visuals/math2-11-choice-b.webp"
+        "text": "$3$"
       },
       {
         "key": "C",
-        "text": "[© s                   ]",
-        "image": "/sat/june-2026-intl/visuals/math2-11-choice-c.webp"
+        "text": "$5$"
       },
       {
         "key": "D",
-        "text": "[@ 7                   ]",
-        "image": "/sat/june-2026-intl/visuals/math2-11-choice-d.webp"
+        "text": "$7$"
       }
     ],
     "rationale": "The supplied June 2026 answer key gives choice D.",
     "asset": "/sat/june-2026-intl/questions/math2-11.webp",
     "assetWidth": 1920,
-    "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math2-11-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math2 question 11"
-    }
+    "assetHeight": 1080
   },
   {
     "id": "math2-12",
     "moduleId": "math2",
     "number": 12,
-    "prompt": "a\nThe function f is a quadratic function. In the xy-plane,\nthe graph of y = f(x) has a vertex at (1, 6) and passes\nthrough the points (2, 40) and (—1, 142). What is the\nvalue of f(—2) — f(0)?",
+    "prompt": "The function $f$ is a quadratic function. In the $xy$-plane, the graph of $y=f(x)$ has a vertex at $(1,6)$ and passes through the points $(2,40)$ and $(-1,142)$. What is the value of $f(-2)-f(0)$?",
     "kind": "student-response",
     "correctAnswer": "272",
     "choices": [],
@@ -2671,10 +2470,6 @@
     "asset": "/sat/june-2026-intl/questions/math2-12.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math2-12-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math2 question 12"
-    },
     "acceptedAnswers": [
       "272"
     ]
@@ -2683,83 +2478,67 @@
     "id": "math2-13",
     "moduleId": "math2",
     "number": 13,
-    "prompt": "The equation 1252? — (25a + 5b)x + ab = 0 is given, where a and bare\npositive constants. The sum of the solutions is equal to k(5a + b) for some\nconstant k. What is the value of k?",
+    "prompt": "The equation $125x^2-(25a+5b)x+ab=0$ is given, where $a$ and $b$ are positive constants. The sum of the solutions is equal to $k(5a+b)$ for some constant $k$. What is the value of $k$?",
     "kind": "multiple-choice",
     "correctAnswer": "B",
     "choices": [
       {
         "key": "A",
-        "text": "[@ os",
-        "image": "/sat/june-2026-intl/visuals/math2-13-choice-a.webp"
+        "text": "$\\frac{1}{125}$"
       },
       {
         "key": "B",
-        "text": "4                        |",
-        "image": "/sat/june-2026-intl/visuals/math2-13-choice-b.webp"
+        "text": "$\\frac{1}{25}$"
       },
       {
         "key": "C",
-        "text": "[© +                     |",
-        "image": "/sat/june-2026-intl/visuals/math2-13-choice-c.webp"
+        "text": "$\\frac{1}{5}$"
       },
       {
         "key": "D",
-        "text": "[@ 5                    ]",
-        "image": "/sat/june-2026-intl/visuals/math2-13-choice-d.webp"
+        "text": "$5$"
       }
     ],
     "rationale": "The supplied June 2026 answer key gives choice B.",
     "asset": "/sat/june-2026-intl/questions/math2-13.webp",
     "assetWidth": 1920,
-    "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math2-13-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math2 question 13"
-    }
+    "assetHeight": 1080
   },
   {
     "id": "math2-14",
     "moduleId": "math2",
     "number": 14,
-    "prompt": "One gallon of paint will cover 310 square feet of a surface. A room has a total\nwall area of w square feet. Which equation represents the total amount of paint\nP, in gallons, needed to paint the walls of the room twice?",
+    "prompt": "One gallon of paint will cover 310 square feet of a surface. A room has a total wall area of $w$ square feet. Which equation represents the total amount of paint $P$, in gallons, needed to paint the walls of the room twice?",
     "kind": "multiple-choice",
     "correctAnswer": "A",
     "choices": [
       {
         "key": "A",
-        "text": "Choice A",
-        "image": "/sat/june-2026-intl/visuals/math2-14-choice-a.webp"
+        "text": "$P=\\frac{w}{155}$"
       },
       {
         "key": "B",
-        "text": "fo P = 620w                                   ]",
-        "image": "/sat/june-2026-intl/visuals/math2-14-choice-b.webp"
+        "text": "$P=620w$"
       },
       {
         "key": "C",
-        "text": "Choice C",
-        "image": "/sat/june-2026-intl/visuals/math2-14-choice-c.webp"
+        "text": "$P=\\frac{w}{310}$"
       },
       {
         "key": "D",
-        "text": "fo P =310w                                   ]",
-        "image": "/sat/june-2026-intl/visuals/math2-14-choice-d.webp"
+        "text": "$P=310w$"
       }
     ],
     "rationale": "The supplied June 2026 answer key gives choice A.",
     "asset": "/sat/june-2026-intl/questions/math2-14.webp",
     "assetWidth": 1920,
-    "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math2-14-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math2 question 14"
-    }
+    "assetHeight": 1080
   },
   {
     "id": "math2-15",
     "moduleId": "math2",
     "number": 15,
-    "prompt": "-6 | -14—      The table shows four values of z and their corresponding\n\nvalues of y. A linear relationship between z and y is\nrepresented by the equation 2x + By = C’, where B and C\n\nare constants. What is the value of C’?\n\ncae",
+    "prompt": "The table shows four values of $x$ and their corresponding values of $y$. A linear relationship between $x$ and $y$ is represented by the equation $2x+By=C$, where $B$ and $C$ are constants. What is the value of $C$?",
     "kind": "student-response",
     "correctAnswer": "-54",
     "choices": [],
@@ -2767,57 +2546,50 @@
     "asset": "/sat/june-2026-intl/questions/math2-15.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math2-15-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math2 question 15"
-    },
     "acceptedAnswers": [
       "-54"
-    ]
+    ],
+    "sourceContent": {
+      "context": "<div class=\"sat-source-table\"><table><thead><tr><th scope=\"col\"><i>x</i></th><th scope=\"col\"><i>y</i></th></tr></thead><tbody><tr><td>-6</td><td>-14</td></tr><tr><td>-3</td><td>-16</td></tr><tr><td>3</td><td>-20</td></tr><tr><td>6</td><td>-22</td></tr></tbody></table></div>",
+      "task": "<p>The table shows four values of <i>x</i> and their corresponding values of <i>y</i>. A linear relationship between <i>x</i> and <i>y</i> is represented by the equation <math><mn>2</mn><mi>x</mi><mo>+</mo><mi>B</mi><mi>y</mi><mo>=</mo><mi>C</mi></math>, where <i>B</i> and <i>C</i> are constants. What is the value of <i>C</i>?</p>",
+      "explanation": "<p>The slope is −2/3, so B = 3. Substituting (−6, −14) into 2x + 3y = C gives C = −54.</p>"
+    }
   },
   {
     "id": "math2-16",
     "moduleId": "math2",
     "number": 16,
-    "prompt": "Mn ee\nIf x is a solution to the equation xz + 18 = x — 2, what is a possible value of\nthe expression x? — 5a — 28?",
+    "prompt": "If $x$ is a solution to the equation $\\sqrt{x+18}=x-2$, what is a possible value of the expression $x^2-5x-28$?",
     "kind": "multiple-choice",
     "correctAnswer": "A",
     "choices": [
       {
         "key": "A",
-        "text": "@ -14                         ]",
-        "image": "/sat/june-2026-intl/visuals/math2-16-choice-a.webp"
+        "text": "$-14$"
       },
       {
         "key": "B",
-        "text": "[@ 7",
-        "image": "/sat/june-2026-intl/visuals/math2-16-choice-b.webp"
+        "text": "$7$"
       },
       {
         "key": "C",
-        "text": "[© 18                          ]",
-        "image": "/sat/june-2026-intl/visuals/math2-16-choice-c.webp"
+        "text": "$18$"
       },
       {
         "key": "D",
-        "text": "@ 21                          ]",
-        "image": "/sat/june-2026-intl/visuals/math2-16-choice-d.webp"
+        "text": "$21$"
       }
     ],
     "rationale": "The supplied June 2026 answer key gives choice A.",
     "asset": "/sat/june-2026-intl/questions/math2-16.webp",
     "assetWidth": 1920,
-    "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math2-16-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math2 question 16"
-    }
+    "assetHeight": 1080
   },
   {
     "id": "math2-17",
     "moduleId": "math2",
     "number": 17,
-    "prompt": "ka” —1122 +8 =0\nIn the equation k is an integer constant. If the\nequation has two distinct real solutions, what is\nthe greatest possible value of k?",
+    "prompt": "$$kx^2-112x+8=0$$\n\nIn the equation $k$ is an integer constant. If the equation has two distinct real solutions, what is the greatest possible value of $k$?",
     "kind": "student-response",
     "correctAnswer": "391",
     "choices": [],
@@ -2825,10 +2597,6 @@
     "asset": "/sat/june-2026-intl/questions/math2-17.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math2-17-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math2 question 17"
-    },
     "acceptedAnswers": [
       "391"
     ]
@@ -2837,7 +2605,7 @@
     "id": "math2-18",
     "moduleId": "math2",
     "number": 18,
-    "prompt": "r? + qr = 8r — 97\nIn the given equation, g is an integer constant. The\ngiven equation has no real solutions. What is the\nlargest possible value of q?",
+    "prompt": "$$r^2+qr=8r-97$$\n\nIn the given equation, $q$ is an integer constant. The given equation has no real solutions. What is the largest possible value of $q$?",
     "kind": "student-response",
     "correctAnswer": "27",
     "choices": [],
@@ -2845,10 +2613,6 @@
     "asset": "/sat/june-2026-intl/questions/math2-18.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math2-18-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math2 question 18"
-    },
     "acceptedAnswers": [
       "27"
     ]
@@ -2857,45 +2621,37 @@
     "id": "math2-19",
     "moduleId": "math2",
     "number": 19,
-    "prompt": "A Dank account earns Interest at an annual rate Of o/o, compounded montnly.\nThe relationship between the initial deposit P and the balance A after t years is\ngiven by A = P(1+ +)”. A different account has an initial deposit of $1, 000\nand earns interest at an annual rate of R, compounded semi-annually. If this\naccount grows to $1, 100 in one year, which equation represents this\nrelationship?",
+    "prompt": "A bank account earns interest at an annual rate of 3%, compounded monthly. The relationship between the initial deposit $P$ and the balance $A$ after $t$ years is given by $A=P(1+\\frac{r}{n})^{nt}$. A different account has an initial deposit of $1,000 and earns interest at an annual rate of $R$, compounded semi-annually. If this account grows to $1,100 in one year, which equation represents this relationship?",
     "kind": "multiple-choice",
     "correctAnswer": "A",
     "choices": [
       {
         "key": "A",
-        "text": "1 @   , 100 = 1,000(1 + 2)?",
-        "image": "/sat/june-2026-intl/visuals/math2-19-choice-a.webp"
+        "text": "$1,100=1,000(1+\\frac{R}{2})^2$"
       },
       {
         "key": "B",
-        "text": "1,100 = 1,000(1 + 2R)”                                                   |",
-        "image": "/sat/june-2026-intl/visuals/math2-19-choice-b.webp"
+        "text": "$1,100=1,000(1+2R)^2$"
       },
       {
         "key": "C",
-        "text": "(©) 1,100 = 1,000(1 + R)?",
-        "image": "/sat/june-2026-intl/visuals/math2-19-choice-c.webp"
+        "text": "$1,100=1,000(1+R)^2$"
       },
       {
         "key": "D",
-        "text": "@ 1,100 = 1,000(1 + £)",
-        "image": "/sat/june-2026-intl/visuals/math2-19-choice-d.webp"
+        "text": "$1,100=1,000(1+\\frac{R}{2})$"
       }
     ],
     "rationale": "The supplied June 2026 answer key gives choice A.",
     "asset": "/sat/june-2026-intl/questions/math2-19.webp",
     "assetWidth": 1920,
-    "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math2-19-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math2 question 19"
-    }
+    "assetHeight": 1080
   },
   {
     "id": "math2-20",
     "moduleId": "math2",
     "number": 20,
-    "prompt": "The function h is defined by h(x) = —Va?+ ba +c,\nwhere 0 and c are constants. In the xy-plane, the graph of\ny = h(x) contains the points (2,0) and (0, — 358). If\nm is a value such that h(m) = 0, what is the greatest\npossible value of ™m?",
+    "prompt": "The function $h$ is defined by $h(x)=-\\sqrt{x^2+bx+c}$, where $b$ and $c$ are constants. In the $xy$-plane, the graph of $y=h(x)$ contains the points $(2,0)$ and $(0,-\\sqrt{358})$. If $m$ is a value such that $h(m)=0$, what is the greatest possible value of $m$?",
     "kind": "student-response",
     "correctAnswer": "179",
     "choices": [],
@@ -2903,10 +2659,6 @@
     "asset": "/sat/june-2026-intl/questions/math2-20.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math2-20-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math2 question 20"
-    },
     "acceptedAnswers": [
       "179"
     ]
@@ -2915,76 +2667,60 @@
     "id": "math2-21",
     "moduleId": "math2",
     "number": 21,
-    "prompt": "An angle with measure “a radians has a corresponding angle on a circle with\nradius 10. What is the arc length of the sector defined by this angle?",
+    "prompt": "An angle with measure $\\frac{7\\pi}{6}$ radians has a corresponding angle on a circle with radius 10. What is the arc length of the sector defined by this angle?",
     "kind": "multiple-choice",
     "correctAnswer": "B",
     "choices": [
       {
         "key": "A",
-        "text": "[®",
-        "image": "/sat/june-2026-intl/visuals/math2-21-choice-a.webp"
+        "text": "$\\frac{7\\pi}{60}$"
       },
       {
         "key": "B",
-        "text": "[@ %                        |",
-        "image": "/sat/june-2026-intl/visuals/math2-21-choice-b.webp"
+        "text": "$\\frac{35\\pi}{3}$"
       },
       {
         "key": "C",
-        "text": "Choice C",
-        "image": "/sat/june-2026-intl/visuals/math2-21-choice-c.webp"
+        "text": "$\\frac{7\\pi}{6}$"
       },
       {
         "key": "D",
-        "text": "Choice D",
-        "image": "/sat/june-2026-intl/visuals/math2-21-choice-d.webp"
+        "text": "$2100$"
       }
     ],
     "rationale": "The supplied June 2026 answer key gives choice B.",
     "asset": "/sat/june-2026-intl/questions/math2-21.webp",
     "assetWidth": 1920,
-    "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math2-21-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math2 question 21"
-    }
+    "assetHeight": 1080
   },
   {
     "id": "math2-22",
     "moduleId": "math2",
     "number": 22,
-    "prompt": "In the ry-plane, the graphs of the functions f(x) = x” — 7x + 12 and g(x) =c\nintersect at exactly one point. What is the value of c?",
+    "prompt": "In the $xy$-plane, the graphs of the functions $f(x)=x^2-7x+12$ and $g(x)=c$ intersect at exactly one point. What is the value of $c$?",
     "kind": "multiple-choice",
     "correctAnswer": "B",
     "choices": [
       {
         "key": "A",
-        "text": "@ 3.5                                           ]",
-        "image": "/sat/june-2026-intl/visuals/math2-22-choice-a.webp"
+        "text": "$3.5$"
       },
       {
         "key": "B",
-        "text": "fo  ~0.25                                                                       ]",
-        "image": "/sat/june-2026-intl/visuals/math2-22-choice-b.webp"
+        "text": "$-0.25$"
       },
       {
         "key": "C",
-        "text": "[© 4",
-        "image": "/sat/june-2026-intl/visuals/math2-22-choice-c.webp"
+        "text": "$4$"
       },
       {
         "key": "D",
-        "text": "@ 12                          |",
-        "image": "/sat/june-2026-intl/visuals/math2-22-choice-d.webp"
+        "text": "$12$"
       }
     ],
     "rationale": "The supplied June 2026 answer key gives choice B.",
     "asset": "/sat/june-2026-intl/questions/math2-22.webp",
     "assetWidth": 1920,
-    "assetHeight": 1080,
-    "visual": {
-      "asset": "/sat/june-2026-intl/visuals/math2-22-prompt.webp",
-      "alt": "Exact typeset June 2026 problem for math2 question 22"
-    }
+    "assetHeight": 1080
   }
 ]

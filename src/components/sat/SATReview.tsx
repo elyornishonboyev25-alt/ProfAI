@@ -40,6 +40,7 @@ import { splitSATPrompt } from '@/features/sat/promptLayout'
 import { satAvailabilityNote, type SATTestDefinition } from '@/features/sat/catalog'
 import SATRichText from './SATRichText'
 import SATSourceContent from './SATSourceContent'
+import SATChoiceContent from './SATChoiceContent'
 import SATVisual from './SATVisual'
 import SATTextHighlights from './SATTextHighlights'
 import { useAuthStore } from '@/store/authStore'
@@ -228,24 +229,17 @@ function ReviewQuestion({
                       >
                         {choice.key}
                       </span>
-                      <span
+                      <div
                         data-sat-highlight-block={`choice-${choice.key}`}
                         className="min-w-0 flex-1 pt-1 font-serif text-[17px] leading-8 text-slate-800"
                       >
-                        {choice.image ? (
-                          <img
-                            src={choice.image}
-                            alt={`Choice ${choice.key}`}
-                            className="mb-2 max-h-56 max-w-full rounded-lg object-contain"
-                          />
-                        ) : null}
-                        {choice.html ? <SATSourceContent html={choice.html} /> : <SATRichText text={choice.text} />}
+                        <SATChoiceContent choice={choice} />
                         {eliminatedChoices.includes(choice.key) ? (
                           <span className="mt-1 block font-sans text-xs font-semibold text-slate-500">
                             Crossed out during test
                           </span>
                         ) : null}
-                      </span>
+                      </div>
                       <span className="ml-auto max-w-[5rem] shrink-0 pt-1 text-right text-[9px] font-black uppercase tracking-[0.08em]">
                         {isCorrectChoice ? (
                           <span className="text-emerald-700">{isUserChoice ? 'Your answer · Correct' : 'Correct'}</span>

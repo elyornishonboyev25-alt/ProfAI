@@ -17,6 +17,7 @@ type JuneQuestion = {
   assetWidth: number
   assetHeight: number
   visual?: { asset: string; alt: string }
+  sourceContent?: SATQuestion['sourceContent']
 }
 
 const MODULE_META: Array<Omit<SATModule, 'questions'>> = [

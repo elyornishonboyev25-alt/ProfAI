@@ -8,7 +8,7 @@ import { SAT_TEST_CATALOG, getSATReviewTests, getSATSectionTest } from '../../sr
 import { createSATAttempt } from '../../src/features/sat/practiceTest4'
 import { saveSATAttempt, saveSATAttemptToHistory } from '../../src/features/sat/attemptStorage'
 import { useAuthStore } from '../../src/store/authStore'
-import { allQuestions } from '../../src/features/sat/bankPractice'
+import { allQuestions, loadBankSession, questionKey, saveBankSession } from '../../src/features/sat/bankPractice'
 import { bankDomain, bankSkill } from '../../src/features/sat/bankTopics'
 import { accountStorageFor } from '../../src/utils/accountStorage'
 
@@ -439,10 +439,65 @@ export async function run() {
   assert.equal(container.querySelectorAll('[data-sat-highlight-id]').length, 1, 'Highlights survive save and resume')
   await act(async () => useAuthStore.setState({ user: { id: 'isolated-bank-user' } as never }))
   assert.match(text(), /This practice set is unavailable/)
+  await act(async () => useAuthStore.setState({ user: null }))
+
+  // Answered questions stay attempted before finishing, and after replacing a set.
+  localStorage.clear()
+  await render('/sat/question-bank?section=reading-writing&count=4&status=unanswered')
+  assert.equal(matching(), total)
+  await click(button('Start 4 questions'))
+  const unfinished = loadBankSession('guest')!
+  await click(container.querySelector('[role="radio"]'))
+  await click(button('Next'))
+  await click(container.querySelector('[role="radio"]'))
+  await click(button('Next'))
+  await click(button('Mark for Review'))
+  await click(document.querySelector('[aria-label="Save and exit practice"]'))
+  await change('Section', 'reading-writing')
+  await change('Progress', 'unanswered')
+  assert.equal(matching(), total - 2, 'Saved unfinished answers must leave Not attempted; merely marked questions remain')
+  await change('Progress', 'all')
+  assert.equal(matching(), total, 'All questions keeps both answered and unanswered questions')
+  await change('Progress', 'incorrect')
+  assert.equal(matching(), 0, 'Unsubmitted answers must not change past mistakes')
+  storage.removeItem('profai:sat:question-bank:guest:attempted:v1')
+  await render('/sat/question-bank?section=reading-writing&count=4&status=unanswered')
+  assert.equal(matching(), total - 2, 'Existing unfinished sessions count before the attempted ledger is created')
+  const originalConfirm = window.confirm
+  window.confirm = () => true
+  await click(button('Start 4 questions'))
+  window.confirm = originalConfirm
+  const replacement = loadBankSession('guest')!
+  assert.ok(unfinished.keys.slice(0, 2).every(key => !replacement.keys.includes(key)), 'Not attempted must build a set without previously answered questions')
+  await click(document.querySelector('[aria-label="Save and exit practice"]'))
+  await render('/sat/question-bank?section=reading-writing&status=unanswered')
+  assert.equal(matching(), total - 2, 'Replacing an unfinished set must retain earlier attempted progress')
+  assert.equal(storage.getItem(key), null, 'Unfinished progress must not create completed sets')
+
+  // Same-tab account updates refresh counts without refocusing.
+  await act(async () => {
+    saveBankSession('guest', { ...replacement, answers: { [replacement.keys[0]]: 'A', [replacement.keys[1]]: '  ' } })
+    await new Promise(resolve => setTimeout(resolve, 100))
+  })
+  assert.equal(matching(), total - 3, 'Account data changes must refresh Not attempted immediately')
+  await act(async () => {
+    saveSATAttempt(active)
+    await new Promise(resolve => setTimeout(resolve, 100))
+  })
+  assert.equal(matching(), total - 3, 'A shared mock question must not double-count a bank attempt')
+  await act(async () => {
+    saveSATAttemptToHistory(other, 'exit')
+    await new Promise(resolve => setTimeout(resolve, 100))
+  })
+  const attempted = new Set([...unfinished.keys.slice(0, 2), replacement.keys[0], questionKey(second, secondTest.id)])
+  assert.equal(matching(), total - attempted.size, 'New mock results refresh the same Not attempted filter')
+  await act(async () => useAuthStore.setState({ user: { id: 'isolated-bank-user' } as never }))
+  assert.equal(matching(), total, 'Attempted progress must remain isolated by account')
+  assert.equal(button('Resume practice'), undefined, 'Another account cannot resume this set')
   await render('/sat/question-bank/run/missing')
   assert.match(text(), /This practice set is unavailable/)
   await act(async () => root.unmount())
   console.log(
-    'SAT question bank: saved answers, storage-quota recovery, full review, filters, refresh, browser back, legacy results, account isolation, saved marks, standalone fullscreen practice, refresh/resume, question navigation, Math Desmos and Reading highlights passed.',
+    'SAT question bank: saved answers, storage-quota recovery, full review, filters, unfinished and replaced set progress, account updates, browser back, legacy results, account isolation, saved marks, standalone fullscreen practice, refresh/resume, question navigation, Math Desmos and Reading highlights passed.',
   )
 }

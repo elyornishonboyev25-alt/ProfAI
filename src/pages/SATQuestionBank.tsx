@@ -12,8 +12,9 @@ import {
 } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import DesmosDrawer from '@/components/sat/DesmosDrawer'
+import { useAccountDataRevision } from '@/hooks/useAccountDataRevision'
 import { useFullscreen } from '@/hooks/useFullscreen'
-import { allQuestions, reviewQuestions, questionKey, readHistory, difficulty, loadBankSession, saveBankSession, type Result } from '@/features/sat/bankPractice'
+import { allQuestions, reviewQuestions, questionKey, readHistory, readAttemptedKeys, difficulty, loadBankSession, saveBankSession, type Result } from '@/features/sat/bankPractice'
 import SATQuestionCanvas from '@/components/sat/SATQuestionCanvas'
 import SATBankSelect from '@/components/sat/SATBankSelect'
 import { bankDomain, bankSkill } from '@/features/sat/bankTopics'
@@ -109,7 +110,9 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
       : 10,
   )
   const [history, setHistory] = useState(() => readHistory(userId))
-  const [activeSet] = useState(() => loadBankSession(userId))
+  const [activeSet, setActiveSet] = useState(() => loadBankSession(userId))
+  const [attemptedKeys, setAttemptedKeys] = useState(() => readAttemptedKeys(userId))
+  const accountRevision = useAccountDataRevision()
   const { enter } = useFullscreen()
   const [calculatorOpen, setCalculatorOpen] = useState(false)
   const [calculatorDocked, setCalculatorDocked] = useState(true)
@@ -123,14 +126,15 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
     const refresh = () => {
       setHistory(readHistory(userId))
       setMockHistory(mockResults())
+      setActiveSet(loadBankSession(userId))
+      setAttemptedKeys(readAttemptedKeys(userId))
     }
+    refresh()
     window.addEventListener('focus', refresh)
-    window.addEventListener('storage', refresh)
     return () => {
       window.removeEventListener('focus', refresh)
-      window.removeEventListener('storage', refresh)
     }
-  }, [userId])
+  }, [userId, accountRevision])
   const latest = useMemo(() => {
     const result = new Map<string, Result>()
     for (const row of [...mockHistory, ...history].sort((a, b) =>
@@ -234,12 +238,12 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
           (skill === 'all' || bankSkill(question) === skill) &&
           (level === 'all' || difficulty(question.difficulty) === level) &&
           (status === 'all' ||
-            (status === 'unanswered' && !prior) ||
+            (status === 'unanswered' && !prior && !attemptedKeys.has(row.key)) ||
             (status === 'incorrect' && prior?.correct === false && prior.answer !== '') ||
             (status === 'marked' && markedKeys.has(row.key)))
         )
       }),
-    [section, domain, skill, level, status, latest, markedKeys],
+    [section, domain, skill, level, status, latest, markedKeys, attemptedKeys],
   )
   const skillStats = useMemo(() => {
     const stats = new Map<string, { correct: number; total: number }>()

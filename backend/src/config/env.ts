@@ -71,6 +71,8 @@ const envSchema = z.object({
   TELEGRAM_CHANNEL: z.string().default('@IvyGoo'),
   TELEGRAM_CHANNEL_URL: z.string().default('https://t.me/IvyGoo'),
   TELEGRAM_PROMO_DAYS: z.coerce.number().int().min(1).max(365).default(7),
+  // Telegram usernames or numeric ids that may spin the wheel endlessly in a no-save design test mode.
+  WHEEL_TESTERS: z.string().default('nishonboyv7'),
 })
 
 export const env = envSchema.parse(process.env)

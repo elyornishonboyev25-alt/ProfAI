@@ -9,7 +9,8 @@ import { asyncHandler } from '../utils/asyncHandler.js'
 import { announcePayouts, announceSpin, botInviteLink, createLinkCode, handleUpdate, inviteLink, knownChatLang, telegramEnabled, type TgUpdate } from '../services/telegram.service.js'
 import { detectLang } from '../services/telegramI18n.js'
 import { isChannelMember } from '../services/telegramApi.js'
-import { drawSpin, isSpinUsable, spinFor, verifyInitData, WHEEL_SEGMENTS } from '../services/wheel.service.js'
+import { drawSpin, isSpinUsable, isWheelTester, spinFor, testSpin, verifyInitData, WHEEL_SEGMENTS } from '../services/wheel.service.js'
+import type { RequestHandler } from 'express'
 import { BillingError } from '../services/billing.service.js'
 import { claimReferral, INVITEE_BONUS_DAYS, referralSummary, settleReferrals } from '../services/referral.service.js'
 import { redeemCode } from '../services/promo.service.js'
@@ -113,9 +114,19 @@ const spinView = (spin: { percent: number; expiresAt: Date; usedAt: Date | null 
   percent: spin.percent, expiresAt: spin.expiresAt.toISOString(), used: Boolean(spin.usedAt), active: isSpinUsable(spin),
 })
 
+// Testers are exempt from the spin rate limit; everyone else keeps it.
+const wheelSpinLimit: RequestHandler = (req, res, next) => {
+  try { if (isWheelTester(verifyInitData(req.body.initData))) return next() } catch { /* Invalid sessions are rejected by the route. */ }
+  return authRateLimit(req, res, next)
+}
+
 wheelRoutes.post('/state', validateBody(initDataSchema), asyncHandler(async (req, res) => {
   const user = verifyInitData(req.body.initData)
   const telegramId = String(user.id)
+  if (isWheelTester(user)) {
+    return res.json({ subscribed: true, linked: false, channelUrl: env.TELEGRAM_CHANNEL_URL, segments: WHEEL_SEGMENTS, spin: null, test: true,
+      language: (await knownChatLang(telegramId)) ?? detectLang(user.language_code) })
+  }
   const [subscribed, spin, link, language] = await Promise.all([
     isChannelMember(user.id),
     spinFor(telegramId),
@@ -126,8 +137,10 @@ wheelRoutes.post('/state', validateBody(initDataSchema), asyncHandler(async (req
     language: language ?? detectLang(user.language_code) })
 }))
 
-wheelRoutes.post('/spin', authRateLimit, validateBody(initDataSchema), asyncHandler(async (req, res) => {
+wheelRoutes.post('/spin', validateBody(initDataSchema), wheelSpinLimit, asyncHandler(async (req, res) => {
   const user = verifyInitData(req.body.initData)
+  // Design test mode: nothing is saved, announced or applied as a discount.
+  if (isWheelTester(user)) return res.json({ fresh: true, test: true, spin: testSpin() })
   const subscribed = await isChannelMember(user.id)
   if (subscribed === null) throw new BillingError('SUBSCRIPTION_CHECK_FAILED', 'We could not check your subscription. Try again in a moment.', 503)
   if (!subscribed) throw new BillingError('NOT_SUBSCRIBED', 'Subscribe to the channel to spin the wheel.', 403)

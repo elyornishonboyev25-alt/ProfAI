@@ -82,3 +82,15 @@ export async function activeDiscount(userId: string, now = new Date()) {
   return { spun: true as const, discount: isSpinUsable(spin, now) ? { id: spin.id, percent: spin.percent, expiresAt: spin.expiresAt.toISOString() } : null,
     lastPercent: spin.percent, expired: !spin.usedAt && spin.expiresAt <= now, used: Boolean(spin.usedAt) }
 }
+
+/** Design testers spin as often as they like; their spins are never stored or applied anywhere. */
+export function isWheelTester(user: TelegramWebAppUser) {
+  const testers = env.WHEEL_TESTERS.split(',').map(value => value.trim().replace(/^@/, '').toLowerCase()).filter(Boolean)
+  return testers.includes(String(user.id)) || Boolean(user.username && testers.includes(user.username.toLowerCase()))
+}
+
+/** A prize drawn with the real odds, without touching the shared blocks or the database. */
+export function testSpin(now = new Date()) {
+  const percent = WHEEL_BLOCK[crypto.randomInt(WHEEL_BLOCK.length)]
+  return { percent, expiresAt: new Date(now.getTime() + spinWindowMs(percent)).toISOString(), used: false, active: true }
+}

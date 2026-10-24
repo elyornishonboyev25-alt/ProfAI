@@ -10,7 +10,7 @@ const { prisma } = await import('../dist/lib/prisma.js')
 const { env } = await import('../dist/config/env.js')
 const { accountOverview, unlockResource, accessStatus, withStudyAccess, fulfillPayment, requireTeacherPlan, requireClassPlan } = await import('../dist/services/billing.service.js')
 const { describeAccess, resolveAccountAccess } = await import('../dist/utils/accessEntitlement.js')
-const { verifyInitData, WHEEL_BLOCK, spinWindowMs } = await import('../dist/services/wheel.service.js')
+const { verifyInitData, WHEEL_BLOCK, spinWindowMs, isWheelTester, testSpin } = await import('../dist/services/wheel.service.js')
 const { clickSignature, verifyStripeSignature } = await import('../dist/services/paymentProviders.service.js')
 const { paymentCallbacks, stripeCallback } = await import('../dist/routes/paymentCallbacks.routes.js')
 const { default: express } = await import('express')
@@ -146,6 +146,12 @@ test('wheel blocks hold exactly one 50% prize per ten spins and the jackpot last
   const counts = WHEEL_BLOCK.reduce((all, percent) => ({ ...all, [percent]: (all[percent] ?? 0) + 1 }), {})
   assert.deepEqual(counts, { 50: 1, 25: 1, 20: 1, 15: 4, 10: 2, 5: 1 })
   assert.equal(spinWindowMs(50), 10 * 60_000)
+})
+test('only listed testers get the no-save wheel test mode', () => {
+  assert.equal(isWheelTester({ id: 1, username: 'NishonboyV7' }), true)
+  assert.equal(isWheelTester({ id: 2, username: 'someone_else' }), false)
+  assert.equal(isWheelTester({ id: 3 }), false)
+  for (let i = 0; i < 50; i++) assert.ok(WHEEL_BLOCK.includes(testSpin().percent))
 })
 test('Mini App launch data must carry a valid Telegram signature', () => {
   const token = process.env.TELEGRAM_BOT_TOKEN

@@ -23,7 +23,7 @@ declare global { interface Window { Telegram?: { WebApp?: TelegramWebApp } } }
 
 type Lang = 'uz' | 'ru' | 'en'
 type Spin = { percent: number; expiresAt: string; used: boolean; active: boolean }
-type WheelState = { subscribed: boolean | null; linked: boolean; channelUrl: string; segments: number[]; spin: Spin | null; language?: Lang }
+type WheelState = { subscribed: boolean | null; linked: boolean; channelUrl: string; segments: number[]; spin: Spin | null; language?: Lang; test?: boolean }
 type Phase = 'idle' | 'windup' | 'spinning' | 'settled'
 
 const SDK_URL = 'https://telegram.org/js/telegram-web-app.js'
@@ -150,6 +150,13 @@ export default function SpinWheel() {
       void load(webApp)
     })
   }, [load])
+
+  /** Design test mode only: clears the result so the wheel can be spun again. */
+  function resetTest() {
+    setRevealed(null)
+    setPhase('idle')
+    setState(current => current ? { ...current, spin: null } : current)
+  }
 
   function toggleMute() {
     const next = !muted
@@ -301,7 +308,7 @@ export default function SpinWheel() {
   return <main className={`spin-page is-${phase} ${jackpotRevealed ? 'is-jackpot' : ''}`}>
     <div className="spin-aura" aria-hidden="true" />
     <header className="spin-top">
-      <span className="spin-logo"><img src="/ivygoo-icon-192.png" alt="" />Ivy<b>goo</b></span>
+      <span className="spin-logo"><img src="/ivygoo-icon-192.png" alt="" />Ivy<b>goo</b>{state?.test && <em className="spin-test-badge">TEST</em>}</span>
       <button type="button" className="spin-mute" onClick={toggleMute} aria-pressed={muted}
         aria-label={muted ? t('Ovozni yoqish', 'Включить звук', 'Turn sound on') : t('Ovozni o‘chirish', 'Выключить звук', 'Turn sound off')}>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" />{muted ? <path d="M16 9l5 6M21 9l-5 6" className="spin-mute-x" /> : <path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" className="spin-mute-wave" />}</svg>
@@ -353,7 +360,10 @@ export default function SpinWheel() {
       <span className="spin-result-eyebrow">{result.active ? (result.percent === 50 ? t('JACKPOT', 'ДЖЕКПОТ', 'JACKPOT') : t('SIZ YUTDINGIZ', 'ВЫ ВЫИГРАЛИ', 'YOU WON')) : t('SIZNING NATIJANGIZ', 'ВАШ РЕЗУЛЬТАТ', 'YOUR RESULT')}</span>
       <span className="spin-result-value">−{shown}<small>%</small></span>
       <span className="spin-result-label">{t('Premium tarifiga chegirma', 'скидка на тариф Premium', 'off any Premium plan')}</span>
-      {result.active ? <>
+      {state?.test ? <>
+        <button type="button" className="spin-primary" onClick={resetTest}>🔄 {t('Qayta aylantirish', 'Крутить снова', 'Spin again')}</button>
+        <p className="spin-result-note">{t('Test rejimi: natija saqlanmaydi, chegirma berilmaydi.', 'Тестовый режим: результат не сохраняется, скидка не выдаётся.', 'Test mode: nothing is saved and no discount is given.')}</p>
+      </> : result.active ? <>
         {countdown && <span className="spin-timer"><i />{t('Amal qiladi', 'Действует', 'Valid for')} <b>{countdown.label}</b></span>}
         <button type="button" className="spin-primary" onClick={() => app.openLink(`${SITE}/premium`)}>{t('Chegirma bilan olish', 'Купить со скидкой', 'Buy with discount')}</button>
         <p className="spin-result-note">{state?.linked

@@ -128,3 +128,4 @@
 @keyframes spin-live{0%{box-shadow:0 0 0 0 #d61c3366}100%{box-shadow:0 0 0 9px #d61c3300}}
 @keyframes spin-confetti{0%{opacity:1;transform:translateY(0) rotate(0)}100%{opacity:0;transform:translateY(300px) rotate(calc(var(--i) * 53deg))}}
 @media(prefers-reduced-motion:reduce){.spin-bulb,.spin-hub,.spin-aura,.spin-result,.spin-confetti i,.spin-pointer.is-tick,.spin-result-value{animation:none!important}}
+.spin-test-badge{margin-left:6px;padding:3px 7px;border-radius:7px;font-size:9.5px;font-style:normal;font-weight:900;letter-spacing:.12em;color:#fff;background:#2a303b}

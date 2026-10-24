@@ -1,32 +1,50 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createHash, createHmac } from 'node:crypto'
-import { BILLING_PRODUCTS, billingProduct, extendBillingExpiry } from '../dist/utils/billingCatalog.js'
+import { BILLING_PRODUCTS, PLAN_QUOTAS, billingProduct, extendBillingExpiry } from '../dist/utils/billingCatalog.js'
 process.env.DATABASE_URL ||= 'postgresql://test:test@localhost:5432/test'
 process.env.ACCESS_TOKEN_SECRET ||= 'billing-test-access-secret-only'
 process.env.REFRESH_TOKEN_SECRET ||= 'billing-test-refresh-secret-only'
+process.env.TELEGRAM_BOT_TOKEN ||= '123456:billing-test-token'
 const { prisma } = await import('../dist/lib/prisma.js')
 const { env } = await import('../dist/config/env.js')
 const { accountOverview, unlockResource, accessStatus, withStudyAccess, fulfillPayment, requireTeacherPlan, requireClassPlan } = await import('../dist/services/billing.service.js')
-const { describeAccess, resolveAccountAccess, FREE_TRIAL_DAYS } = await import('../dist/utils/accessEntitlement.js')
+const { describeAccess, resolveAccountAccess } = await import('../dist/utils/accessEntitlement.js')
+const { verifyInitData, WHEEL_BLOCK, spinWindowMs } = await import('../dist/services/wheel.service.js')
 const { clickSignature, verifyStripeSignature } = await import('../dist/services/paymentProviders.service.js')
 const { paymentCallbacks, stripeCallback } = await import('../dist/routes/paymentCallbacks.routes.js')
 const { default: express } = await import('express')
 const { parseDollarRate, createPaymentQuote, verifyPaymentQuote, dollarRate } = await import('../dist/services/billingQuote.service.js')
 let state
-function reset() { state = { subscription: null, order: null, role: 'USER', email: 'ordinary@example.com', nickname: null, grant: null,
-  trial: { startsAt: new Date(Date.now() - 1000), expiresAt: new Date(Date.now() + FREE_TRIAL_DAYS * 86400000 - 1000) } } }
+function reset() { state = { subscriptions: [], order: null, role: 'USER', email: 'ordinary@example.com', nickname: null, grant: null, usage: {}, unlocks: [] } }
 reset()
+const usageKey = where => `${where.userId_feature_period.feature}:${where.userId_feature_period.period}`
 const tx = {
   $queryRaw: async () => [],
-  user: { findUniqueOrThrow: async () => ({ role: state.role, email: state.email, nickname: state.nickname }) },
+  user: { findUniqueOrThrow: async () => ({ id: 'u', role: state.role, email: state.email, nickname: state.nickname }) },
   premiumGrant: { findUnique: async () => state.grant },
-  freeTrial: { findUnique: async ({ where }) => { assert.equal(where.email, state.email.trim().toLowerCase()); return state.trial } },
   billingSubscription: {
-    findMany: async ({ where }) => state.subscription && state.subscription.startsAt <= where.startsAt.lte && state.subscription.expiresAt > where.expiresAt.gt ? [state.subscription] : [],
-    findUnique: async ({ where }) => state.subscription?.audience === where.userId_audience.audience ? state.subscription : null,
-    upsert: async ({ create, update }) => state.subscription = state.subscription ? { ...state.subscription, ...update } : create,
+    findMany: async ({ where }) => state.subscriptions.filter(sub => sub.startsAt <= where.startsAt.lte && sub.expiresAt > where.expiresAt.gt),
+    findUnique: async ({ where }) => state.subscriptions.find(sub => sub.audience === where.userId_audience.audience) ?? null,
+    upsert: async ({ where, create, update }) => {
+      const existing = state.subscriptions.find(sub => sub.audience === where.userId_audience.audience)
+      if (existing) return Object.assign(existing, update)
+      const created = { startsAt: new Date(0), ...create }
+      state.subscriptions.push(created)
+      return created
+    },
   },
+  featureUsage: {
+    findMany: async ({ where }) => Object.entries(state.usage).filter(([key]) => key.endsWith(`:${where.period}`)).map(([key, count]) => ({ feature: key.split(':')[0], count })),
+    findUnique: async ({ where }) => state.usage[usageKey(where)] === undefined ? null : { count: state.usage[usageKey(where)] },
+    upsert: async ({ where }) => { const key = usageKey(where); state.usage[key] = (state.usage[key] ?? 0) + 1; return { count: state.usage[key] } },
+    updateMany: async ({ where }) => { const key = `${where.feature}:${where.period}`; if (!state.usage[key]) return { count: 0 }; state.usage[key]--; return { count: 1 } },
+  },
+  resourceUnlock: {
+    findUnique: async ({ where }) => state.unlocks.includes(where.userId_resource_period.resource) ? { resource: where.userId_resource_period.resource } : null,
+    upsert: async ({ where }) => { if (!state.unlocks.includes(where.userId_resource_period.resource)) state.unlocks.push(where.userId_resource_period.resource); return {} },
+  },
+  wheelSpin: { updateMany: async () => ({ count: 1 }) },
   paymentRequest: {
     findUnique: async ({ where }) => state.order && (where.id === state.order.id || where.providerId === state.order.providerId) ? { ...state.order } : null,
     findUniqueOrThrow: async args => { const order = await tx.paymentRequest.findUnique(args); assert.ok(order); return order },
@@ -39,95 +57,105 @@ prisma.$transaction = work => {
   const result = queue.then(async () => { const before = structuredClone(state); try { return await work(tx) } catch (error) { state = before; throw error } })
   queue = result.catch(() => {}); return result
 }
-for (const model of ['user', 'premiumGrant', 'freeTrial', 'billingSubscription']) Object.assign(prisma[model], tx[model])
+for (const model of ['user', 'premiumGrant', 'billingSubscription', 'featureUsage', 'resourceUnlock']) Object.assign(prisma[model], tx[model])
+const active = audience => ({ audience, startsAt: new Date(Date.now() - 60000), expiresAt: new Date(Date.now() + 60000) })
 
-test('one student price and teacher price, with no individual or coin products', () => {
-  assert.equal(billingProduct('STUDENT_1').amountUsd, 300)
-  assert.equal(billingProduct('TEACHER_1').amountUsd, 500)
-  assert.equal(billingProduct('STUDENT_3').amountUsd, 810)
-  assert.equal(billingProduct('TEACHER_3').amountUsd, 1350)
-  assert.equal(billingProduct('STUDENT_12').amountUsd, 2880)
-  assert.equal(billingProduct('TEACHER_12').amountUsd, 4800)
-  for (const retired of ['LEARNER_1', 'CENTER_STUDENT_1', 'COINS_150']) assert.equal(billingProduct(retired), undefined)
+test('Pro is $6 and Max is $12 a month, with 3- and 12-month savings and no legacy products for sale', () => {
+  assert.equal(billingProduct('PRO_1').amountUsd, 600)
+  assert.equal(billingProduct('MAX_1').amountUsd, 1200)
+  assert.equal(billingProduct('PRO_3').amountUsd, 1620)
+  assert.equal(billingProduct('MAX_3').amountUsd, 3240)
+  assert.equal(billingProduct('PRO_12').amountUsd, 5760)
+  assert.equal(billingProduct('MAX_12').amountUsd, 11520)
+  for (const retired of ['STUDENT_1', 'TEACHER_1', 'LEARNER_1', 'COINS_150']) assert.equal(billingProduct(retired), undefined)
   assert.equal(BILLING_PRODUCTS.length, 6)
   assert.equal(extendBillingExpiry(1, null, new Date('2027-01-31T12:00:00Z')).toISOString(), '2027-02-28T12:00:00.000Z')
 })
-test('trial expires exactly after seven days and remains expired on repeated logins', async () => {
+test('every account starts on the permanent Free plan; retired trials no longer grant access', async () => {
   reset()
-  const startsAt = new Date('2026-10-08T09:00:00Z'), expiresAt = new Date('2026-10-15T09:00:00Z')
-  state.trial = { startsAt, expiresAt }
-  const grant = { ...state.trial, plan: 'TRIAL_7', source: 'WELCOME' }
-  assert.equal(describeAccess(grant, false, startsAt).daysRemaining, 7)
-  assert.equal(describeAccess(grant, false, new Date(expiresAt.getTime() - 1)).active, true)
-  assert.equal(describeAccess(grant, false, expiresAt).active, false)
-  for (let i = 0; i < 4; i++) {
-    const overview = await accountOverview('u', tx, expiresAt)
-    assert.equal(overview.access.active, false)
-    assert.equal(overview.access.expiresAt, expiresAt.toISOString())
-  }
-  assert.equal(state.trial.startsAt, startsAt)
-  assert.equal(state.trial.expiresAt, expiresAt)
+  const overview = await accountOverview('u')
+  assert.equal(overview.access.tier, 'FREE')
+  assert.equal(overview.access.active, false)
+  assert.equal((await accessStatus('u', 'test', 'test:reading:first')).limit, PLAN_QUOTAS.FREE.test)
+  const trial = { plan: 'TRIAL_7', source: 'WELCOME', startsAt: new Date(Date.now() - 1000), expiresAt: new Date(Date.now() + 86400000) }
+  assert.equal(describeAccess(trial).tier, 'FREE')
+  assert.equal(describeAccess(trial).active, false)
 })
-test('active trial includes tests, mocks and AI but cannot join or create classes', async () => {
+test('Free plan meters tests per month; reopening the same test is free', async () => {
   reset()
-  for (const [feature, resource] of [['test', 'test:listening:sample'], ['test', 'test:reading:sample'], ['mock', 'mock:sat:1']]) {
-    assert.equal((await accessStatus('u', feature, resource)).unlocked, true)
-    await unlockResource('u', feature, resource)
+  for (let i = 0; i < PLAN_QUOTAS.FREE.test; i++) {
+    assert.equal((await accessStatus('u', 'test', `test:reading:t${i}`)).unlocked, false)
+    await unlockResource('u', 'test', `test:reading:t${i}`)
+    assert.equal((await accessStatus('u', 'test', `test:reading:t${i}`)).unlocked, true)
   }
-  for (const feature of ['writing', 'speaking', 'voice', 'ai']) assert.equal(await withStudyAccess('u', feature, async () => 'included'), 'included')
+  await unlockResource('u', 'test', 'test:reading:t0')
+  await assert.rejects(unlockResource('u', 'test', 'test:listening:next'), e => e.code === 'PREMIUM_REQUIRED')
+  assert.equal((await accessStatus('u', 'test', 'test:listening:next')).remaining, 0)
+  await unlockResource('u', 'mock', 'mock:ielts:1')
+  await assert.rejects(unlockResource('u', 'mock', 'mock:ielts:2'), e => e.code === 'PREMIUM_REQUIRED')
+})
+test('Free AI allowances run out without calling the provider, and failed calls are refunded', async () => {
+  reset()
+  let called = false
+  await assert.rejects(withStudyAccess('u', 'voice', async () => { called = true }), e => e.code === 'PREMIUM_REQUIRED')
+  assert.equal(called, false)
+  await assert.rejects(withStudyAccess('u', 'writing', async () => { throw new Error('provider down') }), /provider down/)
+  for (let i = 0; i < PLAN_QUOTAS.FREE.writing; i++) assert.equal(await withStudyAccess('u', 'writing', async () => 'ok'), 'ok')
+  await assert.rejects(withStudyAccess('u', 'writing', async () => { called = true }), e => e.code === 'PREMIUM_REQUIRED')
+  assert.equal(called, false)
   await assert.rejects(requireClassPlan('u'), e => e.code === 'CLASS_PLAN_REQUIRED')
   await assert.rejects(requireTeacherPlan('u'), e => e.code === 'TEACHER_PLAN_REQUIRED')
 })
-test('expired trial blocks every AI provider and tests without invoking providers', async () => {
-  reset(); state.trial.expiresAt = new Date(Date.now() - 1)
-  assert.equal((await accessStatus('u', 'mock', 'mock:ielts:1')).unlocked, false)
-  await assert.rejects(unlockResource('u', 'test', 'test:listening:sample'), e => e.code === 'PREMIUM_REQUIRED')
-  for (const feature of ['writing', 'speaking', 'voice', 'ai']) {
-    let called = false
-    await assert.rejects(withStudyAccess('u', feature, async () => { called = true }), e => e.code === 'PREMIUM_REQUIRED')
-    assert.equal(called, false)
-  }
-})
-test('paid student access survives trial expiry, joins classes and cannot create them', async () => {
-  reset(); state.trial.expiresAt = new Date(Date.now() - 1)
-  state.subscription = { audience: 'STUDENT', startsAt: new Date(Date.now() - 60000), expiresAt: new Date(Date.now() + 60000) }
-  assert.equal((await accountOverview('u')).access.kind, 'PREMIUM')
+test('Pro opens unlimited tests and classes; Max also creates classes; the best active plan wins', async () => {
+  reset(); state.subscriptions = [active('PRO')]
+  assert.equal((await accountOverview('u')).access.tier, 'PRO')
   assert.equal((await accessStatus('u', 'test', 'test:sat:1')).unlocked, true)
+  for (let i = 0; i < PLAN_QUOTAS.PRO.mock; i++) await unlockResource('u', 'mock', `mock:sat:${i}`)
+  await assert.rejects(unlockResource('u', 'mock', 'mock:sat:extra'), e => e.code === 'PREMIUM_REQUIRED')
   await requireClassPlan('u')
   await assert.rejects(requireTeacherPlan('u'), e => e.code === 'TEACHER_PLAN_REQUIRED')
-  state.subscription.audience = 'TEACHER'; await requireTeacherPlan('u')
-  state.subscription.expiresAt = new Date(Date.now() - 1)
-  await assert.rejects(requireClassPlan('u'), e => e.code === 'CLASS_PLAN_REQUIRED')
-  assert.equal((await accountOverview('u')).access.active, false)
+  state.subscriptions.push(active('MAX'))
+  assert.equal((await accountOverview('u')).access.tier, 'MAX')
+  await requireTeacherPlan('u')
+  await unlockResource('u', 'mock', 'mock:sat:unlimited')
+  state.subscriptions = [{ ...active('MAX'), expiresAt: new Date(Date.now() - 1) }]
+  assert.equal((await accountOverview('u')).access.tier, 'FREE')
 })
-test('existing premium and legacy subscriptions retain full access', async () => {
-  reset(); state.trial = null
+test('earlier Student and Teacher subscriptions and unlimited grants keep their access', async () => {
+  reset(); state.subscriptions = [active('STUDENT')]
+  assert.equal((await accountOverview('u')).access.tier, 'PRO')
+  state.subscriptions = [active('TEACHER')]
+  assert.equal((await accountOverview('u')).access.tier, 'MAX')
+  state.subscriptions = []
   state.grant = { plan: 'UNLIMITED', source: 'SELECTED_ACCESS', startsAt: new Date(Date.now() - 1000), expiresAt: null }
   assert.equal((await accountOverview('u')).access.kind, 'UNLIMITED')
   await requireTeacherPlan('u'); await requireClassPlan('u')
-  for (const audience of ['LEARNER', 'CENTER_STUDENT', 'TEACHER']) {
-    state.grant = null
-    state.subscription = { audience, startsAt: new Date(Date.now() - 1000), expiresAt: new Date(Date.now() + 60000) }
-    assert.equal((await accountOverview('u')).access.active, true)
-    await requireClassPlan('u')
-  }
-})
-test('paid subscription takes priority over a trial without changing trial dates', () => {
-  const now = new Date('2026-10-08T09:00:00Z'), expiresAt = new Date('2026-10-15T09:00:00Z')
-  const trial = { startsAt: now, expiresAt }
-  const paid = { startsAt: now, expiresAt: new Date('2026-11-08T09:00:00Z') }
-  assert.equal(resolveAccountAccess(null, false, [paid], trial, now).kind, 'PREMIUM')
-  assert.equal(resolveAccountAccess(null, false, [], trial, expiresAt).active, false)
-  assert.equal(trial.expiresAt, expiresAt)
+  assert.equal(resolveAccountAccess(null, true, [], new Date()).tier, 'MAX')
 })
 test('replayed payment fulfillment extends a subscription exactly once', async () => {
   reset()
-  const product = billingProduct('TEACHER_1')
-  state.order = { id: 'order-1', userId: 'u', ...product, plan: product.code, status: 'PENDING' }
+  const product = billingProduct('MAX_1')
+  state.order = { id: 'order-1', userId: 'u', ...product, plan: product.code, status: 'PENDING', wheelSpinId: null }
   const stale = { ...state.order }
   const results = await Promise.all(Array.from({ length: 4 }, () => prisma.$transaction(tx => fulfillPayment(tx, stale, 'TEST'))))
   assert.equal(results.filter(Boolean).length, 1)
-  assert.equal(state.subscription.audience, 'TEACHER')
+  assert.equal(state.subscriptions.length, 1)
+  assert.equal(state.subscriptions[0].audience, 'MAX')
+})
+test('wheel blocks hold exactly one 50% prize per ten spins and the jackpot lasts ten minutes', () => {
+  const counts = WHEEL_BLOCK.reduce((all, percent) => ({ ...all, [percent]: (all[percent] ?? 0) + 1 }), {})
+  assert.deepEqual(counts, { 50: 1, 25: 1, 20: 1, 15: 4, 10: 2, 5: 1 })
+  assert.equal(spinWindowMs(50), 10 * 60_000)
+})
+test('Mini App launch data must carry a valid Telegram signature', () => {
+  const token = process.env.TELEGRAM_BOT_TOKEN
+  const params = new URLSearchParams({ auth_date: String(Math.floor(Date.now() / 1000)), query_id: 'q', user: JSON.stringify({ id: 42 }) })
+  const check = [...params.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${k}=${v}`).join('\n')
+  const secret = createHmac('sha256', 'WebAppData').update(token).digest()
+  params.set('hash', createHmac('sha256', secret).update(check).digest('hex'))
+  assert.equal(verifyInitData(params.toString()).id, 42)
+  params.set('user', JSON.stringify({ id: 43 }))
+  assert.throws(() => verifyInitData(params.toString()), e => e.code === 'INVALID_TELEGRAM_SESSION')
 })
 test('UZS checkout converts the complete USD invoice and binds the displayed amount for 15 minutes', () => {
   const now = Date.parse('2026-10-06T09:00:00Z')
@@ -140,13 +168,13 @@ test('UZS checkout converts the complete USD invoice and binds the displayed amo
     assert.throws(() => verifyPaymentQuote(quote.token, { ...product, amountUsd: product.amountUsd + 1 }, now), error => error.code === 'QUOTE_EXPIRED')
     assert.throws(() => verifyPaymentQuote(quote.token + 'x', product, now), error => error.code === 'QUOTE_EXPIRED')
   }
-  const teacher = billingProduct('TEACHER_1')
-  const quote = createPaymentQuote(teacher, rate, now)
-  assert.equal(quote.amountUzs, 65500)
-  assert.throws(() => verifyPaymentQuote(quote.token, billingProduct('STUDENT_1'), now), error => error.code === 'QUOTE_EXPIRED')
+  const max = billingProduct('MAX_1')
+  const quote = createPaymentQuote(max, rate, now)
+  assert.equal(quote.amountUzs, 157200)
+  assert.throws(() => verifyPaymentQuote(quote.token, billingProduct('PRO_1'), now), error => error.code === 'QUOTE_EXPIRED')
   const [payload, signature] = quote.token.split('.')
   const forged = JSON.parse(Buffer.from(payload, 'base64url').toString()); forged.amountUzs = 1
-  assert.throws(() => verifyPaymentQuote(Buffer.from(JSON.stringify(forged)).toString('base64url') + '.' + signature, teacher, now), error => error.code === 'QUOTE_EXPIRED')
+  assert.throws(() => verifyPaymentQuote(Buffer.from(JSON.stringify(forged)).toString('base64url') + '.' + signature, max, now), error => error.code === 'QUOTE_EXPIRED')
   for (const change of [{ Rate: 'NaN' }, { Nominal: '0' }, { Date: '01.09.2026' }, { Date: '07.10.2026' }, { Date: '31.02.2026' }]) {
     assert.throws(() => parseDollarRate([{ Ccy: 'USD', Nominal: '1', Rate: '13100', Date: '06.10.2026', ...change }], now))
   }
@@ -190,9 +218,9 @@ test('signatures bind amount, action and prepare ID; Stripe rejects tampering an
 test('Payme callback validates amount, processes once and handles duplicate perform', async () => {
   reset()
   env.AUTOMATED_BILLING_ENABLED = true; env.PAYME_MERCHANT_ID = 'test'; env.PAYME_SECRET_KEY = 'test-key'
-  const product = billingProduct('STUDENT_1')
+  const product = billingProduct('PRO_1')
   state.order = { id: 'order-1', userId: 'u', ...product, plan: product.code, currency: 'UZS', method: 'PAYME', amountMinor: 3999900,
-    status: 'PENDING', providerId: null, providerTime: null, preparedAt: null, performedAt: null, canceledAt: null, cancelReason: null }
+    status: 'PENDING', wheelSpinId: null, providerId: null, providerTime: null, preparedAt: null, performedAt: null, canceledAt: null, cancelReason: null }
   const app = express(); app.post('/stripe', express.raw({ type: 'application/json' }), stripeCallback); app.use(express.json()); app.use(paymentCallbacks)
   const server = app.listen(0, '127.0.0.1'); await new Promise(resolve => server.once('listening', resolve))
   const url = `http://127.0.0.1:${server.address().port}/payme`
@@ -204,7 +232,7 @@ test('Payme callback validates amount, processes once and handles duplicate perf
     assert.equal(state.order.status, 'PROCESSING')
     const first = await rpc('PerformTransaction', { id: 'tx-1' }); const second = await rpc('PerformTransaction', { id: 'tx-1' })
     assert.deepEqual(second.result, first.result)
-    assert.equal(state.subscription.audience, product.audience)
+    assert.equal(state.subscriptions[0]?.audience, product.audience)
     assert.equal((await rpc('CheckTransaction', { id: 'tx-1' })).result.state, 2)
     assert.equal((await rpc('CancelTransaction', { id: 'tx-1', reason: 1 })).error.code, -31007)
   } finally { await new Promise(resolve => server.close(resolve)) }
@@ -212,9 +240,9 @@ test('Payme callback validates amount, processes once and handles duplicate perf
 
 test('Click rejects forged and unprepared callbacks and fulfills a signed order once', async () => {
   reset(); env.AUTOMATED_BILLING_ENABLED = true; env.CLICK_MERCHANT_ID = 'test'; env.CLICK_SERVICE_ID = 'test-service'; env.CLICK_SECRET_KEY = 'test-secret'
-  const product = billingProduct('TEACHER_1')
+  const product = billingProduct('MAX_1')
   state.order = { id: 'click-order', userId: 'u', ...product, plan: product.code, currency: 'UZS', method: 'CLICK', amountMinor: 6999900,
-    status: 'PENDING', providerId: null, preparedAt: null, providerSequence: 42 }
+    status: 'PENDING', wheelSpinId: null, providerId: null, preparedAt: null, providerSequence: 42 }
   const app = express(); app.use(express.json()); app.use(paymentCallbacks)
   const server = app.listen(0, '127.0.0.1'); await new Promise(resolve => server.once('listening', resolve))
   const send = async (action, changes = {}, forged = false) => {
@@ -230,15 +258,15 @@ test('Click rejects forged and unprepared callbacks and fulfills a signed order 
     assert.equal((await send('0')).merchant_prepare_id, 42)
     assert.equal((await send('1')).error, 0)
     assert.equal((await send('1')).error, -4)
-    assert.equal(state.subscription.audience, product.audience)
+    assert.equal(state.subscriptions[0]?.audience, product.audience)
   } finally { await new Promise(resolve => server.close(resolve)) }
 })
 
 test('Stripe requires a signed event with exact USD amount and credits replay only once', async () => {
   reset(); env.AUTOMATED_BILLING_ENABLED = true; env.STRIPE_SECRET_KEY = 'test-secret'; env.STRIPE_WEBHOOK_SECRET = 'test-webhook'
-  const product = billingProduct('TEACHER_1')
+  const product = billingProduct('MAX_1')
   state.order = { id: 'stripe-order', userId: 'u', ...product, plan: product.code, currency: 'USD', method: 'STRIPE', amountMinor: 599,
-    status: 'PENDING', providerId: 'STRIPE:cs_test_order' }
+    status: 'PENDING', wheelSpinId: null, providerId: 'STRIPE:cs_test_order' }
   const app = express(); app.post('/stripe', express.raw({ type: 'application/json' }), stripeCallback)
   app.use((error, req, res, next) => res.status(500).json({ message: error.message }))
   const server = app.listen(0, '127.0.0.1'); await new Promise(resolve => server.once('listening', resolve))
@@ -253,10 +281,10 @@ test('Stripe requires a signed event with exact USD amount and credits replay on
   try {
     assert.equal((await send(599, false)).status, 400)
     assert.equal((await send(599, true, false)).status, 200)
-    assert.equal(state.subscription, null)
+    assert.equal(state.subscriptions.length, 0)
     assert.equal((await send(1)).status, 500)
     assert.equal((await send()).status, 200)
     assert.equal((await send()).status, 200)
-    assert.equal(state.subscription.audience, product.audience)
+    assert.equal(state.subscriptions[0]?.audience, product.audience)
   } finally { await new Promise(resolve => server.close(resolve)) }
 })

@@ -8,12 +8,12 @@ export const premiumIdentitySelect = {
   role: true,
   email: true,
   premiumGrant: { select: { plan: true, source: true, startsAt: true, expiresAt: true } },
-  billingSubscriptions: { select: { startsAt: true, expiresAt: true } },
+  billingSubscriptions: { select: { audience: true, startsAt: true, expiresAt: true } },
 } satisfies Prisma.UserSelect
 
 type PremiumIdentity = Prisma.UserGetPayload<{ select: typeof premiumIdentitySelect & { nickname: true } }>
 
 export function hasPremiumIdentity(user: PremiumIdentity, now = new Date()) {
-  const access = resolveAccountAccess(user.premiumGrant, isPremiumUser(user), user.billingSubscriptions, null, now)
-  return access.active && access.kind !== 'TRIAL'
+  const access = resolveAccountAccess(user.premiumGrant, isPremiumUser(user), user.billingSubscriptions, now)
+  return access.active
 }

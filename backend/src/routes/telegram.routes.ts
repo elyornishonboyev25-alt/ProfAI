@@ -6,7 +6,10 @@ import { prisma } from '../lib/prisma.js'
 import { requireAuth } from '../middleware/auth.js'
 import { validateBody } from '../middleware/validate.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
-import { botInviteLink, createLinkCode, handleUpdate, inviteLink, notifyUser, telegramEnabled, type TgUpdate } from '../services/telegram.service.js'
+import { announcePayouts, announceSpin, botInviteLink, createLinkCode, handleUpdate, inviteLink, telegramEnabled, type TgUpdate } from '../services/telegram.service.js'
+import { isChannelMember } from '../services/telegramApi.js'
+import { drawSpin, isSpinUsable, spinFor, verifyInitData, WHEEL_SEGMENTS } from '../services/wheel.service.js'
+import { BillingError } from '../services/billing.service.js'
 import { claimReferral, INVITEE_BONUS_DAYS, referralSummary, settleReferrals } from '../services/referral.service.js'
 import { redeemCode } from '../services/promo.service.js'
 import { authRateLimit } from '../middleware/rateLimit.js'
@@ -53,9 +56,7 @@ referralRoutes.get('/me', asyncHandler(async (req, res) => {
   const payouts = await settleReferrals(req.user!.id)
   const summary = await referralSummary(req.user!.id)
   const code = summary.code ?? ''
-  for (const payout of payouts) {
-    await notifyUser(payout.inviterId, `🎉 <b>${payout.count}-do'st mukofoti!</b>\nHisobingizga <b>+${payout.days} kun</b> premium qo'shildi.`)
-  }
+  await announcePayouts(payouts)
   res.json({ ...summary, link: code ? inviteLink(code) : null, botLink: code ? botInviteLink(code) : null })
 }))
 
@@ -101,4 +102,33 @@ promoRoutes.post('/redeem', authRateLimit, validateBody(redeemSchema), asyncHand
   const result = await redeemCode(req.user!.id, req.body.code)
   if (!result.ok) return res.status(result.code === 'INVALID_CODE' ? 404 : 409).json({ code: result.code, message: 'This code cannot be applied.' })
   res.json({ redeemed: true, kind: result.kind, days: result.days })
+}))
+
+// Telegram Mini App wheel. Identity comes from signed Telegram launch data, not a site session.
+export const wheelRoutes = Router()
+const initDataSchema = z.object({ initData: z.string().min(10).max(4096) })
+
+const spinView = (spin: { percent: number; expiresAt: Date; usedAt: Date | null }) => ({
+  percent: spin.percent, expiresAt: spin.expiresAt.toISOString(), used: Boolean(spin.usedAt), active: isSpinUsable(spin),
+})
+
+wheelRoutes.post('/state', validateBody(initDataSchema), asyncHandler(async (req, res) => {
+  const user = verifyInitData(req.body.initData)
+  const telegramId = String(user.id)
+  const [subscribed, spin, link] = await Promise.all([
+    isChannelMember(user.id),
+    spinFor(telegramId),
+    prisma.telegramLink.findUnique({ where: { chatId: telegramId }, select: { userId: true } }),
+  ])
+  res.json({ subscribed, linked: Boolean(link), channelUrl: env.TELEGRAM_CHANNEL_URL, segments: WHEEL_SEGMENTS, spin: spin ? spinView(spin) : null })
+}))
+
+wheelRoutes.post('/spin', authRateLimit, validateBody(initDataSchema), asyncHandler(async (req, res) => {
+  const user = verifyInitData(req.body.initData)
+  const subscribed = await isChannelMember(user.id)
+  if (subscribed === null) throw new BillingError('SUBSCRIPTION_CHECK_FAILED', 'We could not check your subscription. Try again in a moment.', 503)
+  if (!subscribed) throw new BillingError('NOT_SUBSCRIBED', 'Subscribe to the channel to spin the wheel.', 403)
+  const { spin, fresh } = await drawSpin(String(user.id))
+  if (fresh) void announceSpin(String(user.id), spin.percent, spin.expiresAt)
+  res.json({ fresh, spin: spinView(spin) })
 }))

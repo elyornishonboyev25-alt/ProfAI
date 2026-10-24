@@ -6,9 +6,10 @@ import { requireOwner } from '../middleware/owner.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { isPremiumUser } from '../utils/premium.js'
 import { extendPremiumExpiry, type PaidPlan } from '../utils/premiumPlans.js'
-import { BILLING_PRODUCTS, billingProduct, extendBillingExpiry } from '../utils/billingCatalog.js'
-import { FREE_TRIAL_DAYS, describeAccess } from '../utils/accessEntitlement.js'
-import { accessStatus, unlockResource, accountOverview, lockBilling, fulfillPayment, BillingError } from '../services/billing.service.js'
+import { BILLING_PRODUCTS, GROUP_MIN_SIZE, GROUP_MONTHLY_USD, PLAN_MONTHLY_USD, PLAN_QUOTAS, billingProduct, discountedAmount, extendBillingExpiry, type BillingProduct } from '../utils/billingCatalog.js'
+import { describeAccess } from '../utils/accessEntitlement.js'
+import { activeDiscount } from '../services/wheel.service.js'
+import { accessStatus, unlockResource, accountOverview, usageSnapshot, lockBilling, fulfillPayment, BillingError } from '../services/billing.service.js'
 import { paymentProviders, checkoutUrl, expireStripeCheckout } from '../services/paymentProviders.service.js'
 import { approvedMedia, educationalCatalog } from '../services/educationalMedia.service.js'
 import { createPaymentQuote, dollarRate, verifyPaymentQuote } from '../services/billingQuote.service.js'
@@ -18,19 +19,33 @@ const grantSchema = z.object({ plan: z.string().refine(value => ['MONTHLY', 'QUA
 const pageSchema = z.coerce.number().int().min(1).max(10000).default(1)
 const PAGE_SIZE = 20
 
-router.get('/plans', (_req, res) => res.json({ products: BILLING_PRODUCTS, trialDays: FREE_TRIAL_DAYS, providers: paymentProviders() }))
+router.get('/plans', (_req, res) => res.json({ products: BILLING_PRODUCTS, monthly: PLAN_MONTHLY_USD, quotas: PLAN_QUOTAS,
+  group: { minSize: GROUP_MIN_SIZE, monthly: GROUP_MONTHLY_USD }, providers: paymentProviders() }))
+
+/** The product with the account's live wheel discount applied, if one exists. */
+async function pricedProduct(userId: string, product: BillingProduct) {
+  const { discount } = await activeDiscount(userId)
+  if (!discount) return { product, discount: null }
+  return { product: { ...product, amountUsd: discountedAmount(product.amountUsd, discount.percent) }, discount }
+}
+
+router.get('/discount', requireAuth, asyncHandler(async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store')
+  return res.json(await activeDiscount(req.user!.id))
+}))
 
 router.get('/quote', requireAuth, asyncHandler(async (req, res) => {
   res.setHeader('Cache-Control', 'no-store')
   const code = z.string().max(50).parse(req.query.product)
   const product = billingProduct(code)
   if (!product) throw new BillingError('INVALID_PLAN', 'Choose a valid plan.', 400)
-  return res.json(createPaymentQuote(product, await dollarRate()))
+  const priced = await pricedProduct(req.user!.id, product)
+  return res.json({ ...createPaymentQuote(priced.product, await dollarRate()), discountPercent: priced.discount?.percent ?? 0, listAmountUsd: product.amountUsd })
 }))
 
 router.get('/account', requireAuth, asyncHandler(async (req, res) => {
   res.setHeader('Cache-Control', 'no-store')
-  const [wallet, orders] = await Promise.all([accountOverview(req.user!.id), prisma.paymentRequest.findMany({
+  const [wallet, orders] = await Promise.all([accountOverview(req.user!.id).then(async overview => ({ ...overview, usage: await usageSnapshot(req.user!.id, overview.tier) })), prisma.paymentRequest.findMany({
     where: { userId: req.user!.id }, orderBy: { createdAt: 'desc' }, take: 20,
     select: { id: true, plan: true, currency: true, amountMinor: true, status: true, method: true, checkoutUrl: true, createdAt: true } })])
   return res.json({ ...wallet, orders })
@@ -56,8 +71,10 @@ router.post('/access', requireAuth, asyncHandler(async (req, res) => {
 }))
 router.post('/checkout', requireAuth, asyncHandler(async (req, res) => {
   const payload = z.object({ product: z.string().max(50), currency: z.enum(['UZS', 'USD']), provider: z.enum(['PAYME', 'CLICK', 'STRIPE']), quote: z.string().max(2048).optional() }).parse(req.body)
-  const product = billingProduct(payload.product)
-  if (!product) throw new BillingError('INVALID_PLAN', 'Choose a valid plan.', 400)
+  const listed = billingProduct(payload.product)
+  if (!listed) throw new BillingError('INVALID_PLAN', 'Choose a valid plan.', 400)
+  // The wheel discount must still be valid when the order is created.
+  const { product, discount } = await pricedProduct(req.user!.id, listed)
   const provider = paymentProviders().find(item => item.code === payload.provider && item.currency === payload.currency)
   if (!provider?.enabled) throw new BillingError('PAYMENTS_UNAVAILABLE', 'This payment method is not available yet.', 503)
   const amountUzs = payload.currency === 'UZS' ? verifyPaymentQuote(payload.quote, product).amountUzs : 0
@@ -66,7 +83,7 @@ router.post('/checkout', requireAuth, asyncHandler(async (req, res) => {
     const existing = await tx.paymentRequest.findFirst({ where: { userId: req.user!.id, status: { in: ['PENDING', 'SUBMITTED', 'PROCESSING'] } } })
     if (existing) throw new BillingError('REQUEST_OPEN', 'Finish or cancel your existing order first.', 409)
     return tx.paymentRequest.create({ data: { userId: req.user!.id, plan: product.code, audience: product.audience, months: product.months,
-      currency: payload.currency, amountUzs,
+      currency: payload.currency, amountUzs, discountPercent: discount?.percent ?? 0, wheelSpinId: discount?.id ?? null,
       amountMinor: payload.currency === 'UZS' ? amountUzs * 100 : product.amountUsd, method: payload.provider } })
   })
   try {

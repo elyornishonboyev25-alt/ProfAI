@@ -865,7 +865,7 @@ router.get(
       return res.status(404).json({ message: 'Test not found.' })
     }
 
-    if (!(await accessStatus(req.user!.id, 'test', `test:database:${test.id}`)).unlocked) throw new BillingError('PREMIUM_REQUIRED', 'Your free trial has ended. Choose a plan to continue.')
+    if (!(await accessStatus(req.user!.id, 'test', `test:database:${test.id}`)).unlocked) throw new BillingError('PREMIUM_REQUIRED', 'You have used this month’s free tests. Upgrade to Pro ($6/month) or Max ($12/month) to continue.')
     return res.json({ test })
   }),
 )
@@ -877,7 +877,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const userId = req.user!.id
     const testId = req.params.id
-    if (!(await accessStatus(userId, 'test', `test:database:${testId}`)).unlocked) throw new BillingError('PREMIUM_REQUIRED', 'Your free trial has ended. Choose a plan to continue.')
+    if (!(await accessStatus(userId, 'test', `test:database:${testId}`)).unlocked) throw new BillingError('PREMIUM_REQUIRED', 'You have used this month’s free tests. Upgrade to Pro ($6/month) or Max ($12/month) to continue.')
     const { answers, timeSpentSec, assignmentId } = req.body
 
     const test = await prisma.test.findUnique({

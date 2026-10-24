@@ -5,24 +5,24 @@ import { ArrowRight, Gift, Sparkles } from 'lucide-react'
 
 const copy = {
   "en": {
-    "label": "Your first week is on us",
-    "title": "7 days of IELTS, SAT and AI · $0",
-    "open": "Explore your free week",
-    "detail": "Start for free. No card required. Try IELTS, SAT and AI for 7 days, once per account. Then continue from $3/month. Classes require a paid plan.",
+    "label": "Free forever · no card",
+    "title": "IELTS, SAT and AI every month · $0",
+    "open": "See what Free includes",
+    "detail": "Start for free. No card required. Every month: 4 tests, 1 full mock and AI Writing & Speaking checks. Upgrade to Pro ($6) or Max ($12) any time.",
     "action": "Start for free"
   },
   "uz": {
-    "label": "Birinchi hafta bizdan",
-    "title": "IELTS, SAT va AI — 7 kun · $0",
-    "open": "Bepul haftani ko‘rish",
-    "detail": "Bepul boshlang. Karta talab etilmaydi. IELTS, SAT va AIni har akkauntga bir marta 7 kun sinang. Keyin oyiga $3 dan davom eting. Classes uchun pullik tarif kerak.",
+    "label": "Doimiy bepul · karta kerak emas",
+    "title": "Har oy IELTS, SAT va AI · $0",
+    "open": "Free tarifda nimalar bor",
+    "detail": "Bepul boshlang. Karta kerak emas. Har oy: 4 ta test, 1 ta to‘liq mock, Writing va Speaking AI tahlili. Istalgan vaqtda Pro ($6) yoki Max ($12) ga o‘ting.",
     "action": "Bepul boshlang"
   },
   "ru": {
-    "label": "Первая неделя за наш счёт",
-    "title": "7 дней IELTS, SAT и AI · $0",
-    "open": "Узнать о бесплатной неделе",
-    "detail": "Начните бесплатно. Карта не нужна. Попробуйте IELTS, SAT и AI 7 дней, один раз на аккаунт. Далее от $3/мес. Для классов нужен платный тариф.",
+    "label": "Бесплатно навсегда · без карты",
+    "title": "IELTS, SAT и AI каждый месяц · $0",
+    "open": "Что входит в Free",
+    "detail": "Начните бесплатно, без карты. Каждый месяц: 4 теста, 1 полный пробный экзамен и AI-разборы Writing и Speaking. Перейдите на Pro ($6) или Max ($12) в любой момент.",
     "action": "Начать бесплатно"
   }
 } as const

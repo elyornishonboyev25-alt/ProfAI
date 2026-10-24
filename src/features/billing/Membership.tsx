@@ -6,6 +6,9 @@ import { useAuthStore } from '@/store/authStore'
 import PricingCards, { formatBillingMoney } from './PricingCards'
 import PlanDuration from './PlanDuration'
 import PromoCode from './PromoCode'
+import PlanComparison from './PlanComparison'
+import { useWheelDiscount } from './useWheelDiscount'
+import { discountedAmount } from './catalog'
 import { BILLING_PRODUCTS, type BillingProduct } from './catalog'
 import { useBillingStore } from './store'
 import { useBillingText } from './copy'
@@ -25,7 +28,9 @@ export default function Membership() {
   const { wallet: storedWallet, userId: walletUserId, refresh, error: walletError } = useBillingStore()
   const wallet = user?.id === walletUserId ? storedWallet : null
   const access = useAccountAccess()
-  const fullAccess = access?.active && access.kind !== 'TRIAL'
+  const fullAccess = access?.active
+  const wheel = useWheelDiscount()
+  const wheelPercent = wheel.discount?.percent ?? 0
   const [catalog, setCatalog] = useState<Catalog | null>(null)
   const [catalogError, setCatalogError] = useState('')
   const [months, setMonths] = useState(1)
@@ -68,7 +73,7 @@ export default function Membership() {
       timer = window.setTimeout(() => { setQuote(null); setQuoteVersion(v => v + 1) }, Math.max(0, value.expiresAt - Date.now()))
     }).catch(() => { if (alive) setQuoteError(true) })
     return () => { alive = false; window.clearTimeout(timer) }
-  }, [selected?.code, currency, quoteVersion, user?.id])
+  }, [selected?.code, currency, quoteVersion, user?.id, wheel.discount?.id])
 
   function choose(product: BillingProduct) {
     if (!user) { navigate('/register', { state: { from: { pathname: '/premium' } } }); return }
@@ -96,7 +101,7 @@ export default function Membership() {
   }
   return <main className="workspace-page billing-page billing-simple-page"><div className="billing-content">
     <div className="billing-page-nav"><Link to="/dashboard" className="billing-text-button"><ArrowLeft size={17} />{text('Dashboard', 'Bosh sahifa', 'Главная')}</Link><span><ShieldCheck size={15} />{text('No auto-renewal', 'Avtomatik uzaytirilmaydi', 'Без автопродления')}</span></div>
-    {user && access && <div className={`billing-status ${access.active ? 'is-success' : ''}`} role="status"><CheckCircle2 size={20} />{fullAccess ? text('Premium active. Your access is ready.', 'Premium faol. Imkoniyatlar ochiq.', 'Premium активен. Доступ открыт.') : access.active ? text(`Your free trial: ${access.daysRemaining} days left.`, `Bepul sinov: ${access.daysRemaining} kun qoldi.`, `Пробный период: осталось ${access.daysRemaining} дн.`) : text('Your free trial has ended. Choose a plan to continue.', 'Bepul sinov tugadi. Davom etish uchun tarif tanlang.', 'Пробный период закончился. Выберите тариф.')}</div>}
+    {user && access && <div className={`billing-status ${access.active ? 'is-success' : ''}`} role="status"><CheckCircle2 size={20} />{fullAccess ? text(`${access.tier === 'MAX' ? 'Max' : 'Pro'} is active${access.expiresAt ? ` until ${new Date(access.expiresAt).toLocaleDateString()}` : ''}.`, `${access.tier === 'MAX' ? 'Max' : 'Pro'} faol${access.expiresAt ? ` — ${new Date(access.expiresAt).toLocaleDateString()} gacha` : ''}.`, `${access.tier === 'MAX' ? 'Max' : 'Pro'} активен${access.expiresAt ? ` до ${new Date(access.expiresAt).toLocaleDateString()}` : ''}.`) : text('You are on the Free plan. Upgrade any time for more tests, mocks and AI feedback.', 'Siz Free tarifidasiz. Ko‘proq test, mock va AI tahlil uchun istalgan vaqtda o‘ting.', 'У вас тариф Free. Перейдите на платный для большего числа тестов и AI-разборов.')}</div>}
     {walletError && <div className="billing-error" role="alert">{walletError}<button onClick={() => void refresh()}>{text('Retry', 'Qayta urinish', 'Повторить')}</button></div>}
     {returnedOrder && <div className={`billing-status ${returnedOrder.status === 'APPROVED' ? 'is-success' : ''}`} role="status"><CheckCircle2 size={20} />{returnedOrder.status === 'APPROVED' ? text('Payment confirmed. Your Premium access is ready.', 'To‘lov tasdiqlandi. Premium imkoniyatlar ochiq.', 'Оплата подтверждена. Premium доступ открыт.') : text('Payment status', 'To‘lov holati', 'Статус оплаты') + ': ' + orderStatusLabel(returnedOrder.status, text)}<button className="billing-text-button" onClick={() => void refresh()}>{text('Refresh', 'Yangilash', 'Обновить')}</button></div>}
     {!!wallet?.subscriptions.length && <div className="billing-active-plans">{wallet.subscriptions.map(plan => <span key={plan.audience}><CheckCircle2 size={15} />{productLabel(plan.plan, text)} · {text('until', 'gacha', 'до')} {new Date(plan.expiresAt).toLocaleDateString()}</span>)}</div>}
@@ -104,18 +109,21 @@ export default function Membership() {
     <section aria-labelledby="billing-plans-title">
       <div className="billing-section-heading"><h2 id="billing-plans-title">{text('Choose a plan', 'Tarifni tanlang', 'Выберите тариф')}</h2><PlanDuration months={months} onChange={value => { setMonths(value); setSelected(null) }} /></div>
       {catalogError && <div role="alert" className="billing-error">{catalogError}<button onClick={() => void loadCatalog()}>{text('Reload plans', 'Qayta yuklash', 'Обновить тарифы')}</button></div>}
-      <PricingCards products={products} months={months} onChoose={choose} disabled={busy || !catalog} />
-      <p className="billing-plan-footnote">{text('Student $3/month · Teacher $5/month. Classes require a paid plan. No auto-renewal.', 'Student $3/oy · Teacher $5/oy. Classes uchun pullik tarif kerak. Avtomatik uzaytirilmaydi.', 'Student $3/мес. · Teacher $5/мес. Для классов нужен платный тариф. Без автопродления.')}</p>
+      <PricingCards products={products} months={months} onChoose={choose} disabled={busy || !catalog} discountPercent={wheelPercent} />
+      <p className="billing-plan-footnote">{text('Free $0 · Pro $6/month · Max $12/month. Pay once for the period you choose — no auto-renewal.', 'Free $0 · Pro $6/oy · Max $12/oy. Tanlangan muddat uchun bir marta to‘laysiz — avtomatik uzaytirilmaydi.', 'Free $0 · Pro $6/мес. · Max $12/мес. Разовая оплата за выбранный срок — без автопродления.')}</p>
     </section>
 
-    <PromoCode onRedeemed={() => void refresh()} />
+    <PlanComparison currentTier={user ? access?.tier : undefined} />
+
+    <PromoCode wheel={wheel} onRedeemed={() => void refresh()} />
 
     {selected && <section ref={checkoutRef} className="billing-glass billing-checkout" aria-labelledby="checkout-title">
       <div className="billing-section-heading"><div><span className="billing-eyebrow"><CreditCard size={15} />{text('PAYMENT', 'TO‘LOV', 'ОПЛАТА')}</span><h2 id="checkout-title">{text('Review your purchase', 'To‘lovni tekshiring', 'Проверьте покупку')}</h2></div><button type="button" className="billing-round-link" aria-label={text('Close checkout', 'To‘lov oynasini yopish', 'Закрыть оплату')} onClick={() => setSelected(null)}><X size={18} /></button></div>
       <div className="billing-checkout-grid"><div>
-        <div className="billing-checkout-summary"><ShieldCheck size={24} /><div><strong>{productLabel(selected.code, text)}</strong><span>{text(`${selected.months} months of Premium access`, `${selected.months} oy Premium`, `${selected.months} мес. Premium`)}</span></div><strong>{formatBillingMoney(selected.amountUsd, 'USD')}</strong></div>
+        <div className="billing-checkout-summary"><ShieldCheck size={24} /><div><strong>{productLabel(selected.code, text)}</strong><span>{text(`${selected.months} months of Premium access`, `${selected.months} oy Premium`, `${selected.months} мес. Premium`)}</span></div><strong>{wheelPercent > 0 && <s className="plans-old-price">{formatBillingMoney(selected.amountUsd, 'USD')}</s>}{formatBillingMoney(discountedAmount(selected.amountUsd, wheelPercent), 'USD')}</strong></div>
+        {wheelPercent > 0 && <p className="billing-checkout-discount">🎡 {text(`Wheel discount −${wheelPercent}% applied`, `Baraban chegirmasi −${wheelPercent}% qo‘llandi`, `Скидка с колеса −${wheelPercent}% применена`)}</p>}
         <p>{text('One payment for the full period. No automatic charges.', 'Butun muddat uchun bir martalik to‘lov. Avtomatik pul yechilmaydi.', 'Один платёж за весь срок. Без автоматических списаний.')}</p>
-        <div className="billing-checkout-amount" aria-live="polite"><span>{text('Amount to pay', 'To‘lanadigan summa', 'К оплате')}</span><strong>{currency === 'USD' ? formatBillingMoney(selected.amountUsd, 'USD') : quoteReady && quote ? formatBillingMoney(quote.amountUzs, 'UZS') : quoteError ? '—' : text('Calculating…', 'Hisoblanmoqda…', 'Рассчитываем…')}</strong>
+        <div className="billing-checkout-amount" aria-live="polite"><span>{text('Amount to pay', 'To‘lanadigan summa', 'К оплате')}</span><strong>{currency === 'USD' ? formatBillingMoney(discountedAmount(selected.amountUsd, wheelPercent), 'USD') : quoteReady && quote ? formatBillingMoney(quote.amountUzs, 'UZS') : quoteError ? '—' : text('Calculating…', 'Hisoblanmoqda…', 'Рассчитываем…')}</strong>
           {currency === 'UZS' && quoteReady && quote && <small>{text('Central Bank rate', 'Markaziy bank kursi', 'Курс Центрального банка')} · {quote.date}<br />$1 = {formatBillingMoney(quote.rate, 'UZS')}</small>}
           {currency === 'UZS' && quoteError && <p className="billing-error">{text('Rate unavailable. Retry or choose USD payment.', 'Kursni olish imkoni bo‘lmadi. Qayta urining yoki USD to‘lovini tanlang.', 'Курс недоступен. Повторите или выберите оплату в USD.')}<button type="button" onClick={() => setQuoteVersion(v => v + 1)}>{text('Retry', 'Qayta urinish', 'Повторить')}</button></p>}
         </div>

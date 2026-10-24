@@ -1,0 +1,38 @@
+/* Free · Pro · Max cards and the comparison table: silver glass with Ivygoo red. */
+.plans-grid .billing-plan.is-current{outline:2px solid #c9ced8;outline-offset:4px}
+.plans-card-max{border-color:#cfd5de!important;
+  background:linear-gradient(150deg,#fdfdfe 0%,#e3e7ee 38%,#f8f9fb 62%,#d7dce4 100%)!important;
+  box-shadow:inset 0 1px 0 #fff,inset 0 -1px 0 #c3c9d3,0 16px 40px #3c465622!important}
+.plans-card-max .billing-icon{background:linear-gradient(145deg,#2c323d,#4a5260)!important;color:#fff!important;border-color:#5b6371!important}
+.plans-card-max h3{background:linear-gradient(90deg,#2a303b,#6b7482);-webkit-background-clip:text;background-clip:text;color:transparent}
+.plans-max-button{border-color:#2f3541!important;color:#fff!important;background:linear-gradient(130deg,#3a414e,#1f242d)!important;box-shadow:0 8px 20px #1f242d33,inset 0 1px #ffffff26!important}
+.plans-max-button:hover{background:#1f242d!important}
+.plans-old-price{font-size:15px;font-weight:700;color:#8a94a3;margin-right:6px}
+.plans-discount-chip{padding:6px 10px;border-radius:9px;font-size:11px;font-weight:800;color:#fff;background:linear-gradient(130deg,#dc3844,#b61d2b);box-shadow:0 6px 14px #c1263533}
+
+.plans-compare{padding:clamp(20px,3vw,34px);display:grid;gap:20px}
+.plans-compare-head{display:grid;gap:6px;max-width:720px}
+.plans-compare-head h2{margin:0;font-size:clamp(20px,2.4vw,28px);font-weight:800;letter-spacing:-.03em;color:#1f2530}
+.plans-compare-head p{margin:0;font-size:12.5px;line-height:1.7;color:#657080}
+.plans-compare-scroll{overflow-x:auto;margin:0 -6px;padding:0 6px;-webkit-overflow-scrolling:touch}
+.plans-table{width:100%;min-width:560px;border-collapse:separate;border-spacing:0;font-size:13px;color:#303846}
+.plans-table thead th{position:sticky;top:0;padding:14px 12px;text-align:center;vertical-align:bottom;background:linear-gradient(180deg,#ffffffee,#f1f3f6e6);backdrop-filter:blur(12px);
+  border-bottom:1px solid #dfe3e9}
+.plans-table thead th:first-child{text-align:left;width:38%}
+.plans-table thead th strong{display:block;font-size:15px;font-weight:800;color:#1f2530}
+.plans-table thead th small{display:block;margin-top:2px;font-size:11.5px;color:#6a7585;font-weight:600}
+.plans-table thead th em{display:inline-block;margin-top:6px;padding:3px 8px;border-radius:999px;font-size:10px;font-style:normal;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#286844;background:#e7f4ec}
+.plans-table thead th.is-featured{border-radius:16px 16px 0 0;background:linear-gradient(180deg,#fff5f6,#fde8eb)}
+.plans-table thead th.is-featured strong{color:#a8192a}
+.plans-table tbody th,.plans-table tbody td{padding:13px 12px;border-bottom:1px solid #e8ebef}
+.plans-table tbody th{text-align:left;font-weight:650;color:#2a303b}
+.plans-table tbody th small{display:block;margin-top:2px;font-size:11px;font-weight:500;color:#8a94a3}
+.plans-table tbody td{text-align:center;font-weight:700;color:#3a4352;font-variant-numeric:tabular-nums}
+.plans-table tbody td.is-featured{background:#fff3f5b3}
+.plans-table tbody tr:not(.plans-group):hover th,.plans-table tbody tr:not(.plans-group):hover td{background:#f6f7fa}
+.plans-table tbody tr:not(.plans-group):hover td.is-featured{background:#fde9ec}
+.plans-group th{padding:20px 12px 8px!important;border-bottom:0!important;font-size:10.5px!important;font-weight:800!important;letter-spacing:.14em;text-transform:uppercase;color:#9c2833!important;background:transparent!important}
+.plans-yes{color:#b61d2b;display:inline-block}
+.plans-no{color:#c3c9d3;display:inline-block}
+@media(max-width:640px){.plans-table{font-size:12px}.plans-table tbody th,.plans-table tbody td{padding:11px 8px}}
+.billing-checkout-discount{margin:10px 0 0;padding:9px 12px;border-radius:11px;font-size:12px;font-weight:700;color:#8f1f2d;background:#fde8eb;border:1px solid #f3c6cc}

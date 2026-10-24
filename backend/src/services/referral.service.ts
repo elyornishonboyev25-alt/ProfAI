@@ -8,13 +8,13 @@ const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 const CLAIM_WINDOW_DAYS = 7
 
 export const INVITEE_BONUS_DAYS = 3
-// Each tier is paid once, when the inviter reaches `count` qualified friends.
+// Each friend who starts the Telegram bot and joins the channel adds FRIEND_DAYS.
+export const FRIEND_DAYS = 3
+// Milestone bonuses are paid once, on top of the per-friend days.
 export const REFERRAL_TIERS = [
-  { count: 1, days: 3 },
-  { count: 3, days: 14 },
-  { count: 5, days: 30 },
-  { count: 10, days: 90 },
-  { count: 25, days: 365 },
+  { count: 5, days: 14 },
+  { count: 10, days: 30 },
+  { count: 25, days: 90 },
 ] as const
 
 function randomCode() {
@@ -93,45 +93,45 @@ export async function claimReferral(inviteeId: string, rawCode: string): Promise
   return { ok: true, bonusDays: INVITEE_BONUS_DAYS }
 }
 
-export type TierPayout = { inviterId: string; days: number; count: number }
+export type TierPayout = { inviterId: string; days: number; count: number; kind: 'FRIEND' | 'MILESTONE' }
 
 /**
- * A friend counts once they finished at least one test or speaking session.
- * Safe to call often: qualification and each reward tier are written once.
+ * Called once the invited friend has started the bot and is a channel member.
+ * Pays the inviter for this friend (once) and any milestone the friend completes.
  */
-export async function settleReferrals(inviterId?: string): Promise<TierPayout[]> {
-  const pending = await prisma.referral.findMany({
-    where: { qualifiedAt: null, ...(inviterId ? { inviterId } : {}) },
-    select: { id: true, inviterId: true, inviteeId: true },
-    take: 500,
+export async function qualifyInvitee(inviteeId: string): Promise<TierPayout[]> {
+  const referral = await prisma.referral.findUnique({ where: { inviteeId }, select: { id: true, inviterId: true, qualifiedAt: true } })
+  if (!referral || referral.qualifiedAt) return []
+  const inviterId = referral.inviterId
+  const friend = await prisma.$transaction(async tx => {
+    await lockBilling(tx, inviterId)
+    const done = await tx.referral.updateMany({ where: { id: referral.id, qualifiedAt: null }, data: { qualifiedAt: new Date() } })
+    if (!done.count) return null
+    const count = await tx.referral.count({ where: { inviterId, qualifiedAt: { not: null } } })
+    await tx.referralReward.create({ data: { userId: inviterId, kind: 'FRIEND', tier: count, days: FRIEND_DAYS } })
+    await grantAccessDays(tx, inviterId, FRIEND_DAYS)
+    return { inviterId, days: FRIEND_DAYS, count, kind: 'FRIEND' as const }
   })
-  const touched = new Set<string>()
-  for (const referral of pending) {
-    const [attempt, speaking] = await Promise.all([
-      prisma.testAttempt.findFirst({ where: { userId: referral.inviteeId }, select: { id: true } }),
-      prisma.speakingSession.findFirst({ where: { userId: referral.inviteeId }, select: { id: true } }),
-    ])
-    if (!attempt && !speaking) continue
-    const done = await prisma.referral.updateMany({ where: { id: referral.id, qualifiedAt: null }, data: { qualifiedAt: new Date() } })
-    if (done.count) touched.add(referral.inviterId)
-  }
-  const payouts: TierPayout[] = []
-  const inviters = inviterId ? [inviterId] : [...touched]
-  for (const id of inviters) payouts.push(...await payTiers(id))
-  return payouts
+  if (!friend) return []
+  return [friend, ...await payMilestones(inviterId)]
 }
 
-async function payTiers(inviterId: string): Promise<TierPayout[]> {
+/** Pays any milestone an inviter has reached but not yet received. Safe to call often. */
+export async function settleReferrals(inviterId?: string): Promise<TierPayout[]> {
+  return inviterId ? payMilestones(inviterId) : []
+}
+
+async function payMilestones(inviterId: string): Promise<TierPayout[]> {
   const count = await prisma.referral.count({ where: { inviterId, qualifiedAt: { not: null } } })
   const payouts: TierPayout[] = []
   for (const tier of REFERRAL_TIERS) {
     if (count < tier.count) break
     try {
       await prisma.$transaction(async tx => {
-        await tx.referralReward.create({ data: { userId: inviterId, kind: 'INVITER', tier: tier.count, days: tier.days } })
+        await tx.referralReward.create({ data: { userId: inviterId, kind: 'MILESTONE', tier: tier.count, days: tier.days } })
         await grantAccessDays(tx, inviterId, tier.days)
       })
-      payouts.push({ inviterId, days: tier.days, count: tier.count })
+      payouts.push({ inviterId, days: tier.days, count: tier.count, kind: 'MILESTONE' })
     } catch (error) {
       if (!(error && typeof error === 'object' && 'code' in error && error.code === 'P2002')) throw error
     }
@@ -140,19 +140,20 @@ async function payTiers(inviterId: string): Promise<TierPayout[]> {
 }
 
 export async function referralSummary(userId: string) {
-  const [code, referrals] = await Promise.all([
+  const [code, referrals, earned] = await Promise.all([
     ensureReferralCode(userId),
     prisma.referral.findMany({ where: { inviterId: userId }, select: { qualifiedAt: true } }),
+    prisma.referralReward.aggregate({ where: { userId, kind: { in: ['FRIEND', 'MILESTONE', 'INVITER'] } }, _sum: { days: true } }),
   ])
   const qualified = referrals.filter(item => item.qualifiedAt).length
   const next = REFERRAL_TIERS.find(tier => tier.count > qualified) ?? null
-  const earnedDays = (await prisma.referralReward.aggregate({ where: { userId, kind: 'INVITER' }, _sum: { days: true } }))._sum.days ?? 0
   return {
     code,
     invited: referrals.length,
     qualified,
     pending: referrals.length - qualified,
-    earnedDays,
+    earnedDays: earned._sum.days ?? 0,
+    friendDays: FRIEND_DAYS,
     inviteeBonusDays: INVITEE_BONUS_DAYS,
     next: next ? { count: next.count, days: next.days, remaining: next.count - qualified } : null,
     tiers: REFERRAL_TIERS.map(tier => ({ ...tier, reached: qualified >= tier.count })),

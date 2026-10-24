@@ -12,6 +12,7 @@ type ReferralSummary = {
   pending: number
   earnedDays: number
   inviteeBonusDays: number
+  friendDays?: number
   next: { count: number; days: number; remaining: number } | null
   tiers: Array<{ count: number; days: number; reached: boolean }>
 }
@@ -97,7 +98,7 @@ export default function ReferralTelegramCard() {
         <div className="rc-grid">
           <div className="rc-main">
             <p className="rc-muted">
-              <UiText text={"Share your link. Your friend gets bonus premium days when they sign up, and you earn more days each time a friend finishes their first test or practice."} />
+              <UiText text={`Share your link. Your friend gets ${referral.inviteeBonusDays} bonus days. You get +${referral.friendDays ?? 3} Premium days for every friend who signs up, starts our Telegram bot and joins the @IvyGoo channel — on top of your plan.`} />
             </p>
             <div className="rc-link">
               <input readOnly value={referral.link ?? ''} aria-label="Invitation link" onFocus={(event) => event.currentTarget.select()} />
@@ -112,7 +113,7 @@ export default function ReferralTelegramCard() {
             </div>
             <p className="rc-progress-note">
               {referral.next
-                ? <>{referral.next.remaining} <UiText text={"more friend(s) until your next reward."} /></>
+                ? <>{referral.next.remaining} <UiText text={"more friend(s) until your next bonus."} /></>
                 : <UiText text={"You have earned every reward. Thank you!"} />}
               {' '}<b>{referral.earnedDays}</b> <UiText text={"days"} /> <UiText text={"earned"} />
             </p>
@@ -120,7 +121,7 @@ export default function ReferralTelegramCard() {
             <ul className="rc-tiers">
               {referral.tiers.map((tier) => (
                 <li key={tier.count} className={tier.reached ? 'is-reached' : ''}>
-                  <span>{tier.count} <UiText text={tier.count === 1 ? 'friend' : 'friends'} /></span>
+                  <span>{tier.count} <UiText text={'friends'} /> · <UiText text={'bonus'} /></span>
                   <b>+{tier.days} <UiText text={"days"} />{tier.reached && <Check size={14} />}</b>
                 </li>
               ))}

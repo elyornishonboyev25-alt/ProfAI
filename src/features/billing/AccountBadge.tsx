@@ -16,7 +16,7 @@ export default function AccountBadge() {
     window.addEventListener('profai:billing-updated', update); window.addEventListener('focus', update)
     return () => { window.removeEventListener('profai:billing-updated', update); window.removeEventListener('focus', update) }
   }, [user?.id, refresh])
-  if (access?.active && access.kind !== 'TRIAL') return null
-  if (access?.active && access.kind === 'TRIAL') return <Link to="/premium" className="billing-account-badge billing-access-badge is-trial" title={text('7-day free trial', '7 kunlik bepul sinov', '7-дневный пробный период')}><Clock3 size={17} /><strong>{text(`${access.daysRemaining}d free`, `${access.daysRemaining} kun bepul`, `${access.daysRemaining} дн. бесплатно`)}</strong></Link>
+  if (access?.active) return null
+  if (user && access) return <Link to="/premium" className="billing-account-badge billing-access-badge is-trial" title={text('You are on the Free plan', 'Siz Free tarifidasiz', 'У вас тариф Free')}><Clock3 size={17} /><strong>{text('Free · Upgrade', 'Free · Yangilash', 'Free · Улучшить')}</strong></Link>
   return <Link to="/premium" className="billing-account-badge"><Sparkles size={17} />{text('View plans', 'Tariflarni ko‘rish', 'Посмотреть тарифы')}</Link>
 }

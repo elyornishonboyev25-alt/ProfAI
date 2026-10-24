@@ -17,7 +17,7 @@ export async function run() {
   const previousUser = useAuthStore.getState().user
   const previousGet = apiClient.get, previousPost = apiClient.post
   const wallet: WalletOverview = { canCreateClass: false, canJoinClass: false, subscriptions: [], orders: [],
-    access: { kind: 'FREE', active: false, startsAt: null, expiresAt: null, trialDays: null, daysRemaining: null } }
+    access: { kind: 'FREE', tier: 'FREE', active: false, startsAt: null, expiresAt: null, trialDays: null, daysRemaining: null } }
   let requests = 0, failQuote = false
   const purchases: unknown[] = []
   useAuthStore.setState({ user: { id: 'pricing-ui', email: 'pricing@example.com', fullName: 'Pricing', role: 'USER', access: wallet.access } as NonNullable<typeof previousUser> })
@@ -29,6 +29,8 @@ export async function run() {
       const product = BILLING_PRODUCTS.find(p => p.code === new URL(path, 'http://localhost').searchParams.get('product'))!
       return { product: product.code, amountUsd: product.amountUsd, amountUzs: Math.round(product.amountUsd * 13100 / 100), rate: 13100, date: '2026-10-06', expiresAt: Date.now() + 900000, token: 'signed-' + product.code } as T
     }
+    if (path === '/billing/discount') return { spun: false, discount: null } as T
+    if (path === '/promo/status') return { telegramEnabled: true, botUsername: 'IvyGoo_bot', channelUrl: 'https://t.me/IvyGoo' } as T
     return wallet as T
   }
   apiClient.post = async <T,>(_path: string, body?: unknown) => { purchases.push(body); throw new Error('Payment intercepted for test') }
@@ -38,33 +40,35 @@ export async function run() {
     await act(async () => root.render(<MemoryRouter><Sidebar onToggle={() => {}} /><Membership /></MemoryRouter>))
     await settle()
     assert.equal(element.querySelectorAll('.billing-plan').length, 3)
-    assert.deepEqual([...element.querySelectorAll('.billing-plan h3')].map(node => node.textContent), ['Start for free', 'Student', 'Teacher'])
-    assert.deepEqual([...element.querySelectorAll('.billing-plan-price strong')].map(node => node.textContent), ['$0', '$3', '$5'])
+    assert.ok(element.querySelector('.plans-table'), 'the comparison table sits below the plans')
+    assert.equal(/7 days|free trial/i.test(element.textContent ?? ''), false, 'no trial copy remains')
+    assert.deepEqual([...element.querySelectorAll('.billing-plan h3')].map(node => node.textContent), ['Free', 'Pro', 'Max'])
+    assert.deepEqual([...element.querySelectorAll('.billing-plan-price strong')].map(node => node.textContent), ['$0', '$6', '$12'])
     assert.equal(element.querySelector('.billing-topup'), null)
     assert.equal(/coins|Individual/.test(element.textContent ?? ''), false)
     assert.equal(requests, 0, 'conversion is requested only after a product is chosen')
     assert.equal(element.textContent?.includes('UZS'), false)
     await click('.billing-segment button:last-child')
-    assert.deepEqual([...element.querySelectorAll('.billing-plan-price strong')].map(node => node.textContent), ['$0', '$28.80', '$48'])
+    assert.deepEqual([...element.querySelectorAll('.billing-plan-price strong')].map(node => node.textContent), ['$0', '$57.60', '$115.20'])
     await click('.billing-plan-featured button')
-    assert.ok(element.querySelector('.billing-checkout-amount strong')?.textContent?.includes('377 280 UZS'))
+    assert.ok(element.querySelector('.billing-checkout-amount strong')?.textContent?.includes('754 560 UZS'))
     await click('.billing-checkout .billing-primary')
-    assert.deepEqual(purchases[0], { product: 'STUDENT_12', currency: 'UZS', provider: 'PAYME', quote: 'signed-STUDENT_12' })
+    assert.deepEqual(purchases[0], { product: 'PRO_12', currency: 'UZS', provider: 'PAYME', quote: 'signed-PRO_12' })
     const select = element.querySelector<HTMLSelectElement>('.billing-provider-label select')!
     await act(async () => { select.value = 'STRIPE'; select.dispatchEvent(new Event('change', { bubbles: true })) })
     await settle()
-    assert.equal(element.querySelector('.billing-checkout-amount strong')?.textContent, '$28.80')
+    assert.equal(element.querySelector('.billing-checkout-amount strong')?.textContent, '$57.60')
     await click('.billing-checkout .billing-primary')
-    assert.deepEqual(purchases[1], { product: 'STUDENT_12', currency: 'USD', provider: 'STRIPE', quote: undefined })
+    assert.deepEqual(purchases[1], { product: 'PRO_12', currency: 'USD', provider: 'STRIPE', quote: undefined })
     failQuote = true
     await click('.billing-plan:last-child button')
     assert.equal(element.querySelector<HTMLButtonElement>('.billing-checkout .billing-primary')?.disabled, true, 'no UZS payment without a rate')
     assert.ok(element.textContent?.includes('Rate unavailable'))
     failQuote = false
     await click('.billing-checkout-amount button')
-    assert.equal(element.querySelector('.billing-checkout-amount strong')?.textContent, '628 800 UZS')
+    assert.equal(element.querySelector('.billing-checkout-amount strong')?.textContent, '1 509 120 UZS')
     assert.equal(element.querySelector<HTMLButtonElement>('.billing-checkout .billing-primary')?.disabled, false)
-    wallet.access = { kind: 'UNLIMITED', active: true, startsAt: null, expiresAt: null, trialDays: null, daysRemaining: null }
+    wallet.access = { kind: 'UNLIMITED', tier: 'MAX', active: true, startsAt: null, expiresAt: null, trialDays: null, daysRemaining: null }
     await act(async () => { useBillingStore.setState({ wallet: { ...wallet } }) })
     assert.equal(element.querySelector('.billing-entitlement'), null)
     assert.equal(element.querySelector('.liquid-upgrade-link')?.textContent, 'Unlimited')
@@ -73,7 +77,7 @@ export async function run() {
     wallet.access = { ...wallet.access, active: false }
     await act(async () => { useBillingStore.setState({ wallet: { ...wallet } }) })
     assert.equal(element.querySelector('.liquid-upgrade-link')?.textContent, 'Upgrade', 'ended access restores the upgrade action')
-    console.log('PASS: free trial and Student/Teacher pricing, no coin UI, checkout conversion and signed quote, failed rate retry, compact entitlement')
+    console.log('PASS: Free/Pro/Max pricing with comparison, no coin UI, checkout conversion and signed quote, failed rate retry, compact entitlement')
   } finally {
     await act(async () => root.unmount())
     apiClient.get = previousGet; apiClient.post = previousPost

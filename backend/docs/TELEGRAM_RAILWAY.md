@@ -62,3 +62,21 @@ So'ng frontend'ni qayta deploy qiling.
 - Bot javob bermayapti → Railway loglarida `Telegram bot: webhook mode` bor-yo'qligini ko'ring; `TELEGRAM_WEBHOOK_URL` to'g'rimi?
 - "Obunani tekshirib bo'lmadi" → bot kanalga administrator qilib qo'shilmagan.
 - Promokod berilmayapti → kanal nomi (`TELEGRAM_CHANNEL`) to'g'ri `@IvyGoo` ekanini tekshiring.
+- Baraban ochilmayapti → `TELEGRAM_SITE_URL` **https** bilan boshlanadigan haqiqiy sayt manzili bo'lishi kerak (Telegram Mini App faqat https'da ishlaydi). Baraban sahifasi: `<sayt>/spin`.
+
+## Tariflar, baraban va guruh (qisqacha)
+
+| Narsa | Qoida |
+|---|---|
+| Free | $0, doimiy. Har oy: 4 test, 1 mock, 2 Writing + 2 Speaking AI tahlil, 15 AI xabar |
+| Pro | $6/oy (3 oy −10%, 12 oy −20%). Cheksiz test, 4 mock, 30+30 AI tahlil, classga qo'shilish |
+| Max | $12/oy. Cheksiz mock, 150+150 AI tahlil, class yaratish |
+| Baraban | Faqat kanal obunachilari, har Telegram hisob **1 marta**. Har 10 aylantirishda: 1×50%, 1×25%, 1×20%, 4×15%, 2×10%, 1×5% (tartib tasodifiy) |
+| 50% chegirma | 10 daqiqa amal qiladi, qolganlari 24 soat. Ishlatilmasa ham shu 10 talik blokda qaytib kelmaydi |
+| Guruh | 5+ kishi: Pro $5, Max $10 kishi boshiga. Botda `/group`. Har bir a'zo botga start berib, kanalga obuna bo'ladi; barabandan chegirmasi hisobga qo'shiladi |
+| Do'st taklifi | Do'st havola orqali ro'yxatdan o'tib, botga start berib, kanalga obuna bo'lsa: taklif qilganga **+3 kun**, 5/10/25 do'stda qo'shimcha bonus |
+
+Barcha limitlar `backend/src/utils/billingCatalog.ts` (`PLAN_QUOTAS`), baraban `backend/src/services/wheel.service.ts` (`WHEEL_BLOCK`) ichida.
+
+> Karta orqali to'lov hali ulanmagan: guruh hisobi va chegirmali narx ko'rsatiladi, "To'lash" bosilganda "tez orada" deyiladi.
+> To'lov ulanganda chegirma checkout'da avtomatik qo'llanadi (`PaymentRequest.discountPercent`) va to'lov tasdiqlangach "ishlatilgan" deb belgilanadi.

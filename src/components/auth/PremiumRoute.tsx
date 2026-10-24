@@ -6,7 +6,7 @@ import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useRegisterModalStore, type RegisterModalState } from '@/store/registerModalStore'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { useTestAttempts } from '@/hooks/useTestAttempts'
-import { ENFORCE_PREMIUM, hasPremiumAccess } from '@/utils/premiumAccess'
+import { ENFORCE_CONTENT_PREMIUM, hasPremiumAccess } from '@/utils/premiumAccess'
 import UpgradeOverlay from '@/components/premium/UpgradeOverlay'
 
 type PremiumRouteProps = {
@@ -21,9 +21,8 @@ export default function PremiumRoute({ children, showGuestBanner = false }: Prem
   const openRegisterModal = useRegisterModalStore((state: RegisterModalState) => state.openRegisterModal)
   const { info } = useTestAttempts()
 
-  // Dormant while ENFORCE_PREMIUM is false — always evaluates to `false`, so
-  // nothing is ever gated in the current open product state.
-  const showUpgrade = ENFORCE_PREMIUM && !!user && !hasPremiumAccess(user) && info.reached
+  // Browsing stays open on every plan; Free limits apply when a test or AI request starts.
+  const showUpgrade = ENFORCE_CONTENT_PREMIUM && !!user && !hasPremiumAccess(user) && info.reached
 
   if (showUpgrade) {
     return (

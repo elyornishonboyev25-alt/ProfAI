@@ -1,0 +1,49 @@
+/* Telegram Mini App: discount wheel in silver glass with Ivygoo red. */
+.spin-page{min-height:100dvh;display:flex;flex-direction:column;align-items:center;gap:18px;padding:20px 16px 28px;box-sizing:border-box;color:#1f2530;
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+  background:radial-gradient(ellipse at 90% 0,#fde1e6 0,transparent 45%),radial-gradient(ellipse at 0 60%,#dfe4ec 0,transparent 55%),linear-gradient(180deg,#f4f6f9,#e8ecf1)}
+.spin-page *{box-sizing:border-box}
+.spin-head{display:grid;justify-items:center;gap:4px;text-align:center}
+.spin-brand{font-size:13px;font-weight:800;letter-spacing:.02em;color:#3a4352}.spin-brand b{color:#c1263a}
+.spin-head h1{margin:0;font-size:26px;font-weight:900;letter-spacing:-.03em}
+.spin-head p{margin:0;font-size:13px;color:#657080}
+
+.spin-stage{position:relative;width:min(84vw,340px);aspect-ratio:1;margin-top:6px;border-radius:50%;padding:12px;
+  background:linear-gradient(145deg,#ffffff,#cfd5de);box-shadow:inset 0 2px 2px #fff,inset 0 -3px 6px #9aa3b155,0 22px 50px #3c46563a,0 0 0 1px #ffffffaa}
+.spin-stage::after{content:"";position:absolute;inset:12px;border-radius:50%;box-shadow:inset 0 0 0 3px #ffffffcc,inset 0 0 24px #3c465626;pointer-events:none}
+.spin-rotor{width:100%;height:100%;border-radius:50%;overflow:hidden;transition-property:transform;transition-timing-function:cubic-bezier(.12,.75,.1,1);will-change:transform}
+.spin-svg{display:block;width:100%;height:100%}
+.spin-label{font:900 15px/1 Inter,system-ui,sans-serif;fill:#3a4352;letter-spacing:-.02em}
+.spin-label.is-jackpot{fill:#fff;font-size:18px;filter:drop-shadow(0 1px 1px #5b0a14)}
+.spin-pointer{position:absolute;top:-6px;left:50%;z-index:3;width:30px;height:38px;transform:translateX(-50%);
+  background:linear-gradient(180deg,#ff4252,#a3142a);clip-path:polygon(50% 100%,0 0,100% 0);filter:drop-shadow(0 4px 6px #8f0f1f66)}
+.spin-hub{position:absolute;top:50%;left:50%;z-index:2;width:30%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;border:3px solid #fff;cursor:pointer;
+  font:900 13px/1 Inter,system-ui,sans-serif;letter-spacing:.06em;color:#fff;background:radial-gradient(circle at 35% 30%,#ff5a68,#b3182c 70%);
+  box-shadow:0 10px 24px #a3142a66,inset 0 2px 3px #ffffff66;transition:transform .15s}
+.spin-hub:active:not(:disabled){transform:translate(-50%,-50%) scale(.95)}
+.spin-hub:disabled{cursor:default;background:radial-gradient(circle at 35% 30%,#8b93a0,#4a5260 70%);box-shadow:0 8px 18px #3c465640,inset 0 2px 3px #ffffff40}
+.spin-stage.is-spinning .spin-hub{background:radial-gradient(circle at 35% 30%,#ff5a68,#b3182c 70%)}
+
+.spin-card,.spin-result{width:100%;max-width:400px;display:grid;justify-items:center;gap:10px;padding:20px;text-align:center;border-radius:22px;border:1px solid #fff;
+  background:linear-gradient(140deg,#ffffffe8,#eef1f5c4);backdrop-filter:blur(18px);box-shadow:inset 0 1px 1px #fff,0 14px 34px #3c46561f}
+.spin-card h1,.spin-card h2{margin:0;font-size:18px;font-weight:800}
+.spin-card p,.spin-result p{margin:0;font-size:13px;line-height:1.6;color:#657080}
+.spin-actions{display:flex;gap:10px;width:100%}
+.spin-actions>*{flex:1}
+.spin-primary,.spin-secondary{display:inline-flex;align-items:center;justify-content:center;min-height:48px;width:100%;padding:0 18px;border-radius:14px;font:800 14px/1 Inter,system-ui,sans-serif;text-decoration:none;cursor:pointer}
+.spin-primary{border:1px solid #b61d2b;color:#fff;background:linear-gradient(130deg,#e03a47,#b01b2a);box-shadow:0 10px 22px #c1263540,inset 0 1px #ffffff33}
+.spin-secondary{border:1px solid #d4d9e0;color:#303846;background:linear-gradient(140deg,#fff,#e9edf2)}
+.spin-result.is-new{animation:spin-pop .5s cubic-bezier(.2,1.4,.4,1) both}
+.spin-result-value{font-size:54px;font-weight:900;letter-spacing:-.04em;line-height:1;background:linear-gradient(135deg,#ff3b4d,#9b1022);-webkit-background-clip:text;background-clip:text;color:transparent}
+.spin-result strong{font-size:16px;font-weight:800}
+.spin-result small{font-size:11.5px;color:#7a8492;line-height:1.5}
+.spin-result.is-jackpot{border-color:#f3b7bf;background:radial-gradient(ellipse at 50% 0,#ffd3da,transparent 70%),linear-gradient(140deg,#fff,#fde8eb)}
+.spin-result.is-jackpot .spin-result-value{font-size:64px;filter:drop-shadow(0 6px 14px #c1263555)}
+.spin-timer{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:12px;background:#fff;border:1px solid #f0c3c9;
+  font:800 18px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#a8192a;font-variant-numeric:tabular-nums}
+.spin-error{margin:0;padding:10px 14px;border-radius:12px;background:#fff1f2;border:1px solid #edc4c9;color:#a32a36;font-size:13px;max-width:400px;text-align:center}
+.spin-foot{max-width:400px;margin-top:auto;font-size:11px;line-height:1.6;color:#8a94a3;text-align:center}
+.spin-loader{width:44px;height:44px;margin:auto;border-radius:50%;border:4px solid #dfe3e9;border-top-color:#c1263a;animation:spin-rot 1s linear infinite}
+@keyframes spin-rot{to{transform:rotate(360deg)}}
+@keyframes spin-pop{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.spin-result.is-new,.spin-loader{animation:none}}

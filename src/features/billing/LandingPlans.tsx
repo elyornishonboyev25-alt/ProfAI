@@ -10,8 +10,8 @@ export default function LandingPlans() {
   const [months, setMonths] = useState(1)
   return <div className="billing-landing-plans">
     <div className="billing-section-heading"><div><span className="billing-eyebrow">IVYGOO PLANS</span>
-      <h2>{text('Your ambition. Your first week. $0.', 'Sizning maqsadingiz. Birinchi hafta. $0.', 'Ваша цель. Первая неделя. $0.')}</h2>
-      <p>{text('Start for free with 7 days of IELTS, SAT and AI. No card required. Continue from $3/month.', 'IELTS, SAT va AI bilan 7 kun bepul boshlang. Karta talab etilmaydi. Keyin oyiga $3 dan.', 'Начните бесплатно: 7 дней IELTS, SAT и AI. Без карты. Далее от $3/мес.')}</p>
+      <h2>{text('Start free. Upgrade when you are ready.', 'Bepul boshlang. Tayyor bo‘lganda o‘ting.', 'Начните бесплатно. Улучшите, когда будете готовы.')}</h2>
+      <p>{text('Free forever with monthly IELTS, SAT and AI allowances. Pro $6/month, Max $12/month. No card required to start.', 'Har oy IELTS, SAT va AI imkoniyatlari bilan doimiy bepul. Pro $6/oy, Max $12/oy. Boshlash uchun karta kerak emas.', 'Бесплатно навсегда с ежемесячными лимитами IELTS, SAT и AI. Pro $6/мес., Max $12/мес. Без карты.')}</p>
     </div></div><PlanDuration months={months} onChange={setMonths} /><PricingCards months={months} onChoose={() => navigate('/premium')} />
   </div>
 }

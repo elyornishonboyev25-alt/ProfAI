@@ -1,42 +1,49 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { hasPremiumAccess } from '@/utils/premiumAccess'
+import { useBillingStore } from '@/features/billing/store'
+import type { AccessFeature } from '@/features/billing/catalog'
 import {
   COMMUNITY_TRIAL_SECONDS,
-  TRIAL_LIMITS,
   addCommunitySeconds,
   getCommunitySecondsUsed,
-  getTrialUsed,
   type TrialFeature,
 } from '@/utils/freeTrial'
 
 export type FeatureTrial = {
-  /** Unlimited access under the current access settings. */
+  /** Paid plan (Pro or Max). */
   isPremium: boolean
   used: number
   limit: number
-  /** Remaining uses (Infinity while access is unlimited). */
+  /** Remaining uses this month (Infinity when the plan has no monthly limit). */
   remaining: number
-  /** True only when limits are enabled and the allowance is spent. */
+  /** True when this month's allowance for the feature is used up. */
   locked: boolean
-  /** Spend one use (no-op while access is unlimited). */
+  /** The server meters each use; this only refreshes the shown allowance. */
   consume: () => boolean
 }
 
-/**
- * The welcome trial and subscriptions include study use for their full duration.
- * Historical attempt counters do not grant or renew access.
- */
+const SERVER_FEATURE: Record<TrialFeature, AccessFeature> = {
+  writing: 'writing', reading: 'test', listening: 'test', speakingDaily: 'speaking', mock: 'mock',
+}
+
+/** Monthly allowance for a feature on the account's plan (Free, Pro or Max). */
 export function useFeatureTrial(feature: TrialFeature): FeatureTrial {
   const user = useAuthStore((state: AuthState) => state.user)
+  const { wallet, userId, refresh } = useBillingStore()
+  useEffect(() => { if (user && userId !== user.id) void refresh() }, [user?.id, userId, refresh])
   const isPremium = hasPremiumAccess(user)
-  const used = getTrialUsed(feature, user?.id)
+  const usage = userId === user?.id ? wallet?.usage?.[SERVER_FEATURE[feature]] : undefined
+  const used = usage?.used ?? 0
+  const limit = usage ? usage.limit ?? Number.POSITIVE_INFINITY : Number.POSITIVE_INFINITY
+  const remaining = Math.max(0, limit - used)
+  // Unknown usage never locks; the server has the final word when the action starts.
+  const locked = Boolean(user) && Boolean(usage) && remaining <= 0
 
-  const limit = TRIAL_LIMITS[feature]
-  const remaining = isPremium ? Number.POSITIVE_INFINITY : 0
-  const locked = !isPremium
-
-  const consume = useCallback(() => isPremium, [isPremium])
+  const consume = useCallback(() => {
+    window.setTimeout(() => void refresh(), 1500)
+    return !locked
+  }, [locked, refresh])
 
   return { isPremium, used, limit, remaining, locked, consume }
 }

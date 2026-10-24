@@ -1,55 +1,44 @@
-/* Promo code: silver glass with Ivygoo red accents, matching the Premium page. */
-.promo{display:grid;gap:14px}
-.promo-toggle{display:flex;align-items:center;gap:14px;width:100%;padding:15px 18px;border:1px solid #fff;border-radius:18px;text-align:left;cursor:pointer;color:#202631;
-  background:linear-gradient(135deg,#ffffffe6,#e7ebf1c4 70%,#fffffff0);backdrop-filter:blur(20px);
-  box-shadow:inset 0 1px 1px #fff,0 10px 30px #3c46560d,0 1px 3px #3c465618;transition:box-shadow .2s,transform .2s,border-color .2s}
-.promo-toggle:hover{box-shadow:inset 0 1px 1px #fff,0 14px 34px #3c465620,0 1px 3px #3c465618;transform:translateY(-1px)}
-.promo-toggle:focus-visible,.promo-get:focus-visible{outline:2px solid #c12e46;outline-offset:3px}
-.promo-toggle.is-open{border-color:#e7b9bf}
-.promo-toggle-icon{display:grid;place-items:center;width:42px;height:42px;flex-shrink:0;border-radius:13px;color:#b42337;
-  background:linear-gradient(145deg,#fff,#f7dce2);border:1px solid #fff;box-shadow:inset 0 1px #fff,0 6px 16px #ac25351f}
-.promo-toggle-copy{display:grid;gap:2px;flex:1}
-.promo-toggle-copy strong{font-size:14px;font-weight:800;letter-spacing:-.01em}
-.promo-toggle-copy small{font-size:11.5px;color:#6a7585;line-height:1.5}
-.promo-toggle-chevron,.promo-get-chevron{color:#7b8696;transition:transform .2s}
-.promo-toggle.is-open .promo-toggle-chevron,.promo-get[aria-expanded="true"] .promo-get-chevron{transform:rotate(180deg)}
+/* Discount centre: silver glass tiles with Ivygoo red accents. */
+.promo-center{display:grid;gap:18px}
+.promo-center-head{display:grid;gap:6px}
+.promo-center-head h2{margin:0;font-size:clamp(22px,2.6vw,30px);font-weight:800;letter-spacing:-.03em;color:#1f2530}
 
-.promo-panel{display:grid;gap:18px;padding:clamp(18px,3vw,28px);animation:promo-in .24s ease both}
-.promo-form{display:grid;gap:10px}
-.promo-form label{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#9c2833}
-.promo-input-row{display:flex;gap:10px;align-items:stretch}
-.promo-input-row input{flex:1;min-height:50px;padding:0 16px;border:1px solid #d4d9e0;border-radius:14px;background:linear-gradient(180deg,#f3f5f8,#fff);
-  color:#202631;font:700 16px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.18em;text-transform:uppercase;
-  box-shadow:inset 0 2px 4px #3c46560f;transition:border-color .18s,box-shadow .18s}
-.promo-input-row input::placeholder{color:#a5adba;letter-spacing:.14em}
-.promo-input-row input:focus{outline:0;border-color:#c12e46;box-shadow:inset 0 2px 4px #3c46560a,0 0 0 4px #c12e4620}
-.promo-input-row .billing-primary{min-width:140px}
-.promo-hint{font-size:12px;line-height:1.7;color:#6a7585}
+.promo-live{display:flex;align-items:center;gap:16px;padding:16px 20px;border-radius:20px;border:1px solid #f0c3c9;color:#5b1520;
+  background:linear-gradient(120deg,#fff6f7,#fde3e7 55%,#fff1f3);box-shadow:inset 0 1px #fff,0 12px 30px #c1263522;animation:promo-in .3s ease both}
+.promo-live>div{display:grid;gap:2px;flex:1;min-width:0}
+.promo-live strong{font-size:14px;font-weight:800}
+.promo-live small{font-size:12px;color:#8a4a53;line-height:1.5}
+.promo-live-badge{display:grid;place-items:center;min-width:64px;height:48px;padding:0 12px;border-radius:14px;color:#fff;font-size:20px;font-weight:900;letter-spacing:-.02em;
+  background:linear-gradient(135deg,#e5404e,#a8192a);box-shadow:0 10px 22px #c1263540,inset 0 1px #ffffff40}
+.promo-live.is-jackpot .promo-live-badge{background:linear-gradient(135deg,#ff2d3f,#8f0f1f);animation:promo-pulse 1.6s ease-in-out infinite}
+.promo-live-timer{display:inline-flex;align-items:center;gap:7px;padding:9px 13px;border-radius:12px;background:#fff;border:1px solid #f0c3c9;
+  font:800 16px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#a8192a;font-variant-numeric:tabular-nums}
 
-.promo-divider{display:flex;align-items:center;gap:14px;color:#8a94a3;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
-.promo-divider::before,.promo-divider::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,#cfd5de,transparent)}
-
-.promo-get{display:flex;align-items:center;gap:14px;width:100%;padding:15px 17px;border:1px dashed #d98a93;border-radius:16px;text-align:left;cursor:pointer;color:#8f1f2d;
-  background:linear-gradient(135deg,#fff7f8,#fde8eb 70%,#fff7f8);transition:background .2s,border-color .2s,box-shadow .2s}
-.promo-get:hover{border-color:#c12e46;box-shadow:0 8px 22px #c126351f}
-.promo-get>svg:first-child{flex-shrink:0;color:#b42337}
-.promo-get span{display:grid;gap:2px;flex:1}
-.promo-get strong{font-size:13.5px;font-weight:800}
-.promo-get small{font-size:11.5px;color:#7a5a60;line-height:1.5}
-
-.promo-steps{list-style:none;margin:0;padding:0;display:grid;gap:0}
-.promo-steps li{display:flex;gap:16px;position:relative;padding-bottom:22px}
-.promo-steps li:last-child{padding-bottom:0}
-.promo-steps li:not(:last-child)::before{content:"";position:absolute;left:17px;top:38px;bottom:4px;width:2px;border-radius:2px;background:linear-gradient(#d4d9e0,#ebeef2)}
-.promo-step-number{display:grid;place-items:center;width:36px;height:36px;flex-shrink:0;border-radius:50%;font-size:13px;font-weight:800;color:#8f1f2d;
-  background:linear-gradient(145deg,#fff,#e4e8ee);border:1px solid #fff;box-shadow:inset 0 1px #fff,0 5px 14px #3c465620}
-.promo-steps li>div{display:grid;gap:7px;justify-items:start;padding-top:4px;min-width:0}
-.promo-steps strong{font-size:14px;font-weight:800;color:#202631}
-.promo-steps p{font-size:12.5px;line-height:1.7;color:#657080;margin:0}
-.promo-steps a.billing-secondary{text-decoration:none;margin-top:3px}
-.promo-steps .billing-primary{margin-top:3px}
+.promo-grid{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:18px}
+.promo-tile{display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding:24px}
+.promo-tile h3{margin:0;font-size:17px;font-weight:800;letter-spacing:-.015em;color:#1f2530}
+.promo-tile p{margin:0;font-size:12.5px;line-height:1.75;color:#657080}
+.promo-tile .billing-primary,.promo-tile .billing-secondary{margin-top:auto;text-decoration:none}
+.promo-tile-icon{display:grid;place-items:center;width:46px;height:46px;border-radius:15px;font-size:24px;color:#b42337;
+  background:linear-gradient(145deg,#fff,#e6eaf0);border:1px solid #fff;box-shadow:inset 0 1px #fff,0 6px 16px #3c46561f}
+.promo-tile-wheel{border-color:#f0c3c9;background:radial-gradient(ellipse at 100% 0,#fdd9df99,transparent 60%),linear-gradient(145deg,#fff,#fff5f6e8 55%,#edf0f5e0)}
+.promo-tile-wheel .promo-tile-icon{background:linear-gradient(145deg,#fff,#f7dce2);box-shadow:inset 0 1px #fff,0 8px 20px #ac25352e}
+.promo-mini-steps{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:0;padding:0;counter-reset:promo}
+.promo-mini-steps li{counter-increment:promo;display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-size:11px;font-weight:700;color:#4a5361;
+  background:linear-gradient(135deg,#fff,#e9edf2);border:1px solid #fff;box-shadow:inset 0 1px #fff,0 2px 6px #3c465614}
+.promo-mini-steps li::before{content:counter(promo);display:grid;place-items:center;width:17px;height:17px;border-radius:50%;font-size:10px;color:#fff;background:#b61d2b}
+.promo-note{font-size:11.5px!important;color:#8f1f2d!important;font-weight:600}
 .promo-soon{color:#9c2833!important;font-weight:700}
 
+.promo-form{display:grid;gap:10px;width:100%;margin-top:auto}
+.promo-input-row{display:flex;gap:8px;align-items:stretch}
+.promo-input-row input{flex:1;min-width:0;min-height:46px;padding:0 14px;border:1px solid #d4d9e0;border-radius:13px;background:linear-gradient(180deg,#f3f5f8,#fff);
+  color:#202631;font:700 14px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.14em;text-transform:uppercase;box-shadow:inset 0 2px 4px #3c46560f}
+.promo-input-row input::placeholder{color:#a5adba}
+.promo-input-row input:focus{outline:0;border-color:#c12e46;box-shadow:inset 0 2px 4px #3c46560a,0 0 0 4px #c12e4620}
+
 @keyframes promo-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
-@media(max-width:560px){.promo-input-row{flex-direction:column}.promo-input-row .billing-primary{width:100%}.promo-toggle{padding:13px 14px}}
-@media(prefers-reduced-motion:reduce){.promo-panel{animation:none}.promo-toggle,.promo-toggle-chevron,.promo-get-chevron{transition:none}.promo-toggle:hover{transform:none}}
+@keyframes promo-pulse{0%,100%{box-shadow:0 10px 22px #c1263540}50%{box-shadow:0 10px 30px #ff2d3f80}}
+@media(max-width:980px){.promo-grid{grid-template-columns:1fr 1fr}.promo-tile-wheel{grid-column:1/-1}}
+@media(max-width:640px){.promo-grid{grid-template-columns:1fr}.promo-live{flex-wrap:wrap}.promo-input-row{flex-direction:column}.promo-tile{padding:20px}}
+@media(prefers-reduced-motion:reduce){.promo-live,.promo-live.is-jackpot .promo-live-badge{animation:none}}

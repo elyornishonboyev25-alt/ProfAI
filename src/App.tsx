@@ -39,6 +39,7 @@ const AchievementCelebration = lazy(() => import('@/components/achievements/Achi
 const FloatingAIAssistant = lazy(() => import('@/components/ai/FloatingAIAssistant'))
 const TalkOverlay = lazy(() => import('@/components/ai/TalkOverlay'))
 const Landing = lazy(() => import('@/pages/Landing'))
+const SpinWheel = lazy(() => import('@/pages/SpinWheel'))
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
 const OwnerDashboard = lazy(() => import('@/pages/OwnerDashboard'))
 const TestPreparation = lazy(() => import('@/pages/TestPreparation'))
@@ -429,7 +430,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell relative min-h-screen text-[#1E293B] selection:bg-blue-100 ${pathname === '/dashboard' || (pathname === '/' && user) ? 'app-shell-dashboard' : ''} ${pathname === '/account' || isGuestLanding ? 'app-shell-sticky-content' : ''} ${isAiTutorMode ? 'app-shell-ai-tutor' : ''} ${isCommunityPeopleMode ? 'app-shell-community-people' : ''}`}>
+    <div data-material={!isTestMode && !isFocusContentMode && !isExamModeActive ? 'silver-glass' : undefined} className={`app-shell relative min-h-screen text-[#1E293B] selection:bg-red-100 ${pathname === '/dashboard' || (pathname === '/' && user) ? 'app-shell-dashboard' : ''} ${pathname === '/account' || isGuestLanding ? 'app-shell-sticky-content' : ''} ${isAiTutorMode ? 'app-shell-ai-tutor' : ''} ${isCommunityPeopleMode ? 'app-shell-community-people' : ''}`}>
       {showAmbientBackground ? <AnimatedBackground /> : null}
       <ToastViewport />
       <XpNotification deferActivityRewards={isTestMode || isExamModeActive} />
@@ -871,5 +872,7 @@ function App() {
 }
 
 export default function VerifiedApp() {
+  // The Telegram wheel runs inside Telegram's Mini App frame, outside the account workspace.
+  if (useLocation().pathname === '/spin') return <Suspense fallback={null}><SpinWheel /></Suspense>
   return <AccountUsageBoundary><App /></AccountUsageBoundary>
 }

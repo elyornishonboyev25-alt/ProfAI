@@ -1,74 +1,59 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowRight, BadgeCheck, ChevronDown, Gift, Loader2, Megaphone, Send, Ticket } from 'lucide-react'
+import { ArrowRight, BadgeCheck, Gift, Loader2, Send, TimerReset, Users } from 'lucide-react'
 import { ApiError, apiClient } from '@/lib/apiClient'
 import { useAuthStore } from '@/store/authStore'
+import { GROUP_MIN_SIZE, GROUP_MONTHLY_USD } from './catalog'
+import { formatBillingMoney } from './PricingCards'
 import { useBillingText } from './copy'
+import { useCountdown, type WheelDiscountState } from './useWheelDiscount'
 import './promo.css'
 
-type PromoStatus = {
-  telegramEnabled: boolean
-  channelUrl: string
-  promoDays: number
-  referralBonusDays: number
-  telegramLinked: boolean
-  promoIssued: boolean
-  promoRedeemed: boolean
-}
-
+type PromoStatus = { telegramEnabled: boolean; botUsername: string; channelUrl: string }
 type Outcome = { tone: 'success' | 'error'; message: string }
 
-export default function PromoCode({ onRedeemed }: { onRedeemed: () => void }) {
+/** Ways to pay less: the Telegram wheel, group buying and a friend's invitation code. */
+export default function PromoCode({ wheel, onRedeemed }: { wheel: WheelDiscountState & { refresh: () => Promise<void> }; onRedeemed: () => void }) {
   const text = useBillingText()
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const user = useAuthStore(state => state.user)
-  const presetCode = (params.get('promo') ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 24)
-  const [open, setOpen] = useState(Boolean(presetCode))
-  const [guideOpen, setGuideOpen] = useState(false)
-  const [code, setCode] = useState(presetCode)
+  const [code, setCode] = useState((params.get('promo') ?? params.get('ref') ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 24))
   const [status, setStatus] = useState<PromoStatus | null>(null)
   const [busy, setBusy] = useState<'apply' | 'bot' | null>(null)
   const [outcome, setOutcome] = useState<Outcome | null>(null)
-  const panelRef = useRef<HTMLDivElement>(null)
+  const countdown = useCountdown(wheel.discount?.expiresAt)
 
   useEffect(() => {
-    if (!open || !user) return
+    if (!user) return
     let alive = true
     void apiClient.get<PromoStatus>('/promo/status').then(value => { if (alive) setStatus(value) }).catch(() => undefined)
     return () => { alive = false }
-  }, [open, user?.id])
-
-  useEffect(() => {
-    if (presetCode) window.setTimeout(() => panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 120)
-  }, [presetCode])
+  }, [user?.id])
 
   const needAccount = () => navigate('/register', { state: { from: { pathname: '/premium' } } })
+  const botUrl = `https://t.me/${status?.botUsername ?? 'IvyGoo_bot'}`
 
   const errorMessage = (error: unknown) => {
-    const reason = error instanceof ApiError ? error.code : undefined
-    switch (reason) {
-      case 'ALREADY_USED': return text('This promo code has already been used.', 'Bu promokod avval ishlatilgan.', 'Этот промокод уже использован.')
+    switch (error instanceof ApiError ? error.code : undefined) {
+      case 'ALREADY_USED': return text('This code has already been used.', 'Bu kod avval ishlatilgan.', 'Этот код уже использован.')
       case 'SELF_REFERRAL': return text('You cannot use your own invitation code.', 'O‘zingizning taklif kodingizdan foydalana olmaysiz.', 'Нельзя использовать собственный код приглашения.')
       case 'ALREADY_CLAIMED': return text('An invitation code was already applied to your account.', 'Hisobingizga taklif kodi allaqachon qo‘llangan.', 'Код приглашения уже применён к вашему аккаунту.')
-      case 'TOO_LATE': return text('Invitation codes work during the first 7 days after sign-up.', 'Taklif kodi ro‘yxatdan o‘tgandan keyingi 7 kun ichida ishlaydi.', 'Коды приглашения работают в течение 7 дней после регистрации.')
-      default: return text('We could not find this code. Check it and try again.', 'Bu kod topilmadi. Tekshirib, qayta urinib ko‘ring.', 'Код не найден. Проверьте его и попробуйте снова.')
+      case 'TOO_LATE': return text('Invitation codes work during the first 7 days after sign-up.', 'Taklif kodi ro‘yxatdan o‘tgandan keyingi 7 kun ichida ishlaydi.', 'Коды приглашения работают 7 дней после регистрации.')
+      default: return text('We could not find this code. Check it and try again.', 'Bu kod topilmadi. Tekshirib, qayta urinib ko‘ring.', 'Код не найден. Проверьте и попробуйте снова.')
     }
   }
 
   async function apply(event: FormEvent) {
     event.preventDefault()
     if (!user) { needAccount(); return }
-    if (code.trim().length < 3 || busy) return
+    if (code.length < 3 || busy) return
     setBusy('apply'); setOutcome(null)
     try {
       const result = await apiClient.post<{ kind: 'PROMO' | 'REFERRAL'; days: number }>('/promo/redeem', { code })
-      setOutcome({
-        tone: 'success',
-        message: result.kind === 'REFERRAL'
-          ? text(`Invitation accepted. +${result.days} days of Premium added.`, `Taklif qabul qilindi. Premium’ga +${result.days} kun qo‘shildi.`, `Приглашение принято. К Premium добавлено +${result.days} дн.`)
-          : text(`Promo code applied. +${result.days} days of Premium added.`, `Promokod qo‘llandi. Premium’ga +${result.days} kun qo‘shildi.`, `Промокод применён. К Premium добавлено +${result.days} дн.`),
-      })
+      setOutcome({ tone: 'success', message: result.kind === 'REFERRAL'
+        ? text(`Invitation accepted — +${result.days} Premium days. Start our Telegram bot and join the channel so your friend gets their reward too.`, `Taklif qabul qilindi — +${result.days} kun Premium. Do‘stingiz ham mukofot olishi uchun Telegram botga start bering va kanalga obuna bo‘ling.`, `Приглашение принято — +${result.days} дн. Premium. Запустите бота и подпишитесь на канал, чтобы друг тоже получил награду.`)
+        : text(`Code applied — +${result.days} Premium days.`, `Kod qo‘llandi — +${result.days} kun Premium.`, `Код применён — +${result.days} дн. Premium.`) })
       setCode('')
       onRedeemed()
     } catch (error) {
@@ -76,7 +61,7 @@ export default function PromoCode({ onRedeemed }: { onRedeemed: () => void }) {
     } finally { setBusy(null) }
   }
 
-  async function openBot() {
+  async function openWheel() {
     if (!user) { needAccount(); return }
     setBusy('bot'); setOutcome(null)
     try {
@@ -87,71 +72,64 @@ export default function PromoCode({ onRedeemed }: { onRedeemed: () => void }) {
     } finally { setBusy(null) }
   }
 
-  const days = status?.promoDays ?? 7
-  const channelUrl = status?.channelUrl ?? 'https://t.me/IvyGoo'
+  const discount = wheel.discount
+  return <section className="promo-center" aria-labelledby="promo-center-title">
+    <div className="promo-center-head">
+      <span className="billing-eyebrow"><Gift size={15} />{text('PAY LESS', 'ARZONROQ OLING', 'ПЛАТИТЕ МЕНЬШЕ')}</span>
+      <h2 id="promo-center-title">{text('Discounts and promo codes', 'Chegirmalar va promokodlar', 'Скидки и промокоды')}</h2>
+    </div>
 
-  return <section className="promo" aria-labelledby="promo-title">
-    <button type="button" className={`promo-toggle ${open ? 'is-open' : ''}`} aria-expanded={open} aria-controls="promo-panel" onClick={() => setOpen(value => !value)}>
-      <span className="promo-toggle-icon"><Ticket size={18} /></span>
-      <span className="promo-toggle-copy">
-        <strong id="promo-title">{text('Have a promo code?', 'Promokodingiz bormi?', 'Есть промокод?')}</strong>
-        <small>{text('Enter it to get free Premium days', 'Kiriting va bepul Premium kunlarini oling', 'Введите и получите бесплатные дни Premium')}</small>
-      </span>
-      <ChevronDown size={18} className="promo-toggle-chevron" />
-    </button>
-
-    {open && <div id="promo-panel" ref={panelRef} className="promo-panel billing-glass">
-      <form className="promo-form" onSubmit={event => void apply(event)}>
-        <label htmlFor="promo-code-input">{text('Promo or invitation code', 'Promokod yoki taklif kodi', 'Промокод или код приглашения')}</label>
-        <div className="promo-input-row">
-          <input id="promo-code-input" value={code} onChange={event => { setCode(event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 24)); setOutcome(null) }}
-            placeholder="IVYXXXXXXX" autoComplete="off" autoCapitalize="characters" spellCheck={false} inputMode="text" maxLength={24} />
-          <button type="submit" className="billing-primary" disabled={busy !== null || code.trim().length < 3}>
-            {busy === 'apply' ? <Loader2 size={16} className="animate-spin" /> : <BadgeCheck size={16} />}
-            {text('Apply', 'Qo‘llash', 'Применить')}
-          </button>
-        </div>
-        <p className="promo-hint">{text('A friend invited you? Paste their invitation code here too — you both get bonus days.', 'Do‘stingiz taklif qildimi? Uning taklif kodini ham shu yerga kiriting — ikkalangiz bonus kun olasiz.', 'Вас пригласил друг? Вставьте и его код приглашения — оба получите бонусные дни.')}</p>
-        {outcome && <div role={outcome.tone === 'error' ? 'alert' : 'status'} className={outcome.tone === 'success' ? 'billing-status is-success' : 'billing-error'}>{outcome.message}</div>}
-      </form>
-
-      <div className="promo-divider" role="presentation"><span>{text('or', 'yoki', 'или')}</span></div>
-
-      <button type="button" className="promo-get" aria-expanded={guideOpen} onClick={() => setGuideOpen(value => !value)}>
-        <Gift size={18} />
-        <span><strong>{text('Get a free promo code', 'Bepul promokod olish', 'Получить бесплатный промокод')}</strong><small>{text(`Join our Telegram channel and get +${days} Premium days`, `Telegram kanalimizga obuna bo‘ling va +${days} kun Premium oling`, `Подпишитесь на наш Telegram-канал и получите +${days} дн. Premium`)}</small></span>
-        <ChevronDown size={17} className="promo-get-chevron" />
-      </button>
-
-      {guideOpen && <ol className="promo-steps">
-        <li>
-          <span className="promo-step-number">1</span>
-          <div>
-            <strong>{text('Join the channel', 'Kanalga obuna bo‘ling', 'Подпишитесь на канал')}</strong>
-            <p>{text('Subscribe to our official Telegram channel.', 'Rasmiy Telegram kanalimizga obuna bo‘ling.', 'Подпишитесь на наш официальный Telegram-канал.')}</p>
-            <a className="billing-secondary" href={channelUrl} target="_blank" rel="noopener noreferrer"><Megaphone size={16} />@IvyGoo<ArrowRight size={15} /></a>
-          </div>
-        </li>
-        <li>
-          <span className="promo-step-number">2</span>
-          <div>
-            <strong>{text('Open the bot and press Start', 'Botni oching va Start bosing', 'Откройте бота и нажмите Start')}</strong>
-            <p>{text('The bot checks your subscription and sends your personal code.', 'Bot obunangizni tekshiradi va shaxsiy kodingizni yuboradi.', 'Бот проверит подписку и пришлёт ваш личный код.')}</p>
-            <button type="button" className="billing-primary" disabled={busy !== null || status?.telegramEnabled === false} onClick={() => void openBot()}>
-              {busy === 'bot' ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-              {text('Open Telegram bot', 'Telegram botni ochish', 'Открыть Telegram-бота')}
-            </button>
-            {status?.telegramEnabled === false && <p className="promo-soon">{text('The bot is coming soon.', 'Bot tez orada ishga tushadi.', 'Бот скоро заработает.')}</p>}
-          </div>
-        </li>
-        <li>
-          <span className="promo-step-number">3</span>
-          <div>
-            <strong>{text('Paste your code above', 'Kodni yuqoriga kiriting', 'Вставьте код выше')}</strong>
-            <p>{text(`Press Apply — +${days} Premium days are added instantly.`, `“Qo‘llash” ni bosing — +${days} kun Premium darhol qo‘shiladi.`, `Нажмите «Применить» — +${days} дн. Premium добавятся сразу.`)}</p>
-          </div>
-        </li>
-      </ol>}
+    {discount && countdown && countdown.left > 0 && <div className={`promo-live ${discount.percent === 50 ? 'is-jackpot' : ''}`} role="status">
+      <span className="promo-live-badge">−{discount.percent}%</span>
+      <div><strong>{text('Your wheel discount is applied to every plan', 'Baraban chegirmangiz barcha tariflarga qo‘llandi', 'Скидка с колеса применена ко всем тарифам')}</strong>
+        <small>{text('Pay before the timer ends — after that the discount is gone.', 'Taymer tugashidan oldin to‘lang — keyin chegirma yo‘qoladi.', 'Оплатите до конца таймера — потом скидка сгорит.')}</small></div>
+      <span className="promo-live-timer"><TimerReset size={16} />{countdown.label}</span>
     </div>}
+
+    <div className="promo-grid">
+      <article className="billing-glass promo-tile promo-tile-wheel">
+        <span className="promo-tile-icon">🎡</span>
+        <h3>{text('Spin for up to 50% off', '50% gacha chegirma yuting', 'Выиграйте скидку до 50%')}</h3>
+        <p>{wheel.spun && !discount
+          ? wheel.used ? text('You have already used your wheel discount.', 'Baraban chegirmangizdan foydalangansiz.', 'Вы уже использовали скидку с колеса.') : text(`Your ${wheel.lastPercent ?? ''}% discount has expired. Everyone can spin once.`, `${wheel.lastPercent ?? ''}% chegirmangiz muddati tugagan. Har kim bir marta aylantiradi.`, `Ваша скидка ${wheel.lastPercent ?? ''}% истекла. Крутить можно один раз.`)
+          : text('Join our Telegram channel and spin the wheel once. 5% to 50% off any plan.', 'Telegram kanalimizga obuna bo‘ling va barabanni bir marta aylantiring. Har qanday tarifga 5% dan 50% gacha.', 'Подпишитесь на наш Telegram-канал и крутите колесо один раз. От 5% до 50% на любой тариф.')}</p>
+        <ol className="promo-mini-steps">
+          <li>{text('Open the bot', 'Botni oching', 'Откройте бота')}</li>
+          <li>{text('Join @IvyGoo', '@IvyGoo’ga obuna bo‘ling', 'Подпишитесь на @IvyGoo')}</li>
+          <li>{text('Spin & pay', 'Aylantiring va to‘lang', 'Крутите и платите')}</li>
+        </ol>
+        {!wheel.spun && <button type="button" className="billing-primary" disabled={busy !== null || status?.telegramEnabled === false} onClick={() => void openWheel()}>
+          {busy === 'bot' ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}{text('Spin in Telegram', 'Telegramda aylantirish', 'Крутить в Telegram')}
+        </button>}
+        {status?.telegramEnabled === false && <p className="promo-soon">{text('The bot is coming soon.', 'Bot tez orada ishga tushadi.', 'Бот скоро заработает.')}</p>}
+      </article>
+
+      <article className="billing-glass promo-tile">
+        <span className="promo-tile-icon"><Users size={22} /></span>
+        <h3>{text(`${GROUP_MIN_SIZE}+ friends? Pay less each`, `${GROUP_MIN_SIZE}+ do‘st? Har biringizga arzon`, `${GROUP_MIN_SIZE}+ друзей? Дешевле каждому`)}</h3>
+        <p>{text(`Pro ${formatBillingMoney(GROUP_MONTHLY_USD.PRO, 'USD')} and Max ${formatBillingMoney(GROUP_MONTHLY_USD.MAX, 'USD')} per person. One person pays; everyone gets Premium. Each friend can add their own wheel discount.`,
+          `Pro ${formatBillingMoney(GROUP_MONTHLY_USD.PRO, 'USD')}, Max ${formatBillingMoney(GROUP_MONTHLY_USD.MAX, 'USD')} — kishi boshiga. Bir kishi to‘laydi, hammaga Premium. Har bir do‘st barabandan qo‘shimcha chegirma qo‘sha oladi.`,
+          `Pro ${formatBillingMoney(GROUP_MONTHLY_USD.PRO, 'USD')}, Max ${formatBillingMoney(GROUP_MONTHLY_USD.MAX, 'USD')} с человека. Платит один — Premium у всех. Каждый может добавить свою скидку с колеса.`)}</p>
+        <p className="promo-note">{text(`Fewer than ${GROUP_MIN_SIZE} people: only the wheel discount applies.`, `${GROUP_MIN_SIZE} kishidan kam bo‘lsa — faqat baraban chegirmasi.`, `Меньше ${GROUP_MIN_SIZE} человек — только скидка с колеса.`)}</p>
+        <a className="billing-secondary" href={`${botUrl}?start=spin`} target="_blank" rel="noopener noreferrer">{text('Build a group in the bot', 'Botda guruh tuzish', 'Собрать группу в боте')}<ArrowRight size={16} /></a>
+      </article>
+
+      <article className="billing-glass promo-tile">
+        <span className="promo-tile-icon"><BadgeCheck size={22} /></span>
+        <h3>{text('Invitation or promo code', 'Taklif yoki promokod', 'Код приглашения или промокод')}</h3>
+        <p>{text('A friend invited you? Enter their code — you both get Premium days.', 'Do‘stingiz taklif qildimi? Kodini kiriting — ikkalangiz Premium kun olasiz.', 'Вас пригласил друг? Введите код — оба получите дни Premium.')}</p>
+        <form className="promo-form" onSubmit={event => void apply(event)}>
+          <label htmlFor="promo-code-input" className="sr-only">{text('Code', 'Kod', 'Код')}</label>
+          <div className="promo-input-row">
+            <input id="promo-code-input" value={code} onChange={event => { setCode(event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 24)); setOutcome(null) }}
+              placeholder="ABCD2345" autoComplete="off" autoCapitalize="characters" spellCheck={false} maxLength={24} />
+            <button type="submit" className="billing-primary" disabled={busy !== null || code.length < 3}>
+              {busy === 'apply' ? <Loader2 size={16} className="animate-spin" /> : <BadgeCheck size={16} />}{text('Apply', 'Qo‘llash', 'Применить')}
+            </button>
+          </div>
+        </form>
+      </article>
+    </div>
+    {outcome && <div role={outcome.tone === 'error' ? 'alert' : 'status'} className={outcome.tone === 'success' ? 'billing-status is-success' : 'billing-error'}>{outcome.message}</div>}
   </section>
 }

@@ -209,12 +209,12 @@ function IELTSMockCatalog() {
                     const first = getFullMockPendingSection(mock.id)
                     if (first?.launchPath) navigate(first.launchPath, { state: fullMockLaunchState(mock.id, first.key, from ?? 'ielts') })
                   }}><RotateCcw size={14} /> Retake</button> :
-                  <button type="button" className="mock-ielts-glass-open mock-ielts-card-open" aria-label={`${inProgress ? 'Resume' : 'Open'} Full Mock ${mock.index}`} onClick={() => {
+                  <button type="button" className="mock-ielts-glass-open mock-ielts-card-open" aria-label={`${inProgress ? 'Resume' : 'Start'} Full Mock ${mock.index}`} onClick={() => {
                     if (!finished) void enter()
                     const pending = getFullMockPendingSection(mock.id)
                     if (pending?.launchPath) navigate(pending.launchPath, { state: fullMockLaunchState(mock.id, pending.key, from ?? 'ielts') })
                     else navigate(`/mock/ielts/${mock.id}`, { state: { from: from ?? 'ielts' } })
-                  }}>{inProgress ? 'Resume' : 'Open'} <ArrowRight size={14} /></button>}
+                  }}>{inProgress ? 'Resume' : 'Start'} <ArrowRight size={14} /></button>}
                   </div>
                 </div>
               </article>

@@ -1688,6 +1688,10 @@ export default function IELTSReadingInterface({
   const confirmSubmitTest = () => {
     setShowSubmitConfirmModal(false)
     const timeSpent = getCurrentTimeSpent()
+    if (fullMockId) {
+      beginSubmitLoading(timeSpent >= minimumLeaderboardTimeSec)
+      return
+    }
     if (!isReviewMode && timeSpent < minimumLeaderboardTimeSec) {
       warnBeforeLeaderboardSubmit(timeSpent)
       return
@@ -7187,7 +7191,7 @@ export default function IELTSReadingInterface({
             >
               <h3 className="text-3xl font-black text-slate-900">Submit this test?</h3>
               <p className="mt-2 text-sm text-slate-600">
-                After submitting, your result will be generated and the test session will end.
+                {fullMockId ? 'Your answers will be saved and the next section will start automatically.' : 'After submitting, your result will be generated and the test session will end.'}
               </p>
               <div className="mt-5 flex items-center justify-center gap-3">
                 <button

@@ -42,8 +42,8 @@ export async function run() {
     const retake = completedCard.querySelector<HTMLButtonElement>('[aria-label="Retake Full Mock 1"]')!
     assert.ok(retake)
     await act(async () => retake.click())
-    assert.ok(element.querySelector('video'), 'Retake returns to Listening instructions')
-    assert.equal(element.querySelector('[data-runner]'), null, 'Retake does not consume exam time before Start')
+    assert.equal(element.querySelector('video'), null, 'Retake has no video gate')
+    assert.ok(element.querySelector('[data-runner]'), 'Retake starts a fresh Listening runner immediately')
     assert.deepEqual(getFullMockCompletedSections(mock.id), [])
     assert.equal(getFullMockResults('full-mock-2').listening?.band, 8)
     assert.equal(storage.getItem(listeningKey), null, 'Previous final-audio countdown cannot submit a retake')
@@ -55,7 +55,6 @@ export async function run() {
     assert.equal(history.length, 1)
     assert.equal(history[0].overallBand, 7)
     assert.equal(Object.keys(history[0].sections).length, 4)
-    await act(async () => element.querySelector<HTMLButtonElement>('.full-mock-intro-start')!.click())
     assert.equal((state as { mock: { section: string } }).mock.section, 'listening')
     console.log('PASS: Retake archives all four scores, clears only the selected mock, resets expired timers and intro gates, preserves practice and other accounts')
   } finally { await act(async () => root.unmount()); localStorage.clear(); useAuthStore.setState({ user: null }) }

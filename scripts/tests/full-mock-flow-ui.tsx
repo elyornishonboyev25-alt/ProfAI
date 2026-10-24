@@ -50,7 +50,7 @@ export async function run() {
     await act(async () => button.click())
     await flush()
   }
-  const submitObjective = async () => { await click('Submit'); await click('Submit test'); await click('Check score') }
+  const submitObjective = async () => { await click('Submit'); await click('Submit test'); assert.equal(element.textContent?.includes('Leaderboard integrity check'), false, 'Full mocks move forward without a score dialog') }
   const type = async (value: string) => {
     const input = element.querySelector('textarea')!
     assert.ok(input)
@@ -73,23 +73,19 @@ export async function run() {
       accountStorage.setItem(practiceKey, JSON.stringify({ [writing.tasks[0].id]: 'Old practice response' }))
       accountStorage.setItem(`${practiceKey}:session`, JSON.stringify({ timerEnabled: true, deadline: Date.now() - 60_000 }))
       await mount(mock.sections[0].launchPath!, fullMockLaunchState(mock.id, 'listening'))
-      assert.ok(element.querySelector('.full-mock-intro'), 'Listening instructions precede the runner')
-      assert.equal(element.querySelector('audio'), null, 'Test audio cannot start during the intro')
-      await click('Skip video & start')
+      assert.equal(element.querySelector('video'), null)
+      assert.ok(element.querySelector('audio'), 'Listening runner opens directly')
       assert.equal(element.textContent?.includes('To continue, click Play.'), false, 'A fresh full mock starts Listening audio automatically')
       assert.equal(element.querySelector('.ielts-exam-timer'), null)
       await submitObjective()
       assert.equal(path, mock.sections[1].launchPath, `${mock.id}: Listening → Reading`)
       assert.equal(getFullMockResults(mock.id).listening?.band, 0, 'Unanswered Listening has band 0')
-      assert.ok(element.querySelector('.full-mock-intro'), 'Reading instructions appear at the automatic transition')
-      assert.equal(element.querySelector('.ielts-exam-timer'), null, 'Reading time is not consumed by instructions')
-      await click('Skip video & start')
+      assert.equal(element.querySelector('video'), null, 'Reading opens without an intro')
       assert.ok(element.querySelector('.ielts-exam-timer')?.textContent?.includes('60:00'), 'Reading starts with its own full time')
       await submitObjective()
       assert.equal(path, mock.sections[2].launchPath, `${mock.id}: Reading → Writing, never Speaking`)
       assert.equal(getFullMockResults(mock.id).reading?.band, 0, 'Unanswered Reading has band 0')
-      assert.ok(element.querySelector('.full-mock-intro'), 'Writing instructions appear before either task')
-      await click('Skip video & start')
+      assert.equal(element.querySelector('video'), null, 'Writing opens without an intro')
       assert.ok(element.querySelector('textarea'), 'Writing opens automatically')
       assert.equal(element.textContent?.includes('Practice Mode'), false, 'Full mock Writing has no practice chooser, including StrictMode')
       assert.equal(element.textContent?.includes('Simulation Mode'), false, 'Full mock Writing has no simulation chooser')
@@ -110,8 +106,7 @@ export async function run() {
         await click('Retry')
       }
       assert.equal(path, mock.sections[3].launchPath, `${mock.id}: Writing → Speaking`)
-      assert.ok(element.querySelector('.full-mock-intro'), 'Speaking also has its own intro')
-      await click('Skip video & start')
+      assert.equal(element.querySelector('video'), null, 'Speaking starts without an intro')
       assert.equal(getFullMockResults(mock.id).writing?.review?.length, 2)
       assert.equal(getFullMockResults(mock.id).writing?.band, 7)
       assert.equal(useBadgeStore.getState().records.length, 0, 'No skill band badge before all four sections finish')

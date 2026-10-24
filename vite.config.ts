@@ -25,8 +25,8 @@ export default defineConfig({
         importScripts: ['/sw-cleanup.js'],
       },
       manifest: {
-        name: 'ivyGoo',
-        short_name: 'ivyGoo',
+        name: 'IvyGoo',
+        short_name: 'IvyGoo',
         description: 'IELTS, SAT and university applications in one learning workspace.',
         lang: 'en',
         id: '/',

@@ -36,6 +36,7 @@ export class AnswerRecording {
   private chunks: Blob[] = []
   private result: Promise<Blob>
   private stopping = false
+  private releaseLifecycle: () => void
 
   constructor(stream: MediaStream, onError?: () => void, onChunk?: (blob: Blob) => void) {
     const mimeType = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm', 'audio/ogg;codecs=opus']
@@ -49,6 +50,19 @@ export class AnswerRecording {
     })
     this.recorder.onerror = () => onError?.()
     this.recorder.start(1000)
+    // Flush while the page is still alive. WebKit may delay timeslices while
+    // suspended; a reload must not depend on the unmount cleanup completing.
+    const flush = () => {
+      if (this.recorder.state !== 'recording') return
+      try { this.recorder.requestData() } catch { /* The last emitted chunk remains saved. */ }
+    }
+    const hidden = () => { if (document.hidden) flush() }
+    window.addEventListener('pagehide', flush)
+    document.addEventListener('visibilitychange', hidden)
+    this.releaseLifecycle = () => {
+      window.removeEventListener('pagehide', flush)
+      document.removeEventListener('visibilitychange', hidden)
+    }
   }
 
   private blob(): Blob {
@@ -58,6 +72,7 @@ export class AnswerRecording {
   async stop(): Promise<Blob> {
     if (!this.stopping) {
       this.stopping = true
+      this.releaseLifecycle()
       if (this.recorder.state !== 'inactive') {
         try { this.recorder.stop() } catch { /* A disconnected recorder can still have flushed chunks. */ }
       }

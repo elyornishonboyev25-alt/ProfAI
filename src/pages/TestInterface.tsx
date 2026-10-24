@@ -1,4 +1,6 @@
 import { accountStorageFor } from '@/utils/accountStorage'
+import { resolveFullMockRouteState } from '@/utils/fullMockRouteState'
+import { saveIeltsObjectiveAttempt } from '@/utils/saveIeltsObjectiveAttempt'
 import FullMockSectionGate from '@/components/ielts/FullMockSectionGate'
 import { readActiveTestPaper } from '@/utils/activeTestPaper'
 import UiText from '@/components/common/UiText'
@@ -52,7 +54,8 @@ function TestInterfaceContent() {
   const { type, id } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
-  const routeState = (location.state as {
+  const owner = useAuthStore(state => state.user?.id ?? 'guest')
+  const routeState = (resolveFullMockRouteState(location) as {
     reviewPayload?: {
       result: TestResult
       showCorrectAnswers?: boolean
@@ -136,8 +139,8 @@ function TestInterfaceContent() {
 
     if (!isReviewLaunch) {
       const key = `ielts_test_session_${id}${mockContext?.id ? `:mock:${mockContext.id}` : ''}`
-      const randomSession = id === 'random' ? accountStorageFor().getItem('ielts_test_route_reading_random') : null
-      const saved = readActiveTestPaper<IELTSTest>(randomSession ?? key)
+      const randomSession = id === 'random' ? accountStorageFor(owner).getItem('ielts_test_route_reading_random') : null
+      const saved = readActiveTestPaper<IELTSTest>(randomSession ?? key, owner)
       if (saved && (saved.id === id || id === 'random')) {
         setTestData(saved)
         setLoading(false)
@@ -205,7 +208,7 @@ function TestInterfaceContent() {
     }
     setTestData(foundTest ?? null)
     setLoading(false)
-  }, [id, sourceTest, reviewPayload, trackTestComingSoon, type, isReviewLaunch, mockContext?.id])
+  }, [id, sourceTest, reviewPayload, trackTestComingSoon, type, isReviewLaunch, mockContext?.id, owner])
 
   const handleComplete = (results: unknown) => {
     // Inside a Full Mock, a section counts as done only when its test is actually
@@ -213,7 +216,10 @@ function TestInterfaceContent() {
     const result = results as TestResult
     // Retain the submitted answers before navigation unmounts the test and its
     // draft is cleared, even if rendering Results subsequently fails.
-    if (testData && !isReviewLaunch) saveReviewState(result.testId, { result, test: testData })
+    if (testData && !isReviewLaunch) {
+      saveReviewState(result.testId, { result, test: testData })
+      saveIeltsObjectiveAttempt(testData, result, owner === 'guest' ? undefined : owner)
+    }
     if (!isReviewLaunch && useAuthStore.getState().user && testData && (type === 'reading' || type === 'listening')) {
       const assignmentId = new URLSearchParams(location.search).get('assignmentId') ?? undefined
       void syncIeltsClassResult(type, testData, result, assignmentId).catch((failure) => {
@@ -283,7 +289,7 @@ function TestInterfaceContent() {
     return <BrandPageLoader compact label="Opening page" />
   }
 
-  if (trackTestComingSoon) {
+  if (trackTestComingSoon && !testData) {
     const label = trackType === 'reading' ? 'Reading' : 'Listening'
     return (
       <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(155deg,#fff_0%,#fff5f5_55%,#fffaf8_100%)] px-4">

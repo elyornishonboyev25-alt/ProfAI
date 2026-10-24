@@ -2,6 +2,8 @@ import { lazy, Suspense, useEffect, useState, type KeyboardEvent } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { BookOpenText, Headphones, Layers3, Mic2, PenLine } from 'lucide-react'
 import BrandPageLoader from '@/components/common/BrandPageLoader'
+import ResumeIeltsAttempts from '@/components/ielts/ResumeIeltsAttempts'
+import { Link } from 'react-router-dom'
 const IELTSSectionTests = lazy(() => import('./IELTSSectionTests'))
 const IELTSWritingTests = lazy(() => import('./IELTSWritingTests'))
 const IELTSSpeakingTests = lazy(() => import('./IELTSSpeakingTests'))
@@ -56,6 +58,8 @@ export default function IELTSTestLibrary() {
   return (
     <main className="workspace-page relative min-h-screen px-4 pb-20 pt-3 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-[1480px]">
+        <ResumeIeltsAttempts />
+        <div className="mb-3 flex justify-end"><Link to="/analyze-mistakes" className="text-sm font-bold text-red-700">Review · Mistake Lab</Link></div>
         <div id="ielts-skill-tabs" className="sticky top-2 z-20 rounded-2xl border border-white bg-white/95 p-2 shadow-[0_12px_35px_rgba(15,23,42,.09)]">
           <div role="tablist" aria-label="IELTS skills" className="flex gap-2 overflow-x-auto">
             {skills.map(({ id, label, icon: Icon, detail }) => <button key={id} id={`ielts-tab-${id}`} type="button" role="tab" tabIndex={activeSkill === id ? 0 : -1} aria-selected={activeSkill === id} aria-controls="ielts-test-panel" onKeyDown={(event) => handleTabKeyDown(event, id)} onClick={() => selectTab(id)} className={`flex min-w-[10rem] flex-1 items-center gap-3 rounded-xl border px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 ${activeSkill === id ? 'border-red-200 bg-gradient-to-br from-white to-red-50 text-red-700 shadow-[0_6px_18px_rgba(185,28,28,.08)]' : 'border-transparent text-slate-800 hover:bg-red-50/70'}`}><Icon className="h-5 w-5 shrink-0 text-red-600" /><span><strong className="block text-sm">{label}</strong><small className="block whitespace-nowrap text-[11px] font-semibold text-slate-500">{detail}</small></span></button>)}

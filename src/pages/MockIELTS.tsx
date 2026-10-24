@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useAccountDataRevision } from '@/hooks/useAccountDataRevision'
+import { useAuthStore } from '@/store/authStore'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import {
   ArrowRight,
@@ -60,6 +62,8 @@ function IELTSMockCatalog() {
   const [search, setSearch] = useState('')
   const [progressVersion, setProgressVersion] = useState(0)
   const [retakeError, setRetakeError] = useState('')
+  const revision = useAccountDataRevision()
+  const owner = useAuthStore(state => state.user?.id ?? 'guest')
 
   useEffect(() => {
     const refresh = () => setProgressVersion((version) => version + 1)
@@ -76,7 +80,7 @@ function IELTSMockCatalog() {
   const completedByMock = useMemo(() => {
     void progressVersion
     return new Map(mocks.map((mock) => [mock.id, new Set(getFullMockCompletedSections(mock.id))]))
-  }, [mocks, progressVersion])
+  }, [mocks, progressVersion, revision, owner])
   const inProgressCount = useMemo(() => [...completedByMock.values()].filter((done) => done.size > 0 && done.size < MOCK_SECTION_COUNT).length, [completedByMock])
   const completedCount = useMemo(() => [...completedByMock.values()].filter((done) => done.size === MOCK_SECTION_COUNT).length, [completedByMock])
 
@@ -192,25 +196,25 @@ function IELTSMockCatalog() {
                     <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-red-100"><div className="h-full rounded-full bg-gradient-to-r from-red-700 to-red-400" style={{ width: `${(doneCount / MOCK_SECTION_COUNT) * 100}%` }} /></div>
                   </div>
                 ) : finished ? (
-                  <span className="mt-3 inline-flex items-center gap-1 self-start rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-emerald-700"><CheckCircle2 className="h-3.5 w-3.5" /> Completed</span>
+                  <span className="mt-3 inline-flex items-center gap-1 self-start rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-emerald-700"><CheckCircle2 className="h-3.5 w-3.5" /> 4/4 completed</span>
                 ) : null}
 
                 <div className="mock-ielts-card-footer mt-auto flex items-end justify-between gap-2 pt-6">
                   <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-500"><Clock3 className="h-4 w-4 shrink-0" /> {formatMockDuration(mock.totalMinutes)}{!finished && ' session'}</span>
                   <div className="mock-ielts-card-actions">
-                  {finished && <button type="button" className="mock-ielts-glass-open mock-ielts-retake" aria-label={`Retake Full Mock ${mock.index}`} onClick={() => {
+                  {finished ? <button type="button" className="mock-ielts-glass-open mock-ielts-retake mock-ielts-card-open" aria-label={`Retake Full Mock ${mock.index}`} onClick={() => {
                     if (!retakeFullMock(mock.id)) { setRetakeError('Unable to save your previous attempt. Please try again.'); return }
                     setRetakeError('')
                     void enter()
                     const first = getFullMockPendingSection(mock.id)
                     if (first?.launchPath) navigate(first.launchPath, { state: fullMockLaunchState(mock.id, first.key, from ?? 'ielts') })
-                  }}><RotateCcw size={14} /> Retake</button>}
-                  <button type="button" className="mock-ielts-glass-open mock-ielts-card-open" aria-label={`${inProgress ? 'Resume' : finished ? 'Review' : 'Open'} Full Mock ${mock.index}`} onClick={() => {
+                  }}><RotateCcw size={14} /> Retake</button> :
+                  <button type="button" className="mock-ielts-glass-open mock-ielts-card-open" aria-label={`${inProgress ? 'Resume' : 'Open'} Full Mock ${mock.index}`} onClick={() => {
                     if (!finished) void enter()
                     const pending = getFullMockPendingSection(mock.id)
                     if (pending?.launchPath) navigate(pending.launchPath, { state: fullMockLaunchState(mock.id, pending.key, from ?? 'ielts') })
                     else navigate(`/mock/ielts/${mock.id}`, { state: { from: from ?? 'ielts' } })
-                  }}>{inProgress ? 'Resume' : finished ? 'Review' : 'Open'} <ArrowRight size={14} /></button>
+                  }}>{inProgress ? 'Resume' : 'Open'} <ArrowRight size={14} /></button>}
                   </div>
                 </div>
               </article>

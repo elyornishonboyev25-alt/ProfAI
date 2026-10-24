@@ -1,16 +1,25 @@
 const deletedOwners = new Set<string>()
+const writes = new Map<string, Promise<void>>()
+const recordings = new Map<string, Blob>()
+const storageKey = (owner: string, key: string) => JSON.stringify([owner, key])
 
 // Audio blobs belong to a single account and stay out of JSON/cloud draft sync.
 function open(owner: string): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(`profai-test-audio:${encodeURIComponent(owner)}`, 1)
+    let expired = false
+    const timer = setTimeout(() => { expired = true; reject(new Error('Audio storage did not open.')) }, 5000)
     request.onupgradeneeded = () => request.result.createObjectStore('audio')
-    request.onsuccess = () => resolve(request.result)
-    request.onerror = () => reject(request.error)
+    request.onsuccess = () => {
+      clearTimeout(timer)
+      if (expired) request.result.close()
+      else resolve(request.result)
+    }
+    request.onerror = () => { clearTimeout(timer); reject(request.error) }
   })
 }
 
-export async function saveTestAudio(owner: string, key: string, blob: Blob) {
+async function writeTestAudio(owner: string, key: string, blob: Blob) {
   try {
     if (deletedOwners.has(owner)) return
     const db = await open(owner)
@@ -25,9 +34,26 @@ export async function saveTestAudio(owner: string, key: string, blob: Blob) {
   } catch { /* Recording remains available in memory if storage is unavailable. */ }
 }
 
+/** Serialize snapshots: a slower earlier open must never overwrite the final clip. */
+export function saveTestAudio(owner: string, key: string, blob: Blob): Promise<void> {
+  if (deletedOwners.has(owner)) return Promise.resolve()
+  const id = storageKey(owner, key)
+  recordings.set(id, blob)
+  const previous = writes.get(id) ?? Promise.resolve()
+  const write = previous.then(() => {
+    if (recordings.get(id) !== blob) return
+    return writeTestAudio(owner, key, blob)
+  })
+  writes.set(id, write)
+  void write.finally(() => { if (writes.get(id) === write) writes.delete(id) })
+  return write
+}
+
 export async function readTestAudio(owner: string, key: string): Promise<Blob | null> {
   try {
     if (deletedOwners.has(owner)) return null
+    const cached = recordings.get(storageKey(owner, key))
+    if (cached) return cached
     const db = await open(owner)
     return await new Promise<Blob | null>((resolve, reject) => {
       const request = db.transaction('audio').objectStore('audio').get(key)
@@ -39,5 +65,6 @@ export async function readTestAudio(owner: string, key: string): Promise<Blob | 
 
 export function deleteAccountTestAudio(owner: string) {
   deletedOwners.add(owner)
+  for (const id of recordings.keys()) if (JSON.parse(id)[0] === owner) recordings.delete(id)
   try { indexedDB.deleteDatabase(`profai-test-audio:${encodeURIComponent(owner)}`) } catch { /* Optional local cache. */ }
 }

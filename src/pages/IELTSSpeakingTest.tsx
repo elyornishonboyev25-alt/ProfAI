@@ -1,4 +1,7 @@
 import { useActiveTest } from '@/hooks/useActiveTest'
+import { useIeltsAttemptResume } from '@/hooks/useIeltsAttemptResume'
+import { resolveFullMockRouteState } from '@/utils/fullMockRouteState'
+import { saveSpeakingDayHistory } from '@/utils/speakingDayHistory'
 import FullMockSectionGate from '@/components/ielts/FullMockSectionGate'
 import { accountStorageFor } from '@/utils/accountStorage'
 import { readTestAudio, saveTestAudio } from '@/utils/testAudioStorage'
@@ -114,8 +117,9 @@ function SpeakingTestContent() {
   const navigate = useNavigate()
   const location = useLocation()
   const { id } = useParams<{ id: string }>()
-  const mockContext = (location.state as { mock?: { id: string; section: string } } | null)?.mock
-  const mockFrom = (location.state as { from?: string } | null)?.from
+  const routeState = resolveFullMockRouteState(location)
+  const mockContext = (routeState as { mock?: { id: string; section: string } } | null)?.mock
+  const mockFrom = (routeState as { from?: string } | null)?.from
   const exitTest = () => {
     if (mockContext?.id) {
       navigate(`/mock/ielts/${mockContext.id}`, { state: { from: mockFrom } })
@@ -298,6 +302,7 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
   const [evaluation, setEvaluation] = useState<SpeakingEvaluation | null>(saved?.evaluation ?? null)
   const [evaluating, setEvaluating] = useState(false)
   useActiveTest(!finished)
+  useIeltsAttemptResume(!finished, sessionKey, day.title)
 
   const audioRecorderRef = useRef<AnswerRecording | null>(null)
   const audioBlobsRef = useRef(new Map<number, Blob>())
@@ -514,7 +519,10 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
       if (disposedRef.current) return
       setEvaluation(result)
       setFinished(true)
-      if (result.source === 'ai') onComplete()
+      if (result.source === 'ai') {
+        saveSpeakingDayHistory(owner, day, result, history, audioKey)
+        onComplete()
+      }
     } finally { if (!disposedRef.current) setEvaluating(false) }
   }
 
@@ -859,7 +867,13 @@ function FullMockRunner({
   onCompleted?: (evaluation: SpeakingEvaluation, transcript: ExaminerTurn[], sessionKey: string) => void
   onSaved: (analysis: import('@/services/speakingAI').SpeakingEvaluation, transcript: import('@/services/speakingAI').ExaminerTurn[], launchMode: 'practice' | 'simulation') => void
 }) {
-  const [launchMode, setLaunchMode] = useState<'practice' | 'simulation' | null>(inFullMock ? 'simulation' : null)
+  const owner = useAuthStore(state => state.user?.id ?? 'guest')
+  const launchKey = `profai:speaking:launch:${mock.id}${sessionScope ? `:mock:${sessionScope}` : ''}`
+  const [launchMode, setLaunchMode] = useState<'practice' | 'simulation' | null>(() => {
+    if (inFullMock) return 'simulation'
+    const saved = accountStorageFor(owner).getItem(launchKey)
+    return saved === 'practice' || saved === 'simulation' ? saved : null
+  })
   const { reducedMotion, allowHoverMotion } = useMotionPreferences()
   // Each numbered mock has its own fixed question set (distinct across mocks).
   const seed = {
@@ -886,7 +900,7 @@ function FullMockRunner({
                 <span className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-red-600 to-rose-500 text-white">{mode === 'practice' ? <Lightbulb className="h-7 w-7" /> : <Mic className="h-7 w-7" />}</span>
                 <h2 className="text-2xl font-bold text-slate-900"><UiText text={mode === 'practice' ? 'Practice Mode' : 'Simulation Mode'} /></h2>
                 <p className="mb-7 mt-3 flex-1 text-sm leading-6 text-slate-600"><UiText text={mode === 'practice' ? 'Prepare with this test’s vocabulary, then practise all three parts with the AI examiner.' : 'Complete all three parts with the AI examiner. Explore this test’s vocabulary in your review after finishing.'} /></p>
-                <button type="button" onClick={() => setLaunchMode(mode)} className="rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 px-5 py-4 text-sm font-bold text-white shadow-lg shadow-red-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2"><UiText text={mode === 'practice' ? 'Start Practice' : 'Launch Final Simulation'} /></button>
+                <button type="button" onClick={() => { accountStorageFor(owner).setItem(launchKey, mode); setLaunchMode(mode) }} className="rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 px-5 py-4 text-sm font-bold text-white shadow-lg shadow-red-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2"><UiText text={mode === 'practice' ? 'Start Practice' : 'Launch Final Simulation'} /></button>
               </motion.section>
             ))}
           </div>
@@ -901,8 +915,9 @@ function FullMockRunner({
         config={{ mode: 'full_mock', mockSeed: seed }}
         autoStart={inFullMock}
         modeLabel={mock.title}
+        sessionId={mock.id}
         onExit={onExit}
-        onSaved={(analysis, transcript) => onSaved(analysis, transcript, launchMode)}
+        onSaved={(analysis, transcript) => { onSaved(analysis, transcript, launchMode); accountStorageFor(owner).removeItem(launchKey) }}
         hideVocabularyReview={inFullMock}
         sessionScope={sessionScope}
         onCompleted={onCompleted}

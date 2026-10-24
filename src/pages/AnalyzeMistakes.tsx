@@ -1,4 +1,7 @@
 import MistakeLabNavigation from '@/components/results/MistakeLabNavigation'
+import FullMockAttemptHistory from '@/components/ielts/FullMockAttemptHistory'
+import { useAccountDataRevision } from '@/hooks/useAccountDataRevision'
+import { recoverSpeakingDayHistory } from '@/utils/speakingDayHistory'
 import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -142,6 +145,7 @@ export default function AnalyzeMistakes() {
   const [searchParams] = useSearchParams()
   const writingTest = searchParams.get('writingTest')
   const user = useAuthStore((state: AuthState) => state.user)
+  const revision = useAccountDataRevision()
   const [readingHistory, setReadingHistory] = useState<ReadingAnalysisHistoryEntry[]>([])
   const [writingHistory, setWritingHistory] = useState<WritingAnalysisEntry[]>([])
   const [overview, setOverview] = useState<ProfileOverview | null>(null)
@@ -157,9 +161,10 @@ export default function AnalyzeMistakes() {
   const userSpeakingSessions = useMemo(() => speakingSessions.filter((entry) => entry.userId === (user?.id ?? null) && entry.kind === 'examiner'), [speakingSessions, user?.id])
 
   useEffect(() => {
+    recoverSpeakingDayHistory(user?.id ?? 'guest')
     setReadingHistory(getReadingAnalysisHistory(user?.id))
     setWritingHistory(getWritingAnalysisHistory(user?.id))
-  }, [user?.id])
+  }, [user?.id, revision])
 
   useEffect(() => {
     if (!writingTest) return
@@ -449,6 +454,7 @@ export default function AnalyzeMistakes() {
       <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-7 sm:px-6 lg:px-8">
         <div className="relative mx-auto w-full max-w-6xl space-y-5">
         <MistakeLabNavigation />
+        <FullMockAttemptHistory />
         <Reveal>
         <section className="glass-surface p-6 sm:p-8">
           <button type="button" onClick={() => navigate('/review-mistakes')} className="route-back-button">

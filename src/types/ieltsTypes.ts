@@ -217,5 +217,7 @@ export interface ReadingAnalysisReport {
 export interface TestResultBreakdown {
     activeSectionIds: string[]
     readingAnalysis?: ReadingAnalysisReport
+    paperSnapshot?: IELTSTest
+    paperSnapshotKey?: string
 }
 

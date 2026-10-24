@@ -214,7 +214,7 @@ export default function CompactIeltsCatalog({
                     <span>{row.detail}</span>
                   </div>
                   <span className={`inline-flex items-center gap-1.5 text-sm font-black ${row.available ? 'text-red-700' : 'text-amber-600'}`}>
-                    {row.available ? 'Open' : 'Coming soon'}
+                    {row.available ? row.completed ? 'Retake' : 'Open' : 'Coming soon'}
                     {row.available ? <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /> : null}
                   </span>
                 </div>

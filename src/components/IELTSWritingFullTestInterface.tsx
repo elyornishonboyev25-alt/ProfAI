@@ -1,11 +1,11 @@
 import { useActiveTest } from '@/hooks/useActiveTest'
+import { useIeltsAttemptResume } from '@/hooks/useIeltsAttemptResume'
 import { saveActiveTestPaper, clearActiveTestPaper } from '@/utils/activeTestPaper'
 import { accountStorageFor } from '@/utils/accountStorage'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   AlertCircle,
-  AlertTriangle,
   ArrowLeft,
   ArrowRight,
   Bookmark,
@@ -100,7 +100,7 @@ export default function IELTSWritingFullTestInterface({
     Object.fromEntries(tasks.map((task) => [task.id, ''])),
   )
   const [bookmarks, setBookmarks] = useState<Record<string, boolean>>({})
-  const [showExitConfirm, setShowExitConfirm] = useState(false)
+
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false)
   const [showImagePreview, setShowImagePreview] = useState(false)
   const [showWritingGate, setShowWritingGate] = useState(false)
@@ -123,10 +123,10 @@ export default function IELTSWritingFullTestInterface({
     [answers, tasks],
   )
   const totalWordCount = tasks.reduce((total, task) => total + wordCounts[task.id], 0)
-  const hasDraft = Object.values(answers).some((answer) => answer.trim().length > 0)
   const user = useAuthStore((state: AuthState) => state.user)
   const draftKey = `profai:writing:draft:${user?.id ?? 'guest'}:${fullTest.id}${fullMockId ? `:mock:${fullMockId}` : ''}`
   const sessionKey = `${draftKey}:session`
+  useIeltsAttemptResume(phase === 'writing' || evaluating, sessionKey, fullTest.title)
   useActiveTest(phase === 'writing' || evaluating)
   const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
   const awardBadge = useBadgeStore((state) => state.awardIfEligible)
@@ -160,7 +160,8 @@ export default function IELTSWritingFullTestInterface({
     try {
       const session = accountStorageFor(user?.id ?? 'guest').getItem(sessionKey)
       if (session) {
-        const parsed = JSON.parse(session) as { timerEnabled?: boolean; deadline?: number | null; bookmarked?: boolean; activeTaskIndex?: number; bookmarks?: Record<string, boolean> }
+        const parsed = JSON.parse(session) as { answers?: Record<string, string>; timerEnabled?: boolean; deadline?: number | null; bookmarked?: boolean; activeTaskIndex?: number; bookmarks?: Record<string, boolean> }
+        if (parsed.answers) setAnswers(Object.fromEntries(tasks.map(task => [task.id, typeof parsed.answers?.[task.id] === 'string' ? parsed.answers[task.id] : ''])))
         autoStartHandled.current = true
         const timed = parsed.timerEnabled === true && typeof parsed.deadline === 'number'
         deadlineRef.current = timed ? parsed.deadline! : null
@@ -177,9 +178,13 @@ export default function IELTSWritingFullTestInterface({
   useLayoutEffect(() => {
     if (phase !== 'writing') return
     saveActiveTestPaper(sessionKey, fullTest, user?.id ?? 'guest')
-    try { accountStorageFor(user?.id ?? 'guest').setItem(sessionKey, JSON.stringify({ timerEnabled, deadline: deadlineRef.current, activeTaskIndex, bookmarks })) } catch { /* Keep the current session. */ }
-    try { accountStorageFor(user?.id ?? 'guest').setItem(draftKey, JSON.stringify(answers)) } catch { /* Keep the in-memory draft. */ }
-  }, [answers, draftKey, phase, sessionKey, fullTest, timerEnabled, activeTaskIndex, bookmarks, user?.id])
+  }, [phase, sessionKey, fullTest, user?.id])
+
+  useLayoutEffect(() => {
+    if (phase !== 'writing') return
+    try { accountStorageFor(user?.id ?? 'guest').setItem(sessionKey, JSON.stringify({ answers, timerEnabled, deadline: deadlineRef.current, activeTaskIndex, bookmarks })) } catch { /* Keep the current session. */ }
+    accountStorageFor(user?.id ?? 'guest').setItem(draftKey, JSON.stringify(answers))
+  }, [answers, phase, sessionKey, draftKey, timerEnabled, activeTaskIndex, bookmarks, user?.id])
 
   useEffect(() => {
     if (!isTimerRunning || !timerEnabled) return
@@ -265,8 +270,6 @@ export default function IELTSWritingFullTestInterface({
       }
       const resultMap = Object.fromEntries(tasks.map((task, index) => [task.id, results[index]]))
       setEvaluations(resultMap)
-      try { accountStorageFor(user?.id ?? 'guest').removeItem(draftKey) } catch { /* Submission still succeeds. */ }
-      try { accountStorageFor(user?.id ?? 'guest').removeItem(sessionKey); clearActiveTestPaper(sessionKey, user?.id ?? 'guest') } catch { /* Submission still succeeds. */ }
       if (totalWordCount > 0 && !inFullMock) writingTrial.consume()
 
       const overallBand = weightedBand(resultMap, tasks.map((task) => task.id))
@@ -348,6 +351,10 @@ export default function IELTSWritingFullTestInterface({
           improvedVersion: results[index]?.improvedVersion,
         })),
       )
+      // Clear recovery only after both tasks and the mock result are durable.
+      accountStorageFor(user?.id ?? 'guest').removeItem(draftKey)
+      accountStorageFor(user?.id ?? 'guest').removeItem(sessionKey)
+      clearActiveTestPaper(sessionKey, user?.id ?? 'guest')
     } catch (error) {
       setEvalError(error instanceof Error ? error.message : 'AI evaluation failed. Please try again.')
     } finally {
@@ -587,16 +594,6 @@ export default function IELTSWritingFullTestInterface({
   return (
     <div className="ielts-writing-workspace flex h-dvh min-h-0 flex-col overflow-hidden bg-white">
       <ConfirmModal
-        open={showExitConfirm}
-        icon={<AlertTriangle className="h-7 w-7" />}
-        title="Leave this full test?"
-        description="Your draft is saved on this device. The exam timer continues while you are away."
-        cancelLabel="Continue writing"
-        confirmLabel="Exit test"
-        onCancel={() => setShowExitConfirm(false)}
-        onConfirm={onExit}
-      />
-      <ConfirmModal
         open={showSubmitConfirm}
         icon={<Send className="h-7 w-7" />}
         title="Submit both responses?"
@@ -627,7 +624,7 @@ export default function IELTSWritingFullTestInterface({
       <header className="ielts-writing-header shrink-0 border-b border-red-100 bg-gradient-to-r from-white via-red-50/40 to-white px-3 py-2.5 sm:px-5">
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2.5">
-            <button type="button" onClick={() => (hasDraft ? setShowExitConfirm(true) : onExit())} className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-red-200 bg-white text-slate-600 shadow-sm hover:text-red-600">
+            <button type="button" onClick={onExit} className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-red-200 bg-white text-slate-600 shadow-sm hover:text-red-600">
               <ArrowLeft className="h-4 w-4" />
             </button>
             <div className="min-w-0">

@@ -1,5 +1,6 @@
 import { accountStorage, accountStorageFor } from '@/utils/accountStorage'
 import { useAuthStore } from '@/store/authStore'
+import { compactIeltsResult } from './ieltsPaperSnapshots'
 // Full Mock catalog. Each Full Mock N bundles the four IELTS sections —
 // Listening N, Reading N, Writing N, Speaking N — into one exam package, in the
 // official exam order (Listening → Reading → Writing → Speaking).
@@ -201,6 +202,35 @@ export type FullMockSectionResult = {
 
 const RESULT_STORAGE_KEY = 'smarttest:full-mock-results:v1'
 type FullMockResults = Record<string, Partial<Record<MockSectionKey, FullMockSectionResult>>>
+export type FullMockAttempt = {
+  mockId: string
+  completedAt: string
+  overallBand: number | null
+  sections: Partial<Record<MockSectionKey, FullMockSectionResult>>
+  archived: boolean
+}
+
+export function getFullMockAttempts(owner?: string): FullMockAttempt[] {
+  const storage = accountStorageFor(owner)
+  return getFullMockCatalog().flatMap(mock => {
+    let history: FullMockAttempt[] = []
+    try {
+      const parsed = JSON.parse(storage.getItem(`smarttest:full-mock-history:v1:${mock.id}`) ?? '[]')
+      if (Array.isArray(parsed)) history = parsed.filter(entry => entry && typeof entry.completedAt === 'string'
+        && mock.sections.every(section => typeof entry.sections?.[section.key]?.band === 'number'))
+        .map(entry => ({ ...entry, mockId: mock.id, archived: true }))
+    } catch { /* One damaged archive must not hide other mocks. */ }
+    const sections = getFullMockResults(mock.id, owner)
+    if (mock.sections.every(section => sections[section.key])) {
+      const values = Object.values(sections)
+      const overallBand = values.some(result => result.assessmentStatus === 'pending') ? null
+        : Math.round(values.reduce((sum, result) => sum + result.band, 0) / 4 * 2) / 2
+      const dates = values.map(result => result.completedAt).sort()
+      history.push({ mockId: mock.id, completedAt: dates[dates.length - 1], overallBand, sections, archived: false })
+    }
+    return history
+  }).sort((a, b) => Date.parse(b.completedAt) - Date.parse(a.completedAt))
+}
 
 function readResults(userId?: string): FullMockResults {
   if (typeof window === 'undefined') return {}
@@ -244,6 +274,7 @@ export function getFullMockResults(mockId: string, userId?: string): Partial<Rec
 export function saveFullMockSectionResult(mockId: string, section: MockSectionKey, result: FullMockSectionResult): void {
   if (!getFullMockById(mockId) || !Number.isFinite(result.band) || result.band < 0 || result.band > 9) return
   const store = readResults()
+  if (result.result) result = { ...result, result: compactIeltsResult(result.result) }
   try {
     accountStorage.setItem(RESULT_STORAGE_KEY, JSON.stringify({
       ...store,

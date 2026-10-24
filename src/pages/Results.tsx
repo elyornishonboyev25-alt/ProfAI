@@ -189,6 +189,7 @@ function ResultsContent() {
       detailedBreakdown: {
         activeSectionIds: result.detailedBreakdown?.activeSectionIds ?? activeSections.map((section) => section.id),
         readingAnalysis: analysis,
+        paperSnapshot: test,
       },
     }
 

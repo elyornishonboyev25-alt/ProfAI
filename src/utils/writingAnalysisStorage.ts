@@ -3,7 +3,6 @@ import type { WritingEvaluation, WritingError } from '@/services/geminiAI'
 import type { WritingTask } from '@/data/writingTestData'
 
 const HISTORY_VERSION = 'v1'
-const ENTRY_LIMIT = 30
 const XP_KEY = 'smarttest-writing-xp'
 
 export interface WritingAnalysisEntry {
@@ -105,7 +104,7 @@ export function saveWritingAnalysis(
   try {
     const storageKey = getStorageKey(userId)
     const current = safeParseHistory(accountStorageFor(userId ?? 'guest').getItem(storageKey))
-    const merged = [entry, ...current].slice(0, ENTRY_LIMIT)
+    const merged = [entry, ...current]
     accountStorageFor(userId ?? 'guest').setItem(storageKey, JSON.stringify(merged))
     addWritingXP(userId, evaluation.xpAwarded)
   } catch { /* An unavailable or full local store must not hide the evaluation. */ }

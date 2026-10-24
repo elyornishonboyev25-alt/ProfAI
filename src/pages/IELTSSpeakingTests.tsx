@@ -8,6 +8,9 @@ import CompactIeltsCatalog, { type CompactIeltsTestRow } from '@/components/cata
 import { useFeatureTrial } from '@/hooks/useFeatureTrial'
 import { getCompletedSpeakingTestIds, getIeltsSpeakingDayCatalog, getIeltsSpeakingFullMockCatalog } from '@/utils/ieltsSpeakingCatalog'
 import { useAuthStore, type AuthState } from '@/store/authStore'
+import { useAccountDataRevision } from '@/hooks/useAccountDataRevision'
+import { accountStorageFor } from '@/utils/accountStorage'
+import { recoverSpeakingDayHistory } from '@/utils/speakingDayHistory'
 
 export default function IELTSSpeakingTests({ embedded = false }: { embedded?: boolean } = {}) {
   const navigate = useNavigate()
@@ -20,7 +23,8 @@ export default function IELTSSpeakingTests({ embedded = false }: { embedded?: bo
   const [searchTerm, setSearchTerm] = useState('')
   const [activeFilter, setActiveFilter] = useState(navigationState?.catalogSkill === 'speaking' ? navigationState.catalogFilter ?? 'full' : 'full')
   const deferredSearchTerm = useDeferredValue(searchTerm)
-  const completedTestIds = useMemo(() => getCompletedSpeakingTestIds(user?.id), [user?.id])
+  const revision = useAccountDataRevision()
+  const completedTestIds = useMemo(() => getCompletedSpeakingTestIds(user?.id), [user?.id, revision])
 
   const rows = useMemo<CompactIeltsTestRow[]>(
     () => activeFilter === 'full'
@@ -64,6 +68,15 @@ export default function IELTSSpeakingTests({ embedded = false }: { embedded?: bo
       return
     }
     if (activeFilter !== 'full') speakingTrial.consume()
+    if (row.completed && activeFilter !== 'full') {
+      recoverSpeakingDayHistory(user?.id ?? 'guest')
+      const storage = accountStorageFor(user?.id ?? 'guest')
+      const key = `profai:speaking:day:${row.id}`
+      try {
+        const session = JSON.parse(storage.getItem(key) ?? 'null')
+        if (session?.finished) storage.removeItem(key)
+      } catch { /* Keep an unfinished attempt available for recovery. */ }
+    }
     navigate(`/ielts/speaking/test/${row.id}`, {
       state: fromMock
         ? { entry: 'mock-ielts', from: navigationState?.from ?? 'tests', catalogFilter: activeFilter, catalogSkill: 'speaking' }

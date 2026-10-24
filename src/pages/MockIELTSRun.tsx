@@ -1,4 +1,6 @@
 import FullMockResults from '@/components/ielts/FullMockResults'
+import IeltsTestExitGuard from '@/components/ielts/IeltsTestExitGuard'
+import { useAccountDataRevision } from '@/hooks/useAccountDataRevision'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import ImprovedResponse from '@/components/ielts/ImprovedResponse'
 import UiText from '@/components/common/UiText'
@@ -79,6 +81,13 @@ function resolveStatus(
 }
 
 export default function MockIELTSRun() {
+  const { mockId } = useParams<{ mockId: string }>()
+  return <IeltsTestExitGuard mockId={mockId} active={() => !!mockId && getFullMockCompletedSections(mockId).length < 4}>
+    <MockIELTSRunContent />
+  </IeltsTestExitGuard>
+}
+
+function MockIELTSRunContent() {
   const { enter, supported, isFullscreen } = useFullscreen()
   const text = useBillingText()
   const userId = useAuthStore((state) => state.user?.id ?? null)
@@ -87,6 +96,7 @@ export default function MockIELTSRun() {
   const location = useLocation()
   const { mockId } = useParams<{ mockId: string }>()
   const from = (location.state as { from?: string } | null)?.from
+  const revision = useAccountDataRevision()
 
   const mock = useMemo<FullMockEntry | null>(() => (mockId ? getFullMockById(mockId) : null), [mockId])
 
@@ -113,7 +123,7 @@ export default function MockIELTSRun() {
       window.removeEventListener('focus', refreshProgress)
       document.removeEventListener('visibilitychange', refreshProgress)
     }
-  }, [refreshProgress])
+  }, [refreshProgress, revision, userId])
 
   const completedSet = useMemo(() => new Set(completedKeys), [completedKeys])
   const sectionResults = useMemo(() => {

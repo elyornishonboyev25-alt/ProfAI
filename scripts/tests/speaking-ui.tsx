@@ -286,7 +286,7 @@ export async function run() {
       assert.equal(recorderStarts, before, 'Fallback cannot record before the question ends')
       for (let i = 0; i < 3; i++) { await act(async () => utterances.at(-1)!.onend?.()); await wait(40) }
       assert.ok(button('Finish answer'), 'Provider failure automatically recovers to the matching device voice')
-      assert.equal(requestedVoices.length, 1, 'Keep the working fallback voice throughout the session')
+      assert.equal(requestedVoices.length, 2, 'One transient retry precedes the device fallback, which stays selected for the session')
     } finally { await act(async () => fallbackRoot.unmount()) }
   }
   voiceFails = false

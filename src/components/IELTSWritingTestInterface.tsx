@@ -1,5 +1,6 @@
 import { useActiveTest } from '@/hooks/useActiveTest'
 import { saveActiveTestPaper, clearActiveTestPaper } from '@/utils/activeTestPaper'
+import { useIeltsAttemptResume } from '@/hooks/useIeltsAttemptResume'
 import { accountStorageFor } from '@/utils/accountStorage'
 import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -11,7 +12,6 @@ import {
   Send,
   Timer,
   TimerOff,
-  AlertTriangle,
   CheckCircle2,
   PenLine,
   Sparkles,
@@ -308,7 +308,7 @@ export default function IELTSWritingTestInterface({
   const [isTimerRunning, setIsTimerRunning] = useState(false)
   const [answer, setAnswer] = useState('')
   const [bookmarked, setBookmarked] = useState(false)
-  const [showExitConfirm, setShowExitConfirm] = useState(false)
+
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false)
   const [aiEvaluation, setAiEvaluation] = useState<WritingEvaluation | null>(null)
   const [evaluating, setEvaluating] = useState(false)
@@ -326,6 +326,7 @@ export default function IELTSWritingTestInterface({
   const user = useAuthStore((state: AuthState) => state.user)
   const draftKey = `profai:writing:draft:${user?.id ?? 'guest'}:${task.id}`
   const sessionKey = `${draftKey}:session`
+  useIeltsAttemptResume(phase === 'writing' || evaluating, sessionKey, task.title)
   useActiveTest(phase === 'writing' || evaluating)
   const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
   const writingTrial = useFeatureTrial('writing')
@@ -342,7 +343,8 @@ export default function IELTSWritingTestInterface({
     try {
       const session = accountStorageFor(user?.id ?? 'guest').getItem(sessionKey)
       if (session) {
-        const parsed = JSON.parse(session) as { timerEnabled?: boolean; deadline?: number | null; bookmarked?: boolean; activeTaskIndex?: number; bookmarks?: Record<string, boolean> }
+        const parsed = JSON.parse(session) as { answer?: string; timerEnabled?: boolean; deadline?: number | null; bookmarked?: boolean; activeTaskIndex?: number; bookmarks?: Record<string, boolean> }
+        if (typeof parsed.answer === 'string') setAnswer(parsed.answer)
         autoStartHandled.current = true
         const timed = parsed.timerEnabled === true && typeof parsed.deadline === 'number'
         deadlineRef.current = timed ? parsed.deadline! : null
@@ -358,9 +360,13 @@ export default function IELTSWritingTestInterface({
   useLayoutEffect(() => {
     if (phase !== 'writing') return
     saveActiveTestPaper(sessionKey, task, user?.id ?? 'guest')
-    try { accountStorageFor(user?.id ?? 'guest').setItem(sessionKey, JSON.stringify({ timerEnabled, deadline: deadlineRef.current, bookmarked })) } catch { /* Keep the current session. */ }
-    try { accountStorageFor(user?.id ?? 'guest').setItem(draftKey, answer) } catch { /* Keep in-memory answer. */ }
-  }, [answer, draftKey, phase, sessionKey, task, timerEnabled, bookmarked, user?.id])
+  }, [phase, sessionKey, task, user?.id])
+
+  useLayoutEffect(() => {
+    if (phase !== 'writing') return
+    try { accountStorageFor(user?.id ?? 'guest').setItem(sessionKey, JSON.stringify({ answer, timerEnabled, deadline: deadlineRef.current, bookmarked })) } catch { /* Keep the current session. */ }
+    accountStorageFor(user?.id ?? 'guest').setItem(draftKey, answer)
+  }, [answer, phase, sessionKey, draftKey, timerEnabled, bookmarked, user?.id])
 
   useEffect(() => {
     if (!isTimerRunning || !timerEnabled) return
@@ -426,8 +432,6 @@ export default function IELTSWritingTestInterface({
     try {
       const result = await evaluateWriting(task.taskType, task.prompt, answer, wordCount, writingVisualContext(task))
       setAiEvaluation(result)
-      try { accountStorageFor(user?.id ?? 'guest').removeItem(draftKey) } catch { /* Evaluation still succeeds. */ }
-      try { accountStorageFor(user?.id ?? 'guest').removeItem(sessionKey); clearActiveTestPaper(sessionKey, user?.id ?? 'guest') } catch { /* Evaluation still succeeds. */ }
       if (answer.trim()) writingTrial.consume()
 
       const timeSpent = timerEnabled ? effectiveDuration * 60 - timeRemaining : 0
@@ -444,6 +448,9 @@ export default function IELTSWritingTestInterface({
         undefined,
         task,
       )
+      accountStorageFor(user?.id ?? 'guest').removeItem(draftKey)
+      accountStorageFor(user?.id ?? 'guest').removeItem(sessionKey)
+      clearActiveTestPaper(sessionKey, user?.id ?? 'guest')
       if (user) {
         void learningCenterApi.syncResult({
           sourceKey: savedEntry.attemptKey,
@@ -497,10 +504,6 @@ export default function IELTSWritingTestInterface({
     }
   }, [handleSubmit, phase, timeRemaining, timerEnabled])
 
-  const handleExitConfirm = useCallback(() => {
-    setShowExitConfirm(false)
-    onExit()
-  }, [onExit])
 
   const handleCopyCorrected = useCallback(() => {
     if (!aiEvaluation?.correctedVersion) return
@@ -1006,51 +1009,6 @@ export default function IELTSWritingTestInterface({
   return (
     <div className="ielts-writing-workspace flex h-dvh min-h-0 flex-col bg-white">
       <AnimatePresence>
-        {showExitConfirm && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-slate-950/50 backdrop-blur-md"
-              onClick={() => setShowExitConfirm(false)}
-            />
-            <motion.div
-              initial={{ opacity: 0, y: 14, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.97 }}
-              className="relative w-full max-w-md rounded-3xl border border-red-100 bg-white p-6 text-center shadow-[0_30px_70px_rgba(220,38,38,0.22)]"
-            >
-              <div className="absolute inset-x-0 top-0 h-1.5 rounded-t-3xl bg-gradient-to-r from-red-600 via-rose-500 to-orange-400" />
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
-                <AlertTriangle className="h-7 w-7" />
-              </div>
-              <h3 className="mt-4 text-xl font-black text-slate-900">Leave this test?</h3>
-              <p className="mt-2 text-sm text-slate-600">
-                Your draft is saved on this device. The timer continues while you are away.
-              </p>
-              <div className="mt-5 flex items-center justify-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowExitConfirm(false)}
-                  className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50"
-                >
-                  Continue Writing
-                </button>
-                <button
-                  type="button"
-                  onClick={handleExitConfirm}
-                  className="rounded-xl bg-gradient-to-r from-red-600 to-rose-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-red-500/20 hover:brightness-105"
-                >
-                  Exit Test
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
         {showSubmitConfirm && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
             <motion.div
@@ -1166,7 +1124,7 @@ export default function IELTSWritingTestInterface({
         <div className="flex min-w-0 items-center gap-3">
           <button
             type="button"
-            onClick={() => (answer.trim() ? setShowExitConfirm(true) : onExit())}
+            onClick={onExit}
             className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-red-200 bg-white text-slate-600 shadow-sm hover:bg-red-50 hover:text-red-600 transition"
           >
             <ArrowLeft className="h-4 w-4" />

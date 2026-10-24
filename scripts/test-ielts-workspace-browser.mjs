@@ -12,17 +12,28 @@ import tailwindcss from 'tailwindcss'
 const WebSocket = createRequire(new URL('../backend/package.json', import.meta.url))('ws')
 const directory = await mkdtemp(join(tmpdir(), 'profai-ielts-workspace-'))
 const source = `
-  import React from 'react'; import { createRoot } from 'react-dom/client'; import { MemoryRouter } from 'react-router-dom';
-  import './src/i18n'; import IELTSReadingInterface from './src/components/IELTSReadingInterface';
+  import React from 'react'; import { createRoot } from 'react-dom/client'; import { MemoryRouter, BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
+  import i18n from './src/i18n'; i18n.changeLanguage('en'); import IELTSReadingInterface from './src/components/IELTSReadingInterface';
   import { workspaceReading } from './scripts/fixtures/ielts-workspace';
   import { listeningFullTest15 } from './src/data/listeningFullTest15';
+  import IeltsTestExitGuard from './src/components/ielts/IeltsTestExitGuard';
+  import { hasActiveTest } from './src/hooks/useActiveTest'; window.hasActiveTest=hasActiveTest;
+  window.fixtureHistoryEvents=[];window.addEventListener('popstate',event=>window.fixtureHistoryEvents.push({state:event.state,path:location.pathname}),true);
+  window.fixtureBootId = Math.random().toString(36);
   const root = createRoot(document.getElementById('root')); let run = 0;
   window.show = (skill = 'reading', review = false, setup = true) => {
     const test = skill === 'reading' ? workspaceReading : listeningFullTest15;
     root.render(<MemoryRouter key={++run}><IELTSReadingInterface test={test} launchPreset={setup ? {mode:'practice',partIndex:2,durationMinutes:20} : undefined}
       reviewPayload={review ? {result:{testId:test.id,date:'2026-10-23',answers:{'p1-q1':'A'},correctAnswers:1,totalQuestions:9,score:1,timeSpent:1200}} : undefined}
       onComplete={()=>{}} onExit={()=>{}} /></MemoryRouter>);
-  }; window.show();
+  };
+  function GuardedTest() { const navigate = useNavigate(); return <IeltsTestExitGuard><IELTSReadingInterface test={workspaceReading}
+    launchPreset={{mode:'simulation'}} onExit={()=>navigate('/catalog')} onComplete={()=>{}} /></IeltsTestExitGuard>; }
+  function Catalog() { const navigate = useNavigate(); return <button onClick={()=>navigate('/guarded')}>Open guarded test</button>; }
+  window.showGuard = () => { sessionStorage.setItem('guard-fixture','1'); root.render(<BrowserRouter key={++run}><Routes>
+    <Route path='/guarded' element={<GuardedTest />} /><Route path='*' element={<Catalog />} />
+  </Routes></BrowserRouter>); };
+  if (sessionStorage.getItem('guard-fixture')) window.showGuard(); else window.show();
 `
 const bundle = await build({ stdin: { contents: source, loader: 'tsx', resolveDir: process.cwd() }, bundle: true, write: false, outfile: 'tmp/workspace-fixture.js', format: 'iife', tsconfig: 'tsconfig.json', define: { 'import.meta.env': '{}', 'process.env.NODE_ENV': '"production"' }, loader: { '.jpg': 'dataurl', '.png': 'dataurl' } })
 const css = (await postcss([tailwindcss()]).process(await readFile('src/index.css', 'utf8'), { from: 'src/index.css' })).css + bundle.outputFiles.filter(file => file.path.endsWith('.css')).map(file => file.text).join('\n')
@@ -48,7 +59,8 @@ try {
   socket = new WebSocket(targets.find(target => target.type === 'page').webSocketDebuggerUrl)
   await new Promise(resolve => socket.once('open', resolve))
   let id = 0
-  const pending = new Map(), exceptions = []
+  const pending = new Map(), exceptions = [], dialogs = []
+  let acceptNativeDialog = false
   const send = (method, params = {}) => new Promise((resolve, reject) => {
     const requestId = ++id
     const timeout = setTimeout(() => { pending.delete(requestId); reject(new Error(method)) }, 15000)
@@ -57,6 +69,10 @@ try {
   })
   socket.on('message', data => {
     const message = JSON.parse(data), call = pending.get(message.id)
+    if (message.method === 'Page.javascriptDialogOpening') {
+      dialogs.push(message.params.type)
+      void send('Page.handleJavaScriptDialog', { accept: acceptNativeDialog })
+    }
     if (message.method === 'Runtime.exceptionThrown') exceptions.push(message.params.exceptionDetails)
     if (!call) return
     clearTimeout(call.timeout); pending.delete(message.id)
@@ -72,15 +88,16 @@ try {
       if (await evaluate(`Boolean(${expression})`)) return
       await new Promise(resolve => setTimeout(resolve, 100))
     }
-    throw new Error(`Timed out: ${expression}; ${JSON.stringify(exceptions)}`)
+    throw new Error(`Timed out: ${expression}; ${JSON.stringify(exceptions)}; ${JSON.stringify(await evaluate('({path:location.pathname,state:history.state,active:window.hasActiveTest?.(),events:window.fixtureHistoryEvents,dialog:!!document.querySelector("[role=alertdialog]"),text:document.body.textContent.slice(0,200)})'))}`)
   }
   const click = text => evaluate(`[...document.querySelectorAll('button')].find(node=>node.textContent.trim()===${JSON.stringify(text)}).click()`)
   await send('Runtime.enable')
+  await send('Page.enable')
   await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/` })
   await until('window.show && document.querySelector("[data-ielts-dialog]")')
   const screenshots = resolve('tmp/ielts-workspace-browser')
   await mkdir(screenshots, { recursive: true })
-  for (const [width, height] of [[1366, 900], [390, 844], [320, 568]]) {
+  for (const [width, height] of process.argv.includes('--guard-only') ? [] : [[1366, 900], [390, 844], [320, 568]]) {
     await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: width < 640 })
     for (const skill of ['reading', 'listening']) {
       await evaluate(`localStorage.clear();window.show('${skill}')`)
@@ -134,6 +151,39 @@ try {
       console.log(`PASS: ${width}px ${skill} setup, controls, panes, saved review${skill === 'reading' ? ', highlights, hidden timer and rapid typing' : ''}`)
     }
   }
+  await send('Emulation.setDeviceMetricsOverride', { width: 320, height: 568, deviceScaleFactor: 1, mobile: true })
+  await evaluate('localStorage.clear();window.showGuard()')
+  await until('document.body.textContent.includes("Open guarded test")')
+  await click('Open guarded test')
+  await until('document.querySelector(".reading-toolbar")')
+  assert.equal(await evaluate('window.hasActiveTest()'), true, 'Browser fixture starts an active attempt')
+  assert.equal(await evaluate('history.state.idx'), 1, 'The test has a prior catalog history entry')
+  await evaluate(`(() => {const n=document.querySelector('input[type="text"]');const set=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set;set.call(n,'Browser saved answer');n.dispatchEvent(new Event('input',{bubbles:true}));n.blur();})()`)
+  await evaluate('window.history.back()')
+  await until('document.querySelector("[role=alertdialog]") && location.pathname==="/guarded"')
+  assert.equal(await evaluate('document.querySelector("input[type=text]").value'), 'Browser saved answer')
+  const fits = await evaluate(`(() => {const r=document.querySelector('[role=alertdialog]').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight;})()`)
+  assert.equal(fits, true, 'IELTS exit dialog fits the 320px mobile viewport')
+  await click('Continue test')
+  await until('!document.querySelector("[role=alertdialog]")')
+  await send('Page.reload')
+  await until('!document.querySelector("[role=alertdialog]") && document.querySelector(".reading-toolbar")')
+  await new Promise(resolve => setTimeout(resolve, 300))
+  assert.ok(dialogs.includes('beforeunload'), 'Refresh shows native confirmation')
+  assert.equal(await evaluate('document.querySelector("input[type=text]").value'), 'Browser saved answer', 'Cancelled refresh retains the mounted answer')
+  acceptNativeDialog = true
+  const previousBoot = await evaluate('window.fixtureBootId')
+  await send('Page.reload')
+  await until(`window.fixtureBootId!==${JSON.stringify(previousBoot)} && window.showGuard && document.querySelector(".reading-toolbar")`)
+  assert.equal(await evaluate('document.querySelector("input[type=text]").value'), 'Browser saved answer', 'Accepted refresh restores the answer')
+  await evaluate('window.history.back()')
+  await until('document.querySelector("[role=alertdialog]")')
+  await click('Save & exit')
+  await until('document.body.textContent.includes("Open guarded test")')
+  await click('Open guarded test')
+  await until('document.querySelector(".reading-toolbar")')
+  assert.equal(await evaluate('document.querySelector("input[type=text]").value'), 'Browser saved answer', 'Confirmed browser Back preserves the session')
+  console.log('PASS: real browser Back/cancel/confirm, native refresh cancellation, accepted reload, saved answers and mobile exit design')
   assert.deepEqual(exceptions, [], 'No browser runtime errors')
 } finally {
   if (socket?.readyState === WebSocket.OPEN) await new Promise(resolve => {

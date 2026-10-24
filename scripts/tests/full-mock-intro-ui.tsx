@@ -88,8 +88,8 @@ export async function run() {
     const open = element.querySelector<HTMLButtonElement>('button.mock-ielts-card-open')!
     assert.ok(open)
     await act(async () => open.click())
-    assert.equal(fullscreenCalls, 4, 'Review opens results without forcing fullscreen')
-    assert.ok(element.textContent?.includes('Exam overview'), 'Completed mock Open shows results')
+    assert.equal(fullscreenCalls, 5, 'Completed mock cards start a fresh retake')
+    assert.ok(element.querySelector('video'), 'Completed mock card returns to Listening instructions')
     await unmount()
     localStorage.clear()
     await mount('/mock/ielts', null)

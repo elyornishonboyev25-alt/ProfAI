@@ -8,13 +8,14 @@ import './full-mock-results.css'
 
 const icons = { listening: Headphones, reading: BookOpen, writing: PenSquare, speaking: Mic2 }
 
-export default function FullMockResults({ mock, results, overall, onBack, onReview, onRegrade }: {
+export default function FullMockResults({ mock, results, overall, onBack, onReview, onRegrade, readOnly = false }: {
   mock: FullMockEntry
   results: Partial<Record<MockSectionKey, FullMockSectionResult>>
   overall: number | null
   onRegrade?: () => Promise<void>
   onBack: () => void
   onReview: (section: MockSection) => void
+  readOnly?: boolean
 }) {
   const [selected, setSelected] = useState<MockSectionKey>(results.speaking?.assessmentStatus === 'pending' ? 'speaking' : 'listening')
   const [regrading, setRegrading] = useState(false)
@@ -54,11 +55,12 @@ export default function FullMockResults({ mock, results, overall, onBack, onRevi
       <section role="tabpanel" id="full-mock-result-detail" aria-labelledby={`result-tab-${selected}`} className="full-mock-result-detail" key={selected}>
         <header><div><p className="full-mock-results-eyebrow">SECTION RESULT</p><h2>{section.title} <span>{pending ? 'Assessment pending' : saved.band.toFixed(1)}</span></h2></div>{objective && saved.result && <button type="button" className="mock-run-review" onClick={() => onReview(section)}>Review answers <ArrowUpRight size={16} /></button>}</header>
         {saved.result && <div className="full-mock-result-stats"><div><strong>{saved.result.correctAnswers}<small> / {saved.result.totalQuestions}</small></strong><span>Correct answers</span></div><div><strong>{Math.round(saved.result.correctAnswers / Math.max(1, saved.result.totalQuestions) * 100)}<small>%</small></strong><span>Accuracy</span></div><div><strong>{Math.round(saved.result.timeSpent / 60)}<small> min</small></strong><span>Time used</span></div></div>}
-        {selected === 'speaking' && pending && <div className="full-mock-assessment-notice" role="status"><div><h3>Your answers are saved</h3><p>All four sections are complete. Your overall band will appear after Speaking is assessed.</p></div><button type="button" disabled={regrading} className="mock-run-review" onClick={() => void regrade()}>{regrading ? 'Assessing your saved recordings...' : 'Retry Speaking assessment'}</button></div>}
+        {selected === 'speaking' && pending && <div className="full-mock-assessment-notice" role="status"><div><h3>Your answers are saved</h3><p>All four sections are complete. Your overall band will appear after Speaking is assessed.</p></div>{onRegrade && <button type="button" disabled={regrading} className="mock-run-review" onClick={() => void regrade()}>{regrading ? 'Assessing your saved recordings...' : 'Retry Speaking assessment'}</button>}</div>}
         {error && <p role="alert" className="full-mock-assessment-error">{error}</p>}
         {saved.summary && <p className="mock-run-summary">{saved.summary}</p>}
         <div className="mock-run-section-review">
           {selected === 'speaking' && saved.speaking ? <SpeakingResult evaluation={saved.speaking.evaluation} transcript={saved.speaking.transcript} modeLabel={section.title} reviewMode embedded hideVocabularyReview onRetry={() => {}} onExit={onBack} onImprovedAnswers={improvedAnswers => {
+            if (readOnly) return
             const current = getFullMockResults(mock.id).speaking
             if (!current?.speaking || current.completedAt !== saved.completedAt) return
             improvedAnswers = [...(current.speaking.evaluation.improvedAnswers ?? []).filter(item => !improvedAnswers.some(answer => answer.answerIndex === item.answerIndex)), ...improvedAnswers].sort((a, b) => a.answerIndex - b.answerIndex)
@@ -69,6 +71,7 @@ export default function FullMockResults({ mock, results, overall, onBack, onRevi
               return { ...item, improvedVersion: improvedAnswers.find(answer => answer.answerIndex === index && answer.original === item.response)?.improved }
             }) })
           }} /> : !!saved.review?.length && <details open><summary>Your responses and feedback</summary><div className="mock-run-responses">{saved.review.map((item, index) => <div key={index}><h4>{item.label}</h4><p>{item.response || 'No response recorded.'}</p>{item.feedback && <p className="mock-run-feedback">{item.feedback}</p>}{(selected === 'writing' || (selected === 'speaking' && item.label === 'Your answer')) && item.response.trim() && <ImprovedResponse text={item.improvedVersion} speakingAnswer={selected === 'speaking' ? item.response : undefined} onImproved={improvedVersion => {
+            if (readOnly) return
             const current = getFullMockResults(mock.id)[selected]
             if (!current || current.completedAt !== saved.completedAt) return
             saveFullMockSectionResult(mock.id, selected, { ...current, review: current.review?.map((response, position) => position === index ? { ...response, improvedVersion } : response) })

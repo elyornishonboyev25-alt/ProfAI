@@ -1,6 +1,7 @@
 import { accountStorageFor } from '@/utils/accountStorage'
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { createJSONStorage, persist } from 'zustand/middleware'
+import { resilientBrowserStorage } from '@/utils/resilientBrowserStorage'
 import type { ExaminerTurn, SpeakingEvaluation } from '@/services/speakingAI'
 
 // Persistent speaking history. Powers the hub stats, the speaking profile charts,
@@ -9,6 +10,7 @@ import type { ExaminerTurn, SpeakingEvaluation } from '@/services/speakingAI'
 
 export type SpeakingSessionRecord = {
   id: string
+  attemptKey?: string
   userId: string | null
   date: string // ISO timestamp
   /** e.g. "IELTS Part 1", "Full Mock", "Job Interview", "Live Partner" */
@@ -45,7 +47,7 @@ export const useSpeakingStore = create<SpeakingState>()(
           id: `spk-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
           date: record.date ?? new Date().toISOString(),
         }
-        set((state) => ({ sessions: [full, ...state.sessions].slice(0, 200) }))
+        set((state) => ({ sessions: [full, ...state.sessions] }))
         saveSpeakingAccount(full.userId, get().sessions)
         return full
       },
@@ -59,7 +61,7 @@ export const useSpeakingStore = create<SpeakingState>()(
         saveSpeakingAccount(userId, get().sessions)
       },
     }),
-    { name: 'smarttest-speaking-history-v1' },
+    { name: 'smarttest-speaking-history-v1', storage: createJSONStorage(() => resilientBrowserStorage) },
   ),
 )
 

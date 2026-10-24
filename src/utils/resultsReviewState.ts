@@ -1,6 +1,7 @@
 import { useAuthStore } from '@/store/authStore'
 import type { IELTSTest, TestResult } from '@/types/ieltsTypes'
 import { accountStorageFor } from './accountStorage'
+import { compactIeltsResult, readIeltsPaperSnapshot } from './ieltsPaperSnapshots'
 
 type StoredReviewPayload = {
   result: TestResult
@@ -17,7 +18,7 @@ export function saveReviewState(testId: string, payload: { result: TestResult; t
   if (payload.result.testId !== testId || payload.test.id !== testId) return
   const previous = loadReviewState(testId)
   const value: StoredReviewPayload = {
-    ...payload,
+    result: compactIeltsResult(payload.result, payload.test),
     savedAt: payload.result.date,
   }
   // Independent stores: quota/privacy failures in one must not hide the result
@@ -25,7 +26,7 @@ export function saveReviewState(testId: string, payload: { result: TestResult; t
   try { window.sessionStorage.setItem(key(testId), JSON.stringify(value)) } catch { /* Keep the route payload usable. */ }
   try {
     const backup = JSON.stringify({
-      result: { ...payload.result, detailedBreakdown: { activeSectionIds: payload.result.detailedBreakdown?.activeSectionIds } },
+      result: value.result,
       savedAt: value.savedAt,
     })
     accountStorageFor().setItem(`smarttest-completed-attempt:${testId}:${payload.result.date}`, backup)
@@ -49,6 +50,7 @@ export function loadReviewState(testId: string): StoredReviewPayload | null {
       const parsed = JSON.parse(raw) as StoredReviewPayload
       if (parsed?.result?.testId !== testId || !parsed.result.answers || typeof parsed.result.answers !== 'object' || Array.isArray(parsed.result.answers)) continue
       if (parsed.test && parsed.test.id !== testId) continue
+      parsed.test ??= readIeltsPaperSnapshot(parsed.result.detailedBreakdown?.paperSnapshotKey, testId) ?? undefined
       if (!newest || (Date.parse(parsed.result.date) || 0) > (Date.parse(newest.result.date) || 0)) newest = parsed
     } catch { /* Try the independent backup if this store is unavailable. */ }
   }

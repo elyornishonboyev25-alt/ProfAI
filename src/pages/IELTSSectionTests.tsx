@@ -7,6 +7,7 @@ import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import CompactIeltsCatalog, { type CompactIeltsTestRow } from '@/components/catalog/CompactIeltsCatalog'
 import { useFeatureTrial } from '@/hooks/useFeatureTrial'
 import { getReadingAnalysisHistory } from '@/utils/readingAnalysisStorage'
+import { useAccountDataRevision } from '@/hooks/useAccountDataRevision'
 import {
   getIeltsFullTestCatalog,
   getIeltsReadingUnifiedCatalog,
@@ -32,18 +33,20 @@ export default function IELTSSectionTests({ sectionOverride, embedded = false }:
   const [activeFilter, setActiveFilter] = useState(navigationState?.catalogSkill === track ? navigationState.catalogFilter ?? 'full' : 'full')
   const deferredSearchTerm = useDeferredValue(searchTerm)
   const fromMock = navigationState?.entry === 'mock-ielts'
+  const revision = useAccountDataRevision()
+  const history = useMemo(() => getReadingAnalysisHistory(user?.id), [user?.id, revision])
 
   const completedTestIds = useMemo(() => {
     return new Set(
-      getReadingAnalysisHistory(user?.id)
-        .filter((entry) => entry.correctAnswers > 0 && entry.totalQuestions > 0)
+      history
+        .filter((entry) => !entry.isPartial && entry.totalQuestions > 0)
         .filter((entry) => {
           const isListeningAttempt = `${entry.testId} ${entry.testTitle}`.toLowerCase().includes('listening')
           return track === 'listening' ? isListeningAttempt : !isListeningAttempt
         })
         .map((entry) => entry.testId),
     )
-  }, [track, user?.id])
+  }, [track, history])
 
   const rows = useMemo<CompactIeltsTestRow[]>(() => {
     if (track === 'reading') {
@@ -83,6 +86,9 @@ export default function IELTSSectionTests({ sectionOverride, embedded = false }:
           title: `${track === 'listening' ? 'Listening' : 'Reading'} Part ${partNumber} · Test ${row.number}`,
           subtitle: row.available ? `Practice Part ${partNumber} from this test` : row.subtitle,
           badge: `Part ${partNumber}`,
+          completed: history.some(entry => entry.testId === row.id && entry.totalQuestions > 0 && (
+            !entry.isPartial || entry.sectionSummaries.some(section => section.partNumber === partNumber)
+          )),
           durationMinutes: track === 'reading' ? 20 : undefined,
           detail: `Part ${partNumber} · focused practice`,
         }))
@@ -90,7 +96,7 @@ export default function IELTSSectionTests({ sectionOverride, embedded = false }:
     const query = deferredSearchTerm.trim().toLowerCase()
     if (!query) return filteredByPart
     return filteredByPart.filter((row) => `${row.title} ${row.subtitle}`.toLowerCase().includes(query))
-  }, [activeFilter, deferredSearchTerm, rows, track])
+  }, [activeFilter, deferredSearchTerm, rows, track, history])
 
   if (!validSection) return <Navigate to="/ielts" replace />
 

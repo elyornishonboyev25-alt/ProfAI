@@ -1,4 +1,5 @@
 import type { IELTSTest, TestResult } from '../types/ieltsTypes'
+import { readIeltsPaperSnapshot } from './ieltsPaperSnapshots'
 import { archivedListeningFullTest3 } from '../data/listeningFullTest1'
 import { fullReadingTest } from '../data/fullReadingTest'
 import { fullReadingTest2 } from '../data/fullReadingTest2'
@@ -39,6 +40,10 @@ export function resolveIeltsTestById(testId: string, result?: Pick<TestResult, '
     || result.detailedBreakdown?.activeSectionIds?.some(id => /^lt3-part[1-4]$/.test(id))
     || result.detailedBreakdown?.readingAnalysis?.sectionSummaries.some(section => /^lt3-part[1-4]$/.test(section.sectionId))
   )) return archivedListeningFullTest3
+  const snapshot = result?.detailedBreakdown?.paperSnapshot
+  if (snapshot?.id === normalized && Array.isArray(snapshot.sections) && snapshot.sections.length) return snapshot
+  const stored = readIeltsPaperSnapshot(result?.detailedBreakdown?.paperSnapshotKey, normalized)
+  if (stored) return stored
   const known = CATALOG.find((test) => test.id === normalized)
   if (known) return known
   return resolveGeneratedTestById(normalized)

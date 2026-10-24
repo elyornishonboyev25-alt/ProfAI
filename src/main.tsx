@@ -15,8 +15,10 @@ import './styles/ielts-exam-workspace.css'
 import './styles/ivygoo-glass.css'
 import { startBuildFreshnessMonitor } from './utils/buildFreshness.ts'
 import { recoverFromStaleBuild } from './utils/staleBuildRecovery.ts'
+import { installTestExitProtection } from './hooks/useTestExitGuard'
 
 if (typeof window !== 'undefined') {
+  installTestExitProtection()
   try { document.documentElement.dataset.effects = localStorage.getItem('profai-effects') === 'reduced' ? 'reduced' : 'full' } catch { /* Optional preference. */ }
   window.addEventListener('vite:preloadError', (event) => {
     event.preventDefault()

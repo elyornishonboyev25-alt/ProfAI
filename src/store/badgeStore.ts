@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { createJSONStorage, persist } from 'zustand/middleware'
+import { resilientBrowserStorage } from '@/utils/resilientBrowserStorage'
 import { tierForAchievement, type SkillTrackKey } from '@/components/achievements/badgeMeta'
 import { upsertBadge } from '@/lib/profileApi'
 import { useCelebrationStore } from './celebrationStore'
@@ -88,6 +89,7 @@ export const useBadgeStore = create<BadgeState>()(
     }),
     {
       name: 'smarttest-skill-badges-v1',
+      storage: createJSONStorage(() => resilientBrowserStorage),
       version: 1,
       migrate: (persisted) => {
         const state = persisted as BadgeState

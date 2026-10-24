@@ -37,7 +37,8 @@ export async function run() {
     </Routes></MemoryRouter>))
     const completedCard = element.querySelector('.mock-ielts-glass-card')!
     assert.equal(completedCard.tagName, 'ARTICLE', 'No invalid nested interactive buttons')
-    assert.ok(completedCard.querySelector('[aria-label="Review Full Mock 1"]'))
+    assert.equal(completedCard.querySelector('[aria-label="Review Full Mock 1"]'), null, 'Completed cards launch a retake; review belongs in Mistake Lab')
+    assert.ok(completedCard.textContent?.includes('4/4 completed'))
     const retake = completedCard.querySelector<HTMLButtonElement>('[aria-label="Retake Full Mock 1"]')!
     assert.ok(retake)
     await act(async () => retake.click())

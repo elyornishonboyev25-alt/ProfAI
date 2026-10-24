@@ -2,6 +2,7 @@ import { useActiveTest } from '@/hooks/useActiveTest'
 import { useAuthStore } from '@/store/authStore'
 import { accountStorageFor } from '@/utils/accountStorage'
 import { readTestAudio, saveTestAudio } from '@/utils/testAudioStorage'
+import { useIeltsAttemptResume } from '@/hooks/useIeltsAttemptResume'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowLeft, AudioLines, CheckCircle2, ChevronLeft, ChevronRight, Clock3, Headphones, Loader2, MessageSquareText, Mic, ShieldCheck, Square, Volume2 } from 'lucide-react'
@@ -218,6 +219,7 @@ export default function ExaminerSession({
   hideVocabularyReview = false,
   autoStart = false,
   sessionScope,
+  sessionId,
   onCompleted,
 }: {
   config: SessionConfig
@@ -225,6 +227,7 @@ export default function ExaminerSession({
   hideVocabularyReview?: boolean
   autoStart?: boolean
   sessionScope?: string
+  sessionId?: string
   onCompleted?: (evaluation: SpeakingEvaluation, transcript: ExaminerTurn[], sessionKey: string) => void
   onExit: () => void
   onSaved: (evaluation: SpeakingEvaluation, transcript: ExaminerTurn[]) => void
@@ -232,11 +235,17 @@ export default function ExaminerSession({
   const recognition = useSpeechRecognition('en-US')
   const owner = useAuthStore(state => state.user?.id ?? 'guest')
   const legacySessionKey = `profai:speaking:examiner:${modeLabel}:${JSON.stringify(config)}`
-  const sessionKey = sessionScope ? `${legacySessionKey}:mock:${sessionScope}` : legacySessionKey
+  const stableKey = sessionId ? `profai:speaking:examiner:test:${sessionId}` : legacySessionKey
+  const sessionKey = sessionScope ? `${stableKey}:mock:${sessionScope}` : stableKey
   const [saved, setSaved] = useState(() => {
     try {
       const storage = accountStorageFor(owner)
       let raw = storage.getItem(sessionKey)
+      if (!raw && sessionId) {
+        const oldKey = sessionScope ? `${legacySessionKey}:mock:${sessionScope}` : legacySessionKey
+        raw = storage.getItem(oldKey)
+        if (raw) { storage.setItem(sessionKey, raw); storage.removeItem(oldKey) }
+      }
       if (!raw && sessionScope) {
         const legacy = storage.getItem(legacySessionKey)
         if (legacy && ['result', 'evaluating'].includes(JSON.parse(legacy).phase)) { raw = legacy; storage.setItem(sessionKey, raw!); storage.removeItem(legacySessionKey) }
@@ -248,6 +257,7 @@ export default function ExaminerSession({
   const [phase, setPhase] = useState<Phase>('idle')
   const [started, setStarted] = useState(false)
   const [starting, setStarting] = useState(false)
+  useIeltsAttemptResume(started, sessionKey, modeLabel)
   const [chat, setChat] = useState<ChatTurn[]>([])
   const [currentPrompt, setCurrentPrompt] = useState('')
   const [activePart, setActivePart] = useState<0 | 1 | 2 | 3>(1)
@@ -689,10 +699,11 @@ export default function ExaminerSession({
       return
     }
     try {
+      const answerIndex = answersRef.current.length
       recorderRef.current = new AnswerRecording(stream, () => {
         microphoneInterruptedRef.current = true
         stopForSilenceRef.current()
-      }, blob => { void saveTestAudio(owner, `${audioKey}:pending:${answersRef.current.length}`, blob) })
+      }, blob => { void saveTestAudio(owner, `${audioKey}:pending:${answerIndex}`, blob) })
     } catch {
       setAnswerError('Could not start audio capture. Check your microphone and retry.')
       return

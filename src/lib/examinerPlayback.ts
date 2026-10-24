@@ -65,9 +65,11 @@ export class ExaminerPlayback {
     }
     callbacks.loading(true)
     const playDevice = async () => {
+      if (!current() || completed || controller.signal.aborted) return
+      failed = false
       if (options.deviceFallback === false) { fail('Natural voice could not play. Please retry audio.'); return }
       const installedVoice = getExaminerVoice(gender) ?? await waitForExaminerVoice(gender, controller.signal)
-      if (!current() || completed) return
+      if (!current() || completed || controller.signal.aborted) return
       if (!installedVoice) { fail('Examiner audio is unavailable and a matching English voice is not installed. Check your connection and retry audio.'); return }
       this.retry = () => this.ask(text, voice, gender, callbacks, true, options)
       this.stopSpeech = speak(text, {
@@ -77,7 +79,7 @@ export class ExaminerPlayback {
       })
     }
     if (device) { void playDevice(); return }
-    void (options.audio ?? examinerAudio(text, voice, controller.signal, options.language)).then((url) => {
+    void (options.audio ?? examinerAudio(text, voice, controller.signal, options.language, true)).then((url) => {
       if (!current()) { URL.revokeObjectURL(url); return }
       this.url = url
       this.player.src = url

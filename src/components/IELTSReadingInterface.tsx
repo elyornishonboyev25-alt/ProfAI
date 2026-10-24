@@ -1,6 +1,7 @@
 import { useReadingAnnotations } from '@/hooks/useReadingAnnotations'
 import { useActiveTest } from '@/hooks/useActiveTest'
 import { saveActiveTestPaper, clearActiveTestPaper } from '@/utils/activeTestPaper'
+import { useIeltsAttemptResume } from '@/hooks/useIeltsAttemptResume'
 import { textOffsets, textRange } from '@/utils/textRanges'
 import { accountStorageFor } from '@/utils/accountStorage'
 import { useState, useMemo, useEffect, useLayoutEffect, useRef, useCallback, Fragment, type MouseEvent as ReactMouseEvent } from 'react'
@@ -295,7 +296,7 @@ export default function IELTSReadingInterface({
     minTimeSec: number
     actualTimeSec: number
   } | null>(null)
-  const [showExitConfirmModal, setShowExitConfirmModal] = useState(false)
+
   const [reviewShowCorrectAnswers, setReviewShowCorrectAnswers] = useState(Boolean(reviewPayload?.showCorrectAnswers))
   const [optionsPage, setOptionsPage] = useState<'menu' | 'contrast' | 'text-size' | 'font'>('menu')
   const [activeDragSlots, setActiveDragSlots] = useState<Record<string, number | null>>({})
@@ -337,6 +338,7 @@ export default function IELTSReadingInterface({
   // --- Session Persistence ---
   const personalStorage = accountStorageFor(badgeUserId ?? 'guest')
   const sessionKey = `ielts_test_session_${test.id}${fullMockId ? `:mock:${fullMockId}` : ''}`
+  useIeltsAttemptResume(isTestActive && !isReviewMode, sessionKey, test.title)
   const focusedPart = !fullMockId && typeof launchPreset?.partIndex === 'number'
     ? clamp(Math.round(launchPreset.partIndex), 1, test.sections.length) - 1 : null
   const examDurationMinutes = (simulationPart ?? focusedPart) !== null && !isListening ? launchPreset?.durationMinutes ?? 20 : test.duration
@@ -379,7 +381,7 @@ export default function IELTSReadingInterface({
     setShowReviewModal(false)
     setShowSubmitConfirmModal(false)
     setShowSubmitLoading(false)
-    setShowExitConfirmModal(false)
+
     setShowNotes(false)
     setActiveDragSlots({})
     setActiveDragOption({})
@@ -1644,7 +1646,8 @@ export default function IELTSReadingInterface({
       isPartial,
       detailedBreakdown: {
         activeSectionIds: activeSections.map(s => s.id),
-        readingAnalysis: analysis
+        readingAnalysis: analysis,
+        paperSnapshot: test,
       },
       leaderboardEligible,
     }
@@ -1793,19 +1796,12 @@ export default function IELTSReadingInterface({
   }
 
   const proceedExitTest = () => {
-    stopListeningAudio()
-    clearSession()
-    setIsTestActive(false)
-    setShowExitConfirmModal(false)
+    flushSession()
     onExit()
   }
 
   const handleExitTest = () => {
-    if (isReviewMode || !isTestActive) {
-      proceedExitTest()
-      return
-    }
-    setShowExitConfirmModal(true)
+    proceedExitTest()
   }
 
   const handleNavigateQuestion = (globalIndex: number) => {
@@ -7105,47 +7101,6 @@ export default function IELTSReadingInterface({
                   className="rounded-xl border border-red-500 bg-gradient-to-r from-red-600 to-rose-600 px-4 py-2 text-sm font-bold text-white hover:from-red-500 hover:to-rose-500"
                 >
                   Save note
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {showExitConfirmModal && (
-          <div className="fixed inset-0 z-[118] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
-              onClick={() => setShowExitConfirmModal(false)}
-            />
-            <motion.div
-              initial={{ opacity: 0, y: 12, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.96 }}
-              className="relative w-full max-w-lg rounded-2xl border border-red-100 bg-white p-6 text-center shadow-[0_30px_70px_rgba(220,38,38,0.25)]"
-            >
-              <h3 className="text-3xl font-black text-slate-900">Close this test?</h3>
-              <p className="mt-2 text-sm text-slate-600">
-                Your current test session will be closed. Do you want to continue?
-              </p>
-              <div className="mt-5 flex items-center justify-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowExitConfirmModal(false)}
-                  className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                >
-                  Stay
-                </button>
-                <button
-                  type="button"
-                  onClick={proceedExitTest}
-                  className="rounded-xl border border-red-500 bg-gradient-to-r from-red-600 to-rose-600 px-4 py-2 text-sm font-bold text-white hover:from-red-500 hover:to-rose-500"
-                >
-                  Exit test
                 </button>
               </div>
             </motion.div>

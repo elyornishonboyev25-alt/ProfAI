@@ -5,6 +5,7 @@ import CompactIeltsCatalog, { type CompactIeltsTestRow } from '@/components/cata
 import { getWritingFullTestCatalog } from '@/data/writingTestData'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { getWritingAnalysisHistory } from '@/utils/writingAnalysisStorage'
+import { useAccountDataRevision } from '@/hooks/useAccountDataRevision'
 
 export default function IELTSWritingTests({ embedded = false }: { embedded?: boolean } = {}) {
   const navigate = useNavigate()
@@ -15,9 +16,10 @@ export default function IELTSWritingTests({ embedded = false }: { embedded?: boo
   const [searchTerm, setSearchTerm] = useState('')
   const [activeFilter, setActiveFilter] = useState(navigationState?.catalogSkill === 'writing' ? navigationState.catalogFilter ?? 'full' : 'full')
   const deferredSearchTerm = useDeferredValue(searchTerm)
+  const revision = useAccountDataRevision()
   const completedTaskIds = useMemo(
     () => new Set(getWritingAnalysisHistory(user?.id).map((entry) => entry.testId)),
-    [user?.id],
+    [user?.id, revision],
   )
 
   const rows = useMemo<CompactIeltsTestRow[]>(

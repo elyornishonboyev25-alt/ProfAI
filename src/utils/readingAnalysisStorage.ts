@@ -1,9 +1,9 @@
 import { accountStorageFor } from '@/utils/accountStorage'
+import { compactIeltsResult } from './ieltsPaperSnapshots'
 import type { ReadingQuestionResult, ReadingSectionSummary } from '../types/ieltsTypes'
 import type { TestResult } from '../types/ieltsTypes'
 
 const HISTORY_VERSION = 'v1'
-const ENTRY_LIMIT = 30
 
 export interface ReadingFocusAreaSnapshot {
   label: string
@@ -77,10 +77,6 @@ function getStorageKey(userId?: string): string {
   return `smarttest-reading-analysis-history-${HISTORY_VERSION}:${owner}`
 }
 
-function compactResult(result: TestResult): TestResult {
-  return { ...result, detailedBreakdown: { activeSectionIds: result.detailedBreakdown?.activeSectionIds ?? [] } }
-}
-
 function safeParseHistory(value: string | null): ReadingAnalysisHistoryEntry[] {
   if (!value) return []
 
@@ -124,7 +120,7 @@ export function saveReadingAnalysisHistory(input: SaveReadingHistoryInput): void
   const storageKey = getStorageKey(input.userId)
   const current = safeParseHistory(accountStorageFor(input.userId ?? 'guest').getItem(storageKey))
   const withoutSameAttempt = current.filter((entry) => entry.attemptKey !== input.attemptKey)
-    .map(entry => ({ ...entry, resultPayload: compactResult(entry.resultPayload) }))
+    .map(entry => ({ ...entry, questionResults: [], resultPayload: compactIeltsResult(entry.resultPayload, undefined, input.userId ?? 'guest') }))
 
   const nextEntry: ReadingAnalysisHistoryEntry = {
     attemptKey: input.attemptKey,
@@ -151,10 +147,11 @@ export function saveReadingAnalysisHistory(input: SaveReadingHistoryInput): void
     })),
     focusAreas: input.focusAreas.slice(0, 4),
     incorrectQuestions: input.incorrectQuestions.slice(0, 16),
-    questionResults: input.questionResults,
-    // Question feedback is already stored above. Avoid retaining it again in
-    // readingAnalysis and in each section's questions inside every history row.
-    resultPayload: compactResult(input.resultPayload),
+    // Reviews recalculate question feedback from the immutable paper and answers.
+    // Retaining that report in every row duplicates most of the paper.
+    questionResults: [],
+    // Large immutable papers are shared across attempts, including retakes.
+    resultPayload: compactIeltsResult(input.resultPayload, undefined, input.userId ?? 'guest'),
   }
 
   const merged = [nextEntry, ...withoutSameAttempt]
@@ -162,7 +159,6 @@ export function saveReadingAnalysisHistory(input: SaveReadingHistoryInput): void
       (a, b) =>
         new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime(),
     )
-    .slice(0, ENTRY_LIMIT)
 
   accountStorageFor(input.userId ?? 'guest').setItem(storageKey, JSON.stringify(merged))
 }

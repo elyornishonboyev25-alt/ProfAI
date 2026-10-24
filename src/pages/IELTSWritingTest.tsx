@@ -1,10 +1,12 @@
 import { readActiveTestPaper } from '@/utils/activeTestPaper'
+import { resolveFullMockRouteState } from '@/utils/fullMockRouteState'
 import FullMockSectionGate from '@/components/ielts/FullMockSectionGate'
 import { useAuthStore } from '@/store/authStore'
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useMemo } from 'react'
 import { ArrowLeft, Clock3 } from 'lucide-react'
 import { getWritingFullTestById, getWritingTaskById } from '@/data/writingTestData'
+import type { WritingTask, WritingFullTest } from '@/data/writingTestData'
 import IELTSWritingTestInterface from '@/components/IELTSWritingTestInterface'
 import IELTSWritingFullTestInterface from '@/components/IELTSWritingFullTestInterface'
 import { fullMockLaunchState, getFullMockPendingSection, getFullMockSectionRedirect, saveFullMockSectionResult, type MockSectionKey } from '@/utils/ieltsMockCatalog'
@@ -26,17 +28,19 @@ function WritingTestContent() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const location = useLocation()
-  const navState = location.state as WritingTestNavState
+  const navState = resolveFullMockRouteState(location) as WritingTestNavState
 
   const owner = useAuthStore(state => state.user?.id ?? 'guest')
   const task = useMemo(() => {
     const candidate = id ? getWritingTaskById(id) : null
-    return candidate ? readActiveTestPaper<typeof candidate>(`profai:writing:draft:${owner}:${id}:session`, owner) ?? candidate : null
+    const saved = readActiveTestPaper<WritingTask>(`profai:writing:draft:${owner}:${id}:session`, owner)
+    return saved?.id === id && typeof saved?.taskType === 'string' ? saved : candidate
   }, [id, owner])
   const fullTest = useMemo(() => {
     const candidate = id ? getWritingFullTestById(id) : null
     const key = `profai:writing:draft:${owner}:${id}${navState?.mock?.id ? `:mock:${navState.mock.id}` : ''}:session`
-    return candidate ? readActiveTestPaper<typeof candidate>(key, owner) ?? candidate : null
+    const saved = readActiveTestPaper<WritingFullTest>(key, owner)
+    return saved?.id === id && Array.isArray(saved?.tasks) ? saved : candidate
   }, [id, owner, navState?.mock?.id])
 
   const mockRedirect = navState?.mock?.id ? getFullMockSectionRedirect(navState.mock.id, 'writing', location.pathname) : null

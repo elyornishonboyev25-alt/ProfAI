@@ -3,8 +3,9 @@ import { env } from '../config/env.js'
 import { prisma } from '../lib/prisma.js'
 import { getLearningStreakSnapshot } from './activityStreak.service.js'
 import { ensureReferralCode, normalizeReferralCode, qualifyInvitee, referralSummary, settleReferrals, FRIEND_DAYS, INVITEE_BONUS_DAYS, REFERRAL_TIERS, type TierPayout } from './referral.service.js'
-import { call, ensureSubscribed, escapeHtml, isChannelMember, send, siteUrl, telegramEnabled, wheelUrl, type Keyboard, type TgUser } from './telegramApi.js'
+import { call, chatLang, ensureSubscribed, escapeHtml, isChannelMember, send, setChatLang, siteUrl, telegramEnabled, wheelUrl, type Keyboard, type TgUser } from './telegramApi.js'
 import { handleGroupCallback, handleGroupText, joinGroups, showGroup } from './telegramGroups.js'
+import { LANGS, tr, type Lang } from './telegramI18n.js'
 import { isSpinUsable, spinFor } from './wheel.service.js'
 import { wordOfDay } from './telegramWords.js'
 
@@ -30,7 +31,10 @@ async function deliver(userId: string, chatId: string, text: string, keyboard?: 
 
 const tashkentDay = (date: Date) => new Intl.DateTimeFormat('en-CA', { timeZone: TIME_ZONE }).format(date)
 const tashkentHour = (date: Date) => Number(new Intl.DateTimeFormat('en-GB', { timeZone: TIME_ZONE, hour: '2-digit', hourCycle: 'h23' }).format(date))
-const minutesLeft = (date: Date) => Math.max(0, Math.ceil((date.getTime() - Date.now()) / 60_000))
+const timeLeft = (date: Date, lang: Lang) => {
+  const minutes = Math.max(0, Math.ceil((date.getTime() - Date.now()) / 60_000))
+  return minutes >= 120 ? tr(lang).hours(Math.round(minutes / 60)) : tr(lang).minutes(minutes)
+}
 
 export const inviteLink = (code: string) => `${siteUrl()}/register?ref=${code}`
 export const botInviteLink = (code: string) => `https://t.me/${env.TELEGRAM_BOT_USERNAME}?start=ref_${code}`
@@ -43,18 +47,24 @@ export async function createLinkCode(userId: string, purpose: 'link' | 'promo' =
   return { code, expiresAt, url: `https://t.me/${env.TELEGRAM_BOT_USERNAME}?start=${purpose}_${code}` }
 }
 
-export async function notifyUser(userId: string, text: string, keyboard?: Keyboard) {
+/** Sends a message to a site account's linked chat, in that chat's language. */
+export async function notifyUser(userId: string, build: (lang: Lang) => { text: string; keyboard?: Keyboard }) {
   if (!telegramEnabled()) return false
   const link = await prisma.telegramLink.findUnique({ where: { userId }, select: { chatId: true } })
-  return link ? deliver(userId, link.chatId, text, keyboard) : false
+  if (!link) return false
+  const { text, keyboard } = build(await chatLang(link.chatId))
+  return deliver(userId, link.chatId, text, keyboard)
 }
 
 export async function announcePayouts(payouts: TierPayout[]) {
   for (const payout of payouts) {
-    const text = payout.kind === 'FRIEND'
-      ? `🎉 <b>Do'stingiz qo'shildi!</b>\nU botga start berib, kanalga obuna bo'ldi. Hisobingizga <b>+${payout.days} kun</b> Premium qo'shildi. (Jami do'stlar: ${payout.count})`
-      : `🏆 <b>${payout.count} do'st bonusi!</b>\nHisobingizga yana <b>+${payout.days} kun</b> Premium qo'shildi.`
-    await notifyUser(payout.inviterId, text, [[{ text: 'Mukofotlarim', url: `${siteUrl()}/account#referral` }]])
+    await notifyUser(payout.inviterId, lang => {
+      const t = tr(lang)
+      return {
+        text: payout.kind === 'FRIEND' ? t.friendJoined(payout.days, payout.count) : t.milestone(payout.count, payout.days),
+        keyboard: [[{ text: t.btnMyRewards, url: `${siteUrl()}/account#referral` }]],
+      }
+    })
   }
 }
 
@@ -66,12 +76,13 @@ async function qualifyReferral(userId: string, telegramUserId: number, knownMemb
   if (member) await announcePayouts(await qualifyInvitee(userId))
 }
 
-async function linkAccount(message: TgMessage, rawCode: string, announce = true) {
+async function linkAccount(message: TgMessage, rawCode: string, lang: Lang, announce = true) {
+  const t = tr(lang)
   const chatId = String(message.chat.id)
   const code = rawCode.trim().toUpperCase()
   const record = await prisma.telegramLinkCode.findUnique({ where: { code } })
   if (!record || record.expiresAt < new Date()) {
-    await send(chatId, '⚠️ Havola muddati tugagan. Saytdagi <b>Premium</b> yoki <b>Hisob → Telegram</b> bo\'limidan yangisini oling.')
+    await send(chatId, t.linkExpired)
     return null
   }
   await prisma.$transaction([
@@ -83,48 +94,38 @@ async function linkAccount(message: TgMessage, rawCode: string, announce = true)
   await prisma.wheelSpin.updateMany({ where: { telegramId: chatId, userId: null }, data: { userId: record.userId } }).catch(() => undefined)
   if (message.from) await qualifyReferral(record.userId, message.from.id).catch(() => undefined)
   if (!announce) return record.userId
-  await send(chatId, '✅ <b>Hisobingiz ulandi!</b>\n\nEndi har kuni yangi so\'z, streak eslatmasi va mukofotlar haqida xabar olasiz.\n\n/spin — chegirma barabani\n/group — guruh bo\'lib olish\n/invite — do\'st taklif qilish\n/help — barcha buyruqlar', [[{ text: 'Saytni ochish', url: `${siteUrl()}/dashboard` }]])
+  await send(chatId, t.linked, [[{ text: t.btnOpenSite, url: `${siteUrl()}/dashboard` }]])
   return record.userId
 }
 
 /** Channel members get the discount wheel and group buying; everyone else is asked to subscribe first. */
-async function sendDiscountMenu(chatId: string, user: TgUser) {
-  if (!(await ensureSubscribed(chatId, user.id, 'sub:check', 'Chegirma barabani va guruh narxlari faqat kanal obunachilari uchun.'))) return
+async function sendDiscountMenu(chatId: string, user: TgUser, lang: Lang) {
+  const t = tr(lang)
+  if (!(await ensureSubscribed(chatId, user.id, 'sub:check', t.reasonDiscount, lang))) return
   const link = await prisma.telegramLink.findUnique({ where: { chatId }, select: { userId: true } })
   if (link) await qualifyReferral(link.userId, user.id, true).catch(() => undefined)
   const spin = await spinFor(String(user.id))
   const keyboard: Keyboard = []
   let status: string
   if (!spin) {
-    status = '🎡 Barabanni bir marta aylantiring va <b>50% gacha</b> chegirma yuting!'
-    keyboard.push([{ text: '🎡 Barabanni aylantirish', web_app: { url: wheelUrl() } }])
+    status = t.spinPrompt
+    keyboard.push([{ text: t.btnSpin, web_app: { url: wheelUrl() } }])
   } else if (isSpinUsable(spin)) {
-    status = `🎁 Sizning chegirmangiz: <b>${spin.percent}%</b>\n⏳ Amal qiladi: yana <b>${minutesLeft(spin.expiresAt)} daqiqa</b>. Shu vaqt ichida to'lov qiling.`
-    keyboard.push([{ text: '💳 Chegirma bilan olish', url: `${siteUrl()}/premium` }])
+    status = t.activeDiscount(spin.percent, timeLeft(spin.expiresAt, lang))
+    keyboard.push([{ text: t.btnUseDiscount, url: `${siteUrl()}/premium` }])
   } else {
-    status = spin.usedAt ? `✅ ${spin.percent}% chegirmangizdan foydalangansiz.` : `⌛ ${spin.percent}% chegirmangiz muddati tugagan. Barabanni har kim bir marta aylantiradi.`
+    status = spin.usedAt ? t.usedDiscount(spin.percent) : t.expiredDiscount(spin.percent)
   }
-  keyboard.push([{ text: '👥 Guruh bo\'lib olish (5+ kishi)', callback_data: 'grp:start' }])
-  if (!link) keyboard.push([{ text: '🔗 Hisobni ulash', url: `${siteUrl()}/premium` }])
-  await send(chatId, `✅ <b>Siz kanal obunachisisiz!</b>\n\n${status}${link ? '' : '\n\n<i>Chegirma saytda ishlashi uchun hisobingizni ulang: Premium sahifasidagi "Telegram" tugmasi.</i>'}`, keyboard)
+  keyboard.push([{ text: t.btnGroup, callback_data: 'grp:start' }])
+  if (!link) keyboard.push([{ text: t.btnLinkAccount, url: `${siteUrl()}/premium` }])
+  await send(chatId, `${t.subscriberHeader}\n\n${status}${link ? '' : `\n\n${t.linkHint}`}`, keyboard)
 }
 
-const HELP = [
-  '<b>Buyruqlar</b>',
-  '/spin — chegirma barabani (kanal obunachilari uchun)',
-  '/group — 5+ kishi bo\'lib arzon olish',
-  '/invite — do\'st taklif qilish, bepul kunlar',
-  '/rewards — mukofotlarim',
-  '/word — bugungi so\'z',
-  '/streak — streak holatingiz',
-  '/free — bepul materiallar',
-  '/mute · /unmute — kunlik xabarlar',
-  '/unlink — hisobni uzish',
-].join('\n')
-
-function wordMessage() {
+function wordMessage(lang: Lang) {
+  const t = tr(lang)
   const item = wordOfDay()
-  return `📚 <b>Bugungi so'z</b>\n\n<b>${escapeHtml(item.word)}</b> <i>(${item.type})</i>\n${escapeHtml(item.uz)}\n\n<i>${escapeHtml(item.example)}</i>`
+  const meaning = lang === 'uz' ? item.uz : lang === 'ru' ? item.ru : item.en
+  return `${t.wordHeader}\n\n<b>${escapeHtml(item.word)}</b> <i>(${item.type})</i>\n${escapeHtml(meaning)}\n\n<i>${escapeHtml(item.example)}</i>`
 }
 
 async function streakText(userId: string) {
@@ -133,81 +134,83 @@ async function streakText(userId: string) {
   return { snapshot, today }
 }
 
+const languageKeyboard = (): Keyboard => [LANGS.map(code => ({ text: tr(code).languageName, callback_data: `lang:${code}` }))]
+
 async function handleCommand(message: TgMessage) {
   const chatId = String(message.chat.id)
   const user = message.from
+  const lang = await chatLang(chatId, user)
+  const t = tr(lang)
   const text = (message.text ?? '').trim()
-  if (user && !text.startsWith('/') && await handleGroupText(chatId, user, text)) return
+  if (user && !text.startsWith('/') && await handleGroupText(chatId, user, text, lang)) return
   const [rawCommand, ...rest] = text.split(/\s+/)
   const command = rawCommand.toLowerCase().replace(/@.*$/, '')
   const argument = rest.join(' ')
   const link = await prisma.telegramLink.findUnique({ where: { chatId }, select: { userId: true } })
 
   if (command === '/start') {
-    if (argument.startsWith('link_')) { await linkAccount(message, argument.slice(5)); return }
+    if (argument.startsWith('link_')) { await linkAccount(message, argument.slice(5), lang); return }
     if (argument.startsWith('promo_')) {
-      const userId = await linkAccount(message, argument.slice(6), false)
-      if (userId && user) await sendDiscountMenu(chatId, user)
+      const userId = await linkAccount(message, argument.slice(6), lang, false)
+      if (userId && user) await sendDiscountMenu(chatId, user, lang)
       return
     }
-    if (user && await joinGroups(chatId, user, argument.startsWith('grp_'))) return
-    if ((argument === 'promo' || argument === 'spin') && user) return sendDiscountMenu(chatId, user)
+    if (user && await joinGroups(chatId, user, lang, argument.startsWith('grp_'))) return
+    if ((argument === 'promo' || argument === 'spin') && user) return sendDiscountMenu(chatId, user, lang)
     const referral = argument.startsWith('ref_') ? normalizeReferralCode(argument.slice(4)) : ''
     const url = referral ? inviteLink(referral) : `${siteUrl()}/register`
-    const intro = referral
-      ? `🎁 Do'stingiz sizni taklif qildi! Ro'yxatdan o'tsangiz <b>+${INVITEE_BONUS_DAYS} kun bepul Premium</b> olasiz.`
-      : '👋 <b>Ivygoo</b> — IELTS va SAT tayyorgarligi uchun yordamchingiz.'
-    return send(chatId, `${intro}\n\n🎡 Kanalimizga obuna bo'ling va barabandan <b>50% gacha</b> chegirma yuting.\n👥 5+ kishi bo'lib oling — arzonroq.\n🎁 Do'st taklif qiling — bepul kunlar.`,
-      [[{ text: '🎡 Chegirma olish', callback_data: 'sub:check' }], [{ text: referral ? 'Ro\'yxatdan o\'tish' : 'Saytni ochish', url }]])
+    const intro = referral ? t.introReferral(INVITEE_BONUS_DAYS) : t.introDefault
+    return send(chatId, `${intro}\n\n${t.startBody}`,
+      [[{ text: t.btnGetDiscount, callback_data: 'sub:check' }], [{ text: referral ? t.btnRegister : t.btnOpenSite, url }]])
   }
-  if (command === '/help') return send(chatId, HELP)
-  if ((command === '/spin' || command === '/promo') && user) return sendDiscountMenu(chatId, user)
+  if (command === '/help') return send(chatId, t.help)
+  if (command === '/language' || command === '/lang') return send(chatId, t.chooseLanguage, languageKeyboard())
+  if ((command === '/spin' || command === '/promo') && user) return sendDiscountMenu(chatId, user, lang)
   if (command === '/group' && user) {
-    if (!(await ensureSubscribed(chatId, user.id, 'grp:start', 'Guruh bo\'lib olish faqat kanal obunachilari uchun.'))) return
-    return showGroup(chatId, user)
+    if (!(await ensureSubscribed(chatId, user.id, 'grp:start', t.reasonGroup, lang))) return
+    return showGroup(chatId, user, lang)
   }
-  if (command === '/word') return send(chatId, wordMessage(), [[{ text: 'Lug\'at mashqlari', url: `${siteUrl()}/vocabulary` }]])
+  if (command === '/word') return send(chatId, wordMessage(lang), [[{ text: t.btnVocabulary, url: `${siteUrl()}/vocabulary` }]])
   if (command === '/free') {
-    return send(chatId, '🎓 <b>Bepul tarifda nimalar bor</b>\n\n• Har oy 4 ta test va 1 ta to\'liq mock\n• 2 ta Writing va 2 ta Speaking AI tahlili\n• Lug\'at, maqolalar, podcast va shadowing\n\nBirortasini tanlang 👇', [
+    return send(chatId, t.freePlan, [
       [{ text: 'IELTS', url: `${siteUrl()}/ielts` }, { text: 'SAT', url: `${siteUrl()}/sat` }],
-      [{ text: 'Lug\'at', url: `${siteUrl()}/vocabulary` }, { text: 'Maqolalar', url: `${siteUrl()}/articles` }],
-      [{ text: 'Tariflar', url: `${siteUrl()}/premium` }],
+      [{ text: t.btnVocabularyShort, url: `${siteUrl()}/vocabulary` }, { text: t.btnArticles, url: `${siteUrl()}/articles` }],
+      [{ text: t.btnPlans, url: `${siteUrl()}/premium` }],
     ])
   }
 
   if (!link) {
     if (['/streak', '/invite', '/rewards', '/mute', '/unmute', '/unlink'].includes(command)) {
-      return send(chatId, '🔗 Bu buyruq uchun avval hisobingizni ulang: saytda <b>Hisob → Telegram</b> bo\'limidan foydalaning.', [[{ text: 'Hisobni ochish', url: `${siteUrl()}/account` }]])
+      return send(chatId, t.needLink, [[{ text: t.btnOpenAccount, url: `${siteUrl()}/account` }]])
     }
-    return send(chatId, 'Buyruqlar ro\'yxati: /help')
+    return send(chatId, t.commandsList)
   }
 
   if (command === '/streak') {
     const { snapshot, today } = await streakText(link.userId)
     const body = snapshot.currentStreak > 0
-      ? `🔥 <b>${snapshot.currentStreak} kunlik streak</b> (eng uzun: ${snapshot.longestStreak})\n${today ? 'Bugun mashq qilgansiz ✅' : 'Bugun hali mashq qilmadingiz — streakni saqlab qoling!'}`
-      : 'Hozircha streak yo\'q. Bugun bitta test yoki mashq qiling va boshlang!'
-    return send(chatId, body, [[{ text: 'Mashq qilish', url: `${siteUrl()}/dashboard` }]])
+      ? `${t.streakLine(snapshot.currentStreak, snapshot.longestStreak)}\n${today ? t.practicedToday : t.notPracticedToday}`
+      : t.noStreak
+    return send(chatId, body, [[{ text: t.btnPractice, url: `${siteUrl()}/dashboard` }]])
   }
   if (command === '/invite' || command === '/rewards') {
     await announcePayouts(await settleReferrals(link.userId).catch(() => []))
     const summary = await referralSummary(link.userId)
     const code = summary.code ?? (await ensureReferralCode(link.userId)) ?? ''
-    const ladder = REFERRAL_TIERS.map(tier => `${summary.qualified >= tier.count ? '✅' : '▫️'} ${tier.count} do'st → yana +${tier.days} kun bonus`).join('\n')
-    return send(chatId,
-      `🎁 <b>Do'st taklif qiling — Premium kunlar yuting</b>\n\nHar bir do'st uchun: <b>+${FRIEND_DAYS} kun</b> (tarifingiz ustiga qo'shiladi)\nDo'stingiz ham <b>+${INVITEE_BONUS_DAYS} kun</b> oladi.\n\n${ladder}\n\nTaklif qilingan: ${summary.invited} · Faol: ${summary.qualified} · Olingan: ${summary.earnedDays} kun\n\n<i>Do'st havola orqali ro'yxatdan o'tib, botga start berib, kanalga obuna bo'lgach hisoblanadi.</i>\n\nHavolangiz:\n${inviteLink(code)}`,
-      [[{ text: '📤 Do\'stga yuborish', url: `https://t.me/share/url?url=${encodeURIComponent(inviteLink(code))}&text=${encodeURIComponent('IELTS va SAT ga birga tayyorlanamiz! Mana havola:')}` }]])
+    const ladder = REFERRAL_TIERS.map(tier => `${summary.qualified >= tier.count ? '✅' : '▫️'} ${t.ladderLine(tier.count, tier.days)}`).join('\n')
+    return send(chatId, t.invite({ friendDays: FRIEND_DAYS, inviteeDays: INVITEE_BONUS_DAYS, ladder, invited: summary.invited, qualified: summary.qualified, earned: summary.earnedDays, link: inviteLink(code) }),
+      [[{ text: t.btnShareFriend, url: `https://t.me/share/url?url=${encodeURIComponent(inviteLink(code))}&text=${encodeURIComponent(t.shareInviteText)}` }]])
   }
   if (command === '/mute' || command === '/unmute') {
     const on = command === '/unmute'
     await prisma.telegramLink.update({ where: { userId: link.userId }, data: { dailyWord: on, streakAlert: on } })
-    return send(chatId, on ? '🔔 Kunlik xabarlar yoqildi.' : '🔕 Kunlik xabarlar o\'chirildi. Qayta yoqish: /unmute')
+    return send(chatId, on ? t.unmuted : t.muted)
   }
   if (command === '/unlink') {
     await prisma.telegramLink.delete({ where: { userId: link.userId } })
-    return send(chatId, 'Hisob uzildi. Qayta ulash uchun saytdagi <b>Hisob → Telegram</b> bo\'limidan foydalaning.')
+    return send(chatId, t.unlinked)
   }
-  return send(chatId, 'Buyruqlar ro\'yxati: /help')
+  return send(chatId, t.commandsList)
 }
 
 async function handleCallback(query: TgCallback) {
@@ -215,8 +218,15 @@ async function handleCallback(query: TgCallback) {
   const chatId = query.message?.chat.id
   const data = query.data ?? ''
   if (!chatId) return
-  if (data === 'sub:check' || data === 'promo_check') return sendDiscountMenu(String(chatId), query.from)
-  if (data.startsWith('grp:')) return handleGroupCallback(String(chatId), query.from, data)
+  if (data.startsWith('lang:')) {
+    const chosen = data.slice(5) as Lang
+    if (!LANGS.includes(chosen)) return
+    await setChatLang(chatId, chosen)
+    return send(chatId, `${tr(chosen).languageSet}\n\n${tr(chosen).help}`)
+  }
+  const lang = await chatLang(chatId, query.from)
+  if (data === 'sub:check' || data === 'promo_check') return sendDiscountMenu(String(chatId), query.from, lang)
+  if (data.startsWith('grp:')) return handleGroupCallback(String(chatId), query.from, data, lang)
 }
 
 export async function handleUpdate(update: TgUpdate) {
@@ -232,10 +242,16 @@ export async function handleUpdate(update: TgUpdate) {
 
 /** Sends the wheel result to the winner's chat. */
 export async function announceSpin(telegramId: string, percent: number, expiresAt: Date) {
-  const minutes = minutesLeft(expiresAt)
-  const window = minutes >= 120 ? `${Math.round(minutes / 60)} soat` : `${minutes} daqiqa`
-  await send(telegramId, `${percent === 50 ? '🔥 <b>JACKPOT! 50% chegirma!</b>' : `🎉 <b>${percent}% chegirma yutdingiz!</b>`}\n\n⏳ Chegirma <b>${window}</b> amal qiladi — shu vaqt ichida to'lov qiling, aks holda u yo'qoladi.`,
-    [[{ text: '💳 Chegirma bilan olish', url: `${siteUrl()}/premium` }], [{ text: '👥 Guruh bo\'lib olish', callback_data: 'grp:start' }]]).catch(() => undefined)
+  const lang = await chatLang(telegramId)
+  const t = tr(lang)
+  await send(telegramId, `${percent === 50 ? t.jackpot : t.won(percent)}\n\n${t.wonWindow(timeLeft(expiresAt, lang))}`,
+    [[{ text: t.btnUseDiscount, url: `${siteUrl()}/premium` }], [{ text: t.btnGroupShort, callback_data: 'grp:start' }]]).catch(() => undefined)
+}
+
+/** Language the Mini App should use for this Telegram user, if the bot already knows it. */
+export async function knownChatLang(telegramId: string): Promise<Lang | null> {
+  const saved = await prisma.telegramChat.findUnique({ where: { chatId: telegramId }, select: { language: true } })
+  return (saved?.language as Lang | undefined) ?? null
 }
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
@@ -251,7 +267,8 @@ async function runDailyJobs() {
     for (const link of due) {
       const claimed = await prisma.telegramLink.updateMany({ where: { userId: link.userId, OR: [{ lastWordAt: null }, { lastWordAt: { lt: startOfToday } }] }, data: { lastWordAt: now } })
       if (!claimed.count) continue
-      await deliver(link.userId, link.chatId, wordMessage(), [[{ text: 'Lug\'at mashqlari', url: `${siteUrl()}/vocabulary` }]])
+      const lang = await chatLang(link.chatId)
+      await deliver(link.userId, link.chatId, wordMessage(lang), [[{ text: tr(lang).btnVocabulary, url: `${siteUrl()}/vocabulary` }]])
       await sleep(60)
     }
   }
@@ -262,11 +279,27 @@ async function runDailyJobs() {
       if (!claimed.count) continue
       const { snapshot, today: practisedToday } = await streakText(link.userId)
       if (snapshot.currentStreak > 0 && !practisedToday) {
-        await deliver(link.userId, link.chatId, `🔥 <b>${snapshot.currentStreak} kunlik streakingiz xavfda!</b>\nBugun hali mashq qilmadingiz — bitta qisqa mashq yetarli.`, [[{ text: 'Hozir mashq qilish', url: `${siteUrl()}/dashboard` }]])
+        const t = tr(await chatLang(link.chatId))
+        await deliver(link.userId, link.chatId, t.streakAlert(snapshot.currentStreak), [[{ text: t.btnPracticeNow, url: `${siteUrl()}/dashboard` }]])
         await sleep(60)
       }
     }
   }
+}
+
+/** Command menu and bot profile texts in every language; English is Telegram's fallback for other languages. */
+async function publishBotProfile() {
+  for (const lang of LANGS) {
+    const t = tr(lang)
+    const scope = lang === 'en' ? {} : { language_code: lang }
+    const commands = (['spin', 'group', 'invite', 'rewards', 'word', 'streak', 'language', 'help'] as const)
+      .map(command => ({ command, description: t.commands[command] }))
+    await call('setMyCommands', { commands, ...scope }).catch(() => undefined)
+    await call('setMyDescription', { description: t.description, ...scope }).catch(() => undefined)
+    await call('setMyShortDescription', { short_description: t.shortDescription, ...scope }).catch(() => undefined)
+  }
+  // The menu button opens the wheel Mini App directly.
+  await call('setChatMenuButton', { menu_button: { type: 'web_app', text: '🎡 Ivygoo', web_app: { url: wheelUrl() } } }).catch(() => undefined)
 }
 
 let started = false
@@ -274,17 +307,7 @@ let started = false
 export async function startTelegramBot() {
   if (started || !telegramEnabled()) return
   started = true
-  await call('setMyCommands', { commands: [
-    { command: 'spin', description: 'Chegirma barabani' },
-    { command: 'group', description: 'Guruh bo\'lib olish (5+ kishi)' },
-    { command: 'invite', description: 'Do\'st taklif qilish' },
-    { command: 'rewards', description: 'Mukofotlarim' },
-    { command: 'word', description: 'Bugungi so\'z' },
-    { command: 'streak', description: 'Streak holatim' },
-    { command: 'help', description: 'Yordam' },
-  ] }).catch(() => undefined)
-  // The menu button opens the wheel Mini App directly.
-  await call('setChatMenuButton', { menu_button: { type: 'web_app', text: '🎡 Baraban', web_app: { url: wheelUrl() } } }).catch(() => undefined)
+  await publishBotProfile()
 
   if (env.TELEGRAM_WEBHOOK_URL.trim()) {
     await call('setWebhook', { url: env.TELEGRAM_WEBHOOK_URL.trim(), allowed_updates: ['message', 'callback_query'], ...(env.TELEGRAM_WEBHOOK_SECRET ? { secret_token: env.TELEGRAM_WEBHOOK_SECRET } : {}) })

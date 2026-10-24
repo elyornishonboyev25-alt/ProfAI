@@ -47,3 +47,21 @@
 @keyframes spin-rot{to{transform:rotate(360deg)}}
 @keyframes spin-pop{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.spin-result.is-new,.spin-loader{animation:none}}
+
+/* Sound toggle, pegs, pointer flick on every tick and jackpot confetti. */
+.spin-head{position:relative;width:100%;max-width:400px}
+.spin-mute{position:absolute;top:0;right:0;display:grid;place-items:center;width:40px;height:40px;border-radius:12px;border:1px solid #fff;cursor:pointer;font-size:18px;
+  background:linear-gradient(140deg,#fff,#e6eaf0);box-shadow:inset 0 1px #fff,0 6px 14px #3c46561f}
+.spin-mute:focus-visible{outline:2px solid #c1263a;outline-offset:2px}
+.spin-peg{fill:#fff;stroke:#b8c0cc;stroke-width:.8}
+.spin-pointer{transform-origin:50% 0}
+.spin-pointer.is-tick{animation:spin-flick .12s ease-out}
+@keyframes spin-flick{0%{transform:translateX(-50%) rotate(0)}35%{transform:translateX(-50%) rotate(-16deg)}100%{transform:translateX(-50%) rotate(0)}}
+.spin-result{position:relative;overflow:hidden}
+.spin-confetti{position:absolute;inset:0;pointer-events:none}
+.spin-confetti i{position:absolute;top:-12px;left:calc(var(--i) * 3.6%);width:7px;height:12px;border-radius:2px;opacity:0;
+  background:hsl(calc(350 + var(--i) * 7) 85% 55%);animation:spin-confetti 1.9s cubic-bezier(.2,.7,.4,1) forwards;animation-delay:calc(var(--i) * 28ms)}
+.spin-confetti i:nth-child(3n){background:#c9ced8}
+.spin-confetti i:nth-child(4n){background:#ffffff;border:1px solid #e3e7ee}
+@keyframes spin-confetti{0%{opacity:1;transform:translateY(0) rotate(0)}100%{opacity:0;transform:translateY(240px) rotate(calc(var(--i) * 47deg))}}
+@media(prefers-reduced-motion:reduce){.spin-pointer.is-tick,.spin-confetti i{animation:none}}

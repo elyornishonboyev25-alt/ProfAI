@@ -15,7 +15,7 @@ const JACKPOT_WINDOW_MS = 10 * 60_000
 const DISCOUNT_WINDOW_MS = 24 * 3_600_000
 const INIT_DATA_MAX_AGE_S = 24 * 3600
 
-export type TelegramWebAppUser = { id: number; first_name?: string; username?: string }
+export type TelegramWebAppUser = { id: number; first_name?: string; username?: string; language_code?: string }
 
 /** Verifies Telegram Mini App launch data (https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app). */
 export function verifyInitData(initData: string, now = Date.now()): TelegramWebAppUser {

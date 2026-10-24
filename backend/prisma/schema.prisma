@@ -1348,3 +1348,11 @@ model PurchaseGroupMember {
   @@unique([groupId, username])
   @@index([username])
 }
+
+// Bot language per private chat: detected from Telegram, or chosen with /language.
+model TelegramChat {
+  chatId    String   @id
+  language  String
+  manual    Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+}

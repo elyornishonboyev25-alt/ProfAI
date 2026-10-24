@@ -23,6 +23,7 @@
     "test:legacy-removal": "node --test scripts/legacy-removal.test.mjs",
     "test:auth": "npm run build && node --test scripts/auth-email.test.mjs scripts/auth-activity.test.mjs scripts/device-limit.test.mjs",
     "test:billing": "npm run build && node --test scripts/billing.test.mjs",
+    "test:telegram": "npm run build && node --test scripts/telegram-i18n.test.mjs",
     "test:guest-diagnostic": "npm run build && node --test scripts/guest-diagnostic.test.mjs"
   },
   "dependencies": {

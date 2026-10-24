@@ -1,6 +1,8 @@
 import { env } from '../config/env.js'
+import { prisma } from '../lib/prisma.js'
+import { detectLang, tr, type Lang } from './telegramI18n.js'
 
-export type TgUser = { id: number; username?: string; first_name?: string }
+export type TgUser = { id: number; username?: string; first_name?: string; language_code?: string }
 export type KeyboardButton = { text: string; url?: string; callback_data?: string; web_app?: { url: string } }
 export type Keyboard = KeyboardButton[][]
 
@@ -45,6 +47,28 @@ export async function trySend(chatId: string | number, text: string, keyboard?: 
   }
 }
 
+/**
+ * The chat's language. Each interaction refreshes it from the user's Telegram language,
+ * unless they picked one with /language.
+ */
+export async function chatLang(chatId: string | number, user?: TgUser): Promise<Lang> {
+  const id = String(chatId)
+  if (user) {
+    const detected = detectLang(user.language_code)
+    const saved = await prisma.telegramChat.findUnique({ where: { chatId: id } })
+    if (saved?.manual) return saved.language as Lang
+    if (saved?.language !== detected) await prisma.telegramChat.upsert({ where: { chatId: id }, create: { chatId: id, language: detected }, update: { language: detected } })
+    return detected
+  }
+  const saved = await prisma.telegramChat.findUnique({ where: { chatId: id }, select: { language: true } })
+  return (saved?.language as Lang | undefined) ?? 'uz'
+}
+
+export async function setChatLang(chatId: string | number, language: Lang) {
+  const id = String(chatId)
+  await prisma.telegramChat.upsert({ where: { chatId: id }, create: { chatId: id, language, manual: true }, update: { language, manual: true } })
+}
+
 /** True/false when Telegram answers; null when the check itself failed (bot is not a channel admin, network). */
 export async function isChannelMember(telegramUserId: number | string) {
   try {
@@ -57,20 +81,19 @@ export async function isChannelMember(telegramUserId: number | string) {
   }
 }
 
-export const subscribeKeyboard = (retry: string): Keyboard => [
-  [{ text: '📣 Kanalga obuna bo\'lish', url: env.TELEGRAM_CHANNEL_URL }],
-  [{ text: '✅ Obuna bo\'ldim — tekshirish', callback_data: retry }],
-]
-
 /** Sends the subscribe prompt and returns false unless the user is a confirmed channel member. */
-export async function ensureSubscribed(chatId: string | number, telegramUserId: number, retry: string, reason: string) {
+export async function ensureSubscribed(chatId: string | number, telegramUserId: number, retry: string, reason: string, lang: Lang) {
   const member = await isChannelMember(telegramUserId)
   if (member) return true
+  const t = tr(lang)
   if (member === null) {
-    await send(chatId, '⚠️ Obunani hozir tekshirib bo\'lmadi. Birozdan keyin qayta urinib ko\'ring.', [[{ text: '🔄 Qayta tekshirish', callback_data: retry }]])
+    await send(chatId, t.checkFailed, [[{ text: t.btnRetryCheck, callback_data: retry }]])
     return false
   }
-  await send(chatId, `📣 <b>Avval kanalimizga obuna bo'ling</b>\n\n${reason}\n\nObuna bo'lgach, "Tekshirish" tugmasini bosing.`, subscribeKeyboard(retry))
+  await send(chatId, t.subscribeFirst(reason), [
+    [{ text: t.btnSubscribe, url: env.TELEGRAM_CHANNEL_URL }],
+    [{ text: t.btnCheckSubscribed, callback_data: retry }],
+  ])
   return false
 }
 

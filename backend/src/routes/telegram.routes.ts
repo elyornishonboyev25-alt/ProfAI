@@ -6,7 +6,8 @@ import { prisma } from '../lib/prisma.js'
 import { requireAuth } from '../middleware/auth.js'
 import { validateBody } from '../middleware/validate.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
-import { announcePayouts, announceSpin, botInviteLink, createLinkCode, handleUpdate, inviteLink, telegramEnabled, type TgUpdate } from '../services/telegram.service.js'
+import { announcePayouts, announceSpin, botInviteLink, createLinkCode, handleUpdate, inviteLink, knownChatLang, telegramEnabled, type TgUpdate } from '../services/telegram.service.js'
+import { detectLang } from '../services/telegramI18n.js'
 import { isChannelMember } from '../services/telegramApi.js'
 import { drawSpin, isSpinUsable, spinFor, verifyInitData, WHEEL_SEGMENTS } from '../services/wheel.service.js'
 import { BillingError } from '../services/billing.service.js'
@@ -115,12 +116,14 @@ const spinView = (spin: { percent: number; expiresAt: Date; usedAt: Date | null 
 wheelRoutes.post('/state', validateBody(initDataSchema), asyncHandler(async (req, res) => {
   const user = verifyInitData(req.body.initData)
   const telegramId = String(user.id)
-  const [subscribed, spin, link] = await Promise.all([
+  const [subscribed, spin, link, language] = await Promise.all([
     isChannelMember(user.id),
     spinFor(telegramId),
     prisma.telegramLink.findUnique({ where: { chatId: telegramId }, select: { userId: true } }),
+    knownChatLang(telegramId),
   ])
-  res.json({ subscribed, linked: Boolean(link), channelUrl: env.TELEGRAM_CHANNEL_URL, segments: WHEEL_SEGMENTS, spin: spin ? spinView(spin) : null })
+  res.json({ subscribed, linked: Boolean(link), channelUrl: env.TELEGRAM_CHANNEL_URL, segments: WHEEL_SEGMENTS, spin: spin ? spinView(spin) : null,
+    language: language ?? detectLang(user.language_code) })
 }))
 
 wheelRoutes.post('/spin', authRateLimit, validateBody(initDataSchema), asyncHandler(async (req, res) => {

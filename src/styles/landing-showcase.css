@@ -1,16 +1,16 @@
 /* ProfAI landing — silver glass + crimson showcase with full-screen chapters. */
 .lx-page {
-  --lx-ink: #14171d;
+  --lx-ink: var(--brand-ink);
   --lx-ink-soft: #2a2f38;
   --lx-muted: #5a616e;
-  --lx-red: #d3132f;
-  --lx-red-deep: #9e0d23;
+  --lx-red: var(--brand-red);
+  --lx-red-deep: var(--brand-red-deep);
   --lx-line: rgba(124, 132, 146, .24);
   --lx-glass: linear-gradient(140deg, rgba(255, 255, 255, .78) 0%, rgba(240, 242, 246, .55) 48%, rgba(222, 226, 233, .5) 100%);
   --lx-glass-edge: rgba(255, 255, 255, .9);
   --lx-glass-solid: linear-gradient(140deg, rgba(255, 255, 255, .9) 0%, rgba(244, 245, 248, .78) 48%, rgba(230, 233, 238, .74) 100%);
   --lx-shadow: 0 30px 70px -28px rgba(25, 32, 46, .32), 0 6px 18px -6px rgba(25, 32, 46, .1), inset 0 1px 0 #fff, inset 0 -1px 0 rgba(118, 127, 142, .16);
-  --lx-red-fill: linear-gradient(135deg, #ec2846 0%, #cf1230 52%, #a40e25 100%);
+  --lx-red-fill: var(--brand-gradient);
   --lx-red-glow: 0 16px 34px -10px rgba(206, 18, 46, .62), inset 0 1px 0 rgba(255, 255, 255, .45), inset 0 -2px 0 rgba(110, 6, 22, .25);
   --lx-gutter: clamp(16px, 4vw, 56px);
   position: relative;

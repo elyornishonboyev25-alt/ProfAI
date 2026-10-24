@@ -1,3 +1,4 @@
+import { BrandLogo } from '@/components/brand/BrandLogo'
 import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useState } from 'react'
@@ -44,13 +45,7 @@ export default function Navbar({ darkMode, setDarkMode, toggleLanguage, currentL
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-3 group">
-              <div className="w-9 h-9 rounded-lg overflow-hidden transform transition-transform duration-300 group-hover:rotate-12 shadow-md">
-                <img src="/logo.svg" alt="Ivygoo Logo" className="w-full h-full object-cover" />
-              </div>
-              <span className="text-xl font-extrabold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent tracking-tight flex items-center">
-                Ivy<span className="text-blue-400">goo</span>
-                <span className="ml-2 inline-block w-1 h-1 rounded-full bg-blue-400 animate-pulse" aria-hidden="true" />
-              </span>
+              <BrandLogo height={42} className="brand-logo--on-dark" />
             </Link>
           </div>
 
@@ -92,7 +87,7 @@ export default function Navbar({ darkMode, setDarkMode, toggleLanguage, currentL
 
             <Link
               to="/profile"
-              className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/30 transition-all duration-200"
+              className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-500/30 transition-all duration-200"
             >
               <UserIcon className="h-5 w-5" />
               <span className="text-sm font-medium">Profile</span>
@@ -119,7 +114,7 @@ export default function Navbar({ darkMode, setDarkMode, toggleLanguage, currentL
                 to={item.href}
                 onClick={() => setMobileMenuOpen(false)}
                 className={`block px-3 py-2 rounded-lg text-base font-medium transition-colors duration-200 ${isActive(item.href)
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-rose-600 text-white'
                     : 'text-slate-400 hover:bg-white/5 hover:text-white'
                   }`}
               >

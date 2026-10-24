@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { BookOpen, ChartNoAxesCombined, GraduationCap } from 'lucide-react'
-import { BrandMark } from '@/components/brand/BrandLogo'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { useCopy } from '@/i18n/interface'
 import '@/styles/auth-showcase.css'
@@ -129,8 +129,8 @@ export default function AuthShowcasePanelV2({ mode }: { mode: 'login' | 'registe
 
       <div className="auth-showcase-layout" key={mode}>
         <motion.div className="auth-showcase-brand" {...reveal(.08, 18)}>
-          <span className="auth-showcase-brand-icon"><BrandMark size={49} /></span>
-          <div><strong>Ivy<span>goo</span></strong><small>{c('Your next chapter')}</small></div>
+          <BrandLogo variant="stacked" height={116} />
+          <small>{c('Your next chapter')}</small>
         </motion.div>
 
         <div className="auth-showcase-content">

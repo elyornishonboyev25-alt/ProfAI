@@ -102,7 +102,6 @@ export default function MockSAT() {
         <header className="flex items-center justify-between gap-4 rounded-[1.6rem] border border-white/85 bg-white/70 px-4 py-3 shadow-[0_18px_50px_rgba(15,23,42,.08)] backdrop-blur-2xl sm:px-6">
           <BrandLockup
             iconSize={46}
-            titleClassName="text-xl sm:text-2xl"
             subtitle="Digital SAT testing studio"
           />
           <button

@@ -3,6 +3,11 @@
 @tailwind utilities;
 
 :root {
+  --brand-red: #df0030;
+  --brand-red-deep: #b60025;
+  --brand-red-soft: #fff0f3;
+  --brand-ink: #22272d;
+  --brand-gradient: linear-gradient(135deg, #f4224b, #df0030 55%, #b60025);
   --app-bg: #f7f9ff;
   /* Shared viewport canvas for navigation, page content and saved reviews. */
   --workspace-canvas: radial-gradient(circle at 8% 12%, rgba(254, 202, 202, 0.32), transparent 31%),
@@ -11,8 +16,8 @@
     linear-gradient(145deg, #fbfcff 0%, #f3f7fc 52%, #f9fbff 100%);
   --app-bg-soft: #eef4ff;
   --app-text: #0f172a;
-  --app-red: #e52b32;
-  --app-red-deep: #b91c1c;
+  --app-red: var(--brand-red);
+  --app-red-deep: var(--brand-red-deep);
   --app-rose: #ef4444;
   --app-amber: #2563eb;
   --app-border: rgba(148, 163, 184, 0.24);
@@ -21,9 +26,9 @@
   --app-shadow-premium: 0 28px 68px rgba(30, 41, 59, 0.12);
   --app-ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
   --app-duration: 160ms;
-  --ui-primary: #e52b32;
-  --ui-primary-strong: #b91c1c;
-  --ui-primary-soft: #fef2f2;
+  --ui-primary: var(--brand-red);
+  --ui-primary-strong: var(--brand-red-deep);
+  --ui-primary-soft: var(--brand-red-soft);
   --ui-indigo: #2563eb;
   --ui-border: #dbe5f2;
   --ui-surface: rgba(255, 255, 255, 0.94);
@@ -31,8 +36,8 @@
   --ui-danger: #dc2626;
   --arena-blue: #2563eb;
   --arena-indigo: #4f46e5;
-  --arena-red: #e52b32;
-  --arena-red-deep: #bd1f29;
+  --arena-red: var(--brand-red);
+  --arena-red-deep: var(--brand-red-deep);
   --arena-glass: rgba(255, 255, 255, 0.72);
   --arena-glass-strong: rgba(255, 255, 255, 0.88);
   --arena-border: rgba(255, 255, 255, 0.88);

@@ -1,23 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="ivygoo"><title>ivygoo</title><defs>
-  <linearGradient id="mlstem" x1="0" y1="0" x2="1" y2="0">
-    <stop offset="0" stop-color="#3a414c"/><stop offset=".22" stop-color="#6b7380"/><stop offset=".38" stop-color="#a7afba"/><stop offset=".56" stop-color="#4a515d"/><stop offset=".85" stop-color="#1c2027"/><stop offset="1" stop-color="#363c46"/>
-  </linearGradient>
-  <linearGradient id="mlleaf" x1="0.15" y1="0" x2=".85" y2="1">
-    <stop offset="0" stop-color="#ff6f7e"/><stop offset=".42" stop-color="#e2293f"/><stop offset="1" stop-color="#9c152b"/>
-  </linearGradient>
-  <linearGradient id="mlgloss" x1="0" y1="0" x2="1" y2="1">
-    <stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".7" stop-color="#fff" stop-opacity="0"/>
-  </linearGradient>
-  <linearGradient id="mlspec" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0" stop-color="#fff" stop-opacity="0.55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
-  </linearGradient>
-  <linearGradient id="mlcrim" x1="0" y1="0" x2="1" y2=".6">
-    <stop offset="0" stop-color="#a91c31"/><stop offset=".65" stop-color="#d62c43"/><stop offset="1" stop-color="#e74a5c"/>
-  </linearGradient></defs><g transform="translate(14.058 3.043) scale(0.5797)">
-  <rect x="35" y="59" width="30" height="91" rx="15" fill="url(#mlstem)"/>
-  <rect x="35.5" y="59.5" width="29" height="90" rx="14.5" fill="none" stroke="#fff" stroke-opacity="0.22" stroke-width="1"/>
-  <rect x="40" y="64" width="5" height="70" rx="2.5" fill="url(#mlspec)"/>
-  <path d="M53 54C45.5 31 65.5 11.5 93.5 12.5C95.5 40.5 74.5 58.5 53 54Z" fill="url(#mlleaf)"/>
-  <path d="M53 54C45.5 31 65.5 11.5 93.5 12.5C76 22 62 36 53 54Z" fill="url(#mlgloss)"/>
-  <path d="M55.6 51.3C64 40 76 27 90.4 15.6" fill="none" stroke="#ffd9de" stroke-opacity=".85" stroke-width="1.7" stroke-linecap="round"/>
-  <path d="M53 54C45.5 31 65.5 11.5 93.5 12.5C95.5 40.5 74.5 58.5 53 54Z" fill="none" stroke="#fff" stroke-opacity=".4" stroke-width=".8"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="250 150 720 720" role="img" aria-label="ivyGoo emblem"><title>ivyGoo emblem</title><defs>
+  <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ff4162"/><stop offset=".45" stop-color="#ec0033"/><stop offset="1" stop-color="#b60025"/></linearGradient>
+  <linearGradient id="metal" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#aeb5ba"/><stop offset=".22" stop-color="#e1e5e8"/><stop offset=".49" stop-color="#505960"/><stop offset=".5" stop-color="#343c43"/><stop offset=".78" stop-color="#11171b"/><stop offset="1" stop-color="#535d65"/></linearGradient>
+  <linearGradient id="edge" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#687078"/><stop offset=".5" stop-color="#12181d"/><stop offset="1" stop-color="#080c0f"/></linearGradient>
+</defs>
+<g>
+  <path d="M500 187C479 253 480 316 504 366C533 423 589 449 664 458C624 376 560 266 500 187Z" fill="url(#leaf)"/>
+  <path d="M512 178C594 185 666 220 700 280C736 341 720 407 684 449C639 361 574 251 512 178Z" fill="url(#leaf)"/>
+  <path d="M501 191C483 252 483 314 506 362" fill="none" stroke="#ff6b83" stroke-width="5" stroke-linecap="round" opacity=".6"/>
+  <path d="M516 180C588 187 655 215 690 263" fill="none" stroke="#ff7690" stroke-width="4" opacity=".55"/>
+  <rect x="547" y="479" width="180" height="361" rx="90" fill="url(#edge)"/>
+  <rect x="554" y="487" width="166" height="345" rx="83" fill="url(#metal)"/>
+</g></svg>

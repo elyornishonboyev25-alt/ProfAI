@@ -27,7 +27,7 @@ import {
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { captureAnalyticsEvent } from '@/lib/analytics'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
-import { BrandMark } from '@/components/brand/BrandLogo'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import { setFlashToast } from '@/utils/authFlash'
 import { updateAccount, uploadAvatar } from '@/lib/profileApi'
@@ -437,8 +437,7 @@ export default function Onboarding() {
             onClick={() => navigate('/dashboard')}
             className="flex items-center gap-2.5 rounded-2xl px-2 py-1.5 transition hover:bg-blue-50/80"
           >
-            <BrandMark size={40} className="shadow-[0_10px_22px_rgba(37,99,235,0.32)]" />
-            <span className="text-sm font-black tracking-tight text-slate-900">Ivygoo</span>
+            <BrandLogo height={44} />
           </button>
           <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white/85 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.14em] text-blue-700 shadow-sm backdrop-blur">
             <Sparkles className="h-3 w-3" />

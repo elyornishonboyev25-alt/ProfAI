@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRight, ArrowUpRight, BookOpen, Building2, GraduationCap, Link2, MapPin, Plus, Search, ShieldCheck, Users, X } from 'lucide-react'
-import { BrandMark } from '@/components/brand/BrandLogo'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { learningCenterApi } from '@/features/learningCenter/api'
 import { CenterPanel, EmptyState, ErrorState, inputClass, Modal, primaryButton, secondaryButton } from '@/features/learningCenter/components'
@@ -43,7 +43,7 @@ export default function LearningCenterPortal() {
 
   return (
     <div className="learning-center lc-portal workspace-page min-h-screen text-slate-900">
-      {!user && <header className="lc-guest-header"><Link to="/dashboard" className="flex items-center gap-3" aria-label="Ivygoo home"><BrandMark size={40} /><span className="text-xl font-black tracking-tight">Ivy<span className="text-red-600">goo</span></span></Link><Link to="/dashboard" className={secondaryButton}>Student platform <ArrowUpRight className="h-4 w-4" /></Link></header>}
+      {!user && <header className="lc-guest-header"><Link to="/dashboard" className="flex items-center gap-3" aria-label="Ivygoo home"><BrandLogo height={46} /></Link><Link to="/dashboard" className={secondaryButton}>Student platform <ArrowUpRight className="h-4 w-4" /></Link></header>}
       <main className="lc-portal-main mx-auto max-w-[1640px] px-4 pb-20 pt-5 sm:px-6 lg:px-8 lg:pt-8">
         <header className="lc-portal-header">
           <div className="lc-portal-heading-copy">

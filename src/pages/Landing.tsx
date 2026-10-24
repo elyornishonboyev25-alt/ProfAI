@@ -4,7 +4,7 @@ import { motion, useInView, useReducedMotion, useScroll, useSpring } from 'frame
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ArrowRight, ArrowUpRight, Check, ChevronDown, Flame, Menu, Send, ShieldCheck, Sparkles, Target, X } from 'lucide-react'
-import { BrandMark } from '@/components/brand/BrandLogo'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 import LanguageSelector from '@/components/layout/LanguageSelector'
 import GoogleOneTap from '@/components/auth/GoogleOneTap'
 import Testimonials from '@/components/landing/Testimonials'
@@ -273,7 +273,7 @@ export default function Landing() {
     <div className="lx-backdrop" aria-hidden="true"><i /><i /><i /></div>
     <header className={`lx-header ${scrolled ? 'is-scrolled' : ''}`}>
       <div className="lx-nav">
-        <button type="button" className="lx-logo" aria-label={c('Ivygoo home')} onClick={() => scrollTo('top')}><BrandMark size={36} /><span>Ivy<span>goo</span></span></button>
+        <button type="button" className="lx-logo" aria-label={c('Ivygoo home')} onClick={() => scrollTo('top')}><BrandLogo height={44} /></button>
         <nav className="lx-nav-links" aria-label={c('Main navigation')}>{navItems.map(({ label, id }) => <button type="button" key={id} onClick={() => scrollTo(id)}>{label}</button>)}</nav>
         <div className="lx-nav-actions">
           <div className="lx-language"><LanguageSelector /></div>
@@ -312,7 +312,7 @@ export default function Landing() {
           <button type="button" onClick={start} className="lx-btn lx-btn-light">{c('Get started free')} <ArrowRight size={19} /></button>
         </div>
         <footer className="lx-footer">
-          <div className="lx-footer-brand"><BrandMark size={30} /><strong>Ivy<span>goo</span></strong><small>{c('Preparation and planning for the journey ahead.')}</small></div>
+          <div className="lx-footer-brand"><BrandLogo height={42} /><small>{c('Preparation and planning for the journey ahead.')}</small></div>
           <nav aria-label={c('Footer navigation')}>{navItems.map(({ label, id }) => <button type="button" key={id} onClick={() => scrollTo(id)}>{label}</button>)}<a href={SUPPORT_TELEGRAM} target="_blank" rel="noopener noreferrer">Telegram</a></nav>
           <p>© {new Date().getFullYear()} Ivygoo. {c('All rights reserved.')} · {c('Independent platform · Not affiliated with IELTS, College Board or any university.')}</p>
         </footer>

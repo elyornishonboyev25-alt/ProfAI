@@ -1,6 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="ivygoo"><title>ivygoo</title><defs><linearGradient id="fl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff5b6c"/><stop offset="1" stop-color="#c41f37"/></linearGradient></defs>
-  <rect width="32" height="32" rx="7.5" fill="#1d2129"/>
-  <g transform="translate(6.116 3.387) scale(0.1594)">
-    <rect x="35" y="59" width="30" height="91" rx="15" fill="#f2f4f7"/>
-    <path d="M53 54C45.5 31 65.5 11.5 93.5 12.5C95.5 40.5 74.5 58.5 53 54Z" fill="url(#fl)"/>
-  </g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="ivyGoo"><title>ivyGoo</title><rect width="512" height="512" rx="108" fill="#fff"/><svg x="42" y="42" width="428" height="428" viewBox="250 150 720 720"><defs>
+  <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ff4162"/><stop offset=".45" stop-color="#ec0033"/><stop offset="1" stop-color="#b60025"/></linearGradient>
+  <linearGradient id="metal" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#aeb5ba"/><stop offset=".22" stop-color="#e1e5e8"/><stop offset=".49" stop-color="#505960"/><stop offset=".5" stop-color="#343c43"/><stop offset=".78" stop-color="#11171b"/><stop offset="1" stop-color="#535d65"/></linearGradient>
+  <linearGradient id="edge" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#687078"/><stop offset=".5" stop-color="#12181d"/><stop offset="1" stop-color="#080c0f"/></linearGradient>
+</defs>
+<g>
+  <path d="M500 187C479 253 480 316 504 366C533 423 589 449 664 458C624 376 560 266 500 187Z" fill="url(#leaf)"/>
+  <path d="M512 178C594 185 666 220 700 280C736 341 720 407 684 449C639 361 574 251 512 178Z" fill="url(#leaf)"/>
+  <path d="M501 191C483 252 483 314 506 362" fill="none" stroke="#ff6b83" stroke-width="5" stroke-linecap="round" opacity=".6"/>
+  <path d="M516 180C588 187 655 215 690 263" fill="none" stroke="#ff7690" stroke-width="4" opacity=".55"/>
+  <rect x="547" y="479" width="180" height="361" rx="90" fill="url(#edge)"/>
+  <rect x="554" y="487" width="166" height="345" rx="83" fill="url(#metal)"/>
+</g></svg></svg>

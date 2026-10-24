@@ -1,3 +1,4 @@
+import { BrandLogo } from '@/components/brand/BrandLogo'
 import { Link, useLocation } from 'react-router-dom'
 import { Settings, Menu, CircleHelp, ShieldCheck } from 'lucide-react'
 import LanguageSelector from './LanguageSelector'
@@ -9,7 +10,7 @@ export default function WorkspaceToolbar() {
   const { c } = useCopy()
   const owner = useAuthStore(state => hasOwnerAccess(state.user?.email, state.user?.nickname))
   const { pathname } = useLocation()
-  return <div className="workspace-toolbar"><Link to="/dashboard" className="workspace-mobile-brand">Ivy<span>goo</span></Link><div className="workspace-toolbar-actions">
+  return <div className="workspace-toolbar"><Link to="/dashboard" className="workspace-mobile-brand" aria-label="ivyGoo home"><BrandLogo height={36} /></Link><div className="workspace-toolbar-actions">
     <details className="liquid-mobile-tools"><summary aria-label={c('Study tools')}><Menu size={19} /></summary><nav className="glass-control" aria-label={c('Study tools')} onClick={event => event.currentTarget.closest('details')?.removeAttribute('open')}>
       <Link to="/academic-skills">{c('Academic Skills')}</Link><Link to="/ai-tutor">{c('AI Coach')}</Link><Link to="/community">{c('Community')}</Link><Link to="/leaderboard">{c('Leaderboard')}</Link><Link to="/learning-center">{c('Classes')}</Link>{owner && <Link to="/owner">{c('Owner dashboard')}</Link>}<button type="button" onClick={() => window.dispatchEvent(new Event('profai:report-issue'))}>{c('Report an issue')}</button>
     </nav></details>

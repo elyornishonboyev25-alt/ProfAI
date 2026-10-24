@@ -1,4 +1,5 @@
 import { textOffsets, clipTextRange } from '@/utils/textRanges'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 import UiText from '@/components/common/UiText'
 import '@/styles/articlesArena.css'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
@@ -402,10 +403,7 @@ export default function ArticleReader() {
             <header className="article-reader-glass article-reader-header-glass flex min-h-[7rem] items-center justify-between gap-5 rounded-[2.35rem] px-5 py-4 sm:px-8 lg:px-10">
               <div className="flex min-w-0 items-center gap-5 lg:gap-10">
                 <Link to="/dashboard" className="flex shrink-0 items-center gap-2.5" aria-label="Ivygoo home">
-                  <img src="/logo.svg" alt="" className="h-14 w-14 drop-shadow-[0_12px_18px_rgba(220,38,38,0.32)] sm:h-[4.6rem] sm:w-[4.6rem]" />
-                  <span className="hidden text-[2.55rem] font-black tracking-[-0.05em] text-slate-900 sm:inline">
-                    Ivy<span className="text-red-600">goo</span>
-                  </span>
+                  <BrandLogo height={56} />
                 </Link>
 
                 <nav aria-label="Breadcrumb" className="hidden min-w-0 items-center gap-3 text-[1.12rem] font-medium text-slate-500 md:flex lg:text-[1.28rem]">

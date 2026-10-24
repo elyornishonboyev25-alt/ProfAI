@@ -120,11 +120,11 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
                   animate={minimalMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
                   exit={minimalMotion ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.96, filter: 'blur(6px)' }}
                   transition={{ duration: minimalMotion ? 0.16 : 0.3, ease: [0.22, 1, 0.36, 1] }}
-                  className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-blue-100 bg-[linear-gradient(145deg,#fff,#fff7f7_58%,#fffaf8)] p-6 text-center shadow-[0_34px_78px_rgba(30,64,175,0.3)]"
+                  className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-rose-100 bg-[linear-gradient(145deg,#fff,#fff7f7_58%,#fffaf8)] p-6 text-center shadow-[0_34px_78px_rgba(182,0,37,0.3)]"
                 >
-                  <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-600 via-indigo-500 to-orange-400" />
-                  <div className="pointer-events-none absolute -right-20 -top-24 h-48 w-48 rounded-full bg-blue-200/45 blur-3xl" />
-                  <div className="relative mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-blue-100 bg-white text-blue-600 shadow-[0_18px_34px_rgba(37,99,235,0.18)]">
+                  <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-rose-600 via-red-500 to-orange-400" />
+                  <div className="pointer-events-none absolute -right-20 -top-24 h-48 w-48 rounded-full bg-rose-200/45 blur-3xl" />
+                  <div className="relative mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-rose-100 bg-white text-rose-600 shadow-[0_18px_34px_rgba(223,0,48,0.18)]">
                     <LogOut className="h-8 w-8" />
                   </div>
                   <h3 className="relative mt-4 text-2xl font-black text-slate-950">Sign out of your account?</h3>
@@ -144,7 +144,7 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
                       type="button"
                       disabled={signingOut}
                       onClick={() => void confirmSignOut()}
-                      className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2.5 text-sm font-black text-white shadow-[0_14px_26px_rgba(37,99,235,0.28)] hover:brightness-105 disabled:cursor-wait disabled:opacity-75"
+                      className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 px-4 py-2.5 text-sm font-black text-white shadow-[0_14px_26px_rgba(223,0,48,0.28)] hover:brightness-105 disabled:cursor-wait disabled:opacity-75"
                     >
                       {signingOut ? 'Signing out...' : 'Yes, sign out'}
                     </button>
@@ -165,15 +165,15 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
       style={{ overflow: 'visible' }}
       className={`app-panel relative z-50 h-20 backdrop-blur-xl ${
         withSidebar
-          ? 'sticky top-0 border-b border-blue-200/90 lg:fixed lg:left-0 lg:right-0 lg:top-0 lg:border-b-0'
-          : 'sticky top-0 border-b border-blue-200/90'
+          ? 'sticky top-0 border-b border-rose-200/90 lg:fixed lg:left-0 lg:right-0 lg:top-0 lg:border-b-0'
+          : 'sticky top-0 border-b border-rose-200/90'
       }`}
     >
       {withSidebar ? (
         <>
           <div className="pointer-events-none absolute inset-0 hidden bg-[linear-gradient(140deg,rgba(255,255,255,0.97),rgba(255,247,247,0.92))] lg:block" />
-          <div className="pointer-events-none absolute left-64 top-0 hidden h-full w-px bg-gradient-to-b from-blue-200/20 via-blue-200/80 to-blue-200/20 lg:block" />
-          <div className="pointer-events-none absolute bottom-0 left-64 right-0 hidden h-px bg-gradient-to-r from-blue-200/70 via-blue-200/95 to-blue-200/70 lg:block" />
+          <div className="pointer-events-none absolute left-64 top-0 hidden h-full w-px bg-gradient-to-b from-rose-200/20 via-rose-200/80 to-rose-200/20 lg:block" />
+          <div className="pointer-events-none absolute bottom-0 left-64 right-0 hidden h-px bg-gradient-to-r from-rose-200/70 via-rose-200/95 to-rose-200/70 lg:block" />
         </>
       ) : null}
 
@@ -184,17 +184,15 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
       >
         <button
           onClick={() => handleNavigate('/dashboard')}
-          className="interactive-lift flex items-center gap-3 rounded-2xl px-2 py-1.5 hover:bg-blue-50/90"
+          className="interactive-lift flex items-center gap-3 rounded-2xl px-2 py-1.5 hover:bg-rose-50/90"
         >
           <BrandLockup
             iconSize={42}
-            iconClassName="glow-ring-red rounded-xl shadow-[0_10px_20px_rgba(37,99,235,0.35)]"
-            titleClassName="text-sm font-black tracking-tight text-slate-900 sm:text-base"
             subtitleClassName="text-xs font-medium text-slate-700"
           />
         </button>
 
-        <div className="hidden items-center gap-1 rounded-2xl border border-blue-200/70 bg-white/95 p-1 text-sm font-semibold shadow-[0_8px_22px_rgba(15,23,42,0.07)] lg:flex">
+        <div className="hidden items-center gap-1 rounded-2xl border border-rose-200/70 bg-white/95 p-1 text-sm font-semibold shadow-[0_8px_22px_rgba(15,23,42,0.07)] lg:flex">
           <TopLink label="Home" active={isActive('/dashboard')} onClick={() => handleNavigate('/dashboard')} />
 
           {/* Prep dropdown — groups the exam tracks */}
@@ -205,13 +203,13 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
               aria-expanded={prepOpen}
               className={cn(
                 'relative flex items-center gap-1 rounded-xl px-3.5 py-2 transition-colors',
-                prepActive ? 'text-blue-800' : 'text-slate-600 hover:text-blue-700',
+                prepActive ? 'text-rose-800' : 'text-slate-600 hover:text-rose-700',
               )}
             >
               {prepActive ? (
                 <motion.span
                   layoutId="topnav-active"
-                  className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-100 to-indigo-100 shadow-[0_6px_14px_rgba(185,28,28,0.16)]"
+                  className="absolute inset-0 rounded-xl bg-gradient-to-r from-rose-100 to-red-100 shadow-[0_6px_14px_rgba(185,28,28,0.16)]"
                   transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                 />
               ) : null}
@@ -225,7 +223,7 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
                   role="menu"
-                  className="absolute left-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-blue-100 bg-white/95 p-1.5 shadow-[0_22px_46px_rgba(15,23,42,0.16)] backdrop-blur-xl"
+                  className="absolute left-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-rose-100 bg-white/95 p-1.5 shadow-[0_22px_46px_rgba(15,23,42,0.16)] backdrop-blur-xl"
                 >
                   {prepItems.map((item) => {
                     const Icon = item.icon
@@ -240,10 +238,10 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
                         }}
                         className={cn(
                           'flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-[13px] font-bold transition',
-                          active ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-blue-50/70 hover:text-blue-700',
+                          active ? 'bg-rose-50 text-rose-700' : 'text-slate-600 hover:bg-rose-50/70 hover:text-rose-700',
                         )}
                       >
-                        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-blue-500">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-50 text-rose-500">
                           <Icon className="h-4 w-4" />
                         </span>
                         {item.label}
@@ -259,7 +257,7 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
 
         <div className="hidden items-center gap-2 sm:flex">
           {user ? (
-            <div className="inline-flex items-center gap-1 rounded-xl border border-blue-300/75 bg-gradient-to-br from-blue-50 to-indigo-100 px-3 py-2 text-sm font-semibold text-blue-800 shadow-[0_10px_22px_rgba(185,28,28,0.18)]">
+            <div className="inline-flex items-center gap-1 rounded-xl border border-rose-300/75 bg-gradient-to-br from-rose-50 to-red-100 px-3 py-2 text-sm font-semibold text-rose-800 shadow-[0_10px_22px_rgba(185,28,28,0.18)]">
               <Zap className="h-4 w-4" />
               {xpValue} XP
             </div>
@@ -270,13 +268,13 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
             <>
               <Button
                 variant="outline"
-                className="interactive-lift rounded-xl border-blue-300 bg-white px-4 py-2 text-blue-800 hover:bg-blue-50"
+                className="interactive-lift rounded-xl border-rose-300 bg-white px-4 py-2 text-rose-800 hover:bg-rose-50"
                 onClick={() => handleNavigate('/login')}
               >
                  <UiText text={"Sign In"} /> </Button>
               <Button
                 variant="primary"
-                className="cta-sheen interactive-lift rounded-xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-4 py-2 text-white hover:opacity-95"
+                className="cta-sheen interactive-lift rounded-xl bg-gradient-to-r from-[#df0030] via-[#f4224b] to-[#b60025] px-4 py-2 text-white hover:opacity-95"
                 onClick={() => handleNavigate('/register')}
               >
                 Get Started
@@ -286,13 +284,13 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
             <>
               <Button
                 variant="ghost"
-                className="interactive-lift rounded-xl border border-blue-200 bg-white/90 px-3 py-2 text-slate-800 hover:bg-blue-50 hover:text-blue-800"
+                className="interactive-lift rounded-xl border border-rose-200 bg-white/90 px-3 py-2 text-slate-800 hover:bg-rose-50 hover:text-rose-800"
                 onClick={() => handleNavigate('/account')}
               >
                 <UserRound className="mr-1 h-4 w-4" />  <UiText text={"Profile"} /> </Button>
               <Button
                 variant="ghost"
-                className="interactive-lift rounded-xl border border-blue-200 bg-white/90 px-3 py-2 text-slate-800 hover:bg-blue-50 hover:text-blue-800"
+                className="interactive-lift rounded-xl border border-rose-200 bg-white/90 px-3 py-2 text-slate-800 hover:bg-rose-50 hover:text-rose-800"
                 onClick={requestSignOut}
               >
                 <LogOut className="mr-1 h-4 w-4" /> Sign Out
@@ -302,7 +300,7 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
         </div>
 
         <button
-          className="rounded-xl border border-blue-200 bg-white p-2 text-slate-800 shadow-sm transition-colors hover:bg-blue-50 lg:hidden"
+          className="rounded-xl border border-rose-200 bg-white p-2 text-slate-800 shadow-sm transition-colors hover:bg-rose-50 lg:hidden"
           onClick={() => setMobileOpen((value) => !value)}
           aria-label="Toggle navigation menu"
           aria-expanded={mobileOpen}
@@ -318,43 +316,43 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
             animate={minimalMotion ? { opacity: 1 } : { height: 'auto', opacity: 1 }}
             exit={minimalMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
             transition={{ duration: minimalMotion ? 0.15 : 0.24, ease: 'easeOut' }}
-            className="overflow-hidden border-t border-blue-100 bg-white/95 lg:hidden"
+            className="overflow-hidden border-t border-rose-100 bg-white/95 lg:hidden"
           >
             <div className="px-4 py-3">
               <div className="mb-3">
                 {user ? (
-                  <span className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700">
+                  <span className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
                     <Zap className="h-4 w-4" /> {xpValue} XP
                   </span>
                 ) : null}
               </div>
               <div className="flex flex-col gap-1 text-sm">
-                <button className="rounded-lg px-3 py-2 text-left font-semibold text-slate-800 transition-colors hover:bg-blue-50 hover:text-blue-800" onClick={() => handleNavigate('/dashboard')}> <UiText text={"Home"} /> </button>
+                <button className="rounded-lg px-3 py-2 text-left font-semibold text-slate-800 transition-colors hover:bg-rose-50 hover:text-rose-800" onClick={() => handleNavigate('/dashboard')}> <UiText text={"Home"} /> </button>
 
-                <p className="px-3 pb-1 pt-2 text-[10px] font-black uppercase tracking-[0.16em] text-blue-400">Prep</p>
+                <p className="px-3 pb-1 pt-2 text-[10px] font-black uppercase tracking-[0.16em] text-rose-400">Prep</p>
                 {prepItems.map((item) => {
                   const Icon = item.icon
                   return (
                     <button
                       key={item.path}
-                      className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-left font-semibold text-slate-700 transition-colors hover:bg-blue-50 hover:text-blue-800"
+                      className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-left font-semibold text-slate-700 transition-colors hover:bg-rose-50 hover:text-rose-800"
                       onClick={() => handleNavigate(item.path)}
                     >
-                      <Icon className="h-4 w-4 text-blue-500" /> {item.label}
+                      <Icon className="h-4 w-4 text-rose-500" /> {item.label}
                     </button>
                   )
                 })}
 
-                <p className="px-3 pb-1 pt-2 text-[10px] font-black uppercase tracking-[0.16em] text-blue-400"> <UiText text={"More"} /> </p>
-                <button className="rounded-lg px-3 py-2 text-left font-semibold text-slate-800 transition-colors hover:bg-blue-50 hover:text-blue-800" onClick={openMockFromLanding}>Mock Arena</button>
-                <button className="rounded-lg px-3 py-2 text-left font-semibold text-slate-800 transition-colors hover:bg-blue-50 hover:text-blue-800" onClick={() => handleNavigate('/leaderboard')}> <UiText text={"Leaderboard"} /> </button>
+                <p className="px-3 pb-1 pt-2 text-[10px] font-black uppercase tracking-[0.16em] text-rose-400"> <UiText text={"More"} /> </p>
+                <button className="rounded-lg px-3 py-2 text-left font-semibold text-slate-800 transition-colors hover:bg-rose-50 hover:text-rose-800" onClick={openMockFromLanding}>Mock Arena</button>
+                <button className="rounded-lg px-3 py-2 text-left font-semibold text-slate-800 transition-colors hover:bg-rose-50 hover:text-rose-800" onClick={() => handleNavigate('/leaderboard')}> <UiText text={"Leaderboard"} /> </button>
 
-                <div className="my-1.5 h-px bg-blue-100" />
+                <div className="my-1.5 h-px bg-rose-100" />
                 {!user ? (
                   <>
-                    <button className="rounded-lg px-3 py-2 text-left text-slate-800 transition-colors hover:bg-blue-50 hover:text-blue-800" onClick={() => handleNavigate('/login')}> <UiText text={"Sign In"} /> </button>
+                    <button className="rounded-lg px-3 py-2 text-left text-slate-800 transition-colors hover:bg-rose-50 hover:text-rose-800" onClick={() => handleNavigate('/login')}> <UiText text={"Sign In"} /> </button>
                     <button
-                      className="rounded-lg px-3 py-2 text-left text-slate-800 transition-colors hover:bg-blue-50 hover:text-blue-800"
+                      className="rounded-lg px-3 py-2 text-left text-slate-800 transition-colors hover:bg-rose-50 hover:text-rose-800"
                       onClick={() => handleNavigate('/register')}
                     >
                       Get Started
@@ -362,8 +360,8 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
                   </>
                 ) : (
                   <>
-                    <button className="rounded-lg px-3 py-2 text-left text-slate-800 transition-colors hover:bg-blue-50 hover:text-blue-800" onClick={() => handleNavigate('/account')}> <UiText text={"Profile"} /> </button>
-                    <button className="rounded-lg px-3 py-2 text-left text-slate-800 transition-colors hover:bg-blue-50 hover:text-blue-800" onClick={requestSignOut}>Sign Out</button>
+                    <button className="rounded-lg px-3 py-2 text-left text-slate-800 transition-colors hover:bg-rose-50 hover:text-rose-800" onClick={() => handleNavigate('/account')}> <UiText text={"Profile"} /> </button>
+                    <button className="rounded-lg px-3 py-2 text-left text-slate-800 transition-colors hover:bg-rose-50 hover:text-rose-800" onClick={requestSignOut}>Sign Out</button>
                   </>
                 )}
               </div>
@@ -384,13 +382,13 @@ function TopLink({ label, active, onClick }: { label: string; active: boolean; o
       aria-current={active ? 'page' : undefined}
       className={cn(
         'relative rounded-xl px-3.5 py-2 transition-colors',
-        active ? 'text-blue-800' : 'text-slate-600 hover:text-blue-700',
+        active ? 'text-rose-800' : 'text-slate-600 hover:text-rose-700',
       )}
     >
       {active ? (
         <motion.span
           layoutId="topnav-active"
-          className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-100 to-indigo-100 shadow-[0_6px_14px_rgba(185,28,28,0.16)]"
+          className="absolute inset-0 rounded-xl bg-gradient-to-r from-rose-100 to-red-100 shadow-[0_6px_14px_rgba(185,28,28,0.16)]"
           transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
         />
       ) : null}

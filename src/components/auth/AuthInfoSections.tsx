@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, ArrowUpRight, ChevronDown, ShieldCheck } from 'lucide-react'
-import { BrandMark } from '@/components/brand/BrandLogo'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 
 const faqs = [
   { question: 'Can I prepare for both IELTS and SAT?', answer: 'Yes. Both exam arenas live in one account, with practice, full tests, results and review.' },
@@ -40,7 +40,7 @@ export default function AuthInfoSections() {
 
     <footer className="auth-info-footer">
       <div className="auth-info-footer-main">
-        <div><div className="auth-info-footer-logo"><BrandMark size={35} /><strong>Ivy<span>goo</span></strong></div><p>Preparation and planning for the journey ahead.</p></div>
+        <div><div className="auth-info-footer-logo"><BrandLogo height={46} /></div><p>Preparation and planning for the journey ahead.</p></div>
         <nav aria-label="Footer navigation">
           <Link to="/test-preparation">IELTS &amp; SAT</Link>
           <a href="#auth-showcase">How it works</a>

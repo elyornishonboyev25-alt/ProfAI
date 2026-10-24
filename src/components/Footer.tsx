@@ -1,3 +1,4 @@
+import { BrandLogo } from '@/components/brand/BrandLogo'
 import { Link } from 'react-router-dom'
 import { Mail, Phone, Send, MapPin } from 'lucide-react'
 import { Reveal } from '@/components/fx'
@@ -14,16 +15,14 @@ export default function Footer() {
   const currentYear = new Date().getFullYear()
 
   return (
-    <footer className="relative w-full overflow-hidden border-t border-blue-100/80 bg-white/95">
+    <footer className="relative w-full overflow-hidden border-t border-rose-100/80 bg-white/95">
       {/* gradient top accent */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-blue-500/70 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-rose-500/70 to-transparent" />
 
       <Reveal>
         <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-4 lg:px-8">
           <div>
-            <h3 className="text-lg font-black tracking-tight text-slate-900">
-              Ivy<span className="text-gradient-red">goo</span>
-            </h3>
+            <Link to="/" aria-label="ivyGoo home"><BrandLogo height={48} /></Link>
             <p className="mt-3 text-sm leading-6 text-slate-600">
               {c('Your all-in-one platform to study abroad — exam prep, English skills and admission guidance that take you to top universities worldwide.')}
             </p>
@@ -37,7 +36,7 @@ export default function Footer() {
                     target={social.href.startsWith('http') ? '_blank' : undefined}
                     rel={social.href.startsWith('http') ? 'noreferrer' : undefined}
                     aria-label={c(social.label)}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-blue-200 bg-white text-blue-600 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 hover:shadow-[0_8px_18px_rgba(37,99,235,0.18)]"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-rose-200 bg-white text-rose-600 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700 hover:shadow-[0_8px_18px_rgba(223,0,48,0.18)]"
                   >
                     <Icon className="h-4 w-4" />
                   </a>
@@ -47,39 +46,39 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="text-sm font-semibold uppercase tracking-wide text-blue-700">{c('Platform')}</h4>
+            <h4 className="text-sm font-semibold uppercase tracking-wide text-rose-700">{c('Platform')}</h4>
             <ul className="mt-3 space-y-2 text-sm text-slate-600">
-              <li><Link to="/tests" className="transition-colors hover:text-blue-700">{c('Practice Tests')}</Link></li>
-              <li><Link to="/mock" className="transition-colors hover:text-blue-700">{c('Mock Arena')}</Link></li>
-              <li><Link to="/community?mode=ai" className="transition-colors hover:text-blue-700">{c('Speaking Community')}</Link></li>
-              <li><Link to="/shadowing-lab" className="transition-colors hover:text-blue-700">{c('Shadowing Lab')}</Link></li>
-              <li><Link to="/vocabulary" className="transition-colors hover:text-blue-700">{c('Vocabulary Arena')}</Link></li>
-              <li><Link to="/articles" className="transition-colors hover:text-blue-700">{c('Articles')}</Link></li>
-              <li><Link to="/admission" className="transition-colors hover:text-blue-700">{c('Study Abroad')}</Link></li>
-              <li><Link to="/leaderboard" className="transition-colors hover:text-blue-700">{c('Leaderboard')}</Link></li>
-              <li><Link to="/profile" className="transition-colors hover:text-blue-700">{c('Performance')}</Link></li>
-              <li><Link to="/ielts" className="transition-colors hover:text-blue-700">{c('IELTS Modules')}</Link></li>
+              <li><Link to="/tests" className="transition-colors hover:text-rose-700">{c('Practice Tests')}</Link></li>
+              <li><Link to="/mock" className="transition-colors hover:text-rose-700">{c('Mock Arena')}</Link></li>
+              <li><Link to="/community?mode=ai" className="transition-colors hover:text-rose-700">{c('Speaking Community')}</Link></li>
+              <li><Link to="/shadowing-lab" className="transition-colors hover:text-rose-700">{c('Shadowing Lab')}</Link></li>
+              <li><Link to="/vocabulary" className="transition-colors hover:text-rose-700">{c('Vocabulary Arena')}</Link></li>
+              <li><Link to="/articles" className="transition-colors hover:text-rose-700">{c('Articles')}</Link></li>
+              <li><Link to="/admission" className="transition-colors hover:text-rose-700">{c('Study Abroad')}</Link></li>
+              <li><Link to="/leaderboard" className="transition-colors hover:text-rose-700">{c('Leaderboard')}</Link></li>
+              <li><Link to="/profile" className="transition-colors hover:text-rose-700">{c('Performance')}</Link></li>
+              <li><Link to="/ielts" className="transition-colors hover:text-rose-700">{c('IELTS Modules')}</Link></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="text-sm font-semibold uppercase tracking-wide text-blue-700">{c('Company')}</h4>
+            <h4 className="text-sm font-semibold uppercase tracking-wide text-rose-700">{c('Company')}</h4>
             <ul className="mt-3 space-y-2 text-sm text-slate-600">
-              <li><Link to="/about" className="transition-colors hover:text-blue-700">{c('About')}</Link></li>
-              <li><Link to="/login" className="transition-colors hover:text-blue-700">{c('Sign In')}</Link></li>
-              <li><Link to="/sat" className="transition-colors hover:text-blue-700">{c('SAT Track')}</Link></li>
+              <li><Link to="/about" className="transition-colors hover:text-rose-700">{c('About')}</Link></li>
+              <li><Link to="/login" className="transition-colors hover:text-rose-700">{c('Sign In')}</Link></li>
+              <li><Link to="/sat" className="transition-colors hover:text-rose-700">{c('SAT Track')}</Link></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="text-sm font-semibold uppercase tracking-wide text-blue-700">{c('Contact')}</h4>
+            <h4 className="text-sm font-semibold uppercase tracking-wide text-rose-700">{c('Contact')}</h4>
             <ul className="mt-3 space-y-2 text-sm text-slate-600">
               <li className="inline-flex items-center gap-2">
-                <Mail className="h-3.5 w-3.5 text-blue-500" />
+                <Mail className="h-3.5 w-3.5 text-rose-500" />
                 elyornishonboyev000@gmail.com
               </li>
               <li className="inline-flex items-center gap-2">
-                <Phone className="h-3.5 w-3.5 text-blue-500" />
+                <Phone className="h-3.5 w-3.5 text-rose-500" />
                 +998 77 481 30 60
               </li>
               <li>
@@ -87,14 +86,14 @@ export default function Footer() {
                   href="https://t.me/nishonboyev7"
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 transition-colors hover:text-blue-700"
+                  className="inline-flex items-center gap-2 transition-colors hover:text-rose-700"
                 >
-                  <Send className="h-3.5 w-3.5 text-blue-500" />
+                  <Send className="h-3.5 w-3.5 text-rose-500" />
                   t.me/nishonboyev7
                 </a>
               </li>
               <li className="inline-flex items-center gap-2">
-                <MapPin className="h-3.5 w-3.5 text-blue-500" />
+                <MapPin className="h-3.5 w-3.5 text-rose-500" />
                 {c('Uzbekistan, Jizzakh, Zomin')}
               </li>
             </ul>
@@ -102,7 +101,7 @@ export default function Footer() {
         </div>
       </Reveal>
 
-      <div className="border-t border-blue-100 py-4 text-center text-sm text-slate-500">
+      <div className="border-t border-rose-100 py-4 text-center text-sm text-slate-500">
         &copy; {currentYear} Ivygoo. {c('All rights reserved.')}
       </div>
     </footer>

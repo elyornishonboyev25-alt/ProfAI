@@ -18,7 +18,7 @@ import {
   Search,
   Sparkles,
 } from 'lucide-react'
-import { BrandMark } from '@/components/brand/BrandLogo'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 import UniversityLogo from '@/components/admission/UniversityLogo'
 import './admission-universities.css'
 import { formatUniversityRank, getUniversities, QS_EDITION, QS_2027_RANKED_UNIVERSITY_COUNT, UNIVERSITY_COUNT } from '@/data/admission'
@@ -305,8 +305,7 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
       <div className="admission-universities-shell relative mx-auto w-full max-w-[104rem]">
         <header className="admission-hub-nav">
           <button type="button" className="admission-hub-brand" onClick={() => navigate('/admission')} aria-label="Open Admission Hub">
-            <span className="admission-hub-brand-mark"><BrandMark size={60} /></span>
-            <span className="admission-hub-wordmark">Ivy<span>goo</span></span>
+            <BrandLogo height={64} />
             <span className="admission-hub-divider" aria-hidden="true" />
             <span className="admission-hub-title">Admission Hub</span>
           </button>

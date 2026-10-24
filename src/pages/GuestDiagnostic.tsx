@@ -22,7 +22,7 @@ import {
   TestTube2,
   X,
 } from 'lucide-react'
-import { BrandMark } from '@/components/brand/BrandLogo'
+import { BrandLogo, BrandMark } from '@/components/brand/BrandLogo'
 import { WORLD_COUNTRIES } from '@/data/countries'
 import { captureAnalyticsEvent } from '@/lib/analytics'
 import {
@@ -283,7 +283,7 @@ export default function GuestDiagnostic() {
 
       <header className="relative z-20 px-3 pt-3 sm:px-6 sm:pt-5">
         <div className="mx-auto flex max-w-7xl items-center justify-between rounded-[1.55rem] border border-white/85 bg-white/58 px-3.5 py-3 shadow-[0_20px_55px_rgba(15,23,42,0.1)] backdrop-blur-2xl sm:px-5">
-          <button type="button" onClick={() => navigate('/')} className="flex items-center gap-2.5 rounded-xl"><BrandMark size={42} /><span className="text-xl font-black tracking-[-.04em]">Ivy<span className="text-red-500">goo</span></span></button>
+          <button type="button" onClick={() => navigate('/')} className="flex items-center gap-2.5 rounded-xl"><BrandLogo height={46} /></button>
           <div className="hidden items-center gap-2 text-xs font-bold text-slate-500 sm:flex"><ShieldCheck className="h-4 w-4 text-emerald-600" /> Private guest assessment</div>
           <button type="button" onClick={() => navigate('/')} className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-black text-slate-600 hover:bg-white/70"><X className="h-4 w-4" /> <span className="hidden sm:inline">Exit</span></button>
         </div>

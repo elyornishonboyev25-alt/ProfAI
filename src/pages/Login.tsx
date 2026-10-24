@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ShieldCheck } from 'lucide-react'
@@ -6,7 +6,7 @@ import { useCopy } from '@/i18n/interface'
 import { apiClient } from '@/lib/apiClient'
 import { useToastStore, type ToastState } from '@/store/toastStore'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
-import { BrandMark } from '@/components/brand/BrandLogo'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 import AuthShowcasePanel from '@/components/auth/AuthShowcasePanelV2'
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton'
 import EmailCodeForm, { type EmailAuthSession } from '@/components/auth/EmailCodeForm'
@@ -39,7 +39,7 @@ export default function Login() {
       <AuthShowcasePanel mode={createMode ? 'register' : 'login'} />
       <section className="auth-cinema-form-side" aria-label={c('Gmail account access')}>
         <div className="auth-cinema-form-inner">
-          <Link to="/" className="auth-cinema-lockup" aria-label="Ivygoo"><span className="auth-cinema-lockup-icon"><BrandMark size={43} /></span><div><strong>Ivy<span>goo</span></strong><small>{c('Your next chapter')}</small></div></Link>
+          <Link to="/" className="auth-cinema-lockup" aria-label="Ivygoo"><div className="brand-lockup"><BrandLogo height={54} /><small>{c('Your next chapter')}</small></div></Link>
           <nav className="auth-cinema-tabs" aria-label={c('Account access')}>
             <Link to="/login" state={location.state} aria-current={!createMode ? 'page' : undefined} className={!createMode ? 'is-active' : ''}>{c('Sign in')}</Link>
             <Link to="/register" state={location.state} aria-current={createMode ? 'page' : undefined} className={createMode ? 'is-active' : ''}>{c('Create account')}</Link>

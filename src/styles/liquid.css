@@ -2,7 +2,7 @@
 :root {
   --liquid-ink: #17202e;
   --liquid-muted: #596574;
-  --liquid-red: #cf2836;
+  --liquid-red: var(--brand-red);
   --liquid-line: rgba(115, 131, 149, .18);
   --liquid-control: linear-gradient(130deg, rgba(255,255,255,.84), rgba(255,255,255,.51));
   --liquid-shadow: 0 14px 42px rgba(45, 57, 77, .075), inset 0 1px 0 #fff, inset 0 -1px 0 rgba(128,147,165,.1);

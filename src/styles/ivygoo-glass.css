@@ -3,8 +3,9 @@
   --app-bg: #e9edf3; --app-bg-soft: #e1e6ee;
   --workspace-canvas: radial-gradient(ellipse at 8% 5%,rgba(255,255,255,.82),transparent 48%),radial-gradient(ellipse at 95% 85%,rgba(190,44,66,.045),transparent 40%),linear-gradient(135deg,#eef0f5,#dfe4ed 55%,#e9edf3);
   --ui-surface: rgba(255,255,255,.67); --ui-border: rgba(162,173,190,.3);
-  --ui-primary: var(--brand-red); --ui-primary-strong: var(--brand-red-deep); --ui-primary-soft: var(--brand-red-soft);
-  --app-red: var(--brand-red); --app-red-deep: var(--brand-red-deep);
+  /* The workspace keeps its restrained crimson; the brighter logo red stays on brand assets. */
+  --ui-primary: #bb2c44; --ui-primary-strong: #9c2038; --ui-primary-soft: #f8edf0;
+  --app-red: #bb2c44; --app-red-deep: #9c2038;
   --app-border: rgba(162,173,190,.26); --app-shadow: 0 18px 42px rgba(43,54,75,.085);
   --app-shadow-soft: 0 8px 22px rgba(43,54,75,.06);
   --arena-glass: rgba(255,255,255,.62); --arena-glass-strong: rgba(255,255,255,.85);
@@ -18,7 +19,7 @@
 .ivygoo-card { border-radius: 22px; }
 .app-shell .liquid-sidebar { background: linear-gradient(145deg,rgba(255,255,255,.8),rgba(218,225,236,.66)); border-color: rgba(255,255,255,.92); backdrop-filter: blur(28px); }
 .app-shell .liquid-mobile-nav { background: rgba(238,242,248,.88); border-color: white; backdrop-filter: blur(24px); }
-.app-shell .ivygoo-button-primary { background: var(--brand-gradient); box-shadow: 0 8px 19px rgba(169,33,59,.17),inset 0 1px 0 rgba(255,255,255,.35); }
+.app-shell .ivygoo-button-primary { background: linear-gradient(125deg,#c12e46,#a7213a); box-shadow: 0 8px 19px rgba(169,33,59,.17),inset 0 1px 0 rgba(255,255,255,.35); }
 .app-shell .ivygoo-button-glass { border-color: rgba(255,255,255,.95); background: linear-gradient(135deg,rgba(255,255,255,.84),rgba(221,228,239,.6)); color: #4b5666; box-shadow: 0 5px 14px rgba(48,60,82,.06),inset 0 1px 0 white; }
 .app-shell .ivygoo-button-primary:hover:not(:disabled) { box-shadow: 0 12px 25px rgba(169,33,59,.23),inset 0 1px 0 rgba(255,255,255,.35); }
 .dark .app-shell .ivygoo-card { background: linear-gradient(135deg,rgba(42,49,64,.92),rgba(29,36,50,.9)); border-color: rgba(160,173,194,.18); }

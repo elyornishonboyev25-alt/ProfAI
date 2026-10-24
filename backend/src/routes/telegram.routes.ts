@@ -7,7 +7,9 @@ import { requireAuth } from '../middleware/auth.js'
 import { validateBody } from '../middleware/validate.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { botInviteLink, createLinkCode, handleUpdate, inviteLink, notifyUser, telegramEnabled, type TgUpdate } from '../services/telegram.service.js'
-import { claimReferral, referralSummary, settleReferrals } from '../services/referral.service.js'
+import { claimReferral, INVITEE_BONUS_DAYS, referralSummary, settleReferrals } from '../services/referral.service.js'
+import { redeemCode } from '../services/promo.service.js'
+import { authRateLimit } from '../middleware/rateLimit.js'
 
 export const telegramWebhookRoutes = Router()
 
@@ -63,4 +65,40 @@ referralRoutes.post('/claim', validateBody(claimSchema), asyncHandler(async (req
   const result = await claimReferral(req.user!.id, req.body.code)
   if (!result.ok) return res.status(result.code === 'ALREADY_CLAIMED' ? 409 : 400).json({ code: result.code, message: 'This invitation cannot be applied.' })
   res.json({ claimed: true, bonusDays: result.bonusDays })
+}))
+
+export const promoRoutes = Router()
+promoRoutes.use(requireAuth)
+
+promoRoutes.get('/status', asyncHandler(async (req, res) => {
+  const [promo, link] = await Promise.all([
+    prisma.promoCode.findUnique({ where: { userId: req.user!.id }, select: { redeemedAt: true } }),
+    prisma.telegramLink.findUnique({ where: { userId: req.user!.id }, select: { userId: true } }),
+  ])
+  res.json({
+    telegramEnabled: telegramEnabled(),
+    botUsername: env.TELEGRAM_BOT_USERNAME,
+    channelUrl: env.TELEGRAM_CHANNEL_URL,
+    promoDays: env.TELEGRAM_PROMO_DAYS,
+    referralBonusDays: INVITEE_BONUS_DAYS,
+    telegramLinked: Boolean(link),
+    promoIssued: Boolean(promo),
+    promoRedeemed: Boolean(promo?.redeemedAt),
+  })
+}))
+
+// Opens the bot: straight to the promo step when the account is already linked.
+promoRoutes.post('/telegram', asyncHandler(async (req, res) => {
+  if (!telegramEnabled()) return res.status(503).json({ message: 'Telegram bot is not available yet.' })
+  const link = await prisma.telegramLink.findUnique({ where: { userId: req.user!.id }, select: { userId: true } })
+  if (link) return res.json({ url: `https://t.me/${env.TELEGRAM_BOT_USERNAME}?start=promo` })
+  res.json({ url: (await createLinkCode(req.user!.id, 'promo')).url })
+}))
+
+const redeemSchema = z.object({ code: z.string().min(3).max(40) })
+
+promoRoutes.post('/redeem', authRateLimit, validateBody(redeemSchema), asyncHandler(async (req, res) => {
+  const result = await redeemCode(req.user!.id, req.body.code)
+  if (!result.ok) return res.status(result.code === 'INVALID_CODE' ? 404 : 409).json({ code: result.code, message: 'This code cannot be applied.' })
+  res.json({ redeemed: true, kind: result.kind, days: result.days })
 }))

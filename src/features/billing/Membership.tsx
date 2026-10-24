@@ -5,6 +5,7 @@ import { apiClient } from '@/lib/apiClient'
 import { useAuthStore } from '@/store/authStore'
 import PricingCards, { formatBillingMoney } from './PricingCards'
 import PlanDuration from './PlanDuration'
+import PromoCode from './PromoCode'
 import { BILLING_PRODUCTS, type BillingProduct } from './catalog'
 import { useBillingStore } from './store'
 import { useBillingText } from './copy'
@@ -106,6 +107,8 @@ export default function Membership() {
       <PricingCards products={products} months={months} onChoose={choose} disabled={busy || !catalog} />
       <p className="billing-plan-footnote">{text('Student $3/month · Teacher $5/month. Classes require a paid plan. No auto-renewal.', 'Student $3/oy · Teacher $5/oy. Classes uchun pullik tarif kerak. Avtomatik uzaytirilmaydi.', 'Student $3/мес. · Teacher $5/мес. Для классов нужен платный тариф. Без автопродления.')}</p>
     </section>
+
+    <PromoCode onRedeemed={() => void refresh()} />
 
     {selected && <section ref={checkoutRef} className="billing-glass billing-checkout" aria-labelledby="checkout-title">
       <div className="billing-section-heading"><div><span className="billing-eyebrow"><CreditCard size={15} />{text('PAYMENT', 'TO‘LOV', 'ОПЛАТА')}</span><h2 id="checkout-title">{text('Review your purchase', 'To‘lovni tekshiring', 'Проверьте покупку')}</h2></div><button type="button" className="billing-round-link" aria-label={text('Close checkout', 'To‘lov oynasini yopish', 'Закрыть оплату')} onClick={() => setSelected(null)}><X size={18} /></button></div>

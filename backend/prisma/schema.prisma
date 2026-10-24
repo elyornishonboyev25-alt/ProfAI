@@ -178,6 +178,7 @@ model User {
   referralsMade                       Referral[]                           @relation("ReferralInviter")
   referralReceived                    Referral?                            @relation("ReferralInvitee")
   referralRewards                     ReferralReward[]
+  promoCode                           PromoCode?
 
   @@index([xp, level])
   @@index([createdAt])
@@ -1264,4 +1265,13 @@ model ReferralReward {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, kind, tier])
+}
+
+model PromoCode {
+  code       String    @id
+  userId     String    @unique
+  days       Int
+  redeemedAt DateTime?
+  createdAt  DateTime  @default(now())
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

@@ -1,0 +1,55 @@
+/* Promo code: silver glass with Ivygoo red accents, matching the Premium page. */
+.promo{display:grid;gap:14px}
+.promo-toggle{display:flex;align-items:center;gap:14px;width:100%;padding:15px 18px;border:1px solid #fff;border-radius:18px;text-align:left;cursor:pointer;color:#202631;
+  background:linear-gradient(135deg,#ffffffe6,#e7ebf1c4 70%,#fffffff0);backdrop-filter:blur(20px);
+  box-shadow:inset 0 1px 1px #fff,0 10px 30px #3c46560d,0 1px 3px #3c465618;transition:box-shadow .2s,transform .2s,border-color .2s}
+.promo-toggle:hover{box-shadow:inset 0 1px 1px #fff,0 14px 34px #3c465620,0 1px 3px #3c465618;transform:translateY(-1px)}
+.promo-toggle:focus-visible,.promo-get:focus-visible{outline:2px solid #c12e46;outline-offset:3px}
+.promo-toggle.is-open{border-color:#e7b9bf}
+.promo-toggle-icon{display:grid;place-items:center;width:42px;height:42px;flex-shrink:0;border-radius:13px;color:#b42337;
+  background:linear-gradient(145deg,#fff,#f7dce2);border:1px solid #fff;box-shadow:inset 0 1px #fff,0 6px 16px #ac25351f}
+.promo-toggle-copy{display:grid;gap:2px;flex:1}
+.promo-toggle-copy strong{font-size:14px;font-weight:800;letter-spacing:-.01em}
+.promo-toggle-copy small{font-size:11.5px;color:#6a7585;line-height:1.5}
+.promo-toggle-chevron,.promo-get-chevron{color:#7b8696;transition:transform .2s}
+.promo-toggle.is-open .promo-toggle-chevron,.promo-get[aria-expanded="true"] .promo-get-chevron{transform:rotate(180deg)}
+
+.promo-panel{display:grid;gap:18px;padding:clamp(18px,3vw,28px);animation:promo-in .24s ease both}
+.promo-form{display:grid;gap:10px}
+.promo-form label{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#9c2833}
+.promo-input-row{display:flex;gap:10px;align-items:stretch}
+.promo-input-row input{flex:1;min-height:50px;padding:0 16px;border:1px solid #d4d9e0;border-radius:14px;background:linear-gradient(180deg,#f3f5f8,#fff);
+  color:#202631;font:700 16px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.18em;text-transform:uppercase;
+  box-shadow:inset 0 2px 4px #3c46560f;transition:border-color .18s,box-shadow .18s}
+.promo-input-row input::placeholder{color:#a5adba;letter-spacing:.14em}
+.promo-input-row input:focus{outline:0;border-color:#c12e46;box-shadow:inset 0 2px 4px #3c46560a,0 0 0 4px #c12e4620}
+.promo-input-row .billing-primary{min-width:140px}
+.promo-hint{font-size:12px;line-height:1.7;color:#6a7585}
+
+.promo-divider{display:flex;align-items:center;gap:14px;color:#8a94a3;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.promo-divider::before,.promo-divider::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,#cfd5de,transparent)}
+
+.promo-get{display:flex;align-items:center;gap:14px;width:100%;padding:15px 17px;border:1px dashed #d98a93;border-radius:16px;text-align:left;cursor:pointer;color:#8f1f2d;
+  background:linear-gradient(135deg,#fff7f8,#fde8eb 70%,#fff7f8);transition:background .2s,border-color .2s,box-shadow .2s}
+.promo-get:hover{border-color:#c12e46;box-shadow:0 8px 22px #c126351f}
+.promo-get>svg:first-child{flex-shrink:0;color:#b42337}
+.promo-get span{display:grid;gap:2px;flex:1}
+.promo-get strong{font-size:13.5px;font-weight:800}
+.promo-get small{font-size:11.5px;color:#7a5a60;line-height:1.5}
+
+.promo-steps{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.promo-steps li{display:flex;gap:16px;position:relative;padding-bottom:22px}
+.promo-steps li:last-child{padding-bottom:0}
+.promo-steps li:not(:last-child)::before{content:"";position:absolute;left:17px;top:38px;bottom:4px;width:2px;border-radius:2px;background:linear-gradient(#d4d9e0,#ebeef2)}
+.promo-step-number{display:grid;place-items:center;width:36px;height:36px;flex-shrink:0;border-radius:50%;font-size:13px;font-weight:800;color:#8f1f2d;
+  background:linear-gradient(145deg,#fff,#e4e8ee);border:1px solid #fff;box-shadow:inset 0 1px #fff,0 5px 14px #3c465620}
+.promo-steps li>div{display:grid;gap:7px;justify-items:start;padding-top:4px;min-width:0}
+.promo-steps strong{font-size:14px;font-weight:800;color:#202631}
+.promo-steps p{font-size:12.5px;line-height:1.7;color:#657080;margin:0}
+.promo-steps a.billing-secondary{text-decoration:none;margin-top:3px}
+.promo-steps .billing-primary{margin-top:3px}
+.promo-soon{color:#9c2833!important;font-weight:700}
+
+@keyframes promo-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@media(max-width:560px){.promo-input-row{flex-direction:column}.promo-input-row .billing-primary{width:100%}.promo-toggle{padding:13px 14px}}
+@media(prefers-reduced-motion:reduce){.promo-panel{animation:none}.promo-toggle,.promo-toggle-chevron,.promo-get-chevron{transition:none}.promo-toggle:hover{transform:none}}

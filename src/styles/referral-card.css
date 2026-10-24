@@ -1,0 +1,51 @@
+/* Invite & Telegram card: silver glass with red accents (matches IELTS / SAT / Premium surfaces). */
+.rc{position:relative;margin-top:1.5rem;padding:clamp(20px,3vw,30px);border:1px solid #fff;border-radius:26px;overflow:hidden;color:#202631;
+  background:radial-gradient(ellipse at 100% 0,#fde3e87a,transparent 55%),linear-gradient(140deg,#ffffffe6,#eceff4c4 62%,#ffffffe0);
+  backdrop-filter:blur(22px);box-shadow:inset 0 1px 1px #fff,0 16px 44px #3c46561a,0 1px 3px #3c465618}
+.rc-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.rc-head>div{flex:1;min-width:200px}
+.rc-badge{display:grid;place-items:center;width:46px;height:46px;border-radius:15px;color:#b42337;background:linear-gradient(145deg,#fff,#f7dce2);
+  border:1px solid #fff;box-shadow:inset 0 1px #fff,0 8px 20px #ac25352b}
+.rc-eyebrow{margin:0;font-size:10px;font-weight:800;letter-spacing:.16em;color:#9c2833}
+.rc h2{margin:2px 0 0;font-size:clamp(18px,2.4vw,22px);font-weight:800;letter-spacing:-.02em;color:#1f2530}
+.rc-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;font-size:11.5px;font-weight:700;color:#3a4352;
+  background:linear-gradient(135deg,#fff,#e4e8ee);border:1px solid #fff;box-shadow:inset 0 1px #fff,0 4px 12px #3c46561a}
+.rc-muted{margin:0;font-size:13px;line-height:1.75;color:#657080}
+.rc-grid{display:grid;gap:22px;margin-top:20px;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr)}
+.rc-main{display:grid;gap:14px;align-content:start}
+.rc-link{display:flex;gap:10px}
+.rc-link input{flex:1;min-width:0;min-height:48px;padding:0 14px;border:1px solid #d4d9e0;border-radius:14px;background:linear-gradient(180deg,#f3f5f8,#fff);
+  color:#3a4352;font-size:12.5px;font-weight:700;box-shadow:inset 0 2px 4px #3c46560f}
+.rc-link input:focus{outline:0;border-color:#c12e46;box-shadow:0 0 0 4px #c12e4620}
+.rc-primary,.rc-secondary{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 18px;border-radius:13px;
+  font-size:12.5px;font-weight:750;cursor:pointer;transition:box-shadow .18s,transform .18s,background .18s}
+.rc-primary{border:1px solid #bb2732;color:#fff;background:linear-gradient(130deg,#dc3844,#b61d2b);box-shadow:0 8px 20px #c7263028,inset 0 1px #ffffff30}
+.rc-primary:hover:not(:disabled){box-shadow:0 11px 26px #c7263044;transform:translateY(-1px)}
+.rc-secondary{border:1px solid #d4d9e0;color:#303846;background:linear-gradient(140deg,#fff,#e9edf2);box-shadow:inset 0 1px #fff}
+.rc-primary:disabled,.rc-secondary:disabled{opacity:.5;cursor:not-allowed}
+.rc-primary:focus-visible,.rc-secondary:focus-visible{outline:2px solid #c12e46;outline-offset:3px}
+
+.rc-progress{height:9px;border-radius:999px;background:linear-gradient(180deg,#dde2e9,#eef1f5);box-shadow:inset 0 1px 3px #3c465626;overflow:hidden}
+.rc-progress span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#e84a58,#b61d2b);box-shadow:0 0 12px #c1263566;transition:width .5s ease}
+.rc-progress-note{margin:-4px 0 0;font-size:12px;color:#657080}
+.rc-progress-note b{color:#a92534}
+
+.rc-tiers{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.rc-tiers li{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid #fff;border-radius:13px;font-size:13px;color:#4a5361;
+  background:linear-gradient(135deg,#ffffffd9,#e9edf3b3);box-shadow:inset 0 1px #fff,0 3px 10px #3c46560d}
+.rc-tiers li b{display:inline-flex;align-items:center;gap:6px;font-weight:800;color:#303846}
+.rc-tiers li.is-reached{border-color:#e7b9bf;background:linear-gradient(135deg,#fff5f6,#fde5e8);color:#8f1f2d}
+.rc-tiers li.is-reached b{color:#b42337}
+
+.rc-telegram{display:grid;gap:12px;align-content:start;padding:20px;border:1px solid #fff;border-radius:20px;
+  background:linear-gradient(145deg,#ffffffcc,#dfe4ebb0);box-shadow:inset 0 1px 1px #fff,0 8px 24px #3c465612}
+.rc-tg-title{display:inline-flex;align-items:center;gap:8px;margin:0;font-size:14px;font-weight:800;color:#8f1f2d}
+.rc-tg-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.rc-connected{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;color:#286844}
+.rc-link-button{background:none;border:0;padding:0;font-size:12px;font-weight:700;color:#657080;text-decoration:underline;cursor:pointer}
+.rc-spin{animation:rc-spin 1s linear infinite;color:#8a94a3}
+@keyframes rc-spin{to{transform:rotate(360deg)}}
+
+@media(max-width:860px){.rc-grid{grid-template-columns:1fr}}
+@media(max-width:520px){.rc-link{flex-direction:column}.rc-primary,.rc-secondary{width:100%}}
+@media(prefers-reduced-motion:reduce){.rc-progress span,.rc-primary{transition:none}.rc-spin{animation:none}}

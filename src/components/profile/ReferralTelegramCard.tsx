@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Check, Copy, Gift, Loader2, Send, Unplug } from 'lucide-react'
+import { Check, Copy, Gift, Loader2, Send, Unplug, Users } from 'lucide-react'
 import UiText from '@/components/common/UiText'
 import { apiClient } from '@/lib/apiClient'
+import '@/styles/referral-card.css'
 
 type ReferralSummary = {
   code: string | null
@@ -76,79 +77,81 @@ export default function ReferralTelegramCard() {
     }
   }
 
-  return (
-    <section id="referral" className="account-profile-card mt-6 scroll-mt-24 surface-card p-6">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="inline-flex items-center gap-2 text-xl font-semibold text-slate-900">
-          <Gift className="h-5 w-5 text-red-600" />
-          <UiText text={"Invite friends, earn free premium"} />
-        </h2>
-        {referral && <span className="soft-chip">{referral.qualified} / {referral.invited} <UiText text={"friends counted"} /></span>}
-      </div>
+  const progress = referral?.next ? Math.min(100, Math.round((referral.qualified / referral.next.count) * 100)) : 100
 
-      {failed && !referral && (
-        <p className="mt-4 text-sm text-slate-600"><UiText text={"Invitation details could not be loaded. Refresh to try again."} /></p>
-      )}
-      {!referral && !failed && <Loader2 className="mt-4 h-5 w-5 animate-spin text-slate-400" />}
+  return (
+    <section id="referral" className="rc scroll-mt-24">
+      <header className="rc-head">
+        <span className="rc-badge"><Gift size={20} /></span>
+        <div>
+          <p className="rc-eyebrow"><UiText text={"INVITE & EARN"} /></p>
+          <h2><UiText text={"Invite friends, earn free premium"} /></h2>
+        </div>
+        {referral && <span className="rc-chip"><Users size={14} />{referral.qualified}/{referral.invited} <UiText text={"friends counted"} /></span>}
+      </header>
+
+      {failed && !referral && <p className="rc-muted"><UiText text={"Invitation details could not be loaded. Refresh to try again."} /></p>}
+      {!referral && !failed && <Loader2 className="rc-spin" size={20} />}
 
       {referral && (
-        <div className="mt-4 grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-          <div>
-            <p className="text-sm leading-6 text-slate-600">
+        <div className="rc-grid">
+          <div className="rc-main">
+            <p className="rc-muted">
               <UiText text={"Share your link. Your friend gets bonus premium days when they sign up, and you earn more days each time a friend finishes their first test or practice."} />
             </p>
-            <div className="mt-3 flex items-center gap-2">
-              <input readOnly value={referral.link ?? ''} aria-label="Invitation link" onFocus={(event) => event.currentTarget.select()}
-                className="min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700" />
-              <button type="button" onClick={() => void copy()}
-                className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl bg-slate-900 px-4 text-xs font-black text-white">
-                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            <div className="rc-link">
+              <input readOnly value={referral.link ?? ''} aria-label="Invitation link" onFocus={(event) => event.currentTarget.select()} />
+              <button type="button" className="rc-primary" onClick={() => void copy()}>
+                {copied ? <Check size={16} /> : <Copy size={16} />}
                 <UiText text={copied ? 'Copied' : 'Copy'} />
               </button>
             </div>
-            <ul className="mt-4 grid gap-2">
-              {referral.tiers.map((tier) => (
-                <li key={tier.count} className={`flex items-center justify-between rounded-xl border px-3 py-2 text-sm ${tier.reached ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-slate-200 bg-white text-slate-700'}`}>
-                  <span>{tier.count} <UiText text={tier.count === 1 ? 'friend' : 'friends'} /></span>
-                  <span className="font-black">+{tier.days} <UiText text={"days"} /> {tier.reached && '✓'}</span>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-3 text-xs text-slate-500">
+
+            <div className="rc-progress" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
+              <span style={{ width: `${progress}%` }} />
+            </div>
+            <p className="rc-progress-note">
               {referral.next
                 ? <>{referral.next.remaining} <UiText text={"more friend(s) until your next reward."} /></>
                 : <UiText text={"You have earned every reward. Thank you!"} />}
-              {' '}<UiText text={"Total earned"} />: {referral.earnedDays} <UiText text={"days"} />
+              {' '}<b>{referral.earnedDays}</b> <UiText text={"days"} /> <UiText text={"earned"} />
             </p>
+
+            <ul className="rc-tiers">
+              {referral.tiers.map((tier) => (
+                <li key={tier.count} className={tier.reached ? 'is-reached' : ''}>
+                  <span>{tier.count} <UiText text={tier.count === 1 ? 'friend' : 'friends'} /></span>
+                  <b>+{tier.days} <UiText text={"days"} />{tier.reached && <Check size={14} />}</b>
+                </li>
+              ))}
+            </ul>
           </div>
 
-          <div className="rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-50 to-white p-5">
-            <p className="inline-flex items-center gap-2 text-sm font-black text-sky-800"><Send className="h-4 w-4" /> Telegram</p>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
+          <aside className="rc-telegram">
+            <p className="rc-tg-title"><Send size={16} /> Telegram</p>
+            <p className="rc-muted">
               <UiText text={"Connect the bot for a daily word, streak reminders and reward alerts."} />
             </p>
             {telegram?.enabled === false ? (
-              <p className="mt-3 text-xs text-slate-500"><UiText text={"The Telegram bot is coming soon."} /></p>
+              <p className="rc-muted"><UiText text={"The Telegram bot is coming soon."} /></p>
             ) : telegram?.linked ? (
-              <div className="mt-3 flex flex-wrap items-center gap-3">
-                <span className="inline-flex items-center gap-1 text-xs font-black text-emerald-700"><Check className="h-4 w-4" /> <UiText text={"Connected"} />{telegram.link?.username ? ` · @${telegram.link.username}` : ''}</span>
-                <button type="button" disabled={busy} onClick={() => void disconnect()}
-                  className="inline-flex min-h-9 items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 text-xs font-black text-slate-600 disabled:opacity-60">
-                  <Unplug className="h-4 w-4" /> <UiText text={"Disconnect"} />
+              <div className="rc-tg-actions">
+                <span className="rc-connected"><Check size={15} /> <UiText text={"Connected"} />{telegram.link?.username ? ` · @${telegram.link.username}` : ''}</span>
+                <button type="button" className="rc-secondary" disabled={busy} onClick={() => void disconnect()}>
+                  <Unplug size={15} /> <UiText text={"Disconnect"} />
                 </button>
               </div>
             ) : (
-              <div className="mt-3 flex flex-wrap items-center gap-3">
-                <button type="button" disabled={busy || !telegram} onClick={() => void connect()}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-sky-600 px-4 text-xs font-black text-white disabled:opacity-60">
-                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} <UiText text={"Connect Telegram"} />
+              <div className="rc-tg-actions">
+                <button type="button" className="rc-primary" disabled={busy || !telegram} onClick={() => void connect()}>
+                  {busy ? <Loader2 size={16} className="rc-spin" /> : <Send size={16} />} <UiText text={"Connect Telegram"} />
                 </button>
-                <button type="button" onClick={() => void load()} className="text-xs font-bold text-slate-500 underline">
+                <button type="button" className="rc-link-button" onClick={() => void load()}>
                   <UiText text={"I connected it"} />
                 </button>
               </div>
             )}
-          </div>
+          </aside>
         </div>
       )}
     </section>

@@ -3,6 +3,7 @@ import { env } from '../config/env.js'
 import { prisma } from '../lib/prisma.js'
 import { getLearningStreakSnapshot } from './activityStreak.service.js'
 import { ensureReferralCode, normalizeReferralCode, referralSummary, settleReferrals, INVITEE_BONUS_DAYS, REFERRAL_TIERS } from './referral.service.js'
+import { issuePromoCode } from './promo.service.js'
 import { wordOfDay } from './telegramWords.js'
 
 const TIME_ZONE = 'Asia/Tashkent'
@@ -12,8 +13,9 @@ const siteUrl = () => (env.TELEGRAM_SITE_URL || env.BILLING_SITE_URL).replace(/\
 
 type TgUser = { id: number; username?: string }
 type TgMessage = { chat: { id: number; type: string }; from?: TgUser; text?: string }
-export type TgUpdate = { update_id: number; message?: TgMessage }
-type Keyboard = Array<Array<{ text: string; url: string }>>
+type TgCallback = { id: string; from: TgUser; data?: string; message?: { chat: { id: number } } }
+export type TgUpdate = { update_id: number; message?: TgMessage; callback_query?: TgCallback }
+type Keyboard = Array<Array<{ text: string; url?: string; callback_data?: string }>>
 
 export const telegramEnabled = () => Boolean(env.TELEGRAM_BOT_TOKEN.trim())
 
@@ -62,20 +64,21 @@ const tashkentHour = (date: Date) => Number(new Intl.DateTimeFormat('en-GB', { t
 export const inviteLink = (code: string) => `${siteUrl()}/register?ref=${code}`
 export const botInviteLink = (code: string) => `https://t.me/${env.TELEGRAM_BOT_USERNAME}?start=ref_${code}`
 
-export async function createLinkCode(userId: string) {
+export async function createLinkCode(userId: string, purpose: 'link' | 'promo' = 'link') {
   await prisma.telegramLinkCode.deleteMany({ where: { OR: [{ userId }, { expiresAt: { lt: new Date() } }] } })
   const code = crypto.randomBytes(5).toString('hex').toUpperCase()
   const expiresAt = new Date(Date.now() + LINK_CODE_TTL_MS)
   await prisma.telegramLinkCode.create({ data: { code, userId, expiresAt } })
-  return { code, expiresAt, url: `https://t.me/${env.TELEGRAM_BOT_USERNAME}?start=link_${code}` }
+  return { code, expiresAt, url: `https://t.me/${env.TELEGRAM_BOT_USERNAME}?start=${purpose}_${code}` }
 }
 
-async function linkAccount(message: TgMessage, rawCode: string) {
+async function linkAccount(message: TgMessage, rawCode: string, announce = true) {
   const chatId = String(message.chat.id)
   const code = rawCode.trim().toUpperCase()
   const record = await prisma.telegramLinkCode.findUnique({ where: { code } })
   if (!record || record.expiresAt < new Date()) {
-    return send(chatId, '⚠️ Kod noto\'g\'ri yoki muddati tugagan. Saytdagi <b>Hisob → Telegram</b> bo\'limidan yangi kod oling.')
+    await send(chatId, '⚠️ Havola muddati tugagan. Saytdagi <b>Premium → Promokod</b> yoki <b>Hisob → Telegram</b> bo\'limidan yangisini oling.')
+    return null
   }
   await prisma.$transaction([
     prisma.telegramLink.deleteMany({ where: { OR: [{ userId: record.userId }, { chatId }] } }),
@@ -83,11 +86,45 @@ async function linkAccount(message: TgMessage, rawCode: string) {
     prisma.telegramLinkCode.delete({ where: { code } }),
   ])
   await settleReferrals(record.userId).catch(() => undefined)
-  return send(chatId, '✅ <b>Hisobingiz ulandi!</b>\n\nEndi har kuni yangi so\'z, streak eslatmasi va mukofotlar haqida xabar olasiz.\n\n/word — bugungi so\'z\n/streak — streakingiz\n/invite — do\'st taklif qilish\n/help — barcha buyruqlar', [[{ text: 'Saytni ochish', url: `${siteUrl()}/dashboard` }]])
+  if (!announce) return record.userId
+  await send(chatId, '✅ <b>Hisobingiz ulandi!</b>\n\nEndi har kuni yangi so\'z, streak eslatmasi va mukofotlar haqida xabar olasiz.\n\n/word — bugungi so\'z\n/streak — streakingiz\n/invite — do\'st taklif qilish\n/help — barcha buyruqlar', [[{ text: 'Saytni ochish', url: `${siteUrl()}/dashboard` }]])
+  return record.userId
+}
+
+async function isChannelMember(telegramUserId: number) {
+  try {
+    const member = await call<{ status: string; is_member?: boolean }>('getChatMember', { chat_id: env.TELEGRAM_CHANNEL, user_id: telegramUserId })
+    if (!member) return null
+    return ['creator', 'administrator', 'member'].includes(member.status) || (member.status === 'restricted' && member.is_member === true)
+  } catch (error) {
+    // The bot must be an administrator of the channel to read its member list.
+    console.error('Telegram channel check failed:', error instanceof Error ? error.message : error)
+    return null
+  }
+}
+
+async function sendPromoFlow(chatId: string, userId: string, telegramUserId: number) {
+  const member = await isChannelMember(telegramUserId)
+  if (member === null) {
+    return send(chatId, '⚠️ Obunani hozir tekshirib bo\'lmadi. Birozdan keyin qayta urinib ko\'ring.', [[{ text: '🔄 Qayta tekshirish', callback_data: 'promo_check' }]])
+  }
+  if (!member) {
+    return send(chatId, '🎁 <b>Promokod olish</b>\n\nPromokod olish uchun avval rasmiy kanalimizga obuna bo\'ling, so\'ng "Tekshirish" tugmasini bosing.', [
+      [{ text: '📣 Kanalga obuna bo\'lish', url: env.TELEGRAM_CHANNEL_URL }],
+      [{ text: '✅ Obuna bo\'ldim, tekshirish', callback_data: 'promo_check' }],
+    ])
+  }
+  const promo = await issuePromoCode(userId)
+  if (promo.redeemedAt) {
+    return send(chatId, `ℹ️ Promokodingiz <code>${promo.code}</code> allaqachon ishlatilgan. Do'stlarni taklif qilib yana bepul kunlar oling: /invite`)
+  }
+  return send(chatId, `🎉 <b>Promokodingiz tayyor!</b>\n\n<code>${promo.code}</code>\n\nUni saytda <b>Premium → Promokod</b> bo'limiga kiriting va <b>+${promo.days} kun</b> bepul premium oling.`,
+    [[{ text: 'Saytda ishlatish', url: `${siteUrl()}/premium?promo=${promo.code}` }]])
 }
 
 const HELP = [
   '<b>Buyruqlar</b>',
+  '/promo — promokod olish (kanalga obuna kerak)',
   '/word — bugungi so\'z',
   '/streak — streak holatingiz',
   '/invite — do\'stlarni taklif qilish',
@@ -117,7 +154,13 @@ async function handleCommand(message: TgMessage) {
   const link = await prisma.telegramLink.findUnique({ where: { chatId }, select: { userId: true } })
 
   if (command === '/start') {
-    if (argument.startsWith('link_')) return linkAccount(message, argument.slice(5))
+    if (argument.startsWith('link_')) { await linkAccount(message, argument.slice(5)); return }
+    if (argument.startsWith('promo_')) {
+      const userId = await linkAccount(message, argument.slice(6), false)
+      if (userId && message.from) await sendPromoFlow(chatId, userId, message.from.id)
+      return
+    }
+    if (argument === 'promo' && link && message.from) return sendPromoFlow(chatId, link.userId, message.from.id)
     const referral = argument.startsWith('ref_') ? normalizeReferralCode(argument.slice(4)) : ''
     const url = referral ? inviteLink(referral) : `${siteUrl()}/register`
     const intro = referral
@@ -127,6 +170,10 @@ async function handleCommand(message: TgMessage) {
       [[{ text: referral ? 'Ro\'yxatdan o\'tish' : 'Saytni ochish', url }]])
   }
   if (command === '/help') return send(chatId, HELP)
+  if (command === '/promo') {
+    if (!link || !message.from) return send(chatId, '🔗 Promokod olish uchun avval hisobingizni ulang: saytda <b>Premium → Promokod</b> tugmasini bosing.', [[{ text: 'Premium sahifasi', url: `${siteUrl()}/premium` }]])
+    return sendPromoFlow(chatId, link.userId, message.from.id)
+  }
   if (command === '/word') return send(chatId, wordMessage(), [[{ text: 'Lug\'at mashqlari', url: `${siteUrl()}/vocabulary` }]])
   if (command === '/free') {
     return send(chatId, '🎓 <b>Bepul materiallar</b>\n\n• IELTS Reading, Listening, Writing va Speaking testlari\n• SAT savollar banki\n• Maqolalar va lug\'at mashqlari\n• Podcast va Shadowing\n\nBirortasini tanlang 👇', [
@@ -172,7 +219,23 @@ async function handleCommand(message: TgMessage) {
   return send(chatId, 'Buyruqlar ro\'yxati: /help')
 }
 
+async function handleCallback(query: TgCallback) {
+  await call('answerCallbackQuery', { callback_query_id: query.id }).catch(() => undefined)
+  const chatId = query.message?.chat.id
+  if (!chatId || query.data !== 'promo_check') return
+  const link = await prisma.telegramLink.findUnique({ where: { chatId: String(chatId) }, select: { userId: true } })
+  if (!link) {
+    await send(chatId, '🔗 Avval hisobingizni ulang: saytda <b>Premium → Promokod</b> tugmasini bosing.')
+    return
+  }
+  await sendPromoFlow(String(chatId), link.userId, query.from.id)
+}
+
 export async function handleUpdate(update: TgUpdate) {
+  if (update.callback_query) {
+    try { await handleCallback(update.callback_query) } catch (error) { console.error('Telegram callback failed:', error instanceof Error ? error.message : error) }
+    return
+  }
   const message = update.message
   if (!message?.text || message.chat.type !== 'private') return
   try {
@@ -230,6 +293,7 @@ export async function startTelegramBot() {
   if (started || !telegramEnabled()) return
   started = true
   await call('setMyCommands', { commands: [
+    { command: 'promo', description: 'Promokod olish' },
     { command: 'word', description: 'Bugungi so\'z' },
     { command: 'streak', description: 'Streak holatim' },
     { command: 'invite', description: 'Do\'st taklif qilish va mukofot' },
@@ -239,7 +303,7 @@ export async function startTelegramBot() {
   ] }).catch(() => undefined)
 
   if (env.TELEGRAM_WEBHOOK_URL.trim()) {
-    await call('setWebhook', { url: env.TELEGRAM_WEBHOOK_URL.trim(), allowed_updates: ['message'], ...(env.TELEGRAM_WEBHOOK_SECRET ? { secret_token: env.TELEGRAM_WEBHOOK_SECRET } : {}) })
+    await call('setWebhook', { url: env.TELEGRAM_WEBHOOK_URL.trim(), allowed_updates: ['message', 'callback_query'], ...(env.TELEGRAM_WEBHOOK_SECRET ? { secret_token: env.TELEGRAM_WEBHOOK_SECRET } : {}) })
     console.log('Telegram bot: webhook mode')
   } else {
     await call('deleteWebhook', {}).catch(() => undefined)
@@ -256,7 +320,7 @@ async function poll() {
   let offset = 0
   for (;;) {
     try {
-      const updates = await call<TgUpdate[]>('getUpdates', { offset, timeout: 25, allowed_updates: ['message'] }, AbortSignal.timeout(40_000))
+      const updates = await call<TgUpdate[]>('getUpdates', { offset, timeout: 25, allowed_updates: ['message', 'callback_query'] }, AbortSignal.timeout(40_000))
       for (const update of updates ?? []) {
         offset = update.update_id + 1
         await handleUpdate(update)

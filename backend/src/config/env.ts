@@ -68,6 +68,9 @@ const envSchema = z.object({
   TELEGRAM_WEBHOOK_URL: z.string().default(''),
   TELEGRAM_WEBHOOK_SECRET: z.string().default(''),
   TELEGRAM_SITE_URL: z.string().default(''),
+  TELEGRAM_CHANNEL: z.string().default('@IvyGoo'),
+  TELEGRAM_CHANNEL_URL: z.string().default('https://t.me/IvyGoo'),
+  TELEGRAM_PROMO_DAYS: z.coerce.number().int().min(1).max(365).default(7),
 })
 
 export const env = envSchema.parse(process.env)

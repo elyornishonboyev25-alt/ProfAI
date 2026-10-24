@@ -139,8 +139,8 @@ const uz = {
     word: 'Bugungi so‘z', streak: 'Streak holatim', language: 'Tilni o‘zgartirish', help: 'Yordam',
   },
   menuButton: '🎡 Baraban',
-  description: 'Ivygoo — IELTS va SAT tayyorgarligi uchun yordamchingiz.\n\n🎡 Kanalga obuna bo‘ling va 50% gacha chegirma yuting\n👥 5+ kishi bo‘lib arzonroq oling\n🎁 Do‘st taklif qiling — bepul Premium kunlar\n📚 Har kuni yangi so‘z va streak eslatmasi',
-  shortDescription: 'IELTS va SAT tayyorgarligi: chegirma barabani, guruh narxlari va har kungi so‘z.',
+  description: '🎓 Ivygoo — chet el universitetlariga yo‘lingiz IELTS va SAT’dan boshlanadi.\n\n🎡 Chegirma barabani — kanalga obuna bo‘ling va Premium’ga 50% gacha chegirma yuting\n👥 Guruh narxi — 5+ do‘st bilan birga oling, har biringizga arzonroq\n🎁 Do‘st taklif qiling — har biri uchun bepul Premium kunlar\n📚 Har kuni yangi akademik so‘z va 🔥 streak eslatmasi\n\n🚀 Boshlash uchun «Start» tugmasini bosing 👇',
+  shortDescription: '🎓 IELTS va SAT’ga aqlli tayyorgarlik ✨ 🎡 50% gacha chegirma · 👥 Guruh narxlari · 🎁 Bepul Premium kunlar',
 }
 
 type Messages = typeof uz
@@ -256,8 +256,8 @@ const ru: Messages = {
     word: 'Слово дня', streak: 'Моя серия', language: 'Сменить язык', help: 'Помощь',
   },
   menuButton: '🎡 Колесо',
-  description: 'Ivygoo — ваш помощник в подготовке к IELTS и SAT.\n\n🎡 Подпишитесь на канал и выиграйте скидку до 50%\n👥 Покупайте группой от 5 человек — дешевле\n🎁 Приглашайте друзей — бесплатные дни Premium\n📚 Слово дня и напоминания о серии',
-  shortDescription: 'Подготовка к IELTS и SAT: колесо скидок, групповые цены и слово дня.',
+  description: '🎓 Ivygoo — ваш путь в зарубежные университеты начинается с IELTS и SAT.\n\n🎡 Колесо скидок — подпишитесь на канал и выиграйте до 50% на Premium\n👥 Групповая цена — берите вместе от 5 человек, каждому дешевле\n🎁 Приглашайте друзей — бесплатные дни Premium за каждого\n📚 Новое академическое слово каждый день и 🔥 напоминания о серии\n\n🚀 Нажмите «Start», чтобы начать 👇',
+  shortDescription: '🎓 Умная подготовка к IELTS и SAT ✨ 🎡 Скидка до 50% · 👥 Групповые цены · 🎁 Бесплатные дни Premium',
 }
 
 const en: Messages = {
@@ -371,8 +371,8 @@ const en: Messages = {
     word: 'Word of the day', streak: 'My streak', language: 'Change language', help: 'Help',
   },
   menuButton: '🎡 Wheel',
-  description: 'Ivygoo — your IELTS and SAT preparation companion.\n\n🎡 Join our channel and win up to 50% off\n👥 Buy as a group of 5+ and pay less\n🎁 Invite friends — free Premium days\n📚 A daily word and streak reminders',
-  shortDescription: 'IELTS and SAT prep: discount wheel, group prices and a daily word.',
+  description: '🎓 Ivygoo — your road to top universities abroad starts with IELTS and SAT.\n\n🎡 Discount wheel — follow our channel and win up to 50% off Premium\n👥 Group price — join with 5+ friends and everyone pays less\n🎁 Invite friends — free Premium days for every friend\n📚 A new academic word every day and 🔥 streak reminders\n\n🚀 Tap «Start» to begin 👇',
+  shortDescription: '🎓 Smart IELTS & SAT prep ✨ 🎡 Win up to 50% off · 👥 Group prices · 🎁 Free Premium days',
 }
 
 const MESSAGES: Record<Lang, Messages> = { uz, ru, en }

@@ -2,6 +2,8 @@ import LandingPlans from '@/features/billing/LandingPlans'
 import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from 'react'
 import { motion, useInView, useReducedMotion, useScroll, useSpring } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
+import Lenis from 'lenis'
+import 'lenis/dist/lenis.css'
 import { useTranslation } from 'react-i18next'
 import { ArrowRight, ArrowUpRight, Check, ChevronDown, Flame, Menu, Send, ShieldCheck, Sparkles, Target, X } from 'lucide-react'
 import { BrandLogo } from '@/components/brand/BrandLogo'
@@ -17,7 +19,7 @@ import '@/styles/landing-showcase.css'
 const SUPPORT_TELEGRAM = 'https://t.me/nishonboyev7'
 const EASE = [0.22, 1, 0.36, 1] as const
 const ZOOM = 1.18
-const STEP_MS = 4200
+const STEP_MS = 5600
 const faqs = [
   { question: 'Can I prepare for both IELTS and SAT?', answer: 'Yes. Both exam arenas live in one account, with practice, full tests, results and review.' },
   { question: 'Is Ivygoo free to use?', answer: 'Yes. The Free plan is $0 forever, with monthly IELTS, SAT and AI allowances. Pro is $5.99/month and Max is $11.99/month for more tests, mocks and AI feedback. Classes require a paid plan. Saved results and vocabulary stay available.' },
@@ -91,7 +93,7 @@ function Hero({ onStart, onExplore }: { onStart: () => void; onExplore: () => vo
         <motion.div className="lx-hero-trust" {...rise(.32)}>
           <span><Check size={15} /> {t(['IELTS Academic & General', 'IELTS Academic va General', 'IELTS Academic и General'])}</span>
           <span><Check size={15} /> Digital SAT</span>
-          <span><Check size={15} /> {t(['7 days free · $0', '7 kun bepul · $0', '7 дней бесплатно · $0'])}</span>
+          <span><Check size={15} /> {t(['Free plan · $0', 'Bepul tarif · $0', 'Бесплатный тариф · $0'])}</span>
         </motion.div>
       </div>
       <motion.div className="lx-hero-stage" initial={reducedMotion ? false : { opacity: 0, rotateY: -18, rotateX: 8, y: 50 }} animate={{ opacity: 1, rotateY: -6, rotateX: 3, y: 0 }} transition={{ duration: 1.1, delay: .15, ease: EASE }}>
@@ -161,7 +163,7 @@ function FeatureScreen({ feature, index, onStart }: { feature: TourFeature; inde
   const t = useLandingText()
   const reducedMotion = useReducedMotion()
   const ref = useRef<HTMLDivElement>(null)
-  const inView = useInView(ref, { amount: .5 })
+  const inView = useInView(ref, { amount: .35 })
   const count = feature.steps.length
   const [active, setActive] = useState(0)
   const [paused, setPaused] = useState(false)
@@ -179,7 +181,7 @@ function FeatureScreen({ feature, index, onStart }: { feature: TourFeature; inde
   // The screenshot magnifies around the active hotspot; other markers follow the same transform.
   const scale = reducedMotion ? 1 : ZOOM
   const zoomed = (point: number, origin: number) => origin + (point - origin) * scale
-  const zoom = { '--lx-zoom-x': `${step.x}%`, '--lx-zoom-y': `${step.y}%`, '--lx-zoom': scale } as CSSProperties
+  const zoom = { '--lx-tx': `${(1 - scale) * step.x}%`, '--lx-ty': `${(1 - scale) * step.y}%`, '--lx-zoom': scale } as CSSProperties
 
   return <Screen id={`tour-${feature.id}`} label={t(feature.label)} className={`lx-feature ${flipped ? 'is-flipped' : ''}`}>
     <div className="lx-feature-inner">
@@ -197,9 +199,9 @@ function FeatureScreen({ feature, index, onStart }: { feature: TourFeature; inde
         <motion.div className="lx-feature-stage" initial={reducedMotion ? false : { opacity: 0, y: 70, rotateY: flipped ? 16 : -16, rotateX: 6, scale: .92 }} animate={inView || reducedMotion ? { opacity: 1, y: 0, rotateY: 0, rotateX: 0, scale: 1 } : undefined} transition={{ duration: 1.05, ease: EASE }}>
           <BrowserFrame src={feature.image} alt={t(feature.alt)} address={feature.address} className="lx-tour-frame" style={zoom}>
             <div className="lx-hotspots" aria-hidden="true">
-              {feature.steps.map((item, stepIndex) => <button key={stepIndex} type="button" tabIndex={-1} className={`lx-hotspot ${stepIndex === active ? 'is-active' : ''}`} style={{ left: `${zoomed(item.x, step.x)}%`, top: `${zoomed(item.y, step.y)}%` }} onClick={() => setActive(stepIndex)}>
+              {feature.steps.map((item, stepIndex) => <span key={stepIndex} className="lx-hotspot-layer" style={{ transform: `translate(${zoomed(item.x, step.x)}%, ${zoomed(item.y, step.y)}%)` }}><button type="button" tabIndex={-1} className={`lx-hotspot ${stepIndex === active ? 'is-active' : ''}`} onClick={() => setActive(stepIndex)}>
                 <i />
-              </button>)}
+              </button></span>)}
               <div className={`lx-hotspot-anchor ${step.x > 58 ? 'is-left' : ''} ${step.y > 62 ? 'is-up' : ''}`} style={{ left: `${step.x}%`, top: `${step.y}%` }}>
                 <motion.div key={active} className="lx-hotspot-card" initial={reducedMotion ? false : { opacity: 0, y: 8, scale: .94 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: .4, delay: reducedMotion ? 0 : .25, ease: EASE }}>
                   <strong>{t(step.title)}</strong><small>{t(step.body)}</small>
@@ -243,21 +245,44 @@ export default function Landing() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(0)
   const [scrolled, setScrolled] = useState(false)
+  const lenis = useRef<Lenis | null>(null)
   const { scrollYProgress } = useScroll()
   const progress = useSpring(scrollYProgress, { stiffness: 140, damping: 30, mass: .3 })
 
   useEffect(() => {
+    // Only crossing the threshold re-renders the page; every scroll frame used to re-render the whole landing.
     let frame = 0
-    const update = () => { frame = 0; setScrolled(window.scrollY > 16) }
+    let current: boolean | null = null
+    const update = () => {
+      frame = 0
+      const next = window.scrollY > 16
+      if (next !== current) { current = next; setScrolled(next) }
+    }
     const onScroll = () => { if (!frame) frame = window.requestAnimationFrame(update) }
     update()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => { window.removeEventListener('scroll', onScroll); window.cancelAnimationFrame(frame) }
   }, [])
+  // A gentler wheel: inertia and a slightly shorter step give revealed content time to be read. Touch stays native.
+  useEffect(() => {
+    if (reducedMotion || !window.matchMedia('(pointer: fine)').matches) return
+    const instance = new Lenis({ lerp: .085, wheelMultiplier: .8, autoRaf: true, anchors: true, allowNestedScroll: true })
+    lenis.current = instance
+    return () => { instance.destroy(); lenis.current = null }
+  }, [reducedMotion])
+  // Decorative loops only run in the chapters on screen.
+  useEffect(() => {
+    const observer = new IntersectionObserver(entries => entries.forEach(entry => entry.target.toggleAttribute('data-live', entry.isIntersecting)), { rootMargin: '10% 0px' })
+    document.querySelectorAll('.lx-screen').forEach(screen => observer.observe(screen))
+    return () => observer.disconnect()
+  }, [])
   const start = () => navigate('/register')
   const scrollTo = (id: string) => {
     setMobileMenuOpen(false)
-    document.getElementById(id)?.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' })
+    const target = document.getElementById(id)
+    if (!target) return
+    if (lenis.current) lenis.current.scrollTo(target, { duration: 1.4 })
+    else target.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' })
   }
   const navItems: { label: string; id: string }[] = [
     { label: c('IELTS & SAT'), id: 'inside' },

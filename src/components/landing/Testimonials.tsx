@@ -215,6 +215,8 @@ function TestimonialMarquee({ reviews, dialogOpen }: { reviews: DisplayReview[];
   const [interacting, setInteracting] = useState(false)
   const [detail, setDetail] = useState<DisplayReview | null>(null)
   const [pageVisible, setPageVisible] = useState(() => typeof document === 'undefined' || !document.hidden)
+  const [onScreen, setOnScreen] = useState(false)
+  const marquee = useRef<HTMLDivElement>(null)
   const topTrack = useRef<HTMLDivElement>(null)
   const bottomTrack = useRef<HTMLDivElement>(null)
   const topGroup = useRef<HTMLDivElement>(null)
@@ -233,9 +235,17 @@ function TestimonialMarquee({ reviews, dialogOpen }: { reviews: DisplayReview[];
     return () => document.removeEventListener('visibilitychange', update)
   }, [])
   useEffect(() => () => { if (interactionTimer.current !== null) window.clearTimeout(interactionTimer.current) }, [])
+  // The flow loop only runs while the wall is near the viewport; off-screen it would restyle the tracks every frame.
+  useEffect(() => {
+    const node = marquee.current
+    if (!node) return
+    const observer = new IntersectionObserver(([entry]) => setOnScreen(entry.isIntersecting), { rootMargin: '120px 0px' })
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
-    if (!flowing) return
+    if (!flowing || !onScreen) return
     const top = topTrack.current
     const bottom = bottomTrack.current
     const firstTop = topGroup.current
@@ -279,7 +289,7 @@ function TestimonialMarquee({ reviews, dialogOpen }: { reviews: DisplayReview[];
     }
     frame = requestAnimationFrame(tick)
     return () => { cancelAnimationFrame(frame); observer.disconnect(); phase.current.last = 0 }
-  }, [active, flowing, reviews.length])
+  }, [active, flowing, onScreen, reviews.length])
 
   function nudge(direction: number) {
     const topCard = topGroup.current?.querySelector<HTMLElement>('.landing-reviews-marquee-card')
@@ -310,7 +320,7 @@ function TestimonialMarquee({ reviews, dialogOpen }: { reviews: DisplayReview[];
 
   if (!flowing) return <><div className="landing-reviews-static">{reviews.map(review => <ReviewCard key={review.id} review={review} onRead={setDetail} />)}</div>{detail && <ReviewDetailDialog review={detail} onClose={() => setDetail(null)} />}</>
 
-  return <div className="landing-reviews-marquee" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onFocusCapture={() => setFocused(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setFocused(false) }} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} onKeyDown={event => { if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') { event.preventDefault(); nudge(event.key === 'ArrowRight' ? 1 : -1) } }}>
+  return <div ref={marquee} className="landing-reviews-marquee" onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onFocusCapture={() => setFocused(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget as Node)) setFocused(false) }} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} onKeyDown={event => { if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') { event.preventDefault(); nudge(event.key === 'ArrowRight' ? 1 : -1) } }}>
     {rows.map((row, rowIndex) => <div className="landing-reviews-marquee-lane" key={rowIndex} role="group" aria-label={`${c('What learners are saying')} ${rowIndex + 1}`}>
       <div className="landing-reviews-marquee-track" ref={rowIndex === 0 ? topTrack : bottomTrack}>
         {[false, true].map(duplicate => <div key={String(duplicate)} className="landing-reviews-marquee-group" ref={!duplicate ? rowIndex === 0 ? topGroup : bottomGroup : undefined} aria-hidden={duplicate || undefined}>

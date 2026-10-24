@@ -127,18 +127,21 @@
 .lx-browser-view { position: relative; aspect-ratio: 16 / 10; overflow: hidden; background: #eef0f3; }
 .lx-browser-view img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top left; user-select: none; }
 
-.lx-float { position: absolute; display: flex; align-items: center; gap: 10px; padding: 11px 15px; border: 1px solid var(--lx-glass-edge); border-radius: 16px; background: linear-gradient(140deg, rgba(255, 255, 255, .9), rgba(236, 238, 242, .74)); box-shadow: 0 22px 40px -18px rgba(25, 32, 46, .42), inset 0 1px 0 #fff; -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); animation: lx-bob 6s ease-in-out infinite; transform: translateZ(60px); }
+/* Hero badges stay compact and opaque: a translucent badge let the red dashboard UI behind it bleed through. */
+.lx-float { position: absolute; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--lx-glass-edge); border-radius: 13px; background: linear-gradient(140deg, #fff, #eef0f4); box-shadow: 0 18px 34px -16px rgba(25, 32, 46, .45), inset 0 1px 0 #fff; transform: translateZ(60px); user-select: none; }
+.lx-screen[data-live] .lx-float { animation: lx-bob 6s ease-in-out infinite; }
 .lx-float > svg { color: var(--lx-red); flex: 0 0 auto; }
 .lx-float span { display: grid; line-height: 1.15; }
-.lx-float small { color: var(--lx-muted); font-size: 11px; font-weight: 600; }
-.lx-float strong { color: var(--lx-ink); font-size: 17px; font-weight: 750; }
-.lx-float-a { left: -26px; top: 18%; }
+.lx-float small { color: var(--lx-muted); font-size: 10.5px; font-weight: 600; }
+.lx-float strong { color: var(--lx-ink); font-size: 15px; font-weight: 750; }
+.lx-float > svg { width: 15px; height: 15px; }
+.lx-float-a { left: -26px; top: 42%; }
 .lx-float-b { right: -18px; top: 46%; animation-delay: -2s; }
-.lx-float-b svg { width: 40px; height: 40px; transform: rotate(-90deg); }
+.lx-float-b > svg { width: 32px; height: 32px; transform: rotate(-90deg); }
 .lx-float-b circle { fill: none; stroke: rgba(124, 132, 146, .22); stroke-width: 4.5; }
 .lx-float-b circle + circle { stroke: var(--lx-red); stroke-linecap: round; }
 .lx-float-c { left: 14%; bottom: -20px; animation-delay: -4s; }
-@keyframes lx-bob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -10px; } }
+@keyframes lx-bob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -6px; } }
 
 .lx-exam-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(16px, 2vw, 26px); width: min(1320px, 100%); margin: 0 auto; }
 .lx-exam-card { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .95fr); align-items: center; gap: 12px; min-height: clamp(190px, 25vh, 250px); padding: clamp(18px, 2.2vw, 28px) clamp(20px, 2.6vw, 34px); border-radius: 24px; transition: transform .35s ease, box-shadow .35s ease; }
@@ -149,7 +152,8 @@
 .lx-silver-object { width: 100%; max-width: 330px; height: auto; max-height: 24vh; filter: drop-shadow(0 22px 26px rgba(25, 32, 46, .22)); transition: transform .6s cubic-bezier(.22, 1, .36, 1); }
 .lx-exam-card:hover .lx-silver-object { transform: translateY(-6px) rotate(-1.5deg) scale(1.03); }
 .lx-scroll-cue { position: absolute; left: 50%; bottom: 14px; width: 26px; height: 40px; border: 2px solid rgba(92, 100, 114, .45); border-radius: 14px; transform: translateX(-50%); }
-.lx-scroll-cue span { position: absolute; left: 50%; top: 8px; width: 4px; height: 8px; border-radius: 4px; background: var(--lx-red); transform: translateX(-50%); animation: lx-cue 1.8s ease-in-out infinite; }
+.lx-scroll-cue span { position: absolute; left: 50%; top: 8px; width: 4px; height: 8px; border-radius: 4px; background: var(--lx-red); transform: translateX(-50%); }
+.lx-screen[data-live] .lx-scroll-cue span { animation: lx-cue 1.8s ease-in-out infinite; }
 @keyframes lx-cue { 0% { opacity: 0; translate: 0 0; } 30% { opacity: 1; } 100% { opacity: 0; translate: 0 14px; } }
 
 /* Inside ProfAI */
@@ -198,17 +202,21 @@
 
 .lx-feature-stage { position: relative; transform-style: preserve-3d; }
 .lx-tour-frame { box-shadow: 0 60px 100px -38px rgba(25, 32, 46, .5), 0 0 0 1px rgba(255, 255, 255, .7), inset 0 1px 0 #fff; }
-.lx-tour-frame .lx-browser-view img { transform-origin: var(--lx-zoom-x) var(--lx-zoom-y); transform: scale(var(--lx-zoom)); transition: transform-origin 1.1s cubic-bezier(.22, 1, .36, 1), transform 1.1s cubic-bezier(.22, 1, .36, 1); }
+/* Zoom with translate + scale from a fixed origin so the move stays on the compositor (animating transform-origin repaints every frame). */
+.lx-tour-frame .lx-browser-view img { transform-origin: 0 0; transform: translate(var(--lx-tx, 0), var(--lx-ty, 0)) scale(var(--lx-zoom, 1)); transition: transform 1.3s cubic-bezier(.22, 1, .36, 1); }
 .lx-hotspots { position: absolute; inset: 0; }
-.lx-hotspot { position: absolute; display: grid; place-items: center; box-sizing: border-box; min-width: 0; min-height: 0; width: 16px; height: 16px; margin: -8px 0 0 -8px; padding: 0; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .94); box-shadow: 0 0 0 1px rgba(25, 32, 46, .1), 0 6px 14px -4px rgba(25, 32, 46, .55); cursor: pointer; transition: left 1.1s cubic-bezier(.22, 1, .36, 1), top 1.1s cubic-bezier(.22, 1, .36, 1), width .35s ease, height .35s ease, margin .35s ease, box-shadow .35s ease; }
+/* Each marker rides a full-size layer: translating the layer by % moves the marker across the frame without layout. */
+.lx-hotspot-layer { position: absolute; inset: 0; pointer-events: none; transition: transform 1.3s cubic-bezier(.22, 1, .36, 1); }
+.lx-hotspot { position: absolute; display: grid; place-items: center; box-sizing: border-box; min-width: 0; min-height: 0; width: 16px; height: 16px; margin: -8px 0 0 -8px; padding: 0; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .94); box-shadow: 0 0 0 1px rgba(25, 32, 46, .1), 0 6px 14px -4px rgba(25, 32, 46, .55); left: 0; top: 0; pointer-events: auto; cursor: pointer; transition: width .35s ease, height .35s ease, margin .35s ease, box-shadow .35s ease; }
 /* Beat the shell-wide 44px touch-target rule for these compact markers and list rows. */
 .lx-page .lx-hotspots .lx-hotspot, .lx-page .lx-steps li > button { min-width: 0; min-height: 0; }
 .lx-hotspot i { width: 6px; height: 6px; border-radius: 50%; background: rgba(211, 19, 47, .5); transition: background .35s ease, transform .35s ease; }
 .lx-hotspot:hover i { background: var(--lx-red); }
 .lx-hotspot.is-active { z-index: 2; width: 22px; height: 22px; margin: -11px 0 0 -11px; box-shadow: 0 0 0 6px rgba(225, 29, 52, .16), 0 10px 22px -6px rgba(206, 18, 46, .7); }
 .lx-hotspot.is-active i { background: var(--lx-red); transform: scale(1.5); }
-.lx-hotspot.is-active::before, .lx-hotspot.is-active::after { content: ""; position: absolute; inset: -3px; border-radius: 50%; border: 1.5px solid rgba(225, 29, 52, .5); animation: lx-ping 2.2s cubic-bezier(0, 0, .2, 1) infinite; }
-.lx-hotspot.is-active::after { animation-delay: 1.1s; }
+.lx-hotspot.is-active::before, .lx-hotspot.is-active::after { content: ""; position: absolute; inset: -3px; border-radius: 50%; border: 1.5px solid rgba(225, 29, 52, .5); opacity: 0; }
+.lx-screen[data-live] .lx-hotspot.is-active::before, .lx-screen[data-live] .lx-hotspot.is-active::after { animation: lx-ping 2.2s cubic-bezier(0, 0, .2, 1) infinite; }
+.lx-screen[data-live] .lx-hotspot.is-active::after { animation-delay: 1.1s; }
 @keyframes lx-ping { from { transform: scale(1); opacity: .9; } to { transform: scale(2.6); opacity: 0; } }
 .lx-hotspot-anchor { position: absolute; z-index: 3; width: 0; height: 0; pointer-events: none; }
 .lx-hotspot-card { position: absolute; left: 24px; top: 14px; display: grid; gap: 3px; width: max-content; max-width: min(260px, 40vw); padding: 11px 14px; border: 1px solid var(--lx-glass-edge); border-radius: 14px; background: linear-gradient(140deg, rgba(255, 255, 255, .95), rgba(240, 242, 246, .88)); box-shadow: 0 20px 40px -16px rgba(25, 32, 46, .5), inset 0 1px 0 #fff; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
@@ -216,7 +224,8 @@
 .lx-hotspot-anchor.is-up .lx-hotspot-card { top: auto; bottom: 14px; }
 .lx-hotspot-card strong { color: var(--lx-ink); font-size: 14px; font-weight: 750; }
 .lx-hotspot-card small { color: var(--lx-muted); font-size: 12.5px; line-height: 1.4; }
-.lx-float-shot { position: absolute; z-index: 4; right: -5%; bottom: -10%; width: 42%; margin: 0; overflow: hidden; border: 1px solid rgba(255, 255, 255, .95); border-radius: 14px; background: #fff; box-shadow: 0 40px 70px -26px rgba(25, 32, 46, .55), 0 0 0 5px rgba(255, 255, 255, .55); rotate: 3deg; animation: lx-bob 7s ease-in-out infinite; }
+.lx-float-shot { position: absolute; z-index: 4; right: -5%; bottom: -10%; width: 42%; margin: 0; overflow: hidden; border: 1px solid rgba(255, 255, 255, .95); border-radius: 14px; background: #fff; box-shadow: 0 40px 70px -26px rgba(25, 32, 46, .55), 0 0 0 5px rgba(255, 255, 255, .55); rotate: 3deg; }
+.lx-screen[data-live] .lx-float-shot { animation: lx-bob 7s ease-in-out infinite; }
 .lx-feature.is-flipped .lx-float-shot { right: auto; left: -5%; rotate: -3deg; }
 .lx-float-shot img { display: block; width: 100%; height: auto; }
 
@@ -329,8 +338,10 @@
   .lx-screen { padding-left: 16px; padding-right: 16px; }
   .lx-hero h1 { font-size: clamp(38px, 11vw, 52px); }
   .lx-hero-actions .lx-btn { flex: 1 1 100%; }
-  .lx-float { padding: 8px 11px; border-radius: 13px; }
-  .lx-float strong { font-size: 14px; }
+  .lx-float { gap: 6px; padding: 6px 10px; border-radius: 11px; }
+  .lx-float small { font-size: 9.5px; }
+  .lx-float strong { font-size: 13px; }
+  .lx-float-b > svg { width: 26px; height: 26px; }
   .lx-float-a { top: 6%; }
   .lx-float-c { display: none; }
   .lx-exam-card { grid-template-columns: minmax(0, 1fr); }
@@ -349,6 +360,6 @@
   .lx-feature-copy h2 { margin-bottom: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .lx-float, .lx-float-shot, .lx-scroll-cue span, .lx-hotspot.is-active::before, .lx-hotspot.is-active::after { animation: none; }
-  .lx-tour-frame .lx-browser-view img, .lx-hotspot, .lx-step-body { transition: none; }
+  .lx-page .lx-screen :is(.lx-float, .lx-float-shot, .lx-scroll-cue span), .lx-page .lx-screen .lx-hotspot.is-active::before, .lx-page .lx-screen .lx-hotspot.is-active::after { animation: none; }
+  .lx-tour-frame .lx-browser-view img, .lx-hotspot-layer, .lx-step-body { transition: none; }
 }

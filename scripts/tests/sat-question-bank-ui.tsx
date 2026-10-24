@@ -158,7 +158,7 @@ export async function run() {
   assert.equal(button('Marked for Review')?.getAttribute('aria-pressed'), 'true')
   assert.match(container.querySelector('.sat-bank-run-question-menu')!.textContent!, /1 marked/)
   await click(container.querySelector('[aria-controls="bank-question-navigator"]'))
-  assert.match(container.querySelector('.sat-bank-run-number')!.getAttribute('aria-label')!, /Marked for Review/)
+  assert.match(document.querySelector('.sat-bank-run-number')!.getAttribute('aria-label')!, /Marked for Review/)
   await click(document.querySelector('[aria-label="Close question navigator"]'))
   assert.equal(document.querySelector('[aria-label="Open Desmos calculator"]'), null)
   await highlight('context', 'amber')

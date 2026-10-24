@@ -7,61 +7,96 @@
   height: 100dvh;
   overflow: hidden;
   background: #f7f8fa;
-  color: #172337;
+  color: #151515;
 }
-.sat-bank-run button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; border: 1px solid #d9dfe8; border-radius: 12px; background: #fff; padding: 10px 14px; font-weight: 750; font-size: 13px; cursor: pointer; }
-.sat-bank-run button:disabled { opacity: .4; cursor: default; }
-.sat-bank-run button:focus-visible { outline: 3px solid #4053d7; outline-offset: 3px; }
-.sat-bank-run-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 88px; padding: 12px 24px; background: white; flex-shrink: 0; }
-.sat-bank-run-heading > span { font-size: 10px; font-weight: 850; letter-spacing: .12em; color: #67758b; }
-.sat-bank-run-heading h1 { font-size: 21px; font-weight: 850; margin: 1px 0; }
-.sat-bank-run-heading p { font-size: 12px; color: #65748b; margin: 0; }
-.sat-bank-run-tools { display: flex; gap: 8px; align-items: center; }
-.sat-bank-run .sat-bank-run-desmos { color: #21794d; background: #effaf4; border-color: #b6ddc8; }
-.sat-bank-run .sat-bank-run-desmos[aria-expanded='true'] { color: white; background: #21794d; }
-.sat-bank-run-progress { height: 3px; background: #e0e5ed; flex-shrink: 0; }
-.sat-bank-run-progress > span { display: block; height: 100%; background: #4053d7; transition: width .2s; }
-.sat-bank-run-viewport { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 20px 24px; }
-.sat-bank-run-meta { display: flex; justify-content: space-between; gap: 16px; margin: 0 auto 16px; max-width: 1400px; color: #65748b; font-size: 12px; }
-.sat-bank-run-viewport > .sat-exam-canvas, .sat-bank-run-viewport .sat-exam-canvas { min-height: 0; border-radius: 14px; overflow: hidden; }
-.sat-bank-run-viewport > div:last-child { max-width: 1400px; margin: 0 auto; }
-.sat-bank-run-footer { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 12px; min-height: 80px; border-top: 1px solid #dce3eb; padding: 14px 24px calc(14px + env(safe-area-inset-bottom)); background: white; }
-.sat-bank-run-navigation { display: flex; gap: 8px; }
-.sat-bank-run .sat-bank-run-primary { color: #fff; background: #4053d7; border-color: #4053d7; }
-.sat-bank-run-question-menu small { color: #65748b; font-size: 11px; }
-.sat-bank-run-error { background: #fff3df; color: #905c11; padding: 12px 24px; font-size: 13px; margin: 0; flex-shrink: 0; }
-.sat-bank-run-navigator { position: absolute; z-index: 80; bottom: calc(90px + env(safe-area-inset-bottom)); left: 24px; width: min(420px, calc(100vw - 32px)); max-height: calc(100dvh - 200px); overflow-y: auto; background: white; padding: 20px; border: 1px solid #dce3eb; border-radius: 20px; box-shadow: 0 20px 70px #17233730; }
-.sat-bank-run-navigator header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-.sat-bank-run-navigator h2 { margin: 0; font-size: 18px; font-weight: 850; }
-.sat-bank-run-navigator p { color: #65748b; font-size: 12px; margin: 8px 0 16px; }
-.sat-bank-run-question-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 10px; }
-.sat-bank-run .sat-bank-run-number { position: relative; padding: 8px; }
-.sat-bank-run-number.answered { background: #edf2ff; color: #4053d7; }
-.sat-bank-run-number[aria-current='step'] { outline: 2px solid #172337; outline-offset: 2px; }
-.sat-bank-run-mark { position: absolute; top: -5px; right: -4px; fill: #4053d7; color: #4053d7; }
+.sat-bank-run button:focus-visible, .sat-bank-run-overlay button:focus-visible { outline: 3px solid #4053d7; outline-offset: 3px; }
+.sat-bank-run-header { position: relative; z-index: 80; flex-shrink: 0; border-bottom: 1px solid #e2e8f0; background: #fff; }
+.sat-bank-run-header-content { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 8px 16px; max-width: 112rem; margin: 0 auto; padding: 12px 32px; }
+.sat-bank-run-heading { min-width: 0; font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif; }
+.sat-bank-run-heading h1 { overflow: hidden; margin: 0; color: #1e293b; font-family: inherit; font-size: 24px; line-height: 32px; font-weight: 700; white-space: nowrap; text-overflow: ellipsis; }
+.sat-bank-run-directions { margin-top: 2px; color: #2355ed; font-size: 16px; line-height: 24px; font-weight: 700; }
+.sat-bank-run-directions:hover { text-decoration: underline; }
+.sat-bank-run-status { text-align: center; }
+.sat-bank-run-status p { margin: 0; font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif; font-size: 20px; line-height: 28px; font-weight: 700; }
+.sat-bank-run-status span { color: #64748b; font-size: 11px; }
+.sat-bank-run-tools { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
+.sat-bank-run-tools button { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; gap: 8px; height: 48px; border-radius: 12px; padding: 0 8px; color: #334155; font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif; font-size: 14px; font-weight: 700; }
+.sat-bank-run-tools .sat-bank-run-navigator-toggle { width: 48px; background: #f1f5f9; color: #475569; }
+.sat-bank-run-tools .sat-bank-run-reference { padding: 0 16px; background: #f0f9ff; color: #075985; }
+.sat-bank-run-tools .sat-bank-run-reference:hover { background: #e0f2fe; }
+.sat-bank-run-tools .sat-bank-run-desmos { padding: 0 16px; background: #fef2f2; color: #b91c1c; }
+.sat-bank-run-tools .sat-bank-run-desmos:hover { background: #fee2e2; }
+.sat-bank-run-tools .sat-bank-run-desmos[aria-expanded='true'] { color: #fff; background: #dc2626; box-shadow: 0 8px 20px #dc262638; }
+.sat-bank-run-divider { height: 3px; flex-shrink: 0; background: repeating-linear-gradient(90deg, #ad3e5d 0 34px, transparent 34px 41px, #ead5c8 41px 75px, transparent 75px 82px, #21176b 82px 116px, transparent 116px 123px, #5e8c68 123px 157px, transparent 157px 164px); }
+.sat-bank-run-viewport { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; }
+.sat-bank-run-footer { position: relative; z-index: 70; flex-shrink: 0; background: #e7edf8; padding-bottom: env(safe-area-inset-bottom); }
+.sat-bank-run-footer-content { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 12px; min-height: 80px; max-width: 112rem; margin: 0 auto; padding: 8px 32px; }
+.sat-bank-run-learner { overflow: hidden; margin: 0; color: #1e293b; font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif; font-size: 18px; line-height: 28px; font-weight: 700; white-space: nowrap; text-overflow: ellipsis; }
+.sat-bank-run-question-menu { display: inline-flex; align-items: center; justify-content: center; gap: 12px; height: 48px; border-radius: 16px; background: #000; padding: 0 20px; color: #fff; font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif; font-size: 18px; font-weight: 700; }
+.sat-bank-run-navigation { display: flex; justify-content: flex-end; gap: 8px; }
+.sat-bank-run-navigation button { height: 48px; border-radius: 9999px; background: #4053d7; padding: 0 28px; color: #fff; font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif; font-size: 18px; font-weight: 700; }
+.sat-bank-run-navigation button:disabled { opacity: .5; cursor: not-allowed; }
+.sat-bank-run-navigation .sat-bank-run-finish { background: #000; font-size: 16px; }
+.sat-bank-run-error { flex-shrink: 0; background: #fff3df; color: #905c11; padding: 12px 24px; font-size: 13px; margin: 0; }
+.sat-bank-run-overlay { position: fixed; inset: 0; z-index: 180; display: flex; align-items: center; justify-content: center; background: #00000073; padding: 12px; color: #151515; }
+.sat-bank-run-dialog { width: 100%; max-width: 672px; max-height: 90dvh; overflow-y: auto; border: 1px solid #cbd5e1; border-radius: 16px; background: #fff; box-shadow: 0 25px 50px -12px #00000040; }
+.sat-bank-run-dialog > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid #cbd5e1; padding: 16px 20px; }
+.sat-bank-run-dialog > header p { margin: 0; color: #4053d7; font-size: 10px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
+.sat-bank-run-dialog h2 { margin: 4px 0 0; font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif; font-size: 20px; line-height: 28px; font-weight: 700; }
+.sat-bank-run-dialog > header button { display: flex; flex-shrink: 0; align-items: center; justify-content: center; width: 40px; height: 40px; border: 1px solid #cbd5e1; border-radius: 12px; color: #475569; }
+.sat-bank-run-directions-body { padding: 24px 28px; color: #334155; font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif; font-size: 18px; line-height: 28px; }
+.sat-bank-run-directions-body p + p { margin-top: 16px; }
+.sat-bank-run-directions-body .sat-bank-run-question-topic { color: #64748b; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 12px; line-height: 20px; }
+.sat-bank-run-navigator { display: flex; flex-direction: column; max-width: 768px; overflow: hidden; }
+.sat-bank-run-navigator-body { min-height: 0; overflow-y: auto; padding: 20px; }
+.sat-bank-run-question-grid { display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 8px; }
+.sat-bank-run-number { position: relative; aspect-ratio: 1; min-width: 0; border: 2px solid #94a3b8; border-radius: 12px; background: #fff; color: #334155; font-size: 12px; font-weight: 900; }
+.sat-bank-run-number.answered { border-color: #000; background: #000; color: #fff; }
+.sat-bank-run-number[aria-current='step'] { box-shadow: 0 0 0 4px #e0e7ff; }
+.sat-bank-run-mark { position: absolute; top: 4px; right: 4px; fill: #fbbf24; color: #f59e0b; }
+.sat-bank-run-navigator-body > p { margin: 20px 0 0; color: #64748b; font-size: 12px; }
+.sat-bank-run-navigator > footer { display: flex; flex-shrink: 0; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid #cbd5e1; background: #e7edf8; padding: 16px 20px; }
+.sat-bank-run-navigator > footer p { margin: 0; color: #64748b; font-size: 10px; font-weight: 700; }
+.sat-bank-run-primary { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; gap: 8px; border-radius: 9999px; background: #4053d7; padding: 10px 20px; color: #fff; font-size: 12px; font-weight: 900; }
 .sat-bank-run-missing { align-items: center; justify-content: center; gap: 16px; padding: 24px; text-align: center; }
-.sat-bank-run-missing h1 { font-size: 24px; font-weight: 850; }
-@media (min-width: 900px) { .sat-bank-run-viewport.with-desmos { padding-right: calc(clamp(320px, var(--sat-bank-desmos-width, 50vw), calc(100vw - 380px)) + 24px); } }
+.sat-bank-run-missing h1 { font-size: 24px; font-weight: 700; }
+.sat-bank-run-missing button { display: inline-flex; align-items: center; gap: 8px; border: 1px solid #cbd5e1; border-radius: 12px; background: #fff; padding: 12px 16px; }
+@media (min-width: 900px) { .sat-bank-run-viewport.with-desmos { padding-right: clamp(320px, var(--sat-bank-desmos-width, 50vw), calc(100vw - 380px)); } }
 @media (max-width: 899px) { .sat-bank-run-viewport.with-desmos { padding-bottom: calc(46dvh + 20px); } }
-@media (max-width: 640px) {
-  .sat-bank-run-header { min-height: 88px; gap: 8px; padding: 10px 12px; }
-  .sat-bank-run-heading h1 { font-size: 17px; }
-  .sat-bank-run-heading p { font-size: 10px; }
-  .sat-bank-run-tools { gap: 4px; }
-  .sat-bank-run-tools button { padding: 9px; }
-  .sat-bank-run-tools button span { display: none; }
-  .sat-bank-run-viewport { padding: 16px 12px; }
-  .sat-bank-run-meta { flex-wrap: wrap; gap: 5px; }
-  .sat-bank-run-footer { padding-left: 12px; padding-right: 12px; gap: 8px; }
-  .sat-bank-run-footer button { padding: 10px; font-size: 12px; }
-  .sat-bank-run-question-menu { flex-wrap: wrap; column-gap: 4px !important; max-width: 145px; }
-  .sat-bank-run-question-menu small { width: 100%; }
-  .sat-bank-run-navigation button svg { display: none; }
-  .sat-bank-run-navigator { left: 12px; }
+@media (max-width: 1599px) { .sat-bank-run-tools button[aria-label='Save and exit practice'] span { display: none; } }
+@media (max-width: 1439px) { .sat-bank-run-reference span { display: none; } }
+@media (max-width: 1279px) {
+  .sat-bank-run-status p { font-size: 18px; }
+  .sat-bank-run-tools { gap: 8px; }
+  .sat-bank-run-tools .sat-bank-run-desmos span { display: none; }
 }
-
-.sat-bank-run-viewport { background: #fff; }
-.sat-bank-run-meta,
-.sat-bank-run-viewport > div:last-child,
-.sat-bank-run-viewport > p { max-width: 860px; margin-left: auto; margin-right: auto; }
-.sat-bank-run-viewport .sat-exam-canvas.sat-bank-canvas { border-radius: 0; overflow: visible; }
+@media (max-width: 1023px) {
+  .sat-bank-run-header-content, .sat-bank-run-footer-content { padding-left: 24px; padding-right: 24px; }
+  .sat-bank-run-heading h1 { font-size: 20px; line-height: 28px; }
+  .sat-bank-run-header-content { grid-template-columns: minmax(0, 1fr) auto; }
+  .sat-bank-run-tools { grid-column: span 2; }
+}
+@media (max-width: 767px) {
+  .sat-bank-run-footer-content { grid-template-columns: minmax(0, 1fr) auto; }
+  .sat-bank-run-learner { display: none; }
+  .sat-bank-run-question-grid { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+}
+@media (max-width: 639px) {
+  .sat-bank-run-header-content, .sat-bank-run-footer-content { padding-left: 16px; padding-right: 16px; }
+  .sat-bank-run-heading h1 { font-size: 16px; line-height: 24px; }
+  .sat-bank-run-directions { font-size: 14px; line-height: 20px; }
+  .sat-bank-run-status p { font-size: 16px; line-height: 24px; }
+  .sat-bank-run-tools { gap: 4px; }
+  .sat-bank-run-tools button span { display: none; }
+  .sat-bank-run-tools .sat-bank-run-reference, .sat-bank-run-tools .sat-bank-run-desmos { padding: 0 12px; }
+  .sat-bank-run-question-menu { gap: 8px; padding: 0 12px; font-size: 14px; }
+  .sat-bank-run-navigation button { padding: 0 16px; font-size: 16px; }
+  .sat-bank-run-navigation .sat-bank-run-finish { padding: 0 12px; font-size: 14px; }
+  .sat-bank-run-footer-content { gap: 8px; }
+  .sat-bank-run-question-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+@media (max-width: 380px) {
+  .sat-bank-run-footer-content { padding-left: 12px; padding-right: 12px; }
+  .sat-bank-run-question-menu { gap: 6px; padding: 0 10px; font-size: 13px; }
+  .sat-bank-run-navigation button { padding: 0 12px; font-size: 14px; }
+}

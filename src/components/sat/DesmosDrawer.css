@@ -21,7 +21,7 @@
   .desmos-panel.desmos-bank.desmos-docked:not(.desmos-expanded) {
     left: auto !important;
     right: 0 !important;
-    top: 103px !important;
+    top: var(--sat-bank-desmos-top, 103px) !important;
     bottom: var(--sat-bank-desmos-bottom, 92px) !important;
     width: clamp(320px, var(--sat-bank-desmos-width, 50vw), calc(100vw - 380px)) !important;
     resize: none;

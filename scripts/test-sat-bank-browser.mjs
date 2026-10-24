@@ -84,6 +84,20 @@ async function main() {
 
     const clickLabel = label => evaluate(`document.querySelector('[aria-label="${label}"]').click()`)
     const clickText = text => evaluate(`[...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='${text}').click()`)
+    const checkExamControls = async () => {
+      const chrome = await evaluate(`(()=>{
+        const tools=document.querySelector('.sat-bank-run-tools').getBoundingClientRect();
+        const status=document.querySelector('.sat-bank-run-status').getBoundingClientRect();
+        const menu=document.querySelector('.sat-bank-run-question-menu').getBoundingClientRect();
+        const navigation=document.querySelector('.sat-bank-run-navigation').getBoundingClientRect();
+        const buttons=[...document.querySelectorAll('.sat-bank-run-header button,.sat-bank-run-footer button')];
+        return {noOverlap:tools.top>=status.bottom || tools.left>=status.right,footerSeparated:menu.right<=navigation.left+1,reachable:buttons.every(button=>{const r=button.getBoundingClientRect();return r.left>=0 && r.right<=innerWidth+1 && r.bottom<=innerHeight+1}),serif:getComputedStyle(document.querySelector('.sat-bank-run-heading h1')).fontFamily.includes('serif')};
+      })()`)
+      assert.equal(chrome.noOverlap,true,'Toolbar and practice status must not overlap')
+      assert.equal(chrome.footerSeparated,true,'Question navigator and navigation buttons must not overlap')
+      assert.equal(chrome.reachable,true,'Header and footer controls remain visible')
+      assert.equal(chrome.serif,true,'Heading matches the SAT mock font')
+    }
     await send('Runtime.enable')
     await send('Page.enable')
     await send('Emulation.setDeviceMetricsOverride',{width:1366,height:768,deviceScaleFactor:1,mobile:false})
@@ -116,15 +130,27 @@ async function main() {
     await until(`!!document.querySelector('.sat-bank-run')`)
     assert.equal(await evaluate('window.fullscreenRequests'),1)
     assert.equal(await evaluate(`document.querySelector('.sat-bank-hero')===null`),true)
+    await evaluate(`document.querySelector('.sat-bank-run-directions').focus();document.querySelector('.sat-bank-run-directions').click()`)
+    await until(`!!document.querySelector('[aria-labelledby="bank-directions-title"]')`)
+    await evaluate(`document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));true`)
+    await until(`!document.querySelector('[aria-labelledby="bank-directions-title"]')`)
+    assert.equal(await evaluate(`document.activeElement===document.querySelector('.sat-bank-run-directions')`),true,'Directions restore keyboard focus')
     await evaluate(`document.querySelector('[role="radio"]').click()`)
     await clickText('Mark for Review')
     await clickLabel('Open Desmos calculator')
     await until(`document.querySelector('iframe')!==null`)
+    await evaluate(`document.querySelector('[aria-label="Open question navigator"]').focus();document.querySelector('[aria-label="Open question navigator"]').click()`)
+    await until(`!!document.querySelector('#bank-question-navigator')`)
+    assert.equal(await evaluate(`(()=>{const button=document.querySelector('[aria-label="Close question navigator"]');const r=button.getBoundingClientRect();return button.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))})()`),true,'Question navigator stays above the calculator')
+    await evaluate(`document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));true`)
+    await until(`!document.querySelector('#bank-question-navigator')`)
+    assert.equal(await evaluate(`document.querySelector('[aria-label="Close Desmos calculator"]')!==null`),true,'Closing the navigator preserves the open calculator')
     await evaluate(`window.calculatorFrame=document.querySelector('iframe');true`)
     const screenshots=join(directory,'screenshots');await mkdir(screenshots)
     for(const [width,height] of [[1366,768],[1024,640],[920,500],[768,1024],[390,844],[320,568]]) {
       await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<1024})
       await new Promise(resolve=>setTimeout(resolve,150))
+      await checkExamControls()
       const layout=await evaluate(`(()=>{
         const panel=document.querySelector('.desmos-panel').getBoundingClientRect();
         const footer=document.querySelector('.sat-bank-run-footer').getBoundingClientRect();
@@ -181,10 +207,19 @@ async function main() {
     await until(`!!document.querySelector('.sat-question-source')`)
     for (const width of [1366, 390]) {
       await send('Emulation.setDeviceMetricsOverride',{width,height:844,deviceScaleFactor:1,mobile:width<1024})
-      const layout=await evaluate(`(()=>{const source=document.querySelector('.sat-question-source'); const panel=document.querySelector('.sat-question-panel'); const answer=document.querySelector('[role="radio"]');return {sourceBottom:source.getBoundingClientRect().bottom,panelTop:panel.getBoundingClientRect().top,border:getComputedStyle(source).borderRightWidth,align:getComputedStyle(answer).justifyContent,textAlign:getComputedStyle(answer).textAlign,overflow:document.documentElement.scrollWidth>innerWidth}})()`)
-      assert.ok(layout.sourceBottom<=layout.panelTop, 'Passage and question follow one another')
-      assert.equal(layout.border,'0px')
-      assert.equal(layout.align,'flex-start')
+      await checkExamControls()
+      const layout=await evaluate(`(()=>{const source=document.querySelector('.sat-question-source'); const panel=document.querySelector('.sat-question-panel'); const answer=document.querySelector('[role="radio"]');const s=source.getBoundingClientRect(),p=panel.getBoundingClientRect();return {sourceBottom:s.bottom,sourceTop:s.top,sourceRight:s.right,panelTop:p.top,panelLeft:p.left,border:getComputedStyle(source).borderRightWidth,answerBorder:getComputedStyle(answer).borderTopColor,answerWeight:getComputedStyle(answer.lastElementChild).fontWeight,textAlign:getComputedStyle(answer).textAlign,bankLayout:document.querySelector('.sat-bank-run .sat-bank-canvas')!==null,overflow:document.documentElement.scrollWidth>innerWidth}})()`)
+      if (width >= 768) {
+        assert.ok(Math.abs(layout.sourceRight-layout.panelLeft)<=1, 'Passage and question use the same two-column layout as SAT mock')
+        assert.equal(layout.sourceTop,layout.panelTop)
+        assert.equal(layout.border,'1px')
+      } else {
+        assert.ok(layout.sourceBottom<=layout.panelTop, 'Mobile passages stack above the question')
+        assert.equal(layout.border,'0px')
+      }
+      assert.equal(layout.bankLayout,false, 'Practice uses the standard mock question canvas')
+      assert.equal(layout.answerBorder,'rgb(0, 0, 0)')
+      assert.equal(layout.answerWeight,'600')
       assert.equal(layout.textAlign,'left')
       assert.equal(layout.overflow,false)
       const shot=await send('Page.captureScreenshot',{format:'png'})
@@ -192,6 +227,8 @@ async function main() {
     }
     await evaluate(`document.querySelector('[role="radio"]').click()`)
     for(let index=0;index<3;index++) await clickText('Next')
+    await send('Emulation.setDeviceMetricsOverride',{width:320,height:568,deviceScaleFactor:1,mobile:true})
+    await checkExamControls()
     await clickText('Finish set')
     await until(`!!document.querySelector('.sat-bank-question')`)
     assert.equal(await evaluate(`getComputedStyle(document.querySelector('.sat-bank-question')).borderRightWidth`),'0px')
@@ -201,7 +238,7 @@ async function main() {
     await mkdir(destination,{recursive:true})
     for(const [width,height] of [[1366,768],[1024,640],[920,500],[768,1024],[390,844],[320,568]]) await writeFile(join(destination,`${width}x${height}.png`),await readFile(join(screenshots,`${width}x${height}.png`)))
     for(const width of [1366,390]) await writeFile(join(destination,`reading-${width}.png`),await readFile(join(screenshots,`reading-${width}.png`)))
-    console.log(`PASS comfortable filters, grouped topics, continuous Reading layout, saved review; saved answers and marks resume; screenshots: ${destination}`)
+    console.log(`PASS comfortable filters, grouped topics, mock Reading layout, saved review; saved answers and marks resume; screenshots: ${destination}`)
     await send('Browser.close').catch(()=>{})
   } finally {
     socket?.close();browser.kill();await exited

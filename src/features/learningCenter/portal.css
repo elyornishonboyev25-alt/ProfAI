@@ -124,3 +124,23 @@
   .lc-portal-filters button.is-active { outline: 2px solid Highlight; }
   .lc-portal-card-arrow,.lc-portal-filters,.lc-portal-skeleton { border: 1px solid CanvasText; }
 }
+
+/* The classes header uses the same glass hero card as the exam hubs. */
+.lc-portal .lc-portal-header {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 0;
+  padding: 30px 32px;
+  border: 1px solid rgba(255, 255, 255, .88);
+  border-radius: 24px;
+  background: radial-gradient(ellipse at 100% 0%, rgba(201, 36, 59, .11), transparent 46%), linear-gradient(132deg, rgba(255, 255, 255, .78), rgba(240, 242, 246, .56) 48%, rgba(214, 219, 228, .46));
+  box-shadow: 0 14px 36px rgba(39, 46, 60, .08), 0 2px 5px rgba(39, 46, 60, .03), inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 -1px 0 rgba(110, 121, 139, .12);
+  backdrop-filter: blur(18px) saturate(115%);
+  -webkit-backdrop-filter: blur(18px) saturate(115%);
+}
+.lc-portal .lc-portal-header > * { position: relative; z-index: 1; }
+.lc-portal .lc-portal-header::after { content: ''; position: absolute; right: -90px; bottom: -130px; width: 300px; height: 300px; border: 1px solid rgba(255, 255, 255, .7); border-radius: 50%; box-shadow: 0 0 0 34px rgba(255, 255, 255, .16), 0 0 0 70px rgba(255, 255, 255, .08); pointer-events: none; }
+@media (max-width: 720px) {
+  .lc-portal .lc-portal-header { padding: 20px 18px; border-radius: 20px; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+  .lc-portal .lc-portal-header::after { display: none; }
+}

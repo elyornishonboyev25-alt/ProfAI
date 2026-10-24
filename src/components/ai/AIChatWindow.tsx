@@ -59,7 +59,7 @@ function CopyButton({ text }: { text: string }) {
           window.setTimeout(() => setCopied(false), 1400)
         })
       }}
-      className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-lg border border-zinc-200/80 bg-white/90 px-2 py-1 text-[10px] font-bold text-slate-500 opacity-60 shadow-sm backdrop-blur transition hover:border-red-200 hover:text-red-700 hover:opacity-100 focus:opacity-100 group-hover:opacity-100"
+      className="coach-copy-button absolute right-2 top-2 inline-flex items-center gap-1 rounded-lg border border-zinc-200/80 bg-white/90 px-2 py-1 text-[10px] font-bold text-slate-500 opacity-60 shadow-sm backdrop-blur transition hover:border-red-200 hover:text-red-700 hover:opacity-100 focus:opacity-100 group-hover:opacity-100"
       aria-label={c('Copy message')}
     >
       {copied ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
@@ -607,10 +607,10 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                className={`group relative max-w-[94%] rounded-2xl border text-sm ${
+                className={`coach-message group relative max-w-[94%] rounded-2xl border text-sm ${
                   message.role === 'assistant'
                     ? 'border-white/90 bg-white/[0.82] px-4 py-3.5 pr-12 text-slate-800 shadow-[0_16px_42px_rgba(15,23,42,0.07)] backdrop-blur-xl sm:px-5 sm:py-4 sm:pr-14'
-                    : 'ml-auto border-red-400/45 bg-gradient-to-br from-red-700 to-red-500 px-4 py-2.5 leading-6 text-white shadow-[0_9px_24px_rgba(185,28,47,.17)]'
+                    : 'ml-auto w-fit border-red-400/45 bg-gradient-to-br from-red-700 to-red-500 px-4 py-2.5 leading-6 text-white shadow-[0_9px_24px_rgba(185,28,47,.17)]'
                 }`}
               >
                 {message.images && message.images.length > 0 ? (
@@ -800,7 +800,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
             <button
               type="button"
               onClick={() => { cancelSend(); openTalk() }}
-              className={`relative inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white transition ${
+              className={`coach-mic-button relative inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white transition ${
                 isListening
                   ? 'bg-gradient-to-r from-emerald-500 to-teal-600'
                   : 'bg-gradient-to-r from-zinc-500 to-red-700 hover:brightness-110'
@@ -822,7 +822,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
             type="button"
             onClick={() => isSending ? cancelSend() : doSend()}
             disabled={!isSending && (threadsLoading || (!draft.trim() && images.length === 0))}
-            className="inline-flex h-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-red-700 to-red-500 px-4 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,28,47,.24)] transition hover:-translate-y-0.5 hover:brightness-105 disabled:translate-y-0 disabled:opacity-50"
+            className="coach-send-button inline-flex h-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-red-700 to-red-500 px-4 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(185,28,47,.24)] transition hover:-translate-y-0.5 hover:brightness-105 disabled:translate-y-0 disabled:opacity-50"
             aria-label={isSending ? (uiLanguage === 'uz' ? 'Javobni to‘xtatish' : uiLanguage === 'ru' ? 'Остановить ответ' : 'Stop response') : c('Send')}
           >
             {isSending ? <Square className="h-4 w-4" /> : <Send className="h-4 w-4" />}

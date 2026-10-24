@@ -119,27 +119,35 @@ export default function SATMistakes() {
     )
   }
 
+  const savedAtLabel = (savedAt: string | number) => new Date(savedAt).toLocaleString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+
   return (
-    <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-7 sm:px-6 lg:px-8">
-      <div className="relative mx-auto max-w-6xl space-y-5">
-        <MistakeLabNavigation />
-        <section className="glass-surface p-6 sm:p-8">
-          <button onClick={() => navigate('/sat')} className="route-back-button">
-            <ArrowLeft className="h-3.5 w-3.5" /> Back to SAT Prep
-          </button>
-          <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
+    <div className="workspace-page mlab">
+      <div className="mlab-shell">
+        <section className="mlab-card mlab-hero">
+          <div className="mlab-hero-top">
+            <button type="button" onClick={() => navigate('/sat')} className="mlab-back">
+              <ArrowLeft aria-hidden="true" /> Back to SAT Prep
+            </button>
+            <MistakeLabNavigation />
+          </div>
+          <div className="mlab-hero-body">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-red-600">SAT-only workspace</p>
-              <h1 className="mt-1 text-4xl font-black tracking-tight text-slate-950">SAT Mistake Lab</h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Every submitted full mock, individual section, and unfinished Exit &amp; Save attempt stays here as a separate dated result.</p>
+              <span className="mlab-eyebrow">SAT-only workspace</span>
+              <h1>SAT Mistake Lab</h1>
+              <p>Every submitted full mock, individual section, and unfinished Exit &amp; Save attempt stays here as a separate dated result.</p>
             </div>
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500 to-rose-700 text-white shadow-[0_14px_30px_rgba(220,38,38,.25)]">
-              <BrainCircuit className="h-6 w-6" />
-            </span>
+            <span className="mlab-hero-mark" aria-hidden="true"><BrainCircuit /></span>
           </div>
         </section>
 
-        <section className="grid gap-3 sm:grid-cols-3">
+        <section className="mlab-stats" aria-label="SAT review summary">
           {[
             { label: 'Saved attempts', value: attempts.length.toString(), icon: CheckCircle2 },
             { label: 'Average accuracy', value: completedAttempts.length ? `${averageAccuracy.toFixed(0)}%` : '—', icon: Target },
@@ -147,67 +155,66 @@ export default function SATMistakes() {
           ].map((metric) => {
             const Icon = metric.icon
             return (
-              <article key={metric.label} className="glass-surface p-4">
-                <Icon className="h-4 w-4 text-red-600" />
-                <p className="mt-3 text-[10px] font-black uppercase tracking-wider text-slate-500">{metric.label}</p>
-                <p className="mt-1 text-2xl font-black text-slate-950">{metric.value}</p>
+              <article key={metric.label} className="mlab-card mlab-stat">
+                <span className="mlab-stat-icon"><Icon aria-hidden="true" /></span>
+                <div>
+                  <p className="mlab-stat-label">{metric.label}</p>
+                  <p className="mlab-stat-value">{metric.value}</p>
+                </div>
               </article>
             )
           })}
         </section>
 
-        <section className="glass-surface p-5 sm:p-6">
-          <div className="flex items-center justify-between">
+        <section className="mlab-card mlab-section">
+          <div className="mlab-section-head">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.15em] text-red-600">Attempt history</p>
-              <h2 className="mt-1 text-xl font-black text-slate-950">Your SAT review queue</h2>
-              <p className="mt-2 text-xs text-slate-500">Full mock: 400–1600 total. Individual sections: 200–800 each.</p>
+              <span className="mlab-eyebrow"><Clock3 size={14} aria-hidden="true" />Attempt history</span>
+              <h2>Your SAT review queue</h2>
+              <p>Full mock: 400–1600 total. Individual sections: 200–800 each.</p>
             </div>
-            <Clock3 className="h-5 w-5 text-red-500" />
+            {attempts.length ? <span className="mlab-count">{attempts.length}</span> : null}
           </div>
 
           {selectedAttemptId ? (
-            <p role="status" className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">This saved attempt is no longer available. Choose another result below.</p>
+            <p role="status" className="mlab-alert is-warning">This saved attempt is no longer available. Choose another result below.</p>
           ) : null}
-          <div className="mt-4 space-y-2.5">
+          <div className="mlab-list">
             {attempts.length ? (
               attempts.map(({ entry, test, result }) => {
                 const completed = entry.attempt.status === 'submitted'
                 return (
-                  <article key={entry.id} className="flex items-center gap-2 rounded-2xl border border-slate-100 bg-white p-2">
+                  <article key={entry.id} className="mlab-row">
                     <button
                       type="button"
                       onClick={() => setSearchParams({ attempt: entry.id })}
                       aria-label={`Review ${test.title} attempt saved ${new Date(entry.savedAt).toLocaleString('en-GB')}`}
-                      className="grid min-w-0 flex-1 gap-3 rounded-xl p-2 text-left transition hover:bg-red-50/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-600 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center"
+                      className="mlab-row-main"
                     >
                       <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="text-sm font-black text-slate-900">{test.title}</p>
-                          <span className={`rounded-full px-2 py-1 text-[8px] font-black uppercase tracking-[0.1em] ${completed ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+                        <div className="mlab-row-title">
+                          <strong>{test.title}</strong>
+                          <span className={`mlab-status ${completed ? 'is-done' : 'is-saved'}`}>
                             {completed ? 'Completed' : 'Saved incomplete'}
                           </span>
                         </div>
-                        <p className="mt-1 text-[11px] font-semibold text-slate-500">
-                          {new Date(entry.savedAt).toLocaleString('en-GB', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
+                        <p className="mlab-row-meta">
+                          <Clock3 aria-hidden="true" />
+                          {savedAtLabel(entry.savedAt)}
                           {' · '}{entry.attempt.mode === 'exam' ? 'Exam mode' : 'Practice mode'}
                         </p>
-                        <span className="mt-2 inline-flex items-center gap-1 text-[11px] font-black text-red-600">Review answers <ChevronRight className="h-3.5 w-3.5" /></span>
+                        <span className="mlab-row-cta">Review answers <ChevronRight aria-hidden="true" /></span>
                       </div>
-                      <div className="rounded-xl bg-red-50 px-3 py-2 text-center">
-                        <p className="text-[9px] font-black uppercase text-red-500">{isSATTestComplete(test) ? result.scoreLabel : 'Accuracy'}</p>
-                        <p className="text-sm font-black text-red-800">{completed ? (isSATTestComplete(test) ? `${result.scoreRange} / ${result.maxScore}` : `${result.accuracy}% accuracy`) : '—'}</p>
-                      </div>
-                      <div className="rounded-xl bg-slate-50 px-3 py-2 text-center">
-                        <p className="text-[9px] font-black uppercase text-slate-500">Correct answers</p>
-                        <p className="text-sm font-black text-slate-800">{result.correct}/{result.total}</p>
-                        <p className="mt-1 text-[10px] font-semibold text-slate-500">{result.incorrect} incorrect · {result.unanswered} unanswered</p>
+                      <div className="mlab-metrics">
+                        <div className="mlab-metric is-accent">
+                          <small>{isSATTestComplete(test) ? result.scoreLabel : 'Accuracy'}</small>
+                          <b>{completed ? (isSATTestComplete(test) ? `${result.scoreRange} / ${result.maxScore}` : `${result.accuracy}% accuracy`) : '—'}</b>
+                        </div>
+                        <div className="mlab-metric">
+                          <small>Correct answers</small>
+                          <b>{result.correct}/{result.total}</b>
+                          <span>{result.incorrect} incorrect · {result.unanswered} unanswered</span>
+                        </div>
                       </div>
                     </button>
                     <button
@@ -215,19 +222,19 @@ export default function SATMistakes() {
                       onClick={() => deleteAttempt(entry, test.title)}
                       aria-label={`Delete ${test.title} attempt`}
                       title="Delete result"
-                      className="inline-flex h-10 w-10 shrink-0 items-center justify-center justify-self-end rounded-xl border border-red-100 bg-red-50 text-red-600 transition hover:border-red-200 hover:bg-red-100"
+                      className="mlab-icon-button"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 aria-hidden="true" />
                     </button>
                   </article>
                 )
               })
             ) : (
-              <div className="rounded-[1.7rem] border border-dashed border-red-200 bg-red-50/45 px-5 py-12 text-center">
-                <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-red-600 shadow-sm"><BrainCircuit className="h-5 w-5" /></span>
-                <h3 className="mt-4 text-lg font-black text-slate-900">No saved SAT attempts yet</h3>
-                <p className="mx-auto mt-2 max-w-md text-xs leading-5 text-slate-500">Submit any full mock or section test, or use Exit &amp; Save during an unfinished attempt.</p>
-                <button onClick={() => navigate('/sat')} className="mt-4 rounded-xl bg-red-600 px-4 py-2.5 text-xs font-black text-white shadow-[0_10px_24px_rgba(220,38,38,.25)]">Choose a SAT test</button>
+              <div className="mlab-empty">
+                <span className="mlab-empty-icon"><BrainCircuit aria-hidden="true" /></span>
+                <h3>No saved SAT attempts yet</h3>
+                <p>Submit any full mock or section test, or use Exit &amp; Save during an unfinished attempt.</p>
+                <button type="button" onClick={() => navigate('/sat')} className="mlab-button is-primary">Choose a SAT test</button>
               </div>
             )}
           </div>

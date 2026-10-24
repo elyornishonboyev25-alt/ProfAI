@@ -1,5 +1,9 @@
 /** Interface strings that are not in the original Uzbek catalog. */
 export const uzbekCompletion: Record<string, string> = {
+  'more friend(s) until your next bonus.': 'ta do‘stdan keyin navbatdagi bonus beriladi.',
+  'friends': 'ta do‘st',
+  'bonus': 'bonus',
+  'Share your link. Your friend gets {{inviteeDays}} bonus days. You get +{{friendDays}} Premium days for every friend who signs up, starts our Telegram bot and joins the @IvyGoo channel — on top of your plan.': 'Havolangizni ulashing. Do‘stingiz {{inviteeDays}} bonus kun oladi. Ro‘yxatdan o‘tib, Telegram botimizni ishga tushirgan va @IvyGoo kanaliga qo‘shilgan har bir do‘stingiz uchun sizga tarifingizga qo‘shimcha {{friendDays}} kun Premium beriladi.',
   'Invite friends, earn free premium': 'Do‘stlaringizni taklif qiling va bepul Premium oling',
   'friends counted': 'ta do‘st hisobga olindi',
   'Invitation details could not be loaded. Refresh to try again.': 'Taklif ma’lumotlari yuklanmadi. Sahifani yangilab, qayta urinib ko‘ring.',

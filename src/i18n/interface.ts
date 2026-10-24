@@ -196,8 +196,8 @@ function canonicalInterfaceText(text: string, resources: object[]) {
 export function useCopy() {
   const { t, i18n } = useTranslation('interface')
   const resources = [i18n.getResourceBundle?.('uz', 'interface'), i18n.getResourceBundle?.('ru', 'interface')].filter(Boolean) as object[]
-  return { c: (text: string) => {
+  return { c: (text: string, values?: Record<string, string | number>) => {
     const key = canonicalInterfaceText(text, resources)
-    return t(key, { defaultValue: key })
+    return t(key, { ...values, defaultValue: key })
   }, language: i18n.resolvedLanguage ?? i18n.language ?? 'en' }
 }

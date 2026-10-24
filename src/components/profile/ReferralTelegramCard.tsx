@@ -98,7 +98,7 @@ export default function ReferralTelegramCard() {
         <div className="rc-grid">
           <div className="rc-main">
             <p className="rc-muted">
-              <UiText text={`Share your link. Your friend gets ${referral.inviteeBonusDays} bonus days. You get +${referral.friendDays ?? 3} Premium days for every friend who signs up, starts our Telegram bot and joins the @IvyGoo channel — on top of your plan.`} />
+              <UiText text="Share your link. Your friend gets {{inviteeDays}} bonus days. You get +{{friendDays}} Premium days for every friend who signs up, starts our Telegram bot and joins the @IvyGoo channel — on top of your plan." values={{ inviteeDays: referral.inviteeBonusDays, friendDays: referral.friendDays ?? 3 }} />
             </p>
             <div className="rc-link">
               <input readOnly value={referral.link ?? ''} aria-label="Invitation link" onFocus={(event) => event.currentTarget.select()} />

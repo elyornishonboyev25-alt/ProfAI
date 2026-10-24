@@ -1,5 +1,9 @@
 /** Interface strings missing from the original Russian catalogs. */
 export const russianAdditions: Record<string, string> = {
+  'more friend(s) until your next bonus.': 'друзей до следующего бонуса.',
+  'friends': 'друзей',
+  'bonus': 'бонус',
+  'Share your link. Your friend gets {{inviteeDays}} bonus days. You get +{{friendDays}} Premium days for every friend who signs up, starts our Telegram bot and joins the @IvyGoo channel — on top of your plan.': 'Поделитесь ссылкой. Ваш друг получит {{inviteeDays}} бонусных дней. За каждого друга, который зарегистрируется, запустит нашего Telegram-бота и подпишется на канал @IvyGoo, вы получите ещё {{friendDays}} дней Премиума в дополнение к вашему тарифу.',
   'Invite friends, earn free premium': 'Приглашайте друзей и получайте бесплатный Премиум',
   'friends counted': 'друзей засчитано',
   'Invitation details could not be loaded. Refresh to try again.': 'Не удалось загрузить данные приглашений. Обновите страницу и попробуйте снова.',

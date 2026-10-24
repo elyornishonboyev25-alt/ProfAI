@@ -45,6 +45,7 @@ import { AmbientBackdrop, CountUp, Reveal } from '@/components/fx'
 import BadgeShelf from '@/components/achievements/BadgeShelf'
 import DeleteAccountDialog from '@/components/profile/DeleteAccountDialog'
 import ReferralTelegramCard from '@/components/profile/ReferralTelegramCard'
+import AccountDevices from '@/components/profile/AccountDevices'
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import { setFlashToast } from '@/utils/authFlash'
 import { purgeAccountClientData } from '@/utils/purgeAccountClientData'
@@ -58,6 +59,7 @@ const PROFILE_SECTIONS = [
   { id: 'targets', label: 'Study targets' },
   { id: 'privacy', label: 'Privacy' },
   { id: 'referral', label: 'Invite & Telegram' },
+  { id: 'devices', label: 'Devices' },
   { id: 'achievements', label: 'Achievements' },
   { id: 'danger', label: 'Account' },
 ] as const
@@ -880,6 +882,8 @@ export default function AccountProfile() {
           </section>
 
           <ReferralTelegramCard />
+
+          <AccountDevices />
 
           {/* Badges */}
           <section id="achievements" className="account-profile-card mt-6 scroll-mt-24 surface-card p-6">

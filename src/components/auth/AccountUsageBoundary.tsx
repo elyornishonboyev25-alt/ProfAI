@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import BrandPageLoader from '@/components/common/BrandPageLoader'
-import { apiClient, ApiError } from '@/lib/apiClient'
+import DeviceAccessDialog from '@/components/auth/DeviceAccessDialog'
+import DeviceAccessPanel from '@/components/auth/DeviceAccessPanel'
+import { apiClient, ApiError, releaseDeviceUsage } from '@/lib/apiClient'
+import { startDeviceActivity } from '@/lib/deviceActivity'
 import { useAuthStore } from '@/store/authStore'
 import { useAccountUsageStore } from '@/store/accountUsageStore'
 import { accountUsageText } from '@/i18n/accountUsage'
@@ -12,9 +15,13 @@ export default function AccountUsageBoundary({ children }: { children: ReactNode
   const usage = useAccountUsageStore()
   const [retry, setRetry] = useState(0)
   const [signingOut, setSigningOut] = useState(false)
+  const [checking, setChecking] = useState(false)
   const verifiedOwner = useRef<string>()
   const { i18n } = useTranslation()
   const text = accountUsageText(i18n.language)
+
+  // Closing the last tab frees the account for the owner's other devices at once.
+  useEffect(() => { startDeviceActivity(releaseDeviceUsage) }, [])
 
   useEffect(() => {
     if (!owner || !hydrated) return
@@ -23,6 +30,7 @@ export default function AccountUsageBoundary({ children }: { children: ReactNode
     const check = async () => {
       if (controller.signal.aborted || running || document.hidden || useAuthStore.getState().user?.id !== owner) return
       running = true
+      setChecking(true)
       const previous = useAccountUsageStore.getState()
       if (previous.owner === owner && previous.status === 'active' && previous.validUntil <= Date.now()) previous.setUsage(owner, 'checking')
       // Use the request start time so a delayed response cannot extend access
@@ -56,12 +64,13 @@ export default function AccountUsageBoundary({ children }: { children: ReactNode
         if (controller.signal.aborted) return
         if (useAuthStore.getState().user?.id !== owner) return
         const current = useAccountUsageStore.getState()
-        if (error instanceof ApiError && error.code === 'ACCOUNT_IN_USE') current.setUsage(owner, 'blocked')
+        if (error instanceof ApiError && error.code === 'ACCOUNT_IN_USE') current.setUsage(owner, 'blocked', 0, error.details)
         else if (current.owner !== owner || current.status !== 'active' || current.validUntil <= Date.now()) current.setUsage(owner, 'unavailable')
       } finally {
         window.clearTimeout(timeout)
         controller.signal.removeEventListener('abort', abort)
         running = false
+        if (!controller.signal.aborted) setChecking(false)
       }
     }
     void check()
@@ -72,6 +81,8 @@ export default function AccountUsageBoundary({ children }: { children: ReactNode
     }, 1000)
     document.addEventListener('visibilitychange', check)
     window.addEventListener('online', check)
+    // Returning to an idle tab confirms at once whether this device may continue.
+    window.addEventListener('profai:device-active', check)
     return () => {
       running = false
       controller.abort()
@@ -79,6 +90,7 @@ export default function AccountUsageBoundary({ children }: { children: ReactNode
       window.clearInterval(expiry)
       document.removeEventListener('visibilitychange', check)
       window.removeEventListener('online', check)
+      window.removeEventListener('profai:device-active', check)
     }
   }, [owner, hydrated, retry])
 
@@ -93,9 +105,10 @@ export default function AccountUsageBoundary({ children }: { children: ReactNode
       setSigningOut(false)
     }
   }, [])
+  const retryNow = useCallback(() => setRetry(value => value + 1), [])
 
   if (!hydrated) return <BrandPageLoader label={text.checking} />
-  if (!owner) { verifiedOwner.current = undefined; return <>{children}</> }
+  if (!owner) { verifiedOwner.current = undefined; return <>{children}<DeviceAccessDialog /></> }
   const status = usage.owner === owner ? usage.status : 'checking'
   const allowed = status === 'active' && usage.validUntil > Date.now()
   if (allowed) verifiedOwner.current = owner
@@ -107,17 +120,12 @@ export default function AccountUsageBoundary({ children }: { children: ReactNode
     <>
     {retained && <div key={owner} data-account-workspace aria-hidden={!allowed || undefined} hidden={!allowed} ref={node => { if (node) node.inert = !allowed }} style={{ display: allowed ? 'contents' : 'none' }}>{children}</div>}
     {!allowed && (status === 'checking' || status === 'active' ? <BrandPageLoader compact label={text.checking} /> : (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 px-6 dark:bg-slate-950">
-      <section className="max-w-lg rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900" role="alert">
-        <h1 className="text-xl font-bold text-slate-900 dark:text-white">{status === 'blocked' ? text.blocked : text.unavailable}</h1>
-        <p className="mt-4 text-slate-600 dark:text-slate-300">{status === 'blocked' ? text.explanation : text.reconnect}</p>
-        <div className="mt-6 flex justify-center gap-3">
-          <button className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white" onClick={() => setRetry(value => value + 1)}>{text.retry}</button>
-          <button className="rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 dark:text-slate-200" disabled={signingOut} onClick={() => { void logout() }}>{text.logout}</button>
-        </div>
-      </section>
+    <main className="device-access-page">
+      <DeviceAccessPanel variant={status === 'blocked' ? 'in-use' : 'unavailable'} activeDevice={usage.details?.activeDevice}
+        startedAt={usage.blockedAt} checking={checking} onRetry={retryNow} onLogout={() => { void logout() }} loggingOut={signingOut} />
     </main>
     ))}
+    <DeviceAccessDialog />
     </>
   )
 }

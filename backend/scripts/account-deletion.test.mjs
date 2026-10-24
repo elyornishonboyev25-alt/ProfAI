@@ -143,7 +143,7 @@ function personalData() {
   const data = structuredClone(rows)
   // Authentication legitimately renews presence before route validation. All
   // other session fields and personal data must remain unchanged on failure.
-  data.AuthSession.forEach(row => { delete row.lastSeenAt; delete row.usageUntil })
+  data.AuthSession.forEach(row => { delete row.lastSeenAt; delete row.usageUntil; delete row.networkKey })
   return data
 }
 try {

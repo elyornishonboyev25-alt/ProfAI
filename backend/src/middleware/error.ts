@@ -8,7 +8,8 @@ export function notFoundHandler(req: Request, res: Response) {
 }
 
 export function errorHandler(error: unknown, _req: Request, res: Response, _next: NextFunction) {
-  if (error instanceof BillingError || error instanceof AuthSessionError) return res.status(error.statusCode).json({ message: error.message, code: error.code })
+  if (error instanceof AuthSessionError) return res.status(error.statusCode).json({ message: error.message, code: error.code, ...(error.details ? { details: error.details } : {}) })
+  if (error instanceof BillingError) return res.status(error.statusCode).json({ message: error.message, code: error.code })
   if (error instanceof ZodError) {
     return res.status(400).json({
       message: 'Validation failed.',

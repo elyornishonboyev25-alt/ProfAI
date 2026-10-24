@@ -2,7 +2,8 @@ import { purgeAccountClientData } from '@/utils/purgeAccountClientData'
 import { syncStoredSession, useAuthStore } from '@/store/authStore'
 import type { AuthUser } from '@/types/platform'
 import { notifyXpAward } from '@/store/xpNotificationStore'
-import { deviceIdentity } from '@/lib/deviceIdentity'
+import { deviceHints, deviceIdentity } from '@/lib/deviceIdentity'
+import { isDeviceIdle } from '@/lib/deviceActivity'
 import { useAccountUsageStore } from '@/store/accountUsageStore'
 
 const configuredApiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL
@@ -32,13 +33,17 @@ type AuthResponse = {
 export class ApiError extends Error {
   status: number
   code?: string
-  constructor(message: string, status: number, code?: string) {
+  details?: Record<string, unknown>
+  constructor(message: string, status: number, code?: string, details?: Record<string, unknown>) {
     super(message)
     this.name = 'ApiError'
     this.status = status
     this.code = code
+    this.details = details
   }
 }
+
+const DEVICE_ACCESS_CODES = new Set(['DEVICE_LIMIT_REACHED', 'ACCOUNT_IN_USE'])
 
 type RefreshResult = 'refreshed' | 'rejected' | 'unavailable' | 'superseded' | 'blocked'
 
@@ -77,7 +82,12 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   const requestHeaders = new Headers(headers)
   requestHeaders.set('Content-Type', 'application/json')
-  if (auth || path.startsWith('/auth/')) requestHeaders.set('X-Device-Id', deviceIdentity())
+  if (auth || path.startsWith('/auth/')) {
+    requestHeaders.set('X-Device-Id', deviceIdentity())
+    const hints = deviceHints()
+    if (hints) requestHeaders.set('X-Device-Hints', hints)
+    if (isDeviceIdle()) requestHeaders.set('X-Device-Activity', 'idle')
+  }
 
   if (auth && authState.accessToken) {
     requestHeaders.set('Authorization', `Bearer ${authState.accessToken}`)
@@ -126,7 +136,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
         throw new Error('Backend is temporarily unavailable. Your session is saved and will retry automatically.')
       }
       if (result === 'blocked') {
-        throw new ApiError('This account is being used on another device.', 409, 'ACCOUNT_IN_USE')
+        throw new ApiError('This account is being used on another device.', 409, 'ACCOUNT_IN_USE', useAccountUsageStore.getState().details)
       }
     }
 
@@ -137,9 +147,13 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   if (!response.ok) {
     const payload = await response.json().catch(() => ({ message: 'Unexpected API error.' }))
-    if (auth && owner && payload.code === 'ACCOUNT_IN_USE') useAccountUsageStore.getState().setUsage(owner, 'blocked')
+    if (auth && owner && payload.code === 'ACCOUNT_IN_USE') useAccountUsageStore.getState().setUsage(owner, 'blocked', 0, payload.details)
+    // A sign-in refused for device reasons explains itself in a dedicated dialog.
+    if (!auth && path.startsWith('/auth/') && path !== '/auth/refresh' && DEVICE_ACCESS_CODES.has(payload.code)) {
+      window.dispatchEvent(new CustomEvent('profai:device-access', { detail: { code: payload.code, details: payload.details } }))
+    }
     if (['PREMIUM_REQUIRED', 'CLASS_PLAN_REQUIRED', 'TEACHER_PLAN_REQUIRED'].includes(payload.code)) window.dispatchEvent(new CustomEvent('profai:premium-required', { detail: payload.message }))
-    throw new ApiError(payload.message ?? 'API request failed.', response.status, payload.code)
+    throw new ApiError(payload.message ?? 'API request failed.', response.status, payload.code, payload.details)
   }
 
   if (response.status === 204) {
@@ -179,7 +193,7 @@ async function refreshSession(refreshToken: string): Promise<RefreshResult> {
     if (useAuthStore.getState().refreshToken !== refreshToken) return 'superseded'
     if (error instanceof ApiError && error.code === 'ACCOUNT_IN_USE') {
       const owner = useAuthStore.getState().user?.id
-      if (owner) useAccountUsageStore.getState().setUsage(owner, 'blocked')
+      if (owner) useAccountUsageStore.getState().setUsage(owner, 'blocked', 0, error.details)
       return 'blocked'
     }
     if (error instanceof ApiError && error.status === 401) {
@@ -192,6 +206,18 @@ async function refreshSession(refreshToken: string): Promise<RefreshResult> {
   } finally {
     clearTimeout(timeout)
   }
+}
+
+/** Frees this browser's hold on the account when its last tab closes, so the
+ *  owner's other device can continue at once instead of after 2 minutes. */
+export function releaseDeviceUsage() {
+  const { accessToken } = useAuthStore.getState()
+  if (!accessToken) return
+  try {
+    void fetch(`${API_BASE_URL}/auth/activity/release`, { method: 'POST', keepalive: true, headers: {
+      Authorization: `Bearer ${accessToken}`, 'X-Device-Id': deviceIdentity(), 'X-Device-Activity': 'idle',
+    } }).catch(() => undefined)
+  } catch { /* The lease still expires on its own. */ }
 }
 
 export const apiClient = {

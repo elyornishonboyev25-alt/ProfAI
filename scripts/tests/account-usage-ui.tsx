@@ -34,7 +34,7 @@ export async function run() {
     assert.equal(container.textContent?.includes('Protected saved test'), false, 'Cached routes cannot mount before server verification')
     mode = 'blocked'
     await act(async () => { resolve?.(); await new Promise(done => setTimeout(done, 10)) })
-    assert.ok(container.textContent?.includes('boshqa qurilmada ishlatilmoqda'))
+    assert.ok(container.textContent?.includes('boshqa qurilmada ochiq'))
     assert.equal(container.textContent?.includes('Protected saved test'), false)
     assert.equal(useAuthStore.getState().refreshToken, 'refresh')
     mode = 'allowed'

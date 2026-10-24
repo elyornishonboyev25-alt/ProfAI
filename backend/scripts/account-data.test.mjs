@@ -36,7 +36,7 @@ const bundled = await build({
     builder.onResolve({ filter: /\/services\/authActivity\.service\.js$/ }, () => ({ path: 'test-session', namespace: 'test' }))
     builder.onLoad({ filter: /.*/, namespace: 'test' }, ({ path }) => ({ contents: path === 'test-prisma'
       ? 'export const prisma = globalThis.prisma'
-      : path === 'test-session' ? 'export async function acquireSessionUsage(owner, sid) { if (sid !== owner + "-session") throw new Error("Invalid test session") }'
+      : path === 'test-session' ? 'export async function acquireSessionUsage(owner, sid) { if (sid !== owner + "-session") throw new Error("Invalid test session") }; export function deviceSignals() { return {} }'
       : `export const env = { ACCESS_TOKEN_SECRET: ${JSON.stringify(secret)} }` }))
   } }],
 })

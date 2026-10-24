@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from 'express'
 import { verifyAccessToken } from '../utils/jwt.js'
 import { prisma } from '../lib/prisma.js'
-import { acquireSessionUsage } from '../services/authActivity.service.js'
+import { acquireSessionUsage, deviceSignals } from '../services/authActivity.service.js'
 
 export async function requireAuth(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization
@@ -24,7 +24,10 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
       return res.status(401).json({ message: 'This account no longer exists. Create a new account to continue.', code: 'ACCOUNT_DELETED' })
     }
     if (payload.sid) {
-      await acquireSessionUsage(user.id, payload.sid, req.get('X-Device-Id')?.toLowerCase() ?? '')
+      // Idle tabs stay signed in but do not hold the account against other devices.
+      await acquireSessionUsage(user.id, payload.sid, req.get('X-Device-Id')?.toLowerCase() ?? '', {
+        renew: req.get('X-Device-Activity') !== 'idle', signals: deviceSignals(req),
+      })
     } else if (req.path !== '/activity/heartbeat') {
       return res.status(401).json({ message: 'Please refresh your session or sign in again.', code: 'SESSION_EXPIRED' })
     }

@@ -75,7 +75,7 @@ test('owner pagination is bounded, counts serialize and search remains parameter
   const sql = calls.filter(call => call.sql?.includes('SELECT u.id')).at(-1)
   assert.ok(!sql.sql.includes(query))
   assert.ok(sql.values.includes("%x\\%' OR 1=1 --%"))
-  assert.ok(sql.sql.includes('COUNT(DISTINCT "deviceId")'))
+  assert.ok(sql.sql.includes('COUNT(DISTINCT COALESCE("deviceKey", "deviceId"))'))
   assert.ok(sql.sql.includes('a."deviceCount" > 1'))
   assert.equal(sql.values.at(-1), 20, 'Second page uses a bounded offset')
 })

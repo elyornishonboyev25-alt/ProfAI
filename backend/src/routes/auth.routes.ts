@@ -20,7 +20,7 @@ import { env } from '../config/env.js'
 import { requireAuth } from '../middleware/auth.js'
 import { accountOverview } from '../services/billing.service.js'
 import { sendAuthCode, type AuthCodePurpose } from '../services/authEmail.service.js'
-import { AuthSessionError, assertDeviceAvailable, createAuthSession, requestDeviceId, DEVICE_USAGE_WINDOW_MS } from '../services/authActivity.service.js'
+import { AuthSessionError, assertDeviceAvailable, createAuthSession, requestDevice, sessionDeviceKey, DEVICE_USAGE_WINDOW_MS, type DeviceSignals } from '../services/authActivity.service.js'
 import activityRoutes from './authActivity.routes.js'
 
 const router = Router()
@@ -187,6 +187,8 @@ async function issueAuthTokens(args: {
   ipAddress?: string
   userAgent?: string
   deviceId: string
+  signals?: DeviceSignals
+  idle?: boolean
   method: string
   sessionId?: string | null
   previousTokenId?: string
@@ -202,10 +204,10 @@ async function issueAuthTokens(args: {
       if (!args.deviceId.startsWith('unknown-') && current.deviceId !== args.deviceId) {
         throw new AuthSessionError(401, 'SESSION_DEVICE_MISMATCH', 'Please sign in on this device.')
       }
-      await assertDeviceAvailable(args.userId, current.deviceId, tx)
+      await assertDeviceAvailable(args.userId, sessionDeviceKey(current), tx)
     }
     const session = args.sessionId
-      ? await tx.authSession.update({ where: { id: args.sessionId }, data: { expiresAt, usageUntil: new Date(Date.now() + DEVICE_USAGE_WINDOW_MS) } })
+      ? await tx.authSession.update({ where: { id: args.sessionId }, data: { expiresAt, lastSeenAt: new Date(), ...(args.idle ? {} : { usageUntil: new Date(Date.now() + DEVICE_USAGE_WINDOW_MS) }) } })
       : await createAuthSession({ ...args, expiresAt }, tx)
     if (args.previousTokenId) {
       // Admission and rotation commit together, so rejection keeps the old token.
@@ -375,7 +377,7 @@ router.post(
       role: user.role,
       ipAddress: req.ip,
       userAgent: req.headers['user-agent'],
-      deviceId: requestDeviceId(req),
+      ...requestDevice(req),
       method: 'REGISTER',
     })
 
@@ -431,7 +433,7 @@ router.post(
       role: user.role,
       ipAddress: req.ip,
       userAgent: req.headers['user-agent'],
-      deviceId: requestDeviceId(req),
+      ...requestDevice(req),
       method: 'PASSWORD',
     })
 
@@ -487,7 +489,7 @@ router.post(
       role: user.role,
       ipAddress: req.ip,
       userAgent: req.headers['user-agent'],
-      deviceId: requestDeviceId(req),
+      ...requestDevice(req),
       method: 'REGISTER',
     })
     return res.status(201).json({ user: await sanitizeUser(user), ...tokens })
@@ -524,7 +526,7 @@ router.post(
       role: user.role,
       ipAddress: req.ip,
       userAgent: req.headers['user-agent'],
-      deviceId: requestDeviceId(req),
+      ...requestDevice(req),
       method: 'EMAIL_CODE',
     })
     return res.json({ user: await sanitizeUser(user), ...tokens, isNewUser: !existing })
@@ -654,7 +656,7 @@ router.post(
       role: user.role,
       ipAddress: req.ip,
       userAgent: req.headers['user-agent'],
-      deviceId: requestDeviceId(req),
+      ...requestDevice(req),
       method: 'GOOGLE',
     })
 
@@ -726,9 +728,10 @@ router.post(
       role: stored.user.role,
       ipAddress: req.ip,
       userAgent: req.headers['user-agent'],
-      deviceId: requestDeviceId(req),
+      ...requestDevice(req),
       method: 'RESTORED',
       sessionId: stored.sessionId,
+      idle: req.get('X-Device-Activity') === 'idle',
       previousTokenId: stored.id,
     })
 

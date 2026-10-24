@@ -924,6 +924,10 @@ model AuthSession {
   id          String    @id @default(cuid())
   userId      String
   deviceId    String
+  deviceKey   String?
+  hardwareKey String?
+  gpuKey      String?
+  networkKey  String?
   deviceType  String
   browser     String
   os          String
@@ -938,6 +942,7 @@ model AuthSession {
   tokens      RefreshToken[]
 
   @@index([userId, deviceId])
+  @@index([userId, deviceKey])
   @@index([loginAt])
   @@index([lastSeenAt])
 }

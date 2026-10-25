@@ -20,6 +20,7 @@ const standingQuerySchema = z.object({
 const postSchema = z.object({
   body: z.string().trim().min(2).max(1500),
   questionRef: z.string().trim().max(40).regex(/^[a-z0-9:-]+$/i).optional(),
+  parentId: z.string().trim().min(1).max(40).regex(/^[a-z0-9]+$/i).optional(),
 }).strict()
 
 const postRateLimit = rateLimit({
@@ -29,6 +30,15 @@ const postRateLimit = rateLimit({
   legacyHeaders: false,
   keyGenerator: (req) => req.user!.id,
   message: { message: 'You are posting too quickly. Please wait a moment.' },
+})
+
+const checkRateLimit = rateLimit({
+  windowMs: 60 * 1000,
+  max: 40,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.user!.id,
+  message: { message: 'Too many reactions. Please wait a moment.' },
 })
 
 // Large embedded uploads stay on the profile page; lists use links and initials.
@@ -134,6 +144,41 @@ router.get(
   }),
 )
 
+const discussionInclude = {
+  user: { select: { fullName: true, nickname: true, avatarUrl: true, googleAvatarUrl: true } },
+  _count: { select: { checks: true } },
+} as const
+
+type DiscussionRow = {
+  id: string
+  userId: string
+  parentId: string | null
+  body: string
+  questionRef: string | null
+  createdAt: Date
+  user: { fullName: string | null; nickname: string | null; avatarUrl: string | null; googleAvatarUrl: string | null }
+  _count: { checks: number }
+}
+
+function serializePost(post: DiscussionRow, viewer: { id: string; role?: string }, checked: Set<string>) {
+  return {
+    id: post.id,
+    parentId: post.parentId,
+    body: post.body,
+    questionRef: post.questionRef,
+    createdAt: post.createdAt.toISOString(),
+    author: {
+      name: post.user.fullName?.trim() || post.user.nickname || 'Ivygoo learner',
+      nickname: post.user.nickname,
+      avatarUrl: listAvatar(post.user),
+    },
+    checks: post._count.checks,
+    checked: checked.has(post.id),
+    mine: post.userId === viewer.id,
+    canDelete: post.userId === viewer.id || viewer.role === 'ADMIN',
+  }
+}
+
 router.get(
   '/:exam/:testId/discussion',
   requireAuth,
@@ -142,25 +187,32 @@ router.get(
     const testId = testIdSchema.safeParse(req.params.testId)
     if (!exam.success || !testId.success) return res.status(400).json({ message: 'Unknown test.' })
     const posts = await prisma.testDiscussionPost.findMany({
-      where: { exam: exam.data, testId: testId.data },
+      where: { exam: exam.data, testId: testId.data, parentId: null },
       orderBy: { createdAt: 'desc' },
       take: 150,
-      include: { user: { select: { id: true, fullName: true, nickname: true, avatarUrl: true, googleAvatarUrl: true } } },
+      include: discussionInclude,
     })
+    const replies = posts.length
+      ? await prisma.testDiscussionPost.findMany({
+          where: { parentId: { in: posts.map((post) => post.id) } },
+          orderBy: { createdAt: 'asc' },
+          take: 1000,
+          include: discussionInclude,
+        })
+      : []
+    const mine = await prisma.testDiscussionCheck.findMany({
+      where: { userId: req.user!.id, postId: { in: [...posts, ...replies].map((post) => post.id) } },
+      select: { postId: true },
+    })
+    const checked = new Set(mine.map((check) => check.postId))
+    const byParent = new Map<string, ReturnType<typeof serializePost>[]>()
+    for (const reply of replies) {
+      const list = byParent.get(reply.parentId!) ?? []
+      list.push(serializePost(reply, req.user!, checked))
+      byParent.set(reply.parentId!, list)
+    }
     return res.json({
-      posts: posts.map((post) => ({
-        id: post.id,
-        body: post.body,
-        questionRef: post.questionRef,
-        createdAt: post.createdAt.toISOString(),
-        author: {
-          name: post.user.fullName?.trim() || post.user.nickname || 'Ivygoo learner',
-          nickname: post.user.nickname,
-          avatarUrl: listAvatar(post.user),
-        },
-        mine: post.userId === req.user!.id,
-        canDelete: post.userId === req.user!.id || req.user!.role === 'ADMIN',
-      })),
+      posts: posts.map((post) => ({ ...serializePost(post, req.user!, checked), replies: byParent.get(post.id) ?? [] })),
     })
   }),
 )
@@ -175,27 +227,58 @@ router.post(
     const testId = testIdSchema.safeParse(req.params.testId)
     if (!exam.success || !testId.success) return res.status(400).json({ message: 'Unknown test.' })
     const payload = req.body as z.infer<typeof postSchema>
+    let parentId: string | null = null
+    let questionRef = payload.questionRef ?? null
+    if (payload.parentId) {
+      const parent = await prisma.testDiscussionPost.findUnique({
+        where: { id: payload.parentId },
+        select: { id: true, exam: true, testId: true, parentId: true, questionRef: true },
+      })
+      if (!parent || parent.exam !== exam.data || parent.testId !== testId.data) {
+        return res.status(404).json({ message: 'That post is no longer available.' })
+      }
+      // A reply to a reply joins the same thread under the top-level post.
+      parentId = parent.parentId ?? parent.id
+      questionRef = null
+    }
     const post = await prisma.testDiscussionPost.create({
-      data: { userId: req.user!.id, exam: exam.data, testId: testId.data, body: payload.body, questionRef: payload.questionRef ?? null },
-      include: { user: { select: { fullName: true, nickname: true, avatarUrl: true, googleAvatarUrl: true } } },
+      data: { userId: req.user!.id, exam: exam.data, testId: testId.data, body: payload.body, questionRef, parentId },
+      include: discussionInclude,
     })
-    return res.status(201).json({
-      post: {
-        id: post.id,
-        body: post.body,
-        questionRef: post.questionRef,
-        createdAt: post.createdAt.toISOString(),
-        author: {
-          name: post.user.fullName?.trim() || post.user.nickname || 'Ivygoo learner',
-          nickname: post.user.nickname,
-          avatarUrl: listAvatar(post.user),
-        },
-        mine: true,
-        canDelete: true,
-      },
-    })
+    return res.status(201).json({ post: { ...serializePost(post, req.user!, new Set()), replies: [] } })
   }),
 )
+
+async function setCheck(postId: string, userId: string, on: boolean) {
+  const post = await prisma.testDiscussionPost.findUnique({ where: { id: postId }, select: { userId: true } })
+  if (!post) return { status: 404 as const }
+  if (post.userId === userId) return { status: 400 as const }
+  if (on) {
+    await prisma.testDiscussionCheck.upsert({
+      where: { postId_userId: { postId, userId } },
+      create: { postId, userId },
+      update: {},
+    })
+  } else {
+    await prisma.testDiscussionCheck.deleteMany({ where: { postId, userId } })
+  }
+  const checks = await prisma.testDiscussionCheck.count({ where: { postId } })
+  return { status: 200 as const, body: { checks, checked: on } }
+}
+
+for (const [method, on] of [['put', true], ['delete', false]] as const) {
+  router[method](
+    '/discussion/:id/check',
+    requireAuth,
+    checkRateLimit,
+    asyncHandler(async (req, res) => {
+      const result = await setCheck(req.params.id, req.user!.id, on)
+      if (result.status === 404) return res.status(404).json({ message: 'Post not found.' })
+      if (result.status === 400) return res.status(400).json({ message: 'You cannot check your own post.' })
+      return res.json(result.body)
+    }),
+  )
+}
 
 router.delete(
   '/discussion/:id',

@@ -6,8 +6,6 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleDashed,
-  Eye,
-  EyeOff,
   Flag,
   Lightbulb,
   MessageSquareText,
@@ -32,17 +30,7 @@ const STATUS = {
   unanswered: { label: 'Unanswered', icon: CircleDashed },
 } as const
 
-function ReviewQuestion({
-  question,
-  attempt,
-  reveal,
-  onReveal,
-}: {
-  question: SATQuestion
-  attempt: SATAttempt
-  reveal: boolean
-  onReveal: () => void
-}) {
+function ReviewQuestion({ question, attempt }: { question: SATQuestion; attempt: SATAttempt }) {
   const response = attempt.answers[question.id]?.trim()
   const eliminated = attempt.eliminatedChoices?.[question.id] ?? []
   const note = attempt.notes[question.id]
@@ -94,7 +82,7 @@ function ReviewQuestion({
             {question.choices.map((choice) => {
               const isKey = choice.key === question.correctAnswer
               const isMine = choice.key === response?.toUpperCase()
-              const tone = reveal ? (isKey ? 'is-key' : isMine ? 'is-wrong' : '') : isMine ? 'is-mine' : ''
+              const tone = isKey ? 'is-key' : isMine ? 'is-wrong' : ''
               return (
                 <div key={choice.key} className={`sqm-choice ${tone}`}>
                   <span className="sqm-choice-key">{choice.key}</span>
@@ -102,9 +90,9 @@ function ReviewQuestion({
                     <SATChoiceContent choice={choice} />
                     {eliminated.includes(choice.key) ? <small>Crossed out during the test</small> : null}
                   </div>
-                  {(isMine || (reveal && isKey)) && (
+                  {(isMine || isKey) && (
                     <span className="sqm-choice-label">
-                      {reveal && isKey ? (isMine ? 'Your answer · Correct' : 'Correct answer') : 'Your answer'}
+                      {isKey ? (isMine ? 'Your answer · Correct' : 'Correct answer') : 'Your answer'}
                     </span>
                   )}
                 </div>
@@ -113,51 +101,38 @@ function ReviewQuestion({
           </div>
         ) : (
           <div className="sqm-free">
-            <div className={`sqm-free-card ${reveal ? (correct ? 'is-key' : response ? 'is-wrong' : '') : 'is-mine'}`}>
+            <div className={`sqm-free-card ${correct ? 'is-key' : response ? 'is-wrong' : ''}`}>
               <span>Your response</span>
               <strong>{response || 'No response'}</strong>
             </div>
-            {reveal && (
-              <div className="sqm-free-card is-key">
-                <span>Correct answer</span>
-                <strong>{question.correctAnswer}</strong>
-                {alternatives.length > 0 && <small>Also accepted: {alternatives.join(', ')}</small>}
-              </div>
-            )}
+            <div className="sqm-free-card is-key">
+              <span>Correct answer</span>
+              <strong>{question.correctAnswer}</strong>
+              {alternatives.length > 0 && <small>Also accepted: {alternatives.join(', ')}</small>}
+            </div>
           </div>
         )}
 
-        {reveal ? (
-          <section className="sqm-explanation">
-            <div className="sqm-explanation-head">
-              <span>
-                <BookOpenCheck size={19} />
-              </span>
-              <div>
-                <p>Answer explanation</p>
-                <h3>Why this answer works</h3>
-              </div>
-            </div>
-            {question.sourceContent ? (
-              <SATSourceContent html={question.sourceContent.explanation} className="sqm-explanation-body" />
-            ) : (
-              <SATRichText text={question.explanation || 'Explanation unavailable.'} className="sqm-explanation-body" />
-            )}
-            <p className="sqm-tip">
-              <Lightbulb size={16} />
-              Say the rule in your own words before you move on — that is what makes it stick.
-            </p>
-          </section>
-        ) : (
-          <button type="button" className="sqm-reveal-card" onClick={onReveal}>
-            <Eye size={20} />
+        <section className="sqm-explanation">
+          <div className="sqm-explanation-head">
             <span>
-              <strong>Try it again first</strong>
-              <small>Show the correct answer and the full explanation when you are ready.</small>
+              <BookOpenCheck size={19} />
             </span>
-            <em>Show correct answer</em>
-          </button>
-        )}
+            <div>
+              <p>Answer explanation</p>
+              <h3>Why this answer works</h3>
+            </div>
+          </div>
+          {question.sourceContent ? (
+            <SATSourceContent html={question.sourceContent.explanation} className="sqm-explanation-body" />
+          ) : (
+            <SATRichText text={question.explanation || 'Explanation unavailable.'} className="sqm-explanation-body" />
+          )}
+          <p className="sqm-tip">
+            <Lightbulb size={16} />
+            Say the rule in your own words before you move on — that is what makes it stick.
+          </p>
+        </section>
 
         {readSATNotes(note).length ? (
           <section className="sqm-notes">
@@ -175,8 +150,6 @@ export default function SATQuestionModal({
   index,
   attempt,
   modules,
-  reveal,
-  onRevealChange,
   onIndexChange,
   onClose,
   onDiscuss,
@@ -185,8 +158,6 @@ export default function SATQuestionModal({
   index: number
   attempt: SATAttempt
   modules: SATModule[]
-  reveal: boolean
-  onRevealChange: (next: boolean) => void
   onIndexChange: (next: number) => void
   onClose: () => void
   onDiscuss: (question: SATQuestion) => void
@@ -267,30 +238,17 @@ export default function SATQuestionModal({
             </h2>
           </div>
           <div className="sqm-header-actions">
-            {reveal && (
-              <span className={`sqm-status is-${status}`}>
-                <StatusIcon size={15} />
-                {STATUS[status].label}
-              </span>
-            )}
-            <button
-              type="button"
-              className={`sqm-toggle ${reveal ? 'is-on' : ''}`}
-              role="switch"
-              aria-checked={reveal}
-              onClick={() => onRevealChange(!reveal)}
-            >
-              {reveal ? <EyeOff size={16} /> : <Eye size={16} />}
-              <span>{reveal ? 'Hide correct answer' : 'Show correct answer'}</span>
-              <i aria-hidden="true" />
-            </button>
+            <span className={`sqm-status is-${status}`}>
+              <StatusIcon size={15} />
+              {STATUS[status].label}
+            </span>
             <button type="button" className="sqm-icon-button" aria-label="Close question" onClick={onClose}>
               <X size={20} />
             </button>
           </div>
         </header>
         <div ref={bodyRef} className="sqm-body">
-          <ReviewQuestion question={question} attempt={attempt} reveal={reveal} onReveal={() => onRevealChange(true)} />
+          <ReviewQuestion question={question} attempt={attempt} />
         </div>
         <footer className="sqm-footer">
           <button

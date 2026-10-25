@@ -26,12 +26,18 @@ export type SATStanding = {
 
 export type TestDiscussionPost = {
   id: string
+  parentId: string | null
   body: string
   questionRef: string | null
   createdAt: string
   author: { name: string; nickname: string | null; avatarUrl: string | null }
+  /** Learners who marked the post as helpful. */
+  checks: number
+  checked: boolean
   mine: boolean
   canDelete: boolean
+  /** Top-level posts carry their thread, oldest reply first. */
+  replies?: TestDiscussionPost[]
 }
 
 export const examResultsApi = {
@@ -44,12 +50,24 @@ export const examResultsApi = {
   },
   discussion: (exam: 'SAT' | 'IELTS', testId: string) =>
     apiClient.get<{ posts: TestDiscussionPost[] }>(`/exam-results/${exam}/${encodeURIComponent(testId)}/discussion`),
-  postDiscussion: (exam: 'SAT' | 'IELTS', testId: string, body: string, questionRef?: string) =>
+  postDiscussion: (
+    exam: 'SAT' | 'IELTS',
+    testId: string,
+    body: string,
+    target: { questionRef?: string; parentId?: string } = {},
+  ) =>
     apiClient.post<{ post: TestDiscussionPost }>(`/exam-results/${exam}/${encodeURIComponent(testId)}/discussion`, {
       body,
-      ...(questionRef ? { questionRef } : {}),
+      ...(target.questionRef ? { questionRef: target.questionRef } : {}),
+      ...(target.parentId ? { parentId: target.parentId } : {}),
     }),
   deleteDiscussion: (id: string) => apiClient.delete<void>(`/exam-results/discussion/${encodeURIComponent(id)}`),
+  checkDiscussion: (id: string, checked: boolean) => {
+    const path = `/exam-results/discussion/${encodeURIComponent(id)}/check`
+    return checked
+      ? apiClient.put<{ checks: number; checked: boolean }>(path, {})
+      : apiClient.delete<{ checks: number; checked: boolean }>(path)
+  },
 }
 
 /** Platform percentiles need a meaningful crowd before they replace the national estimate. */

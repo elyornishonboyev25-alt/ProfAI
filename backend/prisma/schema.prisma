@@ -183,6 +183,7 @@ model User {
   featureUsage                        FeatureUsage[]
   resourceUnlocks                     ResourceUnlock[]
   testDiscussionPosts                 TestDiscussionPost[]
+  testDiscussionChecks                TestDiscussionCheck[]
 
   @@index([xp, level])
   @@index([createdAt])
@@ -1365,16 +1366,34 @@ model TelegramChat {
 
 // Learners discuss a specific mock test after finishing it (result page Discussion tab).
 model TestDiscussionPost {
-  id          String   @id @default(cuid())
+  id          String                @id @default(cuid())
   userId      String
   exam        String // SAT | IELTS
   testId      String
   questionRef String?
+  // Replies point at a top-level post; threads stay one level deep.
+  parentId    String?
   body        String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent      TestDiscussionPost?   @relation("TestDiscussionReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies     TestDiscussionPost[]  @relation("TestDiscussionReplies")
+  checks      TestDiscussionCheck[]
 
   @@index([exam, testId, createdAt])
+  @@index([parentId, createdAt])
+  @@index([userId])
+}
+
+/// A learner marking a discussion post as helpful.
+model TestDiscussionCheck {
+  postId    String
+  userId    String
+  createdAt DateTime           @default(now())
+  post      TestDiscussionPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([postId, userId])
   @@index([userId])
 }

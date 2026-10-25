@@ -138,7 +138,6 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
   const [moduleFilter, setModuleFilter] = useState<'all' | SATModuleId>('all')
   const [domainFilter, setDomainFilter] = useState<string | null>(null)
   const [modal, setModal] = useState<{ questions: SATQuestion[]; index: number } | null>(null)
-  const [revealAnswers, setRevealAnswers] = useState(false)
   const [reportError, setReportError] = useState(false)
   const [sectionFilter, setSectionFilter] = useState<SectionFilter>('all')
   const [standing, setStanding] = useState<StandingState>({
@@ -997,8 +996,6 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
             index={modal.index}
             attempt={attempt}
             modules={modules}
-            reveal={revealAnswers}
-            onRevealChange={setRevealAnswers}
             onIndexChange={(index) => setModal((current) => (current ? { ...current, index } : current))}
             onClose={() => setModal(null)}
             onDiscuss={discussQuestion}

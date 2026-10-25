@@ -1,5 +1,18 @@
-import { useEffect, useState, type FormEvent } from 'react'
-import { Clock3, Crown, Loader2, MessageSquareText, RotateCcw, Send, Trash2, Trophy, Users } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import {
+  CheckCircle2,
+  ChevronDown,
+  Clock3,
+  Crown,
+  Loader2,
+  MessageSquareText,
+  Reply,
+  RotateCcw,
+  Send,
+  Trash2,
+  Trophy,
+  Users,
+} from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { SATModule } from '@/features/sat/practiceTest4'
 import { formatSATDuration } from '@/features/sat/resultAnalysis'
@@ -214,6 +227,186 @@ function timeAgo(value: string) {
   return 'just now'
 }
 
+type Post = TestDiscussionPost
+type SortMode = 'newest' | 'helpful'
+
+const BODY_LIMIT = 1500
+const COLLAPSED_REPLIES = 3
+
+function DiscussionComposer({
+  id,
+  userName,
+  placeholder,
+  submitLabel,
+  initialBody = '',
+  compact = false,
+  autoFocus = false,
+  extra,
+  onSubmit,
+  onCancel,
+}: {
+  id: string
+  userName: string
+  placeholder: string
+  submitLabel: string
+  initialBody?: string
+  compact?: boolean
+  autoFocus?: boolean
+  extra?: ReactNode
+  onSubmit: (text: string) => Promise<void>
+  onCancel?: () => void
+}) {
+  const [body, setBody] = useState(initialBody)
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState('')
+  const fieldRef = useRef<HTMLTextAreaElement>(null)
+  const ready = body.trim().length >= 2 && !sending
+
+  useEffect(() => {
+    if (!autoFocus) return
+    const field = fieldRef.current
+    field?.focus()
+    field?.setSelectionRange(field.value.length, field.value.length)
+  }, [autoFocus])
+
+  const submit = async (event?: FormEvent) => {
+    event?.preventDefault()
+    if (!ready) return
+    setSending(true)
+    setError('')
+    try {
+      await onSubmit(body.trim())
+      setBody('')
+    } catch (failure) {
+      setError(failure instanceof Error && failure.message ? failure.message : 'Your post was not sent. Please try again.')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  return (
+    <form className={`srx-composer ${compact ? 'is-compact' : 'sr-card'}`} onSubmit={submit}>
+      <SRAvatar name={userName} size={compact ? 32 : 42} />
+      <div>
+        <label htmlFor={id} className="srx-visually-hidden">
+          {placeholder}
+        </label>
+        <textarea
+          id={id}
+          ref={fieldRef}
+          value={body}
+          maxLength={BODY_LIMIT}
+          rows={compact ? 2 : 3}
+          placeholder={placeholder}
+          onChange={(event) => setBody(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) void submit()
+            else if (event.key === 'Escape' && onCancel) onCancel()
+          }}
+        />
+        <div className="srx-composer-foot">
+          {extra}
+          <span className={body.length > BODY_LIMIT - 100 ? 'is-near' : ''}>
+            {body.length}/{BODY_LIMIT}
+          </span>
+          {onCancel && (
+            <button type="button" className="sr-button srx-ghost" onClick={onCancel}>
+              Cancel
+            </button>
+          )}
+          <button type="submit" className="sr-button sr-button-primary" disabled={!ready}>
+            {sending ? <Loader2 size={15} className="srx-spin" /> : <Send size={15} />}
+            {submitLabel}
+          </button>
+        </div>
+        {error && (
+          <p className="srx-form-error" role="alert">
+            {error}
+          </p>
+        )}
+      </div>
+    </form>
+  )
+}
+
+function DiscussionItem({
+  post,
+  isReply = false,
+  refLabel,
+  onCheck,
+  onReply,
+  onDelete,
+}: {
+  post: Post
+  isReply?: boolean
+  refLabel?: string | null
+  onCheck: (post: Post) => void
+  onReply: (post: Post) => void
+  onDelete: (post: Post) => void
+}) {
+  const [confirming, setConfirming] = useState(false)
+  useEffect(() => {
+    if (!confirming) return
+    const timer = window.setTimeout(() => setConfirming(false), 4000)
+    return () => window.clearTimeout(timer)
+  }, [confirming])
+  const replies = post.replies?.length ?? 0
+
+  return (
+    <article className={`srx-post ${isReply ? 'is-reply' : ''} ${post.mine ? 'is-mine' : ''}`}>
+      <SRAvatar name={post.author.name} url={post.author.avatarUrl} size={isReply ? 32 : 40} />
+      <div className="srx-post-main">
+        <header className="srx-post-meta">
+          <strong>{post.author.name}</strong>
+          {post.mine && <em className="srx-you">You</em>}
+          {post.author.nickname && <span>@{post.author.nickname}</span>}
+          <span aria-hidden="true">·</span>
+          <time dateTime={post.createdAt} title={new Date(post.createdAt).toLocaleString()}>
+            {timeAgo(post.createdAt)}
+          </time>
+        </header>
+        {refLabel && <span className="srx-post-ref">{refLabel}</span>}
+        <p>{post.body}</p>
+        <div className="srx-post-actions">
+          <button
+            type="button"
+            className={`srx-action is-check ${post.checked ? 'is-on' : ''}`}
+            aria-pressed={post.checked}
+            disabled={post.mine}
+            title={post.mine ? 'Learners can mark your post as helpful' : post.checked ? 'Remove your check' : 'Mark as helpful'}
+            onClick={() => onCheck(post)}
+          >
+            <CheckCircle2 size={15} />
+            <span>{post.checked ? 'Checked' : 'Helpful'}</span>
+            {post.checks > 0 && <b>{post.checks}</b>}
+          </button>
+          <button type="button" className="srx-action" onClick={() => onReply(post)}>
+            <Reply size={15} />
+            <span>Reply</span>
+            {!isReply && replies > 0 && <b>{replies}</b>}
+          </button>
+          {post.canDelete &&
+            (confirming ? (
+              <button type="button" className="srx-action is-danger is-confirm" onClick={() => onDelete(post)}>
+                <Trash2 size={14} />
+                <span>{!isReply && replies ? `Delete with ${replies} ${replies === 1 ? 'reply' : 'replies'}` : 'Confirm delete'}</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="srx-action is-danger"
+                aria-label={isReply ? 'Delete reply' : 'Delete post'}
+                onClick={() => setConfirming(true)}
+              >
+                <Trash2 size={14} />
+              </button>
+            ))}
+        </div>
+      </div>
+    </article>
+  )
+}
+
 export function SATDiscussion({
   testId,
   modules,
@@ -229,12 +422,13 @@ export function SATDiscussion({
   questionRef: string
   onQuestionRefChange: (value: string) => void
 }) {
-  const [posts, setPosts] = useState<TestDiscussionPost[]>([])
+  const [posts, setPosts] = useState<Post[]>([])
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
-  const [body, setBody] = useState('')
-  const [sending, setSending] = useState(false)
-  const [sendError, setSendError] = useState('')
   const [reload, setReload] = useState(0)
+  const [sort, setSort] = useState<SortMode>('newest')
+  const [replyTo, setReplyTo] = useState<{ threadId: string; mention: string } | null>(null)
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set())
+  const [actionError, setActionError] = useState('')
   const refLabel = (ref: string | null) => {
     if (!ref) return null
     const [moduleId, number] = ref.split(':')
@@ -250,7 +444,7 @@ export function SATDiscussion({
       .discussion('SAT', testId)
       .then(({ posts: next }) => {
         if (!active) return
-        setPosts(next)
+        setPosts(next.map((post) => ({ ...post, replies: post.replies ?? [] })))
         setStatus('ready')
       })
       .catch(() => active && setStatus('error'))
@@ -259,55 +453,104 @@ export function SATDiscussion({
     }
   }, [reload, signedIn, testId])
 
+  const sorted = useMemo(() => {
+    if (sort === 'newest') return posts
+    return [...posts].sort(
+      (a, b) =>
+        b.checks - a.checks ||
+        (b.replies?.length ?? 0) - (a.replies?.length ?? 0) ||
+        b.createdAt.localeCompare(a.createdAt),
+    )
+  }, [posts, sort])
+  const replyTotal = posts.reduce((sum, post) => sum + (post.replies?.length ?? 0), 0)
+
   if (!signedIn)
     return <SignInPrompt text="Ask about a question, share a strategy, and learn from others who took this test." />
 
-  const submit = async (event: FormEvent) => {
-    event.preventDefault()
-    const text = body.trim()
-    if (text.length < 2 || sending) return
-    setSending(true)
-    setSendError('')
+  const updatePost = (id: string, change: (post: Post) => Post | null) =>
+    setPosts((current) =>
+      current.flatMap((post) => {
+        if (post.id === id) {
+          const next = change(post)
+          return next ? [next] : []
+        }
+        if (!post.replies?.some((reply) => reply.id === id)) return [post]
+        return [
+          {
+            ...post,
+            replies: post.replies.flatMap((reply) => {
+              if (reply.id !== id) return [reply]
+              const next = change(reply)
+              return next ? [next] : []
+            }),
+          },
+        ]
+      }),
+    )
+
+  const createPost = async (text: string) => {
+    const { post } = await examResultsApi.postDiscussion('SAT', testId, text, { questionRef: questionRef || undefined })
+    setPosts((current) => [{ ...post, replies: [] }, ...current])
+    onQuestionRefChange('')
+    setSort('newest')
+  }
+
+  const createReply = async (threadId: string, text: string) => {
+    const { post } = await examResultsApi.postDiscussion('SAT', testId, text, { parentId: threadId })
+    setPosts((current) =>
+      current.map((thread) =>
+        thread.id === threadId ? { ...thread, replies: [...(thread.replies ?? []), post] } : thread,
+      ),
+    )
+    setExpanded((current) => new Set(current).add(threadId))
+    setReplyTo(null)
+  }
+
+  const toggleCheck = async (post: Post) => {
+    if (post.mine) return
+    const next = !post.checked
+    setActionError('')
+    updatePost(post.id, (item) => ({ ...item, checked: next, checks: Math.max(0, item.checks + (next ? 1 : -1)) }))
     try {
-      const { post } = await examResultsApi.postDiscussion('SAT', testId, text, questionRef || undefined)
-      setPosts((current) => [post, ...current])
-      setBody('')
-      onQuestionRefChange('')
-    } catch (error) {
-      setSendError(
-        error instanceof Error && error.message ? error.message : 'Your post was not sent. Please try again.',
-      )
-    } finally {
-      setSending(false)
+      const result = await examResultsApi.checkDiscussion(post.id, next)
+      updatePost(post.id, (item) => ({ ...item, checked: result.checked, checks: result.checks }))
+    } catch {
+      updatePost(post.id, (item) => ({ ...item, checked: post.checked, checks: post.checks }))
+      setActionError('Your check was not saved. Please try again.')
     }
   }
-  const remove = async (id: string) => {
+
+  const remove = async (post: Post) => {
     const previous = posts
-    setPosts((current) => current.filter((post) => post.id !== id))
+    setActionError('')
+    updatePost(post.id, () => null)
+    if (replyTo?.threadId === post.id) setReplyTo(null)
     try {
-      await examResultsApi.deleteDiscussion(id)
+      await examResultsApi.deleteDiscussion(post.id)
     } catch {
       setPosts(previous)
+      setActionError('The post was not deleted. Please try again.')
     }
+  }
+
+  const startReply = (post: Post) => {
+    const threadId = post.parentId ?? post.id
+    // Replying inside a thread mentions the person you answer.
+    const mention = post.parentId && !post.mine && post.author.nickname ? `@${post.author.nickname} ` : ''
+    setReplyTo({ threadId, mention })
+    if (post.parentId) setExpanded((current) => new Set(current).add(threadId))
   }
 
   return (
     <div className="srx-discussion">
-      <form className="sr-card srx-composer" onSubmit={submit}>
-        <SRAvatar name={userName} size={42} />
-        <div>
-          <label htmlFor="sat-discussion-body" className="srx-visually-hidden">
-            Your post
-          </label>
-          <textarea
-            id="sat-discussion-body"
-            value={body}
-            maxLength={1500}
-            rows={3}
-            placeholder="Ask about a question or share how you solved it…"
-            onChange={(event) => setBody(event.target.value)}
-          />
-          <div className="srx-composer-foot">
+      <DiscussionComposer
+        id="sat-discussion-body"
+        userName={userName}
+        placeholder="Ask about a question or share how you solved it…"
+        submitLabel="Post"
+        onSubmit={createPost}
+        extra={
+          <>
             <label className="srx-visually-hidden" htmlFor="sat-discussion-question">
               Question
             </label>
@@ -327,29 +570,49 @@ export function SATDiscussion({
                 </optgroup>
               ))}
             </select>
-            <span>{body.length}/1500</span>
-            <button type="submit" className="sr-button sr-button-primary" disabled={body.trim().length < 2 || sending}>
-              {sending ? <Loader2 size={15} className="srx-spin" /> : <Send size={15} />}
-              Post
-            </button>
+          </>
+        }
+      />
+      {status === 'ready' && posts.length > 0 && (
+        <div className="srx-thread-bar">
+          <p>
+            <strong>{posts.length}</strong> {posts.length === 1 ? 'post' : 'posts'}
+            <span aria-hidden="true">·</span>
+            <strong>{replyTotal}</strong> {replyTotal === 1 ? 'reply' : 'replies'}
+          </p>
+          <div className="srx-sort" role="group" aria-label="Sort posts">
+            {(['newest', 'helpful'] as const).map((mode) => (
+              <button key={mode} type="button" aria-pressed={sort === mode} onClick={() => setSort(mode)}>
+                {mode === 'newest' ? 'Newest' : 'Most helpful'}
+              </button>
+            ))}
           </div>
-          {sendError && (
-            <p className="srx-form-error" role="alert">
-              {sendError}
-            </p>
-          )}
         </div>
-      </form>
+      )}
+      {actionError && (
+        <p className="srx-form-error srx-action-error" role="alert">
+          {actionError}
+        </p>
+      )}
       {status === 'loading' && (
-        <div className="sr-card srx-empty" role="status">
-          <Loader2 size={26} className="srx-spin" />
-          <p>Loading the discussion…</p>
-        </div>
+        <ul className="srx-posts" aria-busy="true" aria-label="Loading the discussion">
+          {[0, 1, 2].map((item) => (
+            <li key={item} className="sr-card srx-thread srx-skeleton" aria-hidden="true">
+              <span className="srx-skeleton-avatar" />
+              <span className="srx-skeleton-lines">
+                <i />
+                <i />
+                <i />
+              </span>
+            </li>
+          ))}
+        </ul>
       )}
       {status === 'error' && (
         <div className="sr-card srx-empty" role="alert">
           <MessageSquareText size={28} />
           <h3>The discussion did not load</h3>
+          <p>Check your connection, then try again.</p>
           <button type="button" className="sr-button" onClick={() => setReload((value) => value + 1)}>
             <RotateCcw size={14} />
             Try again
@@ -365,25 +628,67 @@ export function SATDiscussion({
       )}
       {status === 'ready' && posts.length > 0 && (
         <ul className="srx-posts">
-          {posts.map((post) => (
-            <li key={post.id} className={`sr-card srx-post ${post.mine ? 'is-mine' : ''}`}>
-              <SRAvatar name={post.author.name} url={post.author.avatarUrl} />
-              <div>
-                <div className="srx-post-meta">
-                  <strong>{post.author.name}</strong>
-                  {post.author.nickname && <span>@{post.author.nickname}</span>}
-                  <time dateTime={post.createdAt}>{timeAgo(post.createdAt)}</time>
-                  {post.canDelete && (
-                    <button type="button" aria-label="Delete post" onClick={() => void remove(post.id)}>
-                      <Trash2 size={14} />
-                    </button>
-                  )}
-                </div>
-                {refLabel(post.questionRef) && <span className="srx-post-ref">{refLabel(post.questionRef)}</span>}
-                <p>{post.body}</p>
-              </div>
-            </li>
-          ))}
+          {sorted.map((post) => {
+            const replies = post.replies ?? []
+            const open = expanded.has(post.id)
+            const hidden = open ? 0 : Math.max(0, replies.length - COLLAPSED_REPLIES)
+            const shown = hidden ? replies.slice(-COLLAPSED_REPLIES) : replies
+            const replying = replyTo?.threadId === post.id
+            return (
+              <li key={post.id} className={`sr-card srx-thread ${post.mine ? 'is-mine' : ''}`}>
+                <DiscussionItem
+                  post={post}
+                  refLabel={refLabel(post.questionRef)}
+                  onCheck={(item) => void toggleCheck(item)}
+                  onReply={startReply}
+                  onDelete={(item) => void remove(item)}
+                />
+                {(replies.length > 0 || replying) && (
+                  <div className="srx-replies">
+                    {hidden > 0 && (
+                      <button
+                        type="button"
+                        className="srx-more-replies"
+                        onClick={() => setExpanded((current) => new Set(current).add(post.id))}
+                      >
+                        <ChevronDown size={15} />
+                        View {hidden} earlier {hidden === 1 ? 'reply' : 'replies'}
+                      </button>
+                    )}
+                    {shown.length > 0 && (
+                      <ul aria-label={`Replies to ${post.author.name}`}>
+                        {shown.map((reply) => (
+                          <li key={reply.id}>
+                            <DiscussionItem
+                              post={reply}
+                              isReply
+                              onCheck={(item) => void toggleCheck(item)}
+                              onReply={startReply}
+                              onDelete={(item) => void remove(item)}
+                            />
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {replying && (
+                      <DiscussionComposer
+                        key={`${post.id}-${replyTo.mention}`}
+                        id={`sat-reply-${post.id}`}
+                        userName={userName}
+                        placeholder={`Reply to ${post.author.name}…`}
+                        submitLabel="Reply"
+                        initialBody={replyTo.mention}
+                        compact
+                        autoFocus
+                        onSubmit={(text) => createReply(post.id, text)}
+                        onCancel={() => setReplyTo(null)}
+                      />
+                    )}
+                  </div>
+                )}
+              </li>
+            )
+          })}
         </ul>
       )}
     </div>

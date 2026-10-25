@@ -267,6 +267,7 @@ function App() {
     pathname === '/ai-tutor' ||
     isLeaderboardMode
   const isSatTestRoute =
+    (pathname === '/sat/hard-questions' && Boolean(new URLSearchParams(location.search).get('q'))) ||
     /^\/sat\/question-bank\/run\/[^/]+$/.test(pathname) ||
     /^\/mock\/sat(?:\/\d+)?$/.test(pathname) ||
     /^\/sat\/mock\/\d+\/run$/.test(pathname)

@@ -201,22 +201,23 @@ try {
     )
     await evaluate('document.querySelector(".srx-row-correct .srx-review-button").click()')
     await until('document.querySelector(".sqm-dialog")')
-    assert.equal(
-      await evaluate('Boolean(document.querySelector(".sqm-explanation"))'),
-      false,
-      'The solution stays hidden until Show correct answer is on',
-    )
-    await evaluate('document.querySelector(".sqm-toggle").click()')
     await until('document.querySelector(".sqm-dialog").textContent.includes("Your answer · Correct")')
     assert.ok(await evaluate('Boolean(document.querySelector(".sqm-explanation"))'))
+    const checkModalNavigation = async () => {
+      assert.equal(await evaluate(`([...document.querySelectorAll('.sqm-nav')].every(button=>{const r=button.getBoundingClientRect();return r.top>=0 && r.bottom<=innerHeight+1 && r.left>=0 && r.right<=innerWidth+1 && button.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))}))`),true,'Full mock review navigation stays visible and clickable')
+    }
+    await checkModalNavigation()
+    await evaluate('document.querySelector(".sqm-body").scrollTop=1e6')
+    await checkModalNavigation()
     const shot = await send('Page.captureScreenshot', { format: 'png' })
     await writeFile(join(artifacts, `${width}-modal.png`), Buffer.from(shot.data, 'base64'))
     const before = await evaluate('document.querySelector(".sqm-progress strong").textContent')
     await evaluate('document.querySelector(".sqm-nav.is-next").click()')
     await until(`document.querySelector(".sqm-progress strong").textContent!==${JSON.stringify(before)}`)
+    assert.equal(await evaluate('document.querySelector(".sqm-body").scrollTop'),0,'Next mock review starts at the top')
     assert.ok(
       await evaluate('Boolean(document.querySelector(".sqm-explanation"))'),
-      'Show correct answer stays on while moving between questions',
+      'Explanations remain visible while moving between questions',
     )
     await evaluate('window.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}))')
     await until('!document.querySelector(".sqm-dialog")')

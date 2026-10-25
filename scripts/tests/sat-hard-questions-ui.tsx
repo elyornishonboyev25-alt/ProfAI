@@ -8,6 +8,7 @@ import { HARD_QUESTIONS, loadHardProgress, selectHardQuestions } from '../../src
 import { allQuestions } from '../../src/features/sat/bankPractice'
 import { isSATAnswerCorrect } from '../../src/features/sat/practiceTest4'
 import { useAuthStore } from '../../src/store/authStore'
+import { useAiAssistantStore } from '../../src/store/aiAssistantStore'
 
 let root: ReturnType<typeof createRoot> | undefined
 const container = document.getElementById('root')!
@@ -50,6 +51,11 @@ export async function run() {
   assert.equal(container.querySelectorAll('.hard-topic').length, 10)
   const row = HARD_QUESTIONS['reading-writing'][0]
   await click(container.querySelector('.hard-tile'))
+  assert.ok(container.querySelector('.hard-page-active'))
+  assert.equal(container.querySelector('.hard-hero'), null, 'Active questions use the focused test layout')
+  assert.equal(useAiAssistantStore.getState().isExamModeActive, true)
+  assert.equal(document.body.style.overflow, 'hidden')
+  assert.ok(container.querySelector('nav[aria-label="Hard question navigation"]'))
   assert.ok(!container.querySelector('.hard-feedback'))
   const wrong = row.question.choices.find(choice => choice.key !== row.question.correctAnswer)!
   await click([...container.querySelectorAll('.hard-choice')].find(button => button.querySelector('.hard-choice-key')?.textContent === wrong.key))
@@ -62,6 +68,8 @@ export async function run() {
   assert.ok(container.querySelector('.hard-feedback.incorrect'), 'Reload preserves checked answer and explanation')
   await click(container.querySelector('[aria-label="Bookmark question"]'))
   await click(byText('All topics'))
+  assert.equal(useAiAssistantStore.getState().isExamModeActive, false)
+  assert.equal(document.body.style.overflow, '')
   await click(byText('Bookmarked'))
   assert.equal(container.querySelectorAll('.hard-tile').length, 1)
   await click(container.querySelector('.hard-tile'))
@@ -69,6 +77,7 @@ export async function run() {
   assert.ok(!container.querySelector('.hard-feedback'))
   await click([...container.querySelectorAll('.hard-choice')].find(button => button.querySelector('.hard-choice-key')?.textContent === row.question.correctAnswer))
   assert.ok(container.querySelector('.hard-feedback.correct'))
+  await click(byText('All topics'))
   await click([...container.querySelectorAll('.hard-subject')].find(button => button.querySelector('strong')?.textContent === 'Math'))
   assert.equal(container.querySelectorAll('.hard-tile').length, 100)
   assert.equal(container.querySelectorAll('.hard-topic').length, 19)

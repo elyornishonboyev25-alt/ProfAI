@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowLeft,
   ArrowRight,
@@ -19,6 +19,7 @@ import SATQuestionCanvas from '@/components/sat/SATQuestionCanvas'
 import SATBankSelect from '@/components/sat/SATBankSelect'
 import { bankDomain, bankSkill } from '@/features/sat/bankTopics'
 import SATRichText from '@/components/sat/SATRichText'
+import SATSourceContent from '@/components/sat/SATSourceContent'
 import { getSATReviewTests } from '@/features/sat/catalog'
 import { loadSATAttempt, loadSATAttemptHistory } from '@/features/sat/attemptStorage'
 import { isSATAnswerCorrect } from '@/features/sat/practiceTest4'
@@ -166,6 +167,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
       .sort((a, b) => b.at.localeCompare(a.at))
   }, [history])
   const reviewSet = sets.find((set) => set.id === reviewId)
+  const reviewHeading = useRef<HTMLHeadingElement>(null)
   const reviewRows =
     reviewSet?.results
       .map((result, number) => ({
@@ -185,11 +187,12 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
   useEffect(() => {
     setReviewIndex(0)
     setReviewFilter('all')
-    window.scrollTo(0, 0)
+    if (!reviewId) window.scrollTo({ top: 0, behavior: 'instant' })
   }, [reviewId])
-  useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [reviewIndex])
+  useLayoutEffect(() => {
+    reviewHeading.current?.focus({ preventScroll: true })
+    reviewHeading.current?.scrollIntoView?.({ block: 'start', behavior: 'instant' })
+  }, [reviewId, reviewIndex, reviewFilter, review?.result.key])
   const goTo = (view: 'practice' | 'history', id?: string) => {
     setParams((current) => {
       current.delete('review')
@@ -428,8 +431,28 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                     </div>
                   </aside>
                   <article className="sat-bank-review-detail">
+                    <nav className="sat-bank-review-pagination" aria-label="Review question navigation">
+                      <button
+                        type="button"
+                        disabled={reviewIndex === 0}
+                        onClick={() => setReviewIndex((value) => value - 1)}
+                      >
+                        <ArrowLeft size={16} /> Previous
+                      </button>
+                      <span aria-live="polite">
+                        {Math.min(reviewIndex + 1, reviewRows.length)} /{' '}
+                        {reviewRows.length}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={reviewIndex >= reviewRows.length - 1}
+                        onClick={() => setReviewIndex((value) => value + 1)}
+                      >
+                        Next <ArrowRight size={16} />
+                      </button>
+                    </nav>
                     <div className="sat-bank-detail-title">
-                      <h3>Question {review.number}</h3>
+                      <h3 ref={reviewHeading} tabIndex={-1}>Question {review.number}</h3>
                       {calculatorButton}
                       <span
                         className={`sat-bank-outcome ${outcome(review.result)}`}
@@ -478,7 +501,11 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                         </div>
                         <section className="sat-bank-explanation">
                           <h4>Explanation</h4>
-                          <SATRichText text={review.row.question.explanation} />
+                          {review.row.question.sourceContent?.explanation ? (
+                            <SATSourceContent html={review.row.question.sourceContent.explanation} />
+                          ) : (
+                            <SATRichText text={review.row.question.explanation} />
+                          )}
                         </section>
                       </>
                     ) : (
@@ -487,26 +514,6 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                         result is still available.
                       </p>
                     )}
-                    <div className="sat-bank-review-pagination">
-                      <button
-                        type="button"
-                        disabled={reviewIndex === 0}
-                        onClick={() => setReviewIndex((value) => value - 1)}
-                      >
-                        <ArrowLeft size={16} /> Previous
-                      </button>
-                      <span>
-                        {Math.min(reviewIndex + 1, reviewRows.length)} /{' '}
-                        {reviewRows.length}
-                      </span>
-                      <button
-                        type="button"
-                        disabled={reviewIndex >= reviewRows.length - 1}
-                        onClick={() => setReviewIndex((value) => value + 1)}
-                      >
-                        Next <ArrowRight size={16} />
-                      </button>
-                    </div>
                   </article>
                 </div>
               ) : (

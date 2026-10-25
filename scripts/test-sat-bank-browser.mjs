@@ -15,13 +15,20 @@ async function main() {
   const directory = await mkdtemp(join(tmpdir(), 'profai-sat-bank-browser-'))
   const source = `
     import React from 'react'; import {createRoot} from 'react-dom/client';
-    import {MemoryRouter, Routes, Route, useLocation} from 'react-router-dom';
+    import {MemoryRouter, Routes, Route, useLocation, useNavigate} from 'react-router-dom';
     import Bank from './src/pages/SATQuestionBank'; import Run from './src/pages/SATQuestionBankRun';
     import {useAuthStore} from './src/store/authStore';
+    import {allQuestions,historyKey} from './src/features/sat/bankPractice'; import {accountStorageFor} from './src/utils/accountStorage';
     useAuthStore.setState({user:null});
     window.fullscreenRequests=0; window.confirm=()=>true;
     document.documentElement.requestFullscreen=async()=>{window.fullscreenRequests++};
-    function Location(){const l=useLocation();return <output data-location>{l.pathname}{l.search}</output>}
+    function Location(){const l=useLocation();window.bankNavigate=useNavigate();return <output data-location>{l.pathname}{l.search}</output>}
+    window.seedLongReview=()=>{
+      const rows=allQuestions.filter(row=>row.question.section==='math'&&row.question.sourceContent?.explanation.includes('<math')).sort((a,b)=>b.question.sourceContent.explanation.length-a.question.sourceContent.explanation.length).slice(0,3);
+      if(rows.length!==3)throw Error('Expected sourced math review fixtures');
+      const at=new Date().toISOString();accountStorageFor('guest').setItem(historyKey('guest'),JSON.stringify(rows.map(row=>({key:row.key,section:'math',domain:row.question.domain,skill:row.question.skill,correct:true,answer:row.question.correctAnswer,at,setId:'long-review'}))));
+      window.dispatchEvent(new Event('focus'));window.bankNavigate('/sat/question-bank?view=history&review=long-review');
+    };
     createRoot(document.getElementById('root')).render(<MemoryRouter initialEntries={['/sat/question-bank?section=math&count=4']}>
       <Location/><Routes><Route path="/sat/question-bank" element={<Bank/>}/><Route path="/sat/question-bank/run/:setId" element={<Run/>}/></Routes>
     </MemoryRouter>);
@@ -236,6 +243,29 @@ async function main() {
     // Retain review screenshots outside the repo; no generated artifacts in commits.
     const destination=resolve(process.env.SAT_TEST_SCREENSHOTS || '/tmp/profai-sat-bank-screenshots')
     await mkdir(destination,{recursive:true})
+    await evaluate('window.seedLongReview()')
+    await until('!!document.querySelector(".sat-bank-explanation math")')
+    await until(`document.querySelector('.sat-bank-detail-title h3').getBoundingClientRect().top>=90 && document.querySelector('.sat-bank-detail-title h3').getBoundingClientRect().bottom<innerHeight`)
+    const checkReviewNavigation = async () => {
+      assert.equal(await evaluate(`([...document.querySelectorAll('.sat-bank-review-pagination button')].every(button=>{const r=button.getBoundingClientRect();return r.top>=0 && r.bottom<=innerHeight && r.left>=0 && r.right<=innerWidth && button.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))}))`), true, 'Review navigation stays visible and clickable above long explanations')
+    }
+    for(const [width,height] of [[1366,768],[768,1024],[390,844],[320,568]]) {
+      await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<1024})
+      await evaluate(`document.querySelector('.sat-bank-detail-title h3').scrollIntoView({block:'start',behavior:'instant'});true`)
+      await checkReviewNavigation()
+      await evaluate(`document.querySelector('.sat-bank-explanation').scrollIntoView({block:'start',behavior:'instant'});true`)
+      await checkReviewNavigation()
+      assert.equal(await evaluate('document.documentElement.scrollWidth<=innerWidth+1'),true,'Math explanations fit the viewport')
+      const shot=await send('Page.captureScreenshot',{format:'png'})
+      await writeFile(join(destination,`review-${width}.png`),Buffer.from(shot.data,'base64'))
+      await clickText('Next')
+      await until('document.querySelector(".sat-bank-detail-title h3").textContent==="Question 2"')
+      await checkReviewNavigation()
+      const headingLayout=await evaluate(`(()=>{const r=document.querySelector('.sat-bank-detail-title h3').getBoundingClientRect(),nav=document.querySelector('.sat-bank-review-pagination').getBoundingClientRect();return {top:r.top,bottom:r.bottom,navBottom:nav.bottom,height:innerHeight,scroll:scrollY}})()`)
+      assert.ok(headingLayout.top>=headingLayout.navBottom && headingLayout.bottom<headingLayout.height,`Next brings the new heading into view below navigation: ${JSON.stringify(headingLayout)}`)
+      await clickText('Previous')
+      await until('document.querySelector(".sat-bank-detail-title h3").textContent==="Question 1"')
+    }
     for(const [width,height] of [[1366,768],[1024,640],[920,500],[768,1024],[390,844],[320,568]]) await writeFile(join(destination,`${width}x${height}.png`),await readFile(join(screenshots,`${width}x${height}.png`)))
     for(const width of [1366,390]) await writeFile(join(destination,`reading-${width}.png`),await readFile(join(screenshots,`reading-${width}.png`)))
     console.log(`PASS comfortable filters, grouped topics, mock Reading layout, saved review; saved answers and marks resume; screenshots: ${destination}`)

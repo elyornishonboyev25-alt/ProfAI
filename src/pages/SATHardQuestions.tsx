@@ -12,6 +12,7 @@ import { isSATAnswerCorrect, type SATSection } from '@/features/sat/practiceTest
 import { splitSATPrompt } from '@/features/sat/promptLayout'
 import { accountStorageFor } from '@/utils/accountStorage'
 import { useAuthStore } from '@/store/authStore'
+import { useAiAssistantStore } from '@/store/aiAssistantStore'
 import './SATHardQuestions.css'
 
 type Filter = 'all' | 'unanswered' | 'incorrect' | 'bookmarked'
@@ -31,9 +32,23 @@ function HardWorkspace({ userId }: { userId: string }) {
   const [error, setError] = useState('')
   const [calculatorOpen, setCalculatorOpen] = useState(false)
   const feedback = useRef<HTMLElement>(null)
+  const questionViewport = useRef<HTMLElement>(null)
+  const previousFeedback = useRef({ key: active?.key, checked: Boolean(active && progress[active.key]?.checked) })
   const questionHeading = useRef<HTMLHeadingElement>(null)
   const subjectHeading = useRef<HTMLHeadingElement>(null)
   const math = section === 'math'
+  const practicing = Boolean(active)
+  useEffect(() => {
+    if (!practicing) return
+    const previous = useAiAssistantStore.getState().isExamModeActive
+    const overflow = document.body.style.overflow
+    useAiAssistantStore.getState().setExamModeActive(true)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      useAiAssistantStore.getState().setExamModeActive(previous)
+      document.body.style.overflow = overflow
+    }
+  }, [practicing])
   const checkedCount = rows.filter(row => progress[row.key]?.checked).length
   const correctCount = rows.filter(row => progress[row.key]?.checked && isSATAnswerCorrect(row.question, progress[row.key].answer)).length
   const visible = rows.filter(row => {
@@ -46,7 +61,10 @@ function HardWorkspace({ userId }: { userId: string }) {
   })), [visible])
   useEffect(() => {
     setCalculatorOpen(false)
-    if (active) questionHeading.current?.focus()
+    if (active) {
+      questionViewport.current?.scrollTo?.(0, 0)
+      questionHeading.current?.focus({ preventScroll: true })
+    }
     else subjectHeading.current?.focus()
   }, [active?.key, section])
   const update = (key: string, patch: Partial<HardProgress[string]>) => {
@@ -62,16 +80,24 @@ function HardWorkspace({ userId }: { userId: string }) {
   const answer = state?.answer ?? ''
   const checked = Boolean(state?.checked)
   useEffect(() => {
-    if (checked) feedback.current?.scrollIntoView?.({ block: 'start', behavior: 'instant' })
+    const previous = previousFeedback.current
+    if (active?.key === previous.key) {
+      if (checked && !previous.checked) feedback.current?.scrollIntoView?.({ block: 'start', behavior: 'instant' })
+      else if (!checked && previous.checked) {
+        questionViewport.current?.scrollTo?.(0, 0)
+        questionHeading.current?.focus({ preventScroll: true })
+      }
+    }
+    previousFeedback.current = { key: active?.key, checked }
   }, [checked, active?.key])
   const correct = active ? isSATAnswerCorrect(active.question, answer) : false
   const question = active?.question
   const index = active ? rows.indexOf(active) : -1
   const prompt = question ? splitSATPrompt(question.prompt) : null
 
-  return <main className="workspace-page hard-page">
+  return <main className={`workspace-page hard-page ${active ? 'hard-page-active' : ''}`} aria-label={active ? 'SAT Hard Questions practice' : undefined}>
     <div className="hard-shell">
-      <SATSectionTabs section="hard-questions" />
+      {!active && <><SATSectionTabs section="hard-questions" />
       <header className="hard-hero">
         <div className="hard-hero-copy"><span className="hard-eyebrow"><Flame size={16} /> SAT CHALLENGE COLLECTION</span>
           <h1>Hard questions.<br /><span>Clear breakthroughs.</span></h1>
@@ -89,18 +115,18 @@ function HardWorkspace({ userId }: { userId: string }) {
             </button>
           })}
         </div>
-      </header>
+      </header></>}
       {error && <p className="hard-error" role="alert">{error}</p>}
-      <section id="sat-test-panel" aria-labelledby="sat-tab-hard-questions" role="tabpanel" className="hard-workspace">
-        <div className="hard-section-heading"><div><span className="hard-eyebrow">{math ? 'MATH' : 'ENGLISH'} · ADVANCED</span><h2 ref={subjectHeading} tabIndex={-1}>{math ? 'Math' : 'English'} challenge map</h2></div>
+      <section id="sat-test-panel" aria-labelledby={active ? undefined : 'sat-tab-hard-questions'} role={active ? undefined : 'tabpanel'} className="hard-workspace">
+        {!active && <div className="hard-section-heading"><div><span className="hard-eyebrow">{math ? 'MATH' : 'ENGLISH'} · ADVANCED</span><h2 ref={subjectHeading} tabIndex={-1}>{math ? 'Math' : 'English'} challenge map</h2></div>
           <div className="hard-stats"><span><strong>{checkedCount}</strong> completed</span><span><strong>{correctCount}</strong> correct</span><span><strong>{checkedCount ? Math.round(correctCount / checkedCount * 100) : 0}%</strong> accuracy</span></div>
-        </div>
+        </div>}
         {active && question && prompt ? <>
           <div className="hard-question-toolbar"><button type="button" onClick={() => openQuestion()}><ArrowLeft size={16} /> All topics</button><span>Question {index + 1} / 100</span>
             {math && <button type="button" aria-expanded={calculatorOpen} onClick={() => setCalculatorOpen(value => !value)}><Calculator size={17} /> Calculator</button>}
             <button type="button" aria-pressed={Boolean(state?.bookmarked)} aria-label={state?.bookmarked ? 'Remove bookmark' : 'Bookmark question'} onClick={() => update(active.key, { bookmarked: !state?.bookmarked })}><Bookmark size={17} fill={state?.bookmarked ? 'currentColor' : 'none'} /></button>
           </div>
-          <article className="hard-question" key={active.key}>
+          <article ref={questionViewport} className="hard-question" key={active.key}>
             <header><span>{question.domain}</span><h3 ref={questionHeading} tabIndex={-1}>{question.skill}</h3><small>From Ivygoo SAT test {active.testNumber} · Hard</small></header>
             <div className={`hard-question-body ${!math ? 'english' : ''}`}>
               <div className="hard-passage">
@@ -130,7 +156,7 @@ function HardWorkspace({ userId }: { userId: string }) {
               <button type="button" className="hard-retry" onClick={() => update(active.key, { answer: '', checked: false })}><RotateCcw size={15} /> Try this question again</button>
             </section>}
           </article>
-          <div className="hard-question-footer"><button type="button" disabled={index === 0} onClick={() => openQuestion(rows[index - 1].key)}><ArrowLeft size={17} /> Previous</button><span>{checked ? error ? 'Result checked' : 'Result saved' : 'Take your time'}</span><button type="button" className="hard-primary" disabled={index === rows.length - 1} onClick={() => openQuestion(rows[index + 1].key)}>Next question <ArrowRight size={17} /></button></div>
+          <nav className="hard-question-footer" aria-label="Hard question navigation"><button type="button" disabled={index === 0} onClick={() => openQuestion(rows[index - 1].key)}><ArrowLeft size={17} /> Previous</button><span>{checked ? error ? 'Result checked' : 'Result saved' : 'Take your time'}</span><button type="button" className="hard-primary" disabled={index === rows.length - 1} onClick={() => openQuestion(rows[index + 1].key)}>Next question <ArrowRight size={17} /></button></nav>
         </> : <>
           <div className="hard-map-tools"><div className="hard-filters" aria-label="Filter questions">{(['all', 'unanswered', 'incorrect', 'bookmarked'] as const).map(value => <button type="button" key={value} aria-pressed={filter === value} onClick={() => setFilter(value)}>{({ all: 'All questions', unanswered: 'To solve', incorrect: 'To review', bookmarked: 'Bookmarked' })[value]}</button>)}</div><label className="hard-search"><Search size={17} /><input type="search" placeholder="Find a topic or question…" aria-label="Search hard questions" value={search} onChange={event => setSearch(event.target.value)} /></label></div>
           <div className="hard-legend"><span><i /> To solve</span><span><i className="correct" /> Correct</span><span><i className="incorrect" /> To review</span><span><Bookmark size={13} /> Bookmarked</span></div>

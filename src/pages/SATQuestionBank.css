@@ -563,7 +563,9 @@
   font-size: 20px;
   font-weight: 900;
   color: #1d293d;
+  scroll-margin-top: 100px;
 }
+.sat-bank-detail-title h3:focus { outline: none; }
 .sat-bank-outcome {
   border: 1px solid;
   border-radius: 99px;
@@ -624,11 +626,19 @@
   color: #243148;
 }
 .sat-bank-review-pagination {
+  position: sticky;
+  top: 12px;
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-top: 22px;
+  margin: 0 0 18px;
+  padding: 10px;
+  border: 1px solid #dce4ee;
+  border-radius: 16px;
+  background: #f8fafc;
+  box-shadow: 0 6px 20px #33415512;
 }
 .sat-bank-review-pagination button {
   display: flex;

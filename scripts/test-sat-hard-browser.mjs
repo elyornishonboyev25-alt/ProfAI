@@ -19,7 +19,8 @@ async function main() {
     import Hard from './src/pages/SATHardQuestions';
     import {HARD_QUESTIONS} from './src/features/sat/hardQuestions';
     import {useAuthStore} from './src/store/authStore';
-    useAuthStore.setState({user:null}); window.hardRows=HARD_QUESTIONS;
+    import {useAiAssistantStore} from './src/store/aiAssistantStore';
+    useAuthStore.setState({user:null}); window.hardRows=HARD_QUESTIONS; window.hardExamMode=()=>useAiAssistantStore.getState().isExamModeActive;
     function Bridge(){window.hardNavigate=useNavigate();return null}
     createRoot(document.getElementById('root')).render(<MemoryRouter initialEntries={['/sat/hard-questions']}>
       <Bridge/><Routes><Route path="/sat/hard-questions" element={<Hard/>}/></Routes>
@@ -83,6 +84,9 @@ async function main() {
 
     const clickLabel = label => evaluate(`document.querySelector('[aria-label="${label}"]').click()`)
     const clickText = text => evaluate(`[...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='${text}').click()`)
+    const checkNavigation = async () => {
+      assert.equal(await evaluate(`([...document.querySelectorAll('.hard-question-toolbar button,.hard-question-footer button')].every(b=>{const r=b.getBoundingClientRect();return r.top>=0 && r.bottom<=innerHeight+1 && r.left>=0 && r.right<=innerWidth+1 && b.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))}))`), true, 'Hard question controls stay visible and clickable')
+    }
     await send('Runtime.enable')
     await send('Page.enable')
     await send('Emulation.setDeviceMetricsOverride',{width:1366,height:768,deviceScaleFactor:1,mobile:false})
@@ -103,12 +107,27 @@ async function main() {
       await capture(width+'-map')
       await evaluate(`document.querySelector('.hard-tile').click()`)
       await until(`!!document.querySelector('.hard-choice')`)
+      assert.equal(await evaluate('window.hardExamMode() && !document.querySelector(".hard-hero") && document.body.style.overflow==="hidden"'), true)
+      await checkNavigation()
+      if (await evaluate('!!document.querySelector(".hard-retry")')) await clickText('Try this question again')
       await evaluate(`document.querySelector('.hard-choice').click()`)
       await until(`!!document.querySelector('.hard-feedback')`)
       assert.equal(await evaluate('document.documentElement.scrollWidth<=innerWidth+1'),true,`${width}: question has no horizontal overflow`)
       assert.ok(await evaluate(`document.querySelector('.hard-explanation').innerText.length>100`))
-      await until(`document.querySelector('.hard-feedback-result').getBoundingClientRect().top>=100 && document.querySelector('.hard-feedback-result').getBoundingClientRect().top<innerHeight`)
+      await until(`document.querySelector('.hard-feedback-result').getBoundingClientRect().top>=0 && document.querySelector('.hard-feedback-result').getBoundingClientRect().bottom<document.querySelector('.hard-question-footer').getBoundingClientRect().top`)
+      await checkNavigation()
       await capture(width+'-feedback')
+      await evaluate(`document.querySelector('.hard-question').scrollTop=1e6;true`)
+      await checkNavigation()
+      await clickText('Next question')
+      await until(`document.querySelector('.hard-question-toolbar').innerText.includes('Question 2 / 100')`)
+      assert.equal(await evaluate('document.querySelector(".hard-question").scrollTop'), 0, 'Next question starts at the top')
+      await clickText('Previous')
+      await until(`document.querySelector('.hard-question-toolbar').innerText.includes('Question 1 / 100')`)
+      assert.equal(await evaluate('document.querySelector(".hard-question").scrollTop'), 0, 'Returning to a checked question starts at the question, not its explanation')
+      await clickText('All topics')
+      await until('!window.hardExamMode()')
+      assert.equal(await evaluate('document.body.style.overflow'), '', 'Leaving practice restores page scrolling')
       console.log(`PASS ${width}x${height}: topic map, question, feedback and responsive layout`)
     }
     await send('Emulation.setDeviceMetricsOverride',{width:1366,height:900,deviceScaleFactor:1,mobile:false})

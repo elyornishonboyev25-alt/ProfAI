@@ -160,3 +160,19 @@
 
 
 .hard-feedback,.hard-page h2,.hard-page h3{scroll-margin-top:115px}
+
+.arena-route:has(> .hard-page-active){animation:none}
+.hard-page.hard-page-active{position:fixed;inset:0;z-index:60;height:100dvh;min-height:0;padding:0;background:#f5f7fb!important;overflow:hidden}
+.hard-page-active .hard-shell{height:100%;max-width:1480px;display:flex;flex-direction:column;min-height:0;padding:12px 24px 0}
+.hard-page-active .hard-workspace{display:flex;flex:1;flex-direction:column;min-height:0;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none}
+.hard-page-active .hard-question-toolbar{flex:none;min-height:48px;margin:0 0 10px}
+.hard-page-active .hard-question{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;scrollbar-width:thin}
+.hard-page-active .hard-question-footer{flex:none;margin:0;padding:12px 0 max(12px,env(safe-area-inset-bottom));background:#f5f7fb}
+.hard-page-active .hard-question-footer button{min-height:44px}
+.hard-page-active .hard-error{flex:none;margin-bottom:8px}
+.hard-page-active .hard-feedback,.hard-page-active h3{scroll-margin-top:16px}
+@media(max-width:700px){
+  .hard-page-active .hard-shell{padding:8px 12px 0}
+  .hard-page-active .hard-question{border-radius:16px}
+  .hard-page-active .hard-question-toolbar button{min-height:44px}
+}

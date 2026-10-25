@@ -61,6 +61,7 @@
 
 /* Header */
 .sqm-header {
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -409,6 +410,7 @@
 
 /* Footer */
 .sqm-footer {
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: space-between;

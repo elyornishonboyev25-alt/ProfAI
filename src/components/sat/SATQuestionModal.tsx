@@ -183,7 +183,7 @@ export default function SATQuestionModal({
   }, [])
 
   useEffect(() => {
-    bodyRef.current?.scrollTo({ top: 0 })
+    bodyRef.current?.scrollTo({ top: 0, behavior: 'instant' })
   }, [index])
 
   useEffect(() => {

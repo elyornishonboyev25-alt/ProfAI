@@ -261,7 +261,7 @@ html:has(.app-shell-ai-tutor) { overflow-y:hidden; scrollbar-gutter:auto; }
   background: transparent !important;
 }
 
-.app-shell .workspace-page:is(.community-page, .podcast-library, .leaderboard-studio)::before,
+.app-shell .workspace-page:is(.community-page, .podcast-library, .leaderboard-studio, .sat-results)::before,
 .app-shell .workspace-page.podcast-library::after {
   content: none;
 }

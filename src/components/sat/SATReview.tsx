@@ -1,11 +1,17 @@
-import { SATNoteList } from './SATNotes'
-import { readSATNotes, type SATNote } from '@/features/sat/notes'
 import { analyzeSATResult, formatSATDate, formatSATDuration, satAnswerStatus } from '@/features/sat/resultAnalysis'
 import { openSATReport } from '@/features/sat/resultReport'
 import { bankDomain } from '@/features/sat/bankTopics'
-import { examResultsApi, MIN_PLATFORM_PARTICIPANTS, nationalPercentile, ordinal } from '@/features/sat/resultInsights'
+import {
+  examResultsApi,
+  filledSegments,
+  MIN_PLATFORM_PARTICIPANTS,
+  nationalPercentile,
+  ordinal,
+  SKILL_BAR_SEGMENTS,
+} from '@/features/sat/resultInsights'
 import { BrandLogo } from '@/components/brand/BrandLogo'
 import { SATDiscussion, SATLeaderboard, type StandingState } from './SATResultSocial'
+import SATQuestionModal from './SATQuestionModal'
 import './SATReview.css'
 import './SATResultsPro.css'
 import { useCallback, useEffect, useId, useMemo, useState, type KeyboardEvent } from 'react'
@@ -24,30 +30,16 @@ import {
   Flag,
   GraduationCap,
   Layers3,
-  Lightbulb,
   MessageSquareText,
   RotateCcw,
   Target,
   TrendingUp,
   Trophy,
   X,
-  XCircle,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import {
-  isSATAnswerCorrect,
-  type SATAttempt,
-  type HighlightStroke,
-  type SATModuleId,
-  type SATQuestion,
-} from '@/features/sat/practiceTest4'
-import { splitSATPrompt } from '@/features/sat/promptLayout'
+import { type SATAttempt, type SATModuleId, type SATQuestion } from '@/features/sat/practiceTest4'
 import { satAvailabilityNote, type SATTestDefinition } from '@/features/sat/catalog'
-import SATRichText from './SATRichText'
-import SATSourceContent from './SATSourceContent'
-import SATChoiceContent from './SATChoiceContent'
-import SATVisual from './SATVisual'
-import SATTextHighlights from './SATTextHighlights'
 import { useAuthStore } from '@/store/authStore'
 import { useBadgeStore } from '@/store/badgeStore'
 
@@ -73,30 +65,6 @@ type Props = {
   onBack?: () => void
   backLabel?: string
   historyReview?: boolean
-}
-
-function OutcomeBar({
-  correct,
-  incorrect,
-  unanswered,
-  total,
-}: {
-  correct: number
-  incorrect: number
-  unanswered: number
-  total: number
-}) {
-  return (
-    <div
-      className="sr-outcome-bar"
-      role="img"
-      aria-label={`${correct} correct, ${incorrect} incorrect, ${unanswered} unanswered out of ${total}`}
-    >
-      <span className="is-correct" style={{ width: `${(correct / Math.max(1, total)) * 100}%` }} />
-      <span className="is-incorrect" style={{ width: `${(incorrect / Math.max(1, total)) * 100}%` }} />
-      <span className="is-unanswered" style={{ width: `${(unanswered / Math.max(1, total)) * 100}%` }} />
-    </div>
-  )
 }
 
 function ScoreRing({ score, percent, label }: { score: number | null; percent: number; label: string }) {
@@ -136,213 +104,11 @@ function ScoreRing({ score, percent, label }: { score: number | null; percent: n
   )
 }
 
-function statusMeta(question: SATQuestion, attempt: SATAttempt) {
-  const response = attempt.answers[question.id]
-  if (!response?.trim())
-    return {
-      label: 'Unanswered',
-      className: 'bg-amber-50 text-amber-700',
-      icon: CircleDashed,
-    }
-  if (isSATAnswerCorrect(question, response))
-    return {
-      label: 'Correct',
-      className: 'bg-emerald-50 text-emerald-700',
-      icon: CheckCircle2,
-    }
-  return {
-    label: 'Incorrect',
-    className: 'bg-red-50 text-red-700',
-    icon: XCircle,
-  }
-}
+const tier = (percent: number) => (percent >= 80 ? 'is-strong' : percent >= 50 ? 'is-mid' : 'is-focus')
 
-function ReviewQuestion({
-  question,
-  response,
-  note,
-  strokes,
-  eliminatedChoices = [],
-}: {
-  question: SATQuestion
-  response?: string
-  note?: string | SATNote[]
-  strokes: HighlightStroke[]
-  eliminatedChoices?: string[]
-}) {
-  const { context, task } = splitSATPrompt(question.prompt)
-  const correct = isSATAnswerCorrect(question, response)
-  const answered = Boolean(response?.trim())
-  const alternativeAnswers = [...new Set(question.acceptedAnswers ?? [])].filter(
-    (answer) => answer !== question.correctAnswer,
-  )
-  return (
-    <SATTextHighlights key={question.id} strokes={strokes} enabled={false}>
-      <div className="space-y-4">
-        <section className="overflow-hidden rounded-[1.7rem] border border-slate-200/80 bg-white shadow-[0_12px_34px_rgba(32,55,99,.05)]">
-          <div className="flex flex-wrap items-center gap-2 border-b border-blue-100 bg-[linear-gradient(90deg,#f5f9ff,#fff9f9)] px-5 py-4 sm:px-7">
-            <span className="rounded-full bg-blue-100 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.1em] text-blue-700">
-              {question.domain}
-            </span>
-            <span className="rounded-full bg-white px-2.5 py-1 text-[9px] font-black text-slate-500 ring-1 ring-slate-200">
-              {question.skill}
-            </span>
-            <span className="ml-auto text-[9px] font-black text-slate-400">{question.difficulty}</span>
-          </div>
-          <div className="p-5 sm:p-8">
-            {question.visual ? (
-              <SATVisual
-                asset={question.visual.asset}
-                alt={question.visual.alt}
-                className="mx-auto mb-6 border border-slate-200 bg-slate-50 p-3"
-                imageClassName="max-h-[20rem] max-w-[min(100%,42rem)] object-contain"
-              />
-            ) : null}
-            {question.sourceContent ? (
-              <>
-                <div data-sat-highlight-block="context">
-                  {question.sourceContent.context && (
-                    <SATSourceContent
-                      html={question.sourceContent.context}
-                      className="rounded-2xl border border-slate-100 bg-[#f7faff] px-5 py-5 font-serif text-[17px] leading-8 text-slate-800"
-                    />
-                  )}
-                </div>
-                <div data-sat-highlight-block="task">
-                  <SATSourceContent
-                    html={question.sourceContent.task}
-                    className="mt-5 font-serif text-lg font-semibold leading-7 text-slate-950"
-                  />
-                </div>
-              </>
-            ) : (
-              <>
-                <div data-sat-highlight-block="context">
-                  {context ? (
-                    <SATRichText
-                      text={context}
-                      className="rounded-2xl border border-slate-100 bg-[#f7faff] px-5 py-5 font-serif text-[17px] leading-8 text-slate-800"
-                    />
-                  ) : null}
-                </div>
-                <div data-sat-highlight-block="task">
-                  <SATRichText
-                    text={task}
-                    className={`${context ? 'mt-5' : ''} font-serif text-lg font-semibold leading-7 text-slate-950`}
-                  />
-                </div>
-              </>
-            )}
-
-            {question.kind === 'multiple-choice' ? (
-              <div className="mt-6 space-y-3.5">
-                {question.choices.map((choice) => {
-                  const isCorrectChoice = choice.key === question.correctAnswer
-                  const isUserChoice = choice.key === response?.trim().toUpperCase()
-                  return (
-                    <div
-                      key={choice.key}
-                      className={`flex items-start gap-3 rounded-[1.2rem] border p-4 transition-colors ${
-                        isCorrectChoice
-                          ? 'border-emerald-300 bg-emerald-50 shadow-[0_5px_18px_rgba(16,185,129,.08)]'
-                          : isUserChoice
-                            ? 'border-red-300 bg-red-50'
-                            : 'border-slate-200 bg-white'
-                      }`}
-                    >
-                      <span
-                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-black ${
-                          isCorrectChoice
-                            ? 'bg-emerald-600 text-white'
-                            : isUserChoice
-                              ? 'bg-red-600 text-white'
-                              : 'bg-slate-100 text-slate-600'
-                        }`}
-                      >
-                        {choice.key}
-                      </span>
-                      <div
-                        data-sat-highlight-block={`choice-${choice.key}`}
-                        className="min-w-0 flex-1 pt-1 font-serif text-[17px] leading-8 text-slate-800"
-                      >
-                        <SATChoiceContent choice={choice} />
-                        {eliminatedChoices.includes(choice.key) ? (
-                          <span className="mt-1 block font-sans text-xs font-semibold text-slate-500">
-                            Crossed out during test
-                          </span>
-                        ) : null}
-                      </div>
-                      <span className="ml-auto max-w-[5rem] shrink-0 pt-1 text-right text-[9px] font-black uppercase tracking-[0.08em]">
-                        {isCorrectChoice ? (
-                          <span className="text-emerald-700">{isUserChoice ? 'Your answer · Correct' : 'Correct'}</span>
-                        ) : isUserChoice ? (
-                          <span className="text-red-700">Your answer</span>
-                        ) : null}
-                      </span>
-                    </div>
-                  )
-                })}
-              </div>
-            ) : (
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                <div
-                  className={`rounded-2xl border p-4 ${correct ? 'border-emerald-200 bg-emerald-50' : answered ? 'border-red-200 bg-red-50' : 'border-amber-200 bg-amber-50'}`}
-                >
-                  <p className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-500">Your response</p>
-                  <p className="mt-2 text-xl font-black text-slate-900">{response?.trim() || 'No response'}</p>
-                </div>
-                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-                  <p className="text-[9px] font-black uppercase tracking-[0.12em] text-emerald-700">Accepted answer</p>
-                  <p className="mt-2 text-xl font-black text-emerald-800">{question.correctAnswer}</p>
-                  {alternativeAnswers.length > 0 ? (
-                    <p className="mt-1 text-[9px] font-bold text-emerald-700/75">
-                      Also accepted: {alternativeAnswers.join(', ')}
-                    </p>
-                  ) : null}
-                </div>
-              </div>
-            )}
-          </div>
-        </section>
-
-        <section className="rounded-[1.7rem] border border-blue-100 bg-[linear-gradient(135deg,#eff6ff,#fff)] p-6 shadow-[0_14px_36px_rgba(37,99,235,.06)] sm:p-7">
-          <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white">
-              <BookOpenCheck className="h-5 w-5" />
-            </span>
-            <div>
-              <p className="text-[9px] font-black uppercase tracking-[0.13em] text-blue-700">Answer explanation</p>
-              <h3 className="mt-0.5 text-lg font-black text-slate-950">Why this answer works</h3>
-            </div>
-          </div>
-          {question.sourceContent ? (
-            <SATSourceContent
-              html={question.sourceContent.explanation}
-              className="mt-4 text-sm font-medium leading-7 text-slate-700"
-            />
-          ) : (
-            <SATRichText
-              text={question.explanation || 'Explanation unavailable.'}
-              className="mt-4 text-sm font-medium leading-7 text-slate-700"
-            />
-          )}
-          <div className="mt-4 flex items-start gap-2 rounded-xl border border-blue-100 bg-white/80 px-3 py-3 text-[11px] font-bold leading-5 text-slate-600">
-            <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" /> Review the rule or pattern, then explain
-            the solution aloud in your own words before moving on.
-          </div>
-        </section>
-
-        {readSATNotes(note).length ? (
-          <section className="rounded-2xl border border-violet-100 bg-violet-50 p-4">
-            <p className="mb-2 text-[9px] font-black uppercase tracking-[0.12em] text-violet-700">
-              Your test-day notes
-            </p>
-            <SATNoteList value={note} />
-          </section>
-        ) : null}
-      </div>
-    </SATTextHighlights>
-  )
+function formatPace(seconds: number) {
+  const whole = Math.round(seconds)
+  return whole >= 60 ? `${Math.floor(whole / 60)}m ${whole % 60}s` : `${whole}s`
 }
 
 export default function SATReview({ attempt, test, onStartAgain, onBack, backLabel, historyReview = false }: Props) {
@@ -371,8 +137,8 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
   const [filter, setFilter] = useState<ReviewFilter>('all')
   const [moduleFilter, setModuleFilter] = useState<'all' | SATModuleId>('all')
   const [domainFilter, setDomainFilter] = useState<string | null>(null)
-  const [selectedId, setSelectedId] = useState(allQuestions[0]?.id)
-  const [reviewView, setReviewView] = useState<'overview' | 'detail'>('overview')
+  const [modal, setModal] = useState<{ questions: SATQuestion[]; index: number } | null>(null)
+  const [revealAnswers, setRevealAnswers] = useState(false)
   const [reportError, setReportError] = useState(false)
   const [sectionFilter, setSectionFilter] = useState<SectionFilter>('all')
   const [standing, setStanding] = useState<StandingState>({
@@ -428,20 +194,9 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
     setFilter(next)
     setModuleFilter(module)
     setDomainFilter(domain)
-    const first = allQuestions.find((q) => matches(q, next, module, domain))
-    if (first) setSelectedId(first.id)
-  }
-  const selectedQuestion = filteredQuestions.find((q) => q.id === selectedId) ?? filteredQuestions[0]
-  const visibleIndex = filteredQuestions.findIndex((q) => q.id === selectedQuestion?.id)
-  const selectedStatus = selectedQuestion ? statusMeta(selectedQuestion, attempt) : null
-  const StatusIcon = selectedStatus?.icon ?? CircleDashed
-  const selectedModule = modules.find((m) => m.id === selectedQuestion?.moduleId)
-  const chooseSection = (next: SectionFilter) => {
-    setSectionFilter(next)
-    const first = allQuestions.find((q) => next === 'all' || q.section === next)
-    if (first) setSelectedId(first.id)
   }
   const discussQuestion = (question: SATQuestion) => {
+    setModal(null)
     setDiscussionRef(`${question.moduleId}:${question.number}`)
     setTab('discussion')
     requestAnimationFrame(() => document.getElementById('sat-discussion-body')?.focus())
@@ -450,7 +205,6 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
     setSectionFilter('all')
     chooseFilter(status, 'all', domain)
     setTab('questions')
-    setReviewView('overview')
     requestAnimationFrame(() => {
       const panel = document.getElementById('sat-result-panel-questions')
       panel?.focus({ preventScroll: true })
@@ -481,13 +235,12 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
     if (next === 'questions') {
       setSectionFilter('all')
       chooseFilter('all', 'all', null)
-      setReviewView('overview')
     }
     setTab(next)
   }
   const openQuestion = (id: string) => {
-    setSelectedId(id)
-    setReviewView('detail')
+    const index = filteredQuestions.findIndex((q) => q.id === id)
+    if (index >= 0) setModal({ questions: filteredQuestions, index })
   }
   const handleTabKeys = (event: KeyboardEvent<HTMLDivElement>) => {
     const index = RESULT_TABS.findIndex((item) => item.id === tab)
@@ -829,116 +582,166 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
             tabIndex={0}
             className="sr-panel"
           >
-            <div className="sr-panel-heading">
-              <div>
-                <p className="sr-eyebrow">The bigger picture</p>
-                <h2>How your test unfolded</h2>
-                <p>Compare accuracy and time across your modules.</p>
-              </div>
-              <span className="sr-time-badge">
-                <Clock3 size={16} />
-                {formatSATDuration(analysis.seconds)} total
-              </span>
+            <div className="srx-center-heading">
+              <p className="sr-eyebrow">The bigger picture</p>
+              <h2>How your test unfolded</h2>
+              <p>Accuracy and time for every module, difficulty level and skill.</p>
             </div>
-            <div className="sr-performance-grid">
-              <section className="sr-card sr-module-card">
-                <h3>Module breakdown</h3>
-                <div className="sr-legend">
-                  <span>
-                    <i className="is-correct" />
-                    Correct
+            <div className="srx-stat-row">
+              {(
+                [
+                  [Clock3, 'Total time', formatSATDuration(analysis.seconds)],
+                  [Target, 'Accuracy', `${report.percent}%`],
+                  [CheckCircle2, 'Answered', `${analysis.answered}/${allQuestions.length}`],
+                  [TrendingUp, 'Accuracy on answered', `${analysis.answeredAccuracy}%`],
+                ] as const
+              ).map(([Icon, label, value]) => (
+                <div key={label} className="sr-card srx-stat">
+                  <span className="srx-stat-icon">
+                    <Icon size={20} />
                   </span>
-                  <span>
-                    <i className="is-incorrect" />
-                    Incorrect
-                  </span>
-                  <span>
-                    <i className="is-unanswered" />
-                    Unanswered
-                  </span>
+                  <div>
+                    <small>{label}</small>
+                    <strong>{value}</strong>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="srx-perf-grid">
+              <section className="sr-card srx-panel-card">
+                <div className="srx-card-head">
+                  <h3>Module breakdown</h3>
+                  <div className="srx-legend">
+                    <span>
+                      <i className="seg-correct" />
+                      Correct
+                    </span>
+                    <span>
+                      <i className="seg-incorrect" />
+                      Incorrect
+                    </span>
+                    <span>
+                      <i className="seg-unanswered" />
+                      Unanswered
+                    </span>
+                  </div>
                 </div>
                 {analysis.modules.map((module) => (
-                  <div className="sr-module-row" key={module.id}>
-                    <div className="sr-module-title">
+                  <div className="srx-module" key={module.id}>
+                    <div className="srx-module-top">
                       <div>
-                        <strong>{module.shortTitle}</strong>
-                        <span>
-                          {module.correct} / {module.total} correct
+                        <span className={`srx-chip ${module.section === 'math' ? 'is-math' : ''}`}>
+                          {moduleChip(module)}
                         </span>
+                        <strong>{module.title}</strong>
                       </div>
-                      <b>{module.percent}%</b>
+                      <b className={`srx-percent ${tier(module.percent)}`}>{module.percent}%</b>
                     </div>
-                    <OutcomeBar {...module} />
-                    <div className="sr-module-foot">
-                      <span>
-                        {module.incorrect} incorrect · {module.unanswered} unanswered
+                    <div
+                      className="srx-stack"
+                      role="img"
+                      aria-label={`${module.correct} correct, ${module.incorrect} incorrect, ${module.unanswered} unanswered`}
+                    >
+                      {(['correct', 'incorrect', 'unanswered'] as const).map((key) => (
+                        <span
+                          key={key}
+                          className={`seg-${key}`}
+                          style={{ width: `${(module[key] / Math.max(1, module.total)) * 100}%` }}
+                        />
+                      ))}
+                    </div>
+                    <div className="srx-module-meta">
+                      <span className="pill-correct">
+                        <b>{module.correct}</b> correct
                       </span>
-                      <span>
-                        <Clock3 size={12} />
+                      <span className="pill-incorrect">
+                        <b>{module.incorrect}</b> incorrect
+                      </span>
+                      <span className="pill-unanswered">
+                        <b>{module.unanswered}</b> unanswered
+                      </span>
+                      <span className="srx-time">
+                        <Clock3 size={14} />
                         {module.started ? formatSATDuration(module.seconds) : 'Not started'}
                       </span>
                     </div>
                   </div>
                 ))}
                 {!attempt.moduleElapsedSeconds && (
-                  <p className="sr-small-note">Timing for this older attempt is estimated from saved timestamps.</p>
+                  <p className="srx-note">Timing for this older attempt is estimated from saved timestamps.</p>
                 )}
               </section>
-              <div className="sr-performance-side">
-                <section className="sr-card sr-difficulty-card">
-                  <h3>Accuracy by difficulty</h3>
-                  <p className="sr-small-note">Question difficulty follows the practice test labels.</p>
+              <div className="srx-perf-side">
+                <section className="sr-card srx-panel-card">
+                  <div className="srx-card-head">
+                    <h3>Accuracy by difficulty</h3>
+                  </div>
                   {analysis.difficulty.map((row) => (
-                    <div className="sr-difficulty-row" key={row.label}>
-                      <div>
-                        <strong>{row.label}</strong>
+                    <div className="srx-bar-row" key={row.label}>
+                      <div className="srx-bar-label">
+                        <strong>
+                          <i className={`level-${row.label.toLowerCase()}`} />
+                          {row.label}
+                        </strong>
                         <span>
                           {row.correct}/{row.total} correct
                         </span>
-                        <b>{row.percent}%</b>
+                        <b className={`srx-percent-sm ${tier(row.percent)}`}>{row.percent}%</b>
                       </div>
-                      <div className="sr-domain-progress">
-                        <span style={{ width: `${row.percent}%` }} />
+                      <div className="srx-meter">
+                        <span className={tier(row.percent)} style={{ width: `${row.percent}%` }} />
                       </div>
                     </div>
                   ))}
                 </section>
-                <section className="sr-card sr-pacing-card">
-                  <Clock3 size={22} />
-                  <h3>Your time, in context</h3>
-                  <p>Time used counts active module time. Breaks and saved pauses are excluded when recorded.</p>
-                  <p>
+                <section className="sr-card srx-panel-card">
+                  <div className="srx-card-head">
+                    <h3>Time per question</h3>
+                  </div>
+                  {analysis.modules.map((module) => (
+                    <div className="srx-pace-row" key={module.id}>
+                      <span>{module.shortTitle}</span>
+                      <strong>
+                        {module.started && module.total ? formatPace(module.seconds / module.total) : '—'}
+                      </strong>
+                    </div>
+                  ))}
+                  <p className="srx-note">
                     {attempt.mode === 'practice'
-                      ? 'This was untimed practice. Focus on understanding the solution before increasing speed.'
-                      : 'Module totals show where you spent time. Review missed answers before choosing a pacing strategy.'}
+                      ? 'Untimed practice: understand each solution first, then build speed.'
+                      : 'Test-day pace is about 71 s per R&W question and 95 s per Math question.'}
                   </p>
-                  <span className="sr-small-note">Per-question timing was not recorded for this attempt.</span>
                 </section>
               </div>
             </div>
-            <section className="sr-card sr-skill-table-card">
-              <div className="sr-block-heading">
+            <section className="sr-card srx-panel-card">
+              <div className="srx-card-head">
                 <div>
                   <p className="sr-eyebrow">Beyond the domain</p>
-                  <h2>Skill-by-skill breakdown</h2>
+                  <h3>Skill-by-skill breakdown</h3>
                 </div>
-                <span>{analysis.skills.length} skills assessed</span>
+                <span className="srx-count-pill">{analysis.skills.length} skills</span>
               </div>
-              <div className="sr-skill-table">
+              <div className="srx-skill-list">
                 {analysis.skills.map((skill) => (
-                  <div key={skill.key}>
-                    <div>
+                  <button
+                    key={skill.key}
+                    type="button"
+                    className="srx-skill-row"
+                    onClick={() => showReview(`${skill.section}:${skill.domain}`, 'all')}
+                  >
+                    <span className="srx-skill-name">
                       <strong>{skill.skill}</strong>
                       <span>{skill.domain}</span>
-                    </div>
-                    <div className="sr-domain-progress">
-                      <span style={{ width: `${skill.percent}%` }} />
-                    </div>
-                    <strong>{skill.percent}%</strong>
-                    <span>
+                    </span>
+                    <span className="srx-meter">
+                      <span className={tier(skill.percent)} style={{ width: `${skill.percent}%` }} />
+                    </span>
+                    <b className={`srx-percent-sm ${tier(skill.percent)}`}>{skill.percent}%</b>
+                    <span className="srx-skill-count">
                       {skill.correct}/{skill.total} correct
                     </span>
-                  </div>
+                  </button>
                 ))}
               </div>
             </section>
@@ -953,61 +756,66 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
             tabIndex={0}
             className="sr-panel"
           >
-            <div className="sr-panel-heading">
-              <div>
-                <p className="sr-eyebrow">Knowledge & skills</p>
-                <h2>Know your strengths. Choose your focus.</h2>
-                <p>Each percentage is based on your answers in this attempt.</p>
-              </div>
+            <div className="srx-center-heading">
+              <p className="sr-eyebrow">Knowledge & skills</p>
+              <h2>Know your strengths. Choose your focus.</h2>
+              <p>Each domain shows how you did on its questions in this attempt.</p>
             </div>
-            <div className="sr-domain-columns">
+            <div className={`srx-domain-columns ${sections.length === 1 ? 'is-single' : ''}`}>
               {sections.map((section) => (
-                <section key={section.id} className="sr-domain-section">
-                  <h3>
-                    {section.id === 'math' ? <GraduationCap size={18} /> : <BookOpen size={18} />}
-                    {section.label}
-                    <span>
-                      {section.correct}/{section.total} correct
+                <section key={section.id} className="srx-domain-col">
+                  <header className="sr-card srx-domain-head">
+                    <span className={`srx-domain-icon ${section.id === 'math' ? 'is-math' : ''}`}>
+                      {section.id === 'math' ? <GraduationCap size={22} /> : <BookOpen size={22} />}
                     </span>
-                  </h3>
+                    <div>
+                      <h3>{section.label}</h3>
+                      <span>
+                        {section.correct}/{section.total} correct
+                      </span>
+                    </div>
+                    <b className={`srx-percent ${tier(section.percent)}`}>{section.percent}%</b>
+                  </header>
                   {domains
                     .filter((d) => d.section === section.id)
                     .map((domain) => (
-                      <div key={domain.key} className="sr-card sr-domain-card">
-                        <div className="sr-domain-heading">
+                      <article key={domain.key} className="sr-card srx-domain-card">
+                        <div className="srx-domain-top">
                           <h4>{domain.domain}</h4>
-                          <strong>
+                          <b className={`srx-percent ${tier(domain.percent)}`}>
                             {domain.percent}
                             <small>%</small>
-                          </strong>
+                          </b>
                         </div>
                         <div
-                          className="sr-domain-progress"
+                          className={`srx-segments ${tier(domain.percent)}`}
                           role="img"
                           aria-label={`${domain.domain}: ${domain.percent}% accuracy`}
                         >
-                          <span style={{ width: `${domain.percent}%` }} />
+                          {Array.from({ length: SKILL_BAR_SEGMENTS }, (_, index) => (
+                            <i key={index} className={index < filledSegments(domain.percent) ? 'on' : ''} />
+                          ))}
                         </div>
-                        <div className="sr-domain-meta">
+                        <div className="srx-domain-meta">
                           <span>
-                            {domain.correct} / {domain.total} correct
+                            <b>{domain.correct}</b> / {domain.total} correct
                           </span>
-                          <span className={domain.percent >= 80 ? 'sr-mastery-strong' : 'sr-mastery-focus'}>
-                            {domain.percent >= 80 ? 'Strong in this attempt' : 'Room to grow'}
+                          <span className={`srx-badge ${tier(domain.percent)}`}>
+                            {domain.percent >= 80 ? 'Strong' : domain.percent >= 50 ? 'Developing' : 'Focus area'}
                           </span>
                         </div>
                         <p>{domain.guidance}</p>
                         <button
                           type="button"
-                          className="sr-text-button"
+                          className="srx-domain-cta"
                           onClick={() => showReview(domain.key, domain.correct < domain.total ? 'missed' : 'all')}
                         >
                           {domain.correct < domain.total
                             ? `Review ${domain.total - domain.correct} missed`
                             : 'Review answers'}
-                          <ArrowRight size={14} />
+                          <ArrowRight size={15} />
                         </button>
-                      </div>
+                      </article>
                     ))}
                 </section>
               ))}
@@ -1028,297 +836,110 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
               <h2>Question Review</h2>
               <p>Your answer, the correct answer and a full explanation for every question.</p>
             </div>
-            {reviewView === 'overview' && (
-              <>
-                <div className="srx-review-controls">
-                  {sections.length > 1 && (
-                    <div className="srx-segment" role="group" aria-label="Section">
-                      {(
-                        [
-                          ['all', 'All'],
-                          ['reading-writing', 'R&W'],
-                          ['math', 'Math'],
-                        ] as const
-                      ).map(([value, label]) => (
-                        <button
-                          key={value}
-                          type="button"
-                          aria-pressed={sectionFilter === value}
-                          onClick={() => chooseSection(value)}
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  <div className="srx-status-chips" role="group" aria-label="Filter by outcome">
-                    {(
-                      [
-                        ['all', 'All'],
-                        ['correct', 'Correct'],
-                        ['incorrect', 'Incorrect'],
-                        ['unanswered', 'Unanswered'],
-                        ['flagged', 'Flagged'],
-                      ] as const
-                    ).map(([value, label]) => (
-                      <button
-                        key={value}
-                        type="button"
-                        className={`chip-${value}`}
-                        aria-pressed={filter === value}
-                        onClick={() => chooseFilter(value, moduleFilter, domainFilter)}
-                      >
-                        {label}
-                        <span>{allQuestions.filter((q) => matches(q, value, moduleFilter, domainFilter)).length}</span>
-                      </button>
-                    ))}
-                  </div>
-                  {(domainFilter || moduleFilter !== 'all') && (
+            <div className="srx-review-controls">
+              {sections.length > 1 && (
+                <div className="srx-segment" role="group" aria-label="Section">
+                  {(
+                    [
+                      ['all', 'All'],
+                      ['reading-writing', 'R&W'],
+                      ['math', 'Math'],
+                    ] as const
+                  ).map(([value, label]) => (
                     <button
+                      key={value}
                       type="button"
-                      className="srx-clear-filter"
-                      onClick={() => chooseFilter(filter, 'all', null)}
+                      aria-pressed={sectionFilter === value}
+                      onClick={() => setSectionFilter(value)}
                     >
-                      {domainFilter ? domains.find((d) => d.key === domainFilter)?.domain : 'Module filter'}
-                      <X size={13} />
+                      {label}
                     </button>
-                  )}
+                  ))}
                 </div>
-                {filteredQuestions.length ? (
-                  <ol className="sr-card srx-question-list" aria-label="Questions">
-                    {filteredQuestions.map((question) => {
-                      const module = modules.find((m) => m.id === question.moduleId)
-                      const outcome = satAnswerStatus(question, attempt)
-                      const response = attempt.answers[question.id]?.trim()
-                      return (
-                        <li key={question.id} className={`srx-q-row srx-row-${outcome}`} data-question-id={question.id}>
-                          <div className="srx-q-id">
-                            <span className={`srx-chip ${question.section === 'math' ? 'is-math' : ''}`}>
-                              {moduleChip(module)}
-                            </span>
-                            <strong>
-                              Question {question.number}
-                              {attempt.flagged.includes(question.id) && (
-                                <Flag size={12} aria-label="Flagged" className="srx-flag" />
-                              )}
-                            </strong>
-                          </div>
-                          <div className="srx-q-answer">
-                            <span>Your Answer</span>
-                            <b className={`tone-${outcome}`}>{response || 'Unanswered'}</b>
-                          </div>
-                          <div className="srx-q-answer">
-                            <span>Correct Answer</span>
-                            <b className="tone-correct">{question.correctAnswer}</b>
-                          </div>
-                          <button
-                            type="button"
-                            className="srx-review-button"
-                            aria-label={`Review ${module?.shortTitle ?? ''} question ${question.number}`}
-                            onClick={() => openQuestion(question.id)}
-                          >
-                            Review
-                            <ChevronRight size={15} />
-                          </button>
-                        </li>
-                      )
-                    })}
-                  </ol>
-                ) : (
-                  <div className="sr-card srx-empty">
-                    <BookOpenCheck size={30} />
-                    <h3>No questions match these filters.</h3>
-                    <button
-                      type="button"
-                      className="sr-button"
-                      onClick={() => {
-                        setSectionFilter('all')
-                        chooseFilter('all', 'all', null)
-                      }}
-                    >
-                      Show all questions
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
-            {reviewView === 'detail' && (
-              <button type="button" className="srx-back-to-list" onClick={() => setReviewView('overview')}>
-                <ArrowLeft size={15} />
-                All questions
-              </button>
-            )}
-            {reviewView === 'detail' && (
-              <div id="sat-deep-review" className="sr-review-layout">
-                <aside className="sr-card sr-navigator">
-                  <div className="sr-navigator-heading">
-                    <h3>Question navigator</h3>
-                    <span>{filteredQuestions.length} questions</span>
-                  </div>
-                  <div className="sr-review-filters" aria-label="Filter questions">
-                    {(['all', 'missed', 'correct', 'incorrect', 'unanswered', 'flagged'] as ReviewFilter[]).map(
-                      (value) => (
-                        <button
-                          key={value}
-                          type="button"
-                          aria-pressed={filter === value}
-                          onClick={() => chooseFilter(value)}
-                        >
-                          {value === 'missed' ? 'To review' : value}
-                          <span>
-                            {allQuestions.filter((q) => matches(q, value, moduleFilter, domainFilter)).length}
-                          </span>
-                        </button>
-                      ),
-                    )}
-                  </div>
-                  <label className="sr-select-label" htmlFor="sat-review-module">
-                    Module
-                  </label>
-                  <select
-                    id="sat-review-module"
-                    value={moduleFilter}
-                    onChange={(event) => chooseFilter(filter, event.target.value as 'all' | SATModuleId)}
+              )}
+              <div className="srx-status-chips" role="group" aria-label="Filter by outcome">
+                {(
+                  [
+                    ['all', 'All'],
+                    ['correct', 'Correct'],
+                    ['incorrect', 'Incorrect'],
+                    ['unanswered', 'Unanswered'],
+                    ['flagged', 'Flagged'],
+                  ] as const
+                ).map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className={`chip-${value}`}
+                    aria-pressed={filter === value}
+                    onClick={() => chooseFilter(value, moduleFilter, domainFilter)}
                   >
-                    <option value="all">All {modules.length} modules</option>
-                    {modules.map((module) => (
-                      <option key={module.id} value={module.id}>
-                        {module.shortTitle}
-                      </option>
-                    ))}
-                  </select>
-                  {domainFilter && (
-                    <div className="sr-domain-filter">
-                      <span>{domains.find((d) => d.key === domainFilter)?.domain}</span>
+                    {label}
+                    <span>{allQuestions.filter((q) => matches(q, value, moduleFilter, domainFilter)).length}</span>
+                  </button>
+                ))}
+              </div>
+              {(domainFilter || moduleFilter !== 'all') && (
+                <button type="button" className="srx-clear-filter" onClick={() => chooseFilter(filter, 'all', null)}>
+                  {domainFilter ? domains.find((d) => d.key === domainFilter)?.domain : 'Module filter'}
+                  <X size={13} />
+                </button>
+              )}
+            </div>
+            {filteredQuestions.length ? (
+              <ol className="sr-card srx-question-list" aria-label="Questions">
+                {filteredQuestions.map((question) => {
+                  const module = modules.find((m) => m.id === question.moduleId)
+                  const outcome = satAnswerStatus(question, attempt)
+                  const response = attempt.answers[question.id]?.trim()
+                  return (
+                    <li key={question.id} className={`srx-q-row srx-row-${outcome}`} data-question-id={question.id}>
+                      <div className="srx-q-id">
+                        <span className={`srx-chip ${question.section === 'math' ? 'is-math' : ''}`}>
+                          {moduleChip(module)}
+                        </span>
+                        <strong>
+                          Question {question.number}
+                          {attempt.flagged.includes(question.id) && (
+                            <Flag size={12} aria-label="Flagged" className="srx-flag" />
+                          )}
+                        </strong>
+                      </div>
+                      <div className="srx-q-answer">
+                        <span>Your Answer</span>
+                        <b className={`tone-${outcome}`}>{response || 'Unanswered'}</b>
+                      </div>
+                      <div className="srx-q-answer">
+                        <span>Correct Answer</span>
+                        <b className="tone-correct">{question.correctAnswer}</b>
+                      </div>
                       <button
                         type="button"
-                        aria-label="Clear domain filter"
-                        onClick={() => chooseFilter(filter, moduleFilter, null)}
+                        className="srx-review-button"
+                        aria-label={`Review ${module?.shortTitle ?? ''} question ${question.number}`}
+                        onClick={() => openQuestion(question.id)}
                       >
-                        <X size={14} />
+                        Review
+                        <ChevronRight size={15} />
                       </button>
-                    </div>
-                  )}
-                  <div className="sr-question-groups">
-                    {modules.map((module) => {
-                      const rows = filteredQuestions.filter((q) => q.moduleId === module.id)
-                      return rows.length ? (
-                        <div key={module.id} className="sr-question-group">
-                          <h4>{module.shortTitle}</h4>
-                          <div>
-                            {rows.map((question) => (
-                              <button
-                                type="button"
-                                key={question.id}
-                                className={`sr-question-number w-full is-${satAnswerStatus(question, attempt)} ${selectedQuestion?.id === question.id ? 'is-selected' : ''}`}
-                                aria-label={`${module.shortTitle}, question ${question.number}, ${satAnswerStatus(question, attempt)}${attempt.flagged.includes(question.id) ? ', flagged' : ''}`}
-                                aria-current={selectedQuestion?.id === question.id ? 'true' : undefined}
-                                onClick={() => openQuestion(question.id)}
-                              >
-                                {question.number}
-                                {attempt.flagged.includes(question.id) && <Flag size={9} />}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      ) : null
-                    })}
-                    {!filteredQuestions.length && (
-                      <div className="sr-empty">
-                        <CheckCircle2 size={26} />
-                        <strong>No questions match.</strong>
-                        <p>Try another status or module.</p>
-                        <button
-                          type="button"
-                          className="sr-text-button"
-                          onClick={() => chooseFilter('all', 'all', null)}
-                        >
-                          Reset filters
-                          <RotateCcw size={13} />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  <div className="sr-legend">
-                    <span>
-                      <i className="is-correct" />
-                      Correct
-                    </span>
-                    <span>
-                      <i className="is-incorrect" />
-                      Incorrect
-                    </span>
-                    <span>
-                      <i className="is-unanswered" />
-                      Unanswered
-                    </span>
-                  </div>
-                </aside>
-                <article className="sr-review-article">
-                  {selectedQuestion && selectedStatus ? (
-                    <>
-                      <div className="sr-question-heading">
-                        <div>
-                          <p className="sr-eyebrow">{selectedModule?.title}</p>
-                          <h3>Question {selectedQuestion.number}</h3>
-                        </div>
-                        <div className="srx-question-actions">
-                          <button
-                            type="button"
-                            className="srx-discuss-button"
-                            onClick={() => discussQuestion(selectedQuestion)}
-                          >
-                            <MessageSquareText size={15} />
-                            Discuss
-                          </button>
-                          <span className={`sr-answer-status ${selectedStatus.className}`}>
-                            <StatusIcon size={16} />
-                            {selectedStatus.label}
-                          </span>
-                        </div>
-                      </div>
-                      <ReviewQuestion
-                        question={selectedQuestion}
-                        response={attempt.answers[selectedQuestion.id]}
-                        note={attempt.notes[selectedQuestion.id]}
-                        strokes={attempt.highlights[selectedQuestion.id] ?? []}
-                        eliminatedChoices={attempt.eliminatedChoices?.[selectedQuestion.id] ?? []}
-                      />
-                      <nav className="sr-question-pagination" aria-label="Review question navigation">
-                        <button
-                          type="button"
-                          className="sr-button"
-                          disabled={visibleIndex <= 0}
-                          onClick={() => setSelectedId(filteredQuestions[visibleIndex - 1].id)}
-                        >
-                          <ArrowLeft size={15} />
-                          Previous
-                        </button>
-                        <span>
-                          {visibleIndex + 1} of {filteredQuestions.length}
-                        </span>
-                        <button
-                          type="button"
-                          className="sr-button sr-button-dark"
-                          disabled={visibleIndex >= filteredQuestions.length - 1}
-                          onClick={() => setSelectedId(filteredQuestions[visibleIndex + 1].id)}
-                        >
-                          Next
-                          <ArrowRight size={15} />
-                        </button>
-                      </nav>
-                    </>
-                  ) : (
-                    <div className="sr-card sr-empty sr-empty-article">
-                      <BookOpenCheck size={34} />
-                      <h3>A fresh view starts here.</h3>
-                      <p>No questions match these filters. Choose another filter to continue reviewing.</p>
-                      <button type="button" className="sr-button" onClick={() => chooseFilter('all', 'all', null)}>
-                        Show all questions
-                      </button>
-                    </div>
-                  )}
-                </article>
+                    </li>
+                  )
+                })}
+              </ol>
+            ) : (
+              <div className="sr-card srx-empty">
+                <BookOpenCheck size={30} />
+                <h3>No questions match these filters.</h3>
+                <button
+                  type="button"
+                  className="sr-button"
+                  onClick={() => {
+                    setSectionFilter('all')
+                    chooseFilter('all', 'all', null)
+                  }}
+                >
+                  Show all questions
+                </button>
               </div>
             )}
           </section>
@@ -1368,6 +989,20 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
               onQuestionRefChange={setDiscussionRef}
             />
           </section>
+        )}
+
+        {modal && (
+          <SATQuestionModal
+            questions={modal.questions}
+            index={modal.index}
+            attempt={attempt}
+            modules={modules}
+            reveal={revealAnswers}
+            onRevealChange={setRevealAnswers}
+            onIndexChange={(index) => setModal((current) => (current ? { ...current, index } : current))}
+            onClose={() => setModal(null)}
+            onDiscuss={discussQuestion}
+          />
         )}
 
         <footer className="sr-footer">

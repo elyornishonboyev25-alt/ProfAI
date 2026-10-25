@@ -200,20 +200,31 @@ try {
       await evaluate('window.expected.report.unanswered'),
     )
     await evaluate('document.querySelector(".srx-row-correct .srx-review-button").click()')
-    await until('document.querySelector("article").textContent.includes("Your answer · Correct")')
-    assert.ok((await layout()).content <= width + 1, `${width}px: selected correct answer stays readable`)
-    await evaluate('document.querySelectorAll(".sr-review-filters button")[1].click()')
-    await until(
-      'document.querySelectorAll(".sr-question-number").length===window.expected.report.incorrect+window.expected.report.unanswered',
-    )
+    await until('document.querySelector(".sqm-dialog")')
     assert.equal(
-      await evaluate(
-        '[...document.querySelectorAll(".sr-question-number")].every(q=>!q.classList.contains("is-correct"))',
-      ),
-      true,
+      await evaluate('Boolean(document.querySelector(".sqm-explanation"))'),
+      false,
+      'The solution stays hidden until Show correct answer is on',
     )
+    await evaluate('document.querySelector(".sqm-toggle").click()')
+    await until('document.querySelector(".sqm-dialog").textContent.includes("Your answer · Correct")')
+    assert.ok(await evaluate('Boolean(document.querySelector(".sqm-explanation"))'))
+    const shot = await send('Page.captureScreenshot', { format: 'png' })
+    await writeFile(join(artifacts, `${width}-modal.png`), Buffer.from(shot.data, 'base64'))
+    const before = await evaluate('document.querySelector(".sqm-progress strong").textContent')
+    await evaluate('document.querySelector(".sqm-nav.is-next").click()')
+    await until(`document.querySelector(".sqm-progress strong").textContent!==${JSON.stringify(before)}`)
+    assert.ok(
+      await evaluate('Boolean(document.querySelector(".sqm-explanation"))'),
+      'Show correct answer stays on while moving between questions',
+    )
+    await evaluate('window.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}))')
+    await until('!document.querySelector(".sqm-dialog")')
+    await evaluate('document.querySelector(".srx-status-chips .chip-incorrect").click()')
+    await until('document.querySelectorAll(".srx-q-row").length===window.expected.report.incorrect')
+    assert.equal(await evaluate('document.querySelectorAll(".srx-q-row:not(.srx-row-incorrect)").length'), 0)
     await clickTab('domains')
-    await evaluate('document.querySelector(".sr-domain-card button").click()')
+    await evaluate('document.querySelector(".srx-domain-card button").click()')
     await until('document.querySelector(".srx-question-list")')
     assert.equal(
       await evaluate('document.querySelector("#sat-result-tab-questions").getAttribute("aria-selected")'),
@@ -287,9 +298,7 @@ try {
   }
   await evaluate('window.show()')
   await until('document.querySelector("#sat-result-panel-scores")')
-  await evaluate(
-    'window.savedOpen=window.open;window.open=()=>null;document.querySelector(".srx-download").click()',
-  )
+  await evaluate('window.savedOpen=window.open;window.open=()=>null;document.querySelector(".srx-download").click()')
   await until('document.querySelector("[role=alert]")')
   await evaluate('window.open=window.savedOpen;document.querySelector(".srx-download").click()')
   let reportTarget

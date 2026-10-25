@@ -28,7 +28,7 @@ export default function Navbar({ darkMode, setDarkMode, toggleLanguage, currentL
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: ChartBarIcon },
-    { name: 'Tests', href: '/tests', icon: BookOpenIcon },
+    { name: 'Tests', href: '/ielts/tests', icon: BookOpenIcon },
     { name: 'SAT', href: '/sat', icon: AcademicCapIcon },
     { name: 'IELTS', href: '/ielts', icon: AcademicCapIcon },
   ]

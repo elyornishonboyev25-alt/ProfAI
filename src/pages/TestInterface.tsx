@@ -275,7 +275,7 @@ function TestInterfaceContent() {
       })
       return
     }
-    navigate('/test-preparation')
+    navigate('/ielts')
   }
 
   const mockRedirect = mockContext?.id && trackType && !isReviewLaunch

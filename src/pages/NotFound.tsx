@@ -72,11 +72,11 @@ export default function NotFound() {
             <Home className="mr-2 h-4 w-4" />
              <UiText text={"Go to Dashboard"} /> </Link>
           <Link
-            to="/test-preparation"
+            to="/ielts"
             className="interactive-lift inline-flex items-center rounded-xl border border-blue-200 bg-white px-5 py-2.5 text-sm font-bold text-blue-700 transition hover:bg-blue-50"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-             <UiText text={"Test Preparation"} /> </Link>
+             <UiText text={"IELTS Modules"} /> </Link>
           <a
             href="mailto:elyornishonboyev000@gmail.com?subject=Ivygoo%20404%20report"
             className="interactive-lift inline-flex items-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 transition hover:border-blue-200 hover:text-blue-700"

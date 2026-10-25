@@ -48,8 +48,8 @@ export default function Footer() {
           <div>
             <h4 className="text-sm font-semibold uppercase tracking-wide text-rose-700">{c('Platform')}</h4>
             <ul className="mt-3 space-y-2 text-sm text-slate-600">
-              <li><Link to="/tests" className="transition-colors hover:text-rose-700">{c('Practice Tests')}</Link></li>
-              <li><Link to="/mock" className="transition-colors hover:text-rose-700">{c('Mock Arena')}</Link></li>
+              <li><Link to="/ielts/tests" className="transition-colors hover:text-rose-700">{c('Practice Tests')}</Link></li>
+              <li><Link to="/ielts/tests#mocks" className="transition-colors hover:text-rose-700">{c('Mock Arena')}</Link></li>
               <li><Link to="/community?mode=ai" className="transition-colors hover:text-rose-700">{c('Speaking Community')}</Link></li>
               <li><Link to="/shadowing-lab" className="transition-colors hover:text-rose-700">{c('Shadowing Lab')}</Link></li>
               <li><Link to="/vocabulary" className="transition-colors hover:text-rose-700">{c('Vocabulary Arena')}</Link></li>

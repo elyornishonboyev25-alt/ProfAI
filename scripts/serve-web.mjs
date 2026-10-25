@@ -4,6 +4,7 @@ import { createReadStream } from 'node:fs'
 import { readFile, stat } from 'node:fs/promises'
 import { resolve, extname, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { isRetiredPagePath } from '../shared/retiredPages.mjs'
 
 export const canonicalOrigin = 'https://ivygoo.com'
 const redirectHosts = new Set(['profai.uz', 'www.profai.uz', 'profai.up.railway.app', 'www.ivygoo.com'])
@@ -75,7 +76,8 @@ export function createWebServer({ dist = resolve('dist'), upstream = process.env
       let decoded
       try { decoded = decodeURIComponent(pathname) } catch { res.writeHead(400); res.end(); return }
       if (decoded.includes('\0') || decoded.includes('\\')) { res.writeHead(400); res.end(); return }
-      let file = resolve(root, '.' + decoded)
+      const retired = isRetiredPagePath(pathname)
+      let file = resolve(root, retired ? 'index.html' : '.' + decoded)
       if (file !== root && !file.startsWith(root + sep)) { res.writeHead(403); res.end(); return }
       let info = await stat(file).catch(() => null)
       if (info?.isDirectory()) { file = resolve(file, 'index.html'); info = await stat(file).catch(() => null) }
@@ -94,9 +96,9 @@ export function createWebServer({ dist = resolve('dist'), upstream = process.env
             .replace(/<link rel="canonical"[^>]*\/>/, '')
             .replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, '')
         }
-        headers['Cache-Control'] = 'no-cache'
+        headers['Cache-Control'] = retired ? 'no-store' : 'no-cache'
         headers['Content-Length'] = Buffer.byteLength(body)
-        res.writeHead(200, headers); res.end(req.method === 'HEAD' ? undefined : body); return
+        res.writeHead(retired ? 404 : 200, headers); res.end(req.method === 'HEAD' ? undefined : body); return
       }
       headers['Cache-Control'] = /\/assets\/.*-[\w-]+\.(js|css)$/.test(pathname) ? 'public, max-age=31536000, immutable' : 'public, max-age=3600'
       if (['/sw.js', '/sw-cleanup.js', '/registerSW.js', '/manifest.webmanifest', '/robots.txt', '/sitemap.xml'].includes(pathname)) headers['Cache-Control'] = 'no-cache'

@@ -53,8 +53,8 @@ export const LANGUAGES = {
 export const ROUTES = {
   HOME: '/',
   DASHBOARD: '/dashboard',
-  TESTS: '/tests',
-  MOCK: '/mock',
+  TESTS: '/ielts/tests',
+  MOCK: '/ielts/tests#mocks',
   SPEAKING_COMMUNITY: '/speaking-community',
   SAT: '/sat',
   IELTS: '/ielts',

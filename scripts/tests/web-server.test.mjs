@@ -102,3 +102,37 @@ test('Ivygoo migration keeps routes, API, media seeking and Speaking signaling w
     await rm(dist, { recursive: true, force: true })
   }
 })
+
+
+test('Retired exam hub URLs return real 404 responses while live exams remain available', { timeout: 15000 }, async () => {
+  const dist = await mkdtemp(join(tmpdir(), 'ivygoo-retired-pages-'))
+  await writeFile(join(dist, 'index.html'), '<title>Ivygoo</title><meta name="robots" content="index, follow" /><div id="root">Current app</div>')
+  await mkdir(join(dist, 'test-preparation'))
+  await writeFile(join(dist, 'test-preparation', 'index.html'), '<h1>Obsolete exam hub</h1>')
+  const server = createWebServer({ dist, upstream: 'http://127.0.0.1:1' })
+  await once(server.listen(0, '127.0.0.1'), 'listening')
+  const base = 'http://127.0.0.1:' + server.address().port
+  try {
+    for (const path of ['/test-preparation', '/test-preparation/', '/test-preparation/old', '/test-preparation/old.js', '/TEST-PREPARATION', '/test%2Dpreparation', '/tests', '/tests/', '/TESTS', '/mock', '/mock/', '/%6Dock?source=old']) {
+      const response = await fetch(base + path)
+      assert.equal(response.status, 404, path)
+      assert.equal(response.headers.get('cache-control'), 'no-store', path)
+      assert.equal(response.headers.get('x-robots-tag'), 'noindex, follow', path)
+      assert.equal(response.headers.get('location'), null, path)
+      const body = await response.text()
+      assert.ok(body.includes('Current app'), path)
+      assert.ok(!body.includes('Obsolete exam hub'), path)
+      const head = await fetch(base + path, { method: 'HEAD' })
+      assert.equal(head.status, 404, path)
+      assert.equal(await head.text(), '', path)
+    }
+    for (const path of ['/', '/login', '/dashboard', '/ielts', '/ielts/tests', '/ielts/reading/tests', '/sat', '/sat/mocks', '/mock/ielts', '/mock/ielts/full-mock-1', '/mock/sat/1', '/sat/mock/1/run', '/tests/custom-test/attempt', '/results/example', '/academic-skills', '/admission']) {
+      assert.equal((await fetch(base + path)).status, 200, path)
+    }
+  } finally {
+    server.closeAllConnections()
+    await new Promise(resolve => server.close(resolve))
+    assert.ok(dist.startsWith(join(tmpdir(), 'ivygoo-retired-pages-')))
+    await rm(dist, { recursive: true, force: true })
+  }
+})

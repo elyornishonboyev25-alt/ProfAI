@@ -38,14 +38,14 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
     setMobileOpen(false)
   }
 
-  const openMockFromLanding = () => handleNavigate('/mock')
+  const openMockFromLanding = () => handleNavigate('/ielts/tests#mocks')
 
   // The exam tracks live behind a "Prep" dropdown so the bar stays clean while
   // still giving one-click access to every prep path from the dashboard.
   const prepItems = [
     { label: 'IELTS Prep', path: '/ielts', icon: BookOpen },
     { label: 'SAT Prep', path: '/sat', icon: GraduationCap },
-    { label: 'Test Library', path: '/tests', icon: Library },
+    { label: 'Test Library', path: '/ielts/tests', icon: Library },
   ] as const
   const prepActive = ['/ielts', '/sat', '/tests'].some((p) => location.pathname.startsWith(p))
   const [prepOpen, setPrepOpen] = useState(false)

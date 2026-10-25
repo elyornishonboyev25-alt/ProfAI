@@ -35,10 +35,9 @@ export const PRODUCT_NAVIGATION: ProductNavigationItem[] = [
     label: 'Test Preparation',
     mobileLabel: 'Prep',
     description: 'IELTS & SAT',
-    path: '/test-preparation',
+    path: '/ielts',
     icon: BookOpenCheck,
     matches: (pathname) => [
-      '/test-preparation',
       '/ielts',
       '/sat',
       '/mock',

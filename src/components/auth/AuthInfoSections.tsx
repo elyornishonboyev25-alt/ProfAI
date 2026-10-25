@@ -42,7 +42,8 @@ export default function AuthInfoSections() {
       <div className="auth-info-footer-main">
         <div><div className="auth-info-footer-logo"><BrandLogo height={46} /></div><p>Preparation and planning for the journey ahead.</p></div>
         <nav aria-label="Footer navigation">
-          <Link to="/test-preparation">IELTS &amp; SAT</Link>
+          <Link to="/ielts">IELTS</Link>
+          <Link to="/sat">SAT</Link>
           <a href="#auth-showcase">How it works</a>
           <Link to="/#plans">Free access</Link>
           <a href="#faq">FAQ</a>

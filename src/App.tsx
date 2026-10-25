@@ -13,6 +13,7 @@ import Footer from '@/components/Footer'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import AccountUsageBoundary from '@/components/auth/AccountUsageBoundary'
 import { isPublicAccountRoute } from '@/utils/accountAccess'
+import { isRetiredPagePath } from '../shared/retiredPages.mjs'
 import PremiumRoute from '@/components/auth/PremiumRoute'
 import SATBrowserExitGuard from '@/components/sat/SATBrowserExitGuard'
 import BillingBoundary from '@/features/billing/BillingBoundary'
@@ -42,7 +43,6 @@ const Landing = lazy(() => import('@/pages/Landing'))
 const SpinWheel = lazy(() => import('@/pages/SpinWheel'))
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
 const OwnerDashboard = lazy(() => import('@/pages/OwnerDashboard'))
-const TestPreparation = lazy(() => import('@/pages/TestPreparation'))
 const AcademicSkills = lazy(() => import('@/pages/AcademicSkills'))
 const SAT = lazy(() => import('@/pages/SAT'))
 const SATSection = lazy(() => import('@/pages/SATSection'))
@@ -249,7 +249,6 @@ function App() {
     pathname === '/dashboard' ||
     (pathname === '/' && Boolean(user)) ||
     pathname.startsWith('/mock') ||
-    pathname === '/test-preparation' ||
     pathname === '/academic-skills' ||
     pathname === '/speaking-community' ||
     pathname.startsWith('/speaker/') ||
@@ -471,14 +470,9 @@ function App() {
                       <Route path="/owner" element={<ProtectedRoute><AnimatedRoute><OwnerDashboard /></AnimatedRoute></ProtectedRoute>} />
                       <Route path="/about" element={<AnimatedRoute dashboardEntrance><Dashboard /></AnimatedRoute>} />
                       <Route
-                        path="/test-preparation"
-                        element={<AnimatedRoute><TestPreparation /></AnimatedRoute>}
-                      />
-                      <Route
                         path="/academic-skills"
                         element={<AnimatedRoute><AcademicSkills /></AnimatedRoute>}
                       />
-                      <Route path="/tests" element={<Navigate to="/test-preparation" replace />} />
                       <Route
                         path="/tests/:id/attempt"
                         element={
@@ -490,7 +484,6 @@ function App() {
                         }
                       />
                       <Route path="/leaderboard" element={<AnimatedRoute><Leaderboard /></AnimatedRoute>} />
-                      <Route path="/mock" element={<Navigate to="/test-preparation" replace />} />
                       <Route
                         path="/mock/ielts"
                         element={
@@ -872,7 +865,10 @@ function App() {
 }
 
 export default function VerifiedApp() {
+  const { pathname } = useLocation()
+  // Retired pages stay 404 even before sign-in or device-access verification.
+  if (isRetiredPagePath(pathname)) return <div className="app-shell relative min-h-screen"><Suspense fallback={<RouteLoader />}><NotFound /></Suspense></div>
   // The Telegram wheel runs inside Telegram's Mini App frame, outside the account workspace.
-  if (useLocation().pathname === '/spin') return <Suspense fallback={null}><SpinWheel /></Suspense>
+  if (pathname === '/spin') return <Suspense fallback={null}><SpinWheel /></Suspense>
   return <AccountUsageBoundary><App /></AccountUsageBoundary>
 }

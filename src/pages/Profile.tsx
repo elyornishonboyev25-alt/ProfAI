@@ -178,7 +178,7 @@ export default function Profile() {
                 <UiText text="Every IELTS and SAT test you finish is saved here in order. Open any result to analyze it question by question." />
               </p>
               <div className="mr-hero-actions">
-                <button type="button" className="mr-button primary" onClick={() => navigate('/test-preparation')}>
+                <button type="button" className="mr-button primary" onClick={() => navigate('/dashboard')}>
                   <UiText text="Start practicing" /> <ArrowUpRight aria-hidden="true" />
                 </button>
                 <button type="button" className="mr-button" onClick={() => navigate('/review-mistakes')}>
@@ -368,7 +368,7 @@ export default function Profile() {
                     <UiText text="Show all results" />
                   </button>
                 ) : (
-                  <button type="button" className="mr-button primary" onClick={() => navigate('/test-preparation')}>
+                  <button type="button" className="mr-button primary" onClick={() => navigate('/dashboard')}>
                     <UiText text="Browse tests" /> <ArrowUpRight aria-hidden="true" />
                   </button>
                 )}

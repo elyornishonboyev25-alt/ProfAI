@@ -145,7 +145,7 @@ export default function Tests() {
             New sets will be added next. For now, continue via IELTS/SAT section pages and shared Writing/Speaking studios.
           </p>
           <button
-            onClick={() => navigate('/mock', { state: { from: 'tests' } })}
+            onClick={() => navigate('/ielts/tests#mocks')}
             className="mt-3 inline-flex items-center rounded-xl border border-blue-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-blue-700 transition hover:bg-blue-50"
           >
             Open Mock Arena

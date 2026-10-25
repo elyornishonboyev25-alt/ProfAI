@@ -161,7 +161,7 @@ export async function run() {
     assert.equal(getFullMockAttempts('guest').filter(item => item.mockId === mock.id).length, 1)
     await remount(<MemoryRouter><FullMockAttemptHistory /></MemoryRouter>)
     await act(async () => element.querySelector<HTMLButtonElement>('button')!.click())
-    assert.ok(document.querySelector('[role="dialog"]')?.textContent?.includes('Your results.'))
+    assert.ok(document.querySelector('[role="dialog"]')?.textContent?.includes('Your overall result.'))
     await click('Close review')
     assert.equal(document.querySelector('[role="dialog"]'), null)
     assert.equal(getFullMockAttempts('different-account').length, 0)

@@ -1,4 +1,5 @@
 import { apiClient } from '@/lib/apiClient'
+import { withAssessmentDeadline } from '@/utils/assessmentDeadline'
 
 export type AiGenerationPurpose =
   | 'assistant_chat'
@@ -118,7 +119,23 @@ export async function evaluateWriting(
     improvements: ['Write a response that addresses every part of the task prompt.'], errors: [], correctedVersion: '', xpAwarded: 0,
   }
   // The backend owns the rubric, word count, score calculation and evidence checks.
-  return apiClient.post<WritingEvaluation>('/ai/generate/writing/evaluate', { taskType, prompt, response: studentResponse, visualContext })
+  const result = await withAssessmentDeadline(signal => apiClient.post<WritingEvaluation>(
+    '/ai/generate/writing/evaluate', { taskType, prompt, response: studentResponse, visualContext }, { signal },
+  ))
+  const criteria = [result.taskAchievement, result.coherenceCohesion, result.lexicalResource, result.grammaticalRange]
+  if (!criteria.every(band => typeof band === 'number' && Number.isFinite(band) && band >= 0 && band <= 9)
+    || typeof result.summary !== 'string' || !result.summary.trim()) {
+    throw new Error('The writing assessment was incomplete. Your response is saved; please retry.')
+  }
+  return {
+    ...result,
+    overallBand: Math.round(criteria.reduce((sum, band) => sum + band, 0) / 4 * 2) / 2,
+    strengths: Array.isArray(result.strengths) ? result.strengths.filter(item => typeof item === 'string') : [],
+    improvements: Array.isArray(result.improvements) ? result.improvements.filter(item => typeof item === 'string') : [],
+    errors: Array.isArray(result.errors) ? result.errors.filter(item => item && typeof item.original === 'string' && typeof item.corrected === 'string' && typeof item.explanation === 'string') : [],
+    correctedVersion: typeof result.correctedVersion === 'string' ? result.correctedVersion : '',
+    xpAwarded: Number.isFinite(result.xpAwarded) ? result.xpAwarded : 0,
+  }
 }
 export type ChatAssistantOptions = {
   coachPreferences?: import('@/services/ai/coachPreferences').CoachPreferences

@@ -7,6 +7,7 @@ import { callGeminiAPI, extractJSON } from './geminiAI'
 import type { SpeechStats } from '@/lib/speakingScoring'
 import { estimateBandsFromStats } from '@/lib/speakingScoring'
 import { apiClient } from '@/lib/apiClient'
+import { withAssessmentDeadline } from '@/utils/assessmentDeadline'
 import { collectSpeakingRewrites, validateSpeakingRewrites } from '../../backend/src/services/speakingRewrites'
 import { FAIR_ASSESSMENT_POLICY, SPEAKING_CALIBRATION } from '../../backend/src/services/ieltsAssessmentPolicy'
 
@@ -200,20 +201,21 @@ export async function evaluateSpeaking(params: EvaluateParams): Promise<Speaking
   }
   try {
     if (params.expectedAudioAnswers?.some(index => !params.audio?.some(clip => clip.answerIndex === index))) throw new Error('A saved recording is missing. Audio assessment cannot be completed.')
-    let assessmentMode: 'audio' | 'transcript' = 'transcript'
-    let response: Omit<SpeakingEvaluation, 'stats'>
-    if (params.audio?.length) {
-      // Never discard recordings or replace failed audio assessment with a text score.
-      if (params.audio.reduce((sum, clip) => sum + clip.blob.size, 0) > 8000000) throw new Error('Recordings exceed the assessment upload limit.')
-      const audio = await Promise.all(params.audio.map(async ({ blob, answerIndex }) => ({
-        answerIndex, mimeType: blob.type.split(';')[0].replace('audio/x-m4a', 'audio/mp4').replace('audio/m4a', 'audio/mp4'),
-        data: await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onerror = () => reject(new Error('Could not read audio.')); reader.onload = () => resolve(String(reader.result).split(',')[1] ?? ''); reader.readAsDataURL(blob) }),
-      })))
-      response = await apiClient.post<Omit<SpeakingEvaluation, 'stats'>>('/ai/speaking-audio/assess', { modeLabel: params.modeLabel, history: params.history, audio, durationSec: params.stats.durationSec }, { signal: AbortSignal.timeout(90000) })
-      assessmentMode = 'audio'
-    } else {
-      response = await apiClient.post<Omit<SpeakingEvaluation, 'stats'>>('/ai/speaking-audio/assess-transcript', { modeLabel: params.modeLabel, history: params.history, durationSec: params.stats.durationSec }, { signal: AbortSignal.timeout(90000) })
-    }
+    const { response, assessmentMode } = await withAssessmentDeadline(async signal => {
+      if (params.audio?.length) {
+        // Never discard recordings or replace failed audio assessment with a text score.
+        if (params.audio.reduce((sum, clip) => sum + clip.blob.size, 0) > 8000000) throw new Error('Recordings exceed the assessment upload limit.')
+        const audio = await Promise.all(params.audio.map(async ({ blob, answerIndex }) => ({
+          answerIndex, mimeType: blob.type.split(';')[0].replace('audio/x-m4a', 'audio/mp4').replace('audio/m4a', 'audio/mp4'),
+          data: await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onerror = () => reject(new Error('Could not read audio.')); reader.onload = () => resolve(String(reader.result).split(',')[1] ?? ''); reader.readAsDataURL(blob) }),
+        })))
+        if (signal.aborted) throw new Error('Assessment timed out.')
+        const response = await apiClient.post<Omit<SpeakingEvaluation, 'stats'>>('/ai/speaking-audio/assess', { modeLabel: params.modeLabel, history: params.history, audio, durationSec: params.stats.durationSec }, { signal })
+        return { response, assessmentMode: 'audio' as const }
+      }
+      const response = await apiClient.post<Omit<SpeakingEvaluation, 'stats'>>('/ai/speaking-audio/assess-transcript', { modeLabel: params.modeLabel, history: params.history, durationSec: params.stats.durationSec }, { signal })
+      return { response, assessmentMode: 'transcript' as const }
+    })
     if (response.assessmentMode !== assessmentMode || response.source !== 'ai' ||
       ![response.fluencyBand, response.lexicalBand, response.grammarBand, response.pronunciationBand].every(band => typeof band === 'number' && Number.isFinite(band) && band >= 0 && band <= 9) ||
       !response.summary?.trim() || !Array.isArray(response.strengths) || !response.strengths.every(item => typeof item === 'string' && item.trim()) ||
@@ -230,7 +232,7 @@ export async function evaluateSpeaking(params: EvaluateParams): Promise<Speaking
 }
 
 export async function improveSpeakingAnswer(text: string): Promise<string> {
-  const response = await apiClient.post<{ improvedAnswers: SpeakingEvaluation['improvedAnswers'] }>('/ai/speaking-audio/rewrites', { history: [{ role: 'candidate', text }] }, { signal: AbortSignal.timeout(90000) })
+  const response = await withAssessmentDeadline(signal => apiClient.post<{ improvedAnswers: SpeakingEvaluation['improvedAnswers'] }>('/ai/speaking-audio/rewrites', { history: [{ role: 'candidate', text }] }, { signal }))
   return validateSpeakingRewrites(response.improvedAnswers, [{ text }])[0].improved
 }
 
@@ -324,7 +326,7 @@ ${text}
 Analyse and return ONLY valid JSON.`
 
   try {
-    const raw = await callGeminiAPI(RESPONSE_ANALYSIS_PROMPT, userMessage, 8192, [], 'speaking_response_analysis')
+    const raw = await withAssessmentDeadline(signal => callGeminiAPI(RESPONSE_ANALYSIS_PROMPT, userMessage, 8192, [], 'speaking_response_analysis', signal))
     const parsed = JSON.parse(extractJSON(raw)) as Partial<SpeakingResponseAnalysis>
     if (![parsed.fluencyBand, parsed.lexicalBand, parsed.grammarBand].every(band => typeof band === 'number' && Number.isFinite(band) && band >= 0 && band <= 9) ||
       !parsed.correctedVersion?.trim() || !parsed.band8Template?.trim() ||

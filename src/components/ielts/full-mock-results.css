@@ -51,6 +51,13 @@
 .full-mock-result-detail .mock-run-section-review > * { margin-top: 20px; }
 .full-mock-results footer { margin-top: 24px; font-size: 11px; color: #748092; line-height: 1.9; padding: 0 4px; }
 .full-mock-results button:focus-visible { outline: 3px solid #ef9bab; outline-offset: 3px; }
+.full-mock-result-detail { scroll-margin-top: 24px; min-width: 0; }
+.full-mock-result-detail:focus-visible { outline: 3px solid #ef9bab; outline-offset: 3px; }
+.full-mock-result-detail .mock-run-responses > div { min-width: 0; padding: 18px; border: 1px solid #e8e4e7; border-radius: 16px; background: #fcfcfd; }
+.full-mock-result-detail .mock-run-responses { display: grid; gap: 16px; margin-top: 16px; }
+.full-mock-result-detail .mock-run-responses p { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.8; }
+.full-mock-result-detail .mock-run-responses h4 { font-size: 13px; font-weight: 800; margin-bottom: 10px; color: #a21b33; }
+.full-mock-result-detail .mock-run-feedback { border-top: 1px solid #e8e4e7; padding-top: 12px; margin-top: 16px; color: #626c7b; }
 @media (prefers-reduced-motion: reduce) { .full-mock-results-skills .full-mock-result-card { transition: none; } }
 @media(max-width: 800px) { .full-mock-results-hero { grid-template-columns: minmax(0, 1fr) 250px; padding: 26px; gap: 24px; }.full-mock-results-skills { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media(max-width: 600px) { .full-mock-results { padding: 18px 14px 36px; }.full-mock-results nav { flex-wrap: wrap; gap: 10px; }.full-mock-results nav > span:nth-child(2) { order: 3; width: 100%; }.full-mock-results-hero { grid-template-columns: minmax(0, 1fr); padding: 22px; }.full-mock-results-heading { display: block; }.full-mock-results-heading p { margin-top: 4px; }.full-mock-results-skills { gap: 10px; }.full-mock-results-skills .full-mock-result-card { padding: 16px; }.full-mock-result-card > span:first-child { gap: 6px; font-size: 12px; }.full-mock-result-card > span:first-child > svg:last-child { display: none; }.full-mock-result-detail { padding: 20px; }.full-mock-result-detail > header { flex-wrap: wrap; }.full-mock-result-stats { gap: 22px; flex-wrap: wrap; } }

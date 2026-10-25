@@ -250,15 +250,16 @@ export default function ExaminerSession({
         const legacy = storage.getItem(legacySessionKey)
         if (legacy && ['result', 'evaluating'].includes(JSON.parse(legacy).phase)) { raw = legacy; storage.setItem(sessionKey, raw!); storage.removeItem(legacySessionKey) }
       }
-      return JSON.parse(raw ?? 'null') as { phase: Phase; chat: ChatTurn[]; prompt: string; activePart: 0 | 1 | 2 | 3; cueCard: CueCard | null; prepNotes: string; stages: Stage[]; stageIndex: number; moveIndex: number; answers: SpeechStats[]; history: ExaminerTurn[]; prepDeadline: number; speakDeadline: number; pendingDuration: number; audioCount: number; audioKey?: string; examiner: ReturnType<typeof chooseExaminer> } | null } catch { return null }
+      return JSON.parse(raw ?? 'null') as { evaluation?: SpeakingEvaluation; phase: Phase; chat: ChatTurn[]; prompt: string; activePart: 0 | 1 | 2 | 3; cueCard: CueCard | null; prepNotes: string; stages: Stage[]; stageIndex: number; moveIndex: number; answers: SpeechStats[]; history: ExaminerTurn[]; prepDeadline: number; speakDeadline: number; pendingDuration: number; audioCount: number; audioKey?: string; examiner: ReturnType<typeof chooseExaminer> } | null } catch { return null }
   })
 
+  const completedEvaluation = saved?.phase === 'result' && saved.evaluation?.source === 'ai' ? saved.evaluation : null
   const [audioKey, setAudioKey] = useState(() => saved?.audioKey ?? `${sessionKey}:${Date.now()}`)
-  const [phase, setPhase] = useState<Phase>('idle')
-  const [started, setStarted] = useState(false)
+  const [phase, setPhase] = useState<Phase>(completedEvaluation ? 'result' : 'idle')
+  const [started, setStarted] = useState(Boolean(completedEvaluation))
   const [starting, setStarting] = useState(false)
-  useIeltsAttemptResume(started, sessionKey, modeLabel)
-  const [chat, setChat] = useState<ChatTurn[]>([])
+  useIeltsAttemptResume(started && phase !== 'result', sessionKey, modeLabel)
+  const [chat, setChat] = useState<ChatTurn[]>(saved?.chat ?? [])
   const [currentPrompt, setCurrentPrompt] = useState('')
   const [activePart, setActivePart] = useState<0 | 1 | 2 | 3>(1)
   const [cueCard, setCueCard] = useState<CueCard | null>(null)
@@ -272,7 +273,7 @@ export default function ExaminerSession({
   const [voiceError, setVoiceError] = useState<string | null>(null)
   const [pendingAudioUrl, setPendingAudioUrl] = useState<string | null>(null)
   const [micStream, setMicStream] = useState<MediaStream | null>(null)
-  const [evaluation, setEvaluation] = useState<SpeakingEvaluation | null>(null)
+  const [evaluation, setEvaluation] = useState<SpeakingEvaluation | null>(completedEvaluation)
   const [evalError, setEvalError] = useState<string | null>(null)
   const [answerError, setAnswerError] = useState<string | null>(null)
   const [stopping, setStopping] = useState(false)
@@ -281,12 +282,12 @@ export default function ExaminerSession({
   const [prepNotes, setPrepNotes] = useState('')
   const examiner = useRef(saved?.examiner ?? chooseExaminer(modeLabel)).current
 
-  const stagesRef = useRef<Stage[]>([])
-  const stageIdxRef = useRef(0)
-  const moveIdxRef = useRef(0)
-  const answersRef = useRef<SpeechStats[]>([])
+  const stagesRef = useRef<Stage[]>(saved?.stages ?? [])
+  const stageIdxRef = useRef(saved?.stageIndex ?? 0)
+  const moveIdxRef = useRef(saved?.moveIndex ?? 0)
+  const answersRef = useRef<SpeechStats[]>(saved?.answers ?? [])
   const audioAnswersRef = useRef<Array<{ blob: Blob; answerIndex: number; duration: number }>>([])
-  const historyRef = useRef<ExaminerTurn[]>([])
+  const historyRef = useRef<ExaminerTurn[]>(saved?.history ?? [])
   const recordStartRef = useRef(0)
   const prepDeadlineRef = useRef(0)
   const longTurnDeadlineRef = useRef(0)
@@ -310,18 +311,21 @@ export default function ExaminerSession({
   const microphoneInterruptedRef = useRef(false)
   const beginPendingRef = useRef(false)
   const autoStartRequestedRef = useRef(false)
-  const savedEvaluationRef = useRef(false)
+  const savedEvaluationRef = useRef(Boolean(completedEvaluation))
+  const restoredCompletionRef = useRef(false)
   const disposedRef = useRef(false)
   useActiveTest(started && phase !== 'result')
+
+  useEffect(() => {
+    if (!completedEvaluation || !sessionScope || restoredCompletionRef.current) return
+    restoredCompletionRef.current = true
+    onCompleted?.(completedEvaluation, [...historyRef.current], sessionKey)
+  }, [completedEvaluation, sessionScope, sessionKey, onCompleted])
 
   useLayoutEffect(() => {
     if (!started) return
     const save = () => {
-      if (savedEvaluationRef.current && !sessionScope) {
-        try { accountStorageFor(owner).removeItem(sessionKey) } catch { /* Optional session cache. */ }
-        return
-      }
-      const data = { phase, chat, prompt: currentPrompt, activePart, cueCard, prepNotes, stages: stagesRef.current, stageIndex: stageIdxRef.current, moveIndex: moveIdxRef.current, answers: answersRef.current, history: historyRef.current, prepDeadline: prepDeadlineRef.current, speakDeadline: longTurnDeadlineRef.current, pendingDuration: pendingAnswerRef.current?.duration ?? (recording ? Math.max(0.1, (Date.now() - recordStartRef.current) / 1000) : 0), audioCount: audioAnswersRef.current.length, audioKey, examiner }
+      const data = { phase, evaluation, chat, prompt: currentPrompt, activePart, cueCard, prepNotes, stages: stagesRef.current, stageIndex: stageIdxRef.current, moveIndex: moveIdxRef.current, answers: answersRef.current, history: historyRef.current, prepDeadline: prepDeadlineRef.current, speakDeadline: longTurnDeadlineRef.current, pendingDuration: pendingAnswerRef.current?.duration ?? (recording ? Math.max(0.1, (Date.now() - recordStartRef.current) / 1000) : 0), audioCount: audioAnswersRef.current.length, audioKey, examiner }
       try { accountStorageFor(owner).setItem(sessionKey, JSON.stringify(data)) } catch { /* Session remains active in memory. */ }
     }
     save()
@@ -329,7 +333,7 @@ export default function ExaminerSession({
     window.addEventListener('pagehide', save)
     window.addEventListener('beforeunload', save)
     return () => { window.clearInterval(timer); window.removeEventListener('pagehide', save); window.removeEventListener('beforeunload', save) }
-  }, [started, phase, chat, currentPrompt, activePart, cueCard, prepNotes, recording, owner, sessionKey, examiner])
+  }, [started, phase, evaluation, chat, currentPrompt, activePart, cueCard, prepNotes, recording, owner, sessionKey, examiner, audioKey])
 
   // Cleanup speech on unmount.
   useEffect(() => {
@@ -425,15 +429,14 @@ export default function ExaminerSession({
       setEvaluation(result)
       setPhase('result')
       // Preserve the completed recording checkpoint before navigation, including outages.
-      if (sessionScope) {
+      {
         try {
           const checkpoint = JSON.parse(accountStorageFor(owner).getItem(sessionKey) ?? '{}')
-          accountStorageFor(owner).setItem(sessionKey, JSON.stringify({ ...checkpoint, phase: 'result', audioKey, history: historyRef.current, answers: answersRef.current }))
+          accountStorageFor(owner).setItem(sessionKey, JSON.stringify({ ...checkpoint, phase: 'result', evaluation: result, audioKey, history: historyRef.current, answers: answersRef.current }))
         } catch { /* In-memory review remains available. */ }
       }
       if (result.source === 'ai' && (config.mode !== 'full_mock' || result.assessmentMode === 'audio') && !savedEvaluationRef.current) {
         savedEvaluationRef.current = true
-        if (!sessionScope) { try { accountStorageFor(owner).removeItem(sessionKey) } catch { /* Grading already succeeded. */ } }
         try { onSaved(result, [...historyRef.current]) } catch { /* Optional history/reward storage cannot block the completed exam report. */ }
       }
       onCompleted?.(result, [...historyRef.current], sessionKey)

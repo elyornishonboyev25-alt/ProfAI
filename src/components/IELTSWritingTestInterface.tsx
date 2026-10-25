@@ -1,4 +1,5 @@
 import { useActiveTest } from '@/hooks/useActiveTest'
+import SubmittedWritingAnswers from '@/components/ielts/SubmittedWritingAnswers'
 import { saveActiveTestPaper, clearActiveTestPaper } from '@/utils/activeTestPaper'
 import { useIeltsAttemptResume } from '@/hooks/useIeltsAttemptResume'
 import { accountStorageFor } from '@/utils/accountStorage'
@@ -326,6 +327,7 @@ export default function IELTSWritingTestInterface({
   const user = useAuthStore((state: AuthState) => state.user)
   const draftKey = `profai:writing:draft:${user?.id ?? 'guest'}:${task.id}`
   const sessionKey = `${draftKey}:session`
+  const submittedTimeRemaining = phase === 'submitted' ? timeRemaining : undefined
   useIeltsAttemptResume(phase === 'writing' || evaluating, sessionKey, task.title)
   useActiveTest(phase === 'writing' || evaluating)
   const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
@@ -343,7 +345,7 @@ export default function IELTSWritingTestInterface({
     try {
       const session = accountStorageFor(user?.id ?? 'guest').getItem(sessionKey)
       if (session) {
-        const parsed = JSON.parse(session) as { answer?: string; timerEnabled?: boolean; deadline?: number | null; bookmarked?: boolean; activeTaskIndex?: number; bookmarks?: Record<string, boolean> }
+        const parsed = JSON.parse(session) as { phase?: string; evaluation?: WritingEvaluation | null; timeRemaining?: number; answer?: string; timerEnabled?: boolean; deadline?: number | null; bookmarked?: boolean; activeTaskIndex?: number; bookmarks?: Record<string, boolean> }
         if (typeof parsed.answer === 'string') setAnswer(parsed.answer)
         autoStartHandled.current = true
         const timed = parsed.timerEnabled === true && typeof parsed.deadline === 'number'
@@ -352,7 +354,13 @@ export default function IELTSWritingTestInterface({
         setTimeRemaining(timed ? Math.max(0, Math.ceil((parsed.deadline! - Date.now()) / 1000)) : effectiveDuration * 60)
         setIsTimerRunning(timed && parsed.deadline! > Date.now())
         setBookmarked(parsed.bookmarked === true)
-        setPhase('writing')
+        if (parsed.phase === 'submitted') {
+          setAiEvaluation(parsed.evaluation ?? null)
+          setIsTimerRunning(false)
+          setTimeRemaining(parsed.timeRemaining ?? 0)
+          if (!parsed.evaluation) setEvalError('Your submitted response is saved. Retry to finish the assessment.')
+          setPhase('submitted')
+        } else setPhase('writing')
       }
     } catch { /* Start from launch screen. */ }
   }, [draftKey, effectiveDuration, sessionKey])
@@ -363,10 +371,10 @@ export default function IELTSWritingTestInterface({
   }, [phase, sessionKey, task, user?.id])
 
   useLayoutEffect(() => {
-    if (phase !== 'writing') return
-    try { accountStorageFor(user?.id ?? 'guest').setItem(sessionKey, JSON.stringify({ answer, timerEnabled, deadline: deadlineRef.current, bookmarked })) } catch { /* Keep the current session. */ }
+    if (phase === 'landing') return
+    try { accountStorageFor(user?.id ?? 'guest').setItem(sessionKey, JSON.stringify({ phase, evaluation: phase === 'submitted' ? aiEvaluation : null, timeRemaining: submittedTimeRemaining, answer, timerEnabled, deadline: deadlineRef.current, bookmarked })) } catch { /* Keep the current session. */ }
     accountStorageFor(user?.id ?? 'guest').setItem(draftKey, answer)
-  }, [answer, phase, sessionKey, draftKey, timerEnabled, bookmarked, user?.id])
+  }, [answer, phase, sessionKey, draftKey, timerEnabled, bookmarked, user?.id, aiEvaluation, submittedTimeRemaining])
 
   useEffect(() => {
     if (!isTimerRunning || !timerEnabled) return
@@ -428,9 +436,11 @@ export default function IELTSWritingTestInterface({
     setShowSubmitConfirm(false)
     setEvaluating(true)
     setEvalError(null)
+    setAiEvaluation(null)
 
     try {
       const result = await evaluateWriting(task.taskType, task.prompt, answer, wordCount, writingVisualContext(task))
+      if ((useAuthStore.getState().user?.id ?? 'guest') !== (user?.id ?? 'guest')) return
       setAiEvaluation(result)
       if (answer.trim()) writingTrial.consume()
 
@@ -449,8 +459,7 @@ export default function IELTSWritingTestInterface({
         task,
       )
       accountStorageFor(user?.id ?? 'guest').removeItem(draftKey)
-      accountStorageFor(user?.id ?? 'guest').removeItem(sessionKey)
-      clearActiveTestPaper(sessionKey, user?.id ?? 'guest')
+      // Keep the submitted report and its paper available after refresh.
       if (user) {
         void learningCenterApi.syncResult({
           sourceKey: savedEntry.attemptKey,
@@ -677,7 +686,7 @@ export default function IELTSWritingTestInterface({
             </p>
             <div className="mt-6 flex items-center justify-center gap-2 text-xs font-semibold text-red-600">
               <Loader2 className="h-4 w-4 animate-spin" />
-              This usually takes 10–20 seconds
+              Assessment can take up to 90 seconds. Your response is saved.
             </div>
           </motion.div>
         </div>
@@ -698,6 +707,7 @@ export default function IELTSWritingTestInterface({
             </div>
             <h2 className="mt-5 text-2xl font-black text-slate-900">Evaluation Failed</h2>
             <p className="mt-2 text-sm text-slate-600">{evalError}</p>
+            <SubmittedWritingAnswers tasks={[task]} answers={{ [task.id]: answer }} />
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
               <button
                 type="button"
@@ -753,6 +763,10 @@ export default function IELTSWritingTestInterface({
                   setEvalError(null)
                   setTimeRemaining(task.durationMinutes * 60)
                   setPhase('landing')
+                  autoSubmittedRef.current = false
+                  accountStorageFor(user?.id ?? 'guest').removeItem(draftKey)
+                  accountStorageFor(user?.id ?? 'guest').removeItem(sessionKey)
+                  clearActiveTestPaper(sessionKey, user?.id ?? 'guest')
                 }}
                 className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-red-500/20 hover:brightness-105 transition"
               >

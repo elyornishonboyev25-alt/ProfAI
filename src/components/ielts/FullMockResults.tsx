@@ -1,14 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, ArrowUpRight, BookOpen, CheckCircle2, Headphones, Mic2, PenSquare, Trophy, X } from 'lucide-react'
 import ImprovedResponse from './ImprovedResponse'
 import SpeakingResult from '@/components/speaking/SpeakingResult'
-import { getFullMockResults, saveFullMockSectionResult } from '@/utils/ieltsMockCatalog'
+import { calculateFullMockOverallBand, getFullMockResults, saveFullMockSectionResult } from '@/utils/ieltsMockCatalog'
 import type { FullMockEntry, FullMockSectionResult, MockSection, MockSectionKey } from '@/utils/ieltsMockCatalog'
 import './full-mock-results.css'
 
 const icons = { listening: Headphones, reading: BookOpen, writing: PenSquare, speaking: Mic2 }
 
-export default function FullMockResults({ mock, results, overall, onBack, onReview, onRegrade, readOnly = false }: {
+export default function FullMockResults({ mock, results, onBack, onReview, onRegrade, readOnly = false }: {
   mock: FullMockEntry
   results: Partial<Record<MockSectionKey, FullMockSectionResult>>
   overall: number | null
@@ -20,6 +20,13 @@ export default function FullMockResults({ mock, results, overall, onBack, onRevi
   const [selected, setSelected] = useState<MockSectionKey | null>(null)
   const [regrading, setRegrading] = useState(false)
   const [error, setError] = useState('')
+  const overall = calculateFullMockOverallBand(results)
+  const detailRef = useRef<HTMLElement>(null)
+  useEffect(() => {
+    if (!selected) return
+    detailRef.current?.focus({ preventScroll: true })
+    detailRef.current?.scrollIntoView({ behavior: 'auto', block: 'start' })
+  }, [selected])
   const regrade = async () => {
     if (regrading || !onRegrade) return
     setRegrading(true); setError('')
@@ -47,7 +54,7 @@ export default function FullMockResults({ mock, results, overall, onBack, onRevi
       <div className="full-mock-results-heading"><h2>Your four skills</h2><p>Select a card to see the section result</p></div>
       <div className="full-mock-results-skills" role="group" aria-label="Section results">
         {mock.sections.map(item => {
-          const result = results[item.key]!
+          const result = results[item.key] ?? { band: 0, assessmentStatus: 'pending', testId: '', completedAt: '' }
           const Icon = icons[item.key]
           return <button type="button" id={`result-card-${item.key}`} aria-expanded={selected === item.key} aria-controls={selected === item.key ? 'full-mock-result-detail' : undefined}
             key={item.key} className={`mock-run-section full-mock-result-card ${selected === item.key ? 'is-selected' : ''}`} onClick={() => setSelected(current => current === item.key ? null : item.key)}>
@@ -59,7 +66,7 @@ export default function FullMockResults({ mock, results, overall, onBack, onRevi
       </div>
       {speakingPending && <div className="full-mock-assessment-notice" role="status"><div><h3>Your answers are saved</h3><p>All four sections are complete. Your overall band will appear after Speaking is assessed.</p></div>{onRegrade && <button type="button" disabled={regrading} className="mock-run-review" onClick={() => void regrade()}>{regrading ? 'Assessing your saved recordings...' : 'Retry Speaking assessment'}</button>}</div>}
       {error && <p role="alert" className="full-mock-assessment-error">{error}</p>}
-      {selected && section && saved && <section aria-labelledby="full-mock-section-title" id="full-mock-result-detail" className="full-mock-result-detail" key={selected}>
+      {selected && section && saved && <section ref={detailRef} tabIndex={-1} aria-labelledby="full-mock-section-title" id="full-mock-result-detail" className="full-mock-result-detail" key={selected}>
         <header><div><p className="full-mock-results-eyebrow">SECTION RESULT</p><h2 id="full-mock-section-title">{section.title} <span>{pending ? 'Assessment pending' : saved.band.toFixed(1)}</span></h2></div>{objective && saved.result && <button type="button" className="mock-run-review" onClick={() => onReview(section)}>Review answers <ArrowUpRight size={16} /></button>}<button type="button" className="full-mock-result-close" onClick={closeSection} aria-label="Close section review"><X size={18} /></button></header>
         {saved.result && <div className="full-mock-result-stats"><div><strong>{saved.result.correctAnswers}<small> / {saved.result.totalQuestions}</small></strong><span>Correct answers</span></div><div><strong>{Math.round(saved.result.correctAnswers / Math.max(1, saved.result.totalQuestions) * 100)}<small>%</small></strong><span>Accuracy</span></div><div><strong>{Math.round(saved.result.timeSpent / 60)}<small> min</small></strong><span>Time used</span></div></div>}
         {saved.summary && <p className="mock-run-summary">{saved.summary}</p>}

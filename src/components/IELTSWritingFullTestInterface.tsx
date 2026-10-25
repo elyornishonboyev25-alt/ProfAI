@@ -26,6 +26,7 @@ import {
 import { AnimatedBackground } from '@/components/AnimatedBackground'
 import TestLaunchOverlay from '@/components/common/TestLaunchOverlay'
 import ImprovedResponse from '@/components/ielts/ImprovedResponse'
+import SubmittedWritingAnswers from '@/components/ielts/SubmittedWritingAnswers'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import WritingTaskDiagram from '@/components/writing/WritingTaskDiagram'
 import WritingDataVisual from '@/components/writing/WritingDataVisual'
@@ -108,6 +109,7 @@ export default function IELTSWritingFullTestInterface({
   const [evaluating, setEvaluating] = useState(false)
   const [evalError, setEvalError] = useState<string | null>(null)
   const [evaluations, setEvaluations] = useState<Record<string, WritingEvaluation>>({})
+  const assessmentCache = useRef<Record<string, { answer: string; evaluation: WritingEvaluation }>>({})
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const submittingRef = useRef(false)
   const autoSubmittedRef = useRef(false)
@@ -126,6 +128,7 @@ export default function IELTSWritingFullTestInterface({
   const user = useAuthStore((state: AuthState) => state.user)
   const draftKey = `profai:writing:draft:${user?.id ?? 'guest'}:${fullTest.id}${fullMockId ? `:mock:${fullMockId}` : ''}`
   const sessionKey = `${draftKey}:session`
+  const submittedTimeRemaining = phase === 'submitted' ? timeRemaining : undefined
   useIeltsAttemptResume(phase === 'writing' || evaluating, sessionKey, fullTest.title)
   useActiveTest(phase === 'writing' || evaluating)
   const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
@@ -160,7 +163,7 @@ export default function IELTSWritingFullTestInterface({
     try {
       const session = accountStorageFor(user?.id ?? 'guest').getItem(sessionKey)
       if (session) {
-        const parsed = JSON.parse(session) as { answers?: Record<string, string>; timerEnabled?: boolean; deadline?: number | null; bookmarked?: boolean; activeTaskIndex?: number; bookmarks?: Record<string, boolean> }
+        const parsed = JSON.parse(session) as { phase?: Phase; evaluations?: Record<string, WritingEvaluation>; timeRemaining?: number; answers?: Record<string, string>; timerEnabled?: boolean; deadline?: number | null; bookmarked?: boolean; activeTaskIndex?: number; bookmarks?: Record<string, boolean> }
         if (parsed.answers) setAnswers(Object.fromEntries(tasks.map(task => [task.id, typeof parsed.answers?.[task.id] === 'string' ? parsed.answers[task.id] : ''])))
         autoStartHandled.current = true
         const timed = parsed.timerEnabled === true && typeof parsed.deadline === 'number'
@@ -170,7 +173,15 @@ export default function IELTSWritingFullTestInterface({
         setIsTimerRunning(timed && parsed.deadline! > Date.now())
         setActiveTaskIndex(Math.max(0, Math.min(tasks.length - 1, parsed.activeTaskIndex ?? 0)))
         setBookmarks(parsed.bookmarks ?? {})
-        setPhase('writing')
+        if (parsed.phase === 'submitted') {
+          const restored = parsed.evaluations ?? {}
+          setEvaluations(restored)
+          assessmentCache.current = Object.fromEntries(tasks.filter(task => restored[task.id]).map(task => [task.id, { answer: parsed.answers?.[task.id] ?? '', evaluation: restored[task.id] }]))
+          setIsTimerRunning(false)
+          setTimeRemaining(parsed.timeRemaining ?? 0)
+          if (!tasks.every(task => restored[task.id])) setEvalError('Your submitted responses are saved. Retry to finish the assessment.')
+          setPhase('submitted')
+        } else setPhase('writing')
       }
     } catch { /* Start from the launch screen. */ }
   }, [draftKey, effectiveDuration, sessionKey, tasks])
@@ -181,10 +192,10 @@ export default function IELTSWritingFullTestInterface({
   }, [phase, sessionKey, fullTest, user?.id])
 
   useLayoutEffect(() => {
-    if (phase !== 'writing') return
-    try { accountStorageFor(user?.id ?? 'guest').setItem(sessionKey, JSON.stringify({ answers, timerEnabled, deadline: deadlineRef.current, activeTaskIndex, bookmarks })) } catch { /* Keep the current session. */ }
+    if (phase === 'landing') return
+    try { accountStorageFor(user?.id ?? 'guest').setItem(sessionKey, JSON.stringify({ phase, evaluations: phase === 'submitted' ? evaluations : {}, timeRemaining: submittedTimeRemaining, answers, timerEnabled, deadline: deadlineRef.current, activeTaskIndex, bookmarks })) } catch { /* Keep the current session. */ }
     accountStorageFor(user?.id ?? 'guest').setItem(draftKey, JSON.stringify(answers))
-  }, [answers, phase, sessionKey, draftKey, timerEnabled, activeTaskIndex, bookmarks, user?.id])
+  }, [answers, phase, sessionKey, draftKey, timerEnabled, activeTaskIndex, bookmarks, user?.id, evaluations, submittedTimeRemaining])
 
   useEffect(() => {
     if (!isTimerRunning || !timerEnabled) return
@@ -238,6 +249,7 @@ export default function IELTSWritingFullTestInterface({
     setAnswers(Object.fromEntries(tasks.map((task) => [task.id, ''])))
     setBookmarks({})
     setEvaluations({})
+    assessmentCache.current = {}
     setEvalError(null)
     setActiveTaskIndex(0)
     setTimeRemaining(effectiveDuration * 60)
@@ -262,11 +274,24 @@ export default function IELTSWritingFullTestInterface({
     setPhase('submitted')
     setEvaluating(true)
     setEvalError(null)
+    setEvaluations(Object.fromEntries(tasks.flatMap(task => {
+      const cached = assessmentCache.current[task.id]
+      return cached?.answer === (answers[task.id] ?? '') ? [[task.id, cached.evaluation]] : []
+    })))
 
     try {
       const results: WritingEvaluation[] = []
       for (const task of tasks) {
-        results.push(await evaluateWriting(task.taskType, task.prompt, answers[task.id] ?? '', wordCounts[task.id], writingVisualContext(task)))
+        const answer = answers[task.id] ?? ''
+        const cached = assessmentCache.current[task.id]
+        const evaluation = cached?.answer === answer ? cached.evaluation : await evaluateWriting(task.taskType, task.prompt, answer, wordCounts[task.id], writingVisualContext(task))
+        if ((useAuthStore.getState().user?.id ?? 'guest') !== (user?.id ?? 'guest')) return
+        assessmentCache.current[task.id] = { answer, evaluation }
+        results.push(evaluation)
+        setEvaluations(Object.fromEntries(tasks.flatMap(item => {
+          const entry = assessmentCache.current[item.id]
+          return entry?.answer === (answers[item.id] ?? '') ? [[item.id, entry.evaluation]] : []
+        })))
       }
       const resultMap = Object.fromEntries(tasks.map((task, index) => [task.id, results[index]]))
       setEvaluations(resultMap)
@@ -353,8 +378,10 @@ export default function IELTSWritingFullTestInterface({
       )
       // Clear recovery only after both tasks and the mock result are durable.
       accountStorageFor(user?.id ?? 'guest').removeItem(draftKey)
-      accountStorageFor(user?.id ?? 'guest').removeItem(sessionKey)
-      clearActiveTestPaper(sessionKey, user?.id ?? 'guest')
+      if (inFullMock) {
+        accountStorageFor(user?.id ?? 'guest').removeItem(sessionKey)
+        clearActiveTestPaper(sessionKey, user?.id ?? 'guest')
+      }
     } catch (error) {
       setEvalError(error instanceof Error ? error.message : 'AI evaluation failed. Please try again.')
     } finally {
@@ -447,22 +474,24 @@ export default function IELTSWritingFullTestInterface({
   if (phase === 'submitted') {
     if (evaluating) {
       return (
-        <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(160deg,#fff7f7_0%,#fee2e2_52%,#fff_100%)] p-6">
-          <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-md rounded-3xl border border-red-100 bg-white p-9 text-center shadow-[0_30px_70px_rgba(220,38,38,0.18)]">
+        <div className="flex min-h-screen flex-col items-center justify-center bg-[linear-gradient(160deg,#fff7f7_0%,#fee2e2_52%,#fff_100%)] p-6">
+          <motion.div role="status" aria-live="polite" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-md rounded-3xl border border-red-100 bg-white p-9 text-center shadow-[0_30px_70px_rgba(220,38,38,0.18)]">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 text-white shadow-lg shadow-red-500/25">
               <Loader2 className="h-8 w-8 animate-spin" />
             </div>
             <h2 className="mt-5 text-2xl font-black text-slate-900">Analyzing both responses</h2>
             <p className="mt-2 text-sm leading-6 text-slate-500">Task 1 and Task 2 are being scored separately, then combined using IELTS Writing weighting.</p>
+            <p className="mt-3 text-sm font-bold text-red-700">{Object.keys(evaluations).length} of {tasks.length} assessments ready</p>
           </motion.div>
+          <SubmittedWritingAnswers tasks={tasks} answers={answers} />
         </div>
       )
     }
 
     if (evalError) {
       return (
-        <div className="flex min-h-screen items-center justify-center bg-red-50 p-6">
-          <div className="w-full max-w-md rounded-3xl border border-red-200 bg-white p-8 text-center shadow-xl">
+        <div className="min-h-screen bg-red-50 p-6">
+          <div role="alert" className="mx-auto w-full max-w-md rounded-3xl border border-red-200 bg-white p-8 text-center shadow-xl">
             <AlertCircle className="mx-auto h-12 w-12 text-red-500" />
             <h2 className="mt-4 text-2xl font-black text-slate-900">Evaluation failed</h2>
             <p className="mt-2 text-sm text-slate-600">{evalError}</p>
@@ -471,6 +500,7 @@ export default function IELTSWritingFullTestInterface({
               <button type="button" onClick={() => setPhase('writing')} className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700">Back to editing</button>
             </div>
           </div>
+          <SubmittedWritingAnswers tasks={tasks} answers={answers} />
         </div>
       )
     }

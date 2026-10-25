@@ -202,6 +202,18 @@ export type FullMockSectionResult = {
 
 const RESULT_STORAGE_KEY = 'smarttest:full-mock-results:v1'
 type FullMockResults = Record<string, Partial<Record<MockSectionKey, FullMockSectionResult>>>
+const SECTION_KEYS = ['listening', 'reading', 'writing', 'speaking'] as const
+
+export function calculateFullMockOverallBand(results: Partial<Record<MockSectionKey, FullMockSectionResult>>): number | null {
+  const bands: number[] = []
+  for (const key of SECTION_KEYS) {
+    const result = results[key]
+    if (!result || result.assessmentStatus === 'pending' || !Number.isFinite(result.band) || result.band < 0 || result.band > 9) return null
+    bands.push(result.band)
+  }
+  // IELTS: .25 rounds up to .5 and .75 rounds up to the next whole band.
+  return Math.round(bands.reduce((sum, band) => sum + band, 0) / MOCK_SECTION_COUNT * 2) / 2
+}
 export type FullMockAttempt = {
   mockId: string
   completedAt: string
@@ -217,14 +229,14 @@ export function getFullMockAttempts(owner?: string): FullMockAttempt[] {
     try {
       const parsed = JSON.parse(storage.getItem(`smarttest:full-mock-history:v1:${mock.id}`) ?? '[]')
       if (Array.isArray(parsed)) history = parsed.filter(entry => entry && typeof entry.completedAt === 'string'
-        && mock.sections.every(section => typeof entry.sections?.[section.key]?.band === 'number'))
-        .map(entry => ({ ...entry, mockId: mock.id, archived: true }))
+        && mock.sections.every(section => Number.isFinite(entry.sections?.[section.key]?.band)
+          && entry.sections[section.key].band >= 0 && entry.sections[section.key].band <= 9))
+        .map(entry => ({ ...entry, overallBand: calculateFullMockOverallBand(entry.sections), mockId: mock.id, archived: true }))
     } catch { /* One damaged archive must not hide other mocks. */ }
     const sections = getFullMockResults(mock.id, owner)
     if (mock.sections.every(section => sections[section.key])) {
       const values = Object.values(sections)
-      const overallBand = values.some(result => result.assessmentStatus === 'pending') ? null
-        : Math.round(values.reduce((sum, result) => sum + result.band, 0) / 4 * 2) / 2
+      const overallBand = calculateFullMockOverallBand(sections)
       const dates = values.map(result => result.completedAt).sort()
       history.push({ mockId: mock.id, completedAt: dates[dates.length - 1], overallBand, sections, archived: false })
     }
@@ -232,17 +244,27 @@ export function getFullMockAttempts(owner?: string): FullMockAttempt[] {
   }).sort((a, b) => Date.parse(b.completedAt) - Date.parse(a.completedAt))
 }
 
+let resultsCache: { raw: string; value: FullMockResults } | undefined
+
 function readResults(userId?: string): FullMockResults {
   if (typeof window === 'undefined') return {}
   try {
     const storage = userId === undefined ? accountStorage : accountStorageFor(userId)
-    const parsed = JSON.parse(storage.getItem(RESULT_STORAGE_KEY) ?? '{}')
-    return parsed && typeof parsed === 'object' ? parsed as FullMockResults : {}
+    const raw = storage.getItem(RESULT_STORAGE_KEY) ?? '{}'
+    if (resultsCache?.raw !== raw) {
+      const parsed = JSON.parse(raw)
+      resultsCache = { raw, value: parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed as FullMockResults : {} }
+    }
+    return { ...resultsCache.value }
   } catch { return {} }
 }
 
 export function getFullMockResults(mockId: string, userId?: string): Partial<Record<MockSectionKey, FullMockSectionResult>> {
   const results = { ...readResults(userId)[mockId] }
+  for (const key of Object.keys(results)) {
+    const result = results[key as MockSectionKey]
+    if (!isMockSectionKey(key) || !result || !Number.isFinite(result.band) || result.band < 0 || result.band > 9) delete results[key as MockSectionKey]
+  }
   const reading = results.reading
   if (reading?.result && Object.keys(reading.result.answers ?? {}).some(id => readingEvidenceKeyConflicts[id])) {
     const test = resolveIeltsTestById(reading.testId)
@@ -286,13 +308,7 @@ export function saveFullMockSectionResult(mockId: string, section: MockSectionKe
 }
 
 export function getFullMockOverallBand(mockId: string): number | null {
-  const results = getFullMockResults(mockId)
-  if (Object.values(results).some(result => result.assessmentStatus === 'pending')) return null
-  const bands = (['listening', 'reading', 'writing', 'speaking'] as const).map((key) => results[key]?.band)
-  if (bands.some((band) => typeof band !== 'number' || !Number.isFinite(band))) return null
-  const average = bands.reduce<number>((sum, band) => sum + (band ?? 0), 0) / MOCK_SECTION_COUNT
-  // IELTS overall scores round to the nearest half band; .25 and .75 round up.
-  return Math.round(average * 2) / 2
+  return calculateFullMockOverallBand(getFullMockResults(mockId))
 }
 
 /** Keep the completed attempt before opening a fresh, isolated mock session. */

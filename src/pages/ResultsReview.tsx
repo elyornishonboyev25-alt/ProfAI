@@ -66,7 +66,7 @@ function ResultsReviewContent() {
 
   const result = state.result ?? sessionState?.result ?? fallbackEntry?.resultPayload
   const storedTest = state.test ?? sessionState?.test
-  const catalogTest = resolveIeltsTestById(result?.testId ?? fallbackEntry?.testId ?? testId ?? '', result)
+  const catalogTest = useMemo(() => resolveIeltsTestById(result?.testId ?? fallbackEntry?.testId ?? testId ?? '', result), [result, fallbackEntry?.testId, testId])
   // Stable question IDs allow saved answers to use corrected prompts and keys.
   const test = catalogTest ?? storedTest ?? undefined
   const resolvedTestId = result?.testId ?? test?.id ?? testId ?? ''

@@ -140,6 +140,10 @@ function ResultsContent() {
   const bandScore = calculateBandScore(analysis.summary.correctAnswers, answeredCount)
   const readingScoreChanged = !isListeningTest && result?.correctAnswers !== analysis.summary.correctAnswers
   const effectiveBandScore = Number((answeredCount > 0 && !isListeningTest && !readingScoreChanged && result?.score && result.score > 0 ? result.score : bandScore).toFixed(1))
+  const reviewedResult = useMemo(() => result ? {
+    ...result, score: effectiveBandScore,
+    correctAnswers: analysis.summary.correctAnswers, totalQuestions: analysis.summary.totalQuestions,
+  } : undefined, [result, effectiveBandScore, analysis.summary.correctAnswers, analysis.summary.totalQuestions])
   const recommendations = useMemo(() => [
     analysis.summary.skippedAnswers > 0
       ? `Revisit the ${analysis.summary.skippedAnswers} skipped questions before your next mock.`
@@ -187,13 +191,14 @@ function ResultsContent() {
         totalQuestions: analysis.summary.totalQuestions,
       } : {}),
       detailedBreakdown: {
+        ...result.detailedBreakdown,
         activeSectionIds: result.detailedBreakdown?.activeSectionIds ?? activeSections.map((section) => section.id),
         readingAnalysis: analysis,
         paperSnapshot: test,
       },
     }
 
-    saveReviewState(result.testId, { result, test })
+    saveReviewState(result.testId, { result: persistedResultPayload, test })
     try {
       saveReadingAnalysisHistory({
         userId: authUser?.id,
@@ -288,7 +293,7 @@ function ResultsContent() {
     navigate(`/test/${testType}/${resolvedTestId}`, {
       state: {
         reviewPayload: {
-          result,
+          result: reviewedResult,
           showCorrectAnswers: Boolean(initialQuestionId) || showCorrectAnswers,
           initialQuestionId,
         },
@@ -553,7 +558,7 @@ function ResultsContent() {
                 >
                   <Share2 className="mr-2 h-4 w-4" /> {sharingResult ? 'Creating secure link…' : 'Share result'}
                 </button>
-                <button type="button" className="mt-3 rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold" onClick={() => downloadTestResult(result)}>
+                <button type="button" className="mt-3 rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold" onClick={() => downloadTestResult(reviewedResult ?? result)}>
                   <UiText text="Download result" />
                 </button>
               </aside>

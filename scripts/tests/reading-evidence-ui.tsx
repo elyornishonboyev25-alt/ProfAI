@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto'
 import React, { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
-import '@/i18n'
+import i18n from '@/i18n'
 import Results from '@/pages/Results'
 import ResultsReview from '@/pages/ResultsReview'
 import TestInterface from '@/pages/TestInterface'
@@ -24,6 +24,7 @@ const q = (changes: Partial<Question> = {}): Question => ({ id: 'fixture-q', num
 const s = (changes: Partial<Section> = {}): Section => ({ id: 'fixture-p', title: 'Original passage', content: 'Earth is large.\n\nArt is useful.', questions: [q()], ...changes })
 
 export async function run() {
+  await i18n.changeLanguage('en')
   assert.deepEqual(findSourceRanges('The Earth has art.', 'art'), [{ start: 14, end: 17 }], 'whole word matching excludes a substring inside Earth')
   const typography = 'An artist’s well–known\n  rôle.'
   const normalized = findSourceRanges(typography, "artist's well-known role")[0]

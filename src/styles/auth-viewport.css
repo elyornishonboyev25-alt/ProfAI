@@ -1,0 +1,107 @@
+/* Account access owns one viewport; decoration must not extend the document. */
+html:has(.auth-access-page) {
+  overflow-y: hidden;
+  scrollbar-gutter: auto;
+}
+
+.app-shell .auth-access-page {
+  --auth-page-gap: clamp(12px, 2dvh, 24px);
+  height: 100dvh;
+  min-height: 0;
+  overflow: clip;
+  padding: var(--auth-page-gap) clamp(12px, 2vw, 32px);
+  padding-bottom: var(--auth-page-gap) !important;
+}
+
+.app-shell .auth-access-page .auth-cinema-shell:has(.auth-showcase-v2) {
+  height: 100%;
+  min-height: 0;
+  max-height: 900px;
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.app-shell .auth-access-page .auth-cinema-shell .auth-cinema-form-side {
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Auto margins center a fitting form and keep its top reachable if it grows
+   during code verification, validation, zooming, or keyboard use. */
+.auth-access-page .auth-cinema-form-inner {
+  flex: none;
+  margin-block: auto;
+}
+
+.app-shell .auth-access-page .auth-cinema-form-side {
+  align-items: safe center;
+}
+
+@media (min-width: 901px) {
+  .app-shell .auth-access-page .auth-cinema-shell .auth-showcase-v2 { padding-block: clamp(20px, 3dvh, 40px); }
+  .auth-access-page .auth-showcase-layout { min-height: 0; height: 100%; }
+  .auth-access-page .auth-showcase-brand > .brand-logo {
+    --brand-logo-height: clamp(62px, 11dvh, 116px) !important;
+  }
+  .auth-access-page .auth-showcase-content h2 {
+    font-size: clamp(38px, min(4.7vw, 7.5dvh), 72px);
+  }
+  .auth-access-page .auth-showcase-progress { margin-top: clamp(14px, 2.5dvh, 30px); }
+  .auth-access-page .auth-showcase-chart { height: clamp(80px, 12dvh, 142px); }
+  .auth-access-page .auth-showcase-features { margin-top: clamp(14px, 2.5dvh, 28px); }
+}
+
+@media (min-width: 901px) and (max-height: 800px) {
+  .app-shell .auth-access-page .auth-cinema-shell .auth-showcase-v2 { padding-block: 22px; }
+  .auth-access-page .auth-showcase-layout { gap: 14px; }
+  .auth-access-page .auth-showcase-description { margin-top: 12px; font-size: 14px; }
+  .auth-access-page .auth-showcase-progress { padding-block: 14px; }
+  .auth-access-page .auth-cinema-lockup { margin-bottom: 12px; }
+  .auth-access-page .auth-cinema-lockup .brand-logo { --brand-logo-height: 36px !important; }
+  .auth-access-page .auth-cinema-intro { margin: 16px 0; }
+  .auth-access-page .auth-cinema-intro h1 { font-size: 28px; }
+  .auth-access-page .auth-cinema-divider { margin: 16px 0 12px; }
+  .auth-access-page .auth-cinema-privacy { margin-top: 14px; }
+}
+
+@media (min-width: 901px) and (max-height: 650px) {
+  .auth-access-page .auth-cinema-lockup { display: none; }
+  .auth-access-page .auth-cinema-intro { margin: 12px 0; }
+}
+
+@media (max-width: 900px) {
+  .app-shell .auth-access-page {
+    padding-top: 64px;
+  }
+  .app-shell .auth-access-page .auth-cinema-shell:has(.auth-showcase-v2) {
+    height: auto;
+    max-height: 100%;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .app-shell .auth-access-page .auth-cinema-shell .auth-showcase-v2 {
+    min-height: 0;
+    padding: 12px 20px;
+  }
+  .auth-access-page .auth-showcase-brand > .brand-logo { --brand-logo-height: 54px !important; }
+  .auth-access-page .auth-cinema-intro { margin: 12px 0 18px; }
+  .auth-access-page .auth-cinema-tabs { margin-bottom: 0; }
+  .auth-access-page .auth-cinema-divider { margin: 16px 0 12px; }
+  .auth-access-page .auth-cinema-privacy { margin-top: 14px; }
+}
+
+@media (min-width: 901px) and (max-height: 800px) {
+  .auth-access-page:has(.gmail-code-challenge) .auth-cinema-lockup { display: none; }
+  .auth-access-page:has(.gmail-code-challenge) .auth-cinema-intro { margin: 10px 0; }
+  .auth-access-page:has(.gmail-code-challenge) .auth-cinema-intro p { display: none; }
+}
+
+@media (max-width: 900px) and (max-height: 650px) {
+  .app-shell .auth-access-page .auth-cinema-shell .auth-showcase-v2 { display: none; }
+  .app-shell .auth-access-page .auth-cinema-shell:has(.auth-showcase-v2) { grid-template-rows: minmax(0, 1fr); }
+}
+
+@media (max-width: 900px) and (max-height: 700px) {
+  .auth-access-page:has(.gmail-code-challenge) .auth-cinema-intro { display: none; }
+  .auth-access-page .gmail-code-delivery { margin: 8px 0 12px; }
+}

@@ -16,6 +16,7 @@ import { finishAccountAccess } from '@/lib/finishAccountAccess'
 import '@/styles/auth-cinema.css'
 import '@/styles/gmail-access.css'
 import '@/styles/auth-access.css'
+import '@/styles/auth-viewport.css'
 
 export default function Login() {
   const { c } = useCopy()

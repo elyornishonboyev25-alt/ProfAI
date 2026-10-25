@@ -86,18 +86,27 @@ export async function run() {
     candidate: 'Aziza O‘ktamova <script>bad()</script>',
     timestamp: attempt.submittedAt,
     mode: 'exam',
+    attempt,
+    percentiles: { total: { value: 54.8, platform: true }, rw: { value: 40.9, platform: true }, math: null },
   })
   const page = new window.DOMParser().parseFromString(html, 'text/html')
   assert.equal(page.querySelectorAll('script').length, 0, 'Report values cannot inject executable HTML')
-  assert.equal(page.querySelectorAll('img').length, 1, 'Only the original Ivygoo brand artwork is included')
-  assert.ok(page.querySelector('.report-brand img')!.getAttribute('src')!.endsWith('/brand/ivygoo-horizontal.png'))
+  const images = [...page.querySelectorAll('img')]
+  assert.equal(images.length, 2, 'Each report page carries only the original Ivygoo brand artwork')
+  assert.ok(
+    images.every(
+      (image) => image.closest('.report-brand') && image.getAttribute('src')!.endsWith('/brand/ivygoo-horizontal.png'),
+    ),
+  )
   assert.equal(page.querySelectorAll('.module-table tbody tr').length, analysis.modules.length)
-  assert.equal(page.querySelectorAll('.focus-grid > div').length, Math.min(2, analysis.prioritySkills.length))
-  assert.equal(page.querySelector('.identity strong')!.textContent, 'Aziza O‘ktamova <script>bad()</script>')
-  assert.equal(page.querySelector('.test-title')!.textContent, 'Test <img src=x onerror="bad()">')
-  assert.equal(page.querySelectorAll('.domain').length, analysis.domains.length)
-  assert.equal(page.querySelector('.big-score')!.textContent, String(analysis.score))
-  assert.ok(page.querySelector('.footer')!.textContent!.includes('Prepared on Ivygoo'))
+  assert.equal(page.querySelector('.identity div')!.textContent, 'Name: Aziza O‘ktamova <script>bad()</script>')
+  assert.equal(page.querySelector('.identity .test-name')!.textContent, 'Test <img src=x onerror="bad()">')
+  assert.equal(page.querySelectorAll('.domain').length, 8, 'A full test shows all eight SAT content domains')
+  assert.ok([...page.querySelectorAll('.bars')].every((bar) => bar.querySelectorAll('i').length === 7))
+  assert.equal(page.querySelector('.score-line.is-total strong')!.textContent, String(analysis.score))
+  assert.equal(page.querySelector('.score-line.is-total .pct')!.textContent, '54.8th*')
+  assert.equal(page.querySelectorAll('.answer-grid > div').length, analysis.questions.length)
+  assert.ok(page.querySelector('.page-foot')!.textContent!.includes('Ivygoo'))
   assert.ok(!html.includes('College Board') && !html.includes('Khan Academy'))
   console.log(
     'SAT results: all 2,475 score combinations add up; perfect, mixed, section, unfinished and legacy attempts; consistent report totals; Unicode and HTML escaping passed.',

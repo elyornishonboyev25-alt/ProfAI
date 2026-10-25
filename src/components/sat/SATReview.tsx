@@ -3,9 +3,12 @@ import { readSATNotes, type SATNote } from '@/features/sat/notes'
 import { analyzeSATResult, formatSATDate, formatSATDuration, satAnswerStatus } from '@/features/sat/resultAnalysis'
 import { openSATReport } from '@/features/sat/resultReport'
 import { bankDomain } from '@/features/sat/bankTopics'
+import { examResultsApi, MIN_PLATFORM_PARTICIPANTS, nationalPercentile, ordinal } from '@/features/sat/resultInsights'
 import { BrandLogo } from '@/components/brand/BrandLogo'
+import { SATDiscussion, SATLeaderboard, type StandingState } from './SATResultSocial'
 import './SATReview.css'
-import { useEffect, useMemo, useState, type KeyboardEvent } from 'react'
+import './SATResultsPro.css'
+import { useCallback, useEffect, useId, useMemo, useState, type KeyboardEvent } from 'react'
 import {
   ArrowDownToLine,
   ArrowLeft,
@@ -15,17 +18,18 @@ import {
   BookOpenCheck,
   Check,
   CheckCircle2,
+  ChevronRight,
   CircleDashed,
   Clock3,
-  ExternalLink,
   Flag,
   GraduationCap,
   Layers3,
-  ListChecks,
   Lightbulb,
+  MessageSquareText,
   RotateCcw,
   Target,
   TrendingUp,
+  Trophy,
   X,
   XCircle,
 } from 'lucide-react'
@@ -48,13 +52,19 @@ import { useAuthStore } from '@/store/authStore'
 import { useBadgeStore } from '@/store/badgeStore'
 
 type ReviewFilter = 'all' | 'missed' | 'correct' | 'incorrect' | 'unanswered' | 'flagged'
-type ResultTab = 'scores' | 'performance' | 'domains' | 'questions'
+type ResultTab = 'scores' | 'performance' | 'leaderboard' | 'domains' | 'questions' | 'discussion'
+type SectionFilter = 'all' | SATQuestion['section']
 const RESULT_TABS = [
   { id: 'scores', label: 'Scores', icon: GraduationCap },
   { id: 'performance', label: 'Performance', icon: BarChart3 },
-  { id: 'domains', label: 'Knowledge & skills', icon: Layers3 },
-  { id: 'questions', label: 'Question review', icon: BookOpenCheck },
+  { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
+  { id: 'domains', label: 'Domains', icon: Layers3 },
+  { id: 'questions', label: 'Question Review', icon: BookOpenCheck },
+  { id: 'discussion', label: 'Discussion', icon: MessageSquareText },
 ] as const
+
+const moduleChip = (module?: { id: string; section: string }) =>
+  module ? `${module.section === 'math' ? 'Math' : 'R&W'} · M${module.id.replace(/\D/g, '') || '1'}` : ''
 
 type Props = {
   attempt: SATAttempt
@@ -90,6 +100,7 @@ function OutcomeBar({
 }
 
 function ScoreRing({ score, percent, label }: { score: number | null; percent: number; label: string }) {
+  const gradientId = `sr-ring-${useId().replace(/:/g, '')}`
   const progress = score === null ? percent : (score / 800) * 100
   return (
     <div
@@ -98,9 +109,16 @@ function ScoreRing({ score, percent, label }: { score: number | null; percent: n
       aria-label={`${label}: ${score === null ? `${percent}% accuracy` : `${score} out of 800, estimated`}`}
     >
       <svg viewBox="0 0 200 200" aria-hidden="true">
+        <defs>
+          <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" className="sr-ring-stop-start" />
+            <stop offset="1" className="sr-ring-stop-end" />
+          </linearGradient>
+        </defs>
         <circle className="sr-ring-track" cx="100" cy="100" r="84" />
         <circle
           className="sr-ring-value"
+          style={{ stroke: `url(#${gradientId})` }}
           cx="100"
           cy="100"
           r="84"
@@ -120,10 +138,23 @@ function ScoreRing({ score, percent, label }: { score: number | null; percent: n
 
 function statusMeta(question: SATQuestion, attempt: SATAttempt) {
   const response = attempt.answers[question.id]
-  if (!response?.trim()) return { label: 'Unanswered', className: 'bg-amber-50 text-amber-700', icon: CircleDashed }
+  if (!response?.trim())
+    return {
+      label: 'Unanswered',
+      className: 'bg-amber-50 text-amber-700',
+      icon: CircleDashed,
+    }
   if (isSATAnswerCorrect(question, response))
-    return { label: 'Correct', className: 'bg-emerald-50 text-emerald-700', icon: CheckCircle2 }
-  return { label: 'Incorrect', className: 'bg-red-50 text-red-700', icon: XCircle }
+    return {
+      label: 'Correct',
+      className: 'bg-emerald-50 text-emerald-700',
+      icon: CheckCircle2,
+    }
+  return {
+    label: 'Incorrect',
+    className: 'bg-red-50 text-red-700',
+    icon: XCircle,
+  }
 }
 
 function ReviewQuestion({
@@ -343,8 +374,49 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
   const [selectedId, setSelectedId] = useState(allQuestions[0]?.id)
   const [reviewView, setReviewView] = useState<'overview' | 'detail'>('overview')
   const [reportError, setReportError] = useState(false)
+  const [sectionFilter, setSectionFilter] = useState<SectionFilter>('all')
+  const [standing, setStanding] = useState<StandingState>({
+    status: 'loading',
+  })
+  const [standingReload, setStandingReload] = useState(0)
+  const [discussionRef, setDiscussionRef] = useState('')
+  const sectionScore = (id: SATQuestion['section']) => sections.find((section) => section.id === id)?.score ?? null
+  const rwScore = sectionScore('reading-writing')
+  const mathScore = sectionScore('math')
+
+  useEffect(() => {
+    if (!user) return setStanding({ status: 'guest' })
+    if (!submitted || score === null) return setStanding({ status: 'unavailable' })
+    let active = true
+    setStanding({ status: 'loading' })
+    examResultsApi
+      .satStanding(test.id, { total: score, rw: rwScore, math: mathScore })
+      .then((data) => active && setStanding({ status: 'ready', data }))
+      .catch(() => active && setStanding({ status: 'error' }))
+    return () => {
+      active = false
+    }
+  }, [mathScore, rwScore, score, standingReload, submitted, test.id, user])
+
+  const platformReady = standing.status === 'ready' && standing.data.participants >= MIN_PLATFORM_PARTICIPANTS
+  const percentileFor = useCallback(
+    (key: 'total' | 'rw' | 'math', value: number | null, scale: 800 | 1600) => {
+      if (value === null) return null
+      const platform = standing.status === 'ready' ? standing.data.percentiles[key] : null
+      if (platformReady && platform !== null) return { value: platform, platform: true }
+      return { value: nationalPercentile(value, scale), platform: false }
+    },
+    [platformReady, standing],
+  )
+  const percentileText = (entry: ReturnType<typeof percentileFor>, firstAttempt = false) =>
+    !entry
+      ? null
+      : entry.platform
+        ? `${entry.value}% got same as or below you${firstAttempt ? ' in their 1st attempt' : ''}.`
+        : `≈ ${ordinal(entry.value)} SAT percentile (estimated).`
   const domainKey = (q: SATQuestion) => `${q.section}:${bankDomain(q.domain)}`
   const matches = (q: SATQuestion, status: ReviewFilter, module: string, domain: string | null) => {
+    if (sectionFilter !== 'all' && q.section !== sectionFilter) return false
     if (module !== 'all' && q.moduleId !== module) return false
     if (domain && domainKey(q) !== domain) return false
     if (status === 'flagged') return attempt.flagged.includes(q.id)
@@ -364,7 +436,18 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
   const selectedStatus = selectedQuestion ? statusMeta(selectedQuestion, attempt) : null
   const StatusIcon = selectedStatus?.icon ?? CircleDashed
   const selectedModule = modules.find((m) => m.id === selectedQuestion?.moduleId)
+  const chooseSection = (next: SectionFilter) => {
+    setSectionFilter(next)
+    const first = allQuestions.find((q) => next === 'all' || q.section === next)
+    if (first) setSelectedId(first.id)
+  }
+  const discussQuestion = (question: SATQuestion) => {
+    setDiscussionRef(`${question.moduleId}:${question.number}`)
+    setTab('discussion')
+    requestAnimationFrame(() => document.getElementById('sat-discussion-body')?.focus())
+  }
   const showReview = (domain: string | null = null, status: ReviewFilter = 'missed') => {
+    setSectionFilter('all')
     chooseFilter(status, 'all', domain)
     setTab('questions')
     setReviewView('overview')
@@ -383,12 +466,20 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
         analysis,
         title: test.title,
         candidate: user?.fullName?.trim() || user?.nickname?.trim() || 'Ivygoo learner',
+        email: user?.email,
         timestamp: attempt.submittedAt ?? attempt.updatedAt,
         mode: attempt.mode,
+        attempt,
+        percentiles: {
+          total: percentileFor('total', score, analysis.maximum === 800 ? 800 : 1600),
+          rw: percentileFor('rw', rwScore, 800),
+          math: percentileFor('math', mathScore, 800),
+        },
       }),
     )
   const activateTab = (next: ResultTab) => {
     if (next === 'questions') {
+      setSectionFilter('all')
       chooseFilter('all', 'all', null)
       setReviewView('overview')
     }
@@ -450,7 +541,7 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
   return (
     <main className="sat-results workspace-page">
       <div className="sr-container">
-        <section className="sr-hero sr-card">
+        <section className="srx-hero sr-card">
           <div className="sr-topbar">
             <button type="button" className="sr-back" onClick={onBack ?? (() => navigate(backPath))}>
               <ArrowLeft size={15} />
@@ -458,61 +549,38 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
             </button>
             <BrandLogo height={42} />
           </div>
-          <header className="sr-header">
-            <div>
-              <p className="sr-eyebrow">
-                <span /> SAT performance studio
-              </p>
+          <header className="srx-header">
+            <div className="srx-title-row">
               <h1>
-                Your SAT <span>results.</span>
+                Your SAT <span>Results</span>
               </h1>
-              <p className="sr-subtitle">A complete picture of your performance. A clearer path to your next score.</p>
-            </div>
-            <div className="sr-download">
               <button
                 type="button"
-                className="sr-button sr-button-primary"
+                className="srx-download"
                 disabled={!submitted}
                 onClick={downloadReport}
+                title="Open your score report to save as PDF or print"
               >
-                <ArrowDownToLine size={18} />
-                Download your result
-                <ExternalLink size={13} />
+                <ArrowDownToLine size={17} />
+                Download Report
               </button>
-              <span>Your Ivygoo report · Save as PDF or print</span>
+            </div>
+            <p className="srx-subtitle">
+              An in-depth analysis of your performance. See your strengths and where you can improve.
+            </p>
+            <div className="srx-meta">
+              <span className="srx-meta-test">{test.title}</span>
+              <span>{formatSATDate(attempt.submittedAt ?? attempt.updatedAt)}</span>
+              <span>{attempt.mode === 'exam' ? 'Exam mode' : 'Practice mode'}</span>
+              <span>
+                {allQuestions.length} questions · {modules.length} modules
+              </span>
+              <span className={`srx-meta-status ${submitted ? '' : 'is-incomplete'}`}>
+                {submitted ? <CheckCircle2 size={13} /> : <CircleDashed size={13} />}
+                {submitted ? 'Completed' : 'Saved incomplete'}
+              </span>
             </div>
           </header>
-          <div className="sr-attempt-meta">
-            <strong>{test.title}</strong>
-            <span className="sr-meta-dot" />
-            <span>{formatSATDate(attempt.submittedAt ?? attempt.updatedAt)}</span>
-            <span className="sr-meta-dot" />
-            <span>{attempt.mode === 'exam' ? 'Exam mode' : 'Practice mode'}</span>
-            <span className={`sr-completed ${submitted ? '' : 'is-incomplete'}`}>
-              {submitted ? <CheckCircle2 size={13} /> : <CircleDashed size={13} />}
-              {submitted ? 'Completed' : 'Saved incomplete'}
-            </span>
-          </div>
-          <div className="sr-hero-bottom">
-            <span className="sr-learner">
-              <span>
-                {(user?.fullName?.trim() || 'Ivygoo learner')
-                  .split(/\s+/)
-                  .slice(0, 2)
-                  .map((part) => part[0])
-                  .join('')}
-              </span>
-              <div>
-                <small>Prepared for</small>
-                <strong>{user?.fullName?.trim() || 'Ivygoo learner'}</strong>
-              </div>
-            </span>
-            <p>
-              <CheckCircle2 size={15} />
-              {allQuestions.length} questions · {modules.length} modules ·{' '}
-              {sections.length === 1 ? sections[0].label : 'Full SAT practice'}
-            </p>
-          </div>
         </section>
         {!submitted && (
           <p className="sr-notice">
@@ -523,26 +591,27 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
         {satAvailabilityNote(test) && <p className="sr-notice">{satAvailabilityNote(test)}</p>}
         {reportError && (
           <p className="sr-notice" role="alert">
-            Your browser blocked the report tab. Allow pop-ups for Ivygoo, then select Download your result again.
+            Your browser blocked the report tab. Allow pop-ups for Ivygoo, then select Download Report again.
           </p>
         )}
-        <div className="sr-tabs" role="tablist" aria-label="SAT result analysis" onKeyDown={handleTabKeys}>
-          {RESULT_TABS.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              id={`sat-result-tab-${id}`}
-              type="button"
-              role="tab"
-              aria-selected={tab === id}
-              aria-controls={`sat-result-panel-${id}`}
-              tabIndex={tab === id ? 0 : -1}
-              onClick={() => activateTab(id)}
-            >
-              <Icon size={16} />
-              <span>{label}</span>
-              {id === 'questions' && <small>{allQuestions.length}</small>}
-            </button>
-          ))}
+        <div className="srx-tabs-wrap">
+          <div className="srx-tabs" role="tablist" aria-label="SAT result analysis" onKeyDown={handleTabKeys}>
+            {RESULT_TABS.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                id={`sat-result-tab-${id}`}
+                type="button"
+                role="tab"
+                aria-selected={tab === id}
+                aria-controls={`sat-result-panel-${id}`}
+                tabIndex={tab === id ? 0 : -1}
+                onClick={() => activateTab(id)}
+              >
+                <Icon size={16} />
+                <span>{label}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {tab === 'scores' && (
@@ -553,154 +622,109 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
             tabIndex={0}
             className="sr-panel"
           >
-            <div className={`sr-score-grid ${sections.length === 1 ? 'is-section' : ''}`}>
+            <div className={`srx-score-stage ${sections.length === 1 ? 'is-section' : ''}`}>
               {sections.length > 1 &&
-                sections.map((section, index) => (
-                  <section
-                    key={section.id}
-                    className={`sr-card sr-section-score ${index === 0 ? 'sr-section-first' : 'sr-section-last'}`}
-                    aria-label={`${section.label} result`}
-                  >
-                    <div className="sr-card-heading">
-                      <span className="sr-section-icon">
-                        {section.id === 'math' ? <GraduationCap size={18} /> : <BookOpen size={18} />}
-                      </span>
+                sections.map((section, index) => {
+                  const entry = percentileFor(section.id === 'math' ? 'math' : 'rw', section.score, 800)
+                  return (
+                    <section
+                      key={section.id}
+                      className={`sr-card srx-score-card ${index === 0 ? 'is-first' : 'is-last'}`}
+                      aria-label={`${section.label} result`}
+                    >
                       <h2>{section.label}</h2>
-                    </div>
-                    <ScoreRing score={section.score} percent={section.percent} label={section.label} />
-                    <div className="sr-section-range">
-                      {section.score === null
-                        ? 'Based on the available answers'
-                        : `Estimated range ${section.range[0]}–${section.range[1]}`}
-                    </div>
-                    <OutcomeBar {...section} />
-                    <div className="sr-outcome-counts">
-                      <span>
-                        <i className="is-correct" />
-                        <b>{section.correct}</b> correct
-                      </span>
-                      <span>
-                        <i className="is-incorrect" />
-                        <b>{section.incorrect}</b> incorrect
-                      </span>
-                      <span>
-                        <i className="is-unanswered" />
-                        <b>{section.unanswered}</b> unanswered
-                      </span>
-                    </div>
-                  </section>
-                ))}
-              <section className="sr-card sr-total-score" aria-label="Overall result">
-                <span className="sr-score-caption">
-                  <Target size={14} />
+                      <ScoreRing score={section.score} percent={section.percent} label={section.label} />
+                      <p className="srx-score-counts">
+                        <b className="tone-correct">{section.correct} Correct</b>
+                        <span aria-hidden="true">·</span>
+                        <b className="tone-wrong">{section.total - section.correct} Wrong</b>
+                      </p>
+                      <p className="srx-percentile">
+                        {percentileText(entry) ??
+                          (section.score === null ? 'Score shown after the full section is completed.' : '')}
+                      </p>
+                      <button type="button" className="srx-card-link" onClick={() => showReview(null, 'all')}>
+                        {section.unanswered ? `${section.unanswered} unanswered · ` : ''}
+                        Review answers
+                        <ChevronRight size={14} />
+                      </button>
+                    </section>
+                  )
+                })}
+              <section className="sr-card srx-score-card srx-total-card" aria-label="Overall result">
+                <span className="srx-total-glow" aria-hidden="true" />
+                <h2>
                   {!submitted
                     ? 'Saved incomplete'
                     : score === null
-                      ? 'Available-module accuracy'
+                      ? 'Accuracy'
                       : sections.length === 1
-                        ? 'Estimated section score'
-                        : 'Estimated total score'}
-                </span>
-                <div className="sr-total-number">{!submitted ? '—' : (score ?? `${report.percent}%`)}</div>
-                <p className="sr-total-scale">{score === null ? 'Based on your saved answers' : `out of ${maximum}`}</p>
-                {score !== null && (
-                  <>
-                    <div
-                      className="sr-score-scale"
-                      role="img"
-                      aria-label={`Estimated score ${score} on a ${maximum === 800 ? 200 : 400} to ${maximum} scale`}
-                    >
-                      <span
-                        style={{
-                          width: `${Math.max(0, Math.min(100, ((score - (maximum === 800 ? 200 : 400)) / (maximum === 800 ? 600 : 1200)) * 100))}%`,
-                        }}
-                      />
-                    </div>
-                    <div className="sr-scale-labels">
-                      <span>{maximum === 800 ? 200 : 400}</span>
-                      <span>{maximum}</span>
-                    </div>
-                    <div className="sr-total-range">
-                      Estimated range{' '}
-                      <strong>
-                        {range[0]}–{range[1]}
-                      </strong>
-                    </div>
-                  </>
-                )}
-                <div className="sr-total-footer">
-                  <span className="sr-score-brand">
-                    <BrandLogo height={25} />
-                  </span>
-                  <p>{submitted ? 'A clearer picture of where you are.' : 'Finish the test to see your score.'}</p>
+                        ? `${sections[0].label} Score`
+                        : 'Total Score'}
+                </h2>
+                <div className="srx-total-number">
+                  <strong>{!submitted ? '—' : (score ?? `${report.percent}%`)}</strong>
+                  {submitted && score !== null && <span>/{maximum}</span>}
                 </div>
-              </section>
-              {sections.length === 1 && (
-                <section className="sr-card sr-section-detail">
-                  <div className="sr-detail-heading">
-                    <div>
-                      <p className="sr-eyebrow">Your section, at a glance</p>
-                      <h2>{sections[0].label} performance</h2>
-                    </div>
-                    <span className="sr-section-icon">
-                      {onlySection === 'math' ? <GraduationCap size={22} /> : <BookOpen size={22} />}
+                <p className="srx-percentile">
+                  {!submitted
+                    ? 'Finish the test to see your score.'
+                    : score === null
+                      ? 'Based on the available modules.'
+                      : percentileText(percentileFor('total', score, maximum === 800 ? 800 : 1600), true)}
+                </p>
+                {score !== null && (
+                  <div className="srx-total-range">
+                    <span>
+                      Estimated range{' '}
+                      <b>
+                        {range[0]}–{range[1]}
+                      </b>
+                    </span>
+                    <span>
+                      <b>{report.correct}</b>/{allQuestions.length} correct
                     </span>
                   </div>
-                  <div className="sr-completion-line">
-                    <strong>
-                      {analysis.answered}
-                      <span> / {allQuestions.length} answered</span>
-                    </strong>
-                    <span>{analysis.completion}% complete</span>
-                  </div>
-                  <OutcomeBar {...report} total={allQuestions.length} />
-                  <div className="sr-outcome-tiles">
-                    {[
-                      ['correct', 'Correct', report.correct],
-                      ['incorrect', 'Incorrect', report.incorrect],
-                      ['unanswered', 'Unanswered', report.unanswered],
-                    ].map(([tone, label, count]) => (
-                      <button
-                        key={tone}
-                        type="button"
-                        className={`is-${tone}`}
-                        onClick={() => showReview(null, tone as ReviewFilter)}
-                      >
-                        <span>{label}</span>
-                        <strong>{count}</strong>
-                        <ArrowRight size={13} />
-                      </button>
-                    ))}
-                  </div>
-                  <div className="sr-section-modules">
-                    {analysis.modules.map((module) => (
-                      <div key={module.id}>
-                        <span>{module.shortTitle}</span>
-                        <strong>
-                          {module.correct}
-                          <small>/{module.total}</small>
-                        </strong>
-                        <span className="sr-module-accuracy">{module.percent}%</span>
-                        <span>
-                          <Clock3 size={12} />
-                          {formatSATDuration(module.seconds)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              )}
+                )}
+                {sections.length === 1 && (
+                  <p className="srx-score-counts">
+                    <b className="tone-correct">{sections[0].correct} Correct</b>
+                    <span aria-hidden="true">·</span>
+                    <b className="tone-wrong">{sections[0].total - sections[0].correct} Wrong</b>
+                  </p>
+                )}
+              </section>
             </div>
             <p className="sr-estimate-note">
               Practice scores are estimates, not official SAT results. Accuracy reflects the questions in this attempt.
             </p>
             <div className="sr-summary-strip" aria-label="Attempt summary">
               {[
-                { label: 'Correct', value: `${report.correct}/${allQuestions.length}`, icon: CheckCircle2 },
-                { label: 'Overall accuracy', value: `${report.percent}%`, icon: Target },
-                { label: 'Accuracy on answered', value: `${analysis.answeredAccuracy}%`, icon: TrendingUp },
-                { label: 'Completion', value: `${analysis.completion}%`, icon: Check },
-                { label: 'Active time', value: formatSATDuration(analysis.seconds), icon: Clock3 },
+                {
+                  label: 'Correct',
+                  value: `${report.correct}/${allQuestions.length}`,
+                  icon: CheckCircle2,
+                },
+                {
+                  label: 'Overall accuracy',
+                  value: `${report.percent}%`,
+                  icon: Target,
+                },
+                {
+                  label: 'Accuracy on answered',
+                  value: `${analysis.answeredAccuracy}%`,
+                  icon: TrendingUp,
+                },
+                {
+                  label: 'Completion',
+                  value: `${analysis.completion}%`,
+                  icon: Check,
+                },
+                {
+                  label: 'Active time',
+                  value: formatSATDuration(analysis.seconds),
+                  icon: Clock3,
+                },
               ].map(({ label, value, icon: Icon }) => (
                 <div key={label}>
                   <Icon size={19} />
@@ -738,11 +762,13 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
                   <TrendingUp size={21} />
                 </span>
                 <div>
-                    <p className="sr-eyebrow">{strongest?.correct ? 'Highest domain accuracy' : 'Build your foundation'}</p>
+                  <p className="sr-eyebrow">
+                    {strongest?.correct ? 'Highest domain accuracy' : 'Build your foundation'}
+                  </p>
                   <h2>{strongest?.correct ? strongest.domain : 'Start with one skill.'}</h2>
                   <p>
                     {strongest?.correct
-                        ? `${strongest.correct} of ${strongest.total} correct · ${strongest.percent}% accuracy. ${strongest.percent >= 80 ? 'Keep this skill sharp as you work on your next focus.' : 'This was your best domain result in this attempt. Review its missed questions to build consistency.'}`
+                      ? `${strongest.correct} of ${strongest.total} correct · ${strongest.percent}% accuracy. ${strongest.percent >= 80 ? 'Keep this skill sharp as you work on your next focus.' : 'This was your best domain result in this attempt. Review its missed questions to build consistency.'}`
                       : 'Review an explanation, write down the rule, then try a similar question without notes.'}
                   </p>
                   <button type="button" className="sr-text-button" onClick={() => setTab('domains')}>
@@ -752,37 +778,6 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
                 </div>
               </section>
             </div>
-            <section className="sr-card sr-skill-snapshot">
-              <div className="sr-block-heading">
-                <div>
-                  <p className="sr-eyebrow">Knowledge & skills</p>
-                  <h2>Your performance by domain</h2>
-                </div>
-                <button type="button" className="sr-text-button" onClick={() => setTab('domains')}>
-                  Full analysis
-                  <ArrowRight size={15} />
-                </button>
-              </div>
-              <div className="sr-snapshot-grid">
-                {domains.map((domain) => (
-                  <button key={domain.key} type="button" onClick={() => showReview(domain.key, 'all')}>
-                    <div>
-                      <strong>{domain.domain}</strong>
-                      <b>{domain.percent}%</b>
-                    </div>
-                    <div className="sr-domain-progress">
-                      <span style={{ width: `${domain.percent}%` }} />
-                    </div>
-                    <span>
-                      {domain.correct}/{domain.total} correct{' '}
-                      <span>
-                        · {domain.incorrect} incorrect · {domain.unanswered} unanswered
-                      </span>
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </section>
             <section className="sr-card sr-next-steps">
               <div>
                 <p className="sr-eyebrow">Your next practice session</p>
@@ -1028,159 +1023,130 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
             tabIndex={0}
             className="sr-panel"
           >
-            <div className="sr-panel-heading">
-              <div>
-                <p className="sr-eyebrow">From answer to understanding</p>
-                <h2>Review, reflect, improve.</h2>
-                <p>Your answers, explanations, highlights and notes — together.</p>
-              </div>
-              <span className="sr-time-badge">
-                <CheckCircle2 size={16} />
-                Correct {report.correct}/{allQuestions.length}
-              </span>
-            </div>
-            <div className="sr-review-statuses" aria-label="Question outcomes">
-              {(
-                [
-                  ['all', 'All questions', allQuestions.length],
-                  ['correct', 'Correct', report.correct],
-                  ['incorrect', 'Incorrect', report.incorrect],
-                  ['unanswered', 'Unanswered', report.unanswered],
-                ] as const
-              ).map(([value, label, count]) => (
-                <button
-                  key={value}
-                  type="button"
-                  className={`sr-status-card is-${value}`}
-                  aria-pressed={filter === value && !domainFilter && moduleFilter === 'all'}
-                  onClick={() => chooseFilter(value, 'all', null)}
-                >
-                  <span className="sr-status-icon">
-                    {value === 'correct' ? (
-                      <CheckCircle2 size={20} />
-                    ) : value === 'incorrect' ? (
-                      <XCircle size={20} />
-                    ) : value === 'unanswered' ? (
-                      <CircleDashed size={20} />
-                    ) : (
-                      <BookOpenCheck size={20} />
-                    )}
-                  </span>
-                  <span>
-                    <strong>{count}</strong>
-                    <small>{label}</small>
-                  </span>
-                  <ArrowRight size={14} />
-                </button>
-              ))}
-            </div>
-            <div className="sr-review-toolbar">
-              <div className="sr-review-view" aria-label="Review view">
-                <button
-                  type="button"
-                  aria-pressed={reviewView === 'overview'}
-                  onClick={() => setReviewView('overview')}
-                >
-                  <ListChecks size={15} />
-                  All answers
-                </button>
-                <button type="button" aria-pressed={reviewView === 'detail'} onClick={() => setReviewView('detail')}>
-                  <BookOpen size={15} />
-                  Detailed review
-                </button>
-              </div>
-              <span>
-                Showing {filteredQuestions.length} of {allQuestions.length} questions
-              </span>
-              {(filter !== 'all' || domainFilter || moduleFilter !== 'all') && (
-                <button type="button" className="sr-text-button" onClick={() => chooseFilter('all', 'all', null)}>
-                  Show all questions
-                  <X size={13} />
-                </button>
-              )}
+            <div className="srx-center-heading">
+              <p className="sr-eyebrow">From answer to understanding</p>
+              <h2>Question Review</h2>
+              <p>Your answer, the correct answer and a full explanation for every question.</p>
             </div>
             {reviewView === 'overview' && (
-              <div className="sr-answer-overview">
-                {modules.map((module) => {
-                  const rows = filteredQuestions.filter((q) => q.moduleId === module.id)
-                  return rows.length > 0 ? (
-                    <section className="sr-card sr-answer-module" key={module.id}>
-                      <div className="sr-answer-module-heading">
-                        <h3>{module.title}</h3>
-                        <span>{rows.length} questions</span>
-                      </div>
-                      <table className="sr-answer-table">
-                        <thead>
-                          <tr>
-                            <th scope="col">Question</th>
-                            <th scope="col">Outcome</th>
-                            <th scope="col">Your answer</th>
-                            <th scope="col">Correct answer</th>
-                            <th scope="col">Skill</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {rows.map((question) => {
-                            const status = statusMeta(question, attempt)
-                            const Icon = status.icon
-                            return (
-                              <tr
-                                key={question.id}
-                                data-question-id={question.id}
-                                data-status={satAnswerStatus(question, attempt)}
-                              >
-                                <td data-label="Question">
-                                  <button
-                                    type="button"
-                                    aria-label={`Review ${module.shortTitle}, question ${question.number}`}
-                                    onClick={() => openQuestion(question.id)}
-                                  >
-                                    <b>Q{question.number}</b>
-                                    <ArrowRight size={13} />
-                                    {attempt.flagged.includes(question.id) && <Flag size={12} />}
-                                  </button>
-                                </td>
-                                <td data-label="Outcome">
-                                  <span className={`sr-table-status is-${satAnswerStatus(question, attempt)}`}>
-                                    <Icon size={13} />
-                                    {status.label}
-                                  </span>
-                                </td>
-                                <td data-label="Your answer">
-                                  <span className="sr-response-text">
-                                    {attempt.answers[question.id]?.trim() || '—'}
-                                  </span>
-                                </td>
-                                <td data-label="Correct answer">
-                                  <span className="sr-accepted-text">{question.correctAnswer}</span>
-                                </td>
-                                <td data-label="Skill">
-                                  <button
-                                    type="button"
-                                    className="sr-skill-link"
-                                    onClick={() => openQuestion(question.id)}
-                                  >
-                                    {question.skill}
-                                  </button>
-                                </td>
-                              </tr>
-                            )
-                          })}
-                        </tbody>
-                      </table>
-                    </section>
-                  ) : null
-                })}
-                {!filteredQuestions.length && (
-                  <div className="sr-card sr-empty">
+              <>
+                <div className="srx-review-controls">
+                  {sections.length > 1 && (
+                    <div className="srx-segment" role="group" aria-label="Section">
+                      {(
+                        [
+                          ['all', 'All'],
+                          ['reading-writing', 'R&W'],
+                          ['math', 'Math'],
+                        ] as const
+                      ).map(([value, label]) => (
+                        <button
+                          key={value}
+                          type="button"
+                          aria-pressed={sectionFilter === value}
+                          onClick={() => chooseSection(value)}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <div className="srx-status-chips" role="group" aria-label="Filter by outcome">
+                    {(
+                      [
+                        ['all', 'All'],
+                        ['correct', 'Correct'],
+                        ['incorrect', 'Incorrect'],
+                        ['unanswered', 'Unanswered'],
+                        ['flagged', 'Flagged'],
+                      ] as const
+                    ).map(([value, label]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        className={`chip-${value}`}
+                        aria-pressed={filter === value}
+                        onClick={() => chooseFilter(value, moduleFilter, domainFilter)}
+                      >
+                        {label}
+                        <span>{allQuestions.filter((q) => matches(q, value, moduleFilter, domainFilter)).length}</span>
+                      </button>
+                    ))}
+                  </div>
+                  {(domainFilter || moduleFilter !== 'all') && (
+                    <button
+                      type="button"
+                      className="srx-clear-filter"
+                      onClick={() => chooseFilter(filter, 'all', null)}
+                    >
+                      {domainFilter ? domains.find((d) => d.key === domainFilter)?.domain : 'Module filter'}
+                      <X size={13} />
+                    </button>
+                  )}
+                </div>
+                {filteredQuestions.length ? (
+                  <ol className="sr-card srx-question-list" aria-label="Questions">
+                    {filteredQuestions.map((question) => {
+                      const module = modules.find((m) => m.id === question.moduleId)
+                      const outcome = satAnswerStatus(question, attempt)
+                      const response = attempt.answers[question.id]?.trim()
+                      return (
+                        <li key={question.id} className={`srx-q-row srx-row-${outcome}`} data-question-id={question.id}>
+                          <div className="srx-q-id">
+                            <span className={`srx-chip ${question.section === 'math' ? 'is-math' : ''}`}>
+                              {moduleChip(module)}
+                            </span>
+                            <strong>
+                              Question {question.number}
+                              {attempt.flagged.includes(question.id) && (
+                                <Flag size={12} aria-label="Flagged" className="srx-flag" />
+                              )}
+                            </strong>
+                          </div>
+                          <div className="srx-q-answer">
+                            <span>Your Answer</span>
+                            <b className={`tone-${outcome}`}>{response || 'Unanswered'}</b>
+                          </div>
+                          <div className="srx-q-answer">
+                            <span>Correct Answer</span>
+                            <b className="tone-correct">{question.correctAnswer}</b>
+                          </div>
+                          <button
+                            type="button"
+                            className="srx-review-button"
+                            aria-label={`Review ${module?.shortTitle ?? ''} question ${question.number}`}
+                            onClick={() => openQuestion(question.id)}
+                          >
+                            Review
+                            <ChevronRight size={15} />
+                          </button>
+                        </li>
+                      )
+                    })}
+                  </ol>
+                ) : (
+                  <div className="sr-card srx-empty">
                     <BookOpenCheck size={30} />
                     <h3>No questions match these filters.</h3>
-                    <button type="button" className="sr-button" onClick={() => chooseFilter('all', 'all', null)}>
+                    <button
+                      type="button"
+                      className="sr-button"
+                      onClick={() => {
+                        setSectionFilter('all')
+                        chooseFilter('all', 'all', null)
+                      }}
+                    >
                       Show all questions
                     </button>
                   </div>
                 )}
-              </div>
+              </>
+            )}
+            {reviewView === 'detail' && (
+              <button type="button" className="srx-back-to-list" onClick={() => setReviewView('overview')}>
+                <ArrowLeft size={15} />
+                All questions
+              </button>
             )}
             {reviewView === 'detail' && (
               <div id="sat-deep-review" className="sr-review-layout">
@@ -1296,10 +1262,20 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
                           <p className="sr-eyebrow">{selectedModule?.title}</p>
                           <h3>Question {selectedQuestion.number}</h3>
                         </div>
-                        <span className={`sr-answer-status ${selectedStatus.className}`}>
-                          <StatusIcon size={16} />
-                          {selectedStatus.label}
-                        </span>
+                        <div className="srx-question-actions">
+                          <button
+                            type="button"
+                            className="srx-discuss-button"
+                            onClick={() => discussQuestion(selectedQuestion)}
+                          >
+                            <MessageSquareText size={15} />
+                            Discuss
+                          </button>
+                          <span className={`sr-answer-status ${selectedStatus.className}`}>
+                            <StatusIcon size={16} />
+                            {selectedStatus.label}
+                          </span>
+                        </div>
                       </div>
                       <ReviewQuestion
                         question={selectedQuestion}
@@ -1347,6 +1323,53 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
             )}
           </section>
         )}
+        {tab === 'leaderboard' && (
+          <section
+            role="tabpanel"
+            id="sat-result-panel-leaderboard"
+            aria-labelledby="sat-result-tab-leaderboard"
+            tabIndex={0}
+            className="sr-panel"
+          >
+            <div className="srx-center-heading">
+              <p className="sr-eyebrow">Test-day ranking</p>
+              <h2>Leaderboard</h2>
+              <p>See how your first attempt compares with every learner who took {test.title}.</p>
+            </div>
+            <SATLeaderboard
+              standing={standing}
+              onRetry={() => setStandingReload((value) => value + 1)}
+              testTitle={test.title}
+              sectioned={sections.length > 1}
+              maximum={maximum}
+            />
+          </section>
+        )}
+
+        {tab === 'discussion' && (
+          <section
+            role="tabpanel"
+            id="sat-result-panel-discussion"
+            aria-labelledby="sat-result-tab-discussion"
+            tabIndex={0}
+            className="sr-panel"
+          >
+            <div className="srx-center-heading">
+              <p className="sr-eyebrow">Learn together</p>
+              <h2>Discussion</h2>
+              <p>Ask about a question, share a strategy, or help someone who is stuck.</p>
+            </div>
+            <SATDiscussion
+              testId={test.id}
+              modules={modules}
+              signedIn={Boolean(user)}
+              userName={user?.fullName?.trim() || 'Ivygoo learner'}
+              questionRef={discussionRef}
+              onQuestionRefChange={setDiscussionRef}
+            />
+          </section>
+        )}
+
         <footer className="sr-footer">
           <span>
             <Check size={13} />

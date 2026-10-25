@@ -23,6 +23,7 @@ import shadowingRoutes from './routes/shadowing.routes.js'
 import podcastsRoutes from './routes/podcasts.routes.js'
 import reviewsRoutes from './routes/reviews.routes.js'
 import sharedResultsRoutes from './routes/sharedResults.routes.js'
+import examResultsRoutes from './routes/examResults.routes.js'
 import aiWorkspaceRoutes from './routes/aiWorkspace.routes.js'
 import aiGenerationRoutes from './routes/aiGeneration.routes.js'
 import assistantRoutes from './routes/assistant.routes.js'
@@ -99,6 +100,7 @@ app.use('/api/v1/shadowing-recordings', shadowingRecordingsRoutes)
 app.use('/api/v1/podcasts', podcastsRoutes)
 app.use('/api/v1/reviews', reviewsRoutes)
 app.use('/api/v1/shared-results', sharedResultsRoutes)
+app.use('/api/v1/exam-results', examResultsRoutes)
 app.use('/api/v1/ai-workspace', aiWorkspaceRoutes)
 app.use('/api/v1/guest-diagnostic', guestDiagnosticRoutes)
 app.use('/api/v1/learning-centers', learningCentersRoutes)

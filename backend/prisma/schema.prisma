@@ -182,6 +182,7 @@ model User {
   wheelSpin                           WheelSpin?
   featureUsage                        FeatureUsage[]
   resourceUnlocks                     ResourceUnlock[]
+  testDiscussionPosts                 TestDiscussionPost[]
 
   @@index([xp, level])
   @@index([createdAt])
@@ -1360,4 +1361,20 @@ model TelegramChat {
   language  String
   manual    Boolean  @default(false)
   updatedAt DateTime @updatedAt
+}
+
+// Learners discuss a specific mock test after finishing it (result page Discussion tab).
+model TestDiscussionPost {
+  id          String   @id @default(cuid())
+  userId      String
+  exam        String // SAT | IELTS
+  testId      String
+  questionRef String?
+  body        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([exam, testId, createdAt])
+  @@index([userId])
 }

@@ -4,7 +4,7 @@ import { createServer } from 'node:http'
 import { createRequire } from 'node:module'
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { join, resolve, sep } from 'node:path'
 import { build } from 'esbuild'
 import postcss from 'postcss'
 import tailwindcss from 'tailwindcss'
@@ -26,8 +26,8 @@ window.show=(kind='full')=>{
  attempt.status=kind==='unfinished'?'active':'submitted';attempt.submittedAt=kind==='unfinished'?undefined:Date.parse('2026-10-24T14:00:00Z');attempt.updatedAt=attempt.submittedAt??Date.parse('2026-10-24T14:00:00Z');
  attempt.moduleElapsedSeconds=Object.fromEntries(test.modules.map((m,i)=>[m.id,kind==='math3'?56:1500+i*60]));attempt.moduleStartedAt=Object.fromEntries(test.modules.map((m,i)=>[m.id,1000+i*1500000]));
  attempt.notes[questions[1].id]='Check the evidence before choosing an answer.';attempt.flagged=[questions[1].id];
- window.expected=analyzeSATResult(test,attempt);window.reportHtml=buildSATReportHtml({analysis:window.expected,title:test.title,candidate:'Aziza O‘ktamova <script>window.injected=true</script>',timestamp:attempt.updatedAt,mode:attempt.mode});
- if(kind==='math3')window.mathReportHtml=buildSATReportHtml({analysis:window.expected,title:test.title,candidate:'Ivygoo learner',timestamp:attempt.updatedAt,mode:attempt.mode});
+ window.expected=analyzeSATResult(test,attempt);window.reportHtml=buildSATReportHtml({analysis:window.expected,title:test.title,candidate:'Aziza O‘ktamova <script>window.injected=true</script>',timestamp:attempt.updatedAt,mode:attempt.mode,attempt});
+ if(kind==='math3')window.mathReportHtml=buildSATReportHtml({analysis:window.expected,title:test.title,candidate:'Ivygoo learner',timestamp:attempt.updatedAt,mode:attempt.mode,attempt});
  root.render(<MemoryRouter key={++run}><SATReview test={test} attempt={attempt} onStartAgain={()=>{}} /></MemoryRouter>);
 };window.show();`
 const bundle = await build({
@@ -64,7 +64,7 @@ const server = createServer(async (req, res) => {
     return
   }
   const path = resolve('public', '.' + decodeURIComponent(new URL(req.url, 'http://localhost').pathname))
-  if (!path.startsWith(resolve('public') + '/')) {
+  if (!path.startsWith(resolve('public') + sep)) {
     res.writeHead(404)
     res.end()
     return
@@ -162,7 +162,7 @@ try {
   await send('Page.enable')
   await send('Runtime.enable')
   await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/` })
-  await until('window.expected && document.querySelector(".sr-total-number")')
+  await until('window.expected && document.querySelector(".srx-total-number")')
   await mkdir(artifacts, { recursive: true })
   const viewports = process.env.SAT_REPORT_ONLY
     ? []
@@ -179,10 +179,10 @@ try {
     await until('document.querySelector("#sat-result-panel-scores")')
     await new Promise((resolve) => setTimeout(resolve, 300))
     assert.equal(
-      await evaluate('Number(document.querySelector(".sr-total-number").textContent)===window.expected.score'),
+      await evaluate('Number(document.querySelector(".srx-total-number strong").textContent)===window.expected.score'),
       true,
     )
-    for (const tab of ['scores', 'performance', 'domains', 'questions']) {
+    for (const tab of ['scores', 'performance', 'leaderboard', 'domains', 'questions', 'discussion']) {
       await clickTab(tab)
       await new Promise((resolve) => setTimeout(resolve, 270))
       const size = await layout()
@@ -190,15 +190,16 @@ try {
       const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true })
       await writeFile(join(artifacts, `${width}-${tab}.png`), Buffer.from(shot.data, 'base64'))
     }
+    await clickTab('questions')
     assert.equal(
-      await evaluate('document.querySelectorAll(".sr-answer-table tbody tr").length'),
+      await evaluate('document.querySelectorAll(".srx-q-row").length'),
       await evaluate('window.expected.questions.length'),
     )
     assert.equal(
-      await evaluate('document.querySelectorAll(".sr-answer-table tr[data-status=unanswered]").length'),
+      await evaluate('document.querySelectorAll(".srx-row-unanswered").length'),
       await evaluate('window.expected.report.unanswered'),
     )
-    await evaluate('document.querySelector(".sr-answer-table tr[data-status=correct] button").click()')
+    await evaluate('document.querySelector(".srx-row-correct .srx-review-button").click()')
     await until('document.querySelector("article").textContent.includes("Your answer · Correct")')
     assert.ok((await layout()).content <= width + 1, `${width}px: selected correct answer stays readable`)
     await evaluate('document.querySelectorAll(".sr-review-filters button")[1].click()')
@@ -213,19 +214,19 @@ try {
     )
     await clickTab('domains')
     await evaluate('document.querySelector(".sr-domain-card button").click()')
-    await until('document.querySelector(".sr-answer-table")')
+    await until('document.querySelector(".srx-question-list")')
     assert.equal(
       await evaluate('document.querySelector("#sat-result-tab-questions").getAttribute("aria-selected")'),
       'true',
     )
     await clickTab('questions')
     assert.equal(
-      await evaluate('document.querySelectorAll(".sr-answer-table tbody tr").length'),
+      await evaluate('document.querySelectorAll(".srx-q-row").length'),
       await evaluate('window.expected.questions.length'),
       'Question review always reopens with all questions, clearing previous domain/status filters',
     )
     console.log(
-      `PASS ${width}px: four tabs, exact totals, no horizontal overflow, missed-question and domain navigation`,
+      `PASS ${width}px: six tabs, exact totals, no horizontal overflow, missed-question and domain navigation`,
     )
   }
   await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false })
@@ -240,14 +241,14 @@ try {
     await evaluate(`window.show('${kind}')`)
     await until('document.querySelector("#sat-result-panel-scores")')
     assert.equal(
-      await evaluate('document.querySelector(".sr-total-number").textContent.trim()'),
+      await evaluate('document.querySelector(".srx-total-number strong").textContent.trim()'),
       kind === 'unfinished'
         ? '—'
         : kind === 'legacy'
           ? `${await evaluate('window.expected.report.percent')}%`
           : String(await evaluate('window.expected.score')),
     )
-    assert.equal(await evaluate('document.querySelector(".sr-download button").disabled'), kind === 'unfinished')
+    assert.equal(await evaluate('document.querySelector(".srx-download").disabled'), kind === 'unfinished')
     if (kind === 'legacy') assert.equal(await evaluate('window.expected.sections.find(s=>s.id==="math").score'), null)
     if (kind === 'math3') {
       assert.equal(await evaluate('window.expected.report.correct'), 9)
@@ -266,7 +267,7 @@ try {
         await writeFile(join(artifacts, `${width}-math3-scores.png`), Buffer.from(shot.data, 'base64'))
       }
       await clickTab('questions')
-      assert.equal(await evaluate('document.querySelectorAll(".sr-answer-table tbody tr").length'), 44)
+      assert.equal(await evaluate('document.querySelectorAll(".srx-q-row").length'), 44)
       await send('Emulation.setDeviceMetricsOverride', {
         width: 1440,
         height: 1050,
@@ -287,10 +288,10 @@ try {
   await evaluate('window.show()')
   await until('document.querySelector("#sat-result-panel-scores")')
   await evaluate(
-    'window.savedOpen=window.open;window.open=()=>null;document.querySelector(".sr-download button").click()',
+    'window.savedOpen=window.open;window.open=()=>null;document.querySelector(".srx-download").click()',
   )
   await until('document.querySelector("[role=alert]")')
-  await evaluate('window.open=window.savedOpen;document.querySelector(".sr-download button").click()')
+  await evaluate('window.open=window.savedOpen;document.querySelector(".srx-download").click()')
   let reportTarget
   for (let i = 0; i < 30; i++) {
     reportTarget = (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find(
@@ -305,7 +306,7 @@ try {
     (await reportClient.send('Runtime.evaluate', { expression, returnByValue: true })).result.value
   assert.equal(await reportEval('window.opener===null'), true)
   assert.equal(
-    await reportEval('document.querySelector(".big-score").textContent'),
+    await reportEval('document.querySelector(".score-line.is-total strong").textContent'),
     String(await evaluate('window.expected.score')),
   )
   await reportClient.send('Page.enable')
@@ -313,7 +314,7 @@ try {
   const frame = await reportClient.send('Page.getFrameTree')
   await reportClient.send('Page.setDocumentContent', { frameId: frame.frameTree.frame.id, html: unicodeHtml })
   assert.equal(await reportEval('window.injected'), undefined)
-  assert.ok((await reportEval('document.querySelector(".identity strong").textContent')).includes('O‘ktamova <script>'))
+  assert.ok((await reportEval('document.querySelector(".identity div").textContent')).includes('O‘ktamova <script>'))
   await reportClient.send('Runtime.evaluate', {
     expression: 'Promise.all(Array.from(document.images, image => image.decode()))',
     awaitPromise: true,
@@ -330,7 +331,8 @@ try {
   })
   const pdfBytes = Buffer.from(pdf.data, 'base64')
   await writeFile(join(artifacts, 'ivygoo-sat-report.pdf'), pdfBytes)
-  if ((pdfBytes.toString('latin1').match(/\/Type\s*\/Page\b/g) || []).length !== 1) {
+  const pageCount = (bytes) => (bytes.toString('latin1').match(/\/Type\s*\/Page\b/g) || []).length
+  if (pageCount(pdfBytes) < 2 || pageCount(pdfBytes) > 3) {
     await reportClient.send('Emulation.setEmulatedMedia', { media: 'print' })
     console.log(
       'Report print layout:',
@@ -342,10 +344,9 @@ try {
     const shot = await reportClient.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true })
     await writeFile(join(artifacts, 'report-overflow.png'), Buffer.from(shot.data, 'base64'))
   }
-  assert.equal(
-    (pdfBytes.toString('latin1').match(/\/Type\s*\/Page\b/g) || []).length,
-    1,
-    'The A4 report fits one page, including its Ivygoo footer',
+  assert.ok(
+    pageCount(pdfBytes) >= 2 && pageCount(pdfBytes) <= 3,
+    'The A4 report keeps scores on page one and the answer sheet on the following pages',
   )
   await reportClient.send('Emulation.setDeviceMetricsOverride', {
     width: 1000,
@@ -376,11 +377,7 @@ try {
     displayHeaderFooter: false,
   })
   const mathBytes = Buffer.from(mathPdf.data, 'base64')
-  assert.equal(
-    (mathBytes.toString('latin1').match(/\/Type\s*\/Page\b/g) || []).length,
-    1,
-    'The section report also fits A4',
-  )
+  assert.equal(pageCount(mathBytes), 2, 'The section report fits a score page and a details page')
   await writeFile(join(artifacts, 'ivygoo-math-report.pdf'), mathBytes)
   await reportClient.send('Emulation.setDeviceMetricsOverride', {
     width: 1000,

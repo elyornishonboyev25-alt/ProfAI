@@ -1,5 +1,7 @@
 /** Interface strings missing from the original Russian catalogs. */
 export const russianAdditions: Record<string, string> = {
+  'In process': 'В процессе',
+  '{{answered}} of {{total}} questions answered': 'Отвечено на {{answered}} из {{total}} вопросов',
   'more friend(s) until your next bonus.': 'друзей до следующего бонуса.',
   'friends': 'друзей',
   'bonus': 'бонус',

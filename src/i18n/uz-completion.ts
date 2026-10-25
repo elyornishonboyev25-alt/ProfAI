@@ -1,5 +1,7 @@
 /** Interface strings that are not in the original Uzbek catalog. */
 export const uzbekCompletion: Record<string, string> = {
+  'In process': 'Jarayonda',
+  '{{answered}} of {{total}} questions answered': '{{total}} ta savoldan {{answered}} tasiga javob berilgan',
   'more friend(s) until your next bonus.': 'ta do‘stdan keyin navbatdagi bonus beriladi.',
   'friends': 'ta do‘st',
   'bonus': 'bonus',

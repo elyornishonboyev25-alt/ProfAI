@@ -4,6 +4,7 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { loadSATAttempt, loadSATAttemptHistory } from '@/features/sat/attemptStorage'
 import UiText from '@/components/common/UiText'
 import { useAuthStore } from '@/store/authStore'
+import { useAccountDataRevision } from '@/hooks/useAccountDataRevision'
 import { getSATSectionTest, isSATSection, SAT_TEST_CATALOG, satAvailabilityNote } from '@/features/sat/catalog'
 import './mock-ielts.css'
 import SATSectionTabs, { SAT_SECTION_TABS } from '@/components/sat/SATSectionTabs'
@@ -19,6 +20,7 @@ export default function SATSection() {
   const { section } = useParams<{ section: string }>()
   const [search, setSearch] = useState('')
   useAuthStore((state) => state.user?.id)
+  useAccountDataRevision()
 
   if (!isTabId(section)) return <Navigate to="/sat" replace />
 
@@ -31,6 +33,14 @@ export default function SATSection() {
   const visibleTests = tests.filter((test) =>
     `${test.mockId} ${isFullMock ? 'Full Mock' : 'Practice Test'} ${test.title} ${test.badge} ${test.subtitle}`.toLowerCase().includes(query),
   )
+  const testAttempts = tests.map((test) => ({ test, attempt: loadSATAttempt(test.id) }))
+  const attemptsByTestId = new Map(testAttempts.map(({ test, attempt }) => [test.id, attempt]))
+  const inProgress = isFullMock ? testAttempts
+    .filter(({ attempt }) => attempt?.status === 'active')
+    .sort((a, b) => (b.attempt?.updatedAt ?? b.attempt?.startedAt ?? 0) - (a.attempt?.updatedAt ?? a.attempt?.startedAt ?? 0))[0] : undefined
+  const answeredInProgress = inProgress
+    ? inProgress.test.modules.flatMap((module) => module.questions).filter((question) => inProgress.attempt?.answers[question.id]?.trim()).length
+    : 0
   const completedTestIds = new Set(loadSATAttemptHistory()
     .filter(({ attempt }) => attempt.status === 'submitted')
     .map(({ attempt }) => attempt.testId))
@@ -57,12 +67,33 @@ export default function SATSection() {
               </label>
             </div>
 
+            {inProgress?.attempt ? (
+              <section aria-labelledby="sat-in-process-heading" data-sat-in-process className="mock-ielts-glass-metric relative mt-5 flex flex-col gap-4 rounded-[1.75rem] p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+                <div className="min-w-0 flex-1">
+                  <h2 id="sat-in-process-heading" className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[11px] font-black text-amber-800">
+                    <Clock3 className="h-3.5 w-3.5" aria-hidden="true" /><UiText text="In process" />
+                  </h2>
+                  <h3 className="mt-3 text-xl font-black tracking-tight text-slate-950">Full Mock {inProgress.test.mockId}</h3>
+                  <p className="mt-1 text-sm font-medium text-slate-500">{inProgress.test.badge}</p>
+                  <div className="mt-3 max-w-md">
+                    <p className="text-xs font-semibold text-slate-600"><UiText text="{{answered}} of {{total}} questions answered" values={{ answered: answeredInProgress, total: inProgress.test.questionCount }} /></p>
+                    <div role="progressbar" aria-label="Saved progress" aria-valuemin={0} aria-valuemax={inProgress.test.questionCount} aria-valuenow={answeredInProgress} className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200">
+                      <div className="h-full rounded-full bg-gradient-to-r from-red-700 to-red-400" style={{ width: `${Math.min(100, (answeredInProgress / Math.max(1, inProgress.test.questionCount)) * 100)}%` }} />
+                    </div>
+                  </div>
+                </div>
+                <button type="button" onClick={() => navigate(`/sat/mock/${inProgress.test.mockId}/run`)} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-red-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-red-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-200">
+                  <UiText text="Continue test" /><ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </button>
+              </section>
+            ) : null}
+
             {visibleTests.length === 0 ? (
               <div className="relative mt-5 rounded-[1.75rem] border border-dashed border-blue-200 bg-white/64 px-4 py-12 text-center text-sm font-semibold text-slate-500">No tests found.</div>
             ) : (
               <div className="relative mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
                 {visibleTests.map((test) => {
-                  const attempt = loadSATAttempt(test.id)
+                  const attempt = attemptsByTestId.get(test.id)
                   const completed = attempt?.status === 'submitted' || completedTestIds.has(test.id)
                   const answered = Object.values(attempt?.answers ?? {}).filter((answer) => answer.trim()).length
                   const note = satAvailabilityNote(test)

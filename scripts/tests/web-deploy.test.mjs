@@ -39,7 +39,7 @@ test('the filtered web runtime starts and serves pages and seekable media withou
     // empty runtime. This catches missing local imports and lost media paths.
     const copies = new Map()
     for (const layer of config.deploy.inputs.filter(input => input.step === 'build')) {
-      const excludes = (layer.exclude ?? []).map(path => path.replace(/^\/app\//, ''))
+      const excludes = layer.exclude ?? []
       for (const included of layer.include) {
         assert.ok(included.startsWith('/app/'))
         const relative = included.slice('/app/'.length)
@@ -49,7 +49,9 @@ test('the filtered web runtime starts and serves pages and seekable media withou
             const normalized = path.replaceAll('\\', '/')
             const base = source.replaceAll('\\', '/') + '/'
             const name = normalized.slice(base.length)
-            if (excludes.some(excluded => name === excluded || name.startsWith(excluded + '/'))) return false
+            // BuildKit's CopyInfo excludes are relative to each copy source.
+            const withinCopy = name === relative ? '' : name.slice(relative.length + 1)
+            if (excludes.some(excluded => withinCopy === excluded || withinCopy.startsWith(excluded + '/'))) return false
             if (Object.hasOwn(fixtures, name)) copies.set(name, (copies.get(name) ?? 0) + 1)
             return true
           },

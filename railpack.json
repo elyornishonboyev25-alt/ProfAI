@@ -23,7 +23,7 @@
           "/app/scripts/serve-web.mjs",
           "/app/shared/retiredPages.mjs"
         ],
-        "exclude": ["/app/dist/audio", "/app/dist/media", "/app/dist/sat"]
+        "exclude": ["audio", "media", "sat"]
       }
     ]
   }

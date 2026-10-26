@@ -36,6 +36,7 @@ import { startSiteTimeTracking } from '@/utils/siteTime'
 import { lazyWithRetry as lazy } from '@/utils/lazyWithRetry'
 import { useProfileIdentitySync } from '@/hooks/useProfileIdentitySync'
 import ReportIssueModal from '@/components/support/ReportIssueModal'
+import '@/styles/responsive-workspace.css'
 
 const AchievementCelebration = lazy(() => import('@/components/achievements/AchievementCelebration'))
 const FloatingAIAssistant = lazy(() => import('@/components/ai/FloatingAIAssistant'))
@@ -441,11 +442,11 @@ function App() {
       {isAuthPage && <div className="liquid-auth-language glass-control"><LanguageSelector /></div>}
       <DeferredRegisterModal />
       <DeferredAchievementCelebration />
+      <FullscreenToggle />
       {!isTestMode ? (
         <>
           {pathname === '/academic-skills' ? <DeferredFloatingAIAssistant /> : null}
           {!isExamModeActive && !isAuthPage && !isGuestExperience && !isLearningCenterMode ? <DeferredTalkOverlay /> : null}
-          {!isExamModeActive && isFocusContentMode && pathname !== '/onboarding' && pathname !== '/focus' ? <FullscreenToggle /> : null}
           {!isLearningCenterMode ? <WordLookupLayer /> : null}
         </>
       ) : null}

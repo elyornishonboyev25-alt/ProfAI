@@ -246,61 +246,19 @@ export default function Dashboard() {
           </div>
         </header>
 
-        <section className="dashboard-entrance-grid grid gap-4 xl:grid-cols-[17.5rem_minmax(30rem,1fr)_18rem]">
-          <article className="dashboard-target-card dashboard-card-sheen">
-            <span className="dashboard-target-ribbon" aria-hidden="true" />
-            <span className="dashboard-target-orb" aria-hidden="true" />
-            <div className="relative z-10">
-              <p className="dashboard-target-heading text-base font-bold"> <UiText text={"Your target"} /> </p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {examTargets.length ? examTargets.map((exam) => (
-                  <span key={exam.label} className="rounded-full border border-white/25 bg-white/15 px-3 py-1 text-sm font-black shadow-inner">
-                    {exam.label} <span className="text-white/75">{exam.target}</span>
-                  </span>
-                )) : <span className="text-sm text-white/80">IELTS · SAT</span>}
-              </div>
+        <section className="dashboard-entrance-grid grid gap-4 xl:grid-cols-[minmax(0,1fr)_18rem]">
+          <article className="dashboard-focus-strip">
+            <div className="dashboard-focus-label"><Target className="h-4 w-4" /><UiText text="Your target" /></div>
+            <div className="dashboard-focus-scores">
+              {examTargets.length ? examTargets.map(exam => <button type="button" key={exam.label} onClick={() => navigate(exam.path)}>
+                <span>{exam.label}</span><strong>{exam.current || '—'}</strong><span className="dashboard-focus-goal">/ {exam.target}</span><ArrowRight className="h-3.5 w-3.5" />
+              </button>) : <button type="button" onClick={() => navigate('/account')}><UiText text="Account settings" /><ArrowRight className="h-3.5 w-3.5" /></button>}
             </div>
-
-            <div className="dashboard-progress-orbit">
-              <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 100 100" aria-hidden="true">
-                <circle cx="50" cy="50" r="41" fill="none" stroke="rgba(255,255,255,.2)" strokeWidth="8" />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="41"
-                  fill="none"
-                  stroke="#fff"
-                  strokeLinecap="round"
-                  strokeWidth="8"
-                  strokeDasharray={`${2 * Math.PI * 41}`}
-                  strokeDashoffset={2 * Math.PI * 41 * (1 - targetProgress / 100)}
-                />
-              </svg>
-              <div className="relative text-center">
-                <p className="text-4xl font-black tracking-[-0.05em]">{hasCurrentScore ? `${targetProgress}%` : '—'}</p>
-                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white/80"> <UiText text={hasCurrentScore ? 'toward target' : 'No score yet'} /> </p>
-              </div>
-            </div>
-
-            <div className={`relative z-10 mt-5 grid gap-2 ${examTargets.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
-              {examTargets.map((exam) => (
-                <div key={exam.label} className="rounded-xl border border-white/15 bg-white/10 px-3 py-2">
-                  <span className="block text-[9px] font-black uppercase tracking-wider text-white/65">{exam.label} current</span>
-                  <strong className="mt-0.5 block text-base">{exam.current || 'Not set'}</strong>
-                </div>
-              ))}
-            </div>
-            {examTargets.length > 0 && <button
-              type="button"
-              onClick={() => navigate(examTargets[0].path)}
-              className="dashboard-target-cta relative z-10 mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-black text-red-950 shadow-lg transition hover:-translate-y-0.5"
-            >
-               <UiText text="Continue preparing" /> <ArrowRight className="h-3.5 w-3.5" />
-            </button>}
+            {hasCurrentScore && <span className="dashboard-focus-progress" aria-label={`${targetProgress}%`}><progress max={100} value={targetProgress} /><b>{targetProgress}%</b></span>}
           </article>
 
-          <div className="min-w-0 space-y-4">
-            <div className="grid gap-3 sm:grid-cols-2">
+          <div className="dashboard-study-main min-w-0 space-y-4">
+            <div className="dashboard-practice-links grid gap-3 sm:grid-cols-2">
               {practiceCards.map(exam => <button key={exam.label} type="button" onClick={() => navigate(exam.path)} className="dashboard-glass-card flex items-start gap-3 p-4 text-left transition hover:-translate-y-0.5 hover:shadow-lg">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600"><Target className="h-5 w-5" /></span>
                 <span className="min-w-0"><strong className="block text-sm font-black text-slate-900">{exam.label}</strong>
@@ -309,7 +267,7 @@ export default function Dashboard() {
                 </span>
               </button>)}
             </div>
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <div className="dashboard-metrics grid grid-cols-2 gap-3 lg:grid-cols-4">
               <StatCard label="Study time" value={weeklyStudyTimeLabel} note="This week" icon={Clock3} />
               <StatCard
                 label="Practices completed"
@@ -321,7 +279,7 @@ export default function Dashboard() {
               <StatCard label="Current rank" value={currentRank ? `#${currentRank}` : 'Unranked'} note="Global board" icon={Trophy} />
             </div>
 
-            <article className="dashboard-glass-card p-5">
+            <article className="dashboard-glass-card dashboard-activity p-5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-[0.17em] text-red-600"> <UiText text={"Weekly activity"} /> </p>
@@ -373,7 +331,7 @@ export default function Dashboard() {
             </article>
           </div>
 
-          <div className="space-y-4">
+          <div className="dashboard-insights space-y-4">
             <article
               className="dashboard-glass-card dashboard-leaderboard-preview cursor-pointer p-5"
               role="link"

@@ -1,22 +1,34 @@
 import { Maximize2, Minimize2 } from 'lucide-react'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import { useCopy } from '@/i18n/interface'
+import { useEffect, useRef } from 'react'
+import { useLocation } from 'react-router-dom'
 
-/**
- * Site-wide fullscreen control — fully manual.
- *  - The site NEVER enters fullscreen on its own; it only happens when the user
- *    clicks this floating button.
- *  - Clicking again while in fullscreen exits it. The app never auto-exits.
- */
 export default function FullscreenToggle() {
-  const { isFullscreen, supported, toggle } = useFullscreen()
+  const { isFullscreen, supported, toggle, enter } = useFullscreen()
   const { c } = useCopy()
+  const { pathname } = useLocation()
+  const attempted = useRef(false)
+  useEffect(() => { if (isFullscreen) attempted.current = true }, [isFullscreen])
+  useEffect(() => {
+    if (!supported || attempted.current || pathname === '/login' || pathname === '/register') return
+    const onInteraction = (event: MouseEvent) => {
+      if (!event.isTrusted || !window.matchMedia('(max-width: 1023px) and (pointer: coarse)').matches) return
+      const target = event.target instanceof Element ? event.target : null
+      if (!target || target.closest('input, textarea, select, [contenteditable], [aria-haspopup], .workspace-fullscreen, .site-fullscreen-control, a[target="_blank"], a[href="/login"], a[href="/register"]')) return
+      attempted.current = true
+      document.removeEventListener('click', onInteraction, true)
+      void enter()
+    }
+    document.addEventListener('click', onInteraction, true)
+    return () => document.removeEventListener('click', onInteraction, true)
+  }, [supported, enter, pathname, isFullscreen])
   const label = c(isFullscreen ? 'Exit full screen' : 'Full screen')
 
   if (!supported) return null
 
   return (
-    <div className="pointer-events-none fixed bottom-24 right-[4.5rem] z-[120] print:hidden lg:bottom-6 lg:right-[5.25rem]">
+    <div className="site-fullscreen-control pointer-events-none fixed bottom-24 right-[4.5rem] z-[120] print:hidden lg:bottom-6 lg:right-[5.25rem]">
       <button
         type="button"
         onClick={toggle}

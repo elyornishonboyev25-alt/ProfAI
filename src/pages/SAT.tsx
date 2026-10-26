@@ -181,12 +181,12 @@ export default function SAT() {
     : completedTestIds.size ? 100 : 0
 
   return (
-    <div className="workspace-page relative min-h-screen overflow-x-clip px-4 pb-14 pt-6 sm:px-6 lg:px-8 lg:pb-20">
+    <div className="workspace-page sat-hub relative min-h-screen overflow-x-clip px-4 pb-14 pt-6 sm:px-6 lg:px-8 lg:pb-20">
       <div className="relative z-10 mx-auto max-w-[112rem]">
         <motion.header
           initial={minimalMotion ? false : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="pb-8 pt-5 text-center sm:pb-10 sm:pt-4"
+          className="arena-hub-heading pb-8 pt-5 text-center sm:pb-10 sm:pt-4"
         >
           <div className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/82 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-red-600">
             <Sparkles className="h-3 w-3" /> Digital SAT command center
@@ -197,7 +197,7 @@ export default function SAT() {
           </p>
         </motion.header>
 
-        <button type="button" onClick={() => navigate('/sat/mocks')} className={`${glassCard} group mb-5 flex w-full flex-col gap-5 p-6 text-left transition hover:-translate-y-0.5 sm:flex-row sm:items-center sm:justify-between sm:p-8`}>
+        <button type="button" onClick={() => navigate('/sat/mocks')} className={`${glassCard} sat-mock-link group mb-5 flex w-full flex-col gap-5 p-6 text-left transition hover:-translate-y-0.5 sm:flex-row sm:items-center sm:justify-between sm:p-8`}>
           <span className="block">
             <span className="flex items-center gap-2 text-red-600"><LibraryBig className="h-5 w-5" /><span className="text-[11px] font-extrabold uppercase tracking-[0.16em]">Digital SAT</span></span>
             <span className="mt-2 block text-3xl font-extrabold tracking-[-0.045em] text-[#151621] sm:text-4xl">Full Mock exams</span>
@@ -208,10 +208,10 @@ export default function SAT() {
           </span>
         </button>
 
-        <button type="button" onClick={() => navigate('/sat/question-bank')} className="mb-5 flex w-full items-center justify-between gap-5 rounded-[1.7rem] border border-white/90 bg-white/75 p-5 text-left shadow-[0_16px_45px_rgba(30,42,70,.09)] backdrop-blur-xl transition hover:-translate-y-0.5 sm:p-6"><span className="flex items-center gap-4"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-red-50 text-red-600"><FileSearch className="h-6 w-6" /></span><span><strong className="block text-lg font-extrabold tracking-tight text-slate-950">SAT Question Bank</strong><small className="mt-1 block text-xs font-semibold text-slate-500">Practice by Math or Reading & Writing, topic, skill and difficulty.</small></span></span><ArrowRight className="h-5 w-5 shrink-0 text-red-600" /></button>
-        <button type="button" onClick={() => navigate('/sat/hard-questions')} className="mb-5 flex w-full items-center justify-between gap-5 rounded-[1.7rem] border border-red-100 bg-gradient-to-r from-white/90 to-red-50/80 p-5 text-left shadow-[0_16px_45px_rgba(30,42,70,.09)] transition hover:-translate-y-0.5 sm:p-6"><span className="flex items-center gap-4"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-red-50 text-red-600"><Flame className="h-6 w-6" /></span><span><strong className="block text-lg font-extrabold tracking-tight text-slate-950">Hard Questions</strong><small className="mt-1 block text-xs font-semibold text-slate-500">100 English + 100 Math · Every topic · Instant explanations</small></span></span><ArrowRight className="h-5 w-5 shrink-0 text-red-600" /></button>
-        <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,.75fr)]">
-          <aside className="grid gap-5 sm:grid-cols-2 xl:row-span-2 xl:grid-cols-1">
+        <button type="button" onClick={() => navigate('/sat/question-bank')} className="sat-practice-link mb-5 flex w-full items-center justify-between gap-5 rounded-[1.7rem] border border-white/90 bg-white/75 p-5 text-left shadow-[0_16px_45px_rgba(30,42,70,.09)] backdrop-blur-xl transition hover:-translate-y-0.5 sm:p-6"><span className="flex items-center gap-4"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-red-50 text-red-600"><FileSearch className="h-6 w-6" /></span><span><strong className="block text-lg font-extrabold tracking-tight text-slate-950">SAT Question Bank</strong><small className="mt-1 block text-xs font-semibold text-slate-500">Practice by Math or Reading & Writing, topic, skill and difficulty.</small></span></span><ArrowRight className="h-5 w-5 shrink-0 text-red-600" /></button>
+        <button type="button" onClick={() => navigate('/sat/hard-questions')} className="sat-practice-link mb-5 flex w-full items-center justify-between gap-5 rounded-[1.7rem] border border-red-100 bg-gradient-to-r from-white/90 to-red-50/80 p-5 text-left shadow-[0_16px_45px_rgba(30,42,70,.09)] transition hover:-translate-y-0.5 sm:p-6"><span className="flex items-center gap-4"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-red-50 text-red-600"><Flame className="h-6 w-6" /></span><span><strong className="block text-lg font-extrabold tracking-tight text-slate-950">Hard Questions</strong><small className="mt-1 block text-xs font-semibold text-slate-500">100 English + 100 Math · Every topic · Instant explanations</small></span></span><ArrowRight className="h-5 w-5 shrink-0 text-red-600" /></button>
+        <section className="sat-overview-grid grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,.75fr)]">
+          <aside className="sat-overview-aside grid gap-5 sm:grid-cols-2 xl:row-span-2 xl:grid-cols-1">
             <article className={`${glassCard} p-6 sm:p-7`}>
               <h2 className="text-[1.6rem] font-extrabold leading-tight tracking-[-0.04em] text-[#151621]"> <UiText text={"Continue where"} /> <br className="hidden xl:block" />  <UiText text={"you left off"} /> </h2>
               <div className="mt-5 rounded-[1.55rem] border border-white/90 bg-white/42 p-5 shadow-[0_12px_30px_rgba(55,65,100,.08),inset_0_1px_0_white]">
@@ -243,7 +243,7 @@ export default function SAT() {
             </article>
           </aside>
 
-          <article className={`${glassCard} flex min-h-[15rem] items-center justify-between gap-4 p-6 sm:p-7`}>
+          <article className={`${glassCard} sat-target-card flex min-h-[15rem] items-center justify-between gap-4 p-6 sm:p-7`}>
             <div>
               <p className="text-xl font-extrabold tracking-[-0.035em] text-[#191a25]"> <UiText text={"Target score"} /> </p>
               <p className="mt-3 text-5xl font-extrabold tracking-[-0.065em] text-[#11121d] sm:text-6xl">{targetScore}+</p>
@@ -252,7 +252,7 @@ export default function SAT() {
             <ProgressRing value={targetProgress} size={134} />
           </article>
 
-          <div className="grid min-h-[15rem] grid-cols-3 gap-4">
+          <div className="sat-metrics grid min-h-[15rem] grid-cols-3 gap-4">
             {[
               { label: 'Practice tests', value: `${completedTestIds.size}/${mockCount}`, icon: Check },
               { label: 'Best score', value: bestScore || '—', icon: Flag },

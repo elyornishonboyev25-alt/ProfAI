@@ -626,10 +626,10 @@
 /* ---------- University cards ---------- */
 .admission-universities-page .admission-university-grid { gap: 14px; }
 .admission-universities-page .admission-university-grid > article.admission-university-card {
-  min-height: 21.5rem;
+  min-height: 0;
   border: 1px solid var(--adm-edge);
   border-radius: 24px;
-  padding: 18px 18px 16px;
+  padding: 16px 16px 14px;
   background: var(--adm-surface);
   box-shadow: var(--adm-shadow);
   backdrop-filter: blur(14px) saturate(115%);
@@ -660,12 +660,19 @@
   border-color: rgba(201, 36, 59, .4);
 }
 
-.admission-universities-page .admission-card-topline { min-height: 4.6rem; }
+.admission-universities-page .admission-card-topline { min-height: 0; }
 .admission-universities-page .admission-university-card .university-official-logo {
   border: 1px solid var(--adm-edge);
   box-shadow: 0 8px 20px rgba(39, 46, 60, .1), inset 0 1px 0 #fff;
 }
-.admission-universities-page .admission-card-rank-actions { gap: 10px; margin: -19px -6px 0 0; }
+/* Save sits beside the hanging rank ribbon, keeping the card header one row tall. */
+.admission-universities-page .admission-card-rank-actions {
+  flex-direction: row-reverse;
+  align-items: flex-start;
+  gap: 8px;
+  margin: -19px -6px 0 0;
+}
+.admission-universities-page .admission-card-rank-actions .admission-card-shortlist { margin-top: 31px; }
 .admission-universities-page .admission-rank-badge {
   min-width: 62px;
   min-height: 62px;
@@ -732,7 +739,7 @@
 }
 .admission-universities-page .admission-card-footer > div:first-child { margin-top: 2px; }
 .admission-universities-page .admission-card-footer > div:first-child small { color: var(--adm-soft); font-size: 9.5px; font-weight: 850; letter-spacing: .1em; }
-.admission-universities-page .admission-card-footer > div:first-child strong { max-width: 11rem; margin-top: 4px; color: var(--adm-ink); font-size: 14px; font-weight: 850; }
+.admission-universities-page .admission-card-footer > div:first-child strong { max-width: 100%; margin-top: 4px; color: var(--adm-ink); font-size: 14px; font-weight: 850; }
 
 .admission-universities-page .admission-match-ring {
   width: 54px;
@@ -835,13 +842,74 @@
 .admission-universities-page .admission-university-scroll::-webkit-scrollbar-thumb { background: linear-gradient(#d62c43, #a91c31) padding-box; }
 
 /* ---------- Layout ---------- */
-@media (min-width: 1200px) {
-  .admission-universities-page .admission-university-intro-sticky { justify-content: flex-start; padding-top: 4px; }
-  .admission-universities-page .admission-university-intro { max-height: calc(100dvh - 13rem); }
+/* Cards fill the results column: as many ~240px columns as fit. */
+.admission-universities-page .admission-university-scroll { container-type: inline-size; }
+@media (min-width: 768px) {
+  .admission-universities-page .admission-university-grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 236px), 1fr));
+  }
 }
 
-@media (min-width: 768px) and (max-width: 1600px) {
-  .admission-universities-page .admission-university-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* Desktop: a slim fixed-width guide column, and the guide is sized to the
+   viewport height so it never needs a scrollbar of its own. */
+@media (min-width: 1200px) {
+  .admission-universities-page { height: calc(100dvh - var(--admission-page-top, 0px)); }
+  /* The route wrapper below the toolbar would otherwise add a full extra screen. */
+  .workspace-main > div:has(> .arena-route > .admission-universities-page) { min-height: 0; }
+  .admission-universities-page .admission-discovery-layout {
+    grid-template-columns: clamp(286px, 24vw, 380px) minmax(0, 1fr);
+    gap: clamp(16px, 1.6vw, 26px);
+  }
+  .admission-universities-page .admission-university-intro-sticky {
+    min-height: 0;
+    justify-content: flex-start;
+    padding-top: 4px;
+  }
+  .admission-universities-page .admission-university-intro {
+    display: flex;
+    min-height: 0;
+    flex: 0 1 auto;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .admission-universities-page .admission-university-intro-main { flex: none; padding: clamp(20px, 2.6vh, 32px) clamp(20px, 1.8vw, 28px); }
+  .admission-universities-page .admission-university-intro-main h1 { margin: clamp(14px, 2vh, 22px) 0 8px; font-size: clamp(30px, min(2.7vw, 5vh), 46px); }
+  .admission-universities-page .admission-university-intro-main > p { font-size: 13px; line-height: 1.55; }
+  .admission-universities-page .admission-university-intro-stats { margin-top: clamp(14px, 2.2vh, 24px); }
+  .admission-universities-page .admission-university-intro-stats > div { padding: 10px 9px; }
+  .admission-universities-page .admission-university-destinations {
+    min-height: 0;
+    flex: 1;
+    overflow-y: auto;
+    padding: clamp(12px, 1.8vh, 20px) 12px 10px;
+    scrollbar-width: none;
+  }
+  .admission-universities-page .admission-university-destinations::-webkit-scrollbar { display: none; }
+  .admission-universities-page .admission-university-destination-list > button { min-height: clamp(42px, 5.4vh, 52px); }
+  .admission-universities-page .admission-university-destination-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .admission-universities-page .admission-university-destination-name small { display: block; margin-top: 1px; }
+  .admission-universities-page .admission-university-intro-shortlist { min-height: clamp(44px, 5.4vh, 52px); margin-top: 10px; }
+  .admission-universities-page .admission-catalog-heading { padding-bottom: 12px; }
+  .admission-universities-page .admission-catalog-heading h2 { margin-top: 8px; font-size: clamp(26px, min(2.4vw, 4.4vh), 40px); }
+}
+
+/* Short desktop screens (laptops, zoomed browsers): trim the guide's prose
+   and the search block so more universities are visible at once. */
+@media (min-width: 1200px) and (max-height: 900px) {
+  .admission-universities-page .admission-university-intro-main > p { display: none; }
+  .admission-universities-page .admission-university-intro-stats strong { font-size: 21px; }
+  .admission-universities-page .admission-university-destinations-heading { margin-bottom: 6px; }
+  .admission-universities-page .admission-university-destination-list { gap: 2px; }
+  .admission-universities-page .admission-university-destination-index { width: 26px; height: 26px; border-radius: 8px; }
+  .admission-universities-page .admission-search-box { height: 54px; border-radius: 18px; }
+  .admission-search-icon { width: 38px; height: 38px; border-radius: 12px; }
+  .admission-universities-page .admission-filter-control { height: 44px; }
+  .admission-universities-page .admission-catalog-heading > p { display: none; }
+}
+@media (min-width: 1200px) and (max-height: 760px) {
+  .admission-universities-page .admission-university-intro-kicker { display: none; }
+  .admission-universities-page .admission-university-intro-main h1 { margin-top: 0; }
+  .admission-universities-page .admission-university-destination-name small { display: none; }
 }
 
 @media (max-width: 1199px) {

@@ -13,6 +13,7 @@ import {
   Flag,
   Sparkles,
   X,
+  Headphones, BookOpenText, NotebookPen, Mic2,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useAuthStore, type AuthState } from '@/store/authStore'
@@ -100,19 +101,26 @@ function ProgressRing({ band, label = 'Band' }: { band: number | null; label?: s
 }
 
 function SkillCard({ skill, score, onOpen }: { skill: (typeof SKILLS)[number]; score: number | null; onOpen: () => void }) {
+  const Icon = { listening: Headphones, reading: BookOpenText, writing: NotebookPen, speaking: Mic2 }[skill.id]
   return (
     <button
       type="button"
       onClick={onOpen}
       onPointerEnter={() => preloadIeltsCatalog(skill.id)}
       onPointerDown={() => preloadIeltsCatalog(skill.id)}
-      className={`${GLASS} group min-h-[24rem] min-w-0 p-6 text-left transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-1 hover:border-red-200 hover:shadow-[0_30px_72px_rgba(185,28,28,.13),inset_0_1px_0_white] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100 sm:p-7`}
+      className={`${GLASS} ielts-skill-card group min-h-[24rem] min-w-0 p-6 text-left transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-1 hover:border-red-200 hover:shadow-[0_30px_72px_rgba(185,28,28,.13),inset_0_1px_0_white] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100 sm:p-7`}
     >
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_94%_4%,rgba(239,68,68,.14),transparent_34%),linear-gradient(116deg,rgba(255,255,255,.54)_0%,rgba(255,255,255,.08)_47%,rgba(191,219,254,.22)_48%,rgba(255,255,255,.04)_100%)]" />
-      <div className="relative flex h-full flex-col">
+      <div className="ielts-skill-mobile">
+        <span className="ielts-mobile-icon"><Icon size={21} /></span>
+        <h2><UiText text={skill.title.replace('IELTS ', '')} /></h2>
+        <small>{skill.tests} full tests{score !== null ? ` · Band ${formatBand(score)}` : ''}</small>
+        <span className="ielts-mobile-action"><UiText text="Open tests" /><ArrowRight size={16} /></span>
+      </div>
+      <div className="ielts-skill-content relative flex h-full flex-col">
         <h2 className="text-[1.7rem] font-black leading-tight tracking-[-0.045em] text-[#12131f] sm:text-[2rem]"><UiText text={skill.title} /></h2>
 
-        <div className="mt-5 flex items-start justify-between gap-4">
+        <div className="ielts-skill-details mt-5 flex items-start justify-between gap-4">
           <div className="min-w-0">
             <h3 className="text-base font-black text-[#1b1c27] sm:text-lg">Skills</h3>
             <ul className="mt-1 space-y-1 text-base font-semibold leading-6 text-[#353744] sm:text-lg">
@@ -126,8 +134,8 @@ function SkillCard({ skill, score, onOpen }: { skill: (typeof SKILLS)[number]; s
           ) : <ProgressRing band={score} />}
         </div>
 
-        <div className="mt-auto flex items-end justify-between gap-4 pt-4">
-          <div className="relative" aria-hidden="true">
+        <div className="ielts-skill-footer mt-auto flex items-end justify-between gap-4 pt-4">
+          <div className="ielts-skill-art relative" aria-hidden="true">
             <StudyIllustration variant={skill.visual} compact />
             <span className="absolute bottom-1 right-0 rounded-full border border-red-100/80 bg-white/70 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.13em] text-red-700 backdrop-blur-md">{skill.tests} full tests</span>
           </div>
@@ -194,7 +202,7 @@ export default function IELTS() {
   }
 
   return (
-    <main className="workspace-page relative min-h-screen overflow-x-clip px-4 pb-16 pt-6 sm:px-6 lg:px-8">
+    <main className="workspace-page ielts-hub relative min-h-screen overflow-x-clip px-4 pb-16 pt-6 sm:px-6 lg:px-8">
       <div className="relative z-10 mx-auto max-w-[112rem]">
         <ResumeIeltsAttempts />
         {fromMock ? (
@@ -206,7 +214,7 @@ export default function IELTS() {
         <motion.header
           initial={minimalMotion ? false : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative pb-8 pt-5 text-center sm:pb-10 sm:pt-4"
+          className="arena-hub-heading relative pb-8 pt-5 text-center sm:pb-10 sm:pt-4"
         >
           <div className="relative inline-flex items-center gap-2 rounded-full border border-white/90 bg-white/70 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[.18em] text-red-600">
             <Sparkles className="h-3 w-3" /> IELTS command center
@@ -215,9 +223,9 @@ export default function IELTS() {
           <p className="mx-auto mt-3 max-w-5xl text-sm font-medium tracking-[-.025em] text-[#262733] sm:text-xl lg:text-[1.65rem]">Listening + Reading + Writing + Speaking — your path to Band {target}+</p>
         </motion.header>
 
-        <section className="mt-5 grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(18rem,.62fr)]">
+        <section className="ielts-hub-grid mt-5 grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(18rem,.62fr)]">
           {SKILLS.slice(0, 2).map((skill) => <SkillCard key={skill.id} skill={skill} score={scores[skill.id]} onOpen={() => openSkill(skill.id)} />)}
-          <aside className="grid gap-5 sm:grid-cols-2 xl:row-span-2 xl:grid-cols-1">
+          <aside className="ielts-hub-overview grid gap-5 sm:grid-cols-2 xl:row-span-2 xl:grid-cols-1">
             <article className={`${GLASS} p-6`}>
               <h2 className="text-2xl font-black tracking-[-.045em] text-slate-900"> <UiText text={"Your IELTS overview"} /> </h2>
               <div className="mt-5 flex items-center justify-between gap-4 rounded-[1.5rem] border border-white/90 bg-white/45 p-4">
@@ -237,7 +245,7 @@ export default function IELTS() {
           {SKILLS.slice(2).map((skill) => <SkillCard key={skill.id} skill={skill} score={scores[skill.id]} onOpen={() => openSkill(skill.id)} />)}
         </section>
 
-        <section className="mt-6 grid gap-5 lg:grid-cols-[1.25fr_1fr]">
+        <section className="ielts-hub-extras mt-6 grid gap-5 lg:grid-cols-[1.25fr_1fr]">
           <article className={`${GLASS} flex flex-col justify-between gap-6 p-6 sm:flex-row sm:items-center sm:p-7`}>
             <div><p className="text-xs font-extrabold uppercase tracking-[.16em] text-red-600"> <UiText text={"Full IELTS mock"} /> </p><h2 className="mt-2 text-2xl font-black tracking-[-.04em] text-slate-900"> <UiText text={"Practice all four skills in one flow"} /> </h2><p className="mt-1 text-sm font-medium text-slate-500"> <UiText text={"Use verified results to update your overview."} /> </p></div>
             <button type="button" onClick={() => navigate('/ielts/tests#mocks', { state: { from: 'ielts' } })} className="ui-action ui-action-primary shrink-0 rounded-full px-6">Start full mock <ArrowRight className="h-4 w-4" /></button>

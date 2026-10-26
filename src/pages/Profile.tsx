@@ -172,7 +172,8 @@ export default function Profile() {
             <div className="mr-hero-copy">
               <span className="mr-chip"><FileSearch aria-hidden="true" /><UiText text="My Results" /></span>
               <h1 className="mr-title">
-                <UiText text="Every result." /> <span><UiText text="One clear record." /></span>
+                <span className="mr-title-desktop"><UiText text="Every result." /> <span><UiText text="One clear record." /></span></span>
+                <span className="mr-title-mobile"><UiText text="My Results" /></span>
               </h1>
               <p className="mr-subtitle">
                 <UiText text="Every IELTS and SAT test you finish is saved here in order. Open any result to analyze it question by question." />

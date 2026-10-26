@@ -3,9 +3,9 @@ import { Loader2 } from 'lucide-react'
 import { connectGoogleIdentity } from '@/lib/googleIdentity'
 import { useCopy } from '@/i18n/interface'
 
-type Props = { mode: 'signin' | 'signup'; disabled?: boolean; onCredential: (credential: string) => Promise<void> | void }
+type Props = { mode: 'signin' | 'signup'; disabled?: boolean; promptOnMount?: boolean; onCredential: (credential: string) => Promise<void> | void }
 
-export default function GoogleAuthButton({ mode, disabled = false, onCredential }: Props) {
+export default function GoogleAuthButton({ mode, disabled = false, promptOnMount = false, onCredential }: Props) {
   const { c, language } = useCopy()
   const container = useRef<HTMLDivElement>(null)
   const handler = useRef(onCredential)
@@ -14,11 +14,14 @@ export default function GoogleAuthButton({ mode, disabled = false, onCredential 
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState('')
   const [retry, setRetry] = useState(0)
+  const promptRequested = useRef(false)
   useEffect(() => { if (container.current) container.current.inert = disabled || processing }, [disabled, processing])
   useEffect(() => {
     let canceled = false
     let release: (() => void) | undefined
     let observer: ResizeObserver | undefined
+    let promptTimer: number | undefined
+    let prompted = false
     setLoading(true); setError('')
     void connectGoogleIdentity(async credential => {
       if (canceled || disabled) return
@@ -41,11 +44,19 @@ export default function GoogleAuthButton({ mode, disabled = false, onCredential 
       render()
       if (typeof ResizeObserver !== 'undefined' && container.current) { observer = new ResizeObserver(render); observer.observe(container.current) }
       setLoading(false)
+      if (promptOnMount && !promptRequested.current) {
+        promptTimer = window.setTimeout(() => {
+          if (canceled || disabled || document.hidden) return
+          promptRequested.current = true
+          prompted = true
+          connection.api.prompt()
+        }, 350)
+      }
     }).catch(failure => {
       if (!canceled) { setError(failure instanceof Error ? failure.message : 'Google sign-in failed'); setLoading(false) }
     })
-    return () => { canceled = true; release?.(); observer?.disconnect() }
-  }, [language, mode, disabled, retry])
+    return () => { canceled = true; window.clearTimeout(promptTimer); if (prompted) window.google?.accounts.id.cancel(); release?.(); observer?.disconnect() }
+  }, [language, mode, disabled, retry, promptOnMount])
 
   return <div className="ivygoo-google-access" aria-busy={loading || processing}>
     <div className="ivygoo-google-button-wrap">

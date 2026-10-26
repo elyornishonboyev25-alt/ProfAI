@@ -137,10 +137,10 @@ export default function CompactIeltsCatalog({
         </div>
       </section> : null}
 
-      <section className={`relative overflow-hidden rounded-[2.25rem] border border-white/90 bg-white/86 p-4 shadow-[0_24px_64px_rgba(30,64,175,.09),inset_0_1px_0_white] sm:p-5 lg:p-6 ${embedded ? '' : 'mt-5'}`}>
+      <section className={`ielts-catalog-panel relative overflow-hidden rounded-[2.25rem] border border-white/90 bg-white/86 p-4 shadow-[0_24px_64px_rgba(30,64,175,.09),inset_0_1px_0_white] sm:p-5 lg:p-6 ${embedded ? '' : 'mt-5'}`}>
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_92%_0%,rgba(59,130,246,.1),transparent_28%),radial-gradient(circle_at_6%_100%,rgba(239,68,68,.06),transparent_30%)]" />
 
-        <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="ielts-catalog-header relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-red-600">IELTS Academic</p>
             <h2 className="mt-0.5 text-xl font-black tracking-tight text-slate-950"><UiText text={meta.label} />  <UiText text={"tests"} /> </h2>
@@ -161,7 +161,7 @@ export default function CompactIeltsCatalog({
         </div>
 
         {filters && activeFilter && onFilterChange ? (
-          <div className="relative mt-5 flex flex-wrap gap-2" role="group" aria-label={`${meta.label} test type`}>
+          <div className="ielts-catalog-filters relative mt-5 flex flex-wrap gap-2" role="group" aria-label={`${meta.label} test type`}>
             {filters.map((filter) => (
               <button
                 key={filter.value}
@@ -181,7 +181,7 @@ export default function CompactIeltsCatalog({
             No tests found.
           </div>
         ) : (
-          <div className="relative mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <div className="ielts-catalog-grid relative mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {rows.map((row) => (
               <button
                 key={row.id}

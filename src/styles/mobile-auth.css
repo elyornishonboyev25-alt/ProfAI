@@ -1,0 +1,59 @@
+/* Google first, with a separate, focused email step. Both fit one viewport. */
+.app-shell .auth-access-page {
+  background: radial-gradient(ellipse at 8% 80%, #c7203a12, transparent 46%), linear-gradient(135deg, #f6f7fa, #dce1e8) !important;
+}
+.auth-access-page .auth-cinema-form-side { background: linear-gradient(145deg, #ffffffc9, #e5e9f099); }
+.auth-access-page .auth-cinema-intro { margin: 24px 0; }
+.auth-access-page .auth-email-choice {
+  display: flex; width: 100%; align-items: center; justify-content: center; gap: 12px;
+  min-height: 48px; padding: 10px 16px; border: 1px solid #c9d0dc; border-radius: 12px;
+  background: linear-gradient(135deg, #ffffffc9, #e5e9f0a6); box-shadow: inset 0 1px 0 #fff;
+  color: #303847; font-size: 14px; font-weight: 650;
+}
+.auth-email-choice > svg:first-child { color: #b51d35; }
+.auth-email-choice > svg:last-child { margin-left: auto; }
+.auth-email-choice > span { flex: 1; text-align: left; }
+.auth-email-dialog {
+  width: min(440px, calc(100% - 32px)); max-height: calc(100dvh - 32px); margin: auto;
+  padding: 26px; overflow: auto; overscroll-behavior: contain; border: 1px solid #fff;
+  border-radius: 24px; background: linear-gradient(145deg, #fdfefef5, #e6eaf2f5);
+  box-shadow: 0 24px 80px #17202e33, inset 0 1px 0 #fff; color: #202733;
+}
+.auth-email-dialog::backdrop { background: #20273355; backdrop-filter: blur(8px); }
+.auth-email-dialog[open] { animation: auth-sheet-enter 220ms ease-out; }
+.auth-email-dialog > header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 20px; }
+.auth-email-dialog h2 { font-size: 21px; font-weight: 750; letter-spacing: -.035em; }
+.auth-email-dialog header p { margin-top: 7px; color: #5c6574; font-size: 13px; line-height: 1.55; }
+.auth-sheet-close { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border: 1px solid #fff; border-radius: 12px; background: #ffffff9c; }
+.auth-sheet-handle { display: none; }
+.auth-email-dialog .gmail-code-hint { display: none; }
+.auth-email-dialog .gmail-code-input-wrap input { font-size: 16px; }
+.auth-email-dialog .gmail-code-input-wrap input:focus-visible { outline: none; }
+.auth-email-dialog .gmail-code-recipient { gap: 8px; flex-wrap: wrap; }
+.auth-email-dialog .gmail-code-recipient strong { overflow-wrap: anywhere; }
+.auth-email-dialog :is(button, input):focus-visible { outline: 2px solid #b51d35; outline-offset: 3px; }
+@keyframes auth-sheet-enter { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 900px) {
+  .app-shell .auth-access-page { display: grid; place-items: center; padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); }
+  .app-shell .auth-access-page .auth-cinema-shell:has(.auth-showcase-v2) { height: auto; max-height: 100%; grid-template-rows: auto minmax(0, 1fr); border-radius: 24px; }
+  .app-shell .auth-access-page .auth-cinema-shell .auth-showcase-v2 { display: none; }
+  .app-shell .auth-access-page .auth-cinema-shell .auth-cinema-form-side { padding: 28px 22px; }
+  .auth-access-page .auth-cinema-lockup { display: flex; margin-bottom: 22px; }
+  .auth-access-page .auth-cinema-lockup .brand-logo { --brand-logo-height: 38px !important; }
+  .auth-access-page .brand-lockup small { display: none; }
+  .auth-access-page .auth-cinema-intro { margin: 22px 0; }
+  .auth-access-page .auth-cinema-intro h1 { font-size: 28px; }
+  .auth-access-page .auth-cinema-privacy { margin-top: 20px; font-size: 11px; }
+  .auth-email-dialog { width: 100%; max-width: 540px; max-height: calc(100dvh - max(12px, env(safe-area-inset-top))); margin: auto auto 0; padding: 10px 22px max(22px, env(safe-area-inset-bottom)); border-radius: 26px 26px 0 0; }
+  .auth-sheet-handle { display: block; width: 36px; height: 4px; margin: 0 auto 16px; border-radius: 5px; background: #bac2cf; }
+}
+@media (max-height: 600px) {
+  .app-shell .auth-access-page .auth-cinema-shell .auth-cinema-form-side { padding: 16px 22px; }
+  .auth-access-page .auth-cinema-lockup { margin-bottom: 12px; }
+  .auth-access-page .auth-cinema-intro { margin: 12px 0; }
+  .auth-access-page .auth-cinema-privacy { margin-top: 12px; }
+  .auth-access-page .auth-cinema-divider { margin: 12px 0; }
+  .auth-email-dialog > header { margin-bottom: 12px; }
+  .auth-email-dialog header p { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .auth-email-dialog[open] { animation: none; } }

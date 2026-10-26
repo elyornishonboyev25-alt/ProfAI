@@ -1,5 +1,5 @@
 import UiText from '@/components/common/UiText'
-import { memo, useCallback, useDeferredValue, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useDeferredValue, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -214,8 +214,25 @@ function FilterSelect({
 
 export default function AdmissionUniversities({ shortlistOnly = false }: { shortlistOnly?: boolean }) {
   const navigate = useNavigate()
+  const pageRef = useRef<HTMLDivElement>(null)
   const resultsSectionRef = useRef<HTMLElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
+
+  // On desktop the catalog fills the viewport below the workspace toolbar, whose
+  // height depends on the shell, so measure where the page actually starts.
+  useLayoutEffect(() => {
+    const page = pageRef.current
+    if (!page) return
+    // Layout offsets ignore the route's entrance transform.
+    const measure = () => {
+      let top = 0
+      for (let node: HTMLElement | null = page; node; node = node.offsetParent as HTMLElement | null) top += node.offsetTop
+      page.style.setProperty('--admission-page-top', `${Math.max(0, top)}px`)
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [])
   const all =useMemo(() => getUniversities(), [])
   const countries = useMemo(() => Array.from(new Set(all.map((university) => university.country))).sort(), [all])
   const { scores, country: profileCountry } = useAdmissionScores()
@@ -313,7 +330,7 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
   }
 
   return (
-    <div className="workspace-page admission-universities-page relative min-h-screen overflow-x-clip px-3 py-4 sm:px-5 lg:px-7">
+    <div ref={pageRef} className="workspace-page admission-universities-page relative min-h-screen overflow-x-clip px-3 py-4 sm:px-5 lg:px-7">
       <div className="admission-universities-blur-field" aria-hidden="true">
         <span className="admission-blur-glow admission-blur-glow-left" />
         <span className="admission-blur-glow admission-blur-glow-right" />

@@ -1,0 +1,298 @@
+/* Compact learning workspace: pearl edges, silver depth, crimson actions.
+   Exam papers and answer controls retain their dedicated typography. */
+.app-shell {
+  --compact-ink: #202733;
+  --compact-muted: #5c6574;
+  --compact-red: #bd2039;
+  --compact-glass: linear-gradient(135deg, #ffffffb8, #eef1f68f 52%, #d7dde78f);
+  --compact-shadow: 0 8px 24px #2735490b, inset 0 1px 0 #fff;
+}
+.app-shell[data-material='silver-glass'] :is(.mr-glass, .mr-row, .mlab-card, .glass-surface, .dashboard-focus-strip, .dashboard-learning-card, .dashboard-stat-card, .dashboard-glass-card, .academic-glass-card, .lc-panel, .lc-portal-class-card, .admission-university-card, .account-profile-card, .learning-card, .articles-studio-card, .leaderboard-table-panel, .podcast-episode-card) {
+  border: 1px solid #ffffffde;
+  background: var(--compact-glass);
+  box-shadow: var(--compact-shadow);
+}
+.dashboard-focus-strip { grid-column: 1 / -1; display: flex; align-items: center; flex-wrap: wrap; gap: 12px 22px; padding: 12px 18px; border-radius: 18px; }
+.dashboard-focus-label { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 650; color: var(--compact-muted); }
+.dashboard-focus-label svg { color: var(--compact-red); }
+.dashboard-focus-scores { display: flex; flex: 1; flex-wrap: wrap; gap: 8px 24px; }
+.dashboard-focus-scores button { display: flex; align-items: center; gap: 8px; min-height: 44px; font-size: 12px; }
+.dashboard-focus-scores strong { font-size: 19px; font-variant-numeric: tabular-nums; }
+.dashboard-focus-scores button > svg { color: var(--compact-red); }
+.dashboard-focus-goal { color: var(--compact-muted); }
+.dashboard-focus-progress { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--compact-muted); }
+.dashboard-focus-progress progress { width: 72px; height: 4px; accent-color: var(--compact-red); }
+.app-shell .profai-dashboard .dashboard-entrance-grid { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1280px) {
+  .app-shell .profai-dashboard .dashboard-entrance-grid { grid-template-columns: minmax(0, 1fr) minmax(240px, .42fr); }
+}
+.ielts-skill-mobile { display: none; }
+.mr-title-mobile { display: none; }
+.my-results .mr-title .mr-title-desktop { background: none; color: var(--mr-ink); }
+.mobile-study-menu { display: none; }
+.mobile-tools-sheet { width: min(480px, calc(100% - 24px)); max-height: calc(100dvh - 24px); margin: auto; padding: 20px; overflow: auto; overscroll-behavior: contain; border: 1px solid #fff; border-radius: 24px; background: linear-gradient(140deg, #f6f8fcf5, #dce2ecf5); color: #202733; box-shadow: 0 24px 70px #20273340; }
+.mobile-tools-sheet::backdrop { background: #20273355; backdrop-filter: blur(6px); }
+html:has(.mobile-tools-sheet[open]) { overflow: hidden; }
+.mobile-tools-sheet[open] { animation: tools-sheet-enter 200ms ease-out; }
+.mobile-tools-sheet header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.mobile-tools-sheet h2 { font-size: 18px; font-weight: 750; letter-spacing: -.025em; }
+.mobile-tools-sheet nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.mobile-tools-sheet nav :is(a, button) { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 56px; padding: 10px 12px; border: 1px solid #fff; border-radius: 14px; background: #ffffff73; text-align: left; font-size: 12px; font-weight: 600; }
+.mobile-tools-sheet nav svg { flex: none; color: #b31d35; }
+.mobile-tools-sheet :focus-visible { outline: 2px solid #b31d35; outline-offset: 3px; }
+.mobile-sheet-handle { width: 36px; height: 4px; margin: 0 auto 16px; border-radius: 4px; background: #b5bdca; }
+.app-shell:has(.workspace-toolbar) .site-fullscreen-control { display: none; }
+.app-shell:has(.auth-access-page) .site-fullscreen-control { display: none; }
+.site-fullscreen-control > button { border-color: #fff; background: #edf0f5ed; color: #a91c34; box-shadow: var(--compact-shadow); }
+@keyframes tools-sheet-enter { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (max-width: 1023px) {
+  .mobile-study-menu { display: block; }
+  .app-shell .workspace-toolbar { position: relative; z-index: 40; min-height: 58px; padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 6px max(12px, env(safe-area-inset-left)); gap: 8px; }
+  .app-shell .workspace-toolbar-actions { gap: 5px; }
+  .app-shell .workspace-mobile-brand .brand-logo { --brand-logo-height: 28px !important; }
+  .app-shell .workspace-toolbar :is(.liquid-icon-button, .language-trigger) { display: inline-grid; place-items: center; min-width: 40px; width: 40px; min-height: 40px; height: 40px; padding: 0; border-radius: 13px; }
+  .app-shell .workspace-toolbar .mobile-study-menu > .liquid-icon-button { display: inline-grid; }
+  .app-shell .workspace-toolbar .liquid-language .language-trigger { grid-auto-flow: column; gap: 0; width: 40px; height: 40px; min-height: 40px; border-radius: 13px; }
+  .app-shell .workspace-toolbar .language-globe svg { display: block; width: 21px; height: 21px; }
+  .app-shell .workspace-toolbar-actions > a[aria-label], .app-shell .workspace-toolbar-actions > button:not(.workspace-fullscreen) { display: none; }
+  .app-shell .workspace-toolbar .billing-account-badge { display: none; }
+  .app-shell .workspace-toolbar .language-trigger .language-globe { display: grid; place-items: center; width: 30px; height: 30px; border: 0; box-shadow: none; background: transparent; }
+  .app-shell .liquid-mobile-nav { left: max(8px, env(safe-area-inset-left)); right: max(8px, env(safe-area-inset-right)); bottom: max(8px, env(safe-area-inset-bottom)); max-width: 510px; padding: 4px; border-radius: 21px; background: linear-gradient(130deg, #f7f9fced, #dce3eded); box-shadow: 0 8px 30px #26304021, inset 0 1px 0 #fff; }
+  .app-shell .liquid-mobile-nav a { min-height: 48px; gap: 3px; padding: 5px 2px; border-radius: 16px; font-size: 9px; font-weight: 550; }
+  .app-shell .liquid-mobile-nav a svg { width: 19px; height: 19px; }
+  .app-shell:has(.liquid-mobile-nav) .workspace-page { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+  .mobile-tools-sheet { width: min(540px, 100%); margin: auto auto 0; padding: 10px 16px max(20px, env(safe-area-inset-bottom)); border-radius: 26px 26px 0 0; }
+  .app-shell .site-fullscreen-control { bottom: max(16px, env(safe-area-inset-bottom)); right: max(12px, env(safe-area-inset-right)); }
+  .app-shell:has(.liquid-mobile-nav) .site-fullscreen-control { bottom: calc(76px + env(safe-area-inset-bottom)); }
+}
+
+@media (max-width: 1023px) {
+  /* Shared shell density applies to navigation pages, never exam answers. */
+  .app-shell .workspace-main > :is(.arena-route, .arena-route > div) { min-width: 0; }
+  .app-shell[data-material='silver-glass'] .workspace-page:not(.auth-access-page) { padding-top: 10px; padding-inline: max(12px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-right)); }
+  .app-shell[data-material='silver-glass'] :is(.glass-surface, .dashboard-glass-card, .dashboard-stat-card, .dashboard-learning-card, .mr-glass, .mlab-card, .account-profile-card, .academic-glass-card) { border-radius: 18px; }
+  .app-shell[data-material='silver-glass'] :is(.ui-page-hero, .premium-hero, .articles-studio-hero, .learning-hero, .leaderboard-hero, .lessons-hero, .my-vocabulary-hero, .lc-portal-hero, .sat-bank-hero) { min-height: 0; padding: 18px; border-radius: 20px; gap: 12px; }
+  .app-shell[data-material='silver-glass'] :is(.liquid-page-heading, .admission-home-heading) { margin: 4px 0 18px; }
+  .app-shell[data-material='silver-glass'] :is(.liquid-page-heading, .ui-page-hero, .premium-hero, .articles-studio-hero, .learning-hero, .leaderboard-heading, .lessons-hero, .my-vocabulary-hero, .lc-portal-hero, .sat-bank-hero, .admission-home-heading) h1 { font-size: clamp(24px, 6vw, 30px); line-height: 1.15; letter-spacing: -.04em; }
+  .app-shell[data-material='silver-glass'] :is(.liquid-page-heading, .articles-studio-hero, .learning-hero, .leaderboard-heading, .lc-portal-hero, .sat-bank-hero) p { font-size: 12px; line-height: 1.55; }
+  .app-shell :is(.learning-hero-visual, .articles-studio-hero-side, .my-vocabulary-hero-art, .sat-bank-hero-art) { display: none; }
+  .app-shell[data-material='silver-glass'] :is(.liquid-test-grid, .liquid-article-grid, .liquid-resource-grid, .academic-skills-grid) { gap: 10px; }
+  .app-shell[data-material='silver-glass'] :is(.liquid-test-card, .liquid-resource-card, .academic-glass-card) { padding: 16px; }
+  .app-shell[data-material='silver-glass'] :is(.liquid-test-card, .liquid-resource-card) h2 { font-size: 17px; }
+  .app-shell .academic-glass-art { max-height: 130px; min-height: 0; }
+  .app-shell .academic-glass-art .study-object { max-width: 90px; }
+  .app-shell .admission-home-hero { min-height: 0; padding: 18px; }
+  .app-shell .admission-home-hero-photo { opacity: .2; }
+  .app-shell .admission-home-hero-grid { gap: 12px; }
+  .app-shell .admission-home-metric { padding: 12px; }
+  .app-shell .account-profile-tabs { flex-wrap: wrap; overflow: visible; position: static; }
+  .app-shell .account-profile-tabs > button { flex: 1 1 auto; min-height: 44px; padding-inline: 10px; font-size: 12px; }
+  .app-shell :is(.ui-action, .liquid-button, .route-back-button) { min-height: 44px; }
+  .app-shell[data-material='silver-glass'] input:is([type='email'], [type='text'], [type='search'], [type='password']), .app-shell[data-material='silver-glass'] textarea, .app-shell[data-material='silver-glass'] select { font-size: max(16px, 1em); }
+
+  /* Four skills are visible together. Desktop illustrations stay on desktop. */
+  .app-shell .arena-hub-heading { padding: 8px 0 12px; text-align: left; }
+  .app-shell .arena-hub-heading > div, .app-shell .arena-hub-heading > p { display: none; }
+  .app-shell .arena-hub-heading h1 { margin: 0; font-size: 28px; line-height: 1.2; letter-spacing: -.05em; }
+  .app-shell .ielts-hub-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 4px; }
+  .app-shell .ielts-skill-card { min-height: 150px; padding: 16px; }
+  .app-shell .ielts-skill-content { display: none; }
+  .app-shell .ielts-skill-mobile { display: flex; flex-direction: column; height: 100%; text-align: left; }
+  .ielts-mobile-icon { display: grid; place-items: center; width: 36px; height: 36px; margin-bottom: 10px; border: 1px solid #fff; border-radius: 11px; background: #ffffff80; color: var(--compact-red); }
+  .ielts-skill-mobile h2 { font-size: 16px; font-weight: 750; line-height: 1.2; letter-spacing: -.025em; }
+  .ielts-skill-mobile small { margin-top: 5px; font-size: 10px; color: var(--compact-muted); line-height: 1.4; }
+  .ielts-mobile-action { display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-top: auto; padding-top: 14px; font-size: 11px; font-weight: 700; color: var(--compact-red); }
+  .app-shell .ielts-hub-overview { grid-column: 1 / -1; grid-row: 3; gap: 10px; }
+  .app-shell .ielts-hub-overview > article { padding: 16px; }
+  .app-shell .ielts-hub-overview h2 { font-size: 18px; }
+  .app-shell .ielts-hub-overview > article > div { margin-top: 12px; }
+  .app-shell .ielts-hub-overview > article:first-child > div:first-of-type { padding: 12px; border-radius: 14px; }
+  .app-shell .ielts-hub-overview > article:first-child > div:first-of-type > div:last-child { width: 72px; height: 72px; }
+  .app-shell .ielts-hub-extras { margin-top: 12px; gap: 10px; }
+  .app-shell .ielts-hub-extras > article { padding: 16px; gap: 12px; }
+  .app-shell .ielts-hub-extras h2 { font-size: 18px; }
+  .app-shell .ielts-hub-extras article > div > p { display: none; }
+  .app-shell .ielts-hub-extras > div > article { min-height: 90px; padding: 12px; }
+  .app-shell .ielts-hub-extras > div > article > svg { margin-bottom: 6px; }
+  .app-shell aside[aria-label='Unfinished IELTS tests'] { margin-bottom: 8px; gap: 6px; }
+  .app-shell aside[aria-label='Unfinished IELTS tests'] a { display: flex; align-items: center; min-height: 44px; max-width: 100%; padding: 6px 10px; font-size: 11px; }
+
+  /* No sideways skills carousel: each of the five tabs is always reachable. */
+  .app-shell #ielts-skill-tabs { top: 6px; padding: 4px; border-radius: 15px; background: #eef2f8ed; backdrop-filter: blur(16px); }
+  .app-shell #ielts-skill-tabs [role='tablist'] { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px; overflow: visible; }
+  .app-shell #ielts-skill-tabs [role='tab'] { flex-direction: column; justify-content: center; min-width: 0; min-height: 57px; gap: 5px; padding: 7px 1px; border-radius: 11px; text-align: center; }
+  .app-shell #ielts-skill-tabs [role='tab'] strong { font-size: clamp(8px, 2.3vw, 11px); font-weight: 650; white-space: nowrap; }
+  .app-shell #ielts-skill-tabs [role='tab'] small { display: none; }
+  .app-shell #ielts-skill-tabs [role='tab'] svg { width: 18px; height: 18px; }
+  .app-shell #ielts-test-panel { margin-top: 12px; }
+  .app-shell .ielts-catalog-panel { padding: 12px; border-radius: 18px; background: var(--compact-glass); }
+  .app-shell .ielts-catalog-header { gap: 10px; }
+  .app-shell .ielts-catalog-header > div:first-child > p { display: none; }
+  .app-shell .ielts-catalog-header h2 { font-size: 18px; }
+  .app-shell .ielts-catalog-filters { flex-wrap: nowrap; gap: 5px; margin-top: 12px; }
+  .app-shell .ielts-catalog-filters button { flex: 1; min-width: 0; min-height: 40px; padding: 6px; border-radius: 11px; font-size: 11px; }
+  .app-shell .ielts-catalog-grid { grid-template-columns: 1fr; gap: 8px; margin-top: 12px; }
+  .app-shell .ielts-catalog-card { min-height: 112px; padding: 14px; border-radius: 15px; background: var(--compact-glass); }
+  .app-shell .ielts-catalog-card > div:first-child > p { font-size: 9px; letter-spacing: .06em; }
+  .app-shell .ielts-catalog-card h3 { margin-top: 6px; font-size: 16px; line-height: 1.3; white-space: normal; }
+  .app-shell .ielts-catalog-card > p { display: none; }
+  .app-shell .ielts-catalog-card > div:last-child { padding-top: 10px; gap: 8px; }
+  .app-shell .ielts-catalog-card > div:last-child > div { gap: 5px 8px; font-size: 10px; }
+  .app-shell .ielts-catalog-card > div:last-child > span { font-size: 12px; }
+  .app-shell .ielts-catalog-card > div:last-child svg { width: 13px; height: 13px; }
+
+  /* SAT keeps the same information, presented as short action rows. */
+  .app-shell .sat-mock-link { flex-direction: row; align-items: center; gap: 12px; margin-bottom: 10px; padding: 16px; }
+  .app-shell .sat-mock-link > span:first-child { min-width: 0; }
+  .app-shell .sat-mock-link > span:first-child > span:first-child { display: none; }
+  .app-shell .sat-mock-link > span:first-child > span:nth-child(2) { margin: 0; font-size: 20px; line-height: 1.2; }
+  .app-shell .sat-mock-link > span:first-child > span:last-child { margin-top: 5px; font-size: 11px; line-height: 1.5; }
+  .app-shell .sat-mock-link > span:last-child { align-self: center; padding: 11px 12px; border-radius: 12px; font-size: 11px; white-space: nowrap; }
+  .app-shell .sat-practice-link { gap: 12px; margin-bottom: 10px; padding: 14px; border-radius: 18px; }
+  .app-shell .sat-practice-link > span { gap: 12px; min-width: 0; }
+  .app-shell .sat-practice-link strong { font-size: 16px; }
+  .app-shell .sat-practice-link small { font-size: 11px; line-height: 1.5; }
+  .app-shell .sat-practice-link > span > span:first-child { width: 38px; height: 38px; border-radius: 12px; }
+  .app-shell .sat-overview-grid { gap: 10px; }
+  .app-shell .sat-overview-aside { order: 3; gap: 10px; }
+  .app-shell .sat-overview-aside > article { padding: 16px; }
+  .app-shell .sat-overview-aside h2 { font-size: 20px; }
+  .app-shell .sat-overview-aside > article > div { margin-top: 12px; padding: 12px; }
+  .app-shell .sat-overview-aside > article:last-child :is(svg, div) { max-height: 150px; }
+  .app-shell .sat-target-card { min-height: 120px; padding: 16px; }
+  .app-shell .sat-target-card > div:last-child { width: 84px !important; height: 84px !important; }
+  .app-shell .sat-target-card p:first-child { font-size: 14px; }
+  .app-shell .sat-target-card p:nth-child(2) { margin-top: 4px; font-size: 32px; }
+  .app-shell .sat-metrics { min-height: 0; gap: 8px; }
+  .app-shell .sat-metrics article { padding: 12px; }
+  .app-shell .sat-metrics svg { margin-bottom: 8px; }
+  .app-shell .sat-metrics p { font-size: 11px; line-height: 1.4; }
+  .app-shell .sat-metrics p:last-child { margin-top: 6px; font-size: 22px; }
+
+  /* Dashboard prioritizes resuming work; the target is a single slim strip. */
+  .app-shell .profai-dashboard .dashboard-main-shell { display: flex; flex-direction: column; gap: 12px; padding: 0; }
+  .app-shell .dashboard-entrance-header { flex-wrap: nowrap; gap: 8px; padding: 4px 0 0; }
+  .app-shell .dashboard-entrance-header > div:first-child { flex: 1; min-width: 0; gap: 10px; }
+  .app-shell .dashboard-avatar-ring { width: 40px; height: 40px; padding: 2px; flex: none; }
+  .app-shell .dashboard-entrance-header h1 { font-size: 20px; line-height: 1.3; }
+  .app-shell .dashboard-entrance-header p { display: none; }
+  .app-shell .dashboard-entrance-header > div:last-child { gap: 4px; flex: none; }
+  .app-shell .dashboard-icon-button { width: 38px; height: 38px; min-height: 38px; }
+  .app-shell .dashboard-entrance-grid { gap: 12px; }
+  .app-shell .dashboard-focus-strip { padding: 8px 12px; gap: 0 8px; border-radius: 15px; }
+  .app-shell .dashboard-focus-label { width: 100%; font-size: 10px; }
+  .app-shell .dashboard-focus-scores { gap: 8px 20px; }
+  .app-shell .dashboard-focus-scores button { min-height: 36px; gap: 6px; font-size: 11px; }
+  .app-shell .dashboard-focus-scores strong { font-size: 17px; }
+  .app-shell .dashboard-focus-progress { display: none; }
+  .app-shell .dashboard-study-main { display: flex; flex-direction: column; gap: 12px; }
+  .app-shell .dashboard-study-main > * { margin: 0; }
+  .app-shell .dashboard-practice-links { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .app-shell .dashboard-practice-links > button { padding: 12px; gap: 8px; }
+  .app-shell .dashboard-practice-links > button > span:first-child { width: 32px; height: 32px; }
+  .app-shell .dashboard-practice-links > button > span:last-child > span:first-of-type { display: none; }
+  .app-shell .dashboard-practice-links > button > span:last-child > span:last-child { font-size: 10px; margin-top: 4px; }
+  .app-shell .dashboard-metrics { gap: 8px; }
+  .app-shell .dashboard-stat-card { min-height: 104px; padding: 12px; }
+  .app-shell .dashboard-stat-icon { width: 28px; height: 28px; border-radius: 9px; }
+  .app-shell .dashboard-stat-label { margin-top: 8px; min-height: 0; font-size: 11px; }
+  .app-shell .dashboard-stat-value { font-size: 22px; }
+  .app-shell .dashboard-stat-note { margin-top: 4px; font-size: 10px; }
+  .app-shell .dashboard-activity { padding: 14px; }
+  .app-shell .dashboard-activity > div:last-child { height: 160px; }
+  .app-shell .dashboard-activity h2 { font-size: 17px; }
+  .app-shell .dashboard-activity p:first-child { display: none; }
+  .app-shell .dashboard-entrance-learning { order: -1; margin-top: 0; padding: 14px; }
+  .app-shell .dashboard-entrance-header { order: -2; }
+  .app-shell .dashboard-entrance-learning > div:first-child { padding-inline: 0; }
+  .app-shell .dashboard-entrance-learning h2 { margin: 0; font-size: 17px; }
+  .app-shell .dashboard-entrance-learning > div:first-child p { display: none; }
+  .app-shell .dashboard-entrance-learning > div:last-child { grid-template-columns: 1fr; gap: 0; margin-top: 10px; }
+  .app-shell[data-material='silver-glass'] .profai-dashboard .dashboard-learning-card { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 1px 10px; align-items: center; min-height: 60px; padding: 10px 0; border: 0; border-bottom: 1px solid #8793a322; border-radius: 0; background: transparent; box-shadow: none; }
+  .app-shell[data-material='silver-glass'] .profai-dashboard .dashboard-learning-card:last-child { border-bottom: 0; }
+  .app-shell .dashboard-learning-card::after { display: none; }
+  .app-shell .dashboard-learning-card > div:first-child { display: contents; }
+  .app-shell .dashboard-learning-card > div:first-child > span:first-child { grid-row: 1 / 3; width: 32px; height: 32px; border-radius: 10px; }
+  .app-shell .dashboard-learning-card > div:first-child > span:last-child { grid-column: 3; grid-row: 1; font-size: 10px; }
+  .app-shell .dashboard-learning-card h3 { grid-column: 2; grid-row: 1; margin: 0; font-size: 13px; }
+  .app-shell .dashboard-learning-card p { grid-column: 2; grid-row: 2; margin: 0; font-size: 10px; }
+  .app-shell .dashboard-learning-card > [role='progressbar'] { display: none; }
+  .app-shell .dashboard-learning-card > span:last-child { grid-column: 3; grid-row: 2; margin: 0; font-size: 0; }
+  .app-shell .dashboard-learning-card > span:last-child svg { width: 16px; height: 16px; color: var(--compact-red); }
+  .app-shell .dashboard-insights { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  .app-shell .dashboard-insights > * { margin: 0; padding: 16px; }
+
+  /* Results: small summary, readable compact records, visible analysis action. */
+  .app-shell .my-results { background: transparent; }
+  .app-shell .my-results .mr-hero { gap: 12px; padding: 16px; }
+  .app-shell .my-results .mr-chip { padding: 0; border: 0; background: none; box-shadow: none; font-size: 11px; letter-spacing: 0; text-transform: none; }
+  .app-shell .my-results .mr-title { margin: 0; font-size: 22px; }
+  .app-shell .my-results .mr-title-mobile { display: inline; background: none; color: #202733; }
+  .app-shell .my-results .mr-chip, .app-shell .my-results .mr-title-desktop, .app-shell .my-results .mr-subtitle { display: none; }
+  .app-shell .my-results .mr-hero-actions { gap: 6px; margin-top: 12px; }
+  .app-shell .my-results .mr-hero-actions .mr-button { flex: 1; min-height: 40px; justify-content: center; gap: 5px; padding: 6px 9px; border-radius: 12px; font-size: 10px; }
+  .app-shell .my-results .mr-hero-actions .mr-button.ghost { display: none; }
+  .app-shell .my-results .mr-record { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .app-shell .my-results .mr-record > div { padding: 10px 8px; border-radius: 12px; }
+  .app-shell .my-results .mr-record .mr-record-total { grid-column: auto; }
+  .app-shell .my-results .mr-record > div:last-child { display: none; }
+  .app-shell .my-results .mr-record dt { font-size: 10px; line-height: 1.45; letter-spacing: 0; }
+  .app-shell .my-results .mr-record dd { margin-top: 5px; font-size: 25px; }
+  .app-shell .my-results .mr-record span { font-size: 10px; line-height: 1.45; }
+  .app-shell .my-results .mr-filters { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .app-shell .my-results .mr-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; padding: 10px; border-radius: 14px; }
+  .app-shell .my-results .mr-filter-icon { width: 26px; height: 26px; border-radius: 8px; }
+  .app-shell .my-results .mr-filter-icon svg { width: 14px; height: 14px; }
+  .app-shell .my-results .mr-filter-copy strong { font-size: 11px; }
+  .app-shell .my-results .mr-filter-copy small { display: none; }
+  .app-shell .my-results .mr-filter-meta { width: 100%; gap: 3px; padding-top: 5px; }
+  .app-shell .my-results .mr-filter-meta b { font-size: 18px; }
+  .app-shell .my-results .mr-filter-meta small { font-size: 9px; }
+  .app-shell .my-results .mr-list { padding: 12px; }
+  .app-shell .my-results .mr-list-head { gap: 10px; }
+  .app-shell .my-results .mr-list-head h2 { font-size: 18px; }
+  .app-shell .my-results .mr-search { flex-basis: 140px; min-height: 42px; padding-inline: 10px; }
+  .app-shell .my-results .mr-sort { min-height: 42px; font-size: 11px; padding-inline: 10px; }
+  .app-shell .my-results .mr-groups { gap: 16px; margin-top: 16px; }
+  .app-shell .my-results .mr-group-title { margin-bottom: 8px; font-size: 10px; letter-spacing: .04em; }
+  .app-shell .my-results .mr-row { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'main score' 'stats stats' 'seq analyze'; gap: 9px; padding: 12px 12px 12px 15px; border-radius: 15px; }
+  .app-shell .my-results .mr-mark { display: none; }
+  .app-shell .my-results .mr-row-kind { font-size: 9px; letter-spacing: .04em; }
+  .app-shell .my-results .mr-row-main h4 { overflow: visible; white-space: normal; font-size: 13px; line-height: 1.4; }
+  .app-shell .my-results .mr-row-meta { gap: 4px 8px; font-size: 10px; }
+  .app-shell .my-results .mr-row-meta svg { width: 12px; height: 12px; }
+  .app-shell .my-results .mr-score { min-width: 58px; padding: 8px; border-radius: 12px; }
+  .app-shell .my-results .mr-score b { font-size: 24px; }
+  .app-shell .my-results .mr-score small { font-size: 8px; letter-spacing: .02em; }
+  .app-shell .my-results .mr-stats { gap: 4px; }
+  .app-shell .my-results .mr-stats li { flex: 1; min-width: 42px; padding: 5px; border-radius: 8px; }
+  .app-shell .my-results .mr-stats small { font-size: 8px; letter-spacing: 0; }
+  .app-shell .my-results .mr-stats b { font-size: 12px; }
+  .app-shell .my-results .mr-seq { font-size: 10px; }
+  .app-shell .my-results .mr-analyze { min-height: 38px; padding: 7px 12px; border-radius: 11px; font-size: 12px; }
+  .app-shell .my-results .mr-analyze svg { width: 14px; height: 14px; }
+  .app-shell .mlab .mlab-hero { padding: 16px; }
+  .app-shell .mlab .mlab-hero-body { margin-top: 14px; gap: 12px; }
+  .app-shell .mlab .mlab-hero h1 { font-size: 25px; }
+  .app-shell .mlab .mlab-hero p { font-size: 12px; }
+  .app-shell .mlab .mlab-hero-mark { display: none; }
+  .app-shell .mlab .mlab-stats { gap: 6px; }
+  .app-shell .mlab .mlab-stat { padding: 12px; gap: 8px; }
+  .app-shell .mlab .mlab-stat-icon { display: none; }
+  .app-shell .mlab .mlab-stat-label { font-size: 9px; letter-spacing: .02em; }
+  .app-shell .mlab .mlab-stat-value { font-size: 22px; }
+  .app-shell .mlab .mlab-section { padding: 14px; }
+}
+@media (max-width: 360px) {
+  .mobile-tools-sheet nav { gap: 6px; }
+  .mobile-tools-sheet nav :is(a, button) { gap: 7px; padding: 10px; font-size: 11px; }
+  .app-shell .dashboard-entrance-header h1 { font-size: 18px; }
+  .app-shell .ielts-skill-card { padding: 13px; }
+  .app-shell .my-results .mr-filter { gap: 4px; padding: 8px; }
+  .app-shell .my-results .mr-filter-icon { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .mobile-tools-sheet[open] { animation: none; } }
+@media (forced-colors: active) {
+  .app-shell .dashboard-focus-strip, .mobile-tools-sheet, .mobile-tools-sheet nav :is(a, button) { border: 1px solid CanvasText; background: Canvas; color: CanvasText; }
+}

@@ -179,10 +179,10 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
           </div>
           <div className="sat-bank-run-tools">
             {math ? <>
-              <button type="button" className="sat-bank-run-reference" aria-label="Open Math reference sheet" title="Formula Sheet" onClick={() => setFormulasOpen(true)}><Sheet size={20} /><span>Formula Sheet</span></button>
+              <button type="button" className="sat-bank-run-reference" aria-label="Open Math reference sheet" aria-expanded={formulasOpen} aria-controls="sat-formula-sheet" title="Formula Sheet" onClick={() => { setFormulasOpen((value) => !value); setCalculatorOpen(false) }}><Sheet size={20} /><span>Formula Sheet</span></button>
               <button type="button" className="sat-bank-run-desmos" aria-expanded={calculatorOpen}
                 aria-label={calculatorOpen ? 'Close Desmos calculator' : 'Open Desmos calculator'}
-                onClick={() => setCalculatorOpen((value) => !value)}><Calculator size={20} /> <span>Desmos</span></button>
+                onClick={() => { setCalculatorOpen((value) => !value); setFormulasOpen(false) }}><Calculator size={20} /> <span>Desmos</span></button>
             </> : null}
             <button type="button" className="sat-bank-run-navigator-toggle" aria-label="Open question navigator" onClick={() => setNavigatorOpen(true)}><FileText size={24} /></button>
             {supported ? <button type="button" onClick={toggle} aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}>
@@ -194,6 +194,7 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
         <div className="sat-bank-run-divider" />
       </header>
       {error ? <p role="alert" className="sat-bank-run-error">{error}</p> : null}
+      <div className="sat-exam-workspace">
       <div ref={viewport} className={`sat-exam-viewport sat-bank-run-viewport ${calculatorOpen && calculatorDocked ? 'with-desmos' : ''}`}>
         <SATQuestionCanvas
           key={current.key}
@@ -213,6 +214,8 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
           onToggleFlag={() => update({ ...session, flagged: session.flagged.includes(current.key)
             ? session.flagged.filter((key) => key !== current.key) : [...session.flagged, current.key] })}
         />
+      </div>
+      <SATFormulaSheet open={formulasOpen && math} onClose={() => setFormulasOpen(false)} />
       </div>
       <footer ref={footer} className="sat-bank-run-footer">
         <div className="sat-bank-run-divider" />
@@ -272,7 +275,6 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
         </div>, document.body,
       ) : null}
       <DesmosDrawer open={math && calculatorOpen} preload={math} docked={calculatorDocked} onDockedChange={setCalculatorDocked} onClose={() => setCalculatorOpen(false)} workspace="question-bank" />
-      <SATFormulaSheet open={formulasOpen} onClose={() => setFormulasOpen(false)} />
     </main>
   )
 }

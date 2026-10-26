@@ -332,7 +332,6 @@ export default function SATMockRun() {
         target?.tagName === 'TEXTAREA' ||
         target?.tagName === 'SELECT' ||
         calculatorOpen ||
-        formulaSheetOpen ||
         notesOpen ||
         navigatorOpen ||
         exitConfirmOpen
@@ -371,7 +370,6 @@ export default function SATMockRun() {
   }, [
     attempt,
     calculatorOpen,
-    formulaSheetOpen,
     currentModule.questions.length,
     currentQuestion.id,
     currentQuestion.kind,
@@ -504,13 +502,16 @@ export default function SATMockRun() {
                 <button
                   type="button"
                   onClick={() => {
-                    setFormulaSheetOpen(true)
+                    setFormulaSheetOpen((value) => !value)
+                    setCalculatorOpen(false)
                     setToolsOpen(false)
                     setMoreOpen(false)
                   }}
                   aria-label="Open SAT formula sheet"
+                  aria-expanded={formulaSheetOpen}
+                  aria-controls="sat-formula-sheet"
                   title="Formula Sheet"
-                  className="flex h-12 items-center justify-center gap-2 rounded-xl bg-sky-50 px-3 font-serif text-sm font-bold text-sky-800 transition hover:bg-sky-100 sm:px-4"
+                  className={`flex h-12 items-center justify-center gap-2 rounded-xl px-3 font-serif text-sm font-bold transition sm:px-4 ${formulaSheetOpen ? 'bg-[#4053d7] text-white' : 'bg-sky-50 text-sky-800 hover:bg-sky-100'}`}
                 >
                   <Sheet className="h-5 w-5" /> <span className="hidden xl:inline">Formula Sheet</span>
                 </button>
@@ -518,6 +519,7 @@ export default function SATMockRun() {
                   type="button"
                   onClick={() => {
                     setCalculatorOpen((value) => !value)
+                    setFormulaSheetOpen(false)
                     setToolsOpen(false)
                     setMoreOpen(false)
                   }}
@@ -590,6 +592,7 @@ export default function SATMockRun() {
         <div className="h-[3px] bg-[repeating-linear-gradient(90deg,#ad3e5d_0_34px,transparent_34px_41px,#ead5c8_41px_75px,transparent_75px_82px,#21176b_82px_116px,transparent_116px_123px,#5e8c68_123px_157px,transparent_157px_164px)]" />
       </header>
 
+      <div className="sat-exam-workspace">
       <div ref={questionViewportRef} className={`sat-exam-viewport min-h-0 flex-1 overflow-y-auto overflow-x-hidden transition-[padding] duration-300 ${calculatorOpen && calculatorDocked ? 'lg:pr-[50vw]' : ''}`}>
         <div
           className="origin-top-left"
@@ -649,6 +652,8 @@ export default function SATMockRun() {
         />
         </div>
       </div>
+      <SATFormulaSheet open={formulaSheetOpen && currentModule.section === 'math'} onClose={() => setFormulaSheetOpen(false)} />
+      </div>
 
       <footer className="relative z-[70] shrink-0 bg-[#e7edf8]">
         <div className="h-[3px] bg-[repeating-linear-gradient(90deg,#ad3e5d_0_34px,transparent_34px_41px,#ead5c8_41px_75px,transparent_75px_82px,#21176b_82px_116px,transparent_116px_123px,#5e8c68_123px_157px,transparent_157px_164px)]" />
@@ -675,8 +680,6 @@ export default function SATMockRun() {
         onDockedChange={setCalculatorDocked}
         onClose={closeCalculator}
       />
-
-      <SATFormulaSheet open={formulaSheetOpen} onClose={() => setFormulaSheetOpen(false)} />
 
       <AnimatePresence>
         {directionsOpen ? (

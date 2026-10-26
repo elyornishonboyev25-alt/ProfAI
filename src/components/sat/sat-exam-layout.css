@@ -1,3 +1,19 @@
+.sat-exam-workspace {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.sat-exam-workspace > .sat-exam-viewport {
+  min-width: 0;
+}
+
+@media (max-width: 767px) {
+  .sat-exam-workspace { flex-direction: column; }
+}
+
 .sat-exam-viewport {
   overscroll-behavior: contain;
   scrollbar-gutter: stable;

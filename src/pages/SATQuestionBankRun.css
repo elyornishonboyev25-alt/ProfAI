@@ -24,6 +24,7 @@
 .sat-bank-run-tools .sat-bank-run-navigator-toggle { width: 48px; background: #f1f5f9; color: #475569; }
 .sat-bank-run-tools .sat-bank-run-reference { padding: 0 16px; background: #f0f9ff; color: #075985; }
 .sat-bank-run-tools .sat-bank-run-reference:hover { background: #e0f2fe; }
+.sat-bank-run-tools .sat-bank-run-reference[aria-expanded='true'] { background: #4053d7; color: #fff; }
 .sat-bank-run-tools .sat-bank-run-desmos { padding: 0 16px; background: #fef2f2; color: #b91c1c; }
 .sat-bank-run-tools .sat-bank-run-desmos:hover { background: #fee2e2; }
 .sat-bank-run-tools .sat-bank-run-desmos[aria-expanded='true'] { color: #fff; background: #dc2626; box-shadow: 0 8px 20px #dc262638; }

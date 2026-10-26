@@ -175,7 +175,7 @@ html:has(.mobile-tools-sheet[open]) { overflow: hidden; }
   .app-shell .sat-metrics p { font-size: 11px; line-height: 1.4; }
   .app-shell .sat-metrics p:last-child { margin-top: 6px; font-size: 22px; }
 
-  /* Dashboard prioritizes resuming work; the target is a single slim strip. */
+  /* Keep the main dashboard first at compact widths, followed by continue learning. */
   .app-shell .profai-dashboard .dashboard-main-shell { display: flex; flex-direction: column; gap: 12px; padding: 0; }
   .app-shell .dashboard-entrance-header { flex-wrap: nowrap; gap: 8px; padding: 4px 0 0; }
   .app-shell .dashboard-entrance-header > div:first-child { flex: 1; min-width: 0; gap: 10px; }
@@ -209,8 +209,7 @@ html:has(.mobile-tools-sheet[open]) { overflow: hidden; }
   .app-shell .dashboard-activity > div:last-child { height: 160px; }
   .app-shell .dashboard-activity h2 { font-size: 17px; }
   .app-shell .dashboard-activity p:first-child { display: none; }
-  .app-shell .dashboard-entrance-learning { order: -1; margin-top: 0; padding: 14px; }
-  .app-shell .dashboard-entrance-header { order: -2; }
+  .app-shell .dashboard-entrance-learning { margin-top: 0; padding: 14px; }
   .app-shell .dashboard-entrance-learning > div:first-child { padding-inline: 0; }
   .app-shell .dashboard-entrance-learning h2 { margin: 0; font-size: 17px; }
   .app-shell .dashboard-entrance-learning > div:first-child p { display: none; }

@@ -1,0 +1,39 @@
+.sat-catalog-header {
+  container: sat-catalog-header / inline-size;
+}
+
+.sat-catalog-header-layout,
+.sat-catalog-controls {
+  display: grid;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.sat-catalog-header-layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.sat-catalog-controls {
+  gap: .75rem;
+}
+
+@container sat-catalog-header (min-width: 36rem) {
+  .sat-catalog-header-layout {
+    grid-template-columns: minmax(0, 1fr) 15rem;
+  }
+}
+
+@container sat-catalog-header (min-width: 54rem) {
+  .sat-catalog-header-layout {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .sat-catalog-controls {
+    grid-template-columns: 15rem;
+  }
+
+  .sat-catalog-controls--with-progress {
+    grid-template-columns: 13rem 15rem;
+  }
+}

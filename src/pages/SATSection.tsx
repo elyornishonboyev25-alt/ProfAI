@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/authStore'
 import { useAccountDataRevision } from '@/hooks/useAccountDataRevision'
 import { getSATSectionTest, isSATSection, SAT_TEST_CATALOG, satAvailabilityNote } from '@/features/sat/catalog'
 import './mock-ielts.css'
+import './SATSection.css'
 import SATSectionTabs, { SAT_SECTION_TABS } from '@/components/sat/SATSectionTabs'
 
 const tabs = SAT_SECTION_TABS
@@ -53,40 +54,43 @@ export default function SATSection() {
 
         <div id="sat-test-panel" role="tabpanel" tabIndex={0} aria-labelledby={`sat-tab-${section}`} className="mt-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300">
           <section className="mock-ielts-glass relative isolate overflow-hidden p-4 sm:p-5 lg:p-6">
-            <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <button type="button" onClick={() => navigate('/sat')} className="route-back-button mb-5"><ArrowLeft className="h-4 w-4" /> SAT Prep</button>
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-red-600">Digital SAT</p>
-                <h1 className="mt-0.5 text-xl font-black tracking-tight text-slate-950">{isFullMock ? 'Full mock exams' : `${activeTab.label} tests`}</h1>
-                <p className="mt-1 text-xs font-semibold text-slate-500">{tests.length} available · {isFullMock ? 'Reading & Writing and Math together' : 'Practice one SAT section at a time'}</p>
-              </div>
-              <label className="relative block w-full sm:w-72">
-                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search test..." aria-label="Search SAT tests"
-                  className="mock-ielts-glass-search h-11 w-full rounded-full pl-10 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:ring-4 focus:ring-red-100" />
-              </label>
-            </div>
-
-            {inProgress?.attempt ? (
-              <section aria-labelledby="sat-in-process-heading" data-sat-in-process className="mock-ielts-glass-metric relative mt-5 flex flex-col gap-4 rounded-[1.75rem] p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-                <div className="min-w-0 flex-1">
-                  <h2 id="sat-in-process-heading" className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[11px] font-black text-amber-800">
-                    <Clock3 className="h-3.5 w-3.5" aria-hidden="true" /><UiText text="In process" />
-                  </h2>
-                  <h3 className="mt-3 text-xl font-black tracking-tight text-slate-950">Full Mock {inProgress.test.mockId}</h3>
-                  <p className="mt-1 text-sm font-medium text-slate-500">{inProgress.test.badge}</p>
-                  <div className="mt-3 max-w-md">
-                    <p className="text-xs font-semibold text-slate-600"><UiText text="{{answered}} of {{total}} questions answered" values={{ answered: answeredInProgress, total: inProgress.test.questionCount }} /></p>
-                    <div role="progressbar" aria-label="Saved progress" aria-valuemin={0} aria-valuemax={inProgress.test.questionCount} aria-valuenow={answeredInProgress} className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200">
-                      <div className="h-full rounded-full bg-gradient-to-r from-red-700 to-red-400" style={{ width: `${Math.min(100, (answeredInProgress / Math.max(1, inProgress.test.questionCount)) * 100)}%` }} />
-                    </div>
-                  </div>
+            <div className="sat-catalog-header relative">
+              <div className="sat-catalog-header-layout">
+                <div>
+                  <button type="button" onClick={() => navigate('/sat')} className="route-back-button mb-5"><ArrowLeft className="h-4 w-4" /> SAT Prep</button>
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-red-600">Digital SAT</p>
+                  <h1 className="mt-0.5 text-xl font-black tracking-tight text-slate-950">{isFullMock ? 'Full mock exams' : `${activeTab.label} tests`}</h1>
+                  <p className="mt-1 text-xs font-semibold text-slate-500">{tests.length} available · {isFullMock ? 'Reading & Writing and Math together' : 'Practice one SAT section at a time'}</p>
                 </div>
-                <button type="button" onClick={() => navigate(`/sat/mock/${inProgress.test.mockId}/run`)} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-red-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-red-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-200">
-                  <UiText text="Continue test" /><ArrowRight className="h-4 w-4" aria-hidden="true" />
-                </button>
-              </section>
-            ) : null}
+                <div className={`sat-catalog-controls${inProgress?.attempt ? ' sat-catalog-controls--with-progress' : ''}`}>
+                  {inProgress?.attempt ? (
+                    <section aria-labelledby="sat-in-process-heading" data-sat-in-process className="mock-ielts-glass-metric flex min-w-0 items-center gap-3 rounded-2xl px-3 py-2.5">
+                      <div className="min-w-0 flex-1">
+                        <h2 id="sat-in-process-heading" className="flex items-center gap-1 text-[10px] font-black text-amber-700">
+                          <Clock3 className="h-3 w-3" aria-hidden="true" /><UiText text="In process" />
+                        </h2>
+                        <div className="mt-1 flex items-center justify-between gap-2">
+                          <h3 className="truncate text-xs font-black text-slate-950" title={inProgress.test.badge}>Full Mock {inProgress.test.mockId}</h3>
+                          <span aria-hidden="true" className="shrink-0 text-[10px] font-bold text-slate-500">{answeredInProgress}/{inProgress.test.questionCount}</span>
+                        </div>
+                        <p className="sr-only"><UiText text="{{answered}} of {{total}} questions answered" values={{ answered: answeredInProgress, total: inProgress.test.questionCount }} /></p>
+                        <div role="progressbar" aria-label="Saved progress" aria-valuemin={0} aria-valuemax={inProgress.test.questionCount} aria-valuenow={answeredInProgress} className="mt-1.5 h-1 overflow-hidden rounded-full bg-slate-200">
+                          <div className="h-full rounded-full bg-gradient-to-r from-red-700 to-red-400" style={{ width: `${Math.min(100, (answeredInProgress / Math.max(1, inProgress.test.questionCount)) * 100)}%` }} />
+                        </div>
+                      </div>
+                      <button type="button" onClick={() => navigate(`/sat/mock/${inProgress.test.mockId}/run`)} className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-600 text-white shadow-sm transition hover:bg-red-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-200">
+                        <span className="sr-only"><UiText text="Continue test" /></span><ArrowRight className="h-4 w-4" aria-hidden="true" />
+                      </button>
+                    </section>
+                  ) : null}
+                  <label className="relative block w-full">
+                    <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search test..." aria-label="Search SAT tests"
+                      className="mock-ielts-glass-search h-11 w-full rounded-full pl-10 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:ring-4 focus:ring-red-100" />
+                  </label>
+                </div>
+              </div>
+            </div>
 
             {visibleTests.length === 0 ? (
               <div className="relative mt-5 rounded-[1.75rem] border border-dashed border-blue-200 bg-white/64 px-4 py-12 text-center text-sm font-semibold text-slate-500">No tests found.</div>

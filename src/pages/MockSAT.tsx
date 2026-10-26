@@ -49,10 +49,10 @@ const modeCards = [
     eyebrow: 'True test simulation',
     title: 'Exam Mode',
     description:
-      'Official module timing in fullscreen or windowed mode. Leaving ends the attempt and discards your answers.',
+      'Official module timing in fullscreen or windowed mode. Save and exit to resume later with your answers and remaining time.',
     icon: ShieldCheck,
     color: 'red',
-    points: ['Optional fullscreen', 'Strict module timer', 'Answers discarded on exit'],
+    points: ['Optional fullscreen', 'Strict module timer', 'Save and resume anytime'],
   },
 ] as const
 

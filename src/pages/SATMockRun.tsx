@@ -21,6 +21,7 @@ import {
   Lightbulb,
   ListChecks,
   NotebookPen,
+  Save,
   ShieldAlert,
   Sheet,
   Sparkles,
@@ -49,7 +50,6 @@ import {
 } from '@/features/sat/practiceTest4'
 import {
   clearSATAttempt,
-  deleteSATAttemptHistoryEntry,
   loadSATAttempt,
   saveSATAttempt,
   saveSATAttemptToHistory,
@@ -196,48 +196,25 @@ export default function SATMockRun() {
     saveSATAttemptToHistory(paused, 'exit')
   }, [modules])
 
+  const saveAndExit = useCallback(() => {
+    pauseAndSaveAttempt()
+    setExitConfirmOpen(false)
+    if (fullscreenElement()) void exit()
+    navigate(backPath)
+  }, [backPath, exit, navigate, pauseAndSaveAttempt])
+
   const exitTest = useCallback(() => {
     if (attemptRef.current?.mode === 'exam' && attemptRef.current.status === 'active') {
       setMoreOpen(false)
       setExitConfirmOpen(true)
       return
     }
-    pauseAndSaveAttempt()
-    if (fullscreenElement()) void exit()
-    navigate(backPath)
-  }, [backPath, exit, navigate, pauseAndSaveAttempt])
+    saveAndExit()
+  }, [saveAndExit])
 
   const continueExam = useCallback(() => {
     setExitConfirmOpen(false)
   }, [])
-
-  const leaveExam = useCallback(() => {
-    const current = attemptRef.current
-    if (!current || current.status !== 'active' || current.mode !== 'exam') return
-    const ended: SATAttempt = {
-      ...finishModule(current, modules),
-      status: 'terminated',
-      terminatedAt: Date.now(),
-      updatedAt: Date.now(),
-      terminationReason: 'User confirmed leaving Exam Mode and discarded answers.',
-      answers: {},
-      notes: {},
-      highlights: {},
-      flagged: [],
-      currentQuestionIndex: 0,
-    }
-    // Persist before navigation so page-exit handlers cannot save an active attempt.
-    attemptRef.current = ended
-    clearSATAttempt(test.id)
-    deleteSATAttemptHistoryEntry(current.attemptId)
-    saveSATAttempt(ended)
-    accountStorageFor().removeItem(uiKey)
-    setCheckedQuestions([])
-    setAttempt(ended)
-    setExitConfirmOpen(false)
-    if (fullscreenElement()) void exit()
-    navigate(backPath)
-  }, [backPath, exit, modules, navigate, test.id, uiKey])
 
   const openNotes = useCallback(() => {
     setNotesOpen(true)
@@ -606,7 +583,7 @@ export default function SATMockRun() {
               {supported && <button type="button" onClick={toggle} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black hover:bg-slate-100">
                 <ZoomIn className="h-4 w-4" /> {isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
               </button>}
-              <button type="button" onClick={exitTest} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black text-red-700 hover:bg-red-50"><X className="h-4 w-4" /> {attempt.mode === 'exam' ? 'Exit test' : 'Exit & Save'}</button>
+              <button type="button" onClick={exitTest} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black text-[#4053d7] hover:bg-indigo-50"><Save className="h-4 w-4" /> <UiText text="Save and exit" /></button>
             </div>
           ) : null}
         </div>
@@ -916,13 +893,10 @@ export default function SATMockRun() {
               aria-describedby="sat-exit-description"
               className="w-full max-w-lg text-center"
             >
-              <ShieldAlert className="mx-auto h-12 w-12 text-red-400" />
-              <h1 id="sat-exit-title" className="mt-3 text-3xl font-black"><UiText text="Leave Exam Mode?" /></h1>
+              <Save className="mx-auto h-12 w-12 text-indigo-300" />
+              <h1 id="sat-exit-title" className="mt-3 text-3xl font-black"><UiText text="Save and exit?" /></h1>
               <p id="sat-exit-description" className="mx-auto mt-3 max-w-md text-sm font-medium leading-6 text-white/60">
-                <UiText text="Your test timer is still running. Continue the test, or leave and discard your answers." />
-              </p>
-              <p className="mt-4 text-sm font-bold text-red-300">
-                <UiText text="If you leave, your answers will be deleted and this attempt cannot be resumed." />
+                <UiText text="Your answers and remaining time will be saved. You can resume this test later." />
               </p>
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
                 <button
@@ -934,10 +908,10 @@ export default function SATMockRun() {
                 </button>
                 <button
                   type="button"
-                  onClick={leaveExam}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-red-400/40 bg-red-500/15 px-6 py-3.5 text-sm font-black text-red-200"
+                  onClick={saveAndExit}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#4053d7] px-6 py-3.5 text-sm font-black text-white shadow-xl"
                 >
-                  <X className="h-4 w-4" /> <UiText text="Leave and end attempt" />
+                  <Save className="h-4 w-4" /> <UiText text="Save and exit" />
                 </button>
               </div>
             </motion.section>

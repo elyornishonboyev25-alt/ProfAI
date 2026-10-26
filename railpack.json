@@ -1,0 +1,30 @@
+{
+  "$schema": "https://schema.railpack.com",
+  "deploy": {
+    "inputs": [
+      {
+        "step": "packages:mise",
+        "include": [
+          "/mise/shims",
+          "/mise/installs",
+          "/usr/local/bin/mise",
+          "/etc/mise/config.toml",
+          "/root/.local/state/mise"
+        ]
+      },
+      { "step": "build", "include": ["/app/dist/audio"] },
+      { "step": "build", "include": ["/app/dist/media"] },
+      { "step": "build", "include": ["/app/dist/sat"] },
+      {
+        "step": "build",
+        "include": [
+          "/app/dist",
+          "/app/package.json",
+          "/app/scripts/serve-web.mjs",
+          "/app/shared/retiredPages.mjs"
+        ],
+        "exclude": ["/app/dist/audio", "/app/dist/media", "/app/dist/sat"]
+      }
+    ]
+  }
+}

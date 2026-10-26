@@ -35,8 +35,8 @@ jobs:
       - name: Build frontend
         run: npm run build
 
-      - name: Check release build validation gate
-        run: npm run test:release-build
+      - name: Check release build validation gate and isolated web runtime
+        run: npm run test:release-build && node --test scripts/tests/web-deploy.test.mjs
 
   backend:
     runs-on: ubuntu-latest

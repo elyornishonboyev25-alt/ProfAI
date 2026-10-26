@@ -1,10 +1,9 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import { createHash } from 'node:crypto'
-import { createRequire } from 'node:module'
+import { JSDOM } from 'jsdom'
 import { build } from 'esbuild'
 
-const { JSDOM } = createRequire(new URL('../backend/package.json', import.meta.url))('jsdom')
 const papers = JSON.parse(fs.readFileSync('src/data/telegramIeltsPapers.json', 'utf8'))
 const evidence = JSON.parse(fs.readFileSync('scripts/fixtures/telegram-ielts-integrity.json', 'utf8'))
 const bundled = await build({ stdin: { contents: `

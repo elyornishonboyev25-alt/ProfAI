@@ -246,7 +246,59 @@ export default function Dashboard() {
           </div>
         </header>
 
-        <section className="dashboard-entrance-grid grid gap-4 xl:grid-cols-[minmax(0,1fr)_18rem]">
+        <section className="dashboard-entrance-grid grid gap-4">
+          <article className="dashboard-target-card dashboard-card-sheen">
+            <span className="dashboard-target-ribbon" aria-hidden="true" />
+            <span className="dashboard-target-orb" aria-hidden="true" />
+            <div className="relative z-10">
+              <p className="dashboard-target-heading text-base font-bold"> <UiText text={"Your target"} /> </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {examTargets.length ? examTargets.map((exam) => (
+                  <span key={exam.label} className="rounded-full border border-white/25 bg-white/15 px-3 py-1 text-sm font-black shadow-inner">
+                    {exam.label} <span className="text-white/75">{exam.target}</span>
+                  </span>
+                )) : <span className="text-sm text-white/80">IELTS · SAT</span>}
+              </div>
+            </div>
+
+            <div className="dashboard-progress-orbit">
+              <svg className="absolute inset-0 h-full w-full -rotate-90" viewBox="0 0 100 100" aria-hidden="true">
+                <circle cx="50" cy="50" r="41" fill="none" stroke="rgba(255,255,255,.2)" strokeWidth="8" />
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="41"
+                  fill="none"
+                  stroke="#fff"
+                  strokeLinecap="round"
+                  strokeWidth="8"
+                  strokeDasharray={`${2 * Math.PI * 41}`}
+                  strokeDashoffset={2 * Math.PI * 41 * (1 - targetProgress / 100)}
+                />
+              </svg>
+              <div className="relative text-center">
+                <p className="text-4xl font-black tracking-[-0.05em]">{hasCurrentScore ? `${targetProgress}%` : '—'}</p>
+                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-white/80"> <UiText text={hasCurrentScore ? 'toward target' : 'No score yet'} /> </p>
+              </div>
+            </div>
+
+            <div className={`relative z-10 mt-5 grid gap-2 ${examTargets.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+              {examTargets.map((exam) => (
+                <div key={exam.label} className="rounded-xl border border-white/15 bg-white/10 px-3 py-2">
+                  <span className="block text-[9px] font-black uppercase tracking-wider text-white/65">{exam.label} current</span>
+                  <strong className="mt-0.5 block text-base">{exam.current || 'Not set'}</strong>
+                </div>
+              ))}
+            </div>
+            {examTargets.length > 0 && <button
+              type="button"
+              onClick={() => navigate(examTargets[0].path)}
+              className="dashboard-target-cta relative z-10 mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-black text-red-950 shadow-lg transition hover:-translate-y-0.5"
+            >
+               <UiText text="Continue preparing" /> <ArrowRight className="h-3.5 w-3.5" />
+            </button>}
+          </article>
+
           <article className="dashboard-focus-strip">
             <div className="dashboard-focus-label"><Target className="h-4 w-4" /><UiText text="Your target" /></div>
             <div className="dashboard-focus-scores">

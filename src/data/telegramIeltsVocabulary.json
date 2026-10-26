@@ -3738,5 +3738,1110 @@
         ]
       }
     ]
+  },
+  {
+    "skill": "speaking",
+    "tests": [
+      {
+        "id": "speaking_full_test_31",
+        "title": "Speaking Full Test 31",
+        "sourceTestId": "speaking-full-31",
+        "sections": [
+          {
+            "id": "speaking_full_test_31_part_1",
+            "title": "Part 1",
+            "topic": "Work, singing and organisation",
+            "entries": [
+              {
+                "term": "emotional intelligence",
+                "example": "Adaptability and the ability to keep learning will be crucial, alongside distinctly human strengths like creativity, communication and emotional intelligence — precisely the things machines find hardest to replicate.",
+                "sourceExcerpt": "Do you work or study? What do you like most? Does your major will be benficial in the future? Did you sing a lot when you were a child? Do you also sing now? Will you take course for singing in near future? Do you usually keep your study or workplace organized?",
+                "sourceSectionId": "tg-s31-part1",
+                "sourceTitle": "Work, singing and organisation",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "remote work",
+                "example": "It’s automating routine tasks, enabling remote work, and demanding new digital skills.",
+                "sourceExcerpt": "Do you work or study? What do you like most? Does your major will be benficial in the future? Did you sing a lot when you were a child? Do you also sing now? Will you take course for singing in near future? Do you usually keep your study or workplace organized?",
+                "sourceSectionId": "tg-s31-part1",
+                "sourceTitle": "Work, singing and organisation",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "communication",
+                "example": "Adaptability and the ability to keep learning will be crucial, alongside distinctly human strengths like creativity, communication and emotional intelligence — precisely the things machines find hardest to replicate.",
+                "sourceExcerpt": "Do you work or study? What do you like most? Does your major will be benficial in the future? Did you sing a lot when you were a child? Do you also sing now? Will you take course for singing in near future? Do you usually keep your study or workplace organized?",
+                "sourceSectionId": "tg-s31-part1",
+                "sourceTitle": "Work, singing and organisation",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "adaptability",
+                "example": "Adaptability and the ability to keep learning will be crucial, alongside distinctly human strengths like creativity, communication and emotional intelligence — precisely …",
+                "sourceExcerpt": "Do you work or study? What do you like most? Does your major will be benficial in the future? Did you sing a lot when you were a child? Do you also sing now? Will you take course for singing in near future? Do you usually keep your study or workplace organized?",
+                "sourceSectionId": "tg-s31-part1",
+                "sourceTitle": "Work, singing and organisation",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "unemployment",
+                "example": "Will automation cause widespread unemployment?",
+                "sourceExcerpt": "Do you work or study? What do you like most? Does your major will be benficial in the future? Did you sing a lot when you were a child? Do you also sing now? Will you take course for singing in near future? Do you usually keep your study or workplace organized?",
+                "sourceSectionId": "tg-s31-part1",
+                "sourceTitle": "Work, singing and organisation",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "flexibility",
+                "example": "For many it’s been positive — it saves commuting time and offers flexibility and autonomy.",
+                "sourceExcerpt": "Do you work or study? What do you like most? Does your major will be benficial in the future? Did you sing a lot when you were a child? Do you also sing now? Will you take course for singing in near future? Do you usually keep your study or workplace organized?",
+                "sourceSectionId": "tg-s31-part1",
+                "sourceTitle": "Work, singing and organisation",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "widespread",
+                "example": "Will automation cause widespread unemployment?",
+                "sourceExcerpt": "Do you work or study? What do you like most? Does your major will be benficial in the future? Did you sing a lot when you were a child? Do you also sing now? Will you take course for singing in near future? Do you usually keep your study or workplace organized?",
+                "sourceSectionId": "tg-s31-part1",
+                "sourceTitle": "Work, singing and organisation",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "creativity",
+                "example": "Adaptability and the ability to keep learning will be crucial, alongside distinctly human strengths like creativity, communication and emotional intelligence — precisely the things machines find hardest to replicate.",
+                "sourceExcerpt": "Do you work or study? What do you like most? Does your major will be benficial in the future? Did you sing a lot when you were a child? Do you also sing now? Will you take course for singing in near future? Do you usually keep your study or workplace organized?",
+                "sourceSectionId": "tg-s31-part1",
+                "sourceTitle": "Work, singing and organisation",
+                "sourceKind": "topic"
+              }
+            ]
+          },
+          {
+            "id": "speaking_full_test_31_part_2",
+            "title": "Part 2",
+            "topic": "Describe a picture or photograph in your family.",
+            "entries": [
+              {
+                "term": "breathtaking",
+                "example": "what it represents: the effort of that climb, and the fact that I pushed through tiredness to witness something genuinely breathtaking.",
+                "sourceExcerpt": "Describe a picture or photograph in your family. What is in the photo? Where is this photo in your home? How was this picture taken? And explain why this photo is special to you.",
+                "sourceSectionId": "tg-s31-part2",
+                "sourceTitle": "Describe a picture or photograph in your family.",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "composition",
+                "example": "First, technically it just came out beautifully — the colours and the composition worked perfectly by luck.",
+                "sourceExcerpt": "Describe a picture or photograph in your family. What is in the photo? Where is this photo in your home? How was this picture taken? And explain why this photo is special to you.",
+                "sourceSectionId": "tg-s31-part2",
+                "sourceTitle": "Describe a picture or photograph in your family.",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "distinctive",
+                "example": "The foreground and silhouettes gave the composition a distinctive atmosphere.",
+                "sourceExcerpt": "Describe a picture or photograph in your family. What is in the photo? Where is this photo in your home? How was this picture taken? And explain why this photo is special to you.",
+                "sourceSectionId": "tg-s31-part2",
+                "sourceTitle": "Describe a picture or photograph in your family.",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "photography",
+                "example": "Describe a photograph you are proud of what is in the photo when and where you took it why you took it and explain why you are proud of it How has photography changed since smartphones became common?",
+                "sourceExcerpt": "Describe a picture or photograph in your family. What is in the photo? Where is this photo in your home? How was this picture taken? And explain why this photo is special to you.",
+                "sourceSectionId": "tg-s31-part2",
+                "sourceTitle": "Describe a picture or photograph in your family.",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "silhouettes",
+                "example": "It shows the first light spilling over a sea of clouds below the peak, with a couple of tiny silhouettes of my friends in the foreground.",
+                "sourceExcerpt": "Describe a picture or photograph in your family. What is in the photo? Where is this photo in your home? How was this picture taken? And explain why this photo is special to you.",
+                "sourceSectionId": "tg-s31-part2",
+                "sourceTitle": "Describe a picture or photograph in your family.",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "atmosphere",
+                "example": "The foreground and silhouettes gave the composition a distinctive atmosphere.",
+                "sourceExcerpt": "Describe a picture or photograph in your family. What is in the photo? Where is this photo in your home? How was this picture taken? And explain why this photo is special to you.",
+                "sourceSectionId": "tg-s31-part2",
+                "sourceTitle": "Describe a picture or photograph in your family.",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "foreground",
+                "example": "It shows the first light spilling over a sea of clouds below the peak, with a couple of tiny silhouettes of my friends in the foreground.",
+                "sourceExcerpt": "Describe a picture or photograph in your family. What is in the photo? Where is this photo in your home? How was this picture taken? And explain why this photo is special to you.",
+                "sourceSectionId": "tg-s31-part2",
+                "sourceTitle": "Describe a picture or photograph in your family.",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "exhausting",
+                "example": "The photograph I’d like to talk about is one I took at sunrise from the top of a mountain after an exhausting overnight hike.",
+                "sourceExcerpt": "Describe a picture or photograph in your family. What is in the photo? Where is this photo in your home? How was this picture taken? And explain why this photo is special to you.",
+                "sourceSectionId": "tg-s31-part2",
+                "sourceTitle": "Describe a picture or photograph in your family.",
+                "sourceKind": "topic"
+              }
+            ]
+          },
+          {
+            "id": "speaking_full_test_31_part_3",
+            "title": "Part 3",
+            "topic": "Family photographs and memories",
+            "entries": [
+              {
+                "term": "photography",
+                "example": "Photography helps me treasure memories, although I remain camera-shy when someone else takes the picture.",
+                "sourceExcerpt": "How important is it for families to preserve and share photographs? In what ways do family photographs contribute to the emotional bond within a family? Can you share an instance where a family photograph played a significant role in your life or the life of someone you know? How have advancements in technology affected the way families document and share their memories through photographs? Do you think there are any drawbacks to relying heavily on photographs to preserve family memories? How would you describe an image to a friend?",
+                "sourceSectionId": "tg-s31-part3",
+                "sourceTitle": "Family photographs and memories",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "photographs",
+                "example": "Photographs 📷 Do you like taking photos?",
+                "sourceExcerpt": "How important is it for families to preserve and share photographs? In what ways do family photographs contribute to the emotional bond within a family? Can you share an instance where a family photograph played a significant role in your life or the life of someone you know? How have advancements in technology affected the way families document and share their memories through photographs? Do you think there are any drawbacks to relying heavily on photographs to preserve family memories? How would you describe an image to a friend?",
+                "sourceSectionId": "tg-s31-part3",
+                "sourceTitle": "Family photographs and memories",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "reflections",
+                "example": "I enjoy capturing memorable landscapes and reflections.",
+                "sourceExcerpt": "How important is it for families to preserve and share photographs? In what ways do family photographs contribute to the emotional bond within a family? Can you share an instance where a family photograph played a significant role in your life or the life of someone you know? How have advancements in technology affected the way families document and share their memories through photographs? Do you think there are any drawbacks to relying heavily on photographs to preserve family memories? How would you describe an image to a friend?",
+                "sourceSectionId": "tg-s31-part3",
+                "sourceTitle": "Family photographs and memories",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "camera-shy",
+                "example": "I’m a little camera-shy, so I’m much happier capturing the scene than being the subject of it.",
+                "sourceExcerpt": "How important is it for families to preserve and share photographs? In what ways do family photographs contribute to the emotional bond within a family? Can you share an instance where a family photograph played a significant role in your life or the life of someone you know? How have advancements in technology affected the way families document and share their memories through photographs? Do you think there are any drawbacks to relying heavily on photographs to preserve family memories? How would you describe an image to a friend?",
+                "sourceSectionId": "tg-s31-part3",
+                "sourceTitle": "Family photographs and memories",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "landscapes",
+                "example": "Mostly landscapes when I travel, and the people I’m with.",
+                "sourceExcerpt": "How important is it for families to preserve and share photographs? In what ways do family photographs contribute to the emotional bond within a family? Can you share an instance where a family photograph played a significant role in your life or the life of someone you know? How have advancements in technology affected the way families document and share their memories through photographs? Do you think there are any drawbacks to relying heavily on photographs to preserve family memories? How would you describe an image to a friend?",
+                "sourceSectionId": "tg-s31-part3",
+                "sourceTitle": "Family photographs and memories",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "capturing",
+                "example": "I’m a little camera-shy, so I’m much happier capturing the scene than being the subject of it.",
+                "sourceExcerpt": "How important is it for families to preserve and share photographs? In what ways do family photographs contribute to the emotional bond within a family? Can you share an instance where a family photograph played a significant role in your life or the life of someone you know? How have advancements in technology affected the way families document and share their memories through photographs? Do you think there are any drawbacks to relying heavily on photographs to preserve family memories? How would you describe an image to a friend?",
+                "sourceSectionId": "tg-s31-part3",
+                "sourceTitle": "Family photographs and memories",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "memorable",
+                "example": "I enjoy capturing memorable landscapes and reflections.",
+                "sourceExcerpt": "How important is it for families to preserve and share photographs? In what ways do family photographs contribute to the emotional bond within a family? Can you share an instance where a family photograph played a significant role in your life or the life of someone you know? How have advancements in technology affected the way families document and share their memories through photographs? Do you think there are any drawbacks to relying heavily on photographs to preserve family memories? How would you describe an image to a friend?",
+                "sourceSectionId": "tg-s31-part3",
+                "sourceTitle": "Family photographs and memories",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "memories",
+                "example": "Photography helps me treasure memories, although I remain camera-shy when someone else takes the picture.",
+                "sourceExcerpt": "How important is it for families to preserve and share photographs? In what ways do family photographs contribute to the emotional bond within a family? Can you share an instance where a family photograph played a significant role in your life or the life of someone you know? How have advancements in technology affected the way families document and share their memories through photographs? Do you think there are any drawbacks to relying heavily on photographs to preserve family memories? How would you describe an image to a friend?",
+                "sourceSectionId": "tg-s31-part3",
+                "sourceTitle": "Family photographs and memories",
+                "sourceKind": "topic"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "speaking_full_test_32",
+        "title": "Speaking Full Test 32",
+        "sourceTestId": "speaking-full-32",
+        "sections": [
+          {
+            "id": "speaking_full_test_32_part_1",
+            "title": "Part 1",
+            "topic": "Studies, shopping and music",
+            "entries": [
+              {
+                "term": "overconsumption",
+                "example": "Comparing products helps me avoid overconsumption and choose a sustainable alternative.",
+                "sourceExcerpt": "What subjects are you studying? What do you like about your studies? Do you prefer shopping online or offline? Did you sing as a child? Do you listen to music while doing other activities? Would you like to take singing classes in the future?",
+                "sourceSectionId": "tg-s32-part1",
+                "sourceTitle": "Studies, shopping and music",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "environmental",
+                "example": "I’ve become a lot more conscious about buying less but better quality, partly for environmental reasons and partly because it just makes more financial sense in the long run.",
+                "sourceExcerpt": "What subjects are you studying? What do you like about your studies? Do you prefer shopping online or offline? Did you sing as a child? Do you listen to music while doing other activities? Would you like to take singing classes in the future?",
+                "sourceSectionId": "tg-s32-part1",
+                "sourceTitle": "Studies, shopping and music",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "affordability",
+                "example": "I consider affordability and quality before an impulse purchase.",
+                "sourceExcerpt": "What subjects are you studying? What do you like about your studies? Do you prefer shopping online or offline? Did you sing as a child? Do you listen to music while doing other activities? Would you like to take singing classes in the future?",
+                "sourceSectionId": "tg-s32-part1",
+                "sourceTitle": "Studies, shopping and music",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "alternative",
+                "example": "Comparing products helps me avoid overconsumption and choose a sustainable alternative.",
+                "sourceExcerpt": "What subjects are you studying? What do you like about your studies? Do you prefer shopping online or offline? Did you sing as a child? Do you listen to music while doing other activities? Would you like to take singing classes in the future?",
+                "sourceSectionId": "tg-s32-part1",
+                "sourceTitle": "Studies, shopping and music",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "sustainable",
+                "example": "Comparing products helps me avoid overconsumption and choose a sustainable alternative.",
+                "sourceExcerpt": "What subjects are you studying? What do you like about your studies? Do you prefer shopping online or offline? Did you sing as a child? Do you listen to music while doing other activities? Would you like to take singing classes in the future?",
+                "sourceSectionId": "tg-s32-part1",
+                "sourceTitle": "Studies, shopping and music",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "convenience",
+                "example": "Mostly online, because of the convenience and the easy price comparison.",
+                "sourceExcerpt": "What subjects are you studying? What do you like about your studies? Do you prefer shopping online or offline? Did you sing as a child? Do you listen to music while doing other activities? Would you like to take singing classes in the future?",
+                "sourceSectionId": "tg-s32-part1",
+                "sourceTitle": "Studies, shopping and music",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "comparison",
+                "example": "Mostly online, because of the convenience and the easy price comparison.",
+                "sourceExcerpt": "What subjects are you studying? What do you like about your studies? Do you prefer shopping online or offline? Did you sing as a child? Do you listen to music while doing other activities? Would you like to take singing classes in the future?",
+                "sourceSectionId": "tg-s32-part1",
+                "sourceTitle": "Studies, shopping and music",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "groceries",
+                "example": "For groceries, a couple of times a week.",
+                "sourceExcerpt": "What subjects are you studying? What do you like about your studies? Do you prefer shopping online or offline? Did you sing as a child? Do you listen to music while doing other activities? Would you like to take singing classes in the future?",
+                "sourceSectionId": "tg-s32-part1",
+                "sourceTitle": "Studies, shopping and music",
+                "sourceKind": "topic"
+              }
+            ]
+          },
+          {
+            "id": "speaking_full_test_32_part_2",
+            "title": "Part 2",
+            "topic": "Describe a book with animals in it.",
+            "entries": [
+              {
+                "term": "folk story",
+                "example": "My grandmother used to tell me a folk story about a child who outsmarted a greedy merchant.",
+                "sourceExcerpt": "Describe a book with animals in it. what the book is what animals appear in it when you read it and explain why you remember or like this book",
+                "sourceSectionId": "tg-s32-part2",
+                "sourceTitle": "Describe a book with animals in it.",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "storytelling",
+                "example": "Its riddle and moral helped develop my imagination, and my grandmother's storytelling made it appealing.",
+                "sourceExcerpt": "Describe a book with animals in it. what the book is what animals appear in it when you read it and explain why you remember or like this book",
+                "sourceSectionId": "tg-s32-part2",
+                "sourceTitle": "Describe a book with animals in it.",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "imagination",
+                "example": "Its riddle and moral helped develop my imagination, and my grandmother's storytelling made it appealing.",
+                "sourceExcerpt": "Describe a book with animals in it. what the book is what animals appear in it when you read it and explain why you remember or like this book",
+                "sourceSectionId": "tg-s32-part2",
+                "sourceTitle": "Describe a book with animals in it.",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "outsmarted",
+                "example": "My grandmother used to tell me a folk story about a child who outsmarted a greedy merchant.",
+                "sourceExcerpt": "Describe a book with animals in it. what the book is what animals appear in it when you read it and explain why you remember or like this book",
+                "sourceSectionId": "tg-s32-part2",
+                "sourceTitle": "Describe a book with animals in it.",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "narrative",
+                "example": "The folk story has a memorable narrative about a clever child and a greedy merchant.",
+                "sourceExcerpt": "Describe a book with animals in it. what the book is what animals appear in it when you read it and explain why you remember or like this book",
+                "sourceSectionId": "tg-s32-part2",
+                "sourceTitle": "Describe a book with animals in it.",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "childhood",
+                "example": "Describe a childhood story you enjoyed what type of story it was which characters were in it what happened in the story and explain why you enjoyed it Would you tell this story to a child today?",
+                "sourceExcerpt": "Describe a book with animals in it. what the book is what animals appear in it when you read it and explain why you remember or like this book",
+                "sourceSectionId": "tg-s32-part2",
+                "sourceTitle": "Describe a book with animals in it.",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "memorable",
+                "example": "The folk story has a memorable narrative about a clever child and a greedy merchant.",
+                "sourceExcerpt": "Describe a book with animals in it. what the book is what animals appear in it when you read it and explain why you remember or like this book",
+                "sourceSectionId": "tg-s32-part2",
+                "sourceTitle": "Describe a book with animals in it.",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "villagers",
+                "example": "The child solved a riddle and helped the villagers keep their harvest.",
+                "sourceExcerpt": "Describe a book with animals in it. what the book is what animals appear in it when you read it and explain why you remember or like this book",
+                "sourceSectionId": "tg-s32-part2",
+                "sourceTitle": "Describe a book with animals in it.",
+                "sourceKind": "topic"
+              }
+            ]
+          },
+          {
+            "id": "speaking_full_test_32_part_3",
+            "title": "Part 3",
+            "topic": "Animals and stories",
+            "entries": [
+              {
+                "term": "climate change",
+                "example": "Habitat loss, pollution and illegal hunting are major causes, and climate change adds pressure to species with narrow ranges.",
+                "sourceExcerpt": "What animals often occur in stories and books for children? Why? How has people's attitude towards animals changed recently? Are animals more intelligent than people?",
+                "sourceSectionId": "tg-s32-part3",
+                "sourceTitle": "Animals and stories",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "companionship",
+                "example": "A pet can provide companionship and a daily routine, although the person needs support if caring for it becomes physically difficult.",
+                "sourceExcerpt": "What animals often occur in stories and books for children? Why? How has people's attitude towards animals changed recently? Are animals more intelligent than people?",
+                "sourceSectionId": "tg-s32-part3",
+                "sourceTitle": "Animals and stories",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "conservation",
+                "example": "Good zoos can support research and conservation, but keeping wild animals in limited spaces raises serious welfare concerns.",
+                "sourceExcerpt": "What animals often occur in stories and books for children? Why? How has people's attitude towards animals changed recently? Are animals more intelligent than people?",
+                "sourceSectionId": "tg-s32-part3",
+                "sourceTitle": "Animals and stories",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "endangered",
+                "example": "Why are some animals endangered?",
+                "sourceExcerpt": "What animals often occur in stories and books for children? Why? How has people's attitude towards animals changed recently? Are animals more intelligent than people?",
+                "sourceSectionId": "tg-s32-part3",
+                "sourceTitle": "Animals and stories",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "pollution",
+                "example": "Habitat loss, pollution and illegal hunting are major causes, and climate change adds pressure to species with narrow ranges.",
+                "sourceExcerpt": "What animals often occur in stories and books for children? Why? How has people's attitude towards animals changed recently? Are animals more intelligent than people?",
+                "sourceSectionId": "tg-s32-part3",
+                "sourceTitle": "Animals and stories",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "pressure",
+                "example": "Habitat loss, pollution and illegal hunting are major causes, and climate change adds pressure to species with narrow ranges.",
+                "sourceExcerpt": "What animals often occur in stories and books for children? Why? How has people's attitude towards animals changed recently? Are animals more intelligent than people?",
+                "sourceSectionId": "tg-s32-part3",
+                "sourceTitle": "Animals and stories",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "wildlife",
+                "example": "Protecting habitats and enforcing wildlife laws help species survive when private decisions alone would not be enough.",
+                "sourceExcerpt": "What animals often occur in stories and books for children? Why? How has people's attitude towards animals changed recently? Are animals more intelligent than people?",
+                "sourceSectionId": "tg-s32-part3",
+                "sourceTitle": "Animals and stories",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "welfare",
+                "example": "Good zoos can support research and conservation, but keeping wild animals in limited spaces raises serious welfare concerns.",
+                "sourceExcerpt": "What animals often occur in stories and books for children? Why? How has people's attitude towards animals changed recently? Are animals more intelligent than people?",
+                "sourceSectionId": "tg-s32-part3",
+                "sourceTitle": "Animals and stories",
+                "sourceKind": "topic"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "speaking_full_test_33",
+        "title": "Speaking Full Test 33",
+        "sourceTestId": "speaking-full-33",
+        "sections": [
+          {
+            "id": "speaking_full_test_33_part_1",
+            "title": "Part 1",
+            "topic": "Where you live and remembering things",
+            "entries": [
+              {
+                "term": "regular contact",
+                "example": "A neighbourly attitude and regular contact help build trust without being intrusive.",
+                "sourceExcerpt": "Can you describe the place where you live? How long have you been living there? Do you like your hometown? How do you remember important things? Have you ever forgotten something important? What kinds of things do you need to remember every day? Do you think technology helps people remember things? Are you good at remembering names and numbers?",
+                "sourceSectionId": "tg-s33-part1",
+                "sourceTitle": "Where you live and remembering things",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "relationships",
+                "example": "Have neighbourly relationships changed over time?",
+                "sourceExcerpt": "Can you describe the place where you live? How long have you been living there? Do you like your hometown? How do you remember important things? Have you ever forgotten something important? What kinds of things do you need to remember every day? Do you think technology helps people remember things? Are you good at remembering names and numbers?",
+                "sourceSectionId": "tg-s33-part1",
+                "sourceTitle": "Where you live and remembering things",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "companionship",
+                "example": "Considerate neighbours respect privacy while offering companionship.",
+                "sourceExcerpt": "Can you describe the place where you live? How long have you been living there? Do you like your hometown? How do you remember important things? Have you ever forgotten something important? What kinds of things do you need to remember every day? Do you think technology helps people remember things? Are you good at remembering names and numbers?",
+                "sourceSectionId": "tg-s33-part1",
+                "sourceTitle": "Where you live and remembering things",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "considerate",
+                "example": "Being considerate, mainly — keeping the noise down, being friendly, and being willing to lend a hand without being intrusive.",
+                "sourceExcerpt": "Can you describe the place where you live? How long have you been living there? Do you like your hometown? How do you remember important things? Have you ever forgotten something important? What kinds of things do you need to remember every day? Do you think technology helps people remember things? Are you good at remembering names and numbers?",
+                "sourceSectionId": "tg-s33-part1",
+                "sourceTitle": "Where you live and remembering things",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "neighbourly",
+                "example": "A neighbourly attitude and regular contact help build trust without being intrusive.",
+                "sourceExcerpt": "Can you describe the place where you live? How long have you been living there? Do you like your hometown? How do you remember important things? Have you ever forgotten something important? What kinds of things do you need to remember every day? Do you think technology helps people remember things? Are you good at remembering names and numbers?",
+                "sourceSectionId": "tg-s33-part1",
+                "sourceTitle": "Where you live and remembering things",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "appreciate",
+                "example": "People will accept a parcel for you or keep an eye on your flat when you’re away, which I really appreciate.",
+                "sourceExcerpt": "Can you describe the place where you live? How long have you been living there? Do you like your hometown? How do you remember important things? Have you ever forgotten something important? What kinds of things do you need to remember every day? Do you think technology helps people remember things? Are you good at remembering names and numbers?",
+                "sourceSectionId": "tg-s33-part1",
+                "sourceTitle": "Where you live and remembering things",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "neighbours",
+                "example": "Considerate neighbours respect privacy while offering companionship.",
+                "sourceExcerpt": "Can you describe the place where you live? How long have you been living there? Do you like your hometown? How do you remember important things? Have you ever forgotten something important? What kinds of things do you need to remember every day? Do you think technology helps people remember things? Are you good at remembering names and numbers?",
+                "sourceSectionId": "tg-s33-part1",
+                "sourceTitle": "Where you live and remembering things",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "intrusive",
+                "example": "Being considerate, mainly — keeping the noise down, being friendly, and being willing to lend a hand without being intrusive.",
+                "sourceExcerpt": "Can you describe the place where you live? How long have you been living there? Do you like your hometown? How do you remember important things? Have you ever forgotten something important? What kinds of things do you need to remember every day? Do you think technology helps people remember things? Are you good at remembering names and numbers?",
+                "sourceSectionId": "tg-s33-part1",
+                "sourceTitle": "Where you live and remembering things",
+                "sourceKind": "topic"
+              }
+            ]
+          },
+          {
+            "id": "speaking_full_test_33_part_2",
+            "title": "Part 2",
+            "topic": "Describe a shop you often visit.",
+            "entries": [
+              {
+                "term": "overconsumption",
+                "example": "Comparing products helps me avoid overconsumption and choose a sustainable alternative.",
+                "sourceExcerpt": "Describe a shop you often visit. what shop it is and where it is what it sells why you like it",
+                "sourceSectionId": "tg-s33-part2",
+                "sourceTitle": "Describe a shop you often visit.",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "environmental",
+                "example": "I’ve become a lot more conscious about buying less but better quality, partly for environmental reasons and partly because it just makes more financial sense in the long run.",
+                "sourceExcerpt": "Describe a shop you often visit. what shop it is and where it is what it sells why you like it",
+                "sourceSectionId": "tg-s33-part2",
+                "sourceTitle": "Describe a shop you often visit.",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "affordability",
+                "example": "I consider affordability and quality before an impulse purchase.",
+                "sourceExcerpt": "Describe a shop you often visit. what shop it is and where it is what it sells why you like it",
+                "sourceSectionId": "tg-s33-part2",
+                "sourceTitle": "Describe a shop you often visit.",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "alternative",
+                "example": "Comparing products helps me avoid overconsumption and choose a sustainable alternative.",
+                "sourceExcerpt": "Describe a shop you often visit. what shop it is and where it is what it sells why you like it",
+                "sourceSectionId": "tg-s33-part2",
+                "sourceTitle": "Describe a shop you often visit.",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "sustainable",
+                "example": "Comparing products helps me avoid overconsumption and choose a sustainable alternative.",
+                "sourceExcerpt": "Describe a shop you often visit. what shop it is and where it is what it sells why you like it",
+                "sourceSectionId": "tg-s33-part2",
+                "sourceTitle": "Describe a shop you often visit.",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "convenience",
+                "example": "Mostly online, because of the convenience and the easy price comparison.",
+                "sourceExcerpt": "Describe a shop you often visit. what shop it is and where it is what it sells why you like it",
+                "sourceSectionId": "tg-s33-part2",
+                "sourceTitle": "Describe a shop you often visit.",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "comparison",
+                "example": "Mostly online, because of the convenience and the easy price comparison.",
+                "sourceExcerpt": "Describe a shop you often visit. what shop it is and where it is what it sells why you like it",
+                "sourceSectionId": "tg-s33-part2",
+                "sourceTitle": "Describe a shop you often visit.",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "groceries",
+                "example": "For groceries, a couple of times a week.",
+                "sourceExcerpt": "Describe a shop you often visit. what shop it is and where it is what it sells why you like it",
+                "sourceSectionId": "tg-s33-part2",
+                "sourceTitle": "Describe a shop you often visit.",
+                "sourceKind": "topic"
+              }
+            ]
+          },
+          {
+            "id": "speaking_full_test_33_part_3",
+            "title": "Part 3",
+            "topic": "Shopping and advertising",
+            "entries": [
+              {
+                "term": "throwaway culture",
+                "example": "The throwaway culture of buying cheap things and quickly discarding them is unsustainable, and a shift towards fewer, better-quality goods would benefit everyone.",
+                "sourceExcerpt": "Do you think that people buy a lot of things that they don't need? Do you often buy more than you expected? How do advertisements influence people's buying decisions? Do advertisements encourage people to buy things they don't really need? Why do some people like shopping? Do you think shopping with friends is more fun?",
+                "sourceSectionId": "tg-s33-part3",
+                "sourceTitle": "Shopping and advertising",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "environmental",
+                "example": "The downsides are its impact on traditional shops and the environmental cost of constant deliveries and returns.",
+                "sourceExcerpt": "Do you think that people buy a lot of things that they don't need? Do you often buy more than you expected? How do advertisements influence people's buying decisions? Do advertisements encourage people to buy things they don't really need? Why do some people like shopping? Do you think shopping with friends is more fun?",
+                "sourceSectionId": "tg-s33-part3",
+                "sourceTitle": "Shopping and advertising",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "unsustainable",
+                "example": "The throwaway culture of buying cheap things and quickly discarding them is unsustainable, and a shift towards fewer, better-quality goods would benefit everyone.",
+                "sourceExcerpt": "Do you think that people buy a lot of things that they don't need? Do you often buy more than you expected? How do advertisements influence people's buying decisions? Do advertisements encourage people to buy things they don't really need? Why do some people like shopping? Do you think shopping with friends is more fun?",
+                "sourceSectionId": "tg-s33-part3",
+                "sourceTitle": "Shopping and advertising",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "dissatisfied",
+                "example": "It informs people about products, but it also shapes desires and values, often making people feel dissatisfied with what they have.",
+                "sourceExcerpt": "Do you think that people buy a lot of things that they don't need? Do you often buy more than you expected? How do advertisements influence people's buying decisions? Do advertisements encourage people to buy things they don't really need? Why do some people like shopping? Do you think shopping with friends is more fun?",
+                "sourceSectionId": "tg-s33-part3",
+                "sourceTitle": "Shopping and advertising",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "convenient",
+                "example": "It’s largely positive — it’s convenient, offers huge choice and lets people compare prices easily.",
+                "sourceExcerpt": "Do you think that people buy a lot of things that they don't need? Do you often buy more than you expected? How do advertisements influence people's buying decisions? Do advertisements encourage people to buy things they don't really need? Why do some people like shopping? Do you think shopping with friends is more fun?",
+                "sourceSectionId": "tg-s33-part3",
+                "sourceTitle": "Shopping and advertising",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "practical",
+                "example": "A lot of it is emotional rather than practical.",
+                "sourceExcerpt": "Do you think that people buy a lot of things that they don't need? Do you often buy more than you expected? How do advertisements influence people's buying decisions? Do advertisements encourage people to buy things they don't really need? Why do some people like shopping? Do you think shopping with friends is more fun?",
+                "sourceSectionId": "tg-s33-part3",
+                "sourceTitle": "Shopping and advertising",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "finances",
+                "example": "I think many of us should, both for our finances and for the planet.",
+                "sourceExcerpt": "Do you think that people buy a lot of things that they don't need? Do you often buy more than you expected? How do advertisements influence people's buying decisions? Do advertisements encourage people to buy things they don't really need? Why do some people like shopping? Do you think shopping with friends is more fun?",
+                "sourceSectionId": "tg-s33-part3",
+                "sourceTitle": "Shopping and advertising",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "friction",
+                "example": "Advertising links products to status and happiness, shopping can be a way to relieve boredom or stress, and easy online buying removes the friction that once made us pause.",
+                "sourceExcerpt": "Do you think that people buy a lot of things that they don't need? Do you often buy more than you expected? How do advertisements influence people's buying decisions? Do advertisements encourage people to buy things they don't really need? Why do some people like shopping? Do you think shopping with friends is more fun?",
+                "sourceSectionId": "tg-s33-part3",
+                "sourceTitle": "Shopping and advertising",
+                "sourceKind": "topic"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "speaking_full_test_34",
+        "title": "Speaking Full Test 34",
+        "sourceTestId": "speaking-full-34",
+        "sections": [
+          {
+            "id": "speaking_full_test_34_part_1",
+            "title": "Part 1",
+            "topic": "Sharing things",
+            "entries": [
+              {
+                "term": "community engagement",
+                "example": "Volunteering strengthens community engagement and meaningful relationships.",
+                "sourceExcerpt": "Do you think kids like to share? Do you like to share things? When you were a kid, did your parents encourage you to share things with others? Have you ever shared anything with anyone?",
+                "sourceSectionId": "tg-s34-part1",
+                "sourceTitle": "Sharing things",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "relationships",
+                "example": "Volunteering strengthens community engagement and meaningful relationships.",
+                "sourceExcerpt": "Do you think kids like to share? Do you like to share things? When you were a kid, did your parents encourage you to share things with others? Have you ever shared anything with anyone?",
+                "sourceSectionId": "tg-s34-part1",
+                "sourceTitle": "Sharing things",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "individualism",
+                "example": "I’m not convinced they are at heart, but modern life can encourage individualism.",
+                "sourceExcerpt": "Do you think kids like to share? Do you like to share things? When you were a kid, did your parents encourage you to share things with others? Have you ever shared anything with anyone?",
+                "sourceSectionId": "tg-s34-part1",
+                "sourceTitle": "Sharing things",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "volunteering",
+                "example": "Making it easy and visible helps — local events, volunteering schemes and shared spaces all give people a reason to get involved.",
+                "sourceExcerpt": "Do you think kids like to share? Do you like to share things? When you were a kid, did your parents encourage you to share things with others? Have you ever shared anything with anyone?",
+                "sourceSectionId": "tg-s34-part1",
+                "sourceTitle": "Sharing things",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "contribute",
+                "example": "They pass on experience, skills and history, often hold families and communities together, and contribute enormously through caring and volunteering.",
+                "sourceExcerpt": "Do you think kids like to share? Do you like to share things? When you were a kid, did your parents encourage you to share things with others? Have you ever shared anything with anyone?",
+                "sourceSectionId": "tg-s34-part1",
+                "sourceTitle": "Sharing things",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "occasional",
+                "example": "Even time-poor neighbours can contribute through occasional activities that create a sense of belonging.",
+                "sourceExcerpt": "Do you think kids like to share? Do you like to share things? When you were a kid, did your parents encourage you to share things with others? Have you ever shared anything with anyone?",
+                "sourceSectionId": "tg-s34-part1",
+                "sourceTitle": "Sharing things",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "generously",
+                "example": "When people are stressed and time-poor, they naturally focus inward, even though most still respond generously when others genuinely need help.",
+                "sourceExcerpt": "Do you think kids like to share? Do you like to share things? When you were a kid, did your parents encourage you to share things with others? Have you ever shared anything with anyone?",
+                "sourceSectionId": "tg-s34-part1",
+                "sourceTitle": "Sharing things",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "meaningful",
+                "example": "Volunteering strengthens community engagement and meaningful relationships.",
+                "sourceExcerpt": "Do you think kids like to share? Do you like to share things? When you were a kid, did your parents encourage you to share things with others? Have you ever shared anything with anyone?",
+                "sourceSectionId": "tg-s34-part1",
+                "sourceTitle": "Sharing things",
+                "sourceKind": "topic"
+              }
+            ]
+          },
+          {
+            "id": "speaking_full_test_34_part_2",
+            "title": "Part 2",
+            "topic": "Describe an interesting place you have been to with a friend",
+            "entries": [
+              {
+                "term": "extraordinary",
+                "example": "The reason I want to visit so badly is the city’s extraordinary blend of the old and the new — it has preserved centuries of tradition while sitting within one of the world’s most advanced societies.",
+                "sourceExcerpt": "Describe an interesting place you have been to with a friend what place it was why you went there what you did there why you think it’s interesting",
+                "sourceSectionId": "tg-s34-part2",
+                "sourceTitle": "Describe an interesting place you have been to with a friend",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "craftsmanship",
+                "example": "I think travelling there wouldn’t just be a holiday; it would be a chance to step into a completely different way of seeing beauty, time and craftsmanship.",
+                "sourceExcerpt": "Describe an interesting place you have been to with a friend what place it was why you went there what you did there why you think it’s interesting",
+                "sourceSectionId": "tg-s34-part2",
+                "sourceTitle": "Describe an interesting place you have been to with a friend",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "documentaries",
+                "example": "I first became fascinated by it through documentaries and the photographs of friends who’ve travelled there, and the more I learn, the stronger the pull becomes.",
+                "sourceExcerpt": "Describe an interesting place you have been to with a friend what place it was why you went there what you did there why you think it’s interesting",
+                "sourceSectionId": "tg-s34-part2",
+                "sourceTitle": "Describe an interesting place you have been to with a friend",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "photographs",
+                "example": "I first became fascinated by it through documentaries and the photographs of friends who’ve travelled there, and the more I learn, the stronger the pull becomes.",
+                "sourceExcerpt": "Describe an interesting place you have been to with a friend what place it was why you went there what you did there why you think it’s interesting",
+                "sourceSectionId": "tg-s34-part2",
+                "sourceTitle": "Describe an interesting place you have been to with a friend",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "fascinated",
+                "example": "I first became fascinated by it through documentaries and the photographs of friends who’ve travelled there, and the more I learn, the stronger the pull becomes.",
+                "sourceExcerpt": "Describe an interesting place you have been to with a friend what place it was why you went there what you did there why you think it’s interesting",
+                "sourceSectionId": "tg-s34-part2",
+                "sourceTitle": "Describe an interesting place you have been to with a friend",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "philosophy",
+                "example": "I’d also love to experience a traditional tea ceremony to understand the philosophy behind it.",
+                "sourceExcerpt": "Describe an interesting place you have been to with a friend what place it was why you went there what you did there why you think it’s interesting",
+                "sourceSectionId": "tg-s34-part2",
+                "sourceTitle": "Describe an interesting place you have been to with a friend",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "preserved",
+                "example": "The reason I want to visit so badly is the city’s extraordinary blend of the old and the new — it has preserved centuries of tradition while sitting within one of the world’s most advanced societies.",
+                "sourceExcerpt": "Describe an interesting place you have been to with a friend what place it was why you went there what you did there why you think it’s interesting",
+                "sourceSectionId": "tg-s34-part2",
+                "sourceTitle": "Describe an interesting place you have been to with a friend",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "intrigues",
+                "example": "That contrast intrigues me deeply.",
+                "sourceExcerpt": "Describe an interesting place you have been to with a friend what place it was why you went there what you did there why you think it’s interesting",
+                "sourceSectionId": "tg-s34-part2",
+                "sourceTitle": "Describe an interesting place you have been to with a friend",
+                "sourceKind": "topic"
+              }
+            ]
+          },
+          {
+            "id": "speaking_full_test_34_part_3",
+            "title": "Part 3",
+            "topic": "Conversations and friendship",
+            "entries": [
+              {
+                "term": "communication",
+                "example": "It’s made communication instant and global, which is remarkable, but also more fragmented.",
+                "sourceExcerpt": "Why are some people unwilling to have conversations with others? Why do some people NOT like to socialise? Does technological development have a negative impact on communication among people? What positive and negative effects do mobile phones have on friendship?",
+                "sourceSectionId": "tg-s34-part3",
+                "sourceTitle": "Conversations and friendship",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "opportunities",
+                "example": "A second language opens up career opportunities and cultures, and the process itself sharpens the mind.",
+                "sourceExcerpt": "Why are some people unwilling to have conversations with others? Why do some people NOT like to socialise? Does technological development have a negative impact on communication among people? What positive and negative effects do mobile phones have on friendship?",
+                "sourceSectionId": "tg-s34-part3",
+                "sourceTitle": "Conversations and friendship",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "preservation",
+                "example": "That’s a real loss, because each language carries unique knowledge and identity, which is why preservation efforts matter.",
+                "sourceExcerpt": "Why are some people unwilling to have conversations with others? Why do some people NOT like to socialise? Does technological development have a negative impact on communication among people? What positive and negative effects do mobile phones have on friendship?",
+                "sourceSectionId": "tg-s34-part3",
+                "sourceTitle": "Conversations and friendship",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "face-to-face",
+                "example": "We send quick messages constantly yet have fewer deep, face-to-face conversations, so the quantity has risen while the quality is sometimes lower.",
+                "sourceExcerpt": "Why are some people unwilling to have conversations with others? Why do some people NOT like to socialise? Does technological development have a negative impact on communication among people? What positive and negative effects do mobile phones have on friendship?",
+                "sourceSectionId": "tg-s34-part3",
+                "sourceTitle": "Conversations and friendship",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "collaborate",
+                "example": "You can be brilliant technically, but if you can’t explain your ideas, collaborate or listen well, your impact is limited.",
+                "sourceExcerpt": "Why are some people unwilling to have conversations with others? Why do some people NOT like to socialise? Does technological development have a negative impact on communication among people? What positive and negative effects do mobile phones have on friendship?",
+                "sourceSectionId": "tg-s34-part3",
+                "sourceTitle": "Conversations and friendship",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "communicate",
+                "example": "In a connected world, being able to communicate across borders is a real advantage.",
+                "sourceExcerpt": "Why are some people unwilling to have conversations with others? Why do some people NOT like to socialise? Does technological development have a negative impact on communication among people? What positive and negative effects do mobile phones have on friendship?",
+                "sourceSectionId": "tg-s34-part3",
+                "sourceTitle": "Conversations and friendship",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "remarkable",
+                "example": "It’s made communication instant and global, which is remarkable, but also more fragmented.",
+                "sourceExcerpt": "Why are some people unwilling to have conversations with others? Why do some people NOT like to socialise? Does technological development have a negative impact on communication among people? What positive and negative effects do mobile phones have on friendship?",
+                "sourceSectionId": "tg-s34-part3",
+                "sourceTitle": "Conversations and friendship",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "technology",
+                "example": "Communication & Language How has technology changed the way people communicate?",
+                "sourceExcerpt": "Why are some people unwilling to have conversations with others? Why do some people NOT like to socialise? Does technological development have a negative impact on communication among people? What positive and negative effects do mobile phones have on friendship?",
+                "sourceSectionId": "tg-s34-part3",
+                "sourceTitle": "Conversations and friendship",
+                "sourceKind": "topic"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "speaking_full_test_35",
+        "title": "Speaking Full Test 35",
+        "sourceTestId": "speaking-full-35",
+        "sections": [
+          {
+            "id": "speaking_full_test_35_part_1",
+            "title": "Part 1",
+            "topic": "Plants and libraries",
+            "entries": [
+              {
+                "term": "walking distance",
+                "example": "There are a few good parks within walking distance, which I’m grateful for, though I’d always welcome more in a busy city.",
+                "sourceExcerpt": "What flowers have special meaning in your country? Do you like flowers? Do you think flowers are important? Do people in your country ever use flowers for special occasions? Did you go to a library when you were a kid? Do you often go to the library?",
+                "sourceSectionId": "tg-s35-part1",
+                "sourceTitle": "Plants and libraries",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "welcome break",
+                "example": "Accessible green space gives me a welcome break from a sedentary routine.",
+                "sourceExcerpt": "What flowers have special meaning in your country? Do you like flowers? Do you think flowers are important? Do people in your country ever use flowers for special occasions? Did you go to a library when you were a kid? Do you often go to the library?",
+                "sourceSectionId": "tg-s35-part1",
+                "sourceTitle": "Plants and libraries",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "green space",
+                "example": "Accessible green space gives me a welcome break from a sedentary routine.",
+                "sourceExcerpt": "What flowers have special meaning in your country? Do you like flowers? Do you think flowers are important? Do people in your country ever use flowers for special occasions? Did you go to a library when you were a kid? Do you often go to the library?",
+                "sourceSectionId": "tg-s35-part1",
+                "sourceTitle": "Plants and libraries",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "surroundings",
+                "example": "Cycling or walking outdoors is restorative and helps me appreciate my surroundings.",
+                "sourceExcerpt": "What flowers have special meaning in your country? Do you like flowers? Do you think flowers are important? Do people in your country ever use flowers for special occasions? Did you go to a library when you were a kid? Do you often go to the library?",
+                "sourceSectionId": "tg-s35-part1",
+                "sourceTitle": "Plants and libraries",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "lifelong learning",
+                "example": "E-books offer convenience and accessibility, while magazines provide informative articles and support lifelong learning.",
+                "sourceExcerpt": "What flowers have special meaning in your country? Do you like flowers? Do you think flowers are important? Do people in your country ever use flowers for special occasions? Did you go to a library when you were a kid? Do you often go to the library?",
+                "sourceSectionId": "tg-s35-part1",
+                "sourceTitle": "Plants and libraries",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "self-improvement",
+                "example": "Fiction and practical self-improvement books both seem popular, judging by what local bookshops display.",
+                "sourceExcerpt": "What flowers have special meaning in your country? Do you like flowers? Do you think flowers are important? Do people in your country ever use flowers for special occasions? Did you go to a library when you were a kid? Do you often go to the library?",
+                "sourceSectionId": "tg-s35-part1",
+                "sourceTitle": "Plants and libraries",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "accessibility",
+                "example": "E-books offer convenience and accessibility, while magazines provide informative articles and support lifelong learning.",
+                "sourceExcerpt": "What flowers have special meaning in your country? Do you like flowers? Do you think flowers are important? Do people in your country ever use flowers for special occasions? Did you go to a library when you were a kid? Do you often go to the library?",
+                "sourceSectionId": "tg-s35-part1",
+                "sourceTitle": "Plants and libraries",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "convenience",
+                "example": "E-books offer convenience and accessibility, while magazines provide informative articles and support lifelong learning.",
+                "sourceExcerpt": "What flowers have special meaning in your country? Do you like flowers? Do you think flowers are important? Do people in your country ever use flowers for special occasions? Did you go to a library when you were a kid? Do you often go to the library?",
+                "sourceSectionId": "tg-s35-part1",
+                "sourceTitle": "Plants and libraries",
+                "sourceKind": "topic"
+              }
+            ]
+          },
+          {
+            "id": "speaking_full_test_35_part_2",
+            "title": "Part 2",
+            "topic": "Describe a place that is good for people to live in",
+            "entries": [
+              {
+                "term": "entertainment",
+                "example": "Cities concentrate jobs, education, healthcare and entertainment, so they offer opportunities that rural areas often can’t.",
+                "sourceExcerpt": "Describe a place that is good for people to live in what place it is how you know this place what it is like why you can recommend living there",
+                "sourceSectionId": "tg-s35-part2",
+                "sourceTitle": "Describe a place that is good for people to live in",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "opportunities",
+                "example": "Cities concentrate jobs, education, healthcare and entertainment, so they offer opportunities that rural areas often can’t.",
+                "sourceExcerpt": "Describe a place that is good for people to live in what place it is how you know this place what it is like why you can recommend living there",
+                "sourceSectionId": "tg-s35-part2",
+                "sourceTitle": "Describe a place that is good for people to live in",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "overcrowding",
+                "example": "If growth outpaces planning, you also get overcrowding and a widening gap between those who can afford the city and those who can’t.",
+                "sourceExcerpt": "Describe a place that is good for people to live in what place it is how you know this place what it is like why you can recommend living there",
+                "sourceSectionId": "tg-s35-part2",
+                "sourceTitle": "Describe a place that is good for people to live in",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "concentrate",
+                "example": "Cities concentrate jobs, education, healthcare and entertainment, so they offer opportunities that rural areas often can’t.",
+                "sourceExcerpt": "Describe a place that is good for people to live in what place it is how you know this place what it is like why you can recommend living there",
+                "sourceSectionId": "tg-s35-part2",
+                "sourceTitle": "Describe a place that is good for people to live in",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "congestion",
+                "example": "It strains housing, transport and services, driving up prices and creating congestion and pollution.",
+                "sourceExcerpt": "Describe a place that is good for people to live in what place it is how you know this place what it is like why you can recommend living there",
+                "sourceSectionId": "tg-s35-part2",
+                "sourceTitle": "Describe a place that is good for people to live in",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "affordable",
+                "example": "Affordable housing, efficient transport, green spaces and a sense of safety and community.",
+                "sourceExcerpt": "Describe a place that is good for people to live in what place it is how you know this place what it is like why you can recommend living there",
+                "sourceSectionId": "tg-s35-part2",
+                "sourceTitle": "Describe a place that is good for people to live in",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "investment",
+                "example": "Heavy control feels wrong in a free society, but governments can shape things sensibly through planning and investment — for instance, by developing smaller towns so that not everyone is forced into a few overcrowded cities.",
+                "sourceExcerpt": "Describe a place that is good for people to live in what place it is how you know this place what it is like why you can recommend living there",
+                "sourceSectionId": "tg-s35-part2",
+                "sourceTitle": "Describe a place that is good for people to live in",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "healthcare",
+                "example": "Cities concentrate jobs, education, healthcare and entertainment, so they offer opportunities that rural areas often can’t.",
+                "sourceExcerpt": "Describe a place that is good for people to live in what place it is how you know this place what it is like why you can recommend living there",
+                "sourceSectionId": "tg-s35-part2",
+                "sourceTitle": "Describe a place that is good for people to live in",
+                "sourceKind": "topic"
+              }
+            ]
+          },
+          {
+            "id": "speaking_full_test_35_part_3",
+            "title": "Part 3",
+            "topic": "Cities and facilities",
+            "entries": [
+              {
+                "term": "entertainment",
+                "example": "Cities concentrate jobs, education, healthcare and entertainment, so they offer opportunities that rural areas often can’t.",
+                "sourceExcerpt": "What makes a city a good one to live in? Why do people still like living in cities despite there are traffic jams? What facilities does your city have? How do people choose a city to live in?",
+                "sourceSectionId": "tg-s35-part3",
+                "sourceTitle": "Cities and facilities",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "opportunities",
+                "example": "Cities concentrate jobs, education, healthcare and entertainment, so they offer opportunities that rural areas often can’t.",
+                "sourceExcerpt": "What makes a city a good one to live in? Why do people still like living in cities despite there are traffic jams? What facilities does your city have? How do people choose a city to live in?",
+                "sourceSectionId": "tg-s35-part3",
+                "sourceTitle": "Cities and facilities",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "overcrowding",
+                "example": "If growth outpaces planning, you also get overcrowding and a widening gap between those who can afford the city and those who can’t.",
+                "sourceExcerpt": "What makes a city a good one to live in? Why do people still like living in cities despite there are traffic jams? What facilities does your city have? How do people choose a city to live in?",
+                "sourceSectionId": "tg-s35-part3",
+                "sourceTitle": "Cities and facilities",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "concentrate",
+                "example": "Cities concentrate jobs, education, healthcare and entertainment, so they offer opportunities that rural areas often can’t.",
+                "sourceExcerpt": "What makes a city a good one to live in? Why do people still like living in cities despite there are traffic jams? What facilities does your city have? How do people choose a city to live in?",
+                "sourceSectionId": "tg-s35-part3",
+                "sourceTitle": "Cities and facilities",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "congestion",
+                "example": "It strains housing, transport and services, driving up prices and creating congestion and pollution.",
+                "sourceExcerpt": "What makes a city a good one to live in? Why do people still like living in cities despite there are traffic jams? What facilities does your city have? How do people choose a city to live in?",
+                "sourceSectionId": "tg-s35-part3",
+                "sourceTitle": "Cities and facilities",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "affordable",
+                "example": "Affordable housing, efficient transport, green spaces and a sense of safety and community.",
+                "sourceExcerpt": "What makes a city a good one to live in? Why do people still like living in cities despite there are traffic jams? What facilities does your city have? How do people choose a city to live in?",
+                "sourceSectionId": "tg-s35-part3",
+                "sourceTitle": "Cities and facilities",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "investment",
+                "example": "Heavy control feels wrong in a free society, but governments can shape things sensibly through planning and investment — for instance, by developing smaller towns so that not everyone is forced into a few overcrowded cities.",
+                "sourceExcerpt": "What makes a city a good one to live in? Why do people still like living in cities despite there are traffic jams? What facilities does your city have? How do people choose a city to live in?",
+                "sourceSectionId": "tg-s35-part3",
+                "sourceTitle": "Cities and facilities",
+                "sourceKind": "topic"
+              },
+              {
+                "term": "healthcare",
+                "example": "Cities concentrate jobs, education, healthcare and entertainment, so they offer opportunities that rural areas often can’t.",
+                "sourceExcerpt": "What makes a city a good one to live in? Why do people still like living in cities despite there are traffic jams? What facilities does your city have? How do people choose a city to live in?",
+                "sourceSectionId": "tg-s35-part3",
+                "sourceTitle": "Cities and facilities",
+                "sourceKind": "topic"
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
 ]

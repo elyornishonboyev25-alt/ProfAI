@@ -1,12 +1,13 @@
-# Original Telegram IELTS papers — first verified batch
+# Original Telegram IELTS tests 31–35
 
 Source channel: https://t.me/jasurbekisaev. Imported on 2026-10-26.
 
-This batch adds five Listening, five Academic Reading and five Writing full tests.
-It does **not** add a completed four-section Full Mock: the downloaded source
-HTML files contain Listening, Reading and Writing, without Speaking question sets.
-The existing 30 complete Full Mocks remain available. Ten additional complete
-Full Mocks have not yet been delivered.
+This import adds five Listening, five Academic Reading, five Writing and five
+Speaking tests. Each skill now has 35 complete tests, and Full Mocks 31–35 combine
+those four sections, bringing the full mock catalog to 35. Each source question
+is retained in its original wording. The four-section pairings are selections
+from the channel's material; the channel reuses Speaking links across multiple
+Listening/Reading/Writing papers.
 
 | ProfAI full-test number | Channel file | Original post |
 | --- | --- | --- |
@@ -15,6 +16,26 @@ Full Mocks have not yet been delivered.
 | 33 | FULL CDI MOCK TEST 30.html | https://t.me/jasurbekisaev/16354 |
 | 34 | FULL CDI MOCK TEST 32.html | https://t.me/jasurbekisaev/16428 |
 | 35 | FULL MOCK 33.html | https://t.me/jasurbekisaev/16539 |
+
+## Speaking sources
+
+| ProfAI number | Original source | Channel post |
+| --- | --- | --- |
+| 31 | https://fullspeakingjasurbekisaev2.netlify.app/ | https://t.me/jasurbekisaev/14974 |
+| 32 | https://fullspeakingjasurbekisaev3.netlify.app/ | https://t.me/jasurbekisaev/15824 |
+| 33 | https://fullspeakingjasurbekisaev4.netlify.app/ | https://t.me/jasurbekisaev/16224 |
+| 34 | Full Mock Test 11.pdf, PDF pages 20–21: Sharing things; first cue card and discussion | https://t.me/jasurbekisaev/11717 |
+| 35 | Full Mock Test 11.pdf, PDF pages 20–21: Plants and Libraries; second cue card and discussion | https://t.me/jasurbekisaev/11717 |
+
+The PDF contains two alternative long turns, each with its own Part 3 questions.
+They are paired with disjoint original Part 1 topic groups from the same sheet.
+Two repeated Part 1 questions from website 3 were omitted because they already
+exist in the live bank. Retained prompts and cue points are unchanged, including
+source spelling. The source's three-point cue card and three-question discussion
+are preserved. No sample answers, follow-up questions or audio recordings were
+supplied with these Speaking sets. The examiner reads the original questions,
+and does not generate extra questions for these five tests. Saved sessions retain
+their original stages. The existing IELTS preparation and speaking timers apply.
 
 ## Content and media
 
@@ -48,9 +69,9 @@ excluded because its Writing Task 2 lacks a task directive in the supplied HTML.
 Unretrieved Speaking sets and incomplete sources are not represented as ready
 tests or used to increase the complete Full Mock count.
 
-The 15 new skill tests also include vocabulary collections required by the live
+The 20 new skill tests also include vocabulary collections required by the live
 catalog. Listening and Reading words use excerpts from their own source parts;
-Writing words are labelled as topic vocabulary and do not alter the original tasks.
+Writing and Speaking words are labelled as topic vocabulary and do not alter the original tasks.
 
 ## Verification
 
@@ -60,6 +81,10 @@ Writing words are labelled as topic vocabulary and do not alter the original tas
 - `npm run validate:reading`, `npm run validate:listening` and
   `npm run validate:writing`: existing and extended catalogs.
 - `npm run validate:vocabulary`: catalog coverage, source attribution and translations.
+- `node scripts/validate-telegram-speaking.mjs`: independent source questions,
+  duplicate exclusions, unchanged cue points and 35 available tests in every skill.
+- `node scripts/test-listening-parts-ui.mjs scripts/tests/telegram-speaking.tsx`:
+  35 complete Full Mocks, original examiner stages and saved-stage preservation.
 - `node scripts/test-listening-parts-ui.mjs scripts/tests/telegram-source-ui.tsx`:
   source input state, multiple-choice limits, immutable-paper review, navigation
   anchors and HTML sanitization.

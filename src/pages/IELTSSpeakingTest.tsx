@@ -877,6 +877,7 @@ function FullMockRunner({
   const { reducedMotion, allowHoverMotion } = useMotionPreferences()
   // Each numbered mock has its own fixed question set (distinct across mocks).
   const seed = {
+    sourceQuestionsOnly: Boolean(mock.source),
     part1: mock.parts.part1.questions.map((q) => q.q),
     part2: {
       title: mock.parts.part2.title,

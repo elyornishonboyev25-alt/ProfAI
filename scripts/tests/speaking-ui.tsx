@@ -386,13 +386,15 @@ export async function run() {
   }
 
   const mocks = getIeltsSpeakingFullMockCatalog()
-  assert.equal(mocks.length, 30)
+  assert.equal(mocks.length, 35)
   for (const mock of mocks) {
     saved = null
     requestedVoices = []
     const completedRoot = createRoot(container)
     const card = mock.parts.part2
+    const expectedAnswers = mock.source ? mock.parts.part1.questions.length + mock.parts.part3.questions.length + 1 : 15
     await act(async () => completedRoot.render(<StrictMode><ExaminerSession config={{ mode: 'full_mock', mockSeed: {
+      sourceQuestionsOnly: Boolean(mock.source),
       part1: mock.parts.part1.questions.map((item) => item.q),
       part2: { title: card.title, bullets: card.bullets, followUp: card.followUp },
       part3: mock.parts.part3.questions.map((item) => item.q),
@@ -419,16 +421,17 @@ export async function run() {
         else await wait(40)
       }
       assert.ok(saved, `${mock.title} reaches a result`)
-      assert.equal(saved.transcript.filter((turn: any) => turn.role === 'candidate').length, 15, `${mock.title} retains all answers once`)
+      assert.equal(saved.transcript.filter((turn: any) => turn.role === 'candidate').length, expectedAnswers, `${mock.title} retains all answers once`)
       for (const question of [...mock.parts.part1.questions, ...mock.parts.part3.questions]) {
         assert.ok(saved.transcript.some((turn: any) => turn.role === 'examiner' && turn.text === question.q), `${mock.title}: ${question.q}`)
       }
-      assert.ok(saved.transcript.some((turn: any) => turn.text === card.followUp), `${mock.title} includes Part 2 follow-up`)
+      if (card.followUp) assert.ok(saved.transcript.some((turn: any) => turn.text === card.followUp), `${mock.title} includes Part 2 follow-up`)
+      else assert.ok(saved.transcript.every((turn: any) => turn.text.trim()), 'Original tests never ask an empty follow-up')
       assert.ok(requestedVoices.length > 10)
       assert.ok(requestedVoices.every((voice) => voice === (mock.index % 2 ? 'cedar' : 'marin')), `${mock.title} keeps the matching voice`)
       assert.equal(saved.result.source, 'ai')
       assert.equal(saved.result.stats.uniqueWords, 12)
-      console.log(`PASS: ${mock.title} — all three parts, 15 answers, voice profile, assessment and review`)
+      console.log(`PASS: ${mock.title} — all three parts, ${expectedAnswers} answers, voice profile, assessment and review`)
     } finally { evaluationPayload = normalEvaluation; await act(async () => completedRoot.unmount()) }
   }
 }

@@ -19,6 +19,9 @@ import { motion } from 'framer-motion'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useSpeakingStore } from '@/store/speakingStore'
 import { getIeltsHubScores } from '@/utils/ieltsHubScores'
+import { getIeltsFullTestCatalog, getIeltsReadingUnifiedCatalog } from '@/utils/ieltsTrackCatalog'
+import { getIeltsSpeakingFullMockCatalog } from '@/utils/ieltsSpeakingCatalog'
+import { getWritingFullTestCatalog } from '@/data/writingTestData'
 import { loadActivityLog, loadOnboardingProfile, saveOnboardingProfile } from '@/utils/weeklyPlanner'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import {
@@ -36,10 +39,10 @@ const SKILLS: Array<{
   tests: number
   visual: StudyIllustrationVariant
 }> = [
-  { id: 'listening', title: 'IELTS Listening', topics: ['Conversations', 'Monologues', 'Academic talks'], tests: 30, visual: 'ielts-listening' },
-  { id: 'reading', title: 'IELTS Reading', topics: ['Evidence', 'Vocabulary', 'Comprehension'], tests: 30, visual: 'ielts-reading' },
-  { id: 'writing', title: 'IELTS Writing', topics: ['Task 1', 'Task 2', 'Coherence'], tests: 30, visual: 'ielts-writing' },
-  { id: 'speaking', title: 'IELTS Speaking', topics: ['Interview', 'Long turn', 'Discussion'], tests: 30, visual: 'ielts-speaking' },
+  { id: 'listening', title: 'IELTS Listening', topics: ['Conversations', 'Monologues', 'Academic talks'], tests: getIeltsFullTestCatalog('listening').length, visual: 'ielts-listening' },
+  { id: 'reading', title: 'IELTS Reading', topics: ['Evidence', 'Vocabulary', 'Comprehension'], tests: getIeltsReadingUnifiedCatalog().length, visual: 'ielts-reading' },
+  { id: 'writing', title: 'IELTS Writing', topics: ['Task 1', 'Task 2', 'Coherence'], tests: getWritingFullTestCatalog().length, visual: 'ielts-writing' },
+  { id: 'speaking', title: 'IELTS Speaking', topics: ['Interview', 'Long turn', 'Discussion'], tests: getIeltsSpeakingFullMockCatalog().length, visual: 'ielts-speaking' },
 ]
 
 const GLASS = ARENA_GLASS_SURFACE

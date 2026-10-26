@@ -1,5 +1,6 @@
 import { accountStorageFor } from '@/utils/accountStorage'
-// Speaking practice catalog (1–30) + Full Mock catalog (1–30). Practice tests
+import telegramSpeaking from '@/data/telegramIeltsSpeaking.json'
+// Speaking practice catalog (1–30) + Full Mock catalog (1–35). Practice tests
 // cycle through Part 1 → Part 2 (cue card) → Part 3, then repeat from Part 1.
 //
 // The bank now holds 40 of each part. To guarantee NO question is ever reused, the
@@ -66,6 +67,7 @@ export type SpeakingFullMockEntry = {
   durationMinutes: number
   available: boolean
   premiumOnly: boolean
+  source?: { url: string; channelPost: string; sha256: string; pages?: number[]; selection?: string }
   /** One Part 1 topic + one Part 2 cue card + one Part 3 theme. */
   parts: {
     part1: Part1Topic
@@ -143,7 +145,7 @@ export function getIeltsSpeakingDayCatalog(): SpeakingDayEntry[] {
 }
 
 export function getIeltsSpeakingFullMockCatalog(): SpeakingFullMockEntry[] {
-  return Array.from({ length: TOTAL_FULL_MOCKS }, (_, index) => {
+  const originalCatalog: SpeakingFullMockEntry[] = Array.from({ length: TOTAL_FULL_MOCKS }, (_, index) => {
     const i = index + 1
     return {
       id: `speaking-full-${i}`,
@@ -162,6 +164,7 @@ export function getIeltsSpeakingFullMockCatalog(): SpeakingFullMockEntry[] {
       },
     }
   })
+  return [...originalCatalog, ...(telegramSpeaking as SpeakingFullMockEntry[])]
 }
 
 export function findIeltsSpeakingDay(id: string): SpeakingDayEntry | null {

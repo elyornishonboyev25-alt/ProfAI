@@ -1,0 +1,437 @@
+[
+  {
+    "id": "speaking-full-31",
+    "index": 31,
+    "title": "Speaking Full Mock 31",
+    "subtitle": "Part 1 → 2 → 3 · original channel questions",
+    "durationMinutes": 14,
+    "available": true,
+    "premiumOnly": false,
+    "source": {
+      "url": "https://fullspeakingjasurbekisaev2.netlify.app/",
+      "channelPost": "https://t.me/jasurbekisaev/14974",
+      "sha256": "a95d4ced4dd878e81bec2903895d24fef67c1d37db2786c3be1af900641eb7ea"
+    },
+    "parts": {
+      "part1": {
+        "id": "tg-s31-part1",
+        "topic": "Work, singing and organisation",
+        "icon": "💬",
+        "questions": [
+          {
+            "q": "Do you work or study?",
+            "sample": ""
+          },
+          {
+            "q": "What do you like most?",
+            "sample": ""
+          },
+          {
+            "q": "Does your major will be benficial in the future?",
+            "sample": ""
+          },
+          {
+            "q": "Did you sing a lot when you were a child?",
+            "sample": ""
+          },
+          {
+            "q": "Do you also sing now?",
+            "sample": ""
+          },
+          {
+            "q": "Will you take course for singing in near future?",
+            "sample": ""
+          },
+          {
+            "q": "Do you usually keep your study or workplace organized?",
+            "sample": ""
+          }
+        ]
+      },
+      "part2": {
+        "id": "tg-s31-part2",
+        "title": "Describe a picture or photograph in your family.",
+        "bullets": [
+          "What is in the photo?",
+          "Where is this photo in your home?",
+          "How was this picture taken?",
+          "And explain why this photo is special to you."
+        ],
+        "followUp": "",
+        "theme": "Family photographs",
+        "sample": ""
+      },
+      "part3": {
+        "id": "tg-s31-part3",
+        "theme": "Family photographs and memories",
+        "questions": [
+          {
+            "q": "How important is it for families to preserve and share photographs?",
+            "sample": ""
+          },
+          {
+            "q": "In what ways do family photographs contribute to the emotional bond within a family?",
+            "sample": ""
+          },
+          {
+            "q": "Can you share an instance where a family photograph played a significant role in your life or the life of someone you know?",
+            "sample": ""
+          },
+          {
+            "q": "How have advancements in technology affected the way families document and share their memories through photographs?",
+            "sample": ""
+          },
+          {
+            "q": "Do you think there are any drawbacks to relying heavily on photographs to preserve family memories?",
+            "sample": ""
+          },
+          {
+            "q": "How would you describe an image to a friend?",
+            "sample": ""
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "speaking-full-32",
+    "index": 32,
+    "title": "Speaking Full Mock 32",
+    "subtitle": "Part 1 → 2 → 3 · original channel questions",
+    "durationMinutes": 14,
+    "available": true,
+    "premiumOnly": false,
+    "source": {
+      "url": "https://fullspeakingjasurbekisaev3.netlify.app/",
+      "channelPost": "https://t.me/jasurbekisaev/15824",
+      "sha256": "0ad61b929ce04c0307092f94af6719906f5823fdaf44cbc24c2ed4448e50771c"
+    },
+    "parts": {
+      "part1": {
+        "id": "tg-s32-part1",
+        "topic": "Studies, shopping and music",
+        "icon": "💬",
+        "questions": [
+          {
+            "q": "What subjects are you studying?",
+            "sample": ""
+          },
+          {
+            "q": "What do you like about your studies?",
+            "sample": ""
+          },
+          {
+            "q": "Do you prefer shopping online or offline?",
+            "sample": ""
+          },
+          {
+            "q": "Did you sing as a child?",
+            "sample": ""
+          },
+          {
+            "q": "Do you listen to music while doing other activities?",
+            "sample": ""
+          },
+          {
+            "q": "Would you like to take singing classes in the future?",
+            "sample": ""
+          }
+        ]
+      },
+      "part2": {
+        "id": "tg-s32-part2",
+        "title": "Describe a book with animals in it.",
+        "bullets": [
+          "what the book is",
+          "what animals appear in it",
+          "when you read it",
+          "and explain why you remember or like this book"
+        ],
+        "followUp": "",
+        "theme": "A book with animals",
+        "sample": ""
+      },
+      "part3": {
+        "id": "tg-s32-part3",
+        "theme": "Animals and stories",
+        "questions": [
+          {
+            "q": "What animals often occur in stories and books for children? Why?",
+            "sample": ""
+          },
+          {
+            "q": "How has people's attitude towards animals changed recently?",
+            "sample": ""
+          },
+          {
+            "q": "Are animals more intelligent than people?",
+            "sample": ""
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "speaking-full-33",
+    "index": 33,
+    "title": "Speaking Full Mock 33",
+    "subtitle": "Part 1 → 2 → 3 · original channel questions",
+    "durationMinutes": 14,
+    "available": true,
+    "premiumOnly": false,
+    "source": {
+      "url": "https://fullspeakingjasurbekisaev4.netlify.app/",
+      "channelPost": "https://t.me/jasurbekisaev/16224",
+      "sha256": "12876b611c536ae33961775f5cc2bbe3414aca396422fb53a40fbe62a80af3e0"
+    },
+    "parts": {
+      "part1": {
+        "id": "tg-s33-part1",
+        "topic": "Where you live and remembering things",
+        "icon": "💬",
+        "questions": [
+          {
+            "q": "Can you describe the place where you live?",
+            "sample": ""
+          },
+          {
+            "q": "How long have you been living there?",
+            "sample": ""
+          },
+          {
+            "q": "Do you like your hometown?",
+            "sample": ""
+          },
+          {
+            "q": "How do you remember important things?",
+            "sample": ""
+          },
+          {
+            "q": "Have you ever forgotten something important?",
+            "sample": ""
+          },
+          {
+            "q": "What kinds of things do you need to remember every day?",
+            "sample": ""
+          },
+          {
+            "q": "Do you think technology helps people remember things?",
+            "sample": ""
+          },
+          {
+            "q": "Are you good at remembering names and numbers?",
+            "sample": ""
+          }
+        ]
+      },
+      "part2": {
+        "id": "tg-s33-part2",
+        "title": "Describe a shop you often visit.",
+        "bullets": [
+          "what shop it is and where it is",
+          "what it sells",
+          "why you like it"
+        ],
+        "followUp": "",
+        "theme": "A shop you often visit",
+        "sample": ""
+      },
+      "part3": {
+        "id": "tg-s33-part3",
+        "theme": "Shopping and advertising",
+        "questions": [
+          {
+            "q": "Do you think that people buy a lot of things that they don't need?",
+            "sample": ""
+          },
+          {
+            "q": "Do you often buy more than you expected?",
+            "sample": ""
+          },
+          {
+            "q": "How do advertisements influence people's buying decisions?",
+            "sample": ""
+          },
+          {
+            "q": "Do advertisements encourage people to buy things they don't really need?",
+            "sample": ""
+          },
+          {
+            "q": "Why do some people like shopping?",
+            "sample": ""
+          },
+          {
+            "q": "Do you think shopping with friends is more fun?",
+            "sample": ""
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "speaking-full-34",
+    "index": 34,
+    "title": "Speaking Full Mock 34",
+    "subtitle": "Part 1 → 2 → 3 · original channel questions",
+    "durationMinutes": 14,
+    "available": true,
+    "premiumOnly": false,
+    "source": {
+      "url": "https://t.me/jasurbekisaev/11717",
+      "channelPost": "https://t.me/jasurbekisaev/11717",
+      "pages": [
+        20,
+        21
+      ],
+      "selection": "Sharing things; first Part 2 and its Part 3",
+      "sha256": "b0e715fc97fe6dfd7b3fad052c5c20837e0d272e4441a045f6f8b61449490348"
+    },
+    "parts": {
+      "part1": {
+        "id": "tg-s34-part1",
+        "topic": "Sharing things",
+        "icon": "💬",
+        "questions": [
+          {
+            "q": "Do you think kids like to share?",
+            "sample": ""
+          },
+          {
+            "q": "Do you like to share things?",
+            "sample": ""
+          },
+          {
+            "q": "When you were a kid, did your parents encourage you to share things with others?",
+            "sample": ""
+          },
+          {
+            "q": "Have you ever shared anything with anyone?",
+            "sample": ""
+          }
+        ]
+      },
+      "part2": {
+        "id": "tg-s34-part2",
+        "title": "Describe an interesting place you have been to with a friend",
+        "bullets": [
+          "what place it was",
+          "why you went there",
+          "what you did there",
+          "why you think it’s interesting"
+        ],
+        "followUp": "",
+        "theme": "An interesting place with a friend",
+        "sample": ""
+      },
+      "part3": {
+        "id": "tg-s34-part3",
+        "theme": "Conversations and friendship",
+        "questions": [
+          {
+            "q": "Why are some people unwilling to have conversations with others?",
+            "sample": ""
+          },
+          {
+            "q": "Why do some people NOT like to socialise?",
+            "sample": ""
+          },
+          {
+            "q": "Does technological development have a negative impact on communication among people?",
+            "sample": ""
+          },
+          {
+            "q": "What positive and negative effects do mobile phones have on friendship?",
+            "sample": ""
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "speaking-full-35",
+    "index": 35,
+    "title": "Speaking Full Mock 35",
+    "subtitle": "Part 1 → 2 → 3 · original channel questions",
+    "durationMinutes": 14,
+    "available": true,
+    "premiumOnly": false,
+    "source": {
+      "url": "https://t.me/jasurbekisaev/11717",
+      "channelPost": "https://t.me/jasurbekisaev/11717",
+      "pages": [
+        20,
+        21
+      ],
+      "selection": "Plants and Libraries; second Part 2 and its Part 3",
+      "sha256": "b0e715fc97fe6dfd7b3fad052c5c20837e0d272e4441a045f6f8b61449490348"
+    },
+    "parts": {
+      "part1": {
+        "id": "tg-s35-part1",
+        "topic": "Plants and libraries",
+        "icon": "💬",
+        "questions": [
+          {
+            "q": "What flowers have special meaning in your country?",
+            "sample": ""
+          },
+          {
+            "q": "Do you like flowers?",
+            "sample": ""
+          },
+          {
+            "q": "Do you think flowers are important?",
+            "sample": ""
+          },
+          {
+            "q": "Do people in your country ever use flowers for special occasions?",
+            "sample": ""
+          },
+          {
+            "q": "Did you go to a library when you were a kid?",
+            "sample": ""
+          },
+          {
+            "q": "Do you often go to the library?",
+            "sample": ""
+          }
+        ]
+      },
+      "part2": {
+        "id": "tg-s35-part2",
+        "title": "Describe a place that is good for people to live in",
+        "bullets": [
+          "what place it is",
+          "how you know this place",
+          "what it is like",
+          "why you can recommend living there"
+        ],
+        "followUp": "",
+        "theme": "A good place to live",
+        "sample": ""
+      },
+      "part3": {
+        "id": "tg-s35-part3",
+        "theme": "Cities and facilities",
+        "questions": [
+          {
+            "q": "What makes a city a good one to live in?",
+            "sample": ""
+          },
+          {
+            "q": "Why do people still like living in cities despite there are traffic jams?",
+            "sample": ""
+          },
+          {
+            "q": "What facilities does your city have?",
+            "sample": ""
+          },
+          {
+            "q": "How do people choose a city to live in?",
+            "sample": ""
+          }
+        ]
+      }
+    }
+  }
+]

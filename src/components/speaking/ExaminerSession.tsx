@@ -43,6 +43,7 @@ export type SessionConfig = {
    * full mock picks questions at random.
    */
   mockSeed?: {
+    sourceQuestionsOnly?: boolean
     part1: string[]
     part2: { title: string; bullets: string[]; followUp: string }
     part3: string[]
@@ -73,7 +74,7 @@ function formatClock(seconds: number): string {
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
 }
 
-function uniqueQuestionMoves(questions: readonly string[]): Move[] {
+function uniqueQuestionMoves(questions: readonly string[], includeFollowups = true): Move[] {
   const seen = new Set<string>()
   const unique = questions.filter((question) => {
     const key = question.trim().toLowerCase().replace(/\s+/g, ' ')
@@ -84,18 +85,18 @@ function uniqueQuestionMoves(questions: readonly string[]): Move[] {
 
   return unique.flatMap((text, index): Move[] => [
     { type: 'seed', text },
-    ...((index === 0 || index === 2) ? [{ type: 'followup' } as Move] : []),
+    ...(includeFollowups && (index === 0 || index === 2) ? [{ type: 'followup' } as Move] : []),
   ])
 }
 
-function buildStages(config: SessionConfig): Stage[] {
-  const part1StageFrom = (questions: string[], includeIntroduction = false): Stage => ({
+export function buildStages(config: SessionConfig): Stage[] {
+  const part1StageFrom = (questions: string[], includeIntroduction = false, includeFollowups = true): Stage => ({
     part: 1,
     label: PART_LABELS[1],
     intro: 'Now, in this first part, I’d like to ask you some questions about yourself.',
     moves: [
       ...(includeIntroduction ? [{ type: 'seed', text: 'Could you tell me your full name, please?' } as Move] : []),
-      ...uniqueQuestionMoves(questions),
+      ...uniqueQuestionMoves(questions, includeFollowups),
     ],
   })
   const part2StageFrom = (card: CueCard): Stage => ({
@@ -104,14 +105,14 @@ function buildStages(config: SessionConfig): Stage[] {
     intro: 'Now we’ll move on to Part 2.',
     moves: [
       { type: 'cuecard', card },
-      { type: 'seed', text: card.followUp },
+      ...(card.followUp.trim() ? [{ type: 'seed', text: card.followUp } as Move] : []),
     ],
   })
-  const part3StageFrom = (questions: string[], topic?: string): Stage => ({
+  const part3StageFrom = (questions: string[], topic?: string, includeFollowups = true): Stage => ({
     part: 3,
     label: PART_LABELS[3],
     intro: topic ? `We’ve been talking about ${topic}. Now I’d like to discuss some more general questions related to that topic.` : 'Now I’d like to discuss some more general questions.',
-    moves: uniqueQuestionMoves(questions),
+    moves: uniqueQuestionMoves(questions, includeFollowups),
   })
 
   const part1Stage = (): Stage => part1StageFrom(pickRandom(PART1_TOPICS).questions)
@@ -131,17 +132,17 @@ function buildStages(config: SessionConfig): Stage[] {
       if (config.mockSeed) {
         const seed = config.mockSeed
         return [
-          part1StageFrom(seed.part1, true),
+          part1StageFrom(seed.part1, !seed.sourceQuestionsOnly, !seed.sourceQuestionsOnly),
           part2StageFrom({ id: 'mock-cue', theme: 'mock', ...seed.part2 }),
-          part3StageFrom(seed.part3, seed.part2.title.replace(/^Describe /i, '')),
+          part3StageFrom(seed.part3, seed.part2.title.replace(/^Describe /i, ''), !seed.sourceQuestionsOnly),
         ]
       }
       const mock = pickRandom(getIeltsSpeakingFullMockCatalog())
       const card = mock.parts.part2
       return [
-        part1StageFrom(mock.parts.part1.questions.map((question) => question.q), true),
+        part1StageFrom(mock.parts.part1.questions.map((question) => question.q), !mock.source, !mock.source),
         part2StageFrom(card),
-        part3StageFrom(mock.parts.part3.questions.map((question) => question.q), card.title.replace(/^Describe /i, '')),
+        part3StageFrom(mock.parts.part3.questions.map((question) => question.q), card.title.replace(/^Describe /i, ''), !mock.source),
       ]
     }
     case 'interview': {

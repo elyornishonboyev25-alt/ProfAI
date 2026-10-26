@@ -1,0 +1,198 @@
+[
+  {
+    "index": 31,
+    "source": {
+      "url": "https://fullspeakingjasurbekisaev2.netlify.app/",
+      "channelPost": "https://t.me/jasurbekisaev/14974",
+      "sha256": "a95d4ced4dd878e81bec2903895d24fef67c1d37db2786c3be1af900641eb7ea"
+    },
+    "original": {
+      "part1": [
+        "Do you work or study?",
+        "What do you like most?",
+        "Does your major will be benficial in the future?",
+        "Did you sing a lot when you were a child?",
+        "Do you also sing now?",
+        "Will you take course for singing in near future?",
+        "Do you usually keep your study or workplace organized?"
+      ],
+      "part2": {
+        "title": "Describe a picture or photograph in your family.",
+        "bullets": [
+          "What is in the photo?",
+          "Where is this photo in your home?",
+          "How was this picture taken?",
+          "And explain why this photo is special to you."
+        ]
+      },
+      "part3": [
+        "How important is it for families to preserve and share photographs?",
+        "In what ways do family photographs contribute to the emotional bond within a family?",
+        "Can you share an instance where a family photograph played a significant role in your life or the life of someone you know?",
+        "How have advancements in technology affected the way families document and share their memories through photographs?",
+        "Do you think there are any drawbacks to relying heavily on photographs to preserve family memories?",
+        "How would you describe an image to a friend?"
+      ]
+    },
+    "excluded": []
+  },
+  {
+    "index": 32,
+    "source": {
+      "url": "https://fullspeakingjasurbekisaev3.netlify.app/",
+      "channelPost": "https://t.me/jasurbekisaev/15824",
+      "sha256": "0ad61b929ce04c0307092f94af6719906f5823fdaf44cbc24c2ed4448e50771c"
+    },
+    "original": {
+      "part1": [
+        "Do you work or are you a student?",
+        "What subjects are you studying?",
+        "What do you like about your studies?",
+        "How often do you go shopping?",
+        "Do you prefer shopping online or offline?",
+        "Did you sing as a child?",
+        "Do you listen to music while doing other activities?",
+        "Would you like to take singing classes in the future?"
+      ],
+      "part2": {
+        "title": "Describe a book with animals in it.",
+        "bullets": [
+          "what the book is",
+          "what animals appear in it",
+          "when you read it",
+          "and explain why you remember or like this book"
+        ]
+      },
+      "part3": [
+        "What animals often occur in stories and books for children? Why?",
+        "How has people's attitude towards animals changed recently?",
+        "Are animals more intelligent than people?"
+      ]
+    },
+    "excluded": [
+      {
+        "part": "part1",
+        "question": "Do you work or are you a student?",
+        "reason": "Already present in the live bank or an earlier imported source"
+      },
+      {
+        "part": "part1",
+        "question": "How often do you go shopping?",
+        "reason": "Already present in the live bank or an earlier imported source"
+      }
+    ]
+  },
+  {
+    "index": 33,
+    "source": {
+      "url": "https://fullspeakingjasurbekisaev4.netlify.app/",
+      "channelPost": "https://t.me/jasurbekisaev/16224",
+      "sha256": "12876b611c536ae33961775f5cc2bbe3414aca396422fb53a40fbe62a80af3e0"
+    },
+    "original": {
+      "part1": [
+        "Can you describe the place where you live?",
+        "How long have you been living there?",
+        "Do you like your hometown?",
+        "How do you remember important things?",
+        "Have you ever forgotten something important?",
+        "What kinds of things do you need to remember every day?",
+        "Do you think technology helps people remember things?",
+        "Are you good at remembering names and numbers?"
+      ],
+      "part2": {
+        "title": "Describe a shop you often visit.",
+        "bullets": [
+          "what shop it is and where it is",
+          "what it sells",
+          "why you like it"
+        ]
+      },
+      "part3": [
+        "Do you think that people buy a lot of things that they don't need?",
+        "Do you often buy more than you expected?",
+        "How do advertisements influence people's buying decisions?",
+        "Do advertisements encourage people to buy things they don't really need?",
+        "Why do some people like shopping?",
+        "Do you think shopping with friends is more fun?"
+      ]
+    },
+    "excluded": []
+  },
+  {
+    "index": 34,
+    "source": {
+      "url": "https://t.me/jasurbekisaev/11717",
+      "channelPost": "https://t.me/jasurbekisaev/11717",
+      "pages": [
+        20,
+        21
+      ],
+      "selection": "Sharing things; first Part 2 and its Part 3",
+      "sha256": "b0e715fc97fe6dfd7b3fad052c5c20837e0d272e4441a045f6f8b61449490348"
+    },
+    "original": {
+      "part1": [
+        "Do you think kids like to share?",
+        "Do you like to share things?",
+        "When you were a kid, did your parents encourage you to share things with others?",
+        "Have you ever shared anything with anyone?"
+      ],
+      "part2": {
+        "title": "Describe an interesting place you have been to with a friend",
+        "bullets": [
+          "what place it was",
+          "why you went there",
+          "what you did there",
+          "why you think it’s interesting"
+        ]
+      },
+      "part3": [
+        "Why are some people unwilling to have conversations with others?",
+        "Why do some people NOT like to socialise?",
+        "Does technological development have a negative impact on communication among people?",
+        "What positive and negative effects do mobile phones have on friendship?"
+      ]
+    },
+    "excluded": []
+  },
+  {
+    "index": 35,
+    "source": {
+      "url": "https://t.me/jasurbekisaev/11717",
+      "channelPost": "https://t.me/jasurbekisaev/11717",
+      "pages": [
+        20,
+        21
+      ],
+      "selection": "Plants and Libraries; second Part 2 and its Part 3",
+      "sha256": "b0e715fc97fe6dfd7b3fad052c5c20837e0d272e4441a045f6f8b61449490348"
+    },
+    "original": {
+      "part1": [
+        "What flowers have special meaning in your country?",
+        "Do you like flowers?",
+        "Do you think flowers are important?",
+        "Do people in your country ever use flowers for special occasions?",
+        "Did you go to a library when you were a kid?",
+        "Do you often go to the library?"
+      ],
+      "part2": {
+        "title": "Describe a place that is good for people to live in",
+        "bullets": [
+          "what place it is",
+          "how you know this place",
+          "what it is like",
+          "why you can recommend living there"
+        ]
+      },
+      "part3": [
+        "What makes a city a good one to live in?",
+        "Why do people still like living in cities despite there are traffic jams?",
+        "What facilities does your city have?",
+        "How do people choose a city to live in?"
+      ]
+    },
+    "excluded": []
+  }
+]

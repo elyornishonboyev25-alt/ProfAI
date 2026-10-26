@@ -120,3 +120,5 @@ console.log(
   `Speaking bank valid: ${part1.length} Part 1 topics (${part1QuestionCount} questions), ` +
     `${part2.length} Part 2 cards, ${part3.length} Part 3 themes (${part3QuestionCount} questions), no duplicates.`,
 )
+
+await import('./validate-telegram-speaking.mjs')

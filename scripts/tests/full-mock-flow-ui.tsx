@@ -63,7 +63,7 @@ export async function run() {
     localStorage.clear()
     useAuthStore.getState().setSession({ user: { id: 'mock-flow-qa', fullName: 'QA', email: 'qa@example.test', role: 'USER', premium: true, xp: 0, level: 1, currentStreak: 0, onboardingCompleted: true }, accessToken: 'local-qa', refreshToken: 'local-qa' })
     const catalog = getFullMockCatalog()
-    assert.equal(catalog.length, 30)
+    assert.equal(catalog.length, 35)
     for (const mock of catalog) {
       assert.equal(mock.fullyReady, true, mock.id)
       assert.deepEqual(mock.sections.map(section => section.key), ['listening', 'reading', 'writing', 'speaking'])
@@ -124,7 +124,7 @@ export async function run() {
     assert.equal(getFullMockPendingSection('full-mock-30')?.key, 'writing')
     await mount('/ielts/speaking/test/speaking-full-30', fullMockLaunchState('full-mock-30', 'speaking'))
     assert.equal(path, '/ielts/writing/test/writing-full-30', 'Stale Speaking history redirects to unfinished Writing')
-    console.log('PASS: all 30 real mock routes; AI failure/retry; delayed awards; stale Speaking history repairs Writing gap')
+    console.log('PASS: all 35 real mock routes; AI failure/retry; delayed awards; stale Speaking history repairs Writing gap')
   } finally {
     if (root) await act(async () => root!.unmount())
     globalThis.fetch = originalFetch

@@ -46,7 +46,7 @@ export async function run() {
     speaking: getIeltsSpeakingFullMockCatalog().map((entry) => entry.id),
   }
   for (const [skill, ids] of Object.entries(catalogs)) {
-    assert.equal(ids.length, 30)
+    assert.equal(ids.length, 35)
     ids.forEach((id, index) => {
       const vocabulary = getIeltsTestVocabulary(id)!
       assert.ok(vocabulary, `${skill} ${id} has vocabulary`)
@@ -59,7 +59,8 @@ export async function run() {
   assert.equal(getIeltsTestVocabulary('missing-test'), null)
   assert.equal(speakingVocabularyTestId('Speaking Full Mock 23'), 'speaking-full-23')
   assert.equal(speakingVocabularyTestId('Speaking Full Test 23'), '')
-  console.log('PASS: all 120 live full tests resolve their exact vocabulary')
+  assert.equal(speakingVocabularyTestId('Speaking Full Mock 35'), 'speaking-full-35')
+  console.log('PASS: all 140 live full tests resolve their exact vocabulary')
 
   for (const unsafe of ['https://example.com', '//example.com', '/vocabulary/ielts', '/test/listening/missing-test', '/test/listening/ielts-listening-1\\evil']) {
     assert.equal(getIeltsVocabularyReturnTo(unsafe), null)

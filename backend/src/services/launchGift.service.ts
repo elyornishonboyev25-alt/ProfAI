@@ -33,6 +33,15 @@ async function reserve(userId: string) {
   })
 }
 
+/**
+ * Numbers a new account at sign-up, so places follow registration order (the
+ * accounts that existed at launch hold 1..N). Sign-up never fails because of it;
+ * a missed reservation is retried when the gift is first shown.
+ */
+export async function reserveLaunchGiftAtSignup(userId: string) {
+  await reserve(userId).catch(error => console.error('Launch gift reservation failed:', error))
+}
+
 async function describe(gift: LaunchGift | null, userId: string) {
   const stats = await launchGiftStats()
   if (!gift) return { eligible: false, ...stats, rank: null, claimedAt: null, expiresAt: null, extended: false, referralCode: null }

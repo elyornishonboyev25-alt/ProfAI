@@ -19,6 +19,7 @@ import {
 import { env } from '../config/env.js'
 import { requireAuth } from '../middleware/auth.js'
 import { accountOverview } from '../services/billing.service.js'
+import { reserveLaunchGiftAtSignup } from '../services/launchGift.service.js'
 import { sendAuthCode, type AuthCodePurpose } from '../services/authEmail.service.js'
 import { AuthSessionError, assertDeviceAvailable, createAuthSession, requestDevice, sessionDeviceKey, DEVICE_USAGE_WINDOW_MS, type DeviceSignals } from '../services/authActivity.service.js'
 import activityRoutes from './authActivity.routes.js'
@@ -371,6 +372,7 @@ router.post(
         profile: { select: { onboardingCompletedAt: true } },
       },
     })
+    await reserveLaunchGiftAtSignup(user.id)
 
     const tokens = await issueAuthTokens({
       userId: user.id,
@@ -484,6 +486,7 @@ router.post(
       }
       throw error
     }
+    await reserveLaunchGiftAtSignup(user.id)
     const tokens = await issueAuthTokens({
       userId: user.id,
       role: user.role,
@@ -650,6 +653,7 @@ router.post(
           profile: { select: { onboardingCompletedAt: true } },
         },
       })
+    if (!existingUser) await reserveLaunchGiftAtSignup(user.id)
 
     const tokens = await issueAuthTokens({
       userId: user.id,

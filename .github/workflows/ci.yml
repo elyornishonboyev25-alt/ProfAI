@@ -35,6 +35,9 @@ jobs:
       - name: Build frontend
         run: npm run build
 
+      - name: Check release build validation gate
+        run: npm run test:release-build
+
   backend:
     runs-on: ubuntu-latest
     steps:

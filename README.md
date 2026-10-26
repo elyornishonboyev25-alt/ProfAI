@@ -184,6 +184,22 @@ npm run build
 ```
 4. Output directory: `dist`
 
+### Frontend (Railway)
+For the frontend service on Railway, use `npm run build:release` and
+`npm run start:web` (healthcheck: `/healthz`). The release command checks the
+public GitHub Actions result for the exact Railway commit and branch. It only
+reuses content validation and TypeScript checks after the latest push run of
+`.github/workflows/ci.yml` succeeds. Vite still builds the app with Railway's
+environment, including the existing SAT vocabulary sync plugin. Missing source
+metadata, unfinished/failed CI, or an unavailable GitHub API falls back to the
+original `npm run build`; no GitHub token is required.
+
+Keep the full `npm run build` in GitHub Actions. Railway's optional **Wait for CI**
+setting avoids starting builds before those checks finish. Include `/scripts/**`,
+`/shared/**` and `/.github/workflows/ci.yml` in the frontend service's watch paths.
+This reduces repeated validation work; dependency installation, bundling and
+Railway build queue times still apply.
+
 ### Backend (Railway / Render)
 1. Create new service from `backend` directory.
 2. Provision PostgreSQL and set `DATABASE_URL`.

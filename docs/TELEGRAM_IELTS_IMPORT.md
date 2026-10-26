@@ -46,6 +46,19 @@ the exact source image URLs, without redrawing, cropping or recompression. Both
 test and saved-attempt review use those original assets. Paper snapshots retain
 the source layouts and answer IDs.
 
+The imported question panels use the shared IELTS colours, typography, answer
+controls, option feedback and question flags. Source inline presentation is
+removed at render time; question wording, options and tables remain intact.
+Existing annotation text offsets are preserved.
+
+The two original Listening maps are displayed without cropping or redrawing.
+Test 34 places word fields on the five existing numbered spaces. Test 35 accepts
+question numbers in locations A–I and synchronizes their letters with the question
+list. No correct locations are prefilled during a test. Partial numbers do not
+erase saved answers, and restored review shows the saved placement and optional
+correct-answer feedback. The source-image paths identify these layouts even in
+older serialized attempts. Narrow screens scroll the map without distorting it.
+
 Each Listening paper uses its own continuous source recording. Tests 31–34 retain
 the original Jukehost audio URLs; the embedded recording for Test 35 is included
 locally. All five complete recordings were downloaded and their original byte
@@ -88,5 +101,10 @@ Writing and Speaking words are labelled as topic vocabulary and do not alter the
 - `node scripts/test-listening-parts-ui.mjs scripts/tests/telegram-source-ui.tsx`:
   source input state, multiple-choice limits, immutable-paper review, navigation
   anchors and HTML sanitization.
+- `node scripts/test-listening-parts-ui.mjs scripts/tests/telegram-maps-ui.tsx`:
+  all 35 imported sections, original text offsets, map writing, flags, stable focus,
+  bidirectional matching, saved review and hidden-answer review.
+- `node scripts/test-telegram-ielts-browser.mjs`: every imported section at
+  1366/390/320px, original map dimensions, real typing, reload and review.
 - Existing `listening-audio-completion.tsx`: final-track completion, 120-second
   countdown, playlists, audio failures, review playback and Reading timing.

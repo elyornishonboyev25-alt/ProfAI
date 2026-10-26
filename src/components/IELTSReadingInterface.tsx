@@ -4101,6 +4101,8 @@ export default function IELTSReadingInterface({
             {currentSection.sourceQuestionsHtml ? (
               <SourceQuestionLayout html={currentSection.sourceQuestionsHtml} questions={currentSection.questions} answers={answers}
                 onAnswer={handleAnswerChange} onQuestionFocus={id => setLastActiveQuestionIndex(getCurrentSectionGlobalIndex(id))}
+                flaggedQuestionIds={new Set(currentSection.questions.filter(question => flaggedQuestions.includes(getCurrentSectionGlobalIndex(question.id))).map(question => question.id))}
+                onFlagQuestion={id => handleFlagQuestion(getCurrentSectionGlobalIndex(id))}
                 review={isReviewMode} showCorrectAnswers={reviewShowCorrectAnswers} reviewQuestions={reviewQuestionMap} />
             ) : (currentSection?.groups ?? []).map((group, groupIndex) => renderListeningGroup(group, groupIndex))}
           </div>
@@ -4130,6 +4132,8 @@ export default function IELTSReadingInterface({
         {currentSection.sourceQuestionsHtml ? (
           <SourceQuestionLayout html={currentSection.sourceQuestionsHtml} questions={currentSection.questions} answers={answers}
             onAnswer={handleAnswerChange} onQuestionFocus={id => setLastActiveQuestionIndex(getCurrentSectionGlobalIndex(id))}
+            flaggedQuestionIds={new Set(currentSection.questions.filter(question => flaggedQuestions.includes(getCurrentSectionGlobalIndex(question.id))).map(question => question.id))}
+            onFlagQuestion={id => handleFlagQuestion(getCurrentSectionGlobalIndex(id))}
             review={isReviewMode} showCorrectAnswers={reviewShowCorrectAnswers} reviewQuestions={reviewQuestionMap} />
         ) : currentSection?.questions.map((q: Question, idx: number) => {
           const globalIdx = getQuestionGlobalIndex(currentSectionIndex, idx);

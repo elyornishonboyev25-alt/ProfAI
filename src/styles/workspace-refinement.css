@@ -68,9 +68,15 @@
   .profai-dashboard .dashboard-progress-orbit { width:9rem; }
 }
 
-/* Desktop navigation collapses to an icon rail while preserving direct links. */
+/* Desktop navigation collapses to an icon rail while preserving direct links.
+   Only the rail's width animates: icons keep one position in both states,
+   labels fade instead of reflowing, and the page follows with a transform
+   started in Sidebar.tsx rather than a per-frame margin transition. */
+.app-shell { --rail-duration:320ms; --rail-ease:cubic-bezier(.22,1,.36,1); }
 .app-shell .liquid-sidebar {
   overflow-x:hidden;
+  padding-right:10px;
+  padding-left:10px;
   backdrop-filter:none;
   -webkit-backdrop-filter:none;
   border-color:rgba(219,229,242,.94);
@@ -79,41 +85,97 @@
     radial-gradient(circle at 100% 6%,rgba(191,219,254,.28),transparent 40%),
     linear-gradient(155deg,rgba(251,252,255,.98),rgba(243,247,252,.97) 56%,rgba(235,242,250,.96));
   box-shadow:0 24px 60px rgba(37,56,87,.13),inset 0 1px 0 #fff,inset 0 -1px 0 rgba(148,163,184,.14);
-  transition:width 260ms cubic-bezier(.22,1,.36,1),padding 260ms cubic-bezier(.22,1,.36,1),transform 240ms var(--liquid-ease),opacity 240ms;
+  transition:width var(--rail-duration) var(--rail-ease),transform 240ms var(--liquid-ease),opacity 240ms;
 }
-@media(min-width:1024px) {
-  .app-shell .workspace-main { transition:margin-left 260ms cubic-bezier(.22,1,.36,1); }
-}
-.liquid-sidebar-heading { position:relative; display:flex; align-items:flex-start; justify-content:space-between; gap:4px; min-height:78px; transition:min-height 420ms cubic-bezier(.22,1,.36,1),gap 380ms cubic-bezier(.22,1,.36,1); }
+.app-shell .liquid-sidebar-collapsed { width:72px; }
+.liquid-sidebar-heading { position:relative; display:flex; align-items:flex-start; min-height:78px; }
 .liquid-sidebar-heading::after { position:absolute; inset:auto 5px 0; height:1px; background:linear-gradient(90deg,transparent,#dbe5f2 18%,#dbe5f2 82%,transparent); content:''; }
-.liquid-sidebar-heading .liquid-brand-link { min-width:0; max-width:180px; overflow:hidden; white-space:nowrap; margin:0 0 22px 5px; opacity:1; transition:max-width 380ms cubic-bezier(.22,1,.36,1),margin 380ms cubic-bezier(.22,1,.36,1),opacity 200ms ease,transform 380ms cubic-bezier(.22,1,.36,1),visibility 0s; }
-.liquid-sidebar-toggle {
+.liquid-sidebar-heading .liquid-brand-link { flex:none; max-width:180px; overflow:hidden; white-space:nowrap; margin:0 0 22px 9px; transition:opacity 220ms ease 110ms,transform var(--rail-duration) var(--rail-ease),visibility 0s; }
+.liquid-sidebar-collapsed .liquid-brand-link { opacity:0; transform:translateX(-10px); visibility:hidden; pointer-events:none; transition:opacity 120ms ease,transform var(--rail-duration) var(--rail-ease),visibility 0s var(--rail-duration); }
+
+/* Rail handle: a glass capsule pinned to the rail's right edge, so it glides
+   with the edge and lands centred over the icon column when collapsed. */
+.sidebar-rail-toggle {
+  position:absolute;
+  top:0;
+  right:4px;
+  z-index:2;
   display:grid;
   place-items:center;
-  flex:0 0 auto;
   width:44px;
   height:44px;
-  border:1px solid #d9e2ee;
-  border-radius:15px;
-  color:#485a72;
-  background:linear-gradient(145deg,#fff 10%,#f0f4fa 100%);
-  box-shadow:0 8px 18px rgba(48,64,88,.1),inset 0 1px 0 #fff;
+  padding:0;
+  border:0;
+  border-radius:14px;
+  color:#4a5363;
+  background:transparent;
   cursor:pointer;
-  transition:transform 220ms cubic-bezier(.22,1,.36,1),border-color 220ms ease,color 220ms ease,background 220ms ease,box-shadow 220ms ease;
+  -webkit-tap-highlight-color:transparent;
 }
-.liquid-sidebar-toggle:hover { transform:translateY(-2px); border-color:#c9d9ed; color:#b32639; background:linear-gradient(145deg,#fff,#edf4fc); box-shadow:0 12px 24px rgba(48,70,103,.14),inset 0 1px 0 #fff; }
-.liquid-sidebar-toggle:active { transform:scale(.94); box-shadow:0 4px 10px rgba(48,64,88,.12),inset 0 1px 0 #fff; }
-.liquid-sidebar-toggle-icon { position:relative; width:20px; height:20px; }
-.liquid-sidebar-toggle-icon svg { position:absolute; inset:0; transition:opacity 180ms ease,transform 300ms cubic-bezier(.22,1,.36,1); }
-.liquid-sidebar-toggle-open { opacity:0; transform:translateX(-5px) scale(.8); }
-.liquid-sidebar-collapsed .liquid-sidebar-toggle-close { opacity:0; transform:translateX(5px) scale(.8); }
-.liquid-sidebar-collapsed .liquid-sidebar-toggle-open { opacity:1; transform:translateX(0) scale(1); }
-.app-shell .liquid-sidebar .liquid-nav-item { transition:gap 380ms cubic-bezier(.22,1,.36,1),padding 380ms cubic-bezier(.22,1,.36,1),background 180ms,color 180ms,border-color 180ms,box-shadow 180ms,transform 180ms; }
-.liquid-sidebar .liquid-nav-item span,.liquid-sidebar .liquid-upgrade-link span,.liquid-sidebar .liquid-account>span:nth-child(2) { max-width:180px; overflow:hidden; white-space:nowrap; opacity:1; transition:max-width 340ms cubic-bezier(.22,1,.36,1),opacity 160ms ease,transform 340ms cubic-bezier(.22,1,.36,1); }
-.liquid-sidebar .liquid-account>svg { flex-shrink:0; max-width:20px; opacity:1; transition:max-width 340ms cubic-bezier(.22,1,.36,1),opacity 160ms ease; }
-.liquid-sidebar .liquid-secondary-nav,.liquid-sidebar .liquid-language { overflow:hidden; max-height:420px; opacity:1; transition:max-height 380ms cubic-bezier(.22,1,.36,1),opacity 180ms ease,margin 380ms cubic-bezier(.22,1,.36,1),padding 380ms cubic-bezier(.22,1,.36,1),visibility 0s; }
-.liquid-sidebar .liquid-upgrade-link { transition:gap 380ms cubic-bezier(.22,1,.36,1),transform 180ms,box-shadow 180ms,filter 180ms; }
-.liquid-sidebar .liquid-account { transition:gap 380ms cubic-bezier(.22,1,.36,1); }
+.sidebar-rail-toggle-chip {
+  position:relative;
+  display:grid;
+  place-items:center;
+  width:30px;
+  height:40px;
+  border:1px solid rgba(255,255,255,.94);
+  border-radius:999px;
+  background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(226,230,237,.84));
+  box-shadow:0 0 0 1px rgba(119,128,143,.17),0 6px 14px rgba(39,46,60,.1),inset 0 1px 0 #fff,inset 0 -1px 0 rgba(110,121,139,.14);
+  transition:transform 220ms var(--rail-ease),box-shadow 220ms ease,color 180ms ease,background 220ms ease;
+}
+.sidebar-rail-toggle-chip::after {
+  position:absolute;
+  inset:7px auto 7px 5px;
+  width:2px;
+  border-radius:2px;
+  background:linear-gradient(180deg,transparent,rgba(201,36,59,.55),transparent);
+  opacity:0;
+  transform:scaleY(.4);
+  transition:opacity 200ms ease,transform 260ms var(--rail-ease);
+  content:'';
+}
+.sidebar-rail-toggle-chevron {
+  transform:rotate(var(--rail-chevron-turn,0deg)) translateX(var(--rail-chevron-nudge,0px));
+  transition:transform var(--rail-duration) var(--rail-ease);
+}
+.liquid-sidebar-collapsed .sidebar-rail-toggle-chevron { --rail-chevron-turn:180deg; }
+.liquid-sidebar-collapsed .sidebar-rail-toggle-chip::after { inset:7px 5px 7px auto; }
+.sidebar-rail-toggle:hover .sidebar-rail-toggle-chip,
+.sidebar-rail-toggle:focus-visible .sidebar-rail-toggle-chip {
+  color:var(--silver-red-deep,#9f182d);
+  background:linear-gradient(180deg,#fff,rgba(236,224,229,.9));
+  box-shadow:0 0 0 1px rgba(201,36,59,.24),0 10px 20px rgba(39,46,60,.14),inset 0 1px 0 #fff,inset 0 -1px 0 rgba(110,121,139,.14);
+  transform:translateY(-1px);
+}
+.sidebar-rail-toggle:hover .sidebar-rail-toggle-chip::after,
+.sidebar-rail-toggle:focus-visible .sidebar-rail-toggle-chip::after { opacity:1; transform:scaleY(1); }
+.sidebar-rail-toggle:hover .sidebar-rail-toggle-chevron { --rail-chevron-nudge:-1.5px; }
+.sidebar-rail-toggle:active .sidebar-rail-toggle-chip { transform:scale(.92); transition-duration:90ms; }
+.app-shell .sidebar-rail-toggle:focus-visible { outline:none; }
+.sidebar-rail-toggle:focus-visible .sidebar-rail-toggle-chip { box-shadow:0 0 0 2px #fff,0 0 0 4px var(--silver-red,#c9243b),0 8px 18px rgba(39,46,60,.12); }
+
+/* Every row keeps its icon at the rail's centre line (36px) in both states. */
+.app-shell .liquid-sidebar :is(.liquid-nav-item,.liquid-upgrade-link,.liquid-support-link,.liquid-account) { overflow:hidden; justify-content:flex-start; }
+.app-shell .liquid-sidebar :is(.liquid-nav-item,.liquid-upgrade-link,.liquid-support-link) { padding-right:12px; padding-left:15px; }
+.app-shell .liquid-sidebar :is(.liquid-nav-item,.liquid-upgrade-link,.liquid-support-link)>svg { flex-shrink:0; }
+.app-shell .liquid-sidebar .liquid-nav-item { gap:13px; transition:background 180ms,color 180ms,border-color 180ms,box-shadow 180ms,transform 180ms; }
+.app-shell .liquid-sidebar .liquid-sidebar-footer { padding-right:0; padding-left:0; }
+.liquid-sidebar :is(.liquid-nav-item,.liquid-upgrade-link,.liquid-support-link)>span,
+.liquid-sidebar .liquid-account>span:nth-child(2),
+.liquid-sidebar .liquid-account>svg { flex-shrink:0; white-space:nowrap; opacity:1; transform:none; transition:opacity 220ms ease 110ms,transform var(--rail-duration) var(--rail-ease); }
+.liquid-sidebar .liquid-account>span:nth-child(2) { flex-shrink:1; }
+/* A fixed label measure ellipsizes long names once, not on every frame of the width change. */
+.liquid-sidebar :is(.liquid-nav-item,.liquid-upgrade-link,.liquid-support-link)>span { max-width:178px; overflow:hidden; text-overflow:ellipsis; }
+.liquid-sidebar-collapsed :is(.liquid-nav-item,.liquid-upgrade-link,.liquid-support-link)>span,
+.liquid-sidebar-collapsed .liquid-account>span:nth-child(2),
+.liquid-sidebar-collapsed .liquid-account>svg { opacity:0; transform:translateX(-6px); transition:opacity 120ms ease,transform var(--rail-duration) var(--rail-ease); }
+.app-shell .liquid-sidebar-collapsed .liquid-support-link span { display:inline; }
+.app-shell .liquid-sidebar.liquid-sidebar-collapsed .liquid-account>span:nth-child(2) { display:block; }
+.liquid-sidebar .liquid-secondary-nav,.liquid-sidebar .liquid-language { overflow:hidden; max-height:420px; opacity:1; transition:max-height var(--rail-duration) var(--rail-ease),opacity 220ms ease 110ms,margin var(--rail-duration) var(--rail-ease),padding var(--rail-duration) var(--rail-ease),visibility 0s; }
+.liquid-sidebar .liquid-language { max-height:64px; }
+.liquid-sidebar-collapsed .liquid-secondary-nav,.liquid-sidebar-collapsed .liquid-language { max-height:0; margin:0; padding:0; border-color:transparent; opacity:0; visibility:hidden; pointer-events:none; transition:max-height var(--rail-duration) var(--rail-ease),opacity 120ms ease,margin var(--rail-duration) var(--rail-ease),padding var(--rail-duration) var(--rail-ease),visibility 0s var(--rail-duration); }
+.liquid-sidebar .liquid-upgrade-link { transition:transform 180ms,box-shadow 180ms,filter 180ms; }
 .app-shell .liquid-sidebar .liquid-nav-item { font-size:14px; font-weight:650; color:#46566c; }
 .app-shell .liquid-sidebar .liquid-nav-item:hover:not(.is-current) { color:#172339; border-color:#dbe5f2; background:rgba(255,255,255,.78); box-shadow:0 8px 20px rgba(48,70,103,.07),inset 0 1px 0 #fff; }
 .app-shell .liquid-sidebar .liquid-nav-item.is-current { color:white; border-color:#c92d3b; background:linear-gradient(120deg,#ae2231,#d73342 68%,#e94b56); box-shadow:0 11px 22px rgba(173,35,52,.24),inset 0 1px 0 rgba(255,255,255,.38); }
@@ -131,62 +193,51 @@
 .liquid-upgrade-link:active { transform:translateY(0); }
 .liquid-sidebar .language-trigger { border-color:#dbe5f2; border-radius:12px; color:#485a72; background:rgba(255,255,255,.68); box-shadow:inset 0 1px 0 #fff; transition:background 180ms,border-color 180ms,color 180ms; }
 .liquid-sidebar .language-trigger:hover { border-color:#c9d9ed; color:#a82435; background:#fff; }
-.liquid-sidebar .liquid-account { border:1px solid #dbe5f2; border-radius:15px; padding:9px 8px; color:#25354d; background:linear-gradient(145deg,rgba(255,255,255,.9),rgba(243,247,252,.76)); box-shadow:0 8px 20px rgba(48,70,103,.06),inset 0 1px 0 #fff; transition:gap 380ms cubic-bezier(.22,1,.36,1),border-color 180ms,box-shadow 180ms,transform 180ms; }
+.liquid-sidebar .liquid-account { border:1px solid #dbe5f2; border-radius:15px; padding:9px 8px 9px 7px; color:#25354d; background:linear-gradient(145deg,rgba(255,255,255,.9),rgba(243,247,252,.76)); box-shadow:0 8px 20px rgba(48,70,103,.06),inset 0 1px 0 #fff; transition:border-color 180ms,box-shadow 180ms,transform 180ms; }
 .liquid-sidebar .liquid-account:hover { border-color:#c6d7ea; box-shadow:0 12px 25px rgba(48,70,103,.1),inset 0 1px 0 #fff; transform:translateY(-1px); }
-/* Keep the expanded navigation and account controls visible at laptop and zoomed viewport heights. */
+/* Keep the navigation and account controls visible at laptop and zoomed viewport
+   heights. Vertical metrics match in both states so rows never jump on toggle. */
 @media (min-width:1024px) and (max-height:950px) {
-  .app-shell .liquid-sidebar:not(.liquid-sidebar-collapsed) { padding-top:18px; padding-bottom:12px; }
-  .liquid-sidebar:not(.liquid-sidebar-collapsed) .liquid-sidebar-heading { min-height:64px; }
-  .liquid-sidebar:not(.liquid-sidebar-collapsed) .liquid-brand-link { margin-bottom:12px; }
-  .app-shell .liquid-sidebar:not(.liquid-sidebar-collapsed) .liquid-nav-item { min-height:48px; margin:2px 0; padding:10px 12px; font-size:13px; line-height:1.3; }
+  .app-shell .liquid-sidebar { padding-top:18px; padding-bottom:12px; }
+  .liquid-sidebar .liquid-sidebar-heading { min-height:64px; }
+  .liquid-sidebar .liquid-brand-link { margin-bottom:12px; }
+  .app-shell .liquid-sidebar .liquid-nav-item { min-height:48px; margin:2px 0; padding-top:10px; padding-bottom:10px; font-size:13px; line-height:1.3; }
   .liquid-sidebar:not(.liquid-sidebar-collapsed) .liquid-secondary-nav { margin-top:12px; padding-top:9px; }
-  .liquid-sidebar:not(.liquid-sidebar-collapsed) .liquid-secondary-nav summary { padding:8px 12px; }
-  .liquid-sidebar:not(.liquid-sidebar-collapsed) .liquid-secondary-nav a { min-height:38px; padding:8px 12px; }
-  .liquid-sidebar:not(.liquid-sidebar-collapsed) .liquid-sidebar-footer { margin-top:12px; padding-top:10px; }
-  .liquid-sidebar:not(.liquid-sidebar-collapsed) .liquid-upgrade-link { min-height:42px; margin-bottom:8px; padding:8px 12px; }
-  .liquid-sidebar:not(.liquid-sidebar-collapsed) .language-trigger { min-height:36px; padding:6px 10px; }
-  .liquid-sidebar:not(.liquid-sidebar-collapsed) .liquid-account { margin-top:8px; padding:7px 8px; }
+  .liquid-sidebar .liquid-secondary-nav summary { padding:8px 12px; }
+  .liquid-sidebar .liquid-secondary-nav a { min-height:38px; padding:8px 12px; }
+  .liquid-sidebar .liquid-sidebar-footer { margin-top:12px; padding-top:10px; }
+  .app-shell .liquid-sidebar .liquid-upgrade-link { min-height:42px; margin-bottom:8px; padding-top:8px; padding-bottom:8px; }
+  .liquid-sidebar .language-trigger { min-height:36px; padding:6px 10px; }
+  .app-shell .liquid-sidebar .liquid-account { margin-top:8px; padding-top:7px; padding-bottom:7px; }
 }
 @media (min-width:1024px) and (max-height:820px) {
-  .app-shell .liquid-sidebar:not(.liquid-sidebar-collapsed) { padding-top:14px; padding-bottom:10px; }
-  .liquid-sidebar:not(.liquid-sidebar-collapsed) .liquid-sidebar-heading { min-height:56px; }
-  .liquid-sidebar:not(.liquid-sidebar-collapsed) .liquid-brand-link { margin-bottom:6px; }
-  .app-shell .liquid-sidebar:not(.liquid-sidebar-collapsed) .liquid-nav-item { min-height:44px; margin:1px 0; padding:7px 12px; }
+  .app-shell .liquid-sidebar { padding-top:14px; padding-bottom:10px; }
+  .liquid-sidebar .liquid-sidebar-heading { min-height:56px; }
+  .liquid-sidebar .liquid-brand-link { margin-bottom:6px; }
+  .app-shell .liquid-sidebar .liquid-nav-item { min-height:44px; margin:1px 0; padding-top:7px; padding-bottom:7px; }
   .liquid-sidebar:not(.liquid-sidebar-collapsed) .liquid-secondary-nav { margin-top:8px; padding-top:5px; }
-  .liquid-sidebar:not(.liquid-sidebar-collapsed) .liquid-secondary-nav summary { padding:6px 12px; }
-  .liquid-sidebar:not(.liquid-sidebar-collapsed) .liquid-secondary-nav a { min-height:34px; padding:6px 12px; }
-  .liquid-sidebar:not(.liquid-sidebar-collapsed) .liquid-sidebar-footer { margin-top:8px; padding-top:7px; }
-  .liquid-sidebar:not(.liquid-sidebar-collapsed) .liquid-upgrade-link { min-height:40px; margin-bottom:5px; }
-  .liquid-sidebar:not(.liquid-sidebar-collapsed) .language-trigger { min-height:34px; }
-  .liquid-sidebar:not(.liquid-sidebar-collapsed) .liquid-account { margin-top:5px; padding:5px 8px; }
+  .liquid-sidebar .liquid-secondary-nav summary { padding:6px 12px; }
+  .liquid-sidebar .liquid-secondary-nav a { min-height:34px; padding:6px 12px; }
+  .liquid-sidebar .liquid-sidebar-footer { margin-top:8px; padding-top:7px; }
+  .app-shell .liquid-sidebar .liquid-upgrade-link { min-height:40px; margin-bottom:5px; }
+  .liquid-sidebar .language-trigger { min-height:34px; }
+  .app-shell .liquid-sidebar .liquid-account { margin-top:5px; padding-top:5px; padding-bottom:5px; }
 }
 @media (min-width:1024px) and (max-height:650px) {
-  .app-shell .liquid-sidebar:not(.liquid-sidebar-collapsed) { padding-top:8px; padding-bottom:8px; }
-  .liquid-sidebar:not(.liquid-sidebar-collapsed) .liquid-sidebar-heading { min-height:46px; }
-  .app-shell .liquid-sidebar:not(.liquid-sidebar-collapsed) .liquid-nav-item { min-height:38px; margin:0; padding:5px 10px; }
+  .app-shell .liquid-sidebar { padding-top:8px; padding-bottom:8px; }
+  .liquid-sidebar .liquid-sidebar-heading { min-height:46px; }
+  .app-shell .liquid-sidebar .liquid-nav-item { min-height:38px; margin:0; padding-top:5px; padding-bottom:5px; }
   .liquid-sidebar:not(.liquid-sidebar-collapsed) .liquid-secondary-nav { margin-top:4px; padding-top:3px; }
-  .liquid-sidebar:not(.liquid-sidebar-collapsed) .liquid-sidebar-footer { margin-top:4px; padding-top:5px; }
-  .liquid-sidebar:not(.liquid-sidebar-collapsed) .liquid-support-link,
-  .liquid-sidebar:not(.liquid-sidebar-collapsed) .liquid-upgrade-link { min-height:36px; }
+  .liquid-sidebar .liquid-sidebar-footer { margin-top:4px; padding-top:5px; }
+  .app-shell .liquid-sidebar :is(.liquid-support-link,.liquid-upgrade-link) { min-height:36px; }
 }
-.app-shell .liquid-sidebar-collapsed { width:72px; padding:17px 9px; }
-.liquid-sidebar-collapsed .liquid-sidebar-heading { min-height:64px; gap:0; justify-content:center; }
-.liquid-sidebar-collapsed .liquid-brand-link { max-width:0; margin:0; opacity:0; transform:translateX(-8px); visibility:hidden; pointer-events:none; transition:max-width 380ms cubic-bezier(.22,1,.36,1),margin 380ms cubic-bezier(.22,1,.36,1),opacity 200ms ease,transform 380ms cubic-bezier(.22,1,.36,1),visibility 0s 380ms; }
-.liquid-sidebar-collapsed .liquid-nav-item span,.liquid-sidebar-collapsed .liquid-upgrade-link span,.liquid-sidebar-collapsed .liquid-account>span:nth-child(2) { max-width:0; opacity:0; transform:translateX(-8px); }
-.liquid-sidebar-collapsed .liquid-account>svg { max-width:0; opacity:0; }
-.liquid-sidebar-collapsed .liquid-secondary-nav,.liquid-sidebar-collapsed .liquid-language { max-height:0; margin:0; padding:0; border-color:transparent; opacity:0; visibility:hidden; pointer-events:none; transition:max-height 380ms cubic-bezier(.22,1,.36,1),opacity 180ms ease,margin 380ms cubic-bezier(.22,1,.36,1),padding 380ms cubic-bezier(.22,1,.36,1),visibility 0s 380ms; }
-.liquid-sidebar-collapsed .liquid-nav-item { justify-content:center; gap:0; padding:12px; min-height:50px; }
-.liquid-sidebar-collapsed .liquid-sidebar-footer { padding:12px 0 0; }
-.liquid-sidebar-collapsed .liquid-upgrade-link { gap:0; min-height:48px; padding:10px; }
-.liquid-sidebar-collapsed .liquid-account { justify-content:center; gap:0; padding:8px 0; }
-.liquid-sidebar-collapsed .liquid-account img,.liquid-sidebar-collapsed .liquid-account .liquid-avatar { width:36px; height:36px; }
-@media(max-width:1023px) { .liquid-sidebar-toggle { display:none; } }
+@media(max-width:1023px) { .sidebar-rail-toggle { display:none; } }
 @media(prefers-reduced-motion:reduce) {
-  .app-shell .liquid-sidebar,.app-shell .workspace-main,.liquid-sidebar-heading,.liquid-sidebar-heading .liquid-brand-link,.liquid-sidebar-toggle,.liquid-sidebar-toggle-icon svg,.app-shell .liquid-sidebar .liquid-nav-item,.liquid-sidebar .liquid-nav-item span,.liquid-sidebar .liquid-upgrade-link,.liquid-sidebar .liquid-upgrade-link span,.liquid-sidebar .liquid-account,.liquid-sidebar .liquid-account>span:nth-child(2),.liquid-sidebar .liquid-account>svg,.liquid-sidebar .liquid-secondary-nav,.liquid-sidebar .liquid-secondary-nav summary,.liquid-sidebar .liquid-language,.liquid-sidebar .language-trigger { transition:none; }
+  .app-shell .liquid-sidebar,.app-shell .liquid-sidebar *,.app-shell .liquid-sidebar *::after { transition-duration:0s !important; transition-delay:0s !important; }
 }
-html[data-motion='minimal'] .app-shell .liquid-sidebar,
-html[data-motion='minimal'] .app-shell .workspace-main,
-html[data-motion='minimal'] .liquid-sidebar :is(.liquid-sidebar-heading,.liquid-brand-link,.liquid-sidebar-toggle,.liquid-sidebar-toggle-icon svg,.liquid-nav-item,.liquid-nav-item span,.liquid-upgrade-link,.liquid-upgrade-link span,.liquid-account,.liquid-account>span:nth-child(2),.liquid-account>svg,.liquid-secondary-nav,.liquid-secondary-nav summary,.liquid-language,.language-trigger) { transition:none; }
+html:is([data-motion='minimal'],[data-effects='reduced']) .app-shell .liquid-sidebar,
+html:is([data-motion='minimal'],[data-effects='reduced']) .app-shell .liquid-sidebar *,
+html:is([data-motion='minimal'],[data-effects='reduced']) .app-shell .liquid-sidebar *::after { transition-duration:0s !important; transition-delay:0s !important; }
 
 /* The dashboard placeholder uses the same shell, columns, and card positions as its content. */
 .dashboard-route-loader .dashboard-loader-header { height:auto; min-height:5.4rem; }

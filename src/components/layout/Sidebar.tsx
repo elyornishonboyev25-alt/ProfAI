@@ -1,8 +1,8 @@
 import { isPremiumUser } from '@/utils/premiumAccess'
 import CrownBadge from '@/components/fx/CrownBadge'
-import { useEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import { Bot, ChevronDown, Crown, PanelLeftClose, PanelLeftOpen, Settings, Trophy, Users, CircleHelp, Languages } from 'lucide-react'
+import { Bot, ChevronDown, ChevronLeft, Crown, Settings, Trophy, Users, CircleHelp, Languages } from 'lucide-react'
 import { BrandLockup } from '@/components/brand/BrandLogo'
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import { WORKSPACE_NAVIGATION } from '@/config/workspaceNavigation'
@@ -10,6 +10,15 @@ import { useAuthStore } from '@/store/authStore'
 import { useCopy } from '@/i18n/interface'
 import LanguageSelector from './LanguageSelector'
 import { useAccountAccess } from '@/features/billing/useAccountAccess'
+
+// Keep in step with --rail-duration and --rail-ease in workspace-refinement.css.
+const RAIL_DURATION = 320
+const RAIL_EASE = 'cubic-bezier(.22,1,.36,1)'
+
+function prefersStillRail() {
+  const root = document.documentElement
+  return root.dataset.effects === 'reduced' || root.dataset.motion === 'minimal' || window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
 
 export function Sidebar({ concealed = false, collapsed = false, onToggle }: { concealed?: boolean; collapsed?: boolean; onToggle: () => void }) {
   const ref = useRef<HTMLElement>(null)
@@ -25,14 +34,42 @@ export function Sidebar({ concealed = false, collapsed = false, onToggle }: { co
     if (concealed) ref.current?.setAttribute('inert', '')
     else ref.current?.removeAttribute('inert')
   }, [concealed])
+  // The page follows the rail with a transform (FLIP), so its content lays out
+  // once at the new width instead of on every frame of a margin transition.
+  const mainLeftBeforeToggle = useRef<number | null>(null)
+  const mainMotion = useRef<Animation | null>(null)
+  const workspaceMain = () => ref.current?.parentElement?.querySelector<HTMLElement>(':scope > .workspace-main') ?? null
+  const toggle = () => {
+    const main = workspaceMain()
+    mainLeftBeforeToggle.current = main && window.matchMedia('(min-width: 1024px)').matches && !prefersStillRail() ? main.getBoundingClientRect().left : null
+    onToggle()
+  }
+  useLayoutEffect(() => {
+    const first = mainLeftBeforeToggle.current
+    mainLeftBeforeToggle.current = null
+    const main = workspaceMain()
+    if (first === null || !main) return
+    mainMotion.current?.cancel()
+    const delta = first - main.getBoundingClientRect().left
+    if (Math.abs(delta) < 1) return
+    const frame = main.parentElement
+    if (frame) frame.style.overflowX = 'clip'
+    const motion = main.animate([{ transform: `translate3d(${delta}px,0,0)` }, { transform: 'translate3d(0,0,0)' }], { duration: RAIL_DURATION, easing: RAIL_EASE })
+    mainMotion.current = motion
+    const settle = () => {
+      if (mainMotion.current !== motion) return
+      mainMotion.current = null
+      if (frame) frame.style.overflowX = ''
+    }
+    motion.onfinish = settle
+    motion.oncancel = settle
+  }, [collapsed])
+  const toggleLabel = c(collapsed ? 'Expand sidebar' : 'Collapse sidebar')
   return <aside ref={ref} aria-hidden={concealed} className={`profai-sidebar liquid-sidebar ${concealed ? 'liquid-sidebar-concealed' : ''} ${collapsed ? 'liquid-sidebar-collapsed' : ''}`}>
     <div className="liquid-sidebar-heading">
       <NavLink to="/dashboard" className="liquid-brand-link" aria-label="Ivygoo"><BrandLockup iconSize={44} subtitle={c('Your next chapter')} /></NavLink>
-      <button type="button" className="liquid-sidebar-toggle" onClick={onToggle} aria-label={c(collapsed ? 'Expand sidebar' : 'Collapse sidebar')} aria-expanded={!collapsed} title={c(collapsed ? 'Expand sidebar' : 'Collapse sidebar')}>
-        <span className="liquid-sidebar-toggle-icon" aria-hidden="true">
-          <PanelLeftClose className="liquid-sidebar-toggle-close" size={20} strokeWidth={1.9} />
-          <PanelLeftOpen className="liquid-sidebar-toggle-open" size={20} strokeWidth={1.9} />
-        </span>
+      <button type="button" className="sidebar-rail-toggle" onClick={toggle} aria-label={toggleLabel} aria-expanded={!collapsed} title={toggleLabel}>
+        <span className="sidebar-rail-toggle-chip" aria-hidden="true"><ChevronLeft className="sidebar-rail-toggle-chevron" size={17} strokeWidth={2.4} /></span>
       </button>
     </div>
     <nav aria-label={c('Dashboard')} className="liquid-nav">

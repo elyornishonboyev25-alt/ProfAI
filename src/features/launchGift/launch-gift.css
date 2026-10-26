@@ -403,6 +403,33 @@
 
 .launch-gift-share button:hover { transform: translateY(-1px); }
 
+/* Short laptop screens: fit the whole card without scrolling. */
+@media (min-width: 481px) and (max-height: 820px) {
+  .launch-gift-card { padding: 20px 26px 18px; }
+  .launch-gift-hero { gap: 7px; }
+  .launch-gift-medal { width: 76px; height: 76px; margin-bottom: 0; }
+  .launch-gift-core { width: 54px; height: 54px; }
+  .launch-gift-core svg { width: 27px; height: 27px; }
+  .launch-gift-spark { transform: rotate(var(--angle)) translateY(-48px) rotate(45deg); }
+  .launch-gift-amount { font-size: 54px; }
+  .launch-gift-subtitle { font-size: 18px; }
+  .launch-gift-intro { font-size: 14px; line-height: 1.5; }
+  .launch-gift-rank { margin-top: 14px; padding: 13px 16px 12px; }
+  .launch-gift-rank-number { font-size: 30px; }
+  .launch-gift-meter { margin-top: 11px; }
+  .launch-gift-status { margin-top: 9px; padding-top: 9px; }
+  .launch-gift-perks { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+  .launch-gift-perks li { flex-direction: column; gap: 6px; font-size: 12px; line-height: 1.3; text-align: center; }
+  .launch-gift-actions { gap: 9px; margin-top: 14px; }
+  .launch-gift-primary { min-height: 50px; }
+  .launch-gift-hint { margin-top: -3px; }
+  .launch-gift-secondary { padding: 0 10px; }
+}
+
+@media (min-width: 481px) and (max-height: 660px) {
+  .launch-gift-perks { display: none; }
+}
+
 /* Phones: keep the main button on the first screen. */
 @media (max-width: 480px) {
   .launch-gift-card { padding: 20px 16px 16px; border-radius: 24px; }

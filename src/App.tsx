@@ -18,6 +18,7 @@ import PremiumRoute from '@/components/auth/PremiumRoute'
 import SATBrowserExitGuard from '@/components/sat/SATBrowserExitGuard'
 import BillingBoundary from '@/features/billing/BillingBoundary'
 import BillingNotice from '@/features/billing/BillingNotice'
+import LaunchGift from '@/features/launchGift/LaunchGift'
 import PremiumOnly from '@/components/premium/PremiumOnly'
 import { ToastViewport } from '@/components/common/ToastViewport'
 import { XpNotification } from '@/components/common/XpNotification'
@@ -435,6 +436,7 @@ function App() {
       <ToastViewport />
       <XpNotification deferActivityRewards={isTestMode || isExamModeActive} />
       <BillingNotice />
+      <LaunchGift enabled={!isTestMode && !isExamModeActive && !isAuthPage && !isLearningCenterMode && pathname !== '/onboarding' && pathname !== '/focus'} />
       <ClassAssignmentContext />
       {isAuthPage && <div className="liquid-auth-language glass-control"><LanguageSelector /></div>}
       <DeferredRegisterModal />

@@ -184,6 +184,7 @@ model User {
   resourceUnlocks                     ResourceUnlock[]
   testDiscussionPosts                 TestDiscussionPost[]
   testDiscussionChecks                TestDiscussionCheck[]
+  launchGift                          LaunchGift?
 
   @@index([xp, level])
   @@index([createdAt])
@@ -1396,4 +1397,16 @@ model TestDiscussionCheck {
 
   @@id([postId, userId])
   @@index([userId])
+}
+
+// Launch campaign: the first 1,000 accounts (everyone registered before it
+// started included) receive one month of Pro. Ranks are never reused.
+model LaunchGift {
+  userId    String    @id
+  rank      Int       @unique
+  claimedAt DateTime?
+  expiresAt DateTime?
+  extended  Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

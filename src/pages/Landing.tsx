@@ -1,6 +1,6 @@
 import LandingPlans from '@/features/billing/LandingPlans'
 import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from 'react'
-import { motion, useInView, useReducedMotion, useScroll, useSpring } from 'framer-motion'
+import { motion, useInView, useMotionValue, useReducedMotion, useSpring } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import Lenis from 'lenis'
 import 'lenis/dist/lenis.css'
@@ -246,8 +246,25 @@ export default function Landing() {
   const [openFaq, setOpenFaq] = useState<number | null>(0)
   const [scrolled, setScrolled] = useState(false)
   const lenis = useRef<Lenis | null>(null)
-  const { scrollYProgress } = useScroll()
+  const scrollYProgress = useMotionValue(0)
   const progress = useSpring(scrollYProgress, { stiffness: 140, damping: 30, mass: .3 })
+
+  useEffect(() => {
+    // framer's useScroll() measures the whole document on every animation frame,
+    // which forces a full layout whenever anything on the page animates. Read the
+    // page height only when it actually scrolls or resizes.
+    const update = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight
+      scrollYProgress.set(max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0)
+    }
+    update()
+    window.addEventListener('scroll', update, { passive: true })
+    window.addEventListener('resize', update)
+    return () => {
+      window.removeEventListener('scroll', update)
+      window.removeEventListener('resize', update)
+    }
+  }, [scrollYProgress])
 
   useEffect(() => {
     // Only crossing the threshold re-renders the page; every scroll frame used to re-render the whole landing.

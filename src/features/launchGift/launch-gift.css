@@ -15,10 +15,40 @@
   overflow-y: auto;
   background:
     radial-gradient(ellipse at 50% 18%, rgba(201, 36, 59, .22), transparent 55%),
-    rgba(20, 24, 32, .52);
-  -webkit-backdrop-filter: blur(12px) saturate(1.1);
-  backdrop-filter: blur(12px) saturate(1.1);
+    radial-gradient(ellipse at 50% 100%, rgba(160, 168, 182, .16), transparent 60%),
+    rgba(17, 20, 27, .66);
+  /* No backdrop blur: blurring a live page costs a full re-blur every frame. */
+  overscroll-behavior: contain;
+  animation: launch-gift-fade-in .38s cubic-bezier(.16, 1, .3, 1) both;
 }
+
+.launch-gift-overlay.is-closing { animation: launch-gift-fade-out .28s cubic-bezier(.4, 0, 1, 1) both; pointer-events: none; }
+.launch-gift-overlay.is-closing .launch-gift-card { animation: launch-gift-card-out .28s cubic-bezier(.4, 0, 1, 1) both; }
+
+/* Entrance and exit run only on transform and opacity, so the compositor
+   thread plays them at full frame rate even while the page is busy. */
+@keyframes launch-gift-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes launch-gift-fade-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes launch-gift-card-in {
+  from { opacity: 0; transform: translate3d(0, 32px, 0) scale(.94); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes launch-gift-card-out {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translate3d(0, 14px, 0) scale(.97); }
+}
+@keyframes launch-gift-rise {
+  from { opacity: 0; transform: translate3d(0, 14px, 0); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes launch-gift-core-in {
+  from { opacity: 0; transform: rotate(-16deg) scale(.45); }
+  60% { opacity: 1; transform: rotate(3deg) scale(1.06); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes launch-gift-fill { from { transform: translate3d(-100%, 0, 0); } }
+
+.launch-gift-rise { animation: launch-gift-rise .62s cubic-bezier(.16, 1, .3, 1) var(--rise-delay, .2s) both; }
 
 .launch-gift-card {
   position: relative;
@@ -30,20 +60,22 @@
   text-align: center;
   isolation: isolate;
   overflow: hidden;
+  /* Opaque enough to need no backdrop blur of its own, which keeps the entrance cheap. */
   background:
     radial-gradient(ellipse at 50% -8%, rgba(214, 44, 67, .16), transparent 52%),
-    linear-gradient(150deg, rgba(255, 255, 255, .94) 0%, rgba(239, 241, 245, .9) 44%, rgba(215, 220, 228, .92) 100%);
+    linear-gradient(150deg, #fdfdfe 0%, #eff1f5 44%, #dde1e8 100%);
   border: 1px solid rgba(255, 255, 255, .92);
   box-shadow:
     0 40px 90px rgba(12, 16, 24, .38),
     0 8px 22px rgba(12, 16, 24, .14),
     inset 0 1px 0 #fff,
     inset 0 -1px 0 rgba(110, 121, 139, .2);
-  -webkit-backdrop-filter: blur(26px) saturate(1.4);
-  backdrop-filter: blur(26px) saturate(1.4);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  animation: launch-gift-card-in .72s cubic-bezier(.16, 1, .3, 1) .04s both;
 }
 
-/* Thin rotating silver-and-crimson rim. */
+/* Thin silver-and-crimson rim. */
 .launch-gift-card::before {
   content: '';
   position: absolute;
@@ -51,36 +83,30 @@
   z-index: -1;
   padding: 1.5px;
   border-radius: inherit;
-  background: conic-gradient(from var(--lg-rim, 0deg), rgba(255, 255, 255, .95), rgba(201, 36, 59, .75), rgba(160, 168, 182, .7), rgba(255, 255, 255, .95), rgba(201, 36, 59, .55), rgba(255, 255, 255, .95));
+  background: conic-gradient(from 200deg, rgba(255, 255, 255, .95), rgba(201, 36, 59, .75), rgba(160, 168, 182, .7), rgba(255, 255, 255, .95), rgba(201, 36, 59, .55), rgba(255, 255, 255, .95));
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
-  animation: launch-gift-rim 7s linear infinite;
   pointer-events: none;
 }
 
-@property --lg-rim {
-  syntax: '<angle>';
-  inherits: false;
-  initial-value: 0deg;
-}
-
-@keyframes launch-gift-rim { to { --lg-rim: 360deg; } }
-
 .launch-gift-sheen {
   position: absolute;
-  inset: -40% auto -40% -60%;
+  top: -40%;
+  bottom: -40%;
+  left: 0;
   z-index: -1;
   width: 45%;
   background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .7), transparent);
-  transform: skewX(-18deg);
-  animation: launch-gift-sheen 5.5s ease-in-out 1.2s infinite;
+  transform: translate3d(-140%, 0, 0) skewX(-18deg);
+  animation: launch-gift-sheen 6s cubic-bezier(.45, 0, .2, 1) 1.4s infinite;
+  will-change: transform;
   pointer-events: none;
 }
 
 @keyframes launch-gift-sheen {
-  0% { left: -60%; }
-  38%, 100% { left: 130%; }
+  0% { transform: translate3d(-140%, 0, 0) skewX(-18deg); }
+  35%, 100% { transform: translate3d(300%, 0, 0) skewX(-18deg); }
 }
 
 .launch-gift-close {
@@ -122,7 +148,8 @@
   border-radius: 999px;
   background: conic-gradient(from 0deg, #f7f8fa, #9aa2ae, #ffffff, #c9243b, #f7f8fa, #a3abb7, #ffffff);
   box-shadow: 0 16px 34px rgba(154, 22, 43, .3), inset 0 0 0 1px rgba(255, 255, 255, .7);
-  animation: launch-gift-spin 9s linear infinite;
+  animation: launch-gift-spin 10s linear infinite;
+  will-change: transform;
 }
 
 .launch-gift-ring::after {
@@ -145,6 +172,7 @@
   color: #fff;
   background: var(--lg-crimson);
   box-shadow: 0 10px 24px rgba(161, 28, 48, .4), inset 0 1px 0 rgba(255, 255, 255, .45), inset 0 -6px 14px rgba(90, 8, 22, .3);
+  animation: launch-gift-core-in .8s cubic-bezier(.22, 1, .36, 1) .16s both;
 }
 
 .launch-gift-spark {
@@ -155,12 +183,20 @@
   height: 7px;
   margin: -3.5px;
   border-radius: 2px;
+  --spark-distance: -66px;
   background: linear-gradient(135deg, #fff, #c9243b);
-  transform: rotate(var(--angle)) translateY(-66px) rotate(45deg);
-  box-shadow: 0 0 10px rgba(201, 36, 59, .5);
+  opacity: 0;
+  transform: rotate(var(--angle)) translate3d(0, calc(var(--spark-distance) * .6), 0) rotate(45deg) scale(.3);
+  animation: launch-gift-spark 3.6s cubic-bezier(.16, 1, .3, 1) var(--delay, .5s) infinite;
 }
 
-.launch-gift-spark:nth-child(odd) { background: linear-gradient(135deg, #fff, #9aa2ae); box-shadow: 0 0 10px rgba(255, 255, 255, .9); }
+.launch-gift-spark:nth-child(odd) { background: linear-gradient(135deg, #fff, #9aa2ae); }
+
+@keyframes launch-gift-spark {
+  0% { opacity: 0; transform: rotate(var(--angle)) translate3d(0, calc(var(--spark-distance) * .6), 0) rotate(45deg) scale(.3); }
+  14% { opacity: 1; }
+  40%, 100% { opacity: 0; transform: rotate(var(--angle)) translate3d(0, var(--spark-distance), 0) rotate(45deg) scale(1); }
+}
 
 .launch-gift-eyebrow {
   display: inline-flex;
@@ -186,19 +222,16 @@
   line-height: 1;
   letter-spacing: -.035em;
   font-variant-numeric: tabular-nums;
-  background: linear-gradient(100deg, #8f1427 0%, #d62c43 35%, #ff9aa6 50%, #d62c43 65%, #8f1427 100%);
-  background-size: 220% 100%;
+  background: linear-gradient(100deg, #8f1427 0%, #c9243b 38%, #f06a7b 52%, #c9243b 66%, #8f1427 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 6px 14px rgba(201, 36, 59, .22));
-  animation: launch-gift-shine 4s ease-in-out infinite;
 }
 
-@keyframes launch-gift-shine {
-  0%, 100% { background-position: 100% 0; }
-  50% { background-position: 0 0; }
-}
+/* The hidden final value reserves the width; the live digits sit on top of it. */
+.launch-gift-count { display: inline-grid; }
+.launch-gift-count > * { grid-area: 1 / 1; }
+.launch-gift-count-ghost { visibility: hidden; }
 
 .launch-gift-subtitle {
   font-size: clamp(17px, 4.6vw, 20px);
@@ -260,10 +293,13 @@
 .launch-gift-meter span {
   position: relative;
   display: block;
+  width: 100%;
   height: 100%;
   overflow: hidden;
   border-radius: inherit;
   background: var(--lg-crimson);
+  transform: translate3d(var(--fill, -97%), 0, 0);
+  animation: launch-gift-fill 1.15s cubic-bezier(.16, 1, .3, 1) .55s both;
 }
 
 .launch-gift-meter span::after {
@@ -343,16 +379,17 @@
 .launch-gift-primary::after {
   content: '';
   position: absolute;
-  inset: 0 auto 0 -40%;
+  inset: 0 auto 0 0;
   width: 35%;
   background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .45), transparent);
-  transform: skewX(-18deg);
-  animation: launch-gift-button 3.2s ease-in-out 1.5s infinite;
+  transform: translate3d(-120%, 0, 0) skewX(-18deg);
+  animation: launch-gift-button 3.4s cubic-bezier(.45, 0, .2, 1) 1.8s infinite;
+  will-change: transform;
 }
 
 @keyframes launch-gift-button {
-  0% { left: -40%; }
-  45%, 100% { left: 120%; }
+  0% { transform: translate3d(-120%, 0, 0) skewX(-18deg); }
+  45%, 100% { transform: translate3d(320%, 0, 0) skewX(-18deg); }
 }
 
 .launch-gift-primary:hover { transform: translateY(-2px); box-shadow: 0 18px 36px rgba(161, 28, 48, .4), inset 0 1px 0 rgba(255, 255, 255, .4); }
@@ -410,7 +447,7 @@
   .launch-gift-medal { width: 76px; height: 76px; margin-bottom: 0; }
   .launch-gift-core { width: 54px; height: 54px; }
   .launch-gift-core svg { width: 27px; height: 27px; }
-  .launch-gift-spark { transform: rotate(var(--angle)) translateY(-48px) rotate(45deg); }
+  .launch-gift-spark { --spark-distance: -50px; }
   .launch-gift-amount { font-size: 54px; }
   .launch-gift-subtitle { font-size: 18px; }
   .launch-gift-intro { font-size: 14px; line-height: 1.5; }
@@ -437,7 +474,7 @@
   .launch-gift-medal { width: 72px; height: 72px; margin-bottom: 0; }
   .launch-gift-core { width: 52px; height: 52px; }
   .launch-gift-core svg { width: 26px; height: 26px; }
-  .launch-gift-spark { transform: rotate(var(--angle)) translateY(-46px) rotate(45deg); }
+  .launch-gift-spark { --spark-distance: -48px; }
   .launch-gift-amount { font-size: 48px; }
   .launch-gift-subtitle { font-size: 16px; }
   .launch-gift-intro { font-size: 13.5px; line-height: 1.5; }
@@ -457,11 +494,26 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .launch-gift-card::before,
+  .launch-gift-overlay,
+  .launch-gift-overlay.is-closing,
+  .launch-gift-overlay.is-closing .launch-gift-card,
+  .launch-gift-card,
+  .launch-gift-core,
+  .launch-gift-rise,
+  .launch-gift-meter span,
   .launch-gift-sheen,
   .launch-gift-ring,
-  .launch-gift-amount,
+  .launch-gift-spark,
   .launch-gift-meter span::after,
   .launch-gift-primary::after { animation: none; }
   .launch-gift-sheen { display: none; }
+}
+
+/* While the gift is open, the page behind it is covered: pause its own
+   animations so every frame goes to the dialog. They resume on close. */
+html[data-launch-gift-open] .app-shell > :not(.launch-gift-overlay),
+html[data-launch-gift-open] .app-shell > :not(.launch-gift-overlay) *,
+html[data-launch-gift-open] .app-shell > :not(.launch-gift-overlay)::before,
+html[data-launch-gift-open] .app-shell > :not(.launch-gift-overlay)::after {
+  animation-play-state: paused !important;
 }

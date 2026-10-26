@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { ArrowRight, Check, Copy, Gift, Share2, Sparkles, X } from 'lucide-react'
 import { apiClient } from '@/lib/apiClient'
 import { useAuthStore } from '@/store/authStore'
@@ -15,6 +14,8 @@ type AccountGift = GiftStats & { eligible: boolean; rank: number | null; claimed
 const CAMPAIGN_SIZE = 1000
 const CAMPAIGN_VALUE_USD = 6000
 const OPEN_DELAY_MS = 1000
+// Matches the exit animation in launch-gift.css.
+const EXIT_MS = 280
 // Guests see the invitation once per browsing session.
 const GUEST_SEEN_KEY = 'smarttest-launch-gift-guest-seen'
 
@@ -25,22 +26,36 @@ function rememberGuestSaw() {
   try { sessionStorage.setItem(GUEST_SEEN_KEY, '1') } catch { /* storage unavailable */ }
 }
 
-function useCountUp(target: number, run: boolean, instant: boolean) {
-  const [value, setValue] = useState(instant ? target : 0)
-  useEffect(() => {
-    if (!run) return
-    if (instant) { setValue(target); return }
+function prefersReducedMotion() {
+  try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches } catch { return false }
+}
+
+/**
+ * Counts up by writing straight to the DOM, so the dialog never re-renders per
+ * frame. A hidden copy of the final value reserves the width and stops the
+ * heading from reflowing while the digits change.
+ */
+function CountUp({ to, format, instant, delay = 0 }: { to: number; format: (value: number) => string; instant: boolean; delay?: number }) {
+  const live = useRef<HTMLSpanElement>(null)
+  const formatRef = useRef(format)
+  formatRef.current = format
+  useLayoutEffect(() => {
+    const node = live.current
+    if (!node) return
+    const write = (value: number) => { node.textContent = formatRef.current(value) }
+    if (instant || !to) { write(to); return }
+    write(0)
     let frame = 0
-    const started = performance.now()
+    const started = performance.now() + delay
     const tick = (time: number) => {
-      const progress = Math.min(1, (time - started) / 1400)
-      setValue(Math.round(target * (1 - Math.pow(1 - progress, 3))))
+      const progress = Math.min(1, Math.max(0, (time - started) / 1300))
+      write(Math.round(to * (1 - Math.pow(1 - progress, 3))))
       if (progress < 1) frame = requestAnimationFrame(tick)
     }
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
-  }, [target, run, instant])
-  return value
+  }, [to, instant, delay])
+  return <span className="launch-gift-count"><span className="launch-gift-count-ghost" aria-hidden="true">{format(to)}</span><span ref={live} aria-hidden="true" /><span className="sr-only">{format(to)}</span></span>
 }
 
 /** Launch campaign: one month of Pro for the first 1,000 students, announced one second after the site opens. */
@@ -50,8 +65,9 @@ export default function LaunchGift({ enabled }: { enabled: boolean }) {
   const hydrated = useAuthStore(state => state.hydrated)
   const [gift, setGift] = useState<AccountGift | null>(null)
   const [stats, setStats] = useState<GiftStats | null>(null)
-  const [open, setOpen] = useState(false)
+  const [phase, setPhase] = useState<'closed' | 'open' | 'closing'>('closed')
   const checked = useRef<string | null>(null)
+  const claimed = useRef(false)
   const signedIn = Boolean(user && accessToken)
 
   useEffect(() => {
@@ -61,21 +77,42 @@ export default function LaunchGift({ enabled }: { enabled: boolean }) {
     checked.current = owner
     let cancelled = false
     let timer = 0
-    setOpen(false)
+    let idle = 0
+    let onLoad: (() => void) | null = null
+    // Open one second after the page has finished loading, in its first idle
+    // moment, so the entrance never competes with the page's own startup work.
+    const showSoon = (show: () => void) => {
+      const schedule = () => {
+        onLoad = null
+        timer = window.setTimeout(() => {
+          if ('requestIdleCallback' in window) idle = window.requestIdleCallback(show, { timeout: 1500 })
+          else show()
+        }, OPEN_DELAY_MS)
+      }
+      if (document.readyState === 'complete') schedule()
+      else { onLoad = schedule; window.addEventListener('load', schedule, { once: true }) }
+    }
+    setPhase('closed')
     if (signedIn) {
       setStats(null)
       apiClient.get<AccountGift>('/launch-gift').then(result => {
         if (cancelled || !result.eligible || result.claimedAt) return
         setGift(result)
-        timer = window.setTimeout(() => {
-          setOpen(true)
+        showSoon(() => {
+          setPhase('open')
           // The gift is activated as soon as it is shown; a failed claim is retried on the next visit.
-          apiClient.post<AccountGift>('/launch-gift/claim').then(claimed => {
+          apiClient.post<AccountGift>('/launch-gift/claim').then(saved => {
             if (cancelled) return
-            setGift(claimed)
-            void useBillingStore.getState().refresh()
+            claimed.current = true
+            setGift(saved)
+            // If the dialog stays open, update the plan once the entrance has finished.
+            window.setTimeout(() => {
+              if (!claimed.current) return
+              claimed.current = false
+              void useBillingStore.getState().refresh()
+            }, 3000)
           }).catch(() => undefined)
-        }, OPEN_DELAY_MS)
+        })
       }).catch(() => undefined)
     } else {
       setGift(null)
@@ -83,22 +120,36 @@ export default function LaunchGift({ enabled }: { enabled: boolean }) {
       apiClient.get<GiftStats>('/launch-gift/stats', { auth: false }).then(result => {
         if (cancelled || result.remaining <= 0) return
         setStats(result)
-        timer = window.setTimeout(() => { setOpen(true); rememberGuestSaw() }, OPEN_DELAY_MS)
+        showSoon(() => { setPhase('open'); rememberGuestSaw() })
       }).catch(() => undefined)
     }
-    return () => { cancelled = true; window.clearTimeout(timer); if (checked.current === owner) checked.current = null }
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+      if (idle && 'cancelIdleCallback' in window) window.cancelIdleCallback(idle)
+      if (onLoad) window.removeEventListener('load', onLoad)
+      if (checked.current === owner) checked.current = null
+    }
   }, [enabled, hydrated, signedIn, user?.id])
 
-  const close = useCallback(() => setOpen(false), [])
+  const close = useCallback(() => {
+    setPhase(current => current === 'open' ? 'closing' : current)
+    window.setTimeout(() => setPhase(current => current === 'closing' ? 'closed' : current), EXIT_MS)
+    // Updating the plan re-renders the whole workspace; do it after the exit animation.
+    if (claimed.current) {
+      claimed.current = false
+      window.setTimeout(() => { void useBillingStore.getState().refresh() }, EXIT_MS + 150)
+    }
+  }, [])
   const data = gift ?? stats
-  return <AnimatePresence>{open && data ? <GiftDialog key="launch-gift" gift={gift} stats={data} onClose={close} /> : null}</AnimatePresence>
+  return phase !== 'closed' && data ? <GiftDialog gift={gift} stats={data} closing={phase === 'closing'} onClose={close} /> : null
 }
 
-function GiftDialog({ gift, stats, onClose }: { gift: AccountGift | null; stats: GiftStats; onClose: () => void }) {
+function GiftDialog({ gift, stats, closing, onClose }: { gift: AccountGift | null; stats: GiftStats; closing: boolean; onClose: () => void }) {
   const text = useBillingText()
   const { i18n } = useTranslation()
   const navigate = useNavigate()
-  const reduceMotion = Boolean(useReducedMotion())
+  const [reduceMotion] = useState(prefersReducedMotion)
   const primary = useRef<HTMLButtonElement>(null)
   const [shared, setShared] = useState<'idle' | 'copied'>('idle')
   const language = (i18n.resolvedLanguage ?? i18n.language ?? 'en').slice(0, 2)
@@ -109,18 +160,29 @@ function GiftDialog({ gift, stats, onClose }: { gift: AccountGift | null; stats:
   const capacity = Math.max(CAMPAIGN_SIZE, stats.capacity)
   const remaining = Math.max(0, stats.remaining)
   const issued = Math.min(capacity, stats.issued)
-  const rank = useCountUp(gift?.rank ?? 0, Boolean(gift?.rank), reduceMotion)
-  const value = useCountUp(CAMPAIGN_VALUE_USD, true, reduceMotion)
   const until = gift?.expiresAt ? new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(gift.expiresAt)) : null
+
+  // Lock page scroll before the first frame is painted, keeping the scrollbar's
+  // width so the page behind never shifts or reflows during the entrance.
+  useLayoutEffect(() => {
+    const root = document.documentElement
+    const previous = { overflow: root.style.overflow, paddingRight: root.style.paddingRight }
+    const gutter = window.innerWidth - root.clientWidth
+    root.style.overflow = 'hidden'
+    if (gutter > 0) root.style.paddingRight = `${gutter}px`
+    root.setAttribute('data-launch-gift-open', '')
+    return () => {
+      root.style.overflow = previous.overflow
+      root.style.paddingRight = previous.paddingRight
+      root.removeAttribute('data-launch-gift-open')
+    }
+  }, [])
 
   useEffect(() => {
     primary.current?.focus({ preventScroll: true })
     const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose() }
     window.addEventListener('keydown', onKey)
-    const root = document.documentElement
-    const previous = root.style.overflow
-    root.style.overflow = 'hidden'
-    return () => { window.removeEventListener('keydown', onKey); root.style.overflow = previous }
+    return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
   const shareUrl = `${window.location.origin}/${gift?.referralCode ? `?ref=${encodeURIComponent(gift.referralCode)}` : ''}`
@@ -150,35 +212,33 @@ function GiftDialog({ gift, stats, onClose }: { gift: AccountGift | null; stats:
     text('AI feedback on Writing & Speaking', 'Writing va Speaking uchun AI baholash', 'AI-проверка Writing и Speaking'),
     text('Full mock exams with score reports', 'Natija hisoboti bilan to‘liq mock imtihonlar', 'Полные пробные экзамены с отчётом'),
   ]
-  const spring = reduceMotion ? { duration: 0 } : { type: 'spring' as const, stiffness: 260, damping: 24 }
-  const rise = (delay: number) => reduceMotion ? {} : { initial: { opacity: 0, y: 14 }, animate: { opacity: 1, y: 0 }, transition: { delay, duration: .45, ease: [0.22, 1, 0.36, 1] as const } }
+  // The entrance is pure CSS keyframes on transform and opacity: the browser runs
+  // them on the compositor thread, so they stay smooth even while the page is busy.
+  const rise = (delay: number) => ({ '--rise-delay': `${delay}s` } as CSSProperties)
+  const fill = { '--fill': `${-(1 - Math.max(.03, issued / capacity)) * 100}%` } as CSSProperties
 
   return (
-    <motion.div className="launch-gift-overlay" data-lenis-prevent onMouseDown={event => { if (event.target === event.currentTarget) onClose() }}
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: reduceMotion ? 0 : .3 }}>
-      <motion.section className="launch-gift-card" role="dialog" aria-modal="true" aria-labelledby="launch-gift-title" aria-describedby="launch-gift-intro"
-        initial={reduceMotion ? false : { opacity: 0, y: 40, scale: .9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 24, scale: .96 }} transition={spring}>
+    <div className={`launch-gift-overlay${closing ? ' is-closing' : ''}`} data-lenis-prevent onMouseDown={event => { if (event.target === event.currentTarget) onClose() }}>
+      <section className="launch-gift-card" role="dialog" aria-modal="true" aria-labelledby="launch-gift-title" aria-describedby="launch-gift-intro">
         <span className="launch-gift-sheen" aria-hidden="true" />
         <button type="button" className="launch-gift-close" aria-label={text('Close', 'Yopish', 'Закрыть')} onClick={onClose}><X size={18} /></button>
 
         <header className="launch-gift-hero">
           <div className="launch-gift-medal" aria-hidden="true">
             <span className="launch-gift-ring" />
-            {!reduceMotion ? Array.from({ length: 10 }, (_, index) => (
-              <motion.i key={index} className="launch-gift-spark" style={{ '--angle': `${index * 36}deg` } as CSSProperties}
-                initial={{ opacity: 0, scale: .2 }} animate={{ opacity: [0, 1, 0], scale: [.2, 1, .6] }}
-                transition={{ delay: .35 + index * .04, duration: 1.4, repeat: Infinity, repeatDelay: 2.6 }} />
+            {!reduceMotion ? Array.from({ length: 6 }, (_, index) => (
+              <i key={index} className="launch-gift-spark" style={{ '--angle': `${index * 60 + 30}deg`, '--delay': `${.5 + index * .06}s` } as CSSProperties} />
             )) : null}
-            <motion.span className="launch-gift-core" initial={reduceMotion ? false : { rotate: -18, scale: .4 }} animate={{ rotate: 0, scale: 1 }} transition={{ ...spring, delay: reduceMotion ? 0 : .15 }}>
+            <span className="launch-gift-core">
               <Gift size={34} strokeWidth={1.9} />
-            </motion.span>
+            </span>
           </div>
-          <motion.p className="launch-gift-eyebrow" {...rise(.2)}><Sparkles size={13} />{text('ProfAI launch gift', 'ProfAI sovg‘asi', 'Подарок от ProfAI')}</motion.p>
-          <motion.h2 id="launch-gift-title" className="launch-gift-title" {...rise(.28)}>
-            <span className="launch-gift-amount">${number(value)}</span>
+          <p className="launch-gift-eyebrow launch-gift-rise" style={rise(.18)}><Sparkles size={13} />{text('ProfAI launch gift', 'ProfAI sovg‘asi', 'Подарок от ProfAI')}</p>
+          <h2 id="launch-gift-title" className="launch-gift-title launch-gift-rise" style={rise(.24)}>
+            <span className="launch-gift-amount"><CountUp to={CAMPAIGN_VALUE_USD} format={value => `$${number(value)}`} instant={reduceMotion} delay={250} /></span>
             <span className="launch-gift-subtitle">{text('in free Premium for the first 1,000 students', 'jami bepul Premium — birinchi 1 000 o‘quvchiga', 'в бесплатном Premium — первым 1 000 ученикам')}</span>
-          </motion.h2>
-          <motion.p id="launch-gift-intro" className="launch-gift-intro" {...rise(.36)}>
+          </h2>
+          <p id="launch-gift-intro" className="launch-gift-intro launch-gift-rise" style={rise(.3)}>
             {isGuest
               ? text('Create your free account and get 1 month of ProfAI Pro — a $6 plan — at no cost. No card needed.',
                 'Bepul ro‘yxatdan o‘ting va 1 oylik ProfAI Pro’ni ($6 lik tarif) tekinga oling. Karta kerak emas.',
@@ -190,13 +250,13 @@ function GiftDialog({ gift, stats, onClose }: { gift: AccountGift | null; stats:
                 : text('Thank you for joining early. Your account now has 1 month of ProfAI Pro ($6) — completely free.',
                   'Erta qo‘shilganingiz uchun rahmat. Akkauntingizda endi 1 oylik ProfAI Pro ($6) bor — butunlay bepul.',
                   'Спасибо, что присоединились рано. На вашем аккаунте теперь месяц ProfAI Pro ($6) — полностью бесплатно.')}
-          </motion.p>
+          </p>
         </header>
 
-        <motion.div className="launch-gift-rank" {...rise(.44)}>
+        <div className="launch-gift-rank launch-gift-rise" style={rise(.36)}>
           {gift?.rank ? (
             <div className="launch-gift-rank-head">
-              <span className="launch-gift-rank-number">#{number(rank)}<small>/ {number(capacity)}</small></span>
+              <span className="launch-gift-rank-number"><CountUp to={gift.rank} format={value => `#${number(value)}`} instant={reduceMotion} delay={450} /><small>/ {number(capacity)}</small></span>
               <span className="launch-gift-rank-label">{text(`You are one of the first ${number(capacity)} students to receive Premium`, `Siz Premium olgan birinchi ${number(capacity)} o‘quvchidan birisiz`, `Вы среди первых ${number(capacity)} учеников, получивших Premium`)}</span>
             </div>
           ) : (
@@ -207,7 +267,7 @@ function GiftDialog({ gift, stats, onClose }: { gift: AccountGift | null; stats:
           )}
           <div className="launch-gift-meter" role="progressbar" aria-valuemin={0} aria-valuemax={capacity} aria-valuenow={issued}
             aria-label={text('Gifts given', 'Berilgan sovg‘alar', 'Выдано подарков')}>
-            <motion.span initial={reduceMotion ? false : { width: 0 }} animate={{ width: `${Math.max(3, (issued / capacity) * 100)}%` }} transition={{ delay: reduceMotion ? 0 : .55, duration: reduceMotion ? 0 : 1.2, ease: [0.22, 1, 0.36, 1] }} />
+            <span style={fill} />
           </div>
           <p className="launch-gift-meter-note">{text(`${number(issued)} given · ${number(remaining)} left`, `${number(issued)} ta berildi · ${number(remaining)} ta qoldi`, `${number(issued)} выдано · ${number(remaining)} осталось`)}</p>
           {gift ? (
@@ -215,13 +275,13 @@ function GiftDialog({ gift, stats, onClose }: { gift: AccountGift | null; stats:
               ? text(`Pro is active until ${until}`, `Pro ${until} gacha faol`, `Pro активен до ${until}`)
               : text('Activating your Pro plan…', 'Pro tarifingiz faollashtirilmoqda…', 'Активируем ваш тариф Pro…')}</p>
           ) : null}
-        </motion.div>
+        </div>
 
-        <motion.ul className="launch-gift-perks" {...rise(.52)}>
+        <ul className="launch-gift-perks launch-gift-rise" style={rise(.42)}>
           {perks.map(perk => <li key={perk}><Check size={14} strokeWidth={2.6} />{perk}</li>)}
-        </motion.ul>
+        </ul>
 
-        <motion.div className="launch-gift-actions" {...rise(.6)}>
+        <div className="launch-gift-actions launch-gift-rise" style={rise(.48)}>
           {isGuest ? (
             <>
               <button ref={primary} type="button" className="launch-gift-primary" onClick={receive}>
@@ -247,8 +307,8 @@ function GiftDialog({ gift, stats, onClose }: { gift: AccountGift | null; stats:
               </button>
             </>
           )}
-        </motion.div>
-      </motion.section>
-    </motion.div>
+        </div>
+      </section>
+    </div>
   )
 }

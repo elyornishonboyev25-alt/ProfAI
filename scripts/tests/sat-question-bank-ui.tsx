@@ -8,7 +8,7 @@ import { SAT_TEST_CATALOG, getSATReviewTests, getSATSectionTest } from '../../sr
 import { createSATAttempt } from '../../src/features/sat/practiceTest4'
 import { saveSATAttempt, saveSATAttemptToHistory } from '../../src/features/sat/attemptStorage'
 import { useAuthStore } from '../../src/store/authStore'
-import { allQuestions, loadBankSession, questionKey, saveBankSession } from '../../src/features/sat/bankPractice'
+import { allQuestions, difficulty, loadBankSession, questionKey, saveBankSession } from '../../src/features/sat/bankPractice'
 import { bankDomain, bankSkill } from '../../src/features/sat/bankTopics'
 import { accountStorageFor } from '../../src/utils/accountStorage'
 
@@ -63,6 +63,8 @@ async function click(node: HTMLElement | null | undefined) {
   await act(async () => node.click())
 }
 async function change(label: string, value: string) {
+  const radio = container.querySelector<HTMLInputElement>(`fieldset[aria-label="${label}"] input[value="${value}"]`)
+  if (radio) return click(radio)
   const node = container.querySelector<HTMLButtonElement>(`[role="combobox"][aria-label="${label}"]`)
   await click(node)
   const option = [...container.querySelectorAll<HTMLElement>('[role="option"]')]
@@ -95,9 +97,9 @@ export async function run() {
   const key = 'profai:sat:question-bank:guest:v1'
   await render('/sat/question-bank')
   // Core topic groups cover every source label; changing sections resets dependent filters.
-  assert.equal(container.querySelector('[aria-label="Section"]')!.textContent, 'Math')
-  await click(container.querySelector('[aria-label="Section"]'))
-  assert.deepEqual([...container.querySelectorAll('[role="option"]')].map(node => node.textContent), ['Math', 'Reading & Writing'])
+  assert.equal(container.querySelector<HTMLInputElement>('[name="bank-section"]:checked')!.value, 'math')
+  assert.deepEqual([...container.querySelectorAll('[name="bank-section"]')].map(node => node.getAttribute('aria-label')), ['Math', 'Reading & Writing'])
+  await click(container.querySelector('[aria-label="Domain / topic"]'))
   await act(async () => document.dispatchEvent(new window.Event('pointerdown', { bubbles: true })))
   assert.equal(container.querySelector('[role="listbox"]'), null)
   for (const section of ['math', 'reading-writing']) {
@@ -113,15 +115,23 @@ export async function run() {
   assert.equal(matching(), allQuestions.filter(row => row.question.section === 'math' &&
     bankSkill(row.question) === 'Ratios & percentages').length)
   await click(button('Reset filters'))
-  await click(container.querySelector('[aria-label="Difficulty"]'))
-  await act(async () => container.querySelector('[aria-label="Difficulty"]')!.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'End', bubbles: true })))
-  await act(async () => container.querySelector('[aria-label="Difficulty"]')!.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true })))
-  assert.equal(container.querySelector('[aria-label="Difficulty"]')!.textContent, 'Hard')
+  await change('Difficulty', 'Hard')
+  assert.equal(container.querySelector<HTMLInputElement>('[name="bank-difficulty"]:checked')!.value, 'Hard')
+  assert.equal(matching(), allQuestions.filter(row => row.question.section === 'math' && difficulty(row.question.difficulty) === 'Hard').length)
+  assert.match(container.querySelector('.sat-bank-set-summary')!.textContent!, /10 questions · Math · Hard/)
   await change('Difficulty', 'all')
+  for (const count of [4, 6, 10, 15, 20, 30]) {
+    await change('Questions in set', String(count))
+    assert.ok(button(`Start ${count} questions`), 'Quantity shortcuts update the practice size')
+  }
+  await change('Domain / topic', 'Algebra')
+  await change('Skill / question type', 'Linear equations & functions')
   // Setup has no calculator; Math practice and saved review retain Desmos.
   assert.equal(document.querySelector('[aria-label="Open Desmos calculator"]'), null)
   assert.equal(document.querySelector('iframe'), null)
   await change('Section', 'reading-writing')
+  assert.equal(container.querySelector('[aria-label="Domain / topic"]')!.textContent, 'All domains')
+  assert.equal(container.querySelector('[aria-label="Skill / question type"]')!.textContent, 'All skills')
   assert.equal(document.querySelector('[aria-label="Open Desmos calculator"]'), null)
   assert.equal(document.querySelector('[role="dialog"]')!.getAttribute('aria-hidden'), 'true')
   await change('Section', 'math')
@@ -267,6 +277,8 @@ export async function run() {
   await change('Progress', 'incorrect')
   assert.equal(matching(), 1, 'Skipped answers are separate from previously incorrect answers')
   await change('Progress', 'marked')
+  assert.match(container.querySelector('.sat-bank-count-note')!.textContent!, /Only 1 question matches/)
+  assert.match(container.querySelector('.sat-bank-set-summary')!.textContent!, /1 question · Reading & Writing/)
   await click(button('Start 1 question'))
   assert.ok(button('Marked for Review'))
   await click(button('Marked for Review'))
@@ -276,6 +288,7 @@ export async function run() {
   await click(button('Practice'))
   await change('Progress', 'marked')
   assert.match(text(), /No questions match these filters/)
+  assert.equal(container.querySelector<HTMLButtonElement>('.sat-bank-build-actions .sat-bank-primary')!.disabled, true)
 
   // Legacy records retain review access without inventing the missing answer.
   const legacy = { ...saved[1], at: '2026-08-01T12:00:00.000Z' }

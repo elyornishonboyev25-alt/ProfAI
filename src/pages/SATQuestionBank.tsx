@@ -5,9 +5,12 @@ import {
   BookOpenCheck,
   Bookmark,
   Calculator,
+  Check,
   CheckCircle2,
   Filter,
+  Grid2X2,
   History,
+  RotateCcw,
   Target,
 } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -617,8 +620,9 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
             <section className="sat-bank-panel">
               <div className="sat-bank-panel-title">
                 <h2>Build a question set</h2>
-                <span role="status" aria-live="polite">{filtered.length} matching</span>
+                <span className="sat-bank-matching" role="status" aria-live="polite">{filtered.length} matching</span>
               </div>
+              <p className="sat-bank-builder-intro">Choose your focus. Make this practice your own.</p>
               {activeSet ? (
                 <div className="sat-bank-resume" role="status">
                   <p>You have an unfinished {activeSet.keys.length}-question set. Your answers are saved.</p>
@@ -630,25 +634,76 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
               ) : null}
               {error ? <p role="alert" className="sat-bank-alert">{error}</p> : null}
               <div className="sat-bank-filters">
-                <SATBankSelect label="Section" value={section}
-                  options={[{ value: 'math', label: 'Math' }, { value: 'reading-writing', label: 'Reading & Writing' }]}
-                  onChange={value => { setSection(value); setDomain('all'); setSkill('all'); setError('') }} />
+                <fieldset className="sat-bank-choice-field sat-bank-section-field" aria-label="Section">
+                  <legend>Section</legend>
+                  <div className="sat-bank-section-options">
+                    {[
+                      { value: 'math', label: 'Math', detail: 'Equations, data & problem solving', Icon: Calculator },
+                      { value: 'reading-writing', label: 'Reading & Writing', detail: 'Comprehension, grammar & expression', Icon: BookOpenCheck },
+                    ].map(({ value, label, detail, Icon }) => (
+                      <label key={value} className="sat-bank-section-option">
+                        <input type="radio" name="bank-section" value={value} checked={section === value}
+                          aria-label={label} onChange={() => { setSection(value); setDomain('all'); setSkill('all'); setError('') }} />
+                        <Icon size={21} aria-hidden="true" />
+                        <span><strong>{label}</strong><small>{detail}</small></span>
+                        <Check size={16} className="sat-bank-choice-check" aria-hidden="true" />
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
                 <SATBankSelect label="Domain / topic" value={domain}
                   options={[{ value: 'all', label: 'All domains' }, ...domains.map(value => ({ value, label: value }))]}
                   onChange={value => { setDomain(value); setSkill('all') }} />
                 <SATBankSelect label="Skill / question type" value={skill}
                   options={[{ value: 'all', label: 'All skills' }, ...skills.map(value => ({ value, label: value }))]}
                   onChange={setSkill} />
-                <SATBankSelect label="Difficulty" value={level}
-                  options={['all', 'Easy', 'Medium', 'Hard'].map(value => ({ value, label: value === 'all' ? 'All levels' : value }))}
-                  onChange={setLevel} />
-                <SATBankSelect label="Progress" value={status}
-                  options={[{ value: 'all', label: 'All questions' }, { value: 'unanswered', label: 'Not attempted' },
-                    { value: 'incorrect', label: 'Previously incorrect' }, { value: 'marked', label: 'Marked for Review' }]}
-                  onChange={setStatus} />
-                <SATBankSelect label="Questions in set" value={String(count)}
-                  options={[4, 6, 10, 15, 20, 30].map(value => ({ value: String(value), label: String(value) }))}
-                  onChange={value => setCount(Number(value))} />
+                <fieldset className="sat-bank-choice-field sat-bank-difficulty-field" aria-label="Difficulty">
+                  <legend>Difficulty</legend>
+                  <div className="sat-bank-difficulty-options">
+                    {['all', 'Easy', 'Medium', 'Hard'].map((value, index) => (
+                      <label key={value}>
+                        <input type="radio" name="bank-difficulty" value={value} checked={level === value}
+                          aria-label={value === 'all' ? 'All levels' : value} onChange={() => setLevel(value)} />
+                        {index ? <span className="sat-bank-level-bars" aria-hidden="true">
+                          {[1, 2, 3].map(bar => <i key={bar} data-filled={bar <= index} />)}
+                        </span> : <Grid2X2 size={16} aria-hidden="true" />}
+                        <span>{value === 'all' ? 'All levels' : value}</span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+                <fieldset className="sat-bank-choice-field sat-bank-progress-field" aria-label="Progress">
+                  <legend>Progress</legend>
+                  <div className="sat-bank-progress-options">
+                    {[
+                      { value: 'all', label: 'All questions', Icon: Grid2X2 },
+                      { value: 'unanswered', label: 'Not attempted', Icon: BookOpenCheck },
+                      { value: 'incorrect', label: 'Previously incorrect', Icon: RotateCcw },
+                      { value: 'marked', label: 'Marked for Review', Icon: Bookmark },
+                    ].map(({ value, label, Icon }) => (
+                      <label key={value}>
+                        <input type="radio" name="bank-progress" value={value} checked={status === value}
+                          aria-label={label} onChange={() => setStatus(value)} />
+                        <Icon size={16} aria-hidden="true" /><span>{label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+                <fieldset className="sat-bank-choice-field sat-bank-count-field" aria-label="Questions in set">
+                  <legend>Questions in set</legend>
+                  <div className="sat-bank-count-options">
+                    {[4, 6, 10, 15, 20, 30].map(value => (
+                      <label key={value}>
+                        <input type="radio" name="bank-count" value={value} checked={count === value}
+                          aria-label={String(value)} onChange={() => setCount(value)} />
+                        <span>{value}</span>
+                      </label>
+                    ))}
+                  </div>
+                  {filtered.length > 0 && filtered.length < count ? (
+                    <p className="sat-bank-count-note" role="status">Only {filtered.length} {filtered.length === 1 ? 'question matches' : 'questions match'} your filters. Your set will include {filtered.length === 1 ? 'it' : 'all of them'}.</p>
+                  ) : null}
+                </fieldset>
               </div>
               {!filtered.length ? (
                 <p role="status" className="sat-bank-alert">
@@ -658,6 +713,10 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                   </button>
                 </p>
               ) : null}
+              <div className="sat-bank-set-summary" aria-live="polite">
+                <BookOpenCheck size={18} aria-hidden="true" />
+                <span><strong>{Math.min(count, filtered.length)} {Math.min(count, filtered.length) === 1 ? 'question' : 'questions'}</strong> · {section === 'math' ? 'Math' : 'Reading & Writing'} · {level === 'all' ? 'Mixed difficulty' : level}</span>
+              </div>
               <div className="sat-bank-build-actions">
               <button
                 type="button"
@@ -668,7 +727,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                 Start {Math.min(count, filtered.length)} {Math.min(count, filtered.length) === 1 ? 'question' : 'questions'}{' '}
                 <ArrowRight size={17} />
               </button>
-              <button type="button" className="sat-bank-reset" onClick={reset}>Reset filters</button>
+              <button type="button" className="sat-bank-reset" onClick={reset}><RotateCcw size={14} aria-hidden="true" /> Reset filters</button>
               </div>
               <p className="sat-bank-muted">Untimed practice · Answers save automatically · Review explanations after finishing</p>
             </section>

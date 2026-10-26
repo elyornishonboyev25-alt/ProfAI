@@ -865,7 +865,69 @@
 /* Generous controls with consistently styled, bounded option lists. */
 .sat-bank-grid { align-items: start; grid-template-columns: minmax(0, 1.8fr) minmax(260px, .8fr); }
 .sat-bank-panel { min-width: 0; }
-.sat-bank-filters { gap: 20px 16px; }
+.sat-bank-filters { gap: 22px 16px; }
+.sat-bank-builder-intro { margin: 9px 0 0; color: #65748b; font-size: 13px; line-height: 1.6; }
+.sat-bank-panel-title .sat-bank-matching {
+  flex-shrink: 0; border: 1px solid #e5eaf1; border-radius: 99px;
+  padding: 6px 10px; background: #f5f7fb; color: #526279; white-space: nowrap;
+}
+.sat-bank-choice-field { min-width: 0; margin: 0; border: 0; padding: 0; grid-column: 1 / -1; }
+.sat-bank-choice-field legend { margin-bottom: 9px; padding: 0; color: #47546a; font-size: 13px; font-weight: 750; }
+.sat-bank-choice-field label { position: relative; cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
+.sat-bank-choice-field input {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+.sat-bank-choice-field label:has(input:focus-visible) { outline: 3px solid #d12c3d; outline-offset: 3px; }
+.sat-bank-choice-field label:has(input:checked) { border-color: #d52b40; background: #fff2f4; color: #b62539; }
+.sat-bank-choice-field label:hover { border-color: #b8c2d1; }
+.sat-bank-choice-field label:has(input:checked):hover { border-color: #b62539; }
+.sat-bank-choice-field svg { flex-shrink: 0; }
+.sat-bank-section-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.sat-bank-section-option {
+  display: flex; align-items: center; gap: 11px; min-height: 82px;
+  border: 1px solid #dce3ee; border-radius: 14px; padding: 14px; background: #fff; color: #65748b;
+}
+.sat-bank-section-option > span { display: grid; gap: 5px; min-width: 0; }
+.sat-bank-section-option strong { color: #243047; font-size: 14px; line-height: 1.4; }
+.sat-bank-section-option small { color: #65748b; font-size: 11px; line-height: 1.5; }
+.sat-bank-section-option:has(input:checked) strong { color: #b62539; }
+.sat-bank-choice-check { margin-left: auto; opacity: 0; }
+.sat-bank-section-option:has(input:checked) .sat-bank-choice-check { opacity: 1; }
+.sat-bank-difficulty-options {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px;
+  border: 1px solid #e5eaf1; border-radius: 13px; padding: 5px; background: #f2f4f8;
+}
+.sat-bank-difficulty-options label {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; border: 1px solid transparent; border-radius: 9px; padding: 8px;
+  color: #65748b; font-size: 12px; font-weight: 700;
+}
+.sat-bank-difficulty-options label:has(input:checked) { border-color: #e4d9dd; background: #fff; box-shadow: 0 2px 5px #3341550b; }
+.sat-bank-level-bars { display: flex; align-items: flex-end; gap: 2px; height: 15px; }
+.sat-bank-level-bars i { width: 3px; height: 5px; border-radius: 1px; background: #d5dce6; }
+.sat-bank-level-bars i:nth-child(2) { height: 10px; }
+.sat-bank-level-bars i:nth-child(3) { height: 15px; }
+.sat-bank-level-bars i[data-filled='true'] { background: currentColor; }
+.sat-bank-progress-options { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.sat-bank-progress-options label {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  min-height: 52px; border: 1px solid #dce3ee; border-radius: 11px; padding: 9px;
+  background: #fff; color: #65748b; font-size: 11px; font-weight: 650; line-height: 1.5;
+}
+.sat-bank-count-options { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+.sat-bank-count-options label {
+  display: grid; place-items: center; min-height: 44px; border: 1px solid #dce3ee;
+  border-radius: 11px; padding: 9px; background: #fff; color: #47546a; font-size: 14px; font-weight: 750;
+}
+.sat-bank-count-options label:has(input:checked) { border-color: #26354b; background: #26354b; color: #fff; }
+.sat-bank-count-note { margin: 10px 0 0; color: #905c11; font-size: 12px; line-height: 1.6; }
+.sat-bank-set-summary {
+  display: flex; align-items: center; gap: 9px; border-top: 1px solid #e5eaf1;
+  padding-top: 20px; margin: 0 0 16px; color: #65748b; font-size: 12px; line-height: 1.7;
+}
+.sat-bank-set-summary > svg { flex-shrink: 0; color: #b62539; }
+.sat-bank-set-summary strong { color: #243047; }
 .sat-bank-select { position: relative; min-width: 0; }
 .sat-bank-select label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 750; color: #47546a; }
 .sat-bank-select-trigger {
@@ -895,8 +957,18 @@
 .sat-bank-select-options svg { flex-shrink: 0; }
 .sat-bank-build-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
 .sat-bank-build-actions .sat-bank-primary { min-height: 50px; padding: 13px 20px; font-size: 14px; }
-.sat-bank-reset { min-height: 44px; border: 0; padding: 10px; background: transparent; color: #65748b; font-size: 13px; font-weight: 650; cursor: pointer; }
+.sat-bank-reset { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; border: 0; padding: 10px; background: transparent; color: #65748b; font-size: 13px; font-weight: 650; cursor: pointer; }
 .sat-bank-reset:hover { color: #be263b; }
 .sat-bank-question:has(.sat-bank-canvas) { min-height: 0; border: 0; border-radius: 0; overflow: visible; }
 @media (max-width: 1000px) { .sat-bank-grid { grid-template-columns: 1fr; } }
 @media (max-width: 600px) { .sat-bank-filters { grid-template-columns: 1fr; gap: 18px; } }
+@media (max-width: 600px) {
+  .sat-bank-section-options { grid-template-columns: 1fr; }
+  .sat-bank-section-option { min-height: 72px; }
+  .sat-bank-progress-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sat-bank-panel-title:has(.sat-bank-matching) { flex-wrap: wrap; gap: 10px; }
+}
+@media (max-width: 420px) {
+  .sat-bank-count-options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .sat-bank-difficulty-options label { flex-direction: column; gap: 7px; padding: 9px 1px; font-size: 11px; text-align: center; white-space: nowrap; }
+}

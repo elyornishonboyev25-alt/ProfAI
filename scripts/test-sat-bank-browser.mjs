@@ -110,13 +110,20 @@ async function main() {
     await send('Emulation.setDeviceMetricsOverride',{width:1366,height:768,deviceScaleFactor:1,mobile:false})
     await send('Page.navigate',{url:`http://127.0.0.1:${server.address().port}/`})
     await until(`document.body?.innerText.includes('Start 4 questions')`)
+    const destination=resolve(process.env.SAT_TEST_SCREENSHOTS || '/tmp/profai-sat-bank-screenshots')
+    await mkdir(destination,{recursive:true})
     const selectOption = async (label, option) => {
+      const radio = `fieldset[aria-label="${label}"] input[aria-label="${option}"]`
+      if (await evaluate(`!!document.querySelector(${JSON.stringify(radio)})`)) {
+        await evaluate(`document.querySelector(${JSON.stringify(radio)}).click()`)
+        return
+      }
       await clickLabel(label)
       await evaluate(`[...document.querySelectorAll('[role="option"]')].find(node=>node.textContent.trim()===${JSON.stringify(option)}).click()`)
     }
     for (const width of [1366, 390]) {
       await send('Emulation.setDeviceMetricsOverride',{width,height:844,deviceScaleFactor:1,mobile:width<1024})
-      for (const [label, count] of [['Section', 2], ['Domain / topic', 5], ['Skill / question type', 10]]) {
+      for (const [label, count] of [['Domain / topic', 5], ['Skill / question type', 10]]) {
         await clickLabel(label)
         assert.equal(await evaluate(`document.querySelectorAll('[role="option"]').length`), count)
         const menu = await evaluate(`(()=>{const trigger=document.querySelector('[aria-label="${label}"][role="combobox"]'); const list=document.querySelector('[role="listbox"]'); list.scrollIntoView({block:'nearest'}); const r=list.getBoundingClientRect(); return {height:trigger.getBoundingClientRect().height, option: list.firstElementChild.getBoundingClientRect().height,left:r.left,right:r.right,menuHeight:r.height}})()`)
@@ -125,6 +132,31 @@ async function main() {
         await evaluate(`document.querySelector('[aria-label="${label}"][role="combobox"]').dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))`)
         assert.equal(await evaluate(`document.querySelector('[role="listbox"]')===null`),true)
       }
+    }
+    // Native radio groups support arrow keys and expose the selected value.
+    for (const [name, next] of [['bank-section', 'reading-writing'], ['bank-difficulty', 'Easy'], ['bank-progress', 'unanswered'], ['bank-count', '6']]) {
+      await evaluate(`document.querySelector('input[name="${name}"]:checked').focus()`)
+      await send('Input.dispatchKeyEvent',{type:'keyDown',key:'ArrowRight',code:'ArrowRight',windowsVirtualKeyCode:39})
+      await send('Input.dispatchKeyEvent',{type:'keyUp',key:'ArrowRight',code:'ArrowRight',windowsVirtualKeyCode:39})
+      await until(`document.querySelector('input[name="${name}"]:checked').value===${JSON.stringify(next)}`)
+    }
+    await selectOption('Section','Math')
+    await selectOption('Difficulty','All levels')
+    await selectOption('Progress','All questions')
+    await selectOption('Questions in set','4')
+    for (const width of [1366, 768, 390, 320]) {
+      await send('Emulation.setDeviceMetricsOverride',{width,height:844,deviceScaleFactor:1,mobile:width<1024})
+      await evaluate(`document.activeElement?.blur();document.querySelector('.sat-bank-filters').scrollIntoView({block:'start'});true`)
+      const layout = await evaluate(`(()=>{
+        const labels=[...document.querySelectorAll('.sat-bank-choice-field label')];
+        return {noOverflow:document.documentElement.scrollWidth<=innerWidth+1,
+          touchTargets:labels.every(label=>{const r=label.getBoundingClientRect();return r.width>=44 && r.height>=44}),
+          inBounds:labels.every(label=>{const r=label.getBoundingClientRect();return r.left>=0 && r.right<=innerWidth+1})};
+      })()`)
+      assert.deepEqual(layout,{noOverflow:true,touchTargets:true,inBounds:true},`Builder controls fit at ${width}px`)
+      const {contentSize}=await send('Page.getLayoutMetrics')
+      const shot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:true,clip:{x:0,y:0,width:contentSize.width,height:contentSize.height,scale:1}})
+      await writeFile(join(destination,`builder-${width}.png`),Buffer.from(shot.data,'base64'))
     }
     await send('Emulation.setDeviceMetricsOverride',{width:1366,height:768,deviceScaleFactor:1,mobile:false})
     await selectOption('Domain / topic','Algebra')
@@ -241,8 +273,6 @@ async function main() {
     assert.equal(await evaluate(`getComputedStyle(document.querySelector('.sat-bank-question')).borderRightWidth`),'0px')
     assert.equal(await evaluate(`!!document.querySelector('.sat-bank-canvas')`),true)
     // Retain review screenshots outside the repo; no generated artifacts in commits.
-    const destination=resolve(process.env.SAT_TEST_SCREENSHOTS || '/tmp/profai-sat-bank-screenshots')
-    await mkdir(destination,{recursive:true})
     await evaluate('window.seedLongReview()')
     await until('!!document.querySelector(".sat-bank-explanation math")')
     await until(`document.querySelector('.sat-bank-detail-title h3').getBoundingClientRect().top>=90 && document.querySelector('.sat-bank-detail-title h3').getBoundingClientRect().bottom<innerHeight`)

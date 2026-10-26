@@ -37,6 +37,7 @@ import DesmosDrawer from '@/components/sat/DesmosDrawer'
 import SATFormulaSheet from '@/components/sat/SATFormulaSheet'
 import SATQuestionCanvas from '@/components/sat/SATQuestionCanvas'
 import SATReview from '@/components/sat/SATReview'
+import SATSectionBreak from '@/components/sat/SATSectionBreak'
 import SATNotes, { SATNoteList } from '@/components/sat/SATNotes'
 import { readSATNotes } from '@/features/sat/notes'
 import SATRichText from '@/components/sat/SATRichText'
@@ -60,6 +61,7 @@ import { useAuthStore, type AuthState } from '@/store/authStore'
 import { markXpActivitySynced, recordXpActivity } from '@/lib/xpApi'
 import { syncSATAttemptResult } from '@/features/sat/resultSync'
 import { saveSATBaseline } from '@/features/sat/baseline'
+import { advanceSATModule, needsSATSectionBreak } from '@/features/sat/sectionBreak'
 
 import { finishModule, migrateModuleTiming, moduleSeconds, pauseModule, resumeModule, totalTime } from '@/features/sat/timing'
 
@@ -243,30 +245,28 @@ export default function SATMockRun() {
   }, [])
 
   const advanceModule = useCallback(() => {
-    if (!attempt) return
-    const nextModuleIndex = attempt.currentModuleIndex + 1
-    if (nextModuleIndex >= modules.length) {
+    const current = attemptRef.current
+    if (!current || current.status !== 'active') return
+    if (current.currentModuleIndex + 1 >= modules.length) {
       submitAttempt()
       return
     }
-    const nextModule = modules[nextModuleIndex]
     const startedAt = Date.now()
-    persistUpdate((current) => ({
-      ...finishModule(current, modules, startedAt),
-      moduleTimerStartedAt: startedAt,
-      moduleDeadlines: { ...current.moduleDeadlines, [nextModule.id]: startedAt + nextModule.durationSeconds * 1000 },
-      currentModuleIndex: nextModuleIndex,
-      currentQuestionIndex: 0,
-      moduleStartedAt: { ...current.moduleStartedAt, [nextModule.id]: startedAt },
-      pausedModuleSeconds: undefined,
-      timerPausedAt: undefined,
-    }))
+    persistUpdate(value => value.currentModuleIndex === current.currentModuleIndex
+      ? advanceSATModule(value, modules, startedAt) : value)
     setNow(startedAt)
     setModuleComplete(false)
+    setConfirmSubmit(false)
     setNavigatorOpen(false)
     setNotesOpen(false)
+    setCalculatorOpen(false)
+    setFormulaSheetOpen(false)
+    setToolsOpen(false)
+    setMoreOpen(false)
+    setDirectionsOpen(false)
+    setExitConfirmOpen(false)
     setZoom(1)
-  }, [attempt, modules, persistUpdate, submitAttempt])
+  }, [modules, persistUpdate, submitAttempt])
 
   const endCurrentModule = useCallback(() => {
     if (moduleIndex === modules.length - 1) {
@@ -316,15 +316,20 @@ export default function SATMockRun() {
       attempt.mode !== 'exam' ||
       attempt.pausedModuleSeconds !== undefined
     ) return
+    if (attempt.sectionBreak) {
+      if (now >= attempt.sectionBreak.endsAt) advanceModule()
+      return
+    }
     if (testSeconds <= 0) advanceModule()
   }, [
     attempt,
     advanceModule,
+    now,
     testSeconds,
   ])
 
   useEffect(() => {
-    if (!attempt || attempt.status !== 'active') return
+    if (!attempt || attempt.status !== 'active' || attempt.sectionBreak) return
     const handleKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null
       if (
@@ -443,6 +448,14 @@ export default function SATMockRun() {
         </motion.section>
       </main>
     )
+  }
+
+  if (attempt.sectionBreak) {
+    return <SATSectionBreak endsAt={attempt.sectionBreak.endsAt} now={now} onExit={() => {
+      pauseAndSaveAttempt()
+      if (fullscreenElement()) void exit()
+      navigate(backPath)
+    }} />
   }
 
   const updateAnswer = (value: string) => {
@@ -868,10 +881,10 @@ export default function SATMockRun() {
                   onClick={confirmSubmit ? submitAttempt : advanceModule}
                   className="rounded-xl bg-[#4053d7] px-4 py-3 text-[11px] font-black text-white"
                 >
-                  {confirmSubmit ? 'Submit & score' : 'Continue to next module'}
+                  {confirmSubmit ? 'Submit & score' : needsSATSectionBreak(attempt, modules) ? <UiText text="Start 10-minute break" /> : 'Continue to next module'}
                 </button>
               </div>
-              {!confirmSubmit && moduleIndex === 1 ? (
+              {!confirmSubmit && attempt.mode === 'practice' && currentModule.section === 'reading-writing' && modules[moduleIndex + 1]?.section === 'math' ? (
                 <p className="mt-4 rounded-xl bg-blue-50 px-3 py-2 text-center text-[10px] font-bold text-blue-700">
                   Recommended: take a 10-minute break before beginning Math.
                 </p>

@@ -1,0 +1,59 @@
+.sat-section-break {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(16px, 4vw, 48px);
+  color: #163e3b;
+  background: radial-gradient(ellipse at top left, #dcf2eb, transparent 65%), #f2f7f5;
+}
+
+.sat-section-break__card {
+  width: 100%;
+  max-width: 860px;
+  overflow: hidden;
+  border: 1px solid #d9e8e2;
+  border-radius: 28px;
+  background: #fff;
+  box-shadow: 0 24px 80px #164e3d0d;
+}
+
+.sat-section-break__intro { padding: 32px 28px 0; text-align: center; }
+.sat-section-break__icon { display: inline-flex; padding: 14px; border-radius: 20px; background: #e7f3ed; color: #327263; }
+.sat-section-break__eyebrow { margin: 16px 0 6px; font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.sat-section-break__intro h1 { margin: 0 0 10px; font-size: clamp(26px, 4vw, 36px); font-weight: 800; letter-spacing: -.03em; }
+.sat-section-break__intro > p:last-child,
+.sat-section-break__body p { font-size: 14px; line-height: 1.7; color: #53716b; }
+.sat-section-break__body { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; padding: 28px 32px 32px; }
+.sat-section-break__rest { text-align: center; }
+.sat-section-break__clock { position: relative; display: grid; place-items: center; width: 200px; height: 200px; margin: 0 auto 18px; }
+.sat-section-break__clock svg { position: absolute; inset: 0; width: 100%; transform: rotate(-90deg); }
+.sat-section-break__clock circle { fill: none; stroke-width: 7; }
+.sat-section-break__ring-track { stroke: #e7f1ec; }
+.sat-section-break__ring { stroke: #5b9b87; stroke-linecap: round; }
+.sat-section-break__clock > span { font-size: 42px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.04em; }
+.sat-section-break__body .sat-section-break__next { font-weight: 800; color: #204b42; }
+.sat-section-break__tip { margin-top: 16px; padding: 14px; border-radius: 14px; background: #f1f7f3; }
+.sat-section-break__music { align-self: start; padding: 22px; border: 1px solid #dfebe5; border-radius: 20px; background: #f9fcfa; }
+.sat-section-break__music > svg { color: #4b8674; }
+.sat-section-break__music h2 { margin: 12px 0 6px; font-size: 20px; font-weight: 800; }
+.sat-section-break__music label { display: block; margin: 18px 0 8px; font-size: 12px; font-weight: 700; }
+.sat-section-break__music select { width: 100%; min-height: 44px; padding: 8px 10px; border: 1px solid #ccdfd5; border-radius: 10px; color: #204b42; background: #fff; font-size: 14px; }
+.sat-section-break__music-toggle { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 46px; margin-top: 12px; padding: 10px 14px; border-radius: 12px; background: #2e6a57; color: #fff; font-size: 13px; font-weight: 700; }
+.sat-section-break__music-toggle:hover { background: #245744; }
+.sat-section-break__player { margin-top: 16px; }
+.sat-section-break__player iframe { width: 100%; min-height: 200px; border: 0; border-radius: 12px; }
+.sat-section-break__player p { margin: 8px 0 0; font-size: 12px; }
+.sat-section-break__credit { display: block; margin-top: 14px; font-size: 10px; line-height: 1.6; color: #60766e; }
+.sat-section-break__footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 28px; border-top: 1px solid #e3ede7; background: #fafcfb; }
+.sat-section-break__footer p { font-size: 12px; line-height: 1.6; color: #60766e; }
+.sat-section-break__footer button { flex-shrink: 0; min-height: 44px; padding: 10px 14px; border: 1px solid #c9dbd0; border-radius: 10px; font-size: 12px; font-weight: 700; }
+.sat-section-break button:focus-visible,
+.sat-section-break select:focus-visible { outline: 3px solid #83b4a2; outline-offset: 3px; }
+
+@media (max-width: 640px) {
+  .sat-section-break__intro { padding: 24px 20px 0; }
+  .sat-section-break__body { grid-template-columns: 1fr; gap: 20px; padding: 24px 20px; }
+  .sat-section-break__clock { width: 180px; height: 180px; }
+  .sat-section-break__footer { align-items: flex-start; flex-direction: column; padding: 18px 20px; }
+}

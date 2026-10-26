@@ -44,7 +44,7 @@ export function moduleSeconds(attempt: SATAttempt, modules: SATModule[], now = D
 }
 
 export function pauseModule(attempt: SATAttempt, modules: SATModule[], now = Date.now()): SATAttempt {
-  if (attempt.pausedModuleSeconds !== undefined) return attempt
+  if (attempt.sectionBreak || attempt.pausedModuleSeconds !== undefined) return attempt
   return {
     ...attempt, moduleElapsedSeconds: moduleTimes(attempt, modules, now), moduleTimerStartedAt: undefined,
     pausedModuleSeconds: moduleSeconds(attempt, modules, now), timerPausedAt: now, updatedAt: now,
@@ -52,6 +52,7 @@ export function pauseModule(attempt: SATAttempt, modules: SATModule[], now = Dat
 }
 
 export function resumeModule(attempt: SATAttempt, modules: SATModule[], now = Date.now()): SATAttempt {
+  if (attempt.sectionBreak) return attempt
   const module = modules[attempt.currentModuleIndex]
   return {
     ...attempt, moduleTimerStartedAt: now, pausedModuleSeconds: undefined, timerPausedAt: undefined,

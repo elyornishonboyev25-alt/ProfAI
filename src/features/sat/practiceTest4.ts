@@ -81,6 +81,8 @@ export type SATAttempt = {
   /** Remaining module exam seconds, or elapsed module practice seconds, while paused. */
   pausedModuleSeconds?: number
   timerPausedAt?: number
+  /** A wall-clock break after Reading & Writing; the next module has not started. */
+  sectionBreak?: { endsAt: number }
 }
 
 export const SAT_TEST_TIMER_KEY = '__test__'

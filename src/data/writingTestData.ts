@@ -1,5 +1,7 @@
 import { WRITING_TESTS_5_TO_30 } from './writingFullTests5to30'
 
+import { telegramWritingTests } from './telegramIeltsPapers'
+
 export type WritingTaskType = 'task1' | 'task2'
 
 export type ChartDataPoint = {
@@ -370,13 +372,13 @@ export function getWritingFullTestCatalog(): WritingFullTest[] {
     tests.push(WRITING_TESTS_5_TO_30[i - 5])
   }
 
-  return tests
+  return [...tests, ...telegramWritingTests]
 }
 
 export function getWritingTaskById(id: string): WritingTask | null {
   if (id === 'writing-day-1') return DAY_1_TASK
 
-  const fullTestTask = [...FULL_TEST_1_TASKS, ...FULL_TEST_2_TASKS, ...FULL_TEST_3_TASKS, ...FULL_TEST_4_TASKS, ...WRITING_TESTS_5_TO_30.flatMap((test) => test.tasks)].find(
+  const fullTestTask = getWritingFullTestCatalog().flatMap(test => test.tasks).find(
     (task) => task.id === id,
   )
   if (fullTestTask) return fullTestTask

@@ -9,12 +9,14 @@ const options = { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020
 const modules = new Map()
 function loadData(name) {
   if (modules.has(name)) return modules.get(name)
-  assert.match(name, /^writing\w+$/)
+  assert.match(name, /^(writing\w+|telegramIeltsPapers)$/)
   const exports = {}
   modules.set(name, exports)
   const source = readFileSync(new URL(`../src/data/${name}.ts`, import.meta.url), 'utf8')
   runInNewContext(ts.transpileModule(source, { compilerOptions: options }).outputText, {
-    exports, require: (moduleName) => loadData(moduleName.replace('./', '')),
+    exports, require: (moduleName) => moduleName === './telegramIeltsPapers.json'
+      ? { default: JSON.parse(readFileSync(new URL('../src/data/telegramIeltsPapers.json', import.meta.url), 'utf8')) }
+      : loadData(moduleName.replace('./', '')),
   })
   return exports
 }
@@ -23,7 +25,7 @@ const supplied = loadData('writingFullTestSourceVisuals')
 const native = loadData('writingSuppliedTaskVisuals')
 const tests = loadData('writingFullTests5to30').WRITING_TESTS_5_TO_30
 const catalog = loadData('writingTestData').getWritingFullTestCatalog()
-assert.equal(catalog.length, 30)
+assert.equal(catalog.length, 30 + JSON.parse(readFileSync('src/data/telegramIeltsPapers.json', 'utf8')).writing.length)
 // Check the complete live catalog, including the first four full tests.
 const essayPrompts = new Set()
 const task1Prompts = new Set()
@@ -150,4 +152,4 @@ assert.deepEqual(Array.from(tests.filter(test => test.index >= 21), test => test
 assert.ok(kindCounts.get('Maps') >= 2)
 assert.ok(kindCounts.get('Process diagram') >= 2)
 execFileSync(process.execPath, [fileURLToPath(new URL('./generate-writing-practice-images.mjs', import.meta.url)), '--check'])
-console.log('Writing bank valid: 30 full tests, unique Task 1 and Task 2 prompts, 21 official Task 2 replacements, 19 supplied native SVG diagrams.')
+console.log(`Writing bank valid: ${catalog.length} full tests, unique Task 1 and Task 2 prompts, 21 official Task 2 replacements, 19 supplied native SVG diagrams.`)

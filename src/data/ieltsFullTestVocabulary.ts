@@ -1,4 +1,5 @@
 import content from './ieltsFullTestVocabulary.json'
+import telegramVocabulary from './telegramIeltsVocabulary.json'
 import type { IeltsBook, VocabularyEntry } from './vocabularyCollections'
 import { getWritingFullTestById } from './writingTestData'
 import { WRITING_SUPPLIED_VOCABULARY, SUPPLIED_VOCABULARY_DEFINITIONS } from './writingSuppliedVocabulary'
@@ -10,7 +11,12 @@ export type IeltsVocabularySkill = 'listening' | 'reading' | 'writing' | 'speaki
 // vocabulary numbering. validate-vocabulary checks them against the live bank.
 const lexicon: Record<string, { term: string; definition: string; synonym: string; uzbek?: string }> = content.lexicon
 
-export const ieltsFullTestVocabulary: IeltsBook[] = content.books.map((book) => ({
+const books = content.books.map(book => ({
+  ...book,
+  tests: [...book.tests, ...(telegramVocabulary.find(extra => extra.skill === book.skill)?.tests ?? [])],
+}))
+
+export const ieltsFullTestVocabulary: IeltsBook[] = books.map((book) => ({
   id: book.id,
   skill: book.skill as IeltsVocabularySkill,
   title: book.title,
@@ -23,7 +29,7 @@ export const ieltsFullTestVocabulary: IeltsBook[] = content.books.map((book) => 
       id: section.id,
       title: section.title,
       topic: section.topic,
-      prompt: 'prompt' in section ? section.prompt : undefined,
+      prompt: 'prompt' in section && typeof section.prompt === 'string' ? section.prompt : undefined,
       entries: section.entries.map((entry, index): VocabularyEntry => ({
         ...lexicon[entry.term],
         id: `${section.id}_entry_${index + 1}`,

@@ -64,6 +64,9 @@ export interface Section {
     id: string
     title: string
     content?: string // For Reading (full text)
+    /** Original, script-free source layout; controls bind to the question IDs below. */
+    sourceQuestionsHtml?: string
+    sourcePassageHtml?: string
     paragraphs?: { label: string; content: string }[] // For structured Reading passages
     showParagraphLabels?: boolean // Preserve source lettering only when the original passage uses it
     premiumQuestionGroups?: boolean // Render contiguous question groups with the shared Full Test visual system

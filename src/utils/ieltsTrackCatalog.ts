@@ -1,5 +1,7 @@
 ﻿export type IeltsTrackType = 'reading' | 'listening'
 
+import { telegramListeningTests, telegramReadingTests } from '@/data/telegramIeltsPapers'
+
 export type PassageDifficulty = 'Easy' | 'Medium' | 'Hard'
 
 export type IeltsPassageEntry = {
@@ -230,7 +232,7 @@ function createFullTestEntry(track: IeltsTrackType, index: number): IeltsFullTes
     index,
     title: `${trackLabel} Full Test ${index}`,
     premiumOnly: false,
-    testId: seededTestId ?? `${track}-full-${index}`,
+    testId: seededTestId ?? (track === 'reading' ? telegramReadingTests : telegramListeningTests)[index - 31]?.id ?? `${track}-full-${index}`,
   }
 }
 
@@ -239,7 +241,8 @@ export function getIeltsPassageCatalog(track: IeltsTrackType): IeltsPassageEntry
 }
 
 export function getIeltsFullTestCatalog(track: IeltsTrackType): IeltsFullTestEntry[] {
-  return Array.from({ length: 30 }, (_, index) => createFullTestEntry(track, index + 1))
+  const extra = track === 'reading' ? telegramReadingTests : telegramListeningTests
+  return Array.from({ length: 30 + extra.length }, (_, index) => createFullTestEntry(track, index + 1))
 }
 
 /**
@@ -274,7 +277,11 @@ export function getIeltsReadingUnifiedCatalog(): IeltsReadingUnifiedEntry[] {
     source: 'library',
   }))
 
-  return [...roadmapTests, ...libraryTests, ...newTests]
+  const telegramTests: IeltsReadingUnifiedEntry[] = telegramReadingTests.map((test, offset) => ({
+    id: `reading-unified-${offset + 31}`, index: offset + 31, title: `Reading Full Test ${offset + 31}`,
+    premiumOnly: false, testId: test.id, source: 'library',
+  }))
+  return [...roadmapTests, ...libraryTests, ...newTests, ...telegramTests]
 }
 
 export function isIeltsTrackCatalogTest(track: IeltsTrackType, testId: string): boolean {
@@ -293,6 +300,7 @@ export function isIeltsTrackCatalogTest(track: IeltsTrackType, testId: string): 
 export function isAvailableIeltsTrackTest(track: IeltsTrackType, testId: string): boolean {
   if (!testId) return false
   return CURRENTLY_AVAILABLE_TRACK_TESTS[track].has(testId)
+    || (track === 'reading' ? telegramReadingTests : telegramListeningTests).some(test => test.id === testId)
 }
 
 export function isPremiumIeltsTrackTest(track: IeltsTrackType, testId: string): boolean {

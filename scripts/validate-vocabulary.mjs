@@ -85,7 +85,8 @@ async function main() {
       if (book.skill === 'listening') assert.equal(new Set(test.sections[0].entries.map((entry) => entry.sourceSectionId)).size, 4, `${test.title}: cover all four parts`)
     }
   }
-  console.log(`Validated 120 IELTS Full Test sets and ${ieltsIds.size} entries against the live four-skill catalogs.`)
+  const setCount = vocabularyCollections.ielts.reduce((sum, book) => sum + book.tests.length, 0)
+  console.log(`Validated ${setCount} IELTS Full Test sets and ${ieltsIds.size} entries against the live four-skill catalogs.`)
   const tests = Object.values(SAT_TEST_CATALOG).sort((a, b) => a.mockId - b.mockId)
   assert.equal(vocabularyCollections.sat.length, tests.length, 'Every live mock needs a curated vocabulary set')
   const ids = new Set()

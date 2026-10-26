@@ -44,8 +44,12 @@ export function run() {
         assert.ok(question.text.trim(), `${question.id}: nonempty question`)
         assert.ok(!/\[\.\.\.\]|�|Ã|Â|â€|\p{Script=Cyrillic}/u.test(question.text), `${question.id}: no import artifacts`)
         if (question.type === 'summary-completion' || question.type === 'note-completion') {
-          assert.equal(question.text.match(/_+/g)?.length, 1, `${question.id}: exactly its own blank`)
-          assert.ok(!/^Questions\s+\d/i.test(question.text), `${question.id}: no duplicated instructions`)
+          if (section.sourceQuestionsHtml) {
+            assert.equal(section.sourceQuestionsHtml.match(new RegExp(`data-source-question="${question.id}"`, 'g'))?.length, 1, `${question.id}: exactly its own source control`)
+          } else {
+            assert.equal(question.text.match(/_+/g)?.length, 1, `${question.id}: exactly its own blank`)
+            assert.ok(!/^Questions\s+\d/i.test(question.text), `${question.id}: no duplicated instructions`)
+          }
         }
         if (typeof question.correctAnswer === 'string') for (const accepted of question.correctAnswer.split(/\s*[|;/]\s*/)) {
           const report = evaluateReadingAnswers(test.sections, { ...keys, [question.id]: accepted })

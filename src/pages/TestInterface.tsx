@@ -197,7 +197,8 @@ function TestInterfaceContent() {
       } else if (id === 'random') {
         foundTest = generateRandomReadingTest()
       } else {
-        foundTest = mockReadingTests.find((test) => test.id === id) ?? resolveGeneratedTrackTest('reading', id)
+        foundTest = resolveIeltsTestById(id, isReviewLaunch ? reviewPayload?.result : undefined)
+          ?? mockReadingTests.find((test) => test.id === id)
       }
     } else if (type === 'listening') {
       foundTest = mockListeningTests.find((test) => test.id === id) ?? resolveGeneratedTrackTest('listening', id)

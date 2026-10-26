@@ -37,6 +37,7 @@ import { IELTSTest, TestResult, Section, Question, ListeningGroup, ListeningBloc
 // Components
 import SplitScreen from './SplitScreen'
 import AnswerEvidencePane from './ielts/AnswerEvidencePane'
+import SourceQuestionLayout, { sanitizeSourcePaper } from './ielts/SourceQuestionLayout'
 import Timer from './Timer'
 import { useListeningAutoSubmit } from '../hooks/useListeningAutoSubmit'
 import ListeningReviewCountdown from './ListeningReviewCountdown'
@@ -3413,7 +3414,9 @@ export default function IELTSReadingInterface({
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] opacity-90">Reading Passage {currentPassageNumber}</p>
           <p className="text-base font-bold sm:text-lg">{passageDisplayTitle(currentSection) || currentSection?.title}</p>
         </div>
-        {currentSection?.paragraphs ? (
+        {currentSection.sourcePassageHtml ? (
+          <div className="ielts-source-paper" dangerouslySetInnerHTML={{ __html: sanitizeSourcePaper(currentSection.sourcePassageHtml) }} />
+        ) : currentSection?.paragraphs ? (
           (() => {
             const showLabels = sectionHasLabeledParagraphs(currentSection)
             return (
@@ -4095,7 +4098,11 @@ export default function IELTSReadingInterface({
         key={currentSection.id}
             onClick={handleMarkPaneClick}
           >
-            {(currentSection?.groups ?? []).map((group, groupIndex) => renderListeningGroup(group, groupIndex))}
+            {currentSection.sourceQuestionsHtml ? (
+              <SourceQuestionLayout html={currentSection.sourceQuestionsHtml} questions={currentSection.questions} answers={answers}
+                onAnswer={handleAnswerChange} onQuestionFocus={id => setLastActiveQuestionIndex(getCurrentSectionGlobalIndex(id))}
+                review={isReviewMode} showCorrectAnswers={reviewShowCorrectAnswers} reviewQuestions={reviewQuestionMap} />
+            ) : (currentSection?.groups ?? []).map((group, groupIndex) => renderListeningGroup(group, groupIndex))}
           </div>
         </div>
       </div>
@@ -4120,7 +4127,11 @@ export default function IELTSReadingInterface({
         </span>
       </div>
       <div className="space-y-8 pb-20">
-        {currentSection?.questions.map((q: Question, idx: number) => {
+        {currentSection.sourceQuestionsHtml ? (
+          <SourceQuestionLayout html={currentSection.sourceQuestionsHtml} questions={currentSection.questions} answers={answers}
+            onAnswer={handleAnswerChange} onQuestionFocus={id => setLastActiveQuestionIndex(getCurrentSectionGlobalIndex(id))}
+            review={isReviewMode} showCorrectAnswers={reviewShowCorrectAnswers} reviewQuestions={reviewQuestionMap} />
+        ) : currentSection?.questions.map((q: Question, idx: number) => {
           const globalIdx = getQuestionGlobalIndex(currentSectionIndex, idx);
           const isFlagged = flaggedQuestions.includes(globalIdx);
           const isTFNG = q.type === 'true-false-not-given' || q.type === 'yes-no-not-given';

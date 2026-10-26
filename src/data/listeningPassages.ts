@@ -22,6 +22,7 @@ import { listeningFullTest20 } from './listeningFullTest20'
 import { listeningFullTest21 } from './listeningFullTest21'
 import { listeningFullTest22 } from './listeningFullTest22'
 import { listeningFullTests23to30 } from './listeningFullTests23to30'
+import { telegramListeningTests } from './telegramIeltsPapers'
 
 export const mockListeningTests: IELTSTest[] = [
   listeningFullTest1,
@@ -47,4 +48,5 @@ export const mockListeningTests: IELTSTest[] = [
   listeningFullTest21,
   listeningFullTest22,
   ...listeningFullTests23to30,
+  ...telegramListeningTests,
 ]

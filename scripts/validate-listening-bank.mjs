@@ -10,7 +10,8 @@ const bundle = await build({
 })
 const module = { exports: {} }
 new Function('module', 'exports', bundle.outputFiles[0].text)(module, module.exports)
-const { mockListeningTests: tests, evaluateReadingAnswers: evaluate } = module.exports
+const { mockListeningTests: catalogTests, evaluateReadingAnswers: evaluate } = module.exports
+const tests = catalogTests.filter(test => !test.sections.some(section => section.sourceQuestionsHtml))
 const variants = value => (Array.isArray(value) ? value : value.split(/[\/;|]/)).map(value => value.trim())
 const numbers = (count, start = 1) => Array.from({ length: count }, (_, i) => i + start)
 const ids = new Set()
@@ -165,3 +166,4 @@ assert.equal(ids.size, 1200)
 assert.equal(audioHashes.get('/audio/ielts-listening/listening-full-test-7.mp3'), 'ccce06dcb6c656465cc6aad980f22a9b037e8c29045400207f5260bf4ab4b5dc', 'Test 7: repaired MP3 metadata')
 assert.equal(audioHashes.get('/audio/ielts-listening/listening-full-test-10.mp3'), '8b0a971a59282b2cfce79be3dc1365fc3807d744f140a8047bc207a28b1ea5d3', 'Test 10: repaired MP3 metadata')
 console.log(`PASS: 1,200 unique question IDs; ${audioHashes.size} distinct audio paths.`)
+await import('./validate-telegram-ielts.mjs')

@@ -13,7 +13,7 @@ body { margin:0; color:#161b26; background:radial-gradient(ellipse at 6% 0,#f1d9
 .masthead { display:flex; justify-content:space-between; align-items:flex-start; gap:24px; }
 .brand-lockup { display:flex; align-items:center; gap:12px; }
 .report-brand { display:block; position:relative; width:150px; height:54px; overflow:hidden; flex:none; border-radius:10px; background:#fff; }
-.report-brand img { position:absolute; display:block; max-width:none; width:169.57404%; height:auto; left:-35.29412%; top:-79.09605%; }
+.report-brand img { display:block; width:100%; height:100%; object-fit:contain; }
 .exam-tag { display:grid; place-items:center; height:54px; padding:0 18px; border:2px solid #161b26; border-radius:4px; font-size:24px; font-weight:800; letter-spacing:.5px; }
 .identity { text-align:right; font-size:14px; line-height:1.6; color:#283246; }
 .identity b { font-weight:800; } .identity span { display:block; color:#6a7486; font-size:12px; }

@@ -6,7 +6,7 @@
   <rect width="1200" height="630" fill="url(#canvas)"/>
   <circle cx="1180" cy="40" r="380" fill="#df0030" opacity=".035"/>
   <rect x="24" y="24" width="1152" height="582" rx="32" fill="#fff" fill-opacity=".6" stroke="#e4e6e9"/>
-  <svg x="76" y="54" width="310" height="112" viewBox="348 280 986 354"><image href="brand/ivygoo-horizontal.png" width="1672" height="941"/></svg>
+  <image href="brand/ivygoo-horizontal.svg" x="76" y="54" width="310" height="114"/>
   <image href="logo.svg" x="850" y="123" width="260" height="300"/>
   <g font-family="Segoe UI,Arial,sans-serif">
     <text x="80" y="211" font-size="18" letter-spacing="2.5" fill="#69717d">YOUR NEXT CHAPTER STARTS HERE</text>

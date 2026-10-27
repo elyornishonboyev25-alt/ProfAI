@@ -95,7 +95,7 @@ export async function run() {
   assert.equal(images.length, 2, 'Each report page carries only the original Ivygoo brand artwork')
   assert.ok(
     images.every(
-      (image) => image.closest('.report-brand') && image.getAttribute('src')!.endsWith('/brand/ivygoo-horizontal.png'),
+      (image) => image.closest('.report-brand') && image.getAttribute('src')!.endsWith('/brand/ivygoo-horizontal.png?v=20261027'),
     ),
   )
   assert.equal(page.querySelectorAll('.module-table tbody tr').length, analysis.modules.length)

@@ -17,7 +17,7 @@ function brandImageUrl() {
     typeof window !== 'undefined' && /^https?:/.test(window.location.origin)
       ? window.location.origin
       : 'https://ivygoo.com'
-  return `${origin}/brand/ivygoo-horizontal.png`
+  return `${origin}/brand/ivygoo-horizontal.png?v=20261027`
 }
 
 function percentileBox(entry: ReportPercentile | undefined) {
@@ -100,7 +100,7 @@ export function buildSATReportHtml({
         .join('')
     : ''
   const date = escape(formatSATDate(timestamp))
-  const masthead = `<header class="masthead"><div class="brand-lockup"><span class="report-brand" role="img" aria-label="Ivygoo"><img src="${escape(logoUrl)}" width="1672" height="941" alt="" decoding="sync"></span><span class="exam-tag">SAT</span></div><div class="identity"><div><b>Name:</b> ${escape(candidate)}</div>${email ? `<span>${escape(email)}</span>` : ''}<span class="test-name">${escape(title)}</span><span>${date} · ${mode === 'exam' ? 'Exam mode' : 'Practice mode'}${a.submitted ? '' : ' · Saved incomplete'}</span></div></header>`
+  const masthead = `<header class="masthead"><div class="brand-lockup"><span class="report-brand" role="img" aria-label="Ivygoo"><img src="${escape(logoUrl)}" width="1672" height="614" alt="" decoding="sync"></span><span class="exam-tag">SAT</span></div><div class="identity"><div><b>Name:</b> ${escape(candidate)}</div>${email ? `<span>${escape(email)}</span>` : ''}<span class="test-name">${escape(title)}</span><span>${date} · ${mode === 'exam' ? 'Exam mode' : 'Practice mode'}${a.submitted ? '' : ' · Saved incomplete'}</span></div></header>`
   const footer = (page: number) =>
     `<footer class="page-foot"><span><b>Ivygoo</b> · Practice score report · ivygoo.com</span><span>Practice scores are estimates, not official SAT results. · Page ${page}</span></footer>`
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(candidate)} — SAT score report | Ivygoo</title><style>${SAT_REPORT_STYLES}</style></head><body>

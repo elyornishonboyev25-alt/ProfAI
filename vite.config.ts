@@ -10,12 +10,14 @@ export default defineConfig({
     VitePWA({
       registerType: 'prompt',
       injectRegister: 'script-defer',
-      includeAssets: ['logo.svg', 'favicon.svg', 'apple-touch-icon.png', 'brand/*.png', 'ivygoo-icon-*.png'],
+      includeAssets: ['logo.svg', 'favicon.svg', 'apple-touch-icon.png', 'brand/*.svg', 'brand/*.png', 'ivygoo-icon-*.png'],
       workbox: {
         // HTML must always come from the server. Precaching index.html can leave
         // an older deployment pointing at JavaScript chunks that no longer
         // exist, which strands the browser on the static boot screen.
         globPatterns: ['logo.svg', 'assets/index-*.css'],
+        // Versioned brand URLs must also resolve from the current offline cache.
+        ignoreURLParametersMatching: [/^utm_/, /^fbclid$/, /^v$/],
         navigateFallback: null,
         cleanupOutdatedCaches: true,
         // Let existing tabs finish using their current worker and assets.
@@ -36,8 +38,8 @@ export default defineConfig({
         background_color: '#ffffff',
         display: 'standalone',
         icons: [
-          { src: '/ivygoo-icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-          { src: '/ivygoo-icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: '/ivygoo-icon-192.png?v=20261027', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+          { src: '/ivygoo-icon-512.png?v=20261027', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
         ]
       }
     })

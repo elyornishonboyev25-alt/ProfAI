@@ -1,4 +1,4 @@
-import { useId, type CSSProperties } from 'react'
+import type { CSSProperties } from 'react'
 import { cn } from '@/components/ui/utils'
 import { useCopy } from '@/i18n/interface'
 import './brand.css'
@@ -10,7 +10,6 @@ type BrandMarkProps = {
 
 type BrandLogoProps = {
   height?: number
-  variant?: 'horizontal' | 'stacked'
   className?: string
 }
 
@@ -21,42 +20,31 @@ type BrandLockupProps = {
   iconSize?: number
 }
 
-// Preserve the supplied lettering and shading; exclude only the white margins.
-export function BrandLogo({ height = 48, variant = 'horizontal', className }: BrandLogoProps) {
-  const filterId = `ivygoo-artwork-${useId().replace(/:/g, '')}`
+// The official horizontal artwork has a transparent canvas and its own viewBox.
+export function BrandLogo({ height = 48, className }: BrandLogoProps) {
   return (
     <span
-      className={cn('brand-logo', `brand-logo--${variant}`, className)}
+      className={cn('brand-logo', className)}
       style={{ '--brand-logo-height': `${height}px` } as CSSProperties}
       role="img"
       aria-label="ivyGoo"
     >
       <img
         className="brand-logo-artwork"
-        style={{ filter: `url(#${filterId})` }}
-        src={`/brand/ivygoo-${variant}.png`}
-        width={variant === 'horizontal' ? 1672 : 1254}
-        height={variant === 'horizontal' ? 941 : 1254}
+        src="/brand/ivygoo-horizontal.svg"
+        width={844}
+        height={310}
         alt=""
         aria-hidden="true"
         decoding="async"
         draggable={false}
       />
-      {/* Remove the near-white canvas in the browser without altering the source artwork. */}
-      <svg width="0" height="0" aria-hidden="true" focusable="false">
-        <defs>
-          <filter id={filterId} colorInterpolationFilters="sRGB">
-            <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  -1 -1 -1 0 3" />
-            <feComponentTransfer><feFuncA type="linear" slope="20" intercept="-1" /></feComponentTransfer>
-          </filter>
-        </defs>
-      </svg>
     </span>
   )
 }
 
 export function BrandMark({ size = 44, className }: BrandMarkProps) {
-  return <img src="/logo.svg" width={size} height={size} alt="" aria-hidden="true" className={cn('brand-mark inline-block shrink-0 object-contain', className)} />
+  return <img src="/logo.svg?v=20261027" width={size} height={size} alt="" aria-hidden="true" className={cn('brand-mark inline-block shrink-0 object-contain', className)} />
 }
 
 export function BrandLockup({

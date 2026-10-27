@@ -129,7 +129,7 @@ export default function AuthShowcasePanelV2({ mode }: { mode: 'login' | 'registe
 
       <div className="auth-showcase-layout" key={mode}>
         <motion.div className="auth-showcase-brand" {...reveal(.08, 18)}>
-          <BrandLogo variant="stacked" height={116} />
+          <BrandLogo height={72} />
           <small>{c('Your next chapter')}</small>
         </motion.div>
 

@@ -40,7 +40,13 @@ export async function run() {
       }
       const card = pane.querySelector(`[id="question-card-${question.id}"]`)
       assert.ok(card, `${test.id} ${question.id}: visible answer card`)
-      if (question.type === 'summary-completion' || question.type === 'note-completion') {
+      if (section.sourceQuestionsHtml) {
+        const controls = [...pane.querySelectorAll<HTMLInputElement | HTMLSelectElement>(`[data-source-question="${question.id}"]`)]
+        assert.ok(controls.length, `${question.id}: source answer controls`)
+        assert.ok(controls.every(control => control.disabled), `${question.id}: source review is read-only`)
+        const input = controls.find(control => control instanceof HTMLInputElement && control.type === 'text')
+        if (input) assert.equal(input.value, result.answers[question.id], `${question.id}: source inline answer is retained`)
+      } else if (question.type === 'summary-completion' || question.type === 'note-completion') {
         const input = card.querySelector('input')!
         assert.ok(input, `${question.id}: inline input`)
         assert.equal(card.querySelectorAll('input').length, 1, `${question.id}: one answer input`)

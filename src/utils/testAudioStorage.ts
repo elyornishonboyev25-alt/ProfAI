@@ -63,6 +63,28 @@ export async function readTestAudio(owner: string, key: string): Promise<Blob | 
   } catch { return null }
 }
 
+/** Remove just one discarded attempt, including in-flight recorder checkpoints. */
+export async function deleteTestAudioPrefix(owner: string, keyPrefix: string) {
+  const matches = (id: string) => {
+    const [account, key] = JSON.parse(id) as [string, string]
+    return account === owner && key.startsWith(keyPrefix)
+  }
+  const pending = [...writes].filter(([id]) => matches(id)).map(([, promise]) => promise)
+  for (const id of recordings.keys()) if (matches(id)) recordings.delete(id)
+  await Promise.allSettled(pending)
+  try {
+    const db = await open(owner)
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction('audio', 'readwrite')
+      const cursor = tx.objectStore('audio').openCursor(IDBKeyRange.bound(keyPrefix, `${keyPrefix}\uffff`))
+      cursor.onsuccess = () => { const entry = cursor.result; if (entry) { entry.delete(); entry.continue() } }
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+      tx.onabort = () => reject(tx.error)
+    }).finally(() => db.close())
+  } catch { /* The attempt is also removed from the in-memory recording cache. */ }
+}
+
 export function deleteAccountTestAudio(owner: string) {
   deletedOwners.add(owner)
   for (const id of recordings.keys()) if (JSON.parse(id)[0] === owner) recordings.delete(id)

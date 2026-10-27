@@ -277,12 +277,13 @@ function App() {
     /^\/tests\/[^/]+\/attempt$/.test(pathname) ||
     isSatTestRoute
   const isClassicTestMode = pathname.startsWith('/test/') || pathname.startsWith('/results/') || pathname.startsWith('/shared/')
+  const isIeltsSkillTest = /^\/ielts\/(writing|speaking)\/test\//.test(pathname)
   const fullMockState = location.state as { mock?: { id?: string }; reviewPayload?: unknown } | null
   const isFullMockExam = /^\/mock\/ielts\/[^/]+$/.test(pathname) || (
-    Boolean(fullMockState?.mock?.id) && !fullMockState?.reviewPayload &&
+    Boolean(fullMockState?.mock?.id || new URLSearchParams(location.search).get('mock')) && !fullMockState?.reviewPayload &&
     (/^\/test\/(listening|reading)\//.test(pathname) || /^\/ielts\/(writing|speaking)\/test\//.test(pathname))
   )
-  const isTestMode = isCustomTestMode || isClassicTestMode || isFullMockExam
+  const isTestMode = isCustomTestMode || isClassicTestMode || isIeltsSkillTest || isFullMockExam
   const isCommunityPeopleMode = pathname === '/community'
   const isLiveCommunityMode = pathname === '/community'
 
@@ -464,7 +465,7 @@ function App() {
                   : 'min-h-full min-h-screen'
               }`}
             >
-              <ErrorBoundary key={`${user?.id ?? 'guest'}:${location.key}:${isTestMode || isExamModeActive ? 0 : accountData.revision}`}>
+              <ErrorBoundary key={`${user?.id ?? 'guest'}:${location.key}`} resetKey={accountData.revision}>
                 <Suspense fallback={<RouteLoader />}>
                     <BillingBoundary>{!accountData.ready ? <RouteLoader /> : <Routes location={location}>
                       <Route path="/" element={<AnimatedRoute dashboardEntrance={Boolean(user)}>{user ? <Dashboard /> : <Landing />}</AnimatedRoute>} />

@@ -42,13 +42,17 @@ export async function run() {
     for (const question of section.questions) assert.equal(host.querySelectorAll(`[id="question-card-${question.id}"]`).length, 1, `${question.id}: one navigation anchor`)
     const source = document.createElement('template')
     source.innerHTML = section.sourceQuestionsHtml!
-    assert.equal(host.querySelector('.ielts-source-paper')!.textContent, source.content.textContent, `${section.id}: saved highlight/note text offsets stay unchanged`)
+    const preserved = host.querySelector('.ielts-source-paper')!.cloneNode(true) as HTMLElement
+    preserved.querySelectorAll('[data-annotation-ignore]').forEach(node => node.remove())
+    assert.equal(preserved.textContent, source.content.textContent, `${section.id}: saved highlight/note text offsets stay unchanged`)
     assert.equal(host.querySelectorAll('script,[style]:not(.source-map-canvas,.source-map-answer)').length, 0, 'Source inline styles cannot override the shared theme')
   }
 
   const library = telegramListeningTests[3].sections[1]
   await mount(library)
-  assert.equal(host.querySelector('.source-map-image')?.getAttribute('src'), '/images/ielts-telegram-16428-image-1.png')
+  assert.ok(host.querySelector('svg.source-map-image'), 'Supplied maps use native SVG, including saved attempts')
+  assert.equal(host.querySelector('.source-map img'), null, 'No raster decoder is needed')
+  assert.ok(!host.querySelector('.source-map')!.textContent?.includes('MORE THAN THREE WORDS'), 'The source image instruction is not duplicated in the map')
   assert.equal(host.querySelectorAll('[data-diagram-answer] input').length, 5)
   const word = host.querySelector<HTMLInputElement>('[data-map-question="tg-l34-q16"]')!
   await enter(word, 'Conference Centre')
@@ -66,21 +70,21 @@ export async function run() {
   await mount(JSON.parse(JSON.stringify(library)), restored, true, true)
   assert.equal(host.querySelector<HTMLInputElement>('[data-map-question="tg-l34-q16"]')!.value, 'Conference Centre')
   assert.ok([...host.querySelectorAll<HTMLInputElement>('input')].every(input => input.disabled))
-  assert.match(host.querySelector('.source-map-review-list')!.textContent!, /Conference Centre/)
+  assert.equal(host.querySelector('.source-map-review-list')!.querySelector('input,select'), null)
   assert.equal(host.querySelector('[data-map-question="tg-l34-q16"]')!.getAttribute('data-review-status'), 'correct')
 
   const centre = telegramListeningTests[4].sections[1]
   await mount(centre)
   const pin = (letter: string) => host.querySelector<HTMLInputElement>(`[data-map-location-input="${letter}"]`)!
-  const letter = (number: number) => host.querySelector<HTMLSelectElement>(`select[data-source-question="tg-l35-q${number}"]`)!
   assert.equal(host.querySelectorAll('[data-map-location-input]').length, 9)
   assert.ok([...host.querySelectorAll<HTMLInputElement>('[data-map-location-input]')].every(input => !input.value), 'Empty map never reveals answer locations')
   await enter(pin('A'), '15')
   assert.equal(saved['tg-l35-q15'], 'A', 'The chosen location is stored even when it is incorrect')
-  assert.equal(letter(15).value, 'A')
-  await act(async () => { letter(15).focus(); letter(15).value = 'C'; letter(15).dispatchEvent(new window.Event('change', { bubbles: true })) })
+  assert.equal(host.querySelector('select[data-source-question="tg-l35-q15"]'), null, 'No duplicate answer fields under the map')
+  await act(async () => (host.querySelector('[data-map-question-key="tg-l35-q15"]') as HTMLButtonElement).click())
+  await act(async () => pin('C').focus())
   assert.equal(pin('A').value, '')
-  assert.equal(pin('C').value, '15', 'Question list and map synchronize both ways')
+  assert.equal(pin('C').value, '15', 'Selecting a question and a map location assigns it without a second field')
   await enter(pin('C'), '1')
   assert.equal(saved['tg-l35-q15'], 'C', 'Partial input does not erase a saved answer')
   await act(async () => pin('C').blur())

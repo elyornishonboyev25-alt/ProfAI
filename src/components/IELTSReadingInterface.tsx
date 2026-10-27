@@ -48,6 +48,8 @@ import NotesPanel from './NotesPanel'
 import WordLookupModal from './vocab/WordLookupModal'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import ListeningDiagram from './ListeningDiagram'
+import SourceListeningMap from './ielts/SourceListeningMap'
+import { listeningMapLayoutFor } from './ielts/listeningMapLayouts'
 import OldWaterMillDiagram from './OldWaterMillDiagram'
 import EducationHouseDiagram from './EducationHouseDiagram'
 import { optionDisplayText, readingQuestionGroups } from '../utils/readingPresentation'
@@ -1085,6 +1087,8 @@ export default function IELTSReadingInterface({
 
   const resolveMarkableContainerForNode = (node: Node | null): HTMLElement | null => {
     if (!node) return null
+    const element = node instanceof Element ? node : node.parentElement
+    if (element?.closest('[data-annotation-ignore]')) return null
     if (node instanceof Element) {
       return node.closest<HTMLElement>('[data-reading-markable="1"]')
     }
@@ -3836,6 +3840,9 @@ export default function IELTSReadingInterface({
       </div>
     )
 
+    const mapImage = group.blocks.find((block): block is Extract<ListeningBlock, { kind: 'image' }> => block.kind === 'image' && Boolean(listeningMapLayoutFor(block.src, block.alt)))
+    const mapLayout = mapImage ? listeningMapLayoutFor(mapImage.src, mapImage.alt) : undefined
+    const mapRows = group.blocks.flatMap(block => block.kind === 'grid' ? block.rows : [])
     const renderBlock = (block: ListeningBlock, key: number) => {
       switch (block.kind) {
         case 'title':
@@ -3878,6 +3885,7 @@ export default function IELTSReadingInterface({
             </div>
           )
         case 'grid':
+          if (mapLayout && block.rows.length && block.rows.every(row => mapLayout.numbers.includes(row.blank))) return null
           return <div key={key}>{renderGrid(block)}</div>
         case 'mcq':
           return <div key={key}>{renderMcq(block)}</div>
@@ -3886,6 +3894,16 @@ export default function IELTSReadingInterface({
         case 'table':
           return <div key={key}>{renderTable(block)}</div>
         case 'image':
+          if (mapLayout && block === mapImage) return <div key={key} className="ielts-source-paper" data-review={isReviewMode}>
+            <SourceListeningMap map={mapLayout} alt={block.alt}
+              questions={currentSection.questions.map(question => ({ ...question, text: mapRows.find(row => row.blank === question.number)?.label ?? question.text }))}
+              answers={answers} onAnswer={handleAnswerChange}
+              onQuestionFocus={id => setLastActiveQuestionIndex(getCurrentSectionGlobalIndex(id))}
+              renderFlag={question => <button type="button" className="source-question-flag" aria-label={`Flag question ${question.number}`}
+                aria-pressed={flaggedQuestions.includes(getCurrentSectionGlobalIndex(question.id))}
+                onClick={() => handleFlagQuestion(getCurrentSectionGlobalIndex(question.id))}><BookmarkIcon className="h-4 w-4" /></button>}
+              review={isReviewMode} showCorrectAnswers={reviewShowCorrectAnswers} reviewQuestions={reviewQuestionMap} />
+          </div>
           return <ListeningDiagram key={key} src={block.src} alt={block.alt} caption={block.caption} />
         case 'diagram':
           if (block.diagram === 'old-water-mill') return <OldWaterMillDiagram key={key} renderAnswer={number => blankInput(number, 'sm', true, /[^A-G]/g)} />

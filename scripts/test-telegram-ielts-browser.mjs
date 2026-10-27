@@ -116,12 +116,25 @@ try {
     }
     for (const index of [3, 4]) {
       await show('listening', index, 1)
-      await until('document.querySelector(".source-map-image").complete && document.querySelector(".source-map-image").naturalWidth')
-      const geometry = await evaluate(`(()=>{const image=document.querySelector('.source-map-image'),r=image.getBoundingClientRect();return{width:image.naturalWidth,height:image.naturalHeight,ratio:r.width/r.height,
+      await until('document.querySelector("svg.source-map-image")')
+      const geometry = await evaluate(`(()=>{const image=document.querySelector('svg.source-map-image'),r=image.getBoundingClientRect(),v=image.viewBox.baseVal;return{width:v.width,height:v.height,ratio:r.width/r.height,
         fits:[...document.querySelectorAll('.source-map-answer input')].every(input=>{const b=input.getBoundingClientRect();return b.left>=r.left-1&&b.right<=r.right+1&&b.top>=r.top&&b.bottom<=r.bottom+1})}})()`)
       assert.deepEqual([geometry.width, geometry.height], index === 3 ? [924, 1023] : [815, 682])
       assert.ok(Math.abs(geometry.ratio - geometry.width / geometry.height) < .002, 'Original image aspect ratio is unchanged')
       assert.equal(geometry.fits, true, `${width}px: every answer field stays inside its original map`)
+      if (width === 1366) {
+        const difference = await evaluate(`(async()=>{
+          const svg=document.querySelector('svg.source-map-image').cloneNode(true),w=svg.viewBox.baseVal.width,h=svg.viewBox.baseVal.height;
+          svg.setAttribute('xmlns','http://www.w3.org/2000/svg');svg.setAttribute('width',w);svg.setAttribute('height',h);svg.removeAttribute('class');
+          const vector=new Image(),original=new Image(),url=URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(svg)],{type:'image/svg+xml'}));
+          vector.src=url;original.src='${index === 3 ? '/images/ielts-telegram-16428-image-1.png' : '/images/ielts-telegram-16539-image-1.jpg'}';
+          await Promise.all([vector.decode(),original.decode()]);const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;const ctx=canvas.getContext('2d');
+          ctx.drawImage(original,0,0);const expected=ctx.getImageData(0,0,w,h).data;ctx.clearRect(0,0,w,h);ctx.drawImage(vector,0,0);const actual=ctx.getImageData(0,0,w,h).data;
+          let difference=0,count=0;for(let i=${index === 3 ? 30 : 0}*w*4;i<actual.length;i++){if(i%4===3)continue;difference+=Math.abs(actual[i]-expected[i]);count++;}
+          URL.revokeObjectURL(url);return difference/count;
+        })()`)
+        assert.ok(difference < (index === 3 ? .001 : 1), `Source geometry, lettering and details match the original (${difference} mean channel difference)`)
+      }
       await screenshot(`map-${index + 31}-${width}`)
     }
   }
@@ -138,7 +151,7 @@ try {
   await evaluate(`document.querySelector('[data-map-location-input="A"]').focus()`)
   await send('Input.insertText', { text: '15' })
   await until(`window.savedAnswers['tg-l35-q15']==='A'`)
-  assert.equal(await evaluate(`document.querySelector('select[data-source-question="tg-l35-q15"]').value`), 'A')
+  assert.equal(await evaluate(`document.querySelector('select[data-source-question="tg-l35-q15"]')`), null)
   await show('listening', 4, 1, true, true)
   assert.equal(await evaluate(`document.querySelector('[data-map-location-input="A"]').disabled`), true)
   assert.ok(await evaluate(`document.querySelector('[data-map-location="C"] .source-map-correct').textContent.includes('15')`))

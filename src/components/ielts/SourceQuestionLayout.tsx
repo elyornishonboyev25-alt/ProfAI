@@ -42,15 +42,19 @@ function prepareSourcePaper(html: string, questions: Question[]) {
     const wrapper = image.closest('.task-img-wrap') ?? image
     wrapper.replaceWith(mount)
     maps.push({ key, map, alt: image.alt })
-    if (map.kind === 'words') for (const question of questions.filter(item => map.numbers.includes(item.number))) {
+    for (const question of questions.filter(item => map.numbers.includes(item.number))) {
       const control = [...fragment.querySelectorAll<HTMLElement>('[data-source-question]')].find(item => item.dataset.sourceQuestion === question.id)
       if (!control) continue
-      const row = control.closest<HTMLElement>('.source-line,li,tr,p')
+      const row = control.closest<HTMLElement>('.help-select-row,.source-line,li,tr,p')
       if (row) {
-        row.classList.add('source-map-summary')
-        row.closest('.notes-block')?.classList.add('source-map-review-list')
+        // Keep the source text leaves for older saved annotation offsets, with
+        // no second set of answer controls or navigation anchors below the map.
+        row.hidden = true
+        row.setAttribute('aria-hidden', 'true')
+        row.classList.add('source-map-legacy-row')
+        if (map.kind === 'words') row.closest('.notes-block')?.classList.add('source-map-review-list')
         const answer = document.createElement('span')
-        answer.dataset.sourceUserAnswer = question.id
+        answer.textContent = control.textContent
         control.replaceWith(answer)
       } else control.remove()
     }
@@ -87,6 +91,7 @@ export default function SourceQuestionLayout({ html, questions, answers, onAnswe
   const root = useRef<HTMLDivElement>(null)
   const layout = useMemo(() => prepareSourcePaper(html, questions), [html, questions])
   const safeHtml = layout.html
+  const sourceMarkup = useMemo(() => ({ __html: safeHtml }), [safeHtml])
   const byId = useMemo(() => new Map(questions.map(q => [q.id, q])), [questions])
   const [targets, setTargets] = useState<{ flags: HTMLElement[]; maps: HTMLElement[] }>({ flags: [], maps: [] })
 
@@ -177,7 +182,7 @@ export default function SourceQuestionLayout({ html, questions, answers, onAnswe
   </button> : null
 
   return <>
-    <div ref={root} className="ielts-source-paper" data-review={review} data-show-correct={showCorrectAnswers} dangerouslySetInnerHTML={{ __html: safeHtml }} />
+    <div ref={root} className="ielts-source-paper" data-review={review} data-show-correct={showCorrectAnswers} dangerouslySetInnerHTML={sourceMarkup} />
     {targets.flags.map(target => {
       const question = byId.get(target.dataset.sourceFlag!)
       return question ? createPortal(flag(question), target, question.id) : null

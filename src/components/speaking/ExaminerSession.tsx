@@ -236,6 +236,13 @@ export default function ExaminerSession({
   const recognition = useSpeechRecognition('en-US')
   const owner = useAuthStore(state => state.user?.id ?? 'guest')
   const legacySessionKey = `profai:speaking:examiner:${modeLabel}:${JSON.stringify(config)}`
+  // Older checkpoints predate the optional sourceQuestionsOnly seed flag.
+  // Their question set is unchanged and must still migrate to the stable ID.
+  const legacySessionKeys = [legacySessionKey]
+  if (config.mockSeed && 'sourceQuestionsOnly' in config.mockSeed) {
+    const seed = Object.fromEntries(Object.entries(config.mockSeed).filter(([key]) => key !== 'sourceQuestionsOnly'))
+    legacySessionKeys.push(`profai:speaking:examiner:${modeLabel}:${JSON.stringify({ ...config, mockSeed: seed })}`)
+  }
   const stableKey = sessionId ? `profai:speaking:examiner:test:${sessionId}` : legacySessionKey
   const sessionKey = sessionScope ? `${stableKey}:mock:${sessionScope}` : stableKey
   const [saved, setSaved] = useState(() => {
@@ -243,13 +250,17 @@ export default function ExaminerSession({
       const storage = accountStorageFor(owner)
       let raw = storage.getItem(sessionKey)
       if (!raw && sessionId) {
-        const oldKey = sessionScope ? `${legacySessionKey}:mock:${sessionScope}` : legacySessionKey
-        raw = storage.getItem(oldKey)
-        if (raw) { storage.setItem(sessionKey, raw); storage.removeItem(oldKey) }
+        for (const candidate of legacySessionKeys) {
+          const oldKey = sessionScope ? `${candidate}:mock:${sessionScope}` : candidate
+          raw = storage.getItem(oldKey)
+          if (raw) { storage.setItem(sessionKey, raw); storage.removeItem(oldKey); break }
+        }
       }
       if (!raw && sessionScope) {
-        const legacy = storage.getItem(legacySessionKey)
-        if (legacy && ['result', 'evaluating'].includes(JSON.parse(legacy).phase)) { raw = legacy; storage.setItem(sessionKey, raw!); storage.removeItem(legacySessionKey) }
+        for (const oldKey of legacySessionKeys) {
+          const legacy = storage.getItem(oldKey)
+          if (legacy && ['result', 'evaluating'].includes(JSON.parse(legacy).phase)) { raw = legacy; storage.setItem(sessionKey, raw); storage.removeItem(oldKey); break }
+        }
       }
       return JSON.parse(raw ?? 'null') as { evaluation?: SpeakingEvaluation; phase: Phase; chat: ChatTurn[]; prompt: string; activePart: 0 | 1 | 2 | 3; cueCard: CueCard | null; prepNotes: string; stages: Stage[]; stageIndex: number; moveIndex: number; answers: SpeechStats[]; history: ExaminerTurn[]; prepDeadline: number; speakDeadline: number; pendingDuration: number; audioCount: number; audioKey?: string; examiner: ReturnType<typeof chooseExaminer> } | null } catch { return null }
   })

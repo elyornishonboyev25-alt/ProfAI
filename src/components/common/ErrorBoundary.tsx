@@ -5,6 +5,7 @@ import UiText from './UiText'
 type ErrorBoundaryProps = {
   children: React.ReactNode
   fallback?: React.ReactNode
+  resetKey?: unknown
 }
 
 type ErrorBoundaryState = {
@@ -30,6 +31,14 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('ErrorBoundary caught an exception', error, errorInfo)
     if (isStaleBuildError(error)) void recoverFromStaleBuild(error)
+  }
+
+  override componentDidUpdate(previous: ErrorBoundaryProps) {
+    // Cloud updates may recover a failed view, but must never remount a healthy
+    // test (and stop its audio, reset its launch screen or lose focus).
+    if (this.state.hasError && !this.state.staleBuild && previous.resetKey !== this.props.resetKey) {
+      this.setState({ hasError: false, message: '', staleBuild: false })
+    }
   }
 
   override render() {

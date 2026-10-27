@@ -22,6 +22,7 @@ export function useReadingAnnotations(shell: RefObject<HTMLDivElement>, key: str
         const fragments: { node: Text; start: number; end: number }[] = []
         while (walker.nextNode()) {
           const node = walker.currentNode as Text
+          if (node.parentElement?.closest('[data-annotation-ignore]')) continue
           if (!range.intersectsNode(node)) continue
           const start = node === range.startContainer ? range.startOffset : 0
           const end = node === range.endContainer ? range.endOffset : node.length

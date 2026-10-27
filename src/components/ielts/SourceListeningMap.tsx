@@ -1,5 +1,8 @@
 import { useId, useState, type ReactNode } from 'react'
 import type { Question } from '@/types/ieltsTypes'
+import SourceMapDrawing from './SourceMapDrawing'
+import { formatCorrectAnswer } from '@/utils/readingReview'
+import ListeningDiagram from '../ListeningDiagram'
 
 type Point = { label: string; x: number; y: number; width: number }
 export type SourceMap = {
@@ -60,12 +63,11 @@ type Props = {
 export default function SourceListeningMap({ map, alt, questions, answers, onAnswer, onQuestionFocus, renderFlag, review, showCorrectAnswers, reviewQuestions }: Props) {
   const [activeLocation, setActiveLocation] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
-  const [failed, setFailed] = useState(false)
-  const [retry, setRetry] = useState(0)
   const [error, setError] = useState('')
   const helpId = useId()
   const lastNumber = map.numbers[map.numbers.length - 1]
-  const instructions = `Write question numbers ${map.numbers[0]}–${lastNumber} in the matching places A–I. The answers below update automatically.`
+  const lastLetter = map.points[map.points.length - 1].label
+  const instructions = `Write question numbers ${map.numbers[0]}–${lastNumber} in the matching places A–${lastLetter}. Select a question below, then select its place on the map, or type the number directly.`
   const invalidNumberMessage = `Use question numbers ${map.numbers[0]}–${lastNumber}.`
   const mapQuestions = questions.filter(question => map.numbers.includes(question.number))
   const statusFor = (question: Question) => review && showCorrectAnswers ? reviewQuestions?.get(question.id)?.status : undefined
@@ -81,18 +83,26 @@ export default function SourceListeningMap({ map, alt, questions, answers, onAns
     const focused = mapQuestions.find(question => question.number === numbers[numbers.length - 1])
     if (focused) onQuestionFocus?.(focused.id)
   }
+  const [selectedQuestion, setSelectedQuestion] = useState<string | null>(null)
 
   return <figure className="source-map" data-source-map-kind={map.kind}>
     {map.kind === 'locations' && <p className="source-map-help" id={helpId} aria-label={instructions} data-instructions={instructions} />}
+    {map.kind === 'locations' && <div className="source-map-question-key" data-annotation-ignore="true" role="group" aria-label="Map questions">
+      {mapQuestions.map(question => <div key={question.id} className="source-map-key-item"><button type="button" id={`question-card-${question.id}`}
+        aria-pressed={selectedQuestion === question.id} disabled={review}
+        data-map-question-key={question.id} data-review-status={statusFor(question)}
+        onFocus={() => onQuestionFocus?.(question.id)}
+        onClick={() => { setSelectedQuestion(question.id); onQuestionFocus?.(question.id) }}>
+        <strong>{question.number}</strong><span>{question.text.replace(new RegExp(`^${question.number}\\s*`), '')}</span><b>{String(answers[question.id] || '—')}</b>
+      </button>{!review && renderFlag?.(question)}</div>)}
+    </div>}
     {error && <p className="source-map-help" role="alert" aria-label={error} data-instructions={error} />}
     <div className="source-map-scroll" tabIndex={0} aria-label={`${alt}. Scroll horizontally on small screens.`}>
       <div className="source-map-canvas" style={{ minWidth: map.minWidth, maxWidth: map.width, aspectRatio: `${map.width} / ${map.height}` }}>
-        <img src={retry ? `${map.src}?retry=${retry}` : map.src} alt={alt} width={map.width} height={map.height}
-          className="source-map-image" loading="eager" onError={() => setFailed(true)} />
-        {failed ? <div className="source-map-error" role="alert">
-          <p aria-label="The map could not load." data-instructions="The map could not load." />
-          <button type="button" aria-label="Retry map" data-instructions="Retry map" onClick={() => { setRetry(previous => previous + 1); setFailed(false) }} />
-        </div> : map.points.map(point => {
+        {map.id === 'british-library' || map.id === 'community-centre'
+          ? <SourceMapDrawing id={map.id} alt={alt} />
+          : <div className="source-map-original"><ListeningDiagram src={map.src} alt={alt} /></div>}
+        {map.points.map(point => {
           const question = map.kind === 'words' ? mapQuestions.find(item => item.number === Number(point.label)) : undefined
           const assigned = map.kind === 'locations' ? mapQuestions.filter(item => String(answers[item.id] ?? '').toUpperCase() === point.label) : []
           const statuses = assigned.map(statusFor)
@@ -118,6 +128,14 @@ export default function SourceListeningMap({ map, alt, questions, answers, onAns
                 event.currentTarget.select()
                 if (question) onQuestionFocus?.(question.id)
                 else {
+                  if (selectedQuestion && !review) {
+                    onAnswer(selectedQuestion, point.label)
+                    const selected = mapQuestions.find(item => item.id === selectedQuestion)
+                    const nextNumbers = [...new Set([...assigned.map(item => item.number), ...(selected ? [selected.number] : [])])].sort((a, b) => a - b)
+                    setActiveLocation(point.label); setDraft(nextNumbers.join(', ')); setError(''); setSelectedQuestion(null)
+                    onQuestionFocus?.(selectedQuestion)
+                    return
+                  }
                   setActiveLocation(point.label); setDraft(value); setError('')
                   if (assigned[0]) onQuestionFocus?.(assigned[0].id)
                 }
@@ -138,7 +156,8 @@ export default function SourceListeningMap({ map, alt, questions, answers, onAns
                 }
                 setActiveLocation(null)
               }} />
-            {!review && <span className="source-map-flags">{question ? renderFlag?.(question) : assigned.map(item => <span key={item.id}>{renderFlag?.(item)}</span>)}</span>}
+            {!review && question && <span className="source-map-flags">{renderFlag?.(question)}</span>}
+            {question && review && showCorrectAnswers && status !== 'correct' && <span className="source-map-correct" data-annotation-ignore="true">Correct: {formatCorrectAnswer(reviewQuestions?.get(question.id)?.correctAnswer ?? question.correctAnswer)}</span>}
             {correctNumbers.length > 0 && correctNumbers.join(', ') !== value && <span className="source-map-correct">Correct: {correctNumbers.join(', ')}</span>}
           </div>
         })}

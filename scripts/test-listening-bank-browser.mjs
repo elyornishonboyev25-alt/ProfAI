@@ -49,6 +49,9 @@ const server = createServer(async (req, res) => {
     else {
       const path = resolve(publicRoot, '.' + decodeURIComponent(new URL(req.url, 'http://localhost').pathname))
       if (!path.startsWith(publicRoot + sep)) { res.writeHead(403); res.end(); return }
+      // Layout-only audits must not queue entire recordings ahead of map images
+      // on this deliberately small fixture server (production supports ranges).
+      if (process.argv.includes('--skip-audio') && path.endsWith('.mp3')) { res.writeHead(204); res.end(); return }
       const bytes = await readFile(path)
       res.setHeader('Content-Type', path.endsWith('.mp3') ? 'audio/mpeg' : path.endsWith('.svg') ? 'image/svg+xml' : path.endsWith('.png') ? 'image/png' : 'image/jpeg')
       res.setHeader('Content-Length', bytes.length); res.end(bytes)
@@ -97,18 +100,22 @@ try {
       if (await evaluate(`Boolean(${expression})`)) return
       await new Promise(resolve => setTimeout(resolve, 75))
     }
-    assert.fail(expression + ': ' + JSON.stringify(exceptions))
+    assert.fail(expression + ': ' + JSON.stringify(exceptions) + '; images=' + JSON.stringify(await evaluate('[...document.images].map(image=>({src:image.currentSrc||image.src,complete:image.complete,width:image.naturalWidth}))')))
   }
   await send('Runtime.enable')
   await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}` })
   await until('window.tests && document.querySelector(".reading-pane")')
   const failures = []
+  let reviewed = 0
   for (const width of [1440, 390]) {
     await send('Emulation.setDeviceMetricsOverride', { width, height: 1000, deviceScaleFactor: 1, mobile: width === 390 })
     for (let index = 0; index < 30; index++) {
+      const only = process.argv.find(value => value.startsWith('--test='))
+      if (only && index !== Number(only.split('=')[1]) - 1) continue
       await evaluate(`window.mount(${index})`)
       await until(`document.querySelector('#question-card-' + window.tests[${index}].sections[0].questions[0].id)`)
       for (let part = 1; part <= 4; part++) {
+        reviewed++
         await evaluate(`[...document.querySelectorAll('span')].find(el=>el.textContent==='Part ${part}').click()`)
         await until(`document.querySelector('#question-card-' + window.tests[${index}].sections[${part - 1}].questions[0].id)`)
         const issues = await evaluate(`(()=>{
@@ -123,7 +130,10 @@ try {
           for(const el of inputs){
             if(!el.disabled)issues.push('review is editable');
             if(!el.getAttribute('aria-label'))issues.push('unlabelled Q'+el.placeholder);
-            if(el.value!==window.expectedAnswers[section.questions.find(q=>q.number===Number(el.placeholder))?.id])issues.push('wrong saved value Q'+el.placeholder);
+            const expected=el.dataset.mapLocationInput
+              ? section.questions.filter(q=>document.querySelector('[data-map-question-key="'+q.id+'"]')&&window.expectedAnswers[q.id]===el.dataset.mapLocationInput).map(q=>q.number).join(', ')
+              : window.expectedAnswers[section.questions.find(q=>q.number===Number(el.placeholder))?.id];
+            if(el.value!==expected)issues.push('wrong saved value Q'+el.placeholder);
             const r=el.getBoundingClientRect();
             for(const other of inputs){if(el===other)continue;const s=other.getBoundingClientRect();if(Math.min(r.right,s.right)>Math.max(r.left,s.left)&&Math.min(r.bottom,s.bottom)>Math.max(r.top,s.top))issues.push('overlap '+el.placeholder+'/'+other.placeholder);}
           }
@@ -132,6 +142,12 @@ try {
           return [...new Set(issues)];
         })()`)
         if (issues.length) failures.push({ test: index + 1, part, width, issues })
+        if (width === 1440 && part === 2 && await evaluate('Boolean(document.querySelector(".source-map"))')) {
+          await evaluate('document.querySelector(".source-map").scrollIntoView({block:"start"})')
+          await until('[...document.querySelectorAll(".source-map img")].every(image=>image.complete&&image.naturalWidth>0)')
+          const shot = await send('Page.captureScreenshot', { format: 'png' })
+          await writeFile(join(artifacts, `map-${index + 1}.png`), Buffer.from(shot.data, 'base64'))
+        }
       }
       console.log(`Rendered ${index + 1}/30: four saved-review parts at ${width}px`)
     }
@@ -161,7 +177,7 @@ try {
   await until(`document.querySelector('input[placeholder="31"]')`)
   assert.ok(await evaluate('[...document.querySelectorAll("span")].some(el=>el.textContent==="Part 4")'), 'Saved Part 4 keeps its original number')
   assert.equal(await evaluate('window.completed.length'), 0, 'Review never submits')
-  console.log('PASS: 240 review views, typed fields, saved answers, focus spacing, partial review and all question anchors')
+  console.log(`PASS: ${reviewed} review views, typed fields, saved answers, focus spacing, partial review and all question anchors`)
   if (!process.argv.includes('--skip-audio')) {
     const paths = await evaluate('[...new Set(window.tests.flatMap(t=>t.continuousAudioUrl?[t.continuousAudioUrl]:t.sections.map(s=>s.audioUrl)))]')
     for (const path of paths) {

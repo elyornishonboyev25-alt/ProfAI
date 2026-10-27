@@ -12,8 +12,21 @@ export function textOffsets(container: HTMLElement, range: Range) {
   const prefix = document.createRange()
   prefix.selectNodeContents(container)
   prefix.setEnd(range.startContainer, range.startOffset)
-  const start = prefix.toString().length
-  return { start, end: start + range.toString().length }
+  const length = (part: Range) => {
+    // Measure text leaves without cloning potentially large SVG path drawings.
+    const walker = document.createTreeWalker(container, window.NodeFilter.SHOW_TEXT)
+    let total = 0
+    while (walker.nextNode()) {
+      const node = walker.currentNode as Text
+      if (node.parentElement?.closest('[data-annotation-ignore]') || !part.intersectsNode(node)) continue
+      const start = node === part.startContainer ? part.startOffset : 0
+      const end = node === part.endContainer ? part.endOffset : node.length
+      total += Math.max(0, end - start)
+    }
+    return total
+  }
+  const start = length(prefix)
+  return { start, end: start + length(range) }
 }
 
 export function textRange(container: HTMLElement, start: number, end: number): Range | null {
@@ -24,6 +37,7 @@ export function textRange(container: HTMLElement, start: number, end: number): R
   let started = false
   while (walker.nextNode()) {
     const node = walker.currentNode
+    if (node.parentElement?.closest('[data-annotation-ignore]')) continue
     const length = node.textContent?.length ?? 0
     if (!started && start < offset + length) {
       range.setStart(node, start - offset)

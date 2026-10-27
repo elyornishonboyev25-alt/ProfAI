@@ -8,10 +8,11 @@ export default function FullscreenToggle() {
   const { isFullscreen, supported, toggle, enter } = useFullscreen()
   const { c } = useCopy()
   const { pathname } = useLocation()
+  const isWritingTest = pathname.startsWith('/ielts/writing/test/')
   const attempted = useRef(false)
   useEffect(() => { if (isFullscreen) attempted.current = true }, [isFullscreen])
   useEffect(() => {
-    if (!supported || attempted.current || pathname === '/login' || pathname === '/register') return
+    if (isWritingTest || !supported || attempted.current || pathname === '/login' || pathname === '/register') return
     const onInteraction = (event: MouseEvent) => {
       if (!event.isTrusted || !window.matchMedia('(max-width: 1023px) and (pointer: coarse)').matches) return
       const target = event.target instanceof Element ? event.target : null
@@ -22,10 +23,10 @@ export default function FullscreenToggle() {
     }
     document.addEventListener('click', onInteraction, true)
     return () => document.removeEventListener('click', onInteraction, true)
-  }, [supported, enter, pathname, isFullscreen])
+  }, [supported, enter, pathname, isFullscreen, isWritingTest])
   const label = c(isFullscreen ? 'Exit full screen' : 'Full screen')
 
-  if (!supported) return null
+  if (!supported || isWritingTest) return null
 
   return (
     <div className="site-fullscreen-control pointer-events-none fixed bottom-24 right-[4.5rem] z-[120] print:hidden lg:bottom-6 lg:right-[5.25rem]">

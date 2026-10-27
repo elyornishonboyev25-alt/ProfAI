@@ -8,7 +8,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowLeft,
   Clock,
-  BookmarkIcon,
   RotateCcw,
   Send,
   Timer,
@@ -44,6 +43,7 @@ import TestLaunchOverlay from '@/components/common/TestLaunchOverlay'
 import WritingTaskDiagram from '@/components/writing/WritingTaskDiagram'
 import WritingDataVisual from '@/components/writing/WritingDataVisual'
 import WritingTaskImage from '@/components/writing/WritingTaskImage'
+import WritingWorkspace from '@/components/writing/WritingWorkspace'
 import { markXpActivitySynced, recordXpActivity } from '@/lib/xpApi'
 import { useSearchParams } from 'react-router-dom'
 import { learningCenterApi } from '@/features/learningCenter/api'
@@ -334,7 +334,7 @@ export default function IELTSWritingTestInterface({
   const writingTrial = useFeatureTrial('writing')
   const [showWritingGate, setShowWritingGate] = useState(false)
   const wordCount = countWords(answer)
-  const { min: minWords, max: maxWords } = task.suggestedWordCount
+  const minWords = task.suggestedWordCount.min
   const effectiveDuration = autoDurationMinutes && autoDurationMinutes > 0 ? autoDurationMinutes : task.durationMinutes
 
   useEffect(() => {
@@ -1006,20 +1006,6 @@ export default function IELTSWritingTestInterface({
     )
   }
 
-  const timerColor =
-    timerEnabled && timeRemaining < 120
-      ? 'text-red-600'
-      : timerEnabled && timeRemaining < 300
-        ? 'text-amber-600'
-        : 'text-slate-700'
-
-  const wordCountColor =
-    wordCount >= minWords && wordCount <= maxWords
-      ? 'text-emerald-600'
-      : wordCount > maxWords
-        ? 'text-amber-600'
-        : 'text-slate-500'
-
   return (
     <div className="ielts-writing-workspace flex h-dvh min-h-0 flex-col bg-white">
       <AnimatePresence>
@@ -1134,49 +1120,19 @@ export default function IELTSWritingTestInterface({
         )}
       </AnimatePresence>
 
-      <header className="ielts-writing-header flex items-center justify-between border-b border-red-100 bg-gradient-to-r from-white via-red-50/30 to-white px-4 py-2.5 sm:px-6">
-        <div className="flex min-w-0 items-center gap-3">
-          <button
-            type="button"
-            onClick={onExit}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-red-200 bg-white text-slate-600 shadow-sm hover:bg-red-50 hover:text-red-600 transition"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </button>
-          <div className="min-w-0">
-            <p className="writing-exam-label">IELTS Writing · {task.taskType === 'task1' ? 'Task 1' : 'Task 2'}</p>
-            <h1 className="truncate text-sm font-bold text-slate-900">{task.title}</h1>
-            <p className="truncate text-[11px] text-slate-500">{task.subtitle}</p>
-          </div>
-        </div>
-
-        <div className="flex shrink-0 items-center gap-2">
-          {timerEnabled && (
-            <div className="flex items-center gap-2">
-              <div
-                className={`flex items-center gap-1.5 rounded-xl border border-red-200 bg-white px-3 py-1.5 font-mono text-base font-black ${timerColor} shadow-sm`}
-              >
-                <Clock className="h-4 w-4" />
-                {formatTime(timeRemaining)}
-              </div>
-            </div>
-          )}
-          <button
-            type="button"
-            onClick={() => setBookmarked(!bookmarked)}
-            className={`inline-flex h-9 w-9 items-center justify-center rounded-xl border shadow-sm transition ${
-              bookmarked
-                ? 'border-amber-300 bg-amber-100 text-amber-700'
-                : 'border-red-200 bg-white text-slate-500 hover:text-amber-600 hover:border-amber-300'
-            }`}
-          >
-            <BookmarkIcon className="h-4 w-4" fill={bookmarked ? 'currentColor' : 'none'} />
-          </button>
-        </div>
-      </header>
-
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
-        <div className="shrink-0 border-b border-red-100 bg-gradient-to-b from-white via-red-50/20 to-white p-4 sm:p-6 lg:w-1/2 lg:overflow-y-auto lg:border-b-0 lg:border-r lg:p-8">
+      <WritingWorkspace
+        title={task.title}
+        tasks={[{ id: task.id, label: task.taskType === 'task1' ? 'Task 1' : 'Task 2', minutes: task.durationMinutes, minimum: minWords, words: wordCount, marked: bookmarked }]}
+        activeIndex={0}
+        onExit={onExit}
+        onBookmark={() => setBookmarked(value => !value)}
+        timed={timerEnabled}
+        seconds={timeRemaining}
+        answer={answer}
+        onAnswerChange={setAnswer}
+        textareaRef={textareaRef}
+        action={<button type="button" onClick={() => setShowSubmitConfirm(true)} className="writing-primary"><Send size={15} />Submit</button>}
+        prompt={<>
           <div className="writing-exam-card p-5">
             <p className="writing-exam-label mb-3">Task instructions</p>
             <p className="text-[15px] leading-relaxed text-slate-800 whitespace-pre-line">
@@ -1185,73 +1141,27 @@ export default function IELTSWritingTestInterface({
           </div>
 
           {task.chart && task.chart.type === 'line' && (
-            <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="writing-source-visual">
               <LineChart chart={task.chart} />
             </div>
           )}
           {task.diagram ? (
-            <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+            <div className="writing-source-visual">
               <WritingTaskDiagram diagram={task.diagram} />
             </div>
           ) : null}
           {task.visual ? (
-            <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+            <div className="writing-source-visual">
               <WritingDataVisual visual={task.visual} />
             </div>
           ) : null}
           {task.imageUrl ? (
-            <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+            <div className="writing-source-visual">
               <WritingTaskImage task={task} className="mx-auto h-auto max-w-full" />
             </div>
           ) : null}
-        </div>
-
-        <div className="flex min-h-[420px] flex-1 flex-col bg-gradient-to-b from-white via-slate-50/30 to-white lg:min-h-0 lg:w-1/2">
-          <div className="min-h-0 flex-1 p-4 sm:p-6 lg:p-8">
-            <div className="writing-exam-card relative flex h-full min-h-[300px] flex-col overflow-hidden lg:min-h-0">
-              <div className="writing-editor-label"><span>Your response</span><span>Task {task.taskType === 'task1' ? '1' : '2'}</span></div>
-              <textarea
-                ref={textareaRef}
-                value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
-                placeholder="Write your response here..."
-                className="min-h-0 flex-1 resize-none bg-transparent p-5 text-[15px] leading-relaxed text-slate-800 placeholder:text-slate-400 outline-none"
-              />
-              <div className="flex items-center justify-between border-t border-slate-100 px-4 py-2.5">
-                <span className="text-xs text-slate-500">
-                  Suggested word count: {minWords}–{maxWords}
-                </span>
-                <span className={`text-xs font-bold ${wordCountColor}`}>
-                  {wordCount} words
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-3 sm:px-6">
-            <div className="flex items-center gap-2">
-              <PenLine className="h-4 w-4 text-slate-400" />
-              <span className={`text-sm font-semibold ${wordCountColor}`}>
-                {wordCount} {wordCount === 1 ? 'word' : 'words'}
-              </span>
-              {wordCount >= minWords && wordCount <= maxWords && (
-                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
-                  <CheckCircle2 className="h-3 w-3" />
-                  Good range
-                </span>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowSubmitConfirm(true)}
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-red-500/20 hover:brightness-105 transition"
-            >
-              <Send className="h-4 w-4" />
-              Submit
-            </button>
-          </div>
-        </div>
-      </div>
+        </>}
+      />
     </div>
   )
 }

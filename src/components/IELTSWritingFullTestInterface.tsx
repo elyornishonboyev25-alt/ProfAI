@@ -8,16 +8,12 @@ import {
   AlertCircle,
   ArrowLeft,
   ArrowRight,
-  Bookmark,
   CheckCircle2,
-  Clock3,
   Crown,
   Lightbulb,
   Loader2,
   Maximize2,
-  Minimize2,
   Monitor,
-  PenLine,
   RotateCcw,
   Send,
   Target,
@@ -33,8 +29,7 @@ import WritingDataVisual from '@/components/writing/WritingDataVisual'
 import WritingTaskImage from '@/components/writing/WritingTaskImage'
 import type { WritingFullTest } from '@/data/writingTestData'
 import { useFeatureTrial } from '@/hooks/useFeatureTrial'
-import { useFullscreen } from '@/hooks/useFullscreen'
-import { useBillingText } from '@/features/billing/copy'
+import WritingWorkspace from '@/components/writing/WritingWorkspace'
 import { markXpActivitySynced, recordXpActivity } from '@/lib/xpApi'
 import { evaluateWriting, type WritingEvaluation } from '@/services/geminiAI'
 import { writingSectionBand, writingVisualContext } from '@/lib/writingScoring'
@@ -65,12 +60,6 @@ function countWords(value: string): number {
   return trimmed.split(/\s+/).filter((token) => /[\p{L}\p{N}]/u.test(token)).length
 }
 
-function formatTime(seconds: number): string {
-  const minutes = Math.floor(seconds / 60)
-  const remainder = seconds % 60
-  return `${String(minutes).padStart(2, '0')}:${String(remainder).padStart(2, '0')}`
-}
-
 function weightedBand(evaluations: Record<string, WritingEvaluation>, taskIds: string[]): number {
   return writingSectionBand(evaluations[taskIds[0]], evaluations[taskIds[1]])
 }
@@ -86,7 +75,6 @@ export default function IELTSWritingFullTestInterface({
   fullMockId,
 }: Props) {
   const [searchParams] = useSearchParams()
-  const text = useBillingText()
   const tasks = fullTest.tasks
   const defaultDuration = tasks.reduce((total, task) => total + task.durationMinutes, 0)
   const effectiveDuration =
@@ -119,7 +107,6 @@ export default function IELTSWritingFullTestInterface({
 
   const activeTask = tasks[activeTaskIndex]
   const activeAnswer = answers[activeTask.id] ?? ''
-  const activeWordCount = countWords(activeAnswer)
   const wordCounts = useMemo(
     () => Object.fromEntries(tasks.map((task) => [task.id, countWords(answers[task.id] ?? '')])),
     [answers, tasks],
@@ -135,7 +122,6 @@ export default function IELTSWritingFullTestInterface({
   const awardBadge = useBadgeStore((state) => state.awardIfEligible)
   const writingTrial = useFeatureTrial('writing')
   const setExamModeActive = useAiAssistantStore((state) => state.setExamModeActive)
-  const { isFullscreen, supported: fullscreenSupported, toggle: toggleFullscreen } = useFullscreen()
 
   useEffect(() => {
     const active = phase === 'writing'
@@ -616,11 +602,6 @@ export default function IELTSWritingFullTestInterface({
     )
   }
 
-  const timerColor = timeRemaining < 120 ? 'text-red-600' : timeRemaining < 300 ? 'text-amber-600' : 'text-slate-700'
-  const minWords = activeTask.suggestedWordCount.min
-  const maxWords = activeTask.suggestedWordCount.max
-  const wordCountColor = activeWordCount >= minWords ? 'text-emerald-600' : 'text-slate-500'
-
   return (
     <div className="ielts-writing-workspace flex h-dvh min-h-0 flex-col overflow-hidden bg-white">
       <ConfirmModal
@@ -651,44 +632,24 @@ export default function IELTSWritingFullTestInterface({
         ) : null}
       </AnimatePresence>
 
-      <header className="ielts-writing-header shrink-0 border-b border-red-100 bg-gradient-to-r from-white via-red-50/40 to-white px-3 py-2.5 sm:px-5">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <button type="button" onClick={onExit} className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-red-200 bg-white text-slate-600 shadow-sm hover:text-red-600">
-              <ArrowLeft className="h-4 w-4" />
-            </button>
-            <div className="min-w-0">
-              <p className="writing-exam-label">IELTS Writing · Full test</p>
-              <h1 className="truncate text-sm font-black text-slate-900">{fullTest.title}</h1>
-            </div>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            {timerEnabled ? (
-              <div className={`inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-white px-2.5 py-1.5 font-mono text-sm font-black shadow-sm sm:text-base ${timerColor}`}>
-                <Clock3 className="h-4 w-4" /> {formatTime(timeRemaining)}
-              </div>
-            ) : null}
-            <button type="button" onClick={() => setBookmarks((current) => ({ ...current, [activeTask.id]: !current[activeTask.id] }))} className={`inline-flex h-9 w-9 items-center justify-center rounded-xl border shadow-sm ${bookmarks[activeTask.id] ? 'border-amber-300 bg-amber-100 text-amber-700' : 'border-red-200 bg-white text-slate-500'}`}>
-              <Bookmark className="h-4 w-4" fill={bookmarks[activeTask.id] ? 'currentColor' : 'none'} />
-            </button>
-          </div>
-        </div>
-        <nav className="mt-2 grid grid-cols-2 gap-2" aria-label="Writing tasks">
-          {tasks.map((task, index) => {
-            const isActive = index === activeTaskIndex
-            const count = wordCounts[task.id]
-            return (
-              <button key={task.id} type="button" onClick={() => { setActiveTaskIndex(index); setTimeout(() => textareaRef.current?.focus(), 50) }} className={`flex items-center justify-between rounded-xl border px-3 py-2 text-left transition ${isActive ? 'border-red-300 bg-red-50 text-red-800 shadow-sm' : 'border-slate-200 bg-white text-slate-600 hover:border-red-200'}`}>
-                <span className="text-xs font-black sm:text-sm">Task {index + 1}</span>
-                <span className={`text-[10px] font-bold ${count >= task.suggestedWordCount.min ? 'text-emerald-600' : 'text-slate-400'}`}>{count} words</span>
-              </button>
-            )
-          })}
-        </nav>
-      </header>
-
-      <main className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
-        <section className="shrink-0 border-b border-red-100 bg-gradient-to-b from-white via-red-50/20 to-white p-4 sm:p-5 lg:w-1/2 lg:overflow-y-auto lg:border-b-0 lg:border-r lg:p-7">
+      <WritingWorkspace
+        title={fullTest.title}
+        tasks={tasks.map((task, index) => ({ id: task.id, label: `Task ${index + 1}`, minutes: task.durationMinutes, minimum: task.suggestedWordCount.min, words: wordCounts[task.id], marked: Boolean(bookmarks[task.id]) }))}
+        activeIndex={activeTaskIndex}
+        onTaskChange={index => { setActiveTaskIndex(index); setShowImagePreview(false) }}
+        onExit={onExit}
+        onBookmark={() => setBookmarks(current => ({ ...current, [activeTask.id]: !current[activeTask.id] }))}
+        timed={timerEnabled}
+        seconds={timeRemaining}
+        answer={activeAnswer}
+        onAnswerChange={value => setAnswers(current => ({ ...current, [activeTask.id]: value }))}
+        textareaRef={textareaRef}
+        action={activeTaskIndex < tasks.length - 1 ? (
+          <button type="button" onClick={() => setActiveTaskIndex(activeTaskIndex + 1)} className="writing-primary">Next: Task 2 <ArrowRight size={15} /></button>
+        ) : (
+          <button type="button" onClick={() => setShowSubmitConfirm(true)} className="writing-primary"><Send size={15} />Submit Full Test</button>
+        )}
+        prompt={<>
           <div className="writing-exam-card p-5">
             <p className="writing-exam-label mb-3">Task {activeTaskIndex + 1} · Instructions</p>
             <p className="text-[15px] font-medium leading-7 text-slate-900">{activeTask.promptLead ?? activeTask.prompt}</p>
@@ -700,7 +661,7 @@ export default function IELTSWritingFullTestInterface({
             ) : null}
           </div>
           {activeTask.imageUrl ? (
-            <div className="relative mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-sm sm:p-3">
+            <div className="writing-source-visual relative">
               <button type="button" onClick={() => setShowImagePreview(true)} aria-label="Enlarge Task 1 image" className="absolute right-4 top-4 z-10 rounded-lg border border-slate-200 bg-white/95 p-2 text-slate-700 shadow-sm hover:bg-slate-50">
                 <Maximize2 className="h-4 w-4" />
               </button>
@@ -708,7 +669,7 @@ export default function IELTSWritingFullTestInterface({
             </div>
           ) : null}
           {activeTask.diagram ? (
-            <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-sm sm:p-3">
+            <div className="writing-source-visual">
               <div className="mb-2 flex justify-end">
                 <button type="button" onClick={() => setShowImagePreview(true)} aria-label="Enlarge Task 1 image" className="rounded-lg border border-slate-200 bg-white p-2 text-slate-700 shadow-sm hover:bg-slate-50">
                   <Maximize2 className="h-4 w-4" />
@@ -718,46 +679,12 @@ export default function IELTSWritingFullTestInterface({
             </div>
           ) : null}
           {activeTask.visual ? (
-            <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-sm sm:p-3">
+            <div className="writing-source-visual">
               <WritingDataVisual visual={activeTask.visual} />
             </div>
           ) : null}
-        </section>
-
-        <section className="flex min-h-[460px] flex-1 flex-col bg-gradient-to-b from-white via-slate-50/30 to-white lg:min-h-0 lg:w-1/2">
-          <div className="min-h-0 flex-1 p-4 sm:p-5 lg:p-7">
-            <div className="writing-exam-card relative flex h-full min-h-[360px] flex-col overflow-hidden lg:min-h-0">
-              <div className="writing-editor-label"><span>Your response</span><span>Task {activeTaskIndex + 1}</span></div>
-              <textarea ref={textareaRef} value={activeAnswer} onChange={(event) => setAnswers((current) => ({ ...current, [activeTask.id]: event.target.value }))} placeholder={`Write your Task ${activeTaskIndex + 1} response here...`} className="min-h-0 flex-1 resize-none bg-transparent p-5 text-[15px] leading-7 text-slate-800 outline-none placeholder:text-slate-400" />
-              <div className="flex items-center justify-between border-t border-slate-100 px-4 py-2.5">
-                <span className="text-xs text-slate-500">Minimum {minWords} words · suggested {minWords}–{maxWords}</span>
-                <span className={`text-xs font-black ${wordCountColor}`}>{activeWordCount} words</span>
-              </div>
-            </div>
-          </div>
-          <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-4 py-3 sm:px-6">
-            <div className="flex items-center gap-2 text-sm font-bold text-slate-600"><PenLine className="h-4 w-4 text-slate-400" /> {totalWordCount} total words</div>
-            <div className="flex items-center gap-2">
-              {fullscreenSupported ? (
-                <button
-                  type="button"
-                  onClick={toggleFullscreen}
-                  aria-label={isFullscreen ? text('Exit fullscreen', 'To‘liq ekrandan chiqish', 'Выйти из полноэкранного режима') : text('Fullscreen', 'To‘liq ekran', 'Полноэкранный режим')}
-                  aria-pressed={isFullscreen}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-blue-200 bg-white text-blue-700 shadow-sm transition hover:border-blue-300 hover:bg-blue-50"
-                >
-                  {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-                </button>
-              ) : null}
-              {activeTaskIndex < tasks.length - 1 ? (
-                <button type="button" onClick={() => setActiveTaskIndex(activeTaskIndex + 1)} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-red-500/20">Next: Task 2 <ArrowRight className="h-4 w-4" /></button>
-              ) : (
-                <button type="button" onClick={() => setShowSubmitConfirm(true)} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-500/20"><Send className="h-4 w-4" /> Submit Full Test</button>
-              )}
-            </div>
-          </footer>
-        </section>
-      </main>
+        </>}
+      />
       {showImagePreview && (activeTask.imageUrl || activeTask.diagram) ? (
         <div className="fixed inset-0 z-[250] flex items-center justify-center bg-slate-950/80 p-3 sm:p-6" role="dialog" aria-modal="true" aria-label="Enlarged Task 1 image">
           <button type="button" onClick={() => setShowImagePreview(false)} aria-label="Close enlarged image" className="absolute inset-0" />

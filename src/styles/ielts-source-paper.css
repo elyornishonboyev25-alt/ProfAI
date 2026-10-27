@@ -57,6 +57,10 @@
 .ielts-source-paper .source-map-question-key { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 6px; margin-bottom: 12px; }
 .ielts-source-paper .source-map-key-item { display: flex; align-items: center; min-width: 0; gap: 3px; }
 .ielts-source-paper .source-map-key-item > button:first-child { flex: 1; min-width: 0; }
+.ielts-source-paper .source-map-question-answer { display: flex; flex: 1; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; border: 1px solid #e2e8f0; border-radius: 8px; background: white; padding: 8px 10px; font-size: 13px; }
+.ielts-source-paper .source-map-question-answer label { display: flex; flex: 1; align-items: center; gap: 8px; min-width: 80px; }
+.ielts-source-paper .source-map-question-answer select { width: 54px; min-width: 54px; flex-shrink: 0; }
+.ielts-source-paper .source-map-question-correct { flex-basis: 100%; color: #047857; font-size: 12px; }
 .ielts-source-paper .source-map-question-key button { display: flex; align-items: center; gap: 8px; min-height: 36px; border: 1px solid #e2e8f0; border-radius: 8px; background: white; padding: 6px 10px; color: #334155; font: inherit; font-size: 13px; text-align: left; scroll-margin: 24px; }
 .ielts-source-paper .source-map-question-key button > span { flex: 1; }
 .ielts-source-paper .source-map-question-key button > b { min-width: 24px; color: #be123c; text-align: center; }

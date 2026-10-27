@@ -122,6 +122,17 @@ try {
       assert.deepEqual([geometry.width, geometry.height], index === 3 ? [924, 1023] : [815, 682])
       assert.ok(Math.abs(geometry.ratio - geometry.width / geometry.height) < .002, 'Original image aspect ratio is unchanged')
       assert.equal(geometry.fits, true, `${width}px: every answer field stays inside its original map`)
+      if (index === 3) {
+        const workspace = await evaluate(`(()=>{const map=document.querySelector('svg.source-map-image').getBoundingClientRect(),fields=document.querySelector('.source-word-map-fields').getBoundingClientRect();return {height:map.height,sideBySide:fields.left>=map.right,fields:[...document.querySelectorAll('[data-map-question]')].every(input=>input.getBoundingClientRect().width>=100)};})()`)
+        assert.ok(workspace.height <= 900 - 180 + 1, 'The complete Library plan fits vertically')
+        assert.equal(workspace.fields, true, 'Answers retain a readable width')
+        if (width === 1366) assert.equal(workspace.sideBySide, true, 'Complete plan and answer panel remain visible together')
+        if (width === 1366) {
+          await send('Emulation.setDeviceMetricsOverride', { width, height: 630, deviceScaleFactor: 1, mobile: false })
+          assert.ok(await evaluate('document.querySelector(".source-word-map").getBoundingClientRect().height <= 480'), 'The entire map and all five answers also fit a short test viewport')
+          await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: false })
+        }
+      }
       if (width === 1366) {
         const difference = await evaluate(`(async()=>{
           const svg=document.querySelector('svg.source-map-image').cloneNode(true),w=svg.viewBox.baseVal.width,h=svg.viewBox.baseVal.height;
@@ -143,8 +154,10 @@ try {
   await evaluate(`document.querySelector('[data-map-question="tg-l34-q16"]').focus()`)
   await send('Input.insertText', { text: 'Conference Centre' })
   await until(`window.savedAnswers['tg-l34-q16']==='Conference Centre'`)
+  const mapBefore = await evaluate(`(()=>{const r=document.querySelector('svg.source-map-image').getBoundingClientRect();return {top:r.top,left:r.left,height:r.height};})()`)
   await evaluate(`window.beforeInput=document.activeElement;window.tick()`)
   assert.equal(await evaluate('document.activeElement===window.beforeInput'), true, 'Clock rerenders retain input focus')
+  assert.deepEqual(await evaluate(`(()=>{const r=document.querySelector('svg.source-map-image').getBoundingClientRect();return {top:r.top,left:r.left,height:r.height};})()`), mapBefore, 'Typing and timer updates do not move or resize the plan')
   await send('Page.reload')
   await until(`document.querySelector('[data-map-question="tg-l34-q16"]')?.value==='Conference Centre'`)
   await show('listening', 4, 1)

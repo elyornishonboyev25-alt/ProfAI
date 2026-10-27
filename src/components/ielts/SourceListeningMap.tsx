@@ -3,6 +3,7 @@ import type { Question } from '@/types/ieltsTypes'
 import SourceMapDrawing from './SourceMapDrawing'
 import { formatCorrectAnswer } from '@/utils/readingReview'
 import ListeningDiagram from '../ListeningDiagram'
+import SourceWordMapWorkspace from './SourceWordMapWorkspace'
 
 type Point = { label: string; x: number; y: number; width: number }
 export type SourceMap = {
@@ -48,7 +49,7 @@ export function sourceListeningMapFor(src: string) {
   catch { return undefined }
 }
 
-type Props = {
+export type SourceListeningMapProps = {
   map: SourceMap
   alt: string
   questions: Question[]
@@ -61,7 +62,7 @@ type Props = {
   reviewQuestions?: Map<string, { status: 'correct' | 'incorrect' | 'skipped'; correctAnswer: string | string[] }>
 }
 
-export default function SourceListeningMap({ map, alt, questions, answers, onAnswer, onQuestionFocus, renderFlag, review, showCorrectAnswers, reviewQuestions }: Props) {
+export default function SourceListeningMap({ map, alt, questions, answers, onAnswer, onQuestionFocus, renderFlag, review, showCorrectAnswers, reviewQuestions }: SourceListeningMapProps) {
   const [activeLocation, setActiveLocation] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
   const [error, setError] = useState('')
@@ -86,6 +87,9 @@ export default function SourceListeningMap({ map, alt, questions, answers, onAns
     if (focused) onQuestionFocus?.(focused.id)
   }
   const [selectedQuestion, setSelectedQuestion] = useState<string | null>(null)
+
+  if (map.id === 'british-library') return <SourceWordMapWorkspace map={map} alt={alt} questions={mapQuestions} answers={answers}
+    onAnswer={onAnswer} onQuestionFocus={onQuestionFocus} renderFlag={renderFlag} review={review} showCorrectAnswers={showCorrectAnswers} reviewQuestions={reviewQuestions} />
 
   return <figure className="source-map" data-source-map-kind={map.kind}>
     {map.kind === 'locations' && !answerBesideQuestion && <p className="source-map-help" id={helpId} aria-label={instructions} data-instructions={instructions} />}

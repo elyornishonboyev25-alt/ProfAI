@@ -45,7 +45,7 @@ export async function run() {
     const preserved = host.querySelector('.ielts-source-paper')!.cloneNode(true) as HTMLElement
     preserved.querySelectorAll('[data-annotation-ignore]').forEach(node => node.remove())
     assert.equal(preserved.textContent, source.content.textContent, `${section.id}: saved highlight/note text offsets stay unchanged`)
-    assert.equal(host.querySelectorAll('script,[style]:not(.source-map-canvas,.source-map-answer)').length, 0, 'Source inline styles cannot override the shared theme')
+    assert.equal(host.querySelectorAll('script,[style]:not(.source-map-canvas,.source-map-answer,.source-word-map-marker)').length, 0, 'Source inline styles cannot override the shared theme')
   }
 
   const library = telegramListeningTests[3].sections[1]
@@ -54,15 +54,20 @@ export async function run() {
   assert.equal(host.querySelector('.source-map img'), null, 'No raster decoder is needed')
   assert.ok(!host.querySelector('.source-map')!.textContent?.includes('MORE THAN THREE WORDS'), 'The source image instruction is not duplicated in the map')
   assert.equal(host.querySelectorAll('[data-diagram-answer] input').length, 5)
+  assert.equal(host.querySelector('.source-map-answer input'), null, 'Library answers have one stable panel beside the complete plan')
+  assert.equal(host.querySelectorAll('[data-map-marker]').length, 5)
   const word = host.querySelector<HTMLInputElement>('[data-map-question="tg-l34-q16"]')!
   await enter(word, 'Conference Centre')
   assert.equal(saved['tg-l34-q16'], 'Conference Centre')
   assert.equal(focused, 'tg-l34-q16')
+  assert.equal(host.querySelector('[data-map-marker="tg-l34-q16"]')!.getAttribute('data-active'), 'true', 'Typing identifies the corresponding place on the original map')
   word.setSelectionRange(3, 3)
   await act(async () => tick())
   assert.equal(host.querySelector('[data-map-question="tg-l34-q16"]'), word, 'Audio clock updates preserve the real input node')
   assert.equal(document.activeElement, word)
   assert.equal(word.selectionStart, 3)
+  await act(async () => (host.querySelector('[data-map-marker="tg-l34-q20"]') as HTMLButtonElement).click())
+  assert.equal(document.activeElement, host.querySelector('[data-map-question="tg-l34-q20"]'), 'Map targets focus their matching answer without a second input')
   const flag = host.querySelector<HTMLButtonElement>('[aria-label="Flag question 16"]')!
   await act(async () => flag.click())
   assert.equal(flag.getAttribute('aria-pressed'), 'true')

@@ -79,6 +79,29 @@
 .ielts-source-paper .source-map-mobile-hint { display: none; margin-top: 8px; color: #64748b; font-size: 12px; text-align: center; }
 .ielts-source-paper .source-map-review-list { display: none; }
 .ielts-source-paper .source-map-legacy-row { display: none !important; }
+.ielts-source-paper .source-word-map { display: grid; grid-template-columns: minmax(0, 1fr) 240px; align-items: center; gap: 16px; padding: 14px; }
+.ielts-source-paper .source-word-map-preview { display: flex; min-width: 0; justify-content: center; }
+.ielts-source-paper .source-word-map-canvas { width: min(100%, calc((100dvh - 230px) * 0.90322580645)); aspect-ratio: 924 / 1023; margin: 0; }
+.ielts-source-paper .source-word-map-marker { position: absolute; height: 3%; min-height: 16px; border: 2px solid transparent; border-radius: 5px; background: transparent; padding: 0; cursor: pointer; }
+.ielts-source-paper .source-word-map-marker:hover, .ielts-source-paper .source-word-map-marker[data-active="true"] { border-color: #c52d43; background: #fff1f280; box-shadow: 0 0 0 3px #c52d431a; }
+.ielts-source-paper .source-word-map-fields { display: grid; min-width: 0; gap: 10px; }
+.ielts-source-paper .source-word-map-field { min-width: 0; border: 1px solid #e2e8f0; border-radius: 10px; background: white; padding: 10px 12px; }
+.ielts-source-paper .source-word-map-field[data-active="true"] { border-color: #c52d43; box-shadow: 0 0 0 2px #c52d431a; }
+.ielts-source-paper .source-word-map-field-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 13px; font-weight: 700; }
+.ielts-source-paper .source-word-map-field input[type="text"] { width: 100%; max-width: none; min-height: 36px; text-align: left; }
+@media (max-height: 700px) {
+  .ielts-source-paper .source-word-map-fields { gap: 6px; }
+  .ielts-source-paper .source-word-map-field { padding: 6px 10px; }
+  .ielts-source-paper .source-word-map-field-heading { margin-bottom: 3px; font-size: 12px; line-height: 1.3; }
+  .ielts-source-paper .source-word-map-field input[type="text"],
+  .reading-shell.ielts-exam-workspace .source-word-map .source-word-map-field input[type="text"] { height: 32px; min-height: 32px; }
+}
+@media (max-width: 640px) {
+  .ielts-source-paper .source-word-map { grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 10px; }
+  .ielts-source-paper .source-word-map-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .ielts-source-paper .source-word-map-field { padding: 8px; }
+  .ielts-source-paper .source-word-map-canvas { width: min(100%, calc((100dvh - 180px) * 0.90322580645)); }
+}
 .ielts-source-paper .source-map-summary { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; padding: 8px 0; border-bottom: 1px solid #f1f5f9; line-height: 1.6; }
 .ielts-source-paper .source-map-summary:last-child { border-bottom: 0; }
 .ielts-source-paper [data-source-user-answer] { font-weight: 600; }

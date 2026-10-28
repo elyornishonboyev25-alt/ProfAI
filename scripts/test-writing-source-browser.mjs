@@ -1,23 +1,41 @@
 import assert from 'node:assert/strict'
 import { build } from 'esbuild'
+import { createHash } from 'node:crypto'
 import { spawn } from 'node:child_process'
 import { createServer } from 'node:http'
 import { createRequire } from 'node:module'
 import { mkdtemp, readFile, writeFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, resolve, sep } from 'node:path'
 
 const requireBackend = createRequire(new URL('../backend/package.json', import.meta.url))
 const WebSocket = requireBackend('ws')
 const directory = await mkdtemp(join(tmpdir(), 'profai-writing-sources-'))
+// Build an independent reference from the untouched source paths. Only the
+// publisher URL rectangle may differ; every artwork pixel must still match.
+const artwork = JSON.parse(await readFile('src/assets/ielts/aluminium-recycling-paths.json', 'utf8'))
+const reference = Buffer.alloc(artwork.width * artwork.height * 3, 255)
+for (const { fill, d } of artwork.paths) {
+  const colour = Number.parseInt(fill.slice(1), 16)
+  for (const [, left, top, width, height] of d.matchAll(/M(\d+) (\d+)h(\d+)v(\d+)h-\d+z/g)) {
+    for (let y = +top; y < +top + +height; y++) for (let x = +left; x < +left + +width; x++) {
+      const offset = (y * artwork.width + x) * 3
+      reference[offset] = colour >> 16; reference[offset + 1] = colour >> 8; reference[offset + 2] = colour
+    }
+  }
+}
+for (let y = 264; y < 276; y++) reference.fill(255, (y * artwork.width + 150) * 3, (y * artwork.width + 254) * 3)
+const cleanedArtworkHash = createHash('sha256').update(reference).digest('hex')
 const bundle = await build({
   stdin: { contents: `
     import React from 'react'; import { createRoot } from 'react-dom/client';
     import Diagram from './src/components/writing/WritingTaskDiagram';
+    import TaskImage from './src/components/writing/WritingTaskImage';
     import { getWritingFullTestCatalog } from './src/data/writingTestData';
+    const imageMode = location.pathname === '/sources';
     createRoot(document.getElementById('root')).render(<>
-      {getWritingFullTestCatalog().filter(t => [6, 8, 11, 12, 13, 14].includes(t.index) || t.index >= 21).map(t => <section key={t.id}>
-        <h2>Writing Full Test {t.index}</h2><Diagram diagram={t.tasks[0].diagram} />
+      {getWritingFullTestCatalog().filter(t => imageMode ? [5,7,10,15,31,33,34].includes(t.index) : [6,8,11,12,13,14,32,35].includes(t.index) || (t.index >= 21 && t.index <= 30)).map(t => <section key={t.id} data-test={t.index}>
+        <h2>Writing Full Test {t.index}</h2>{t.tasks[0].diagram ? <Diagram diagram={t.tasks[0].diagram} /> : <TaskImage task={t.tasks[0]} />}
       </section>)}
     </>);
   `, loader: 'tsx', resolveDir: process.cwd() },
@@ -26,7 +44,14 @@ const bundle = await build({
 })
 const server = createServer((req, res) => {
   if (req.url === '/fixture.js') { res.setHeader('Content-Type', 'text/javascript'); res.end(bundle.outputFiles[0].text); return }
-  res.setHeader('Content-Security-Policy', req.url === '/pixels' ? 'img-src blob:' : "img-src 'none'")
+  if (req.url.startsWith('/images/')) {
+    const path = resolve('public', '.' + req.url)
+    assert.ok(path.startsWith(resolve('public/images') + sep))
+    res.setHeader('Content-Type', path.endsWith('.webp') ? 'image/webp' : /\.jpe?g$/.test(path) ? 'image/jpeg' : 'image/png')
+    readFile(path).then(bytes => res.end(bytes)).catch(() => { res.statusCode = 404; res.end() })
+    return
+  }
+  res.setHeader('Content-Security-Policy', req.url === '/sources' ? "img-src 'self'" : req.url === '/pixels' ? 'img-src blob:' : "img-src 'none'")
   res.setHeader('Content-Type', 'text/html')
   res.end('<meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;background:#eee;font-family:Arial}#root{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:16px}section{background:white;padding:12px}h2{font-size:16px}svg{display:block;width:100%;height:auto}@media(max-width:600px){#root{grid-template-columns:1fr}}</style><div id="root"></div><script src="/fixture.js"></script>')
 })
@@ -65,16 +90,16 @@ try {
     await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width === 390 })
     await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/` })
     for (let i = 0; i < 100; i++) {
-      if (await evaluate('document.querySelectorAll("svg[data-supplied-writing-diagram]").length === 16')) break
+      if (await evaluate('document.querySelectorAll("svg[data-supplied-writing-diagram]").length === 18')) break
       await new Promise(resolve => setTimeout(resolve, 100))
     }
-    assert.equal(await evaluate('document.querySelectorAll("svg[data-supplied-writing-diagram]").length'), 16)
+    assert.equal(await evaluate('document.querySelectorAll("svg[data-supplied-writing-diagram]").length'), 18)
     assert.equal(await evaluate('document.querySelectorAll("img, image").length'), 0)
     // The page above is verified with all image loading blocked. A separate
     // test-only page permits a blob to compare serialized SVG pixels.
     await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/pixels` })
     for (let i = 0; i < 100; i++) {
-      if (await evaluate('document.querySelectorAll("svg[data-supplied-writing-diagram]").length === 16')) break
+      if (await evaluate('document.querySelectorAll("svg[data-supplied-writing-diagram]").length === 18')) break
       await new Promise(resolve => setTimeout(resolve, 100))
     }
     const sourceHash = await evaluate(`(async () => {
@@ -90,7 +115,7 @@ try {
       const hash = await crypto.subtle.digest('SHA-256', rgb); URL.revokeObjectURL(url);
       return Array.from(new Uint8Array(hash), n => n.toString(16).padStart(2, '0')).join('');
     })()`)
-    assert.equal(sourceHash, '5748a60ccb5d24e5479e1d083d6301b00985393003d6127cf3207680dfdc2f79', 'Aluminium artwork must match the supplied source exactly')
+    assert.equal(sourceHash, cleanedArtworkHash, 'Aluminium artwork matches the source except the removed publisher URL')
     assert.equal(await evaluate('document.documentElement.scrollWidth <= window.innerWidth'), true, 'No page overflow')
     const clipped = await evaluate(`Array.from(document.querySelectorAll('svg')).flatMap(svg => {
       const b = svg.viewBox.baseVal;
@@ -104,14 +129,44 @@ try {
       }).map(t => svg.dataset.suppliedWritingDiagram + ': ' + t.textContent);
     })`)
     assert.deepEqual(clipped, [], 'Every source label stays inside its drawing')
+    assert.equal(await evaluate('/@writing_report|www\\.|Hanexenglish/i.test(document.body.textContent)'), false, 'No publisher branding in native drawings')
     const height = await evaluate('document.documentElement.scrollHeight')
     const screenshot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true, clip: { x: 0, y: 0, width, height, scale: 1 } })
     const path = join(tmpdir(), `profai-writing-supplied-${width}.png`)
     await writeFile(path, Buffer.from(screenshot.data, 'base64'))
-    console.log(`PASS: ${width}px: all sixteen native drawings, image loading blocked, no clipped labels or page overflow; preview ${path}`)
+    console.log(`PASS: ${width}px: eighteen native drawings, image loading blocked, artwork preserved, no branding or clipped labels; preview ${path}`)
+    if (width === 1200) {
+      for (const index of [32, 35]) {
+        const clip = await evaluate(`(()=>{const r=document.querySelector('[data-test="${index}"] svg').getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,scale:1}})()`)
+        const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true, clip })
+        await writeFile(join(tmpdir(), `profai-writing-clean-${index}.png`), Buffer.from(shot.data, 'base64'))
+      }
+    }
+    await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/sources` })
+    for (let i = 0; i < 100; i++) {
+      if (await evaluate(`document.querySelectorAll('svg image, img').length === 8 && performance.getEntriesByType('resource').filter(r=>r.name.includes('/images/')).length === 7`)) break
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+    assert.equal(await evaluate('document.querySelectorAll("svg image, img").length'), 8)
+    const viewports = await evaluate(`Object.fromEntries([31,33].map(i=>[i,document.querySelector('[data-test="'+i+'"] svg').getAttribute('viewBox')]))`)
+    assert.deepEqual(viewports, { 31: '0 296 1346 810', 33: '0 110 1536 914' }, 'Username headers are outside the visible source windows')
+    assert.equal(await evaluate('document.documentElement.scrollWidth <= innerWidth'), true, 'Cleaned source images fit the viewport')
+    const heightSources = await evaluate('document.documentElement.scrollHeight')
+    const sources = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true, clip: { x: 0, y: 0, width, height: heightSources, scale: 1 } })
+    await writeFile(join(tmpdir(), `profai-writing-clean-sources-${width}.png`), Buffer.from(sources.data, 'base64'))
+    if (width === 1200) {
+      const clip = await evaluate(`(()=>{const r=document.querySelector('[data-test="15"] svg').getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,scale:1}})()`)
+      const shot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true, clip })
+      await writeFile(join(tmpdir(), 'profai-writing-clean-15.png'), Buffer.from(shot.data, 'base64'))
+    }
+    console.log(`PASS: ${width}px: seven cleaned source images, complete charts and responsive windows`)
   }
 } finally {
+  if (socket?.readyState === WebSocket.OPEN) await new Promise(resolve => {
+    socket.send(JSON.stringify({ id: 999999, method: 'Browser.close' }))
+    setTimeout(resolve, 500)
+  })
   socket?.close(); browser.kill(); await exited
   await new Promise(resolve => server.close(resolve))
-  await rm(directory, { recursive: true, force: true })
+  await rm(directory, { recursive: true, force: true, maxRetries: 15, retryDelay: 200 })
 }

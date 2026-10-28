@@ -44,6 +44,7 @@ import WritingTaskDiagram from '@/components/writing/WritingTaskDiagram'
 import WritingDataVisual from '@/components/writing/WritingDataVisual'
 import WritingTaskImage from '@/components/writing/WritingTaskImage'
 import WritingWorkspace from '@/components/writing/WritingWorkspace'
+import WritingTaskPrompt from '@/components/writing/WritingTaskPrompt'
 import { markXpActivitySynced, recordXpActivity } from '@/lib/xpApi'
 import { useSearchParams } from 'react-router-dom'
 import { learningCenterApi } from '@/features/learningCenter/api'
@@ -1133,12 +1134,7 @@ export default function IELTSWritingTestInterface({
         textareaRef={textareaRef}
         action={<button type="button" onClick={() => setShowSubmitConfirm(true)} className="writing-primary"><Send size={15} />Submit</button>}
         prompt={<>
-          <div className="writing-exam-card p-5">
-            <p className="writing-exam-label mb-3">Task instructions</p>
-            <p className="text-[15px] leading-relaxed text-slate-800 whitespace-pre-line">
-              {task.prompt}
-            </p>
-          </div>
+          <WritingTaskPrompt task={task} />
 
           {task.chart && task.chart.type === 'line' && (
             <div className="writing-source-visual">

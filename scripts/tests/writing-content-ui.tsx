@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import assert from 'node:assert/strict'
 import IELTSWritingFullTestInterface from '../../src/components/IELTSWritingFullTestInterface'
 import WritingResultModal from '../../src/components/WritingResultModal'
+import WritingTaskImage from '../../src/components/writing/WritingTaskImage'
 import { getWritingFullTestById } from '../../src/data/writingTestData'
 import { getWritingAnalysisHistory, saveWritingAnalysis } from '../../src/utils/writingAnalysisStorage'
 import { accountStorageFor } from '../../src/utils/accountStorage'
@@ -31,7 +32,7 @@ export async function run() {
   const suppliedDetails: Record<number, string[]> = {
     6: ['International students at a UK university', '1995', '2000', '2005', '2010', '2015', 'Students', 'Year', 'Asia', 'Africa', 'Europe', 'North America', '140'],
     8: ['Comparison of Energy Production', '1995', '2005', 'Coal', 'Gas', 'Petro', 'Nuclear', 'Other', '29.80%', '29.63%', '29.27%', '6.40%', '4.90%', '30.93%', '30.31%', '19.55%', '10.10%', '9.10%'],
-    11: ['Average minutes spent on reading for pleasure', 'Average minutes spent on listening to music', 'Minutes per day', 'Age groups', '15-24', '25-34', '35-44', '45-54', '55+', '90', 'Hanexenglish.edu.vn'],
+    11: ['Average minutes spent on reading for pleasure', 'Average minutes spent on listening to music', 'Minutes per day', 'Age groups', '15-24', '25-34', '35-44', '45-54', '55+', '90'],
     12: ['Number of patients to four clinics in one hospital', '2010', '2012', '2014', '2016', 'Birth control', 'Eye', 'Diabetic', 'Dental', '400'],
     13: ['Geothermal power plant', 'Cold', 'Hot', 'water', 'pumped', 'down', 'up', '4.5 km', 'injection', 'production', 'well', 'Condenser', 'Steam', 'Turbine', 'Generator', 'Geothermal zone (hot rocks)', '(powered by', 'electricity)', '1', '2', '3', '4', '5'],
     14: ['IELTS Task 1: Tourist Office', 'in person', 'by letter/email', 'by telephone', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', '2000'],
@@ -56,6 +57,7 @@ export async function run() {
     assert.ok(visual, `Test ${index} must show its supplied drawing`)
     assert.equal(visual.querySelector('image, img'), null, 'SVG cannot embed or decode a raster')
     assert.ok(visual.getAttribute('viewBox'))
+    assert.doesNotMatch(visual.textContent ?? '', /Hanexenglish|www\.|@writing_report/i, 'Source branding is absent in the exam')
     for (const detail of suppliedDetails[index] ?? []) assert.ok(visual.textContent?.includes(detail), `Test ${index} source detail: ${detail}`)
     if ([22, 26, 30].includes(index)) assert.ok(visual.querySelector('pattern'), `Test ${index} retains source bar patterns`)
     if (index >= 21) assert.equal(test.tasks[0].imageUrl, undefined, 'Replacement cannot use the old practice image')
@@ -87,6 +89,27 @@ export async function run() {
     assert.ok(document.body.textContent?.includes(task.promptLead!))
     assert.ok(document.body.textContent?.includes('My saved response'))
     console.log(`PASS: Full Test ${index}: resumed test, SVG details, enlargement, Task 2 navigation, saved Analyze review`)
+  }
+
+  for (const [index, drawing] of [[32, 'mobile-phone-sales'], [35, 'spain-visitor-ages']] as const) {
+    const task = getWritingFullTestById(`writing-full-${index}`)!.tasks[0]
+    await render(<WritingTaskImage task={{ ...task, fullTestIndex: null }} />)
+    const visual = container.querySelector(`svg[data-supplied-writing-diagram="${drawing}"]`)!
+    assert.ok(visual, 'Imported source is cleaned by asset identity, including old snapshots')
+    assert.equal(visual.querySelector('image, img'), null, 'Native source drawing requires no image decoder')
+    assert.doesNotMatch(visual.textContent ?? '', /www\.|@writing_report/i)
+    if (index === 32) {
+      for (const name of ['Motorola', 'Nokia', 'Sony Ericsson']) assert.equal(visual.querySelectorAll(`[data-series="${name}"] title`).length, 11)
+      assert.ok(visual.textContent?.includes('2002: 37%'))
+      assert.ok(visual.textContent?.includes('1994: 32%'))
+      assert.ok(visual.textContent?.includes('2003: 7%'))
+    } else {
+      assert.equal(visual.querySelectorAll('[data-age-group]').length, 10)
+      assert.equal(visual.querySelectorAll('pattern').length, 3)
+    }
+    saveWritingAnalysis(undefined, task.id, task.title, task.taskType, 160, 1200, true, 'Saved answer', evaluation, undefined, { ...task, fullTestIndex: null })
+    await render(<WritingResultModal entry={getWritingAnalysisHistory()[0]} onClose={() => {}} />)
+    assert.ok(document.querySelector(`svg[data-supplied-writing-diagram="${drawing}"]`), 'Analyze uses the cleaned drawing for saved attempts')
   }
   const essay = getWritingFullTestById('writing-full-30')!.tasks[1]
   saveWritingAnalysis(undefined, essay.id, essay.title, 'task2', 260, 2400, true, 'My essay', evaluation, undefined, essay)

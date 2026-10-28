@@ -30,6 +30,7 @@ import WritingTaskImage from '@/components/writing/WritingTaskImage'
 import type { WritingFullTest } from '@/data/writingTestData'
 import { useFeatureTrial } from '@/hooks/useFeatureTrial'
 import WritingWorkspace from '@/components/writing/WritingWorkspace'
+import WritingTaskPrompt from '@/components/writing/WritingTaskPrompt'
 import { markXpActivitySynced, recordXpActivity } from '@/lib/xpApi'
 import { evaluateWriting, type WritingEvaluation } from '@/services/geminiAI'
 import { writingSectionBand, writingVisualContext } from '@/lib/writingScoring'
@@ -650,21 +651,14 @@ export default function IELTSWritingFullTestInterface({
           <button type="button" onClick={() => setShowSubmitConfirm(true)} className="writing-primary"><Send size={15} />Submit Full Test</button>
         )}
         prompt={<>
-          <div className="writing-exam-card p-5">
-            <p className="writing-exam-label mb-3">Task {activeTaskIndex + 1} · Instructions</p>
-            <p className="text-[15px] font-medium leading-7 text-slate-900">{activeTask.promptLead ?? activeTask.prompt}</p>
-            {activeTask.promptQuestion ? (
-              <div className="mt-4 whitespace-pre-line rounded-xl bg-slate-100 px-4 py-4 text-[15px] font-medium leading-7 text-slate-900">{activeTask.promptQuestion}</div>
-            ) : null}
-            {activeTask.instructions ? (
-              <p className="mt-4 text-sm leading-6 text-slate-600"><strong className="font-black text-slate-700">Instructions:</strong> {activeTask.instructions}</p>
-            ) : null}
-          </div>
+          <WritingTaskPrompt task={activeTask} />
           {activeTask.imageUrl ? (
-            <div className="writing-source-visual relative">
-              <button type="button" onClick={() => setShowImagePreview(true)} aria-label="Enlarge Task 1 image" className="absolute right-4 top-4 z-10 rounded-lg border border-slate-200 bg-white/95 p-2 text-slate-700 shadow-sm hover:bg-slate-50">
-                <Maximize2 className="h-4 w-4" />
-              </button>
+            <div className="writing-source-visual">
+              <div className="mb-2 flex justify-end">
+                <button type="button" onClick={() => setShowImagePreview(true)} aria-label="Enlarge Task 1 image" className="rounded-lg border border-slate-200 bg-white p-2 text-slate-700 shadow-sm hover:bg-slate-50">
+                  <Maximize2 className="h-4 w-4" />
+                </button>
+              </div>
               <WritingTaskImage task={activeTask} className="h-auto w-full object-contain" />
             </div>
           ) : null}

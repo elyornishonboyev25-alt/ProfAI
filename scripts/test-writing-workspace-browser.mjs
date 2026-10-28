@@ -18,7 +18,7 @@ const source = `
   import FullscreenToggle from './src/components/common/FullscreenToggle';
   import { getWritingFullTestById } from './src/data/writingTestData'; import { accountStorageFor } from './src/utils/accountStorage';
   const root=createRoot(document.getElementById('root')); let run=0;
-  const test=getWritingFullTestById('writing-full-4'); const storage=accountStorageFor('guest');
+  let test=getWritingFullTestById('writing-full-4'); const storage=accountStorageFor('guest');
   window.sessionKey='profai:writing:draft:guest:'+test.id+':session';
   window.getSession=()=>JSON.parse(storage.getItem(window.sessionKey));
   window.show=(practice=false, timed=true)=>{
@@ -29,6 +29,7 @@ const source = `
     </div></MemoryRouter>);
   };
   window.showOther=()=>root.render(<MemoryRouter key={++run} initialEntries={['/ielts/reading/test/1']}><FullscreenToggle/></MemoryRouter>);
+  window.showImported=()=>{test=getWritingFullTestById('writing-full-32');window.sessionKey='profai:writing:draft:guest:'+test.id+':session';window.show(false,false)};
   window.show();
 
 import './src/styles/premium-identity.css';import './src/styles/liquid.css';import './src/styles/liquid-completion.css';import './src/styles/workspace-refinement.css';import './src/styles/ielts-exam-workspace.css';import './src/styles/ivygoo-glass.css';
@@ -147,10 +148,20 @@ try {
   await evaluate(`document.querySelector('.writing-fullscreen').click()`);await until('!document.fullscreenElement');
   await evaluate('window.show(true,false)');await until('document.querySelector(".writing-practice-badge")');
   await evaluate(`document.querySelectorAll('.writing-mobile-panels button')[1].click()`);await type('Saved practice response.');
-  await evaluate('window.show(true,false)');await until('document.querySelector("textarea").value==="Saved practice response."');
+  await evaluate('window.show(true,false)');await until('document.querySelector("textarea")?.value==="Saved practice response."');
   assert.equal(await evaluate('Boolean(document.querySelector(".site-fullscreen-control"))'),false);
   await evaluate('window.showOther()');await until('document.querySelector(".site-fullscreen-control")');
   assert.deepEqual(exceptions,[],'No browser runtime errors');console.log('PASS: standalone practice persistence, fullscreen enter/exit, and other sections retain their fullscreen control');
+  await send('Emulation.setDeviceMetricsOverride',{width:1366,height:900,deviceScaleFactor:1,mobile:false});
+  await evaluate('window.showImported()');await until('document.querySelector("[data-supplied-writing-diagram=mobile-phone-sales]")');
+  assert.equal(await evaluate('document.querySelector(".writing-source-visual").querySelector("image, img")'),null,'Test 32 uses native drawing');
+  const controls=await evaluate(`(()=>{const b=document.querySelector('[aria-label="Enlarge Task 1 image"]').getBoundingClientRect();const s=document.querySelector('[data-supplied-writing-diagram=mobile-phone-sales]').getBoundingClientRect();return b.bottom<=s.top})()`);
+  assert.equal(controls,true,'Enlarge control never covers chart labels');
+  const imported=await send('Page.captureScreenshot',{format:'png'});await writeFile(join(screenshots,'1366-writing-test-32.png'),Buffer.from(imported.data,'base64'));
+  await evaluate(`document.querySelector('[aria-label="Enlarge Task 1 image"]').click()`);await until('document.querySelector("[role=dialog] [data-supplied-writing-diagram=mobile-phone-sales]")');
+  await evaluate(`window.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape'}))`);await until('!document.querySelector("[role=dialog]")');
+  assert.deepEqual(exceptions,[],'No runtime errors in imported test or enlargement');
+  console.log('PASS: username-free Test 32 workspace and enlargement preserve chart labels');
 
 } finally {
   if (socket?.readyState === WebSocket.OPEN) await new Promise(resolve => {

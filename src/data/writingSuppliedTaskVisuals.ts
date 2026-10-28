@@ -108,7 +108,7 @@ export const SUPPLIED_TASK_VISUALS: Record<number, {
     kind: 'Process diagram', title: 'Aluminium recycle',
     lead: 'The diagram below shows the recycling process of aluminium cans.',
     diagram: 'aluminium-can-recycling',
-    context: 'Clockwise aluminium can recycling cycle: used cans deposited in an Aluminium only bin; COLLECTION by truck; CLEANING, SORTING, SHREDDING AND COMPRESSING; HEATING AND MELTING; ROLLING 2.5mm - 6mm thick; RECYCLING into cans; REUSING, 74% recycled (UK); returns to used cans. Central black burst labelled Aluminium recycle, with www.ielts-exam.net underneath. Preserve the six visible arrows and the clockwise cycle, machinery, person, bin, truck, rolled sheet and four reused beverage cans.',
+    context: 'Clockwise aluminium can recycling cycle: used cans deposited in an Aluminium only bin; COLLECTION by truck; CLEANING, SORTING, SHREDDING AND COMPRESSING; HEATING AND MELTING; ROLLING 2.5mm - 6mm thick; RECYCLING into cans; REUSING, 74% recycled (UK); returns to used cans. Central black burst labelled Aluminium recycle. Preserve the six visible arrows and the clockwise cycle, machinery, person, bin, truck, rolled sheet and four reused beverage cans.',
   },
   29: {
     kind: 'Table', title: 'Bicycle riding by age group in 2012',

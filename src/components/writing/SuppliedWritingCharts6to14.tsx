@@ -92,7 +92,6 @@ export function NewZealandLeisureCharts() {
           <text x="318" y={chart.bottom + 11} textAnchor="middle" fontSize="5.5" fontWeight="700">Age groups</text>
         </g>
       })}
-      <text x="45" y="506" fontSize="7">Hanexenglish.edu.vn</text><text x="339" y="506" textAnchor="end" fontSize="7">1</text>
     </g>
   </svg>
 }

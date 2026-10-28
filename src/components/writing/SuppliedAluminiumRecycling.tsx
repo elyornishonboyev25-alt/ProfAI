@@ -8,8 +8,10 @@ export default memo(function AluminiumRecyclingDiagram() {
     aria-label="The recycling process of aluminium cans" data-supplied-writing-diagram="aluminium-recycling"
     shapeRendering="crispEdges">
     <title>The recycling process of aluminium cans</title>
-    <desc>REUSING, 74% recycled (UK); used cans; COLLECTION; CLEANING, SORTING, SHREDDING AND COMPRESSING; HEATING AND MELTING; ROLLING, 2.5mm - 6mm thick; RECYCLING. Aluminium recycle. www.ielts-exam.net.</desc>
+    <desc>REUSING, 74% recycled (UK); used cans; COLLECTION; CLEANING, SORTING, SHREDDING AND COMPRESSING; HEATING AND MELTING; ROLLING, 2.5mm - 6mm thick; RECYCLING. Aluminium recycle.</desc>
     <rect width={drawing.width} height={drawing.height} fill="white" />
     {drawing.paths.map(({ fill, d }) => <path key={fill} fill={fill} d={d} />)}
+    {/* The URL sits in empty space below the caption, clear of all artwork. */}
+    <rect data-source-cleanup="publisher-url" x="150" y="264" width="104" height="12" fill="white" />
   </svg>
 })

@@ -42,8 +42,6 @@ export function MuseumMaps() {
       <path d="M391 460H523M550 460H622M391 476H622" fill="none" stroke="#777" strokeWidth="1.5" />
       <path d="M523 456V463M550 456V463" stroke="#777" /><text x="480" y="471" textAnchor="middle">Road</text>
       <path d="M623 168V507" stroke="#111" strokeWidth="4" />
-      {/* The faint pink arrows visible on the supplied museum plan. */}
-      <path d="M444 356Q474 325 516 345L540 357L512 351L502 374Q470 351 451 373Z M452 459Q484 434 498 411L480 425L516 391L558 383L560 407Q538 441 510 459Z" fill="#efd2d6" opacity=".35" pointerEvents="none" />
     </g>
   </svg>
 }

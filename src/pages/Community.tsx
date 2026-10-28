@@ -29,7 +29,6 @@ import {
   type AccountResponse,
   type LearnerSearchResult,
 } from '@/lib/profileApi'
-import { BrandLockup } from '@/components/brand/BrandLogo'
 import { cn } from '@/components/ui/utils'
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import SpeakingHub from '@/components/community/SpeakingHub'
@@ -218,10 +217,10 @@ export default function Community() {
     <main className={cn('workspace-page community-page min-h-screen', hub.room && 'has-live-room')}>
       <div className="community-shell">
         <header className="community-header">
-          <div className="community-brand-row"><BrandLockup className="community-brand" /><span className="community-brand-caption">{t('Speaking community')}</span></div>
-          <div className="community-status" role="status"><span className={cn('hub-connection', hub.connected && 'is-live')}>{t(hub.connected ? 'Live' : 'Connecting...')}</span><span>{hub.online} {t('online in community')}</span></div>
+          <div className="community-brand-row"><span className="speaking-zone-mark"><Mic size={24} aria-hidden="true" /></span><div><h1>Speaking Zone</h1><p>{t('Practise English. Meet people. Speak with confidence.')}</p></div></div>
+          <div className="community-status" role="status"><span className={cn('hub-connection', hub.connected && 'is-live')}>{t(hub.connected ? 'Live' : 'Connecting...')}</span><span>{hub.online} {t('online now')}</span></div>
         </header>
-        <nav className="community-main-nav" aria-label={t('Community navigation')}>
+        <nav className="community-main-nav" aria-label="Speaking Zone">
           {COMMUNITY_SECTIONS.map(item => {
             const Icon = item.icon
             return <button type="button" key={item.id} aria-pressed={mode === item.id} className={cn(mode === item.id && 'is-active')} onClick={() => selectMode(item.id)}><span className="community-nav-icon"><Icon size={19} /></span><span><b>{t(item.name)}</b><small>{t(item.detail)}</small></span>{item.id === 'voice' || item.id === 'partner' ? <span className="community-nav-count">{item.id === 'voice' ? hub.rooms.length : hub.available.filter(name => name !== hub.selfName).length}</span> : null}</button>
@@ -232,7 +231,7 @@ export default function Community() {
 
         {mode === 'partner' && !hub.room && !searchParams.get('room') ? <section className="community-layout">
           <div className="community-feed-heading">
-            <div><span className="community-eyebrow"><Sparkles size={15} />{t('Find your speaking circle')}</span><h2>{t('Meet your speaking circle')}</h2><p>{t('Explore profiles, find shared goals and invite an available learner to speak.')}</p></div>
+            <div><span className="community-eyebrow"><Sparkles size={15} />{t('Find shared goals')}</span><h2>{t('All speaking partners')}</h2><p>{t('Browse profiles or filter by your study goal.')}</p></div>
             {champion ? <div className="hub-champion community-champion"><button type="button" className="community-champion-profile" onClick={() => navigate('/u/' + encodeURIComponent(champion.nickname), { state: { from: '/community' } })}><span className="community-champion-portrait"><ProfileAvatar src={champion.avatarUrl} name={champion.nickname} alt="" /><Crown size={15} /></span><span className="community-champion-copy"><b>{t('Top learner')}</b><strong>@{champion.nickname}</strong><small>{t('Highest earned XP')}</small></span><span className="community-champion-score"><Zap size={15} />{champion.xp.toLocaleString()}<small>XP</small><ArrowUpRight size={14} /></span></button><details><summary>{t('How it works')}</summary><p>{t('Highest total earned XP among learners with a public profile and visible leaderboard. Ties use streak, then join date. Updates every 30 seconds.')}</p></details></div> : null}
           </div>
           <div className="community-search-bar">

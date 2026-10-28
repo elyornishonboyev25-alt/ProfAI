@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
 export const russianInterface: Record<string, string> = {
+  'Speaking Zone': 'Speaking Zone',
   "Score before using Ivygoo": "Балл до использования Ivygoo",
   "Score after using Ivygoo": "Балл после использования Ivygoo",
   "Your comment will appear on the site after the owner reviews and approves it.": "Ваш комментарий появится на сайте после проверки и одобрения владельцем.",

@@ -1,5 +1,6 @@
 /** Interface strings that are not in the original Uzbek catalog. */
 export const uzbekCompletion: Record<string, string> = {
+  'Speaking Zone': 'Speaking Zone',
   'SAT Exam Mode': 'SAT imtihon rejimi',
   'Time for a break': 'Tanaffus vaqti',
   'Reading and Writing is complete. Take 10 minutes to rest before Math.': 'Reading va Writing tugadi. Math boshlanishidan oldin 10 daqiqa dam oling.',

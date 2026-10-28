@@ -309,7 +309,23 @@ const speakingStudioCopy: Record<string, [string, string]> = {
 export function useCommunityCopy() {
   const { language } = useCopy()
   return (text: string) => {
-    const entry = speakingStudioCopy[text] ?? copy[text]
+    const entry = speakingZoneCopy[text] ?? speakingStudioCopy[text] ?? copy[text]
     return language.startsWith('uz') ? entry?.[0] ?? text : language.startsWith('ru') ? entry?.[1] ?? text : text
   }
+}
+
+const speakingZoneCopy: Record<string, [string, string]> = {
+  'Practise English. Meet people. Speak with confidence.': ['Inglizcha mashq qiling. Suhbatdosh toping. Ishonch bilan gapiring.', 'Практикуйте английский. Знакомьтесь. Говорите увереннее.'],
+  'online now': ['hozir onlayn', 'сейчас онлайн'],
+  'Group speaking practice': ['Guruhda suhbat mashqi', 'Разговорная практика в группе'],
+  'A little practice. More confidence.': ['Har bir suhbat — yangi ishonch.', 'Больше практики. Больше уверенности.'],
+  'A good conversation starts with hello.': ['Yaxshi suhbat salomdan boshlanadi.', 'Хорошая беседа начинается с приветствия.'],
+  'Join a live room or create your own. Listen first, then speak when you are ready.': ['Xonaga kiring yoki o‘zingiz xona oching. Avval tinglang, tayyor bo‘lganda suhbatga qo‘shiling.', 'Присоединитесь к комнате или создайте свою. Сначала послушайте, затем говорите, когда будете готовы.'],
+  'Find a random partner or invite someone online for a private conversation.': ['Tasodifiy suhbatdosh toping yoki onlayn foydalanuvchini shaxsiy suhbatga taklif qiling.', 'Найдите случайного партнёра или пригласите пользователя онлайн в личную беседу.'],
+  'Your mic starts off': ['Mikrofon dastlab o‘chiq', 'Микрофон выключен при входе'],
+  'Just you and your speaking partner': ['Faqat siz va suhbatdoshingiz', 'Только вы и ваш собеседник'],
+  'Choose a topic and invite others': ['Mavzu tanlang va boshqalarni taklif qiling', 'Выберите тему и пригласите других'],
+  'Find shared goals': ['Maqsadingizga mos suhbatdosh', 'Общие цели'],
+  'All speaking partners': ['Barcha suhbatdoshlar', 'Все собеседники'],
+  'Browse profiles or filter by your study goal.': ['Profillarni ko‘ring yoki o‘quv maqsadingiz bo‘yicha saralang.', 'Посмотрите профили или выберите партнёра по учебной цели.'],
 }

@@ -80,7 +80,7 @@ export function Sidebar({ concealed = false, collapsed = false, onToggle }: { co
         <summary>{c('Study tools')}<ChevronDown size={15} /></summary>
         <NavLink to="/academic-skills"><Languages size={18} />{c('Academic Skills')}</NavLink>
         <NavLink to="/ai-tutor"><Bot size={18} />{c('AI Coach')}</NavLink>
-        <NavLink to="/community"><Users size={18} />{c('Community')}</NavLink>
+        <NavLink to="/community"><Users size={18} />{c('Speaking Zone')}</NavLink>
         <NavLink to="/leaderboard"><Trophy size={18} />{c('Leaderboard')}</NavLink>
       </details>
     </nav>

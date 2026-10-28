@@ -20,7 +20,9 @@ async function main() {
     import Community from './src/pages/Community';
     import {apiClient} from './src/lib/apiClient';
     import {useAuthStore} from './src/store/authStore';
-    import './src/i18n/index';
+    import i18n from './src/i18n/index';
+    // English assertions must not depend on the machine's time zone.
+    void i18n.changeLanguage('en');
     window.captureStreams=[];
     window.peerConnections=[];
     window.communitySockets=[];

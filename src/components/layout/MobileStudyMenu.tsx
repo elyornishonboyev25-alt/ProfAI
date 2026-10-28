@@ -17,7 +17,7 @@ export default function MobileStudyMenu({ owner }: { owner: boolean }) {
   const links = [
     { path: '/academic-skills', label: 'Academic Skills', icon: BookOpen },
     { path: '/ai-tutor', label: 'AI Coach', icon: Bot },
-    { path: '/community', label: 'Community', icon: Users },
+    { path: '/community', label: 'Speaking Zone', icon: Users },
     { path: '/leaderboard', label: 'Leaderboard', icon: Trophy },
     { path: '/learning-center', label: 'Classes', icon: GraduationCap },
     { path: '/account', label: 'Account settings', icon: Settings },

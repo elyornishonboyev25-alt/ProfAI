@@ -23,6 +23,7 @@ async function main() {
     import i18n from './src/i18n/index';
     // English assertions must not depend on the machine's time zone.
     void i18n.changeLanguage('en');
+    window.setFixtureLanguage = language => i18n.changeLanguage(language);
     window.captureStreams=[];
     window.peerConnections=[];
     window.communitySockets=[];
@@ -192,6 +193,19 @@ async function main() {
     await host.until("document.querySelector('.hub-audio-setup').innerText.includes('Microphone works') || document.querySelector('.hub-audio-setup').innerText.includes('No sound detected')");
     assert.equal(await host.evaluate("window.captureStreams.every(stream=>stream.getTracks().every(track=>track.readyState==='ended'))"),true,'Mic test ends automatically');
     const micTests = await host.evaluate('window.captureStreams.length');
+    // The launchpad turns a prompt into a real room, without opening a form.
+    const firstSpark = await host.evaluate("document.querySelector('.zone-spark-question p').textContent");
+    await host.evaluate("document.querySelector('.zone-shuffle').click()");
+    const selectedSpark = await host.evaluate("document.querySelector('.zone-spark-question p').textContent");
+    assert.notEqual(selectedSpark, firstSpark, 'Shuffle changes the conversation question');
+    await host.click('Talk about this');
+    await host.until("document.querySelector('.hub-topic h2')?.textContent==="+JSON.stringify(selectedSpark));
+    await host.click('Leave room');
+    await host.until("document.querySelector('.zone-start') && !document.querySelector('.hub-room-header')");
+    await host.evaluate("document.querySelector('.zone-start').click()");
+    await host.until("document.querySelector('.hub-room-header')?.innerText.includes('Say hello')");
+    await host.click('Leave room');
+    await host.until("document.querySelector('.hub-lobby')");
     // Topic tiles start a room directly, without a form or typing.
     await host.click('Say hello')
     await host.until(`document.querySelector('.hub-room-header')?.innerText.includes('Say hello')`)
@@ -215,6 +229,10 @@ async function main() {
     await host.until(`document.querySelector('.hub-room-header')?.innerText.includes('Climate debate')`)
     assert.equal(await host.evaluate('window.captureStreams.length'), micTests, 'Custom creation also opens without microphone permission')
     await guest.until(`document.querySelector('.hub-room-card')?.innerText.includes('Climate debate')`)
+    await guest.evaluate("document.querySelector('.zone-start').click()");
+    await guest.until("document.querySelector('.hub-room-header')?.innerText.includes('Climate debate')");
+    await guest.click('Leave room');
+    await guest.until("document.querySelector('.hub-room-card')?.innerText.includes('Climate debate')");
     await guest.evaluate("(()=>{const input=document.querySelector('.hub-room-search input');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'  CLIMATE  ');input.dispatchEvent(new Event('input',{bubbles:true}));})()");
     await guest.until("document.querySelectorAll('.hub-room-card').length===1");
     await guest.evaluate("(()=>{const input=document.querySelector('.hub-room-search input');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'unmatched-topic');input.dispatchEvent(new Event('input',{bubbles:true}));})()");
@@ -382,6 +400,16 @@ async function main() {
     assert.equal(await host.evaluate("window.captureStreams.every(stream=>stream.getTracks().every(track=>track.readyState==='ended'))"), true, 'Changing account releases the old session microphone');
     await guest.click('Partner');
     await guest.until("document.querySelector('.hub-partner-grid').innerText.includes('SwitchedAccount')");
+    for (const language of ['uz', 'ru']) {
+      await host.evaluate('window.setFixtureLanguage('+JSON.stringify(language)+')');
+      await host.evaluate("window.navigateCommunity('/community?mode=voice'); window.scrollTo(0,0)");
+      await host.until("document.querySelector('.zone-spark') && document.documentElement.lang==="+JSON.stringify(language));
+      await layout(host, 'voice-'+language);
+      assert.equal(await host.evaluate("(()=>{const title=document.querySelector('.zone-launch-copy h2');return title.scrollWidth<=title.clientWidth+1;})()"),true,'Localized title fits at 320px: '+language);
+      await host.evaluate("window.navigateCommunity('/community?mode=partner'); window.scrollTo(0,0)");
+      await host.until("document.querySelector('.hub-partner-discovery')");
+      await layout(host, 'partner-'+language);
+    }
     assert.deepEqual(host.errors, [], 'Host has no browser exceptions')
     assert.deepEqual(guest.errors, [], 'Guest has no browser exceptions')
     console.log('Community browser passed: two-way WebRTC audio, debate modes/teams/turns, random matching/cancellation/next partner and cross-tab recovery, private invitations and deep links, microphone release, chat, speaking-only navigation and legacy redirects, learner search/filters/reset/sorting/profile navigation/retry, independent learner scrolling and layouts at 320–1440px, visible call controls and champion refresh.')

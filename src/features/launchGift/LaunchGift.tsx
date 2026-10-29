@@ -11,8 +11,6 @@ import './launch-gift.css'
 type GiftStats = { capacity: number; issued: number; remaining: number; valueUsd: number; months: number }
 type AccountGift = GiftStats & { eligible: boolean; rank: number | null; claimedAt: string | null; expiresAt: string | null; extended: boolean; referralCode: string | null }
 
-const CAMPAIGN_SIZE = 1000
-const CAMPAIGN_VALUE_USD = 6000
 const OPEN_DELAY_MS = 1000
 // Matches the exit animation in launch-gift.css.
 const EXIT_MS = 280
@@ -58,7 +56,7 @@ function CountUp({ to, format, instant, delay = 0 }: { to: number; format: (valu
   return <span className="launch-gift-count"><span className="launch-gift-count-ghost" aria-hidden="true">{format(to)}</span><span ref={live} aria-hidden="true" /><span className="sr-only">{format(to)}</span></span>
 }
 
-/** Launch campaign: one month of Pro for the first 1,000 students, announced one second after the site opens. */
+/** Launch campaign: one month of Pro for the first 200 students, announced one second after the site opens. */
 export default function LaunchGift({ enabled }: { enabled: boolean }) {
   const user = useAuthStore(state => state.user)
   const accessToken = useAuthStore(state => state.accessToken)
@@ -157,7 +155,8 @@ function GiftDialog({ gift, stats, closing, onClose }: { gift: AccountGift | nul
   const groupLocale = language === 'en' ? 'en-US' : 'ru-RU'
   const number = (value: number) => new Intl.NumberFormat(groupLocale).format(value)
   const isGuest = !gift
-  const capacity = Math.max(CAMPAIGN_SIZE, stats.capacity)
+  const capacity = stats.capacity
+  const campaignValueUsd = capacity * stats.valueUsd
   const remaining = Math.max(0, stats.remaining)
   const issued = Math.min(capacity, stats.issued)
   const until = gift?.expiresAt ? new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(gift.expiresAt)) : null
@@ -187,9 +186,9 @@ function GiftDialog({ gift, stats, closing, onClose }: { gift: AccountGift | nul
 
   const shareUrl = `${window.location.origin}/${gift?.referralCode ? `?ref=${encodeURIComponent(gift.referralCode)}` : ''}`
   const shareMessage = text(
-    `ProfAI is giving 1 month of Pro free to the first 1,000 students. Only ${number(remaining)} gifts left — get yours:`,
-    `ProfAI birinchi 1 000 o‘quvchiga 1 oylik Pro’ni bepul beryapti. Atigi ${number(remaining)} ta sovg‘a qoldi — o‘zingiznikini oling:`,
-    `ProfAI дарит месяц Pro бесплатно первым 1 000 ученикам. Осталось всего ${number(remaining)} подарков — заберите свой:`,
+    `ProfAI is giving 1 month of Pro free to the first ${number(capacity)} students. Only ${number(remaining)} gifts left — get yours:`,
+    `ProfAI birinchi ${number(capacity)} o‘quvchiga 1 oylik Pro’ni bepul beryapti. Atigi ${number(remaining)} ta sovg‘a qoldi — o‘zingiznikini oling:`,
+    `ProfAI дарит месяц Pro бесплатно первым ${number(capacity)} ученикам. Осталось всего ${number(remaining)} подарков — заберите свой:`,
   )
   const share = async () => {
     if (navigator.share) {
@@ -235,8 +234,8 @@ function GiftDialog({ gift, stats, closing, onClose }: { gift: AccountGift | nul
           </div>
           <p className="launch-gift-eyebrow launch-gift-rise" style={rise(.18)}><Sparkles size={13} />{text('ProfAI launch gift', 'ProfAI sovg‘asi', 'Подарок от ProfAI')}</p>
           <h2 id="launch-gift-title" className="launch-gift-title launch-gift-rise" style={rise(.24)}>
-            <span className="launch-gift-amount"><CountUp to={CAMPAIGN_VALUE_USD} format={value => `$${number(value)}`} instant={reduceMotion} delay={250} /></span>
-            <span className="launch-gift-subtitle">{text('in free Premium for the first 1,000 students', 'jami bepul Premium — birinchi 1 000 o‘quvchiga', 'в бесплатном Premium — первым 1 000 ученикам')}</span>
+            <span className="launch-gift-amount"><CountUp to={campaignValueUsd} format={value => `$${number(value)}`} instant={reduceMotion} delay={250} /></span>
+            <span className="launch-gift-subtitle">{text(`in free Premium for the first ${number(capacity)} students`, `jami bepul Premium — birinchi ${number(capacity)} o‘quvchiga`, `в бесплатном Premium — первым ${number(capacity)} ученикам`)}</span>
           </h2>
           <p id="launch-gift-intro" className="launch-gift-intro launch-gift-rise" style={rise(.3)}>
             {isGuest

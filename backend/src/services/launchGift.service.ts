@@ -4,8 +4,8 @@ import { extendBillingExpiry } from '../utils/billingCatalog.js'
 import { accountOverview, lockBilling } from './billing.service.js'
 import { ensureReferralCode } from './referral.service.js'
 
-/** The first 1,000 accounts receive one month of Pro ($6), $6,000 in total. */
-export const LAUNCH_GIFT_CAPACITY = 1000
+/** The first 200 accounts receive one month of Pro ($6), $1,200 in total. */
+export const LAUNCH_GIFT_CAPACITY = 200
 export const LAUNCH_GIFT_MONTHS = 1
 export const LAUNCH_GIFT_VALUE_USD = 6
 

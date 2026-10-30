@@ -128,7 +128,7 @@ function clearSessionThreads() {
 // A reload belongs to the current visit. Returning from an external page in the
 // same tab is a new visit, even though the browser retains sessionStorage.
 if (typeof window !== 'undefined') {
-  const navigation = window.performance.getEntriesByType?.('navigation')[0] as PerformanceNavigationTiming | undefined
+  const navigation = window.performance?.getEntriesByType?.('navigation')?.[0] as PerformanceNavigationTiming | undefined
   if (navigation && navigation.type !== 'reload') clearSessionThreads()
 }
 

@@ -11,6 +11,8 @@ import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useAccountDataRevision } from '@/hooks/useAccountDataRevision'
 import { accountStorageFor } from '@/utils/accountStorage'
 import { recoverSpeakingDayHistory } from '@/utils/speakingDayHistory'
+import { useSpeakingStore } from '@/store/speakingStore'
+import { getCatalogMockResults, speakingCatalogResult } from '@/utils/ieltsCatalogResults'
 
 export default function IELTSSpeakingTests({ embedded = false }: { embedded?: boolean } = {}) {
   const navigate = useNavigate()
@@ -25,6 +27,8 @@ export default function IELTSSpeakingTests({ embedded = false }: { embedded?: bo
   const deferredSearchTerm = useDeferredValue(searchTerm)
   const revision = useAccountDataRevision()
   const completedTestIds = useMemo(() => getCompletedSpeakingTestIds(user?.id), [user?.id, revision])
+  const sessions = useSpeakingStore(state => state.sessions)
+  const mockResults = useMemo(() => getCatalogMockResults(user?.id, 'speaking'), [user?.id, revision])
 
   const rows = useMemo<CompactIeltsTestRow[]>(
     () => activeFilter === 'full'
@@ -38,6 +42,7 @@ export default function IELTSSpeakingTests({ embedded = false }: { embedded?: bo
         detail: '3 parts · AI feedback',
         available: test.available,
         completed: completedTestIds.has(test.id),
+        ...speakingCatalogResult(sessions, user?.id, test, mockResults),
       }))
       : getIeltsSpeakingDayCatalog()
         .filter((test) => `part-${test.part}` === activeFilter)
@@ -51,8 +56,9 @@ export default function IELTSSpeakingTests({ embedded = false }: { embedded?: bo
           detail: 'AI feedback',
           available: test.available,
           completed: completedTestIds.has(test.id),
+          ...speakingCatalogResult(sessions, user?.id, test, mockResults),
         })),
-    [activeFilter, completedTestIds],
+    [activeFilter, completedTestIds, sessions, user?.id, mockResults],
   )
 
   const visibleRows = useMemo(() => {

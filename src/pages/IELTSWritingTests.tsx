@@ -6,6 +6,7 @@ import { getWritingFullTestCatalog } from '@/data/writingTestData'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { getWritingAnalysisHistory } from '@/utils/writingAnalysisStorage'
 import { useAccountDataRevision } from '@/hooks/useAccountDataRevision'
+import { getCatalogMockResults, writingCatalogResult } from '@/utils/ieltsCatalogResults'
 
 export default function IELTSWritingTests({ embedded = false }: { embedded?: boolean } = {}) {
   const navigate = useNavigate()
@@ -17,10 +18,11 @@ export default function IELTSWritingTests({ embedded = false }: { embedded?: boo
   const [activeFilter, setActiveFilter] = useState(navigationState?.catalogSkill === 'writing' ? navigationState.catalogFilter ?? 'full' : 'full')
   const deferredSearchTerm = useDeferredValue(searchTerm)
   const revision = useAccountDataRevision()
-  const completedTaskIds = useMemo(
-    () => new Set(getWritingAnalysisHistory(user?.id).map((entry) => entry.testId)),
+  const history = useMemo(
+    () => getWritingAnalysisHistory(user?.id),
     [user?.id, revision],
   )
+  const mockResults = useMemo(() => getCatalogMockResults(user?.id, 'writing'), [user?.id, revision])
 
   const rows = useMemo<CompactIeltsTestRow[]>(
     () => getWritingFullTestCatalog().flatMap((test) => {
@@ -36,7 +38,7 @@ export default function IELTSWritingTests({ embedded = false }: { embedded?: boo
             durationMinutes: task.durationMinutes,
             detail: `${task.suggestedWordCount.min}+ words`,
             available: test.available && task.available,
-            completed: completedTaskIds.has(task.id),
+            ...writingCatalogResult(history, test, task.id, mockResults),
           }))
       }
       return [{
@@ -48,10 +50,10 @@ export default function IELTSWritingTests({ embedded = false }: { embedded?: boo
         durationMinutes: 60,
         detail: '2 tasks · 400+ words',
         available: test.available,
-        completed: test.available && test.tasks.length > 0 && test.tasks.every((task) => completedTaskIds.has(task.id)),
+        ...writingCatalogResult(history, test, undefined, mockResults),
       }]
     }),
-    [activeFilter, completedTaskIds],
+    [activeFilter, history, mockResults],
   )
 
   const visibleRows = useMemo(() => {

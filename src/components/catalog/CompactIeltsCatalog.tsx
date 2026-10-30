@@ -1,5 +1,6 @@
 import UiText from '@/components/common/UiText'
 import type { ReactNode } from 'react'
+import type { IeltsCatalogResult } from '@/utils/ieltsCatalogResults'
 import {
   ArrowLeft,
   ArrowRight,
@@ -16,7 +17,7 @@ import {
 
 export type IeltsCatalogSection = 'reading' | 'listening' | 'writing' | 'speaking'
 
-export type CompactIeltsTestRow = {
+export type CompactIeltsTestRow = IeltsCatalogResult & {
   id: string
   number: number
   title: string
@@ -25,7 +26,6 @@ export type CompactIeltsTestRow = {
   durationMinutes?: number
   detail: string
   available: boolean
-  completed?: boolean
 }
 
 type CompactIeltsCatalogProps = {
@@ -200,13 +200,18 @@ export default function CompactIeltsCatalog({
                   </p>
                   {row.completed ? (
                     <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-black text-emerald-700">
-                      <CheckCircle2 className="h-3.5 w-3.5" />  <UiText text={"Completed"} /> </span>
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      {row.band !== undefined && <strong>Band {row.band.toFixed(1)} ·</strong>}
+                      <UiText text={"Completed"} /> </span>
+                  ) : row.progressLabel ? (
+                    <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-black text-amber-700">{row.progressLabel}</span>
                   ) : !row.available ? (
                     <Lock className="h-5 w-5 shrink-0 text-slate-400" />
                   ) : null}
                 </div>
                 <h3 className={`mt-3 font-black tracking-[-0.04em] text-slate-950 ${section === 'listening' ? 'whitespace-nowrap text-[clamp(1rem,2.2vw,1.5rem)]' : 'text-2xl'}`}>{row.title}</h3>
                 <p className="mt-2 line-clamp-2 text-sm font-medium leading-6 text-slate-500">{row.subtitle}</p>
+                {row.scoreLabel && <p className="mt-2 text-xs font-bold text-emerald-700">{row.scoreLabel}</p>}
 
                 <div className="mt-auto flex flex-wrap items-end justify-between gap-4 pt-7">
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-bold text-slate-500">

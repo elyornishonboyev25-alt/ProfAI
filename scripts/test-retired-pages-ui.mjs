@@ -45,15 +45,15 @@ try {
             { hydrated: true, user: { id: 'layout-test-user' }, accessToken: 'test-access' },
           ]) {
             useAuthStore.setState(session)
-            for (const path of ['/test-preparation', '/tests', '/mock', '/test-preparation/old', '/TEST-PREPARATION/', '/test%2Dpreparation', '/tests/?source=old']) {
+            for (const path of ['/test-preparation', '/tests', '/mock', '/test-preparation/old', '/TEST-PREPARATION/', '/test%2Dpreparation', '/tests/?source=old', '/review-mistakes', '/review-mistakes/old', '/REVIEW-MISTAKES/', '/review%2Dmistakes', '/review-mistakes/?source=old']) {
               await render(path)
               assert.match(document.querySelector('h1')?.textContent || '', /404/, path)
               assert.equal(globalThis.retiredPageGateCalls, 0, 'Retired page bypasses auth/device gates: ' + path)
               assert.ok(!document.body.textContent.includes('Choose your exam'), path)
-              for (const link of document.querySelectorAll('a[href]')) assert.ok(!['/test-preparation', '/tests', '/mock'].includes(link.getAttribute('href')), '404 links to an active page')
+              for (const link of document.querySelectorAll('a[href]')) assert.ok(!['/test-preparation', '/tests', '/mock', '/review-mistakes'].includes(link.getAttribute('href')), '404 links to an active page')
             }
           }
-          for (const path of ['/dashboard', '/ielts/tests', '/sat', '/mock/ielts/full-mock-1', '/mock/sat/1', '/tests/custom-test/attempt']) {
+          for (const path of ['/dashboard', '/ielts/tests', '/sat', '/mock/ielts/full-mock-1', '/mock/sat/1', '/tests/custom-test/attempt', '/profile', '/analyze-mistakes', '/sat/mistakes']) {
             await render(path)
             assert.equal(globalThis.retiredPageGateCalls, 1, 'Active route retains its account gate: ' + path)
             assert.ok(document.querySelector('[data-account-gate]'), path)

@@ -138,7 +138,7 @@ export const russianInterface: Record<string, string> = {
   'Open IELTS': 'Открыть IELTS', 'Open SAT': 'Открыть SAT',
   'Listening': 'Аудирование', 'Reading': 'Чтение', 'Writing': 'Письмо', 'Speaking': 'Говорение',
   'Math': 'Математика', 'Reading & Writing': 'Чтение и письмо',
-  'Full mock tests': 'Полные пробные тесты', 'Review mistakes': 'Разбор ошибок',
+  'Full mock tests': 'Полные пробные тесты',
   'Build your English skills': 'Развивайте английский',
   'Small exercises for the skills behind your score.': 'Небольшие упражнения для улучшения ваших навыков.',
   'Vocabulary': 'Словарь', 'Articles': 'Статьи', 'Podcasts': 'Подкасты',

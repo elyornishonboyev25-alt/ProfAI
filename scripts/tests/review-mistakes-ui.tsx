@@ -2,7 +2,6 @@ import React, { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import assert from 'node:assert/strict'
-import ReviewMistakes from '../../src/pages/ReviewMistakes'
 import AnalyzeMistakes from '../../src/pages/AnalyzeMistakes'
 import SATMistakes from '../../src/pages/SATMistakes'
 
@@ -12,9 +11,8 @@ export async function run() {
   const root = createRoot(container)
   const render = async () => {
     await act(async () => root.render(
-      <MemoryRouter initialEntries={['/review-mistakes']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <MemoryRouter initialEntries={['/analyze-mistakes']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
-          <Route path="/review-mistakes" element={<ReviewMistakes />} />
           <Route path="/analyze-mistakes" element={<AnalyzeMistakes />} />
           <Route path="/sat/mistakes" element={<SATMistakes />} />
           <Route path="/profile" element={<output>My Results</output>} />
@@ -36,5 +34,5 @@ export async function run() {
   await act(async () => container.querySelector<HTMLAnchorElement>('a[href="/sat/mistakes"]')!.click())
   assert.equal(container.querySelector('h1')?.textContent, 'SAT Mistake Lab')
   await act(async () => root.unmount())
-  console.log('Review Mistakes exam selection and switching passed.')
+  console.log('IELTS and SAT mistake lab switching passed.')
 }

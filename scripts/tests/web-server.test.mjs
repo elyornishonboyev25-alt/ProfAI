@@ -104,7 +104,7 @@ test('Ivygoo migration keeps routes, API, media seeking and Speaking signaling w
 })
 
 
-test('Retired exam hub URLs return real 404 responses while live exams remain available', { timeout: 15000 }, async () => {
+test('Retired hub URLs return real 404 responses while live exams and results remain available', { timeout: 15000 }, async () => {
   const dist = await mkdtemp(join(tmpdir(), 'ivygoo-retired-pages-'))
   await writeFile(join(dist, 'index.html'), '<title>Ivygoo</title><meta name="robots" content="index, follow" /><div id="root">Current app</div>')
   await mkdir(join(dist, 'test-preparation'))
@@ -113,7 +113,7 @@ test('Retired exam hub URLs return real 404 responses while live exams remain av
   await once(server.listen(0, '127.0.0.1'), 'listening')
   const base = 'http://127.0.0.1:' + server.address().port
   try {
-    for (const path of ['/test-preparation', '/test-preparation/', '/test-preparation/old', '/test-preparation/old.js', '/TEST-PREPARATION', '/test%2Dpreparation', '/tests', '/tests/', '/TESTS', '/mock', '/mock/', '/%6Dock?source=old']) {
+    for (const path of ['/test-preparation', '/test-preparation/', '/test-preparation/old', '/test-preparation/old.js', '/TEST-PREPARATION', '/test%2Dpreparation', '/tests', '/tests/', '/TESTS', '/mock', '/mock/', '/%6Dock?source=old', '/review-mistakes', '/review-mistakes/', '/review-mistakes/old', '/REVIEW-MISTAKES', '/review%2Dmistakes?source=old']) {
       const response = await fetch(base + path)
       assert.equal(response.status, 404, path)
       assert.equal(response.headers.get('cache-control'), 'no-store', path)
@@ -126,7 +126,7 @@ test('Retired exam hub URLs return real 404 responses while live exams remain av
       assert.equal(head.status, 404, path)
       assert.equal(await head.text(), '', path)
     }
-    for (const path of ['/', '/login', '/dashboard', '/ielts', '/ielts/tests', '/ielts/reading/tests', '/sat', '/sat/mocks', '/mock/ielts', '/mock/ielts/full-mock-1', '/mock/sat/1', '/sat/mock/1/run', '/tests/custom-test/attempt', '/results/example', '/academic-skills', '/admission']) {
+    for (const path of ['/', '/login', '/dashboard', '/ielts', '/ielts/tests', '/ielts/reading/tests', '/sat', '/sat/mocks', '/mock/ielts', '/mock/ielts/full-mock-1', '/mock/sat/1', '/sat/mock/1/run', '/tests/custom-test/attempt', '/results/example', '/academic-skills', '/admission', '/profile', '/analyze-mistakes', '/sat/mistakes']) {
       assert.equal((await fetch(base + path)).status, 200, path)
     }
   } finally {

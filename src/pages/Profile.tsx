@@ -7,7 +7,6 @@ import {
   ArrowUpRight,
   ArrowUpWideNarrow,
   BookOpen,
-  BrainCircuit,
   CalendarDays,
   ChevronRight,
   Clock3,
@@ -181,9 +180,6 @@ export default function Profile() {
               <div className="mr-hero-actions">
                 <button type="button" className="mr-button primary" onClick={() => navigate('/dashboard')}>
                   <UiText text="Start practicing" /> <ArrowUpRight aria-hidden="true" />
-                </button>
-                <button type="button" className="mr-button" onClick={() => navigate('/review-mistakes')}>
-                  <UiText text="Review mistakes" /> <BrainCircuit aria-hidden="true" />
                 </button>
                 <button type="button" className="mr-button ghost" onClick={() => navigate('/leaderboard')}>
                   <Trophy aria-hidden="true" /> <UiText text="Leaderboard" />

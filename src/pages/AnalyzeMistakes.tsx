@@ -457,8 +457,8 @@ export default function AnalyzeMistakes() {
         <Reveal>
         <section className="mlab-card mlab-hero">
           <div className="mlab-hero-top">
-            <button type="button" onClick={() => navigate('/review-mistakes')} className="mlab-back">
-              <ArrowLeft aria-hidden="true" /><UiText text="Review mistakes" />
+            <button type="button" onClick={() => navigate('/profile')} className="mlab-back">
+              <ArrowLeft aria-hidden="true" /><UiText text="My Results" />
             </button>
             <MistakeLabNavigation />
           </div>

@@ -81,6 +81,9 @@ type AiAssistantState = {
   setThreadLoading: (ownerKey: string, loading: boolean) => void
   setThreads: (ownerKey: string, threads: AiAssistantThread[]) => void
   addThread: (ownerKey: string, thread: AiAssistantThread) => void
+  startNewThread: (ownerKey: string) => string
+  ensureActiveThread: (ownerKey: string) => string
+  endChatSession: (ownerKey: string) => void
   syncThread: (ownerKey: string, draftId: string, thread: AiAssistantThread) => void
   setActiveThread: (ownerKey: string, threadId: string) => void
   pushMessage: (ownerKey: string, threadId: string, message: AiAssistantMessage) => void
@@ -96,9 +99,49 @@ type AiAssistantState = {
 const sortThreads = (threads: AiAssistantThread[]) =>
   [...threads].sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt))
 
+// History survives visits; the selected conversation belongs only to this tab's
+// session. Reloading keeps it, while a new visit starts from a reusable draft.
+const sessionThreadPrefix = 'ivygoo-ai-active-thread:'
+const fallbackSessionThreads = new Map<string, string>()
+function readSessionThread(owner: string): string | null {
+  try { return window.sessionStorage.getItem(`${sessionThreadPrefix}${owner}`) }
+  catch { return fallbackSessionThreads.get(owner) ?? null }
+}
+function writeSessionThread(owner: string, id: string | null) {
+  if (id) fallbackSessionThreads.set(owner, id)
+  else fallbackSessionThreads.delete(owner)
+  try {
+    if (id) window.sessionStorage.setItem(`${sessionThreadPrefix}${owner}`, id)
+    else window.sessionStorage.removeItem(`${sessionThreadPrefix}${owner}`)
+  } catch { /* Keep the open conversation usable when session storage is blocked. */ }
+}
+
+function clearSessionThreads() {
+  fallbackSessionThreads.clear()
+  try {
+    for (const key of Object.keys(window.sessionStorage)) {
+      if (key.startsWith(sessionThreadPrefix)) window.sessionStorage.removeItem(key)
+    }
+  } catch { /* The in-memory selection still resets if storage is unavailable. */ }
+}
+
+// A reload belongs to the current visit. Returning from an external page in the
+// same tab is a new visit, even though the browser retains sessionStorage.
+if (typeof window !== 'undefined') {
+  const navigation = window.performance.getEntriesByType?.('navigation')[0] as PerformanceNavigationTiming | undefined
+  if (navigation && navigation.type !== 'reload') clearSessionThreads()
+}
+
+function createDraftThread(): AiAssistantThread {
+  const now = new Date().toISOString()
+  const id = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`
+  return { id: `local-${id}`, title: 'New chat', createdAt: now, updatedAt: now, messages: [], synced: false }
+}
+
 export const useAiAssistantStore = create<AiAssistantState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       isOpen: false,
       isSending: false,
       error: null,
@@ -173,7 +216,7 @@ export const useAiAssistantStore = create<AiAssistantState>()(
           const currentActive = state.activeThreadIds[ownerKey]
           const activeThreadId = threads.some((thread) => thread.id === currentActive)
             ? currentActive ?? null
-            : threads[0]?.id ?? null
+            : null
           return {
             threadsByOwner: { ...state.threadsByOwner, [ownerKey]: threads },
             activeThreadIds: { ...state.activeThreadIds, [ownerKey]: activeThreadId },
@@ -181,25 +224,54 @@ export const useAiAssistantStore = create<AiAssistantState>()(
             threadsLoaded: { ...state.threadsLoaded, [ownerKey]: true },
           }
         }),
-      addThread: (ownerKey, thread) =>
+      addThread: (ownerKey, thread) => {
+        writeSessionThread(ownerKey, thread.id)
         set((state) => ({
           threadsByOwner: {
             ...state.threadsByOwner,
             [ownerKey]: sortThreads([thread, ...(state.threadsByOwner[ownerKey] ?? []).filter((item) => item.id !== thread.id && item.messages.length > 0)]),
           },
           activeThreadIds: { ...state.activeThreadIds, [ownerKey]: thread.id },
-        })),
-      setActiveThread: (ownerKey, threadId) =>
-        set((state) => ({ activeThreadIds: { ...state.activeThreadIds, [ownerKey]: threadId } })),
-      syncThread: (ownerKey, draftId, savedThread) => set((state) => ({
-        threadsByOwner: {
-          ...state.threadsByOwner,
-          [ownerKey]: (state.threadsByOwner[ownerKey] ?? []).map((thread) => thread.id === draftId
-            ? { ...savedThread, clientId: thread.clientId ?? draftId, messages: thread.messages, title: thread.title, updatedAt: thread.updatedAt }
-            : thread),
-        },
-        activeThreadIds: { ...state.activeThreadIds, [ownerKey]: state.activeThreadIds[ownerKey] === draftId ? savedThread.id : state.activeThreadIds[ownerKey] ?? null },
-      })),
+        }))
+      },
+      startNewThread: (ownerKey) => {
+        const draft = get().threadsByOwner[ownerKey]?.find((thread) => !thread.synced && thread.messages.length === 0) ?? createDraftThread()
+        get().addThread(ownerKey, draft)
+        return draft.id
+      },
+      ensureActiveThread: (ownerKey) => {
+        const state = get()
+        const threads = state.threadsByOwner[ownerKey] ?? []
+        const current = threads.find((thread) => thread.id === state.activeThreadIds[ownerKey])
+        if (current) return current.id
+        const remembered = threads.find((thread) => thread.id === readSessionThread(ownerKey))
+        if (remembered) {
+          state.setActiveThread(ownerKey, remembered.id)
+          return remembered.id
+        }
+        return state.startNewThread(ownerKey)
+      },
+      endChatSession: (ownerKey) => {
+        writeSessionThread(ownerKey, null)
+        set((state) => ({ activeThreadIds: { ...state.activeThreadIds, [ownerKey]: null } }))
+      },
+      setActiveThread: (ownerKey, threadId) => {
+        if (!get().threadsByOwner[ownerKey]?.some((thread) => thread.id === threadId)) return
+        writeSessionThread(ownerKey, threadId)
+        set((state) => ({ activeThreadIds: { ...state.activeThreadIds, [ownerKey]: threadId } }))
+      },
+      syncThread: (ownerKey, draftId, savedThread) => set((state) => {
+        if (state.activeThreadIds[ownerKey] === draftId) writeSessionThread(ownerKey, savedThread.id)
+        return {
+          threadsByOwner: {
+            ...state.threadsByOwner,
+            [ownerKey]: (state.threadsByOwner[ownerKey] ?? []).map((thread) => thread.id === draftId
+              ? { ...savedThread, clientId: thread.clientId ?? draftId, messages: thread.messages, title: thread.title, updatedAt: thread.updatedAt }
+              : thread),
+          },
+          activeThreadIds: { ...state.activeThreadIds, [ownerKey]: state.activeThreadIds[ownerKey] === draftId ? savedThread.id : state.activeThreadIds[ownerKey] ?? null },
+        }
+      }),
       pushMessage: (ownerKey, threadId, message) =>
         set((state) => {
           const now = message.createdAt
@@ -223,11 +295,12 @@ export const useAiAssistantStore = create<AiAssistantState>()(
         set((state) => {
           const threads = (state.threadsByOwner[ownerKey] ?? []).filter((thread) => thread.id !== threadId)
           const active = state.activeThreadIds[ownerKey]
+          if (active === threadId) writeSessionThread(ownerKey, null)
           return {
             threadsByOwner: { ...state.threadsByOwner, [ownerKey]: threads },
             activeThreadIds: {
               ...state.activeThreadIds,
-              [ownerKey]: active === threadId ? threads[0]?.id ?? null : active ?? null,
+              [ownerKey]: active === threadId ? null : active ?? null,
             },
           }
         }),
@@ -238,6 +311,7 @@ export const useAiAssistantStore = create<AiAssistantState>()(
           const activeThreadIds = { ...state.activeThreadIds }
           const memoriesByOwner = { ...state.memoriesByOwner }
           for (const alias of aliases) {
+            writeSessionThread(alias, null)
             delete threadsByOwner[alias]
             delete activeThreadIds[alias]
             delete memoriesByOwner[alias]
@@ -270,7 +344,7 @@ export const useAiAssistantStore = create<AiAssistantState>()(
     }),
     {
       name: 'profai-ai-chat',
-      version: 5,
+      version: 6,
       migrate: (persistedState, version) => {
         const old = persistedState as Partial<AiAssistantState> & {
           conversations?: Record<string, AiAssistantMessage[]>
@@ -299,6 +373,16 @@ export const useAiAssistantStore = create<AiAssistantState>()(
         }
         return { ...old, conversations: undefined, threadsByOwner, activeThreadIds } as AiAssistantState
       },
+      merge: (persistedState, currentState) => {
+        const state = { ...currentState, ...(persistedState as Partial<AiAssistantState>) }
+        return {
+          ...state,
+          activeThreadIds: Object.fromEntries(Object.entries(state.threadsByOwner).map(([owner, threads]) => {
+            const id = readSessionThread(owner)
+            return [owner, threads.some((thread) => thread.id === id) ? id : null]
+          })),
+        }
+      },
       partialize: (state): AiAssistantState => ({
         ...state,
         isOpen: false,
@@ -311,11 +395,11 @@ export const useAiAssistantStore = create<AiAssistantState>()(
         voiceLevel: 0,
         threadsLoading: {},
         threadsLoaded: {},
-        activeThreadIds: Object.fromEntries(Object.entries(state.activeThreadIds).map(([owner, id]) => [owner, state.threadsByOwner[owner]?.some((thread) => thread.id === id && thread.messages.length > 0) ? id : null])),
+        activeThreadIds: {},
         threadsByOwner: Object.fromEntries(
           Object.entries(state.threadsByOwner).map(([owner, threads]) => [
             owner,
-            threads.filter((thread) => thread.messages.some((message) => message.status !== 'streaming')).map((thread) => ({
+            threads.filter((thread) => (!thread.synced && thread.messages.length === 0) || thread.messages.some((message) => message.status !== 'streaming')).map((thread) => ({
               ...thread,
               messages: thread.messages.filter((message) => message.status !== 'streaming').map(({ images: _images, ...message }) => message),
             })),
@@ -325,3 +409,12 @@ export const useAiAssistantStore = create<AiAssistantState>()(
     },
   ),
 )
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('pageshow', (event) => {
+    if (!event.persisted) return
+    // Back/forward cache restores the existing document without rehydrating it.
+    clearSessionThreads()
+    useAiAssistantStore.setState({ activeThreadIds: {}, pendingActions: [], error: null })
+  })
+}

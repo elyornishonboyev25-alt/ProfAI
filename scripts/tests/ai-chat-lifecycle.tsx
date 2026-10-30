@@ -53,6 +53,7 @@ export async function run() {
     return new Response(JSON.stringify(result), { headers: { 'Content-Type': 'application/json' } })
   }
   try {
+    window.sessionStorage.clear()
     localStorage.setItem('profai-ai-chat', JSON.stringify({ version: 4, state: { threadsByOwner: { [owner]: [empty, conversation] }, activeThreadIds: { [owner]: empty.id }, voiceLang: 'uz' } }))
     await useAiAssistantStore.persist.rehydrate()
     assert.deepEqual(useAiAssistantStore.getState().threadsByOwner[owner].map(thread => thread.id), ['saved'], 'Migration removes old empty records without losing actual conversations')
@@ -61,6 +62,9 @@ export async function run() {
       root.render(<MemoryRouter><Harness/><AIChatWindow variant="page"/><LanguageSelector/><UiText text="Yangi chat"/><TalkOverlay/></MemoryRouter>)
     })
     assert.equal(creates, 0, 'Opening chat never creates a server conversation')
+    assert.equal(tutor!.messages.length, 0, 'A fresh visit opens the blank composer rather than old history')
+    assert.ok(tutor!.activeThread && !tutor!.activeThread.synced, 'The welcome chat is a local draft')
+    await act(async () => tutor!.selectChat(conversation.id))
     assert.ok(host.textContent!.includes('Bu mening asl suhbatim.'), 'Conversation content is preserved in its original language')
     assert.ok(!host.textContent!.includes('Yangi chat'), 'English UI normalizes cached Uzbek system labels')
     const menu = host.querySelector<HTMLButtonElement>('[aria-haspopup="dialog"]')!
@@ -74,7 +78,9 @@ export async function run() {
     assert.equal(tutor!.activeThreadId, draftId, 'Repeated new-chat clicks reuse the blank draft')
     assert.equal(creates, 0)
     const persisted = JSON.parse(localStorage.getItem('profai-ai-chat')!)
-    assert.equal(persisted.state.threadsByOwner[owner].length, 1, 'Blank drafts never enter local storage')
+    assert.equal(persisted.state.threadsByOwner[owner].length, 2, 'History and one reusable blank draft are cached locally')
+    assert.equal(persisted.state.threadsByOwner[owner].filter((thread: { messages: unknown[] }) => thread.messages.length === 0).length, 1)
+    assert.deepEqual(persisted.state.activeThreadIds, {}, 'The current conversation is never restored from permanent storage')
     await act(async () => tutor!.send({ text: 'Help me practise writing.' }))
     assert.equal(creates, 1, 'Only the first message creates the conversation')
     assert.equal(requests[0].language, 'auto', 'Text language detection does not inherit Uzbek microphone preference')

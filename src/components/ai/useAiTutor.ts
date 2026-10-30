@@ -62,18 +62,6 @@ function createMessage(
   return { id: createId(), role, content, createdAt: new Date().toISOString(), images }
 }
 
-function createOfflineThread(): AiAssistantThread {
-  const now = new Date().toISOString()
-  return {
-    id: `local-${createId()}`,
-    title: 'New chat',
-    createdAt: now,
-    updatedAt: now,
-    messages: [],
-    synced: false,
-  }
-}
-
 // Strip emoji / markdown so the spoken reply sounds natural.
 function cleanForSpeech(text: string) {
   return text
@@ -141,6 +129,8 @@ export function useAiTutor() {
   const setThreadLoading = useAiAssistantStore((s) => s.setThreadLoading)
   const setThreads = useAiAssistantStore((s) => s.setThreads)
   const addThread = useAiAssistantStore((s) => s.addThread)
+  const startNewThread = useAiAssistantStore((s) => s.startNewThread)
+  const ensureActiveThread = useAiAssistantStore((s) => s.ensureActiveThread)
   const setActiveThread = useAiAssistantStore((s) => s.setActiveThread)
   const renameStoredThread = useAiAssistantStore((s) => s.renameThread)
   const removeStoredThread = useAiAssistantStore((s) => s.removeThread)
@@ -179,6 +169,10 @@ export function useAiTutor() {
   const stoppingVoiceRef = useRef(false)
   const workspace = getAiWorkspace(activeWorkspace)
 
+  useEffect(() => {
+    if (user && hasPremium) ensureActiveThread(ownerKey)
+  }, [activeThreadId, ensureActiveThread, hasPremium, ownerKey, user])
+
   // Hydrate account-private chat history and long-term memory once. Multiple
   // mounted tutor surfaces share the same store, so the loading flag de-duplicates
   // requests from the floating chat, full page, and talk overlay.
@@ -188,17 +182,17 @@ export function useAiTutor() {
 
     void Promise.all([fetchAiThreads(), fetchAiMemories()])
       .then(([loadedThreads, loadedMemories]) => {
+        if (useAuthStore.getState().user?.id !== user.id) { setThreadLoading(ownerKey, false); return }
         setThreads(ownerKey, loadedThreads)
-        if (!useAiAssistantStore.getState().activeThreadIds[ownerKey]) addThread(ownerKey, createOfflineThread())
+        ensureActiveThread(ownerKey)
         setStoredMemories(ownerKey, loadedMemories)
       })
       .catch(() => {
-        if (chatThreads.length === 0) addThread(ownerKey, createOfflineThread())
+        if (useAuthStore.getState().user?.id === user.id) ensureActiveThread(ownerKey)
         setThreadLoading(ownerKey, false)
       })
   }, [
-    addThread,
-    chatThreads.length,
+    ensureActiveThread,
     hasPremium,
     ownerKey,
     setStoredMemories,
@@ -216,11 +210,8 @@ export function useAiTutor() {
     setError(null)
     setDraft('')
     setImages([])
-    const existingDraft = useAiAssistantStore.getState().threadsByOwner[ownerKey]?.find((thread) => !thread.synced && thread.messages.length === 0)
-    const thread = existingDraft ?? createOfflineThread()
-    addThread(ownerKey, thread)
-    return thread.id
-  }, [addThread, ownerKey, setError, setPendingActions])
+    return startNewThread(ownerKey)
+  }, [startNewThread, ownerKey, setError, setPendingActions])
 
   const selectChat = useCallback((threadId: string) => {
     if (activeChatRequest?.owner === ownerKey) activeChatRequest.controller.abort('chat_changed')
@@ -395,7 +386,7 @@ export function useAiTutor() {
       let threadId = activeThreadId ?? await createNewChat()
       const replyVersion = coachAudioVersion()
       const draftThread = useAiAssistantStore.getState().threadsByOwner[ownerKey]?.find((thread) => thread.id === threadId)
-      // A blank draft lives only in memory. Create its server record once the
+      // A blank draft stays local. Create its server record once the
       // learner actually sends a message, keeping existing offline messages safe.
       if (draftThread && !draftThread.synced && draftThread.messages.length === 0) {
         try {
@@ -690,6 +681,7 @@ export function useAiTutor() {
   const previousOwnerRef = useRef(ownerKey)
   useEffect(() => {
     if (previousOwnerRef.current !== ownerKey) {
+      useAiAssistantStore.getState().endChatSession(previousOwnerRef.current)
       cancelCoachAudio()
       previousOwnerRef.current = ownerKey
       setPendingActions([])

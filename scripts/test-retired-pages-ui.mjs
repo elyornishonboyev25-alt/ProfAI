@@ -23,18 +23,22 @@ try {
     stdin: { contents: `
       import React, { act } from 'react'
       import { createRoot } from 'react-dom/client'
-      import { MemoryRouter } from 'react-router-dom'
+      import { MemoryRouter, useLocation } from 'react-router-dom'
       import App from './src/App'
       import './src/i18n'
       import { useAuthStore } from './src/store/authStore'
       import assert from 'node:assert/strict'
+      function LocationProbe() {
+        const location = useLocation()
+        return <output data-location>{location.pathname}{location.search}{location.hash}</output>
+      }
       export async function run() {
         const root = createRoot(document.getElementById('root'))
         let revision = 0
         const render = async path => {
           globalThis.retiredPageGateCalls = 0
           await act(async () => {
-            root.render(<MemoryRouter key={++revision} initialEntries={[path]}><App /></MemoryRouter>)
+            root.render(<MemoryRouter key={++revision} initialEntries={[path]}><LocationProbe /><App /></MemoryRouter>)
             await new Promise(resolve => setTimeout(resolve, 0))
           })
         }
@@ -58,6 +62,12 @@ try {
             assert.equal(globalThis.retiredPageGateCalls, 1, 'Active route retains its account gate: ' + path)
             assert.ok(document.querySelector('[data-account-gate]'), path)
           }
+          for (const path of ['/analyze-mistakes', '/analyze-mistakes/old?source=bookmark', '/ANALYZE-MISTAKES/', '/sat/mistakes', '/sat/mistakes?attempt=older-result#review', '/sat/mistakes/old']) {
+            await render(path)
+            assert.equal(document.querySelector('[data-location]')?.textContent, '/profile', 'Mistake Lab redirects directly to My Results: ' + path)
+            assert.equal(globalThis.retiredPageGateCalls, 1, 'My Results retains account verification: ' + path)
+          }
+          console.log('PASS: retired IELTS/SAT Mistake Lab URLs and bookmarks redirect to My Results')
           console.log('PASS: retired pages show 404 before hydration, for guests and signed-in users; active exam routes retain their account gate')
         } finally { await act(async () => root.unmount()) }
       }

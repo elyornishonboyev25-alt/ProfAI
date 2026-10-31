@@ -28,9 +28,13 @@ import { Reveal } from '@/components/fx'
 import { useCopy } from '@/i18n/interface'
 import WritingResultModal from '@/components/WritingResultModal'
 import SpeakingResult from '@/components/speaking/SpeakingResult'
+import FullMockAttemptHistory from '@/components/ielts/FullMockAttemptHistory'
 import type { WritingAnalysisEntry } from '@/utils/writingAnalysisStorage'
 import type { SpeakingSessionRecord } from '@/store/speakingStore'
 import { getResultsHistory, type ResultRecord, type ResultSkill } from '@/utils/resultsHistory'
+import { ACCOUNT_DATA_EVENT } from '@/utils/accountStorage'
+import { getSATReviewTests } from '@/features/sat/catalog'
+import { loadSATAttempt } from '@/features/sat/attemptStorage'
 import '@/styles/my-results.css'
 
 type FilterKey = 'all' | ResultSkill
@@ -90,12 +94,21 @@ export default function Profile() {
   useEffect(() => {
     const refresh = () => setHistoryVersion((version) => version + 1)
     window.addEventListener('storage', refresh)
+    window.addEventListener(ACCOUNT_DATA_EVENT, refresh)
     window.addEventListener('smarttest:attempt-submitted', refresh)
     return () => {
       window.removeEventListener('storage', refresh)
+      window.removeEventListener(ACCOUNT_DATA_EVENT, refresh)
       window.removeEventListener('smarttest:attempt-submitted', refresh)
     }
   }, [])
+
+  // Keep older submitted SAT slots visible now that results no longer pass through the lab.
+  useEffect(() => {
+    if (!userId) return
+    getSATReviewTests().forEach((test) => loadSATAttempt(test.id))
+    setHistoryVersion((version) => version + 1)
+  }, [userId])
 
   const records = useMemo(
     () => getResultsHistory(userId, speakingSessions, overview?.recentAttempts ?? []),
@@ -151,7 +164,7 @@ export default function Profile() {
     if (!target) return
     if (target.type === 'writing') setWritingEntry(target.entry)
     else if (target.type === 'speaking') setSpeakingEntry(target.entry)
-    else if (target.type === 'sat') navigate(`/sat/mistakes?attempt=${encodeURIComponent(target.attemptId)}`)
+    else if (target.type === 'sat') navigate(`/sat/results/${encodeURIComponent(target.attemptId)}`)
     else navigate(`/results/${target.testId}`, { state: { result: target.result } })
   }
 
@@ -373,6 +386,7 @@ export default function Profile() {
             )}
           </section>
         </Reveal>
+        <div className="mlab mt-6" style={{ minHeight: 'auto', padding: 0 }}><FullMockAttemptHistory /></div>
       </div>
 
       {writingEntry ? <WritingResultModal entry={writingEntry} onClose={() => setWritingEntry(null)} /> : null}

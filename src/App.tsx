@@ -51,7 +51,7 @@ const SATSection = lazy(() => import('@/pages/SATSection'))
 const SATQuestionBankRun = lazy(() => import('@/pages/SATQuestionBankRun'))
 const SATHardQuestions = lazy(() => import('@/pages/SATHardQuestions'))
 const SATQuestionBank = lazy(() => import('@/pages/SATQuestionBank'))
-const SATMistakes = lazy(() => import('@/pages/SATMistakes'))
+const SATResultReview = lazy(() => import('@/pages/SATResultReview'))
 const SATCalculator = lazy(() => import('@/pages/SATCalculator'))
 const SATMockRun = lazy(() => import('@/pages/SATMockRun'))
 const IELTS = lazy(() => import('@/pages/IELTS'))
@@ -74,7 +74,6 @@ const Results = lazy(() => import('@/pages/Results'))
 const ResultsReview = lazy(() => import('@/pages/ResultsReview'))
 const SharedResult = lazy(() => import('@/pages/SharedResult'))
 const Profile = lazy(() => import('@/pages/Profile'))
-const AnalyzeMistakes = lazy(() => import('@/pages/AnalyzeMistakes'))
 const AccountProfile = lazy(() => import('@/pages/AccountProfile'))
 const Login = lazy(() => import('@/pages/Login'))
 const Register = lazy(() => import('@/pages/Register'))
@@ -532,7 +531,7 @@ function App() {
                       <Route path="/sat/question-bank/run/:setId" element={<SATQuestionBankRun />} />
                       <Route path="/sat/hard-questions" element={<AnimatedRoute><SATHardQuestions /></AnimatedRoute>} />
                       <Route path="/sat/question-bank" element={<AnimatedRoute><SATQuestionBank /></AnimatedRoute>} />
-                      <Route path="/sat/mistakes" element={<AnimatedRoute><SATMistakes /></AnimatedRoute>} />
+                      <Route path="/sat/results/:attemptId" element={<AnimatedRoute><SATResultReview /></AnimatedRoute>} />
                       <Route
                         path="/sat/mock/:mockId/run"
                         element={
@@ -748,14 +747,6 @@ function App() {
                       <Route path="/shared/shadowing/:shareId" element={<AnimatedRoute><SharedShadowing /></AnimatedRoute>} />
                       <Route path="/shared/results/:shareId" element={<AnimatedRoute><SharedResult /></AnimatedRoute>} />
                       <Route
-                        path="/analyze-mistakes"
-                        element={
-                          <AnimatedRoute>
-                            <AnalyzeMistakes />
-                          </AnimatedRoute>
-                        }
-                      />
-                      <Route
                         path="/profile"
                         element={
                           <AnimatedRoute>
@@ -869,6 +860,8 @@ function App() {
 
 export default function VerifiedApp() {
   const { pathname } = useLocation()
+  // Old bookmarks go straight to the single results workspace, including nested URLs.
+  if (/^\/(?:analyze-mistakes|sat\/mistakes)(?:\/|$)/i.test(pathname)) return <Navigate to="/profile" replace />
   // Retired pages stay 404 even before sign-in or device-access verification.
   if (isRetiredPagePath(pathname)) return <div className="app-shell relative min-h-screen"><Suspense fallback={<RouteLoader />}><NotFound /></Suspense></div>
   // The Telegram wheel runs inside Telegram's Mini App frame, outside the account workspace.

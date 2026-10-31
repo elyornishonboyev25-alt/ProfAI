@@ -1,5 +1,6 @@
 /** Interface strings that are not in the original Uzbek catalog. */
 export const uzbekCompletion: Record<string, string> = {
+  'View level progress': 'Daraja rivojini ko‘rish',
   'View results': 'Natijalarni ko‘rish',
   'Back to leaderboard': 'Reytingga qaytish',
   'Back to Account': 'Hisobga qaytish',

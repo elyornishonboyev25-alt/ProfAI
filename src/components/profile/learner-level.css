@@ -1,14 +1,20 @@
-.learner-level-badge { display:inline-flex; align-items:center; gap:5px; padding:5px 9px; border:1px solid #dac2ca; border-radius:99px; color:#a0213b; background:linear-gradient(130deg,#fff,#eceef3); font-size:11px; line-height:1.4; font-weight:750; white-space:nowrap; }
-.learner-level-badge.is-max { background:linear-gradient(130deg,#c12b45,#86182e); color:white; border-color:#ba4a5f; }
-.learner-level-panel { margin:20px 0; padding:clamp(20px,3vw,30px); border:1px solid #fff; border-radius:24px; background:linear-gradient(125deg,#fffffff0,#e8ebf2cc); box-shadow:inset 0 1px 0 #fff,0 12px 36px #27334a0d; color:#29303d; }
-.learner-level-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:13px; font-weight:650; color:#616b7c; }
-.learner-level-panel h2 { margin:16px 0; font-size:clamp(20px,2.5vw,26px); font-weight:750; letter-spacing:-.035em; }
-.learner-level-steps { display:flex; gap:clamp(4px,1.5vw,12px); margin:20px 0; }
-.learner-level-steps > span { display:grid; place-items:center; flex:1; max-width:44px; aspect-ratio:1; border:1px solid #d4dae3; border-radius:12px; color:#7a8493; background:#ffffff80; font-size:12px; font-weight:700; }
-.learner-level-steps .is-earned { color:#a4203a; border-color:#dba4b0; background:#fff4f6; }
-.learner-level-steps [aria-current] { background:linear-gradient(135deg,#c82b47,#991b34); color:#fff; box-shadow:0 5px 15px #a3203926; }
+﻿.learner-level-badge { display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; flex-shrink:0; vertical-align:middle; color:#a0213b; filter:drop-shadow(0 2px 3px #28374d18); }
+.learner-level-badge svg { display:block; width:100%; height:100%; overflow:visible; }
+.leaderboard-podium-name > .learner-level-badge { display:inline-flex; width:34px; height:34px; margin-top:0; color:#a0213b; }
+.learner-level-badge.is-max { color:#86182e; filter:drop-shadow(0 2px 4px #b72a4135); }
+.learner-level-trigger { display:inline-flex; align-items:center; justify-content:center; min-width:44px; min-height:44px; margin:-5px 0; border:1px solid transparent; border-radius:12px; cursor:pointer; vertical-align:middle; background:transparent; transition:background .15s,border-color .15s; }
+.learner-level-trigger:hover { background:#ffffffb3; border-color:#e1c4cd; }
+.learner-level-trigger:focus-visible,.learner-level-dialog :focus-visible { outline:3px solid #b52140; outline-offset:3px; }
+.learner-level-dialog { width:calc(100% - 32px); max-width:400px; max-height:calc(100dvh - 48px); margin:auto; padding:28px; overflow:auto; border:1px solid #fff; border-radius:26px; background:linear-gradient(135deg,#fff,#e8ecf3); box-shadow:0 28px 90px #24334e33,inset 0 1px 0 #fff; color:#29303d; }
+.learner-level-dialog::backdrop { background:#1d293d66; backdrop-filter:blur(7px); }
+.learner-level-close { position:absolute; top:14px; right:14px; display:grid; place-items:center; width:36px; height:36px; border:1px solid #dbe1ea; border-radius:12px; color:#687385; background:#ffffffa8; }
+.learner-level-heading { display:flex; align-items:center; gap:15px; margin-bottom:26px; padding-right:28px; }
+.learner-level-heading > .learner-level-badge { width:64px; height:64px; color:#a0213b; }
+.learner-level-heading h2 { margin:0 0 4px; font-size:25px; font-weight:750; letter-spacing:-.035em; }
+.learner-level-heading span { font-size:13px; color:#657083; font-weight:600; }
+.learner-level-next { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 12px; font-size:13px; color:#657083; font-weight:650; }
 .learner-level-progress { height:7px; overflow:hidden; border-radius:99px; background:#d7dde7; }
 .learner-level-progress > span { display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,#a61e39,#e84c66); transition:width .4s; }
-.learner-level-panel p,.learner-level-panel summary { margin-top:12px; font-size:13px; line-height:1.7; color:#5c6779; }
-.learner-level-panel summary { cursor:pointer; color:#98243a; font-weight:650; }
-@media(prefers-reduced-motion:reduce) { .learner-level-progress > span { transition:none; } }
+.learner-level-dialog > p:not(.learner-level-next),.learner-level-dialog summary,.learner-level-dialog details p { margin-top:12px; font-size:13px; line-height:1.7; color:#5c6779; }
+.learner-level-dialog summary { cursor:pointer; color:#98243a; font-weight:650; }
+@media(prefers-reduced-motion:reduce) { .learner-level-progress > span,.learner-level-trigger { transition:none; } }

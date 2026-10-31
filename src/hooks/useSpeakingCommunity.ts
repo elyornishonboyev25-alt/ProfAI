@@ -26,6 +26,8 @@ export function useSpeakingCommunity(enabled: boolean) {
   const [streams, setStreams] = useState<Record<string, MediaStream>>({})
   const [peerStates, setPeerStates] = useState<Record<string, string>>({})
   const [invitation, setInvitation] = useState<Invitation | null>(null)
+  const [blockedPeople, setBlockedPeople] = useState<{ id: string; name: string; avatarUrl: string | null }[]>([])
+  const [blockBusy, setBlockBusy] = useState(false)
   const [outgoingInvitation, setOutgoingInvitation] = useState<{ nickname: string; expiresAt: number } | null>(null)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
@@ -168,9 +170,10 @@ export function useSpeakingCommunity(enabled: boolean) {
             if (nextPartnerRef.current) { nextPartnerRef.current = false; void beginRoomRequest({ type: 'communityMatch' }) }
             break
           case 'communityInvitation': setInvitation(message); break
+          case 'communityBlocks': setBlockedPeople(message.people ?? []); setBlockBusy(false); break
           case 'communityInvitationCancelled': setInvitation(current => current?.id === message.id ? null : current); break
           case 'communityMatching': window.clearTimeout(timeoutRef.current); setMatching(true); break
-          case 'communityError': setError(message.message); if (!roomRef.current) stopMedia(); else if (pendingRef.current) releaseMicrophone(); break
+          case 'communityError': setBlockBusy(false); setError(message.message); if (!roomRef.current) stopMedia(); else if (pendingRef.current) releaseMicrophone(); break
           case 'communityNotice': setNotice(message.message); if (!message.message.startsWith('Invitation sent') && !roomRef.current && !leavingRef.current) stopMedia(); break
         }
       }
@@ -185,6 +188,7 @@ export function useSpeakingCommunity(enabled: boolean) {
         setOnline(0)
         setActivity('idle')
         setInvitation(null)
+        setBlockBusy(false)
         nextPartnerRef.current = false
         leavingRef.current = false
         const wasInRoom = !!roomRef.current
@@ -212,6 +216,8 @@ export function useSpeakingCommunity(enabled: boolean) {
       setActivity('idle')
       setSelfId('')
       setSelfName('')
+      setBlockedPeople([])
+      setBlockBusy(false)
       nextPartnerRef.current = false
       leavingRef.current = false
       stopMedia()
@@ -301,10 +307,22 @@ export function useSpeakingCommunity(enabled: boolean) {
     send({ type: 'communityState', muted: next.muted, hand: next.hand, side: next.side })
   }
   return {
-    connected, rooms, online, available, availablePeople, room, selfId, selfName, self, messages, streams, peerStates, invitation, outgoingInvitation, error, notice, busy, matching, activity, publicProfile,
+    connected, rooms, online, available, availablePeople, room, selfId, selfName, self, messages, streams, peerStates, invitation, outgoingInvitation, blockedPeople, blockBusy, error, notice, busy, matching, activity, publicProfile,
     resetActivity: () => { nextPartnerRef.current = false; setError(''); setNotice(''); send({ type: 'communityReset' }) },
     clearError: () => setError(''),
     reconnect: () => { setError(''); setReconnectKey(value => value + 1) },
+    blockCaller: () => {
+      if (!invitation || blockBusy || socketRef.current?.readyState !== WebSocket.OPEN) return
+      setBlockBusy(true)
+      setError('')
+      send({ type: 'communityBlock', id: invitation.id })
+    },
+    unblockCaller: (userId: string) => {
+      if (blockBusy || socketRef.current?.readyState !== WebSocket.OPEN) return
+      setBlockBusy(true)
+      setError('')
+      send({ type: 'communityUnblock', userId })
+    },
     create: (draft: RoomDraft) => beginRoomRequest({ type: 'communityCreate', ...draft }),
     join: (roomId: string) => beginRoomRequest({ type: 'communityJoin', roomId, listen: true }),
     takeSeat,

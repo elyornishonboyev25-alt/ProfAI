@@ -1,5 +1,6 @@
 /** Interface strings missing from the original Russian catalogs. */
 export const russianAdditions: Record<string, string> = {
+  'View level progress': 'Посмотреть прогресс уровня',
   'View results': 'Посмотреть результаты',
   'Back to leaderboard': 'Назад к рейтингу',
   'Back to Community': 'Назад к сообществу',

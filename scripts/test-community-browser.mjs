@@ -63,7 +63,16 @@ async function main() {
     if (req.url.startsWith('/fixture.js')) { res.setHeader('Content-Type', 'text/javascript; charset=utf-8'); res.end(bundle.outputFiles.find(file => file.path.endsWith('.js'))?.text ?? bundle.outputFiles[0].text) }
     else { res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.end(`<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}</style><div id="root"></div><script src="/fixture.js"></script>`) }
   })
-  const signaling = attachSpeakingSignaling(server, async token => token.startsWith('account:') ? { userId: token.slice(8), name: token.slice(8), avatarUrl: null, public: true } : null)
+  const blockedCallers = new Map()
+  const signaling = attachSpeakingSignaling(server, async token => token.startsWith('account:') ? { userId: token.slice(8), name: token.slice(8), avatarUrl: null, public: true } : null, {
+    load: async userId => [...(blockedCallers.get(userId)?.values() ?? [])],
+    set: async (blockerId, blockedId, blocked) => {
+      const people = blockedCallers.get(blockerId) ?? new Map()
+      if (blocked) people.set(blockedId, { userId: blockedId, name: blockedId, avatarUrl: null })
+      else people.delete(blockedId)
+      blockedCallers.set(blockerId, people)
+    },
+  })
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve))
   const browser = spawn(process.env.COMMUNITY_TEST_BROWSER || 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', ['--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check', '--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream', '--autoplay-policy=no-user-gesture-required', '--remote-debugging-port=0', '--user-data-dir=' + directory, 'about:blank'], { windowsHide: true, stdio: 'ignore' })
   const exited = new Promise(resolve => { browser.once('exit', resolve); browser.once('error', resolve) })
@@ -84,7 +93,7 @@ async function main() {
       const errors = []
       const send = (method, params = {}) => new Promise((resolve, reject) => {
         const requestId = ++id
-        const timeout = setTimeout(() => { pending.delete(requestId); reject(new Error(method)) }, method === 'Page.captureScreenshot' ? 45000 : 15000)
+        const timeout = setTimeout(() => { pending.delete(requestId); reject(new Error(`${method}: ${params.expression ?? ''}`)) }, method === 'Page.captureScreenshot' ? 45000 : 15000)
         pending.set(requestId, { resolve, reject, timeout })
         socket.send(JSON.stringify({ id: requestId, method, params }))
       })
@@ -337,6 +346,21 @@ async function main() {
     await host.until("!document.querySelector('.hub-pending') && document.querySelector('.hub-partner-card')");
     await host.click('Call now');
     await guest.until("document.querySelector('.hub-invitation')?.innerText.includes('Host')");
+    assert.equal(await guest.evaluate('window.captureStreams.every(stream=>stream.getTracks().every(track=>track.readyState===\'ended\'))'), true, 'Ringing does not activate the recipient microphone');
+    await guest.click('Block caller');
+    await guest.until("document.querySelector('[role=alertdialog]')?.innerText.includes('Block this caller?')");
+    await guest.click('Cancel');
+    await guest.until("!document.querySelector('[role=alertdialog]')");
+    await guest.click('Block caller');
+    await guest.evaluate("document.querySelector('[role=alertdialog] .is-danger').click()");
+    await guest.until("document.querySelector('.hub-blocked-callers')?.textContent.includes('Host')");
+    await host.until("!document.querySelector('.hub-pending') && !document.querySelector('.hub-partner-card')");
+    await guest.evaluate("document.querySelector('.hub-blocked-callers').open=true");
+    await guest.click('Unblock');
+    await guest.until("!document.querySelector('.hub-blocked-callers')");
+    await host.until("document.querySelector('.hub-partner-card')?.innerText.includes('Guest')");
+    await host.click('Call now');
+    await guest.until("document.querySelector('.hub-invitation')?.innerText.includes('Host')");
     await guest.click('Accept & join');
     await host.until("document.querySelector('.hub-room-header')?.innerText.includes('Private room')");
     await guest.until("document.querySelector('.hub-room-header')?.innerText.includes('Private room')");
@@ -412,7 +436,7 @@ async function main() {
     }
     assert.deepEqual(host.errors, [], 'Host has no browser exceptions')
     assert.deepEqual(guest.errors, [], 'Guest has no browser exceptions')
-    console.log('Community browser passed: two-way WebRTC audio, debate modes/teams/turns, random matching/cancellation/next partner and cross-tab recovery, private invitations and deep links, microphone release, chat, speaking-only navigation and legacy redirects, learner search/filters/reset/sorting/profile navigation/retry, independent learner scrolling and layouts at 320–1440px, visible call controls and champion refresh.')
+    console.log('Community browser passed: two-way WebRTC audio, debate modes/teams/turns, random matching/cancellation/next partner and cross-tab recovery, private invitations and deep links, declined calls, confirmed blocking and unblocking, microphone release, chat, speaking-only navigation and legacy redirects, learner search/filters/reset/sorting/profile navigation/retry, independent learner scrolling and layouts at 320–1440px, visible call controls and champion refresh.')
     await host.send('Browser.close').catch(() => {})
   } finally {
     connections.forEach(socket => socket.close())

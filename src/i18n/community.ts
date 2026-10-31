@@ -1,6 +1,21 @@
 import { useCopy } from './interface'
 
 const copy: Record<string, [string, string]> = {
+  'Your call settings are updating. Please try again.': ['Qo‘ng‘iroq sozlamalari yangilanmoqda. Qayta urining.', 'Настройки звонков обновляются. Повторите попытку.'],
+  'Incoming call': ['Kiruvchi qo‘ng‘iroq', 'Входящий звонок'],
+  'You can decline or let the call expire.': ['Rad etishingiz yoki javob bermasligingiz mumkin.', 'Можно отклонить звонок или не отвечать.'],
+  'Call time remaining': ['Qo‘ng‘iroqning qolgan vaqti', 'Оставшееся время звонка'],
+  'Block caller': ['Bloklash', 'Заблокировать'],
+  'Block this caller?': ['Bu foydalanuvchi bloklansinmi?', 'Заблокировать этого участника?'],
+  'They will not be able to call or match with you. You can unblock them in call settings.': ['U sizga qo‘ng‘iroq qila olmaydi va tasodifiy suhbatda sizga tushmaydi. Sozlamalardan blokni ochishingiz mumkin.', 'Участник не сможет звонить вам или попасть к вам при случайном подборе. Разблокировать можно в настройках звонков.'],
+  'Blocked callers': ['Bloklanganlar', 'Заблокированные участники'],
+  'Blocked people cannot call or match with you.': ['Bloklangan foydalanuvchilar sizga qo‘ng‘iroq qila olmaydi va tasodifiy suhbatda sizga tushmaydi.', 'Заблокированные участники не могут звонить вам или попасть к вам при случайном подборе.'],
+  'Unblock': ['Blokdan chiqarish', 'Разблокировать'],
+  'Caller blocked. They cannot call or match with you.': ['Foydalanuvchi bloklandi. U sizga qo‘ng‘iroq qila olmaydi va tasodifiy suhbatda sizga tushmaydi.', 'Участник заблокирован. Он не сможет звонить вам или попасть к вам при случайном подборе.'],
+  'Caller unblocked.': ['Foydalanuvchi blokdan chiqarildi.', 'Участник разблокирован.'],
+  'Call preferences could not load. Reconnect to try again.': ['Qo‘ng‘iroq sozlamalari yuklanmadi. Qayta ulaning.', 'Не удалось загрузить настройки звонков. Подключитесь заново.'],
+  'The call was declined, but blocking could not be saved. Please try again.': ['Qo‘ng‘iroq rad etildi, lekin bloklash saqlanmadi. Qayta urining.', 'Звонок отклонён, но блокировку сохранить не удалось. Повторите попытку.'],
+  'Unable to unblock this caller. Please try again.': ['Blokdan chiqarib bo‘lmadi. Qayta urining.', 'Не удалось разблокировать участника. Повторите попытку.'],
   'Call now': ['Qo‘ng‘iroq qilish', 'Позвонить'],
   'Call sounds on': ['Qo‘ng‘iroq ovozi yoqilgan', 'Звук звонка включён'],
   'Call sounds off': ['Qo‘ng‘iroq ovozi o‘chirilgan', 'Звук звонка выключен'],

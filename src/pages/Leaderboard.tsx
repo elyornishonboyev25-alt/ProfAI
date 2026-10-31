@@ -17,7 +17,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
-import LearnerLevel, { LevelBadge } from '@/components/profile/LearnerLevel'
+import { LevelBadge } from '@/components/profile/LearnerLevel'
 import UiText from '@/components/common/UiText'
 import { Skeleton } from '@/components/common/Skeleton'
 import LeaderboardAvatar from '@/components/leaderboard/LeaderboardAvatar'
@@ -64,7 +64,6 @@ export default function Leaderboard() {
   const { c } = useCopy()
   const navigate = useNavigate()
   const userId = useAuthStore((state) => state.user?.id)
-  const userXp = useAuthStore((state) => state.user?.xp ?? 0)
   const [period, setPeriod] = useState<'week' | 'month' | 'all'>('week')
   const [data, setData] = useState<LeaderboardResponse | null>(null)
   const [loading, setLoading] = useState(true)
@@ -350,7 +349,6 @@ export default function Leaderboard() {
               </div>
             )}
 
-            <LearnerLevel xp={data?.rows.find(row => row.isCurrentUser)?.lifetimeXp ?? userXp} />
             <section
               className="leaderboard-podium-section"
               aria-labelledby="podium-heading"

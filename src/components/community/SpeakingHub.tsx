@@ -10,6 +10,8 @@ import SpeakingLaunchpad, { ConversationSpark } from './SpeakingLaunchpad'
 import { useCallFeedback } from '@/hooks/useCallFeedback'
 import { Phone, Volume2, VolumeX, RefreshCw } from 'lucide-react'
 import '@/styles/speaking-calls.css'
+import IncomingCall from './IncomingCall'
+import { ShieldBan } from 'lucide-react'
 
 const KINDS = { conversation: 'Conversation', debate: 'Debate', ielts: 'IELTS practice' }
 const LEVELS = { all: 'All levels', beginner: 'Beginner', intermediate: 'Intermediate', advanced: 'Advanced' }
@@ -66,12 +68,8 @@ export default function SpeakingHub({ hub, invitedRoom, view = 'rooms' }: { hub:
     {hub.notice && !hub.outgoingInvitation ? <div className="hub-feedback" role="status">{t(hub.notice)}</div> : null}
     {blocked ? <div className="hub-activity-recovery" role="status"><Headphones size={23} /><div><b>{t('You already have an active session')}</b><p>{t('A room, search or invitation is still active in this account. End it to start a new conversation. This also closes it in other tabs.')}</p></div><button type="button" className="hub-button" onClick={hub.resetActivity}><PhoneOff size={16} />{t('End session & start again')}</button></div> : null}
     {view === 'partner' && hub.connected && !hub.publicProfile ? <div className="hub-activity-recovery"><LockKeyhole size={23} /><div><b>{t('Enable your public profile to find a speaking partner.')}</b><p>{t('Your nickname and study goals help other learners find you.')}</p></div><a className="hub-button" href="/profile">{t('Edit profile')}<ArrowRight size={16} /></a></div> : null}
-    {hub.invitation ? <div className="hub-invitation" role="status">
-      <span className="hub-invite-icon"><Phone /></span>
-      <div><b>{t('Speaking invitation')}</b><p>@{hub.invitation.from.name} {t('invites you to a private voice conversation.')}</p></div>
-      <button type="button" className="hub-button is-primary" disabled={!hub.connected || hub.busy || !!room} onClick={() => void hub.reply(true)}>{t('Accept & join')}</button>
-      <button type="button" className="hub-button" onClick={() => void hub.reply(false)}>{t('Decline')}</button>
-    </div> : null}
+    {hub.blockedPeople.length ? <details className="hub-blocked-callers"><summary><ShieldBan size={16} />{t('Blocked callers')}<span>{hub.blockedPeople.length}</span></summary><p>{t('Blocked people cannot call or match with you.')}</p><ul>{hub.blockedPeople.map(person => <li key={person.id}><span className="hub-blocked-avatar"><ProfileAvatar src={person.avatarUrl} name={person.name} alt="" /></span><b>@{person.name}</b><button type="button" className="hub-button" disabled={!hub.connected || hub.blockBusy} onClick={() => hub.unblockCaller(person.id)}>{t('Unblock')}</button></li>)}</ul></details> : null}
+    <IncomingCall key={hub.invitation?.id ?? 'no-call'} hub={hub} />
     {room ? <>
       <header className="hub-room-header">
         <div><span className="hub-eyebrow"><Radio size={14} />{t(room.private ? 'Private room' : 'Live')} · English</span><h1>{room.title}</h1></div>

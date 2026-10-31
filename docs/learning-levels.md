@@ -1,6 +1,6 @@
 # Learning levels
 
-Levels use lifetime earned XP and are capped at 10. A weekly or monthly leaderboard still ranks period XP; its level badges use lifetime XP. Levels are calculated on the server from XP, including for accounts with an older cached level. Existing XP is preserved.
+Levels use lifetime earned XP and are capped at 10. A weekly or monthly leaderboard still ranks period XP; its small numbered star badges use lifetime XP. Details open only when the level star is selected on a profile. The leaderboard has no large progress panel or ten-step ladder. Levels are calculated on the server from XP, including for accounts with an older cached level. Existing XP is preserved.
 
 | Level | Lifetime XP required |
 | --- | ---: |
@@ -20,3 +20,5 @@ The existing reward policies remain authoritative: completed test rewards depend
 Server milestones are in `backend/src/config/levelConfig.ts`; the display mirror is in `src/utils/learnerLevel.ts`. `scripts/tests/learning-experience-ui.tsx` verifies parity and boundary cases. This is an educational XP system inspired by numerical profile badges; Telegram's Stars rating is a separate, transaction-based system.
 
 Speaking calls use live socket availability, not the approximate online indicator from learner search. Both parties must accept the invitation flow before entering a private voice room. Microphones start muted and are requested only when a learner chooses to speak. Permission, missing-device, busy-device and connection failures have separate recovery messages. Call cues respect browser audio restrictions and can be muted.
+
+An incoming call can be declined, ignored until its deadline, or blocked after confirmation. Call blocks are stored in `SpeakingCallBlock` by account IDs, survive reconnects and server restarts, and are removed by account deletion cascades. They prevent direct invitations and random pairing in both directions. The caller receives a generic unavailable response. Each learner can view and undo their own blocks in Speaking Zone. Existing shared public rooms are unaffected. Deployments apply the additive migration through the existing backend start command.

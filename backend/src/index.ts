@@ -20,6 +20,15 @@ async function bootstrap() {
     const user = await prisma.user.findUnique({ where: { id: payload.sub }, select: { id: true, nickname: true, avatarUrl: true, profile: { select: { isPublic: true } } } })
     if (!user?.nickname) return null
     return { userId: user.id, name: user.nickname, avatarUrl: user.avatarUrl, public: user.profile?.isPublic !== false }
+  }, {
+    load: async userId => {
+      const rows = await prisma.speakingCallBlock.findMany({ where: { blockerId: userId }, select: { blocked: { select: { id: true, nickname: true, avatarUrl: true } } } })
+      return rows.map(row => ({ userId: row.blocked.id, name: row.blocked.nickname ?? 'Learner', avatarUrl: row.blocked.avatarUrl }))
+    },
+    set: async (blockerId, blockedId, blocked) => {
+      if (blocked) await prisma.speakingCallBlock.upsert({ where: { blockerId_blockedId: { blockerId, blockedId } }, create: { blockerId, blockedId }, update: {} })
+      else await prisma.speakingCallBlock.deleteMany({ where: { blockerId, blockedId } })
+    },
   })
 
   const server = httpServer.listen(env.PORT, () => {

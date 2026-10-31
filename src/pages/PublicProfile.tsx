@@ -1,5 +1,5 @@
 import CrownBadge from '@/components/fx/CrownBadge'
-import LearnerLevel, { LevelBadge } from '@/components/profile/LearnerLevel'
+import LearnerLevel from '@/components/profile/LearnerLevel'
 import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
@@ -197,7 +197,7 @@ export default function PublicProfile() {
               {p.fieldOfStudy ? <p className="mt-2 text-sm font-semibold text-slate-600">{p.fieldOfStudy}</p> : null}
               {p.bio ? <p className="mt-2 max-w-xl text-sm text-slate-600">{p.bio}</p> : null}
               <div className="mt-3 flex flex-wrap gap-2">
-                <LevelBadge xp={p.xp} />
+                <LearnerLevel xp={p.xp} />
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white px-3 py-1 text-xs font-bold text-slate-700"><Zap className="h-3.5 w-3.5 text-amber-500" /> {p.xp} XP</span>
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white px-3 py-1 text-xs font-bold text-slate-700"><Flame className="h-3.5 w-3.5 text-orange-500" /> {p.streak}  <UiText text={"day streak"} /> </span>
                 {p.country ? <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white px-3 py-1 text-xs font-bold text-slate-700"><MapPin className="h-3.5 w-3.5 text-blue-500" /> {p.country}</span> : null}
@@ -228,7 +228,6 @@ export default function PublicProfile() {
         </Reveal>
       ) : null}
 
-      <LearnerLevel xp={p.xp} />
       {xpBreakdown.length ? (
         <Reveal>
           <article className="surface-card p-5">

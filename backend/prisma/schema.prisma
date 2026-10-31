@@ -148,6 +148,8 @@ model User {
   vocabularyNotebooks                 VocabularyNotebook[]
   speakingEvaluations                 SpeakingEvaluation[]
   speakingSessions                    SpeakingSession[]
+  blockedSpeakingCallers              SpeakingCallBlock[]                  @relation("SpeakingCallBlocker")
+  speakingCallBlocksReceived          SpeakingCallBlock[]                  @relation("SpeakingCallBlocked")
   shadowingVideos                     ShadowingVideo[]                     @relation("ShadowingSubmitter")
   podcastVideos                       PodcastVideo[]                       @relation("PodcastSubmitter")
   createdTests                        Test[]                               @relation("TestAuthor")
@@ -190,6 +192,18 @@ model User {
 
   @@index([xp, level])
   @@index([createdAt])
+}
+
+// Call blocks follow account identity across sessions and devices.
+model SpeakingCallBlock {
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+  blocker   User @relation("SpeakingCallBlocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked   User @relation("SpeakingCallBlocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+  @@index([blockedId])
 }
 
 // Email-keyed trial data is removed with permanent account deletion.

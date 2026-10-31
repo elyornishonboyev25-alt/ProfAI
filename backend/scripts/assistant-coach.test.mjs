@@ -116,7 +116,9 @@ test('audio grades use equal weights and reject invented answer evidence', () =>
   assert.equal(validateAudioAssessment(JSON.stringify(result), history, [0]).overallBand, 6.5)
   assert.deepEqual(validateAudioAssessment(JSON.stringify(result), history, [0]).improvedAnswers, result.improvedAnswers)
   for (const improvedAnswers of [[], undefined, [{ ...result.improvedAnswers[0], original: 'Invented answer' }], [{ ...result.improvedAnswers[0], answerIndex: 1 }], [...result.improvedAnswers, ...result.improvedAnswers], [{ ...result.improvedAnswers[0], improved: ' ' }]]) {
-    assert.throws(() => validateAudioAssessment(JSON.stringify({ ...result, improvedAnswers }), history, [0]))
+    const assessed = validateAudioAssessment(JSON.stringify({ ...result, improvedAnswers }), history, [0])
+    assert.deepEqual(assessed.improvedAnswers, [], 'Invalid optional rewrites must not be attached to the candidate answer')
+    assert.equal(assessed.overallBand, 6.5, 'Missing coaching must not discard an otherwise grounded assessment')
   }
   assert.throws(() => validateAudioAssessment(JSON.stringify(result), history, [1]))
   assert.throws(() => validateAudioAssessment(JSON.stringify({ ...result, evidence: [{ ...result.evidence[0], quote: 'invented sentence' }] }), history, [0]))

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import React, { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { apiClient } from '@/lib/apiClient'
+import { apiClient, ApiError } from '@/lib/apiClient'
 import { evaluateSpeaking, type SpeakingEvaluation } from '@/services/speakingAI'
 import { analyseTranscript, estimateBandsFromStats } from '@/lib/speakingScoring'
 import { writingSectionBand, writingVisualContext } from '@/lib/writingScoring'
@@ -15,6 +15,9 @@ import IELTSSpeakingTest from '@/pages/IELTSSpeakingTest'
 import { findIeltsSpeakingDay } from '@/utils/ieltsSpeakingCatalog'
 import { accountStorageFor } from '@/utils/accountStorage'
 import i18n from '@/i18n'
+import { saveTestAudio } from '@/utils/testAudioStorage'
+import { regradeFullMockSpeaking } from '@/services/fullMockSpeakingReview'
+import type { FullMockSectionResult } from '@/utils/ieltsMockCatalog'
 
 export async function run() {
   const originalPost = apiClient.post
@@ -37,6 +40,43 @@ export async function run() {
     const graded = await evaluateSpeaking({ modeLabel: 'Speaking Mock 1', history, stats, audio })
     assert.equal(graded.overallBand, 8, 'Short identification answers do not impose an arbitrary band ceiling')
     assert.equal(graded.assessmentMode, 'audio')
+    const attempts: Array<{ body: unknown; signal?: AbortSignal | null }> = []
+    apiClient.post = (async (path: string, body: unknown, options?: { signal?: AbortSignal | null }) => {
+      assert.equal(path, '/ai/speaking-audio/assess')
+      attempts.push({ body, signal: options?.signal })
+      if (attempts.length === 1) throw new ApiError('Provider temporarily unavailable.', 502, 'GEMINI_503')
+      return evaluation
+    }) as typeof apiClient.post
+    assert.equal((await evaluateSpeaking({ modeLabel: 'Speaking Mock 11', history, stats, audio })).source, 'ai')
+    assert.equal(attempts.length, 2)
+    assert.equal(attempts[0].body, attempts[1].body, 'Retry reuses the same prepared recordings')
+    assert.equal(attempts[0].signal, attempts[1].signal, 'Retries share the original assessment deadline')
+    for (const failure of [new ApiError('Login required.', 401), new ApiError('Study limit reached.', 403), new ApiError('Too many requests.', 429), new ApiError('Audio is too large.', 413), new ApiError('AI is not configured on the server yet.', 503, 'AI_NOT_CONFIGURED')]) {
+      let calls = 0
+      apiClient.post = (async () => { calls++; throw failure }) as typeof apiClient.post
+      const result = await evaluateSpeaking({ modeLabel: 'Speaking Mock 11', history, stats, audio })
+      assert.equal(calls, 1, 'Permanent failures must not be retried')
+      assert.equal(result.source, 'offline')
+      assert.ok(result.summary.includes(failure.message), 'The failure reason is preserved')
+    }
+    let outageCalls = 0
+    apiClient.post = (async () => { outageCalls++; throw new ApiError('Provider unavailable.', 503) }) as typeof apiClient.post
+    const outage = await evaluateSpeaking({ modeLabel: 'Speaking Mock 11', history, stats, audio })
+    assert.equal(outageCalls, 2, 'Persistent outages have exactly one retry')
+    assert.equal(outage.source, 'offline')
+    await act(async () => root.render(<SpeakingResult evaluation={outage} modeLabel="Speaking Mock 11" onRetry={() => {}} onRegrade={() => {}} onExit={() => {}} />))
+    assert.ok(document.querySelector('[role="alert"]')?.textContent?.includes('Provider unavailable.'))
+
+    const checkpointKey = 'speaking-assessment-recovery'
+    accountStorageFor('guest').setItem(checkpointKey, JSON.stringify({ history, audioKey: 'recovery-audio' }))
+    await Promise.all(audio.map(({ blob, answerIndex }) => saveTestAudio('guest', `recovery-audio:answer:${answerIndex}`, blob)))
+    apiClient.post = (async (path: string, body: { audio: unknown[] }) => {
+      assert.equal(path, '/ai/speaking-audio/assess')
+      assert.equal(body.audio.length, audio.length)
+      return evaluation
+    }) as typeof apiClient.post
+    const savedAttempt: FullMockSectionResult = { band: 0, assessmentStatus: 'pending', testId: 'speaking-full-11', completedAt: '2026-10-31', speaking: { sessionKey: checkpointKey, transcript: history, evaluation: outage } }
+    assert.equal((await regradeFullMockSpeaking('guest', savedAttempt)).source, 'ai', 'A previously failed saved attempt can be assessed without retaking it')
     requests = []
     apiClient.post = (async (path: string) => { requests.push(path); throw new Error('Provider unavailable') }) as typeof apiClient.post
     const failed = await evaluateSpeaking({ modeLabel: 'Speaking Mock 1', history, stats, audio })

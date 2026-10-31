@@ -10,6 +10,7 @@
     "dev:tunnel": "vite --host",
     "validate:speaking": "node scripts/validate-speaking-bank.mjs",
     "test:speaking-ui": "node scripts/test-listening-parts-ui.mjs scripts/tests/speaking-ui.tsx",
+    "test:speaking-feedback": "npm --prefix backend run build && node --test backend/scripts/ielts-assessment.test.mjs && node scripts/test-listening-parts-ui.mjs scripts/tests/ielts-assessment-ui.tsx",
     "test:ielts-review": "node scripts/test-listening-parts-ui.mjs scripts/tests/ielts-review-improvements-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/ielts-review-recovery-ui.tsx",
     "test:ielts-workspace": "node scripts/test-listening-parts-ui.mjs scripts/tests/ielts-workspace-ui.tsx",
     "test:ielts-catalog-results": "node scripts/test-listening-parts-ui.mjs scripts/tests/ielts-catalog-results-ui.tsx",

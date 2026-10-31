@@ -6,7 +6,7 @@
 import { callGeminiAPI, extractJSON } from './geminiAI'
 import type { SpeechStats } from '@/lib/speakingScoring'
 import { estimateBandsFromStats } from '@/lib/speakingScoring'
-import { apiClient } from '@/lib/apiClient'
+import { apiClient, ApiError } from '@/lib/apiClient'
 import { withAssessmentDeadline } from '@/utils/assessmentDeadline'
 import { collectSpeakingRewrites, validateSpeakingRewrites } from '../../backend/src/services/speakingRewrites'
 import { FAIR_ASSESSMENT_POLICY, SPEAKING_CALIBRATION } from '../../backend/src/services/ieltsAssessmentPolicy'
@@ -195,6 +195,18 @@ export type EvaluateParams = {
   expectedAudioAnswers?: number[]
 }
 
+async function requestSpeakingAssessment(path: string, body: unknown, signal: AbortSignal) {
+  const request = () => apiClient.post<Omit<SpeakingEvaluation, 'stats'>>(path, body, { signal })
+  try { return await request() }
+  catch (error) {
+    // Retry a temporary gateway/provider failure once, using the same recordings
+    // and deadline. Authentication, billing and invalid uploads need user action.
+    if (signal.aborted || !(error instanceof ApiError) || ![502, 503, 504].includes(error.status) || error.code === 'AI_NOT_CONFIGURED') throw error
+    signal.throwIfAborted()
+    return request()
+  }
+}
+
 export async function evaluateSpeaking(params: EvaluateParams): Promise<SpeakingEvaluation> {
   if (!params.history.some((turn) => turn.role === 'candidate' && turn.text.trim())) {
     return offlineEvaluation(params)
@@ -210,10 +222,10 @@ export async function evaluateSpeaking(params: EvaluateParams): Promise<Speaking
           data: await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onerror = () => reject(new Error('Could not read audio.')); reader.onload = () => resolve(String(reader.result).split(',')[1] ?? ''); reader.readAsDataURL(blob) }),
         })))
         if (signal.aborted) throw new Error('Assessment timed out.')
-        const response = await apiClient.post<Omit<SpeakingEvaluation, 'stats'>>('/ai/speaking-audio/assess', { modeLabel: params.modeLabel, history: params.history, audio, durationSec: params.stats.durationSec }, { signal })
+        const response = await requestSpeakingAssessment('/ai/speaking-audio/assess', { modeLabel: params.modeLabel, history: params.history, audio, durationSec: params.stats.durationSec }, signal)
         return { response, assessmentMode: 'audio' as const }
       }
-      const response = await apiClient.post<Omit<SpeakingEvaluation, 'stats'>>('/ai/speaking-audio/assess-transcript', { modeLabel: params.modeLabel, history: params.history, durationSec: params.stats.durationSec }, { signal })
+      const response = await requestSpeakingAssessment('/ai/speaking-audio/assess-transcript', { modeLabel: params.modeLabel, history: params.history, durationSec: params.stats.durationSec }, signal)
       return { response, assessmentMode: 'transcript' as const }
     })
     if (response.assessmentMode !== assessmentMode || response.source !== 'ai' ||
@@ -226,8 +238,8 @@ export async function evaluateSpeaking(params: EvaluateParams): Promise<Speaking
     const pronunciationBand = assessmentMode === 'audio' ? clampBand(response.pronunciationBand) : 0
     const overallBand = clampBand((fluencyBand + lexicalBand + grammarBand + pronunciationBand) / (assessmentMode === 'audio' ? 4 : 3))
     return { ...response, improvedAnswers, fluencyBand, lexicalBand, grammarBand, pronunciationBand, overallBand, stats: params.stats }
-  } catch {
-    return offlineEvaluation(params)
+  } catch (error) {
+    return offlineEvaluation(params, error)
   }
 }
 
@@ -374,11 +386,12 @@ Analyse and return ONLY valid JSON.`
   }
 }
 
-function offlineEvaluation(params: EvaluateParams): SpeakingEvaluation {
+function offlineEvaluation(params: EvaluateParams, error?: unknown): SpeakingEvaluation {
   const bands = estimateBandsFromStats(params.stats)
+  const reason = error instanceof Error ? error.message.trim().slice(0, 500) : ''
   return {
     ...bands,
-    summary: params.stats.wordCount === 0 ? 'No clear answer was captured. Check your microphone and try again.' : 'Assessment is temporarily unavailable. Your answers are kept; retry grading to receive a band based on your actual performance.',
+    summary: params.stats.wordCount === 0 ? 'No clear answer was captured. Check your microphone and try again.' : `${reason || 'Assessment is temporarily unavailable.'} Your answers are kept; retry grading to receive a band based on your actual performance.`,
     strengths: [], weaknesses: [], improvementPriorities: [],
     stats: params.stats, source: 'offline', assessmentMode: 'offline',
   }

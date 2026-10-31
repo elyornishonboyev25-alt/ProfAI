@@ -17,11 +17,12 @@ function clear() {
   }
 }
 
-/** Remembers `?ref=CODE` from an invitation link until the visitor has an account. */
+/** Remembers an invitation or promo link until the visitor has an account. */
 export function captureReferralFromUrl() {
   if (typeof window === 'undefined') return
   try {
-    const code = new URLSearchParams(window.location.search).get('ref')
+    const params = new URLSearchParams(window.location.search)
+    const code = params.get('promo') ?? params.get('ref')
     if (code && CODE_PATTERN.test(code)) localStorage.setItem(STORAGE_KEY, code.toUpperCase())
   } catch {
     // Ignore unavailable storage.
@@ -34,7 +35,7 @@ export async function claimPendingReferral() {
   if (!code) return
   try {
     const { apiClient } = await import('@/lib/apiClient')
-    await apiClient.post('/referrals/claim', { code })
+    await apiClient.post('/promo/redeem', { code })
   } catch {
     // Invalid, expired or already-claimed invitations are not retried.
   }

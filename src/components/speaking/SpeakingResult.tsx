@@ -1,3 +1,4 @@
+import TestLeaderboard from '@/components/results/TestLeaderboard'
 import { motion } from 'framer-motion'
 import {
   ArrowLeft,
@@ -42,6 +43,7 @@ function bandWord(band: number): string {
 }
 
 export default function SpeakingResult({
+  testId,
   evaluation,
   modeLabel,
   transcript,
@@ -52,6 +54,7 @@ export default function SpeakingResult({
   embedded = false,
   onImprovedAnswers,
 }: {
+  testId?: string
   evaluation: SpeakingEvaluation
   modeLabel: string
   transcript?: ExaminerTurn[]
@@ -98,7 +101,7 @@ export default function SpeakingResult({
 
       <p className="mt-3 text-center text-xs leading-5 text-slate-500">{unavailable ? 'No band was awarded. Your answers are available for another assessment.' : evaluation.assessmentMode === 'audio' ? 'IELTS-style practice estimate using your answers and recordings. Four criteria carry equal weight. This is not an official IELTS score.' : 'This estimate uses your transcribed answers. Pronunciation was not assessed; it needs audio or examiner review.'}</p>
       <p className="mt-2 text-center"><a href="https://ielts.org/cdn/ielts-guides/ielts-speaking-band-descriptors.pdf" target="_blank" rel="noreferrer" className="text-xs font-semibold text-red-700 underline">Official IELTS Speaking descriptors</a></p>
-      {evaluation.source === 'offline' && onRegrade && !reviewMode ? <div className="surface-card mt-4 p-4 text-center"><p className="mb-3 text-sm text-slate-600">Your answers are kept in this session. Retry AI feedback without taking the test again.</p><button onClick={onRegrade} className="speaking-record-button"><Sparkles className="h-4 w-4" /> Retry AI feedback</button></div> : null}
+      {evaluation.source === 'offline' && onRegrade && !reviewMode ? <div className="surface-card mt-4 p-4 text-center"><p role="alert" className="mb-2 text-sm text-slate-700">{evaluation.summary}</p><p className="mb-3 text-sm text-slate-600">Retry AI feedback without taking the test again.</p><button onClick={onRegrade} className="speaking-record-button"><Sparkles className="h-4 w-4" /> Retry AI feedback</button></div> : null}
 
       {/* Criteria gauges */}
       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -207,6 +210,7 @@ export default function SpeakingResult({
         </div>
       ) : null}
 
+      {testId && <details className="ir-glass mt-6 p-5"><summary className="cursor-pointer font-bold">Test leaderboard</summary><div className="mt-5"><TestLeaderboard testId={testId} title={modeLabel} eligible={!unavailable} /></div></details>}
       {/* Actions */}
       {!embedded && <div className="mt-6 flex flex-wrap gap-3">
         {!reviewMode ? <button onClick={onRetry} className="arena-primary-btn cta-sheen px-6 py-3">

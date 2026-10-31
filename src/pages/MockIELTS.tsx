@@ -21,9 +21,9 @@ import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import './mock-ielts.css'
 import {
   formatMockDuration,
-  getFullMockOverallBand,
   getFullMockCatalog,
-  getFullMockCompletedSections,
+  getFullMockResults,
+  calculateFullMockOverallBand,
   FULL_MOCK_PROGRESS_EVENT,
   MOCK_SECTION_COUNT,
   retakeFullMock,
@@ -79,10 +79,11 @@ function IELTSMockCatalog() {
     }
   }, [])
 
-  const completedByMock = useMemo(() => {
+  const resultsByMock = useMemo(() => {
     void progressVersion
-    return new Map(mocks.map((mock) => [mock.id, new Set(getFullMockCompletedSections(mock.id))]))
+    return new Map(mocks.map((mock) => [mock.id, getFullMockResults(mock.id, owner)]))
   }, [mocks, progressVersion, revision, owner])
+  const completedByMock = useMemo(() => new Map(mocks.map(mock => [mock.id, new Set(Object.keys(resultsByMock.get(mock.id) ?? {}) as MockSectionKey[])])), [mocks, resultsByMock])
   const inProgressCount = useMemo(() => [...completedByMock.values()].filter((done) => done.size > 0 && done.size < MOCK_SECTION_COUNT).length, [completedByMock])
   const completedCount = useMemo(() => [...completedByMock.values()].filter((done) => done.size === MOCK_SECTION_COUNT).length, [completedByMock])
 
@@ -159,6 +160,7 @@ function IELTSMockCatalog() {
             const doneCount = doneSections.size
             const finished = doneCount === MOCK_SECTION_COUNT
             const inProgress = doneCount > 0 && !finished
+            const overall = finished ? calculateFullMockOverallBand(resultsByMock.get(mock.id) ?? {}) : null
 
             return (
               <article
@@ -199,9 +201,9 @@ function IELTSMockCatalog() {
                     <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-red-100"><div className="h-full rounded-full bg-gradient-to-r from-red-700 to-red-400" style={{ width: `${(doneCount / MOCK_SECTION_COUNT) * 100}%` }} /></div>
                   </div>
                 ) : finished ? (
-                  <span className="mt-3 inline-flex items-center gap-1 self-start rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-emerald-700"><CheckCircle2 className="h-3.5 w-3.5" /> 4/4 completed</span>
+                  <span className="mt-3 inline-flex flex-wrap items-center gap-1 self-start rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-emerald-700"><CheckCircle2 className="h-3.5 w-3.5" /> {overall !== null && <strong>Overall {overall.toFixed(1)} ·</strong>} 4/4 completed{overall === null && <span>· Assessment pending</span>}</span>
                 ) : null}
-                {finished && getFullMockOverallBand(mock.id) !== null ? <CatalogScore score={getFullMockOverallBand(mock.id)!} maximum={9} label="Overall band" detail="4 skills completed" /> : null}
+                {finished && overall !== null ? <CatalogScore score={overall} maximum={9} label="Overall band" detail="4 skills completed" /> : null}
 
                 <div className="mock-ielts-card-footer mt-auto flex items-end justify-between gap-2 pt-6">
                   <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-500"><Clock3 className="h-4 w-4 shrink-0" /> {formatMockDuration(mock.totalMinutes)}{!finished && ' session'}</span>

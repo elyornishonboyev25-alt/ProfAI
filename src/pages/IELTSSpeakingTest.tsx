@@ -1,3 +1,5 @@
+import AttemptEntryBoundary from '@/components/tests/AttemptEntryBoundary'
+import { testReturnPath } from '@/utils/testNavigation'
 import { useActiveTest } from '@/hooks/useActiveTest'
 import { useIeltsAttemptResume } from '@/hooks/useIeltsAttemptResume'
 import { resolveFullMockRouteState } from '@/utils/fullMockRouteState'
@@ -110,7 +112,7 @@ function questionsForDay(day: SpeakingDayEntry): QuestionItem[] {
 }
 
 export default function IELTSSpeakingTest() {
-  return <FullMockSectionGate><SpeakingTestContent /></FullMockSectionGate>
+  return <AttemptEntryBoundary exam="IELTS"><FullMockSectionGate><SpeakingTestContent /></FullMockSectionGate></AttemptEntryBoundary>
 }
 
 function SpeakingTestContent() {
@@ -121,6 +123,7 @@ function SpeakingTestContent() {
   const mockContext = (routeState as { mock?: { id: string; section: string } } | null)?.mock
   const mockFrom = (routeState as { from?: string } | null)?.from
   const exitTest = () => {
+    if ((routeState as { returnTo?: string } | null)?.returnTo) { navigate(testReturnPath(routeState, '/ielts')); return }
     if (mockContext?.id) {
       navigate(`/mock/ielts/${mockContext.id}`, { state: { from: mockFrom } })
       return
@@ -225,6 +228,7 @@ function SpeakingTestContent() {
               completedAt: new Date().toISOString(),
               assignmentId: new URLSearchParams(location.search).get('assignmentId') ?? undefined,
               breakdown: {
+                testId: mode.mock.id,
                 fluency: analysis.fluencyBand,
                 lexical: analysis.lexicalBand,
                 grammar: analysis.grammarBand,
@@ -522,13 +526,20 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
       setFinished(true)
       if (result.source === 'ai') {
         saveSpeakingDayHistory(owner, day, result, history, audioKey)
+        if (owner !== 'guest') void learningCenterApi.syncResult({
+          sourceKey: `speaking-day-${day.id}-${audioKey.split(':').pop()}`,
+          sourceType: 'IELTS_SPEAKING_DAY', examType: 'IELTS', skill: 'IELTS_SPEAKING',
+          title: day.title, score: result.overallBand, maxScore: 9,
+          durationSec: Math.round(result.stats.durationSec), completedAt: new Date().toISOString(),
+          breakdown: { testId: day.id },
+        }).catch(() => {})
         onComplete()
       }
     } finally { if (!disposedRef.current) setEvaluating(false) }
   }
 
   if (evaluating) return <div className="surface-card mx-auto mt-8 max-w-2xl p-8 text-center"><Loader2 className="mx-auto h-8 w-8 animate-spin text-red-500" /><p className="mt-3 text-sm font-semibold text-slate-700">Assessing all your answers using the IELTS criteria…</p></div>
-  if (finished && evaluation) return <SpeakingResult evaluation={evaluation} transcript={history} modeLabel={day.title} onRetry={() => setFinished(false)} onRegrade={() => void finishPractice()} onExit={onExit} />
+  if (finished && evaluation) return <SpeakingResult testId={day.id} evaluation={evaluation} transcript={history} modeLabel={day.title} onRetry={() => setFinished(false)} onRegrade={() => void finishPractice()} onExit={onExit} />
   if (finished) return <div className="surface-card mx-auto mt-8 max-w-2xl p-6 text-center"><p className="text-sm text-slate-600">Your saved answers are ready for assessment using the IELTS criteria.</p><button onClick={() => void finishPractice()} className="arena-primary-btn mt-4">Assess saved answers</button></div>
 
   return (

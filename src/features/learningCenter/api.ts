@@ -87,5 +87,8 @@ export const learningCenterApi = {
     completedAt?: string
     breakdown?: Record<string, unknown>
     assignmentId?: string
-  }) => apiClient.post('/learning-centers/results/sync', input),
+  }) => apiClient.post('/learning-centers/results/sync', input).then(result => {
+    if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('smarttest:attempt-submitted'))
+    return result
+  }),
 }

@@ -1,3 +1,5 @@
+import AttemptEntryBoundary from '@/components/tests/AttemptEntryBoundary'
+import { testReturnPath } from '@/utils/testNavigation'
 import { accountStorageFor } from '@/utils/accountStorage'
 import { resolveFullMockRouteState } from '@/utils/fullMockRouteState'
 import { saveIeltsObjectiveAttempt } from '@/utils/saveIeltsObjectiveAttempt'
@@ -47,7 +49,7 @@ function clamp(value: number, min: number, max: number) {
 }
 
 export default function TestInterface() {
-  return <FullMockSectionGate><TestInterfaceContent /></FullMockSectionGate>
+  return <AttemptEntryBoundary exam="IELTS"><FullMockSectionGate><TestInterfaceContent /></FullMockSectionGate></AttemptEntryBoundary>
 }
 
 function TestInterfaceContent() {
@@ -63,6 +65,9 @@ function TestInterfaceContent() {
     }
     sourceTest?: IELTSTest
     fromResults?: boolean
+    returnTo?: string
+    resultBackTo?: string
+    fullMockReview?: { mockId: string; completedAt: string }
     entry?: string
     from?: string
     catalogFilter?: string
@@ -246,6 +251,7 @@ function TestInterfaceContent() {
         test: testData,
         mock: mockContext,
         from: mockFrom,
+        returnTo: routeState?.returnTo,
       },
     })
   }
@@ -258,10 +264,13 @@ function TestInterfaceContent() {
           test: testData ?? sourceTest ?? undefined,
           mock: mockContext,
           from: mockFrom,
+          returnTo: routeState?.resultBackTo,
         },
       })
       return
     }
+
+    if (routeState?.returnTo) { navigate(testReturnPath(routeState, '/ielts'), { state: { fullMockReview: routeState.fullMockReview } }); return }
 
     if (mockContext?.id) {
       navigate(`/mock/ielts/${mockContext.id}`, { state: { from: mockFrom } })

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { ChevronRight, Trophy } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useAccountDataRevision } from '@/hooks/useAccountDataRevision'
@@ -12,9 +12,13 @@ export default function FullMockAttemptHistory() {
   const owner = useAuthStore(state => state.user?.id ?? 'guest')
   useAccountDataRevision()
   const navigate = useNavigate()
+  const location = useLocation()
   const attempts = getFullMockAttempts(owner)
   const [selected, setSelected] = useState<FullMockAttempt | null>(null)
-  useEffect(() => { setSelected(null) }, [owner])
+  const requested = (location.state as { fullMockReview?: { mockId: string; completedAt: string } } | null)?.fullMockReview
+  useEffect(() => {
+    setSelected(requested ? getFullMockAttempts(owner).find(attempt => attempt.mockId === requested.mockId && attempt.completedAt === requested.completedAt) ?? null : null)
+  }, [owner, requested?.mockId, requested?.completedAt])
   useEffect(() => {
     if (!selected) return
     const previous = document.body.style.overflow
@@ -52,7 +56,7 @@ export default function FullMockAttemptHistory() {
         onBack={() => setSelected(null)} onReview={section => {
           const saved = selected.sections[section.key]
           if (!section.launchPath || !saved?.result) return
-          navigate(section.launchPath, { state: { reviewPayload: { result: saved.result, showCorrectAnswers: true }, fromResults: false } })
+          navigate(section.launchPath, { state: { reviewPayload: { result: saved.result, showCorrectAnswers: true }, fromResults: false, returnTo: '/profile', fullMockReview: { mockId: selected.mockId, completedAt: selected.completedAt } } })
         }} />
     </div>, document.body)}
   </section>

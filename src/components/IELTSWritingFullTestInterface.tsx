@@ -1,4 +1,5 @@
 import { useActiveTest } from '@/hooks/useActiveTest'
+import TestLeaderboard from '@/components/results/TestLeaderboard'
 import { useIeltsAttemptResume } from '@/hooks/useIeltsAttemptResume'
 import { saveActiveTestPaper, clearActiveTestPaper } from '@/utils/activeTestPaper'
 import { accountStorageFor } from '@/utils/accountStorage'
@@ -323,6 +324,7 @@ export default function IELTSWritingFullTestInterface({
           completedAt: savedEntries[0].savedAt,
           assignmentId: searchParams.get('assignmentId') ?? undefined,
           breakdown: {
+            testId: fullTest.id,
             wordCount: totalWordCount,
             tasks: tasks.map((task, index) => ({
               taskType: task.taskType,
@@ -522,6 +524,7 @@ export default function IELTSWritingFullTestInterface({
           </div>
 
           <div className="mt-5 space-y-5">
+            <details className="ir-glass p-5 mt-5"><summary className="cursor-pointer font-bold">Test leaderboard</summary><div className="mt-5"><TestLeaderboard testId={fullTest.id} title={fullTest.title} /></div></details>
             {tasks.map((task, index) => {
               const evaluation = evaluations[task.id]
               if (!evaluation) return null

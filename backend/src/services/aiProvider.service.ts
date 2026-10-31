@@ -131,7 +131,9 @@ async function requestGemini(input: GenerateAiTextInput): Promise<ProviderResult
         const parsed = parseDataUrl(image)
         return { inlineData: parsed }
       })
-      const audioParts = (input.audio ?? []).map((audio) => ({ inlineData: audio }))
+      // Application metadata (e.g. a Speaking answerIndex) is not a Blob field.
+      // Explicitly serialize the provider contract even when callers pass richer objects.
+      const audioParts = (input.audio ?? []).map(({ mimeType, data }) => ({ inlineData: { mimeType, data } }))
       const operation = input.onText ? 'streamGenerateContent?alt=sse' : 'generateContent'
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:${operation}`
 

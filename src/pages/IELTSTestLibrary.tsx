@@ -1,8 +1,8 @@
 import { lazy, Suspense, useEffect, useState, type KeyboardEvent } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { BookOpenText, Headphones, Layers3, Mic2, PenLine } from 'lucide-react'
+import { BookOpenText, Headphones, Layers3, Mic2, PenLine, FolderClock } from 'lucide-react'
+import InProcessPanel from '@/components/tests/InProcessPanel'
 import BrandPageLoader from '@/components/common/BrandPageLoader'
-import ResumeIeltsAttempts from '@/components/ielts/ResumeIeltsAttempts'
 import { Link } from 'react-router-dom'
 const IELTSSectionTests = lazy(() => import('./IELTSSectionTests'))
 const IELTSWritingTests = lazy(() => import('./IELTSWritingTests'))
@@ -15,6 +15,7 @@ const skills = [
   { id: 'writing', label: 'Writing', icon: PenLine, detail: 'Task 1 and Task 2' },
   { id: 'speaking', label: 'Speaking', icon: Mic2, detail: 'Fluency and feedback' },
   { id: 'mocks', label: 'Full mocks', icon: Layers3, detail: 'All four skills together' },
+  { id: 'in-process', label: 'In process', icon: FolderClock, detail: 'Continue your saved tests' },
 ] as const
 
 type TabId = (typeof skills)[number]['id']
@@ -58,7 +59,6 @@ export default function IELTSTestLibrary() {
   return (
     <main className="workspace-page relative min-h-screen px-4 pb-20 pt-3 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-[1480px]">
-        <ResumeIeltsAttempts />
         <div className="mb-3 flex justify-end"><Link to="/profile" className="text-sm font-bold text-red-700">My Results</Link></div>
         <div id="ielts-skill-tabs" className="sticky top-2 z-20 rounded-2xl border border-white bg-white/95 p-2 shadow-[0_12px_35px_rgba(15,23,42,.09)]">
           <div role="tablist" aria-label="IELTS skills" className="flex gap-2 overflow-x-auto">
@@ -72,6 +72,7 @@ export default function IELTSTestLibrary() {
             {activeSkill === 'writing' && <IELTSWritingTests embedded />}
             {activeSkill === 'speaking' && <IELTSSpeakingTests embedded />}
             {activeSkill === 'mocks' && <MockIELTS embedded />}
+            {activeSkill === 'in-process' && <InProcessPanel exam="IELTS" showEmpty />}
           </Suspense>
         </div>
       </div>

@@ -952,6 +952,7 @@ export default function ExaminerSession({
   if (phase === 'result' && evaluation) {
     return (
       <SpeakingResult
+        testId={sessionId}
         evaluation={evaluation}
         modeLabel={modeLabel}
         transcript={historyRef.current}

@@ -165,7 +165,7 @@ export default function Profile() {
     if (target.type === 'writing') setWritingEntry(target.entry)
     else if (target.type === 'speaking') setSpeakingEntry(target.entry)
     else if (target.type === 'sat') navigate(`/sat/results/${encodeURIComponent(target.attemptId)}`)
-    else navigate(`/results/${target.testId}`, { state: { result: target.result } })
+    else navigate(`/results/${target.testId}`, { state: { result: target.result, returnTo: '/profile' } })
   }
 
   const formatDate = (time: number) => {

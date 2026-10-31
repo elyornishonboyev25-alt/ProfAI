@@ -1,3 +1,4 @@
+import ConfirmDialog from '@/components/common/ConfirmDialog'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowLeft,
@@ -265,9 +266,10 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
       .sort((a, b) => a[1].correct / a[1].total - b[1].correct / b[1].total)
       .slice(0, 5)
   }, [history, mockHistory])
-  const start = () => {
+  const [replaceSetOpen, setReplaceSetOpen] = useState(false)
+  const start = (replacementConfirmed = false) => {
     if (!filtered.length) return
-    if (activeSet && !window.confirm('Start a new set and replace your unfinished practice?')) return
+    if (activeSet && !replacementConfirmed) { setReplaceSetOpen(true); return }
     const priority = (row: (typeof allQuestions)[number]) =>
       latest.get(row.key)?.correct === false ? 0 : latest.has(row.key) ? 2 : 1
     const rows = [...filtered].sort((a, b) => priority(a) - priority(b)).slice(0, count)
@@ -283,7 +285,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
     try {
       saveBankSession(userId, session)
       void enter()
-      navigate(`/sat/question-bank/run/${session.id}`)
+      navigate(`/sat/question-bank/run/${session.id}`, { state: { resumeIntent: true, returnTo: '/sat/question-bank' } })
     } catch {
       setError('Your practice could not be started. Free up browser storage and try again.')
     }
@@ -312,6 +314,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
   }
   return (
     <main className="workspace-page sat-bank-page">
+      <ConfirmDialog open={replaceSetOpen} title="Replace your unfinished practice set?" description="Starting a new set deletes the answers and notes from your unfinished set. Your completed practice results are kept." confirmLabel="Replace & start again" cancelLabel="Keep saved set" destructive onClose={() => setReplaceSetOpen(false)} onConfirm={() => { setReplaceSetOpen(false); start(true) }} />
       <div className={`sat-bank-wrap ${mathVisible && calculatorOpen && calculatorDocked ? 'sat-bank-calculator-docked' : ''}`}>
         <button
           type="button"
@@ -628,7 +631,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                   <p>You have an unfinished {activeSet.keys.length}-question set. Your answers are saved.</p>
                   <button type="button" className="sat-bank-primary" onClick={() => {
                     void enter()
-                    navigate(`/sat/question-bank/run/${activeSet.id}`)
+                    navigate(`/sat/question-bank/run/${activeSet.id}`, { state: { resumeIntent: true, returnTo: '/sat/question-bank' } })
                   }}>Resume practice <ArrowRight size={17} /></button>
                 </div>
               ) : null}
@@ -721,7 +724,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
               <button
                 type="button"
                 className="sat-bank-primary"
-                onClick={start}
+                onClick={() => start()}
                 disabled={!filtered.length}
               >
                 Start {Math.min(count, filtered.length)} {Math.min(count, filtered.length) === 1 ? 'question' : 'questions'}{' '}

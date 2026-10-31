@@ -1,3 +1,4 @@
+import TestLeaderboard from '@/components/results/TestLeaderboard'
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
@@ -285,6 +286,7 @@ export default function WritingResultModal({
               </div>
             )}
 
+            <details className="ir-glass p-5"><summary className="cursor-pointer font-bold">Test leaderboard</summary><div className="mt-5"><TestLeaderboard testId={entry.testId} title={entry.testTitle} /></div></details>
             {/* Original */}
             <div className="rounded-2xl border border-slate-200 bg-white p-4">
               <h4 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">

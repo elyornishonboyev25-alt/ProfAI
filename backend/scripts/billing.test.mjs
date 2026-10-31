@@ -114,11 +114,24 @@ test('Free AI allowances run out without calling the provider, and failed calls 
   await assert.rejects(withStudyAccess('u', 'ai', async () => { called = true }), e => e.code === 'PREMIUM_REQUIRED')
   assert.equal(called, false, 'exhaustion blocks the provider before generation')
   await assert.rejects(withStudyAccess('u', 'writing', async () => { throw new Error('provider down') }), /provider down/)
-  for (let i = 0; i < PLAN_QUOTAS.FREE.writing; i++) assert.equal(await withStudyAccess('u', 'writing', async () => 'ok'), 'ok')
-  await assert.rejects(withStudyAccess('u', 'writing', async () => { called = true }), e => e.code === 'PREMIUM_REQUIRED')
-  assert.equal(called, false)
   await assert.rejects(requireClassPlan('u'), e => e.code === 'CLASS_PLAN_REQUIRED')
   await assert.rejects(requireTeacherPlan('u'), e => e.code === 'TEACHER_PLAN_REQUIRED')
+})
+test('Writing and Speaking assessment stays included after old quotas and text AI are exhausted', async () => {
+  for (const tier of ['FREE', 'PRO', 'MAX']) {
+    reset()
+    if (tier !== 'FREE') state.subscriptions = [active(tier)]
+    const period = new Date().toISOString().slice(0, 7)
+    state.usage = { [`ai:${period}`]: PLAN_QUOTAS[tier].ai, [`writing:${period}`]: 500, [`speaking:${period}`]: 500 }
+    const before = structuredClone(state.usage)
+    for (const feature of ['writing', 'speaking']) {
+      assert.equal(PLAN_QUOTAS[tier][feature], null)
+      for (let i = 0; i < 6; i++) assert.equal(await withStudyAccess('u', feature, async () => 'assessed'), 'assessed')
+      await assert.rejects(withStudyAccess('u', feature, async () => { throw new Error('assessment unavailable') }), /assessment unavailable/)
+    }
+    assert.deepEqual(state.usage, before, 'included assessment never spends or refunds text AI or historical assessment counters')
+    assert.equal((await accessStatus('u', 'test', 'test:writing:writing-full-6')).unlocked, tier !== 'FREE', 'paid catalog access still applies')
+  }
 })
 test('Pro opens unlimited tests and classes; Max also creates classes; the best active plan wins', async () => {
   reset(); state.subscriptions = [active('PRO')]

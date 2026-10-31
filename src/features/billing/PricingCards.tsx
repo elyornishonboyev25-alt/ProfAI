@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowUpRight, Check, Crown, Rocket, Sparkles } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useAccountAccess } from './useAccountAccess'
-import { BILLING_PRODUCTS, PLAN_QUOTAS, discountedAmount, type BillingCurrency, type BillingProduct, type PlanTier } from './catalog'
+import { BILLING_PRODUCTS, discountedAmount, type BillingCurrency, type BillingProduct, type PlanTier } from './catalog'
 import { useBillingText } from './copy'
 import './plans.css'
 
@@ -13,20 +13,17 @@ export function formatBillingMoney(amount: number, currency: BillingCurrency) {
 type Text = ReturnType<typeof useBillingText>
 
 export function planHighlights(tier: PlanTier, text: Text) {
-  const q = PLAN_QUOTAS[tier]
-  const checks = text(q.writing + ' Writing + ' + q.speaking + ' Speaking AI checks', q.writing + ' ta Writing + ' + q.speaking + ' ta Speaking AI tahlili', q.writing + ' проверок Writing + ' + q.speaking + ' Speaking от AI')
   if (tier === 'FREE') return [
     text('First 5 tests in each IELTS skill', 'Har bir IELTS skillida dastlabki 5 ta test', 'Первые 5 тестов каждого навыка IELTS'),
     text('First 5 IELTS + 5 SAT full mocks', 'Dastlabki 5 ta IELTS + 5 ta SAT full mock', 'Первые 5 полных IELTS + 5 SAT'),
     text('Vocabulary for your free tests', 'Bepul testlaringizning lug‘atlari', 'Словари бесплатных тестов'),
-    text('Monthly AI balance · starts at 100%', 'Oylik AI balansi · 100% dan boshlanadi', 'Ежемесячный баланс AI · начинается со 100%'), checks,
-    text('Articles, podcasts & shadowing are free', 'Maqola, podcast va shadowing bepul', 'Статьи, подкасты и шэдоуинг бесплатно'),
+    text('AI tutor with a monthly balance', 'Oylik balansli AI ustoz', 'AI-наставник с месячным балансом'),
   ]
   return [
     text('Every IELTS & SAT test and full mock', 'Barcha IELTS va SAT test va full mocklar', 'Все тесты и полные экзамены IELTS и SAT'),
     text('Vocabulary for every test', 'Har bir testning lug‘ati', 'Словарь каждого теста'),
-    text('Monthly AI balance · starts at 100%', 'Oylik AI balansi · 100% dan boshlanadi', 'Ежемесячный баланс AI · начинается со 100%'),
-    tier === 'PRO' ? text('Live AI · 1h/day, 30h/month', 'Live AI · 1 soat/kun, 30 soat/oy', 'Live AI · 1 ч/день, 30 ч/месяц') : text('Live AI · 4h/day, 120h/month', 'Live AI · 4 soat/kun, 120 soat/oy', 'Live AI · 4 ч/день, 120 ч/месяц'), checks,
+    tier === 'PRO' ? text('6× more AI chat capacity', 'AI suhbat uchun 6× ko‘proq imkoniyat', 'В 6× больше общения с AI') : text('30× more AI chat capacity', 'AI suhbat uchun 30× ko‘proq imkoniyat', 'В 30× больше общения с AI'),
+    tier === 'PRO' ? text('Live AI tutor · 1 hour a day', 'Live AI ustoz · kuniga 1 soat', 'Голосовой AI · 1 час в день') : text('Live AI tutor · 4 hours a day', 'Live AI ustoz · kuniga 4 soat', 'Голосовой AI · 4 часа в день'),
     tier === 'PRO' ? text('Join classes and complete assignments', 'Classlarga qo‘shilish va vazifalar', 'Участие в классах и задания') : text('Create classes and follow every student', 'Class yaratish va o‘quvchilarni kuzatish', 'Создание классов и контроль учеников'),
   ]
 }
@@ -51,7 +48,7 @@ export default function PricingCards({ months, onChoose, disabled = false, produ
       <div className="billing-plan-top"><span className="billing-icon"><Sparkles size={24} /></span><span className="billing-saving">{text('Free forever', 'Doimiy bepul', 'Навсегда бесплатно')}</span></div>
       <h3>Free</h3><p className="billing-plan-description">{text('Start practising today. No card, no time limit.', 'Bugunoq boshlang. Karta va muddat yo‘q.', 'Начните сегодня. Без карты и срока.')}</p>
       <div className="billing-plan-price"><strong>$0</strong><span>{text('/ forever', '/ doimiy', '/ навсегда')}</span></div>
-      <p className="billing-plan-total">{text('Monthly allowance renews on the 1st.', 'Oylik imkoniyatlar har oyning 1-sanasida yangilanadi.', 'Лимиты обновляются 1-го числа.')}</p>
+      <p className="billing-plan-total">{text('Your free tests stay open.', 'Bepul testlaringiz doim ochiq.', 'Бесплатные тесты остаются доступными.')}</p>
       <ul>{planHighlights('FREE', text).map(item => <li key={item}><Check size={16} />{item}</li>)}</ul>
       <button type="button" className="billing-secondary" onClick={() => navigate(user ? '/ielts' : '/register')}>
         {!user ? text('Start for free', 'Bepul boshlash', 'Начать бесплатно') : tier === 'FREE' ? text('Your current plan', 'Joriy tarifingiz', 'Ваш текущий тариф') : text('Continue learning', 'O‘qishni davom ettirish', 'Продолжить обучение')}

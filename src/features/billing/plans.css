@@ -10,38 +10,31 @@
 .plans-old-price{font-size:15px;font-weight:700;color:#8a94a3;margin-right:6px}
 .plans-discount-chip{padding:6px 10px;border-radius:9px;font-size:11px;font-weight:800;color:#fff;background:linear-gradient(130deg,#dc3844,#b61d2b);box-shadow:0 6px 14px #c1263533}
 
-.plans-compare{padding:clamp(20px,3vw,34px);display:grid;gap:20px}
-.plans-compare-head{display:grid;gap:6px;max-width:720px}
-.plans-compare-head h2{margin:0;font-size:clamp(20px,2.4vw,28px);font-weight:800;letter-spacing:-.03em;color:#1f2530}
-.plans-compare-head p{margin:0;font-size:12.5px;line-height:1.7;color:#657080}
-.plans-compare-scroll{overflow-x:auto;margin:0 -6px;padding:0 6px;-webkit-overflow-scrolling:touch}
-.plans-table{width:100%;min-width:560px;border-collapse:separate;border-spacing:0;font-size:13px;color:#303846}
-.plans-table thead th{position:sticky;top:0;padding:14px 12px;text-align:center;vertical-align:bottom;background:linear-gradient(180deg,#ffffffee,#f1f3f6e6);backdrop-filter:blur(12px);
-  border-bottom:1px solid #dfe3e9}
-.plans-table thead th:first-child{text-align:left;width:38%}
-.plans-table thead th strong{display:block;font-size:15px;font-weight:800;color:#1f2530}
-.plans-table thead th small{display:block;margin-top:2px;font-size:11.5px;color:#6a7585;font-weight:600}
-.plans-table thead th em{display:inline-block;margin-top:6px;padding:3px 8px;border-radius:999px;font-size:10px;font-style:normal;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#286844;background:#e7f4ec}
-.plans-table thead th.is-featured{border-radius:16px 16px 0 0;background:linear-gradient(180deg,#fff5f6,#fde8eb)}
-.plans-table thead th.is-featured strong{color:#a8192a}
-.plans-table tbody th,.plans-table tbody td{padding:13px 12px;border-bottom:1px solid #e8ebef}
-.plans-table tbody th{text-align:left;font-weight:650;color:#2a303b}
-.plans-table tbody th small{display:block;margin-top:2px;font-size:11px;font-weight:500;color:#8a94a3}
-.plans-table tbody td{text-align:center;font-weight:700;color:#3a4352;font-variant-numeric:tabular-nums}
-.plans-table tbody td.is-featured{background:#fff3f5b3}
-.plans-table tbody tr:not(.plans-group):hover th,.plans-table tbody tr:not(.plans-group):hover td{background:#f6f7fa}
-.plans-table tbody tr:not(.plans-group):hover td.is-featured{background:#fde9ec}
-.plans-group th{padding:20px 12px 8px!important;border-bottom:0!important;font-size:10.5px!important;font-weight:800!important;letter-spacing:.14em;text-transform:uppercase;color:#9c2833!important;background:transparent!important}
-.plans-yes{color:#b61d2b;display:inline-block}
-.plans-no{color:#c3c9d3;display:inline-block}
-@media(max-width:640px){.plans-table{font-size:12px}.plans-table tbody th,.plans-table tbody td{padding:11px 8px}}
-.billing-checkout-discount{margin:10px 0 0;padding:9px 12px;border-radius:11px;font-size:12px;font-weight:700;color:#8f1f2d;background:#fde8eb;border:1px solid #f3c6cc}
+
 .plans-grid .billing-plan{border-radius:24px;backdrop-filter:blur(24px);transition:border-color .2s,box-shadow .2s}
 .plans-grid .billing-plan h3{letter-spacing:-.045em;font-size:clamp(20px,2vw,25px)}
-.plans-compare{border-color:#fff;background:linear-gradient(125deg,#ffffffed,#edf0f5c7 65%,#ffffffe0);box-shadow:inset 0 1px #fff,0 14px 48px #3540530d}
-.plans-table{min-width:650px}.plans-table thead th{padding:22px 15px}.plans-table thead th strong{letter-spacing:-.025em}.plans-table thead th:first-child{width:36%}.plans-table thead th:last-child{border-radius:18px 18px 0 0;background:linear-gradient(135deg,#f5f7fa,#e0e5ed 60%,#f5f7fa)}
-.plans-table tbody th,.plans-table tbody td{padding:17px 14px}.plans-table tbody th small{line-height:1.7;max-width:270px}.plans-table tbody tr:not(.plans-group):last-child :is(th,td){border-bottom:0}.plans-group th{letter-spacing:.02em;text-transform:none;font-size:12px!important}
-.plans-compare-scroll{border-radius:18px;isolation:isolate}.plans-table thead th:first-child{position:sticky;left:0;z-index:3}.plans-table tbody th{position:sticky;left:0;z-index:1;background:#f8f9fcf7;backdrop-filter:blur(16px)}.plans-table .plans-group th{position:static}
-.plans-mobile-hint{display:none;font-size:11px;color:#707b8c;margin:0}
-@media(max-width:640px){.plans-mobile-hint{display:block}}
-@media(max-width:640px){.plans-table{min-width:650px}.plans-table thead th:first-child{width:160px;min-width:160px}.plans-table tbody th{max-width:160px;font-size:11px}.plans-table tbody th small{font-size:10px}.plans-table tbody td{font-size:11px}.plans-compare{padding:20px 14px}.plans-grid .billing-plan h3{font-size:24px}}
+.billing-checkout-discount{margin:10px 0 0;padding:9px 12px;border-radius:11px;font-size:12px;font-weight:700;color:#8f1f2d;background:#fde8eb;border:1px solid #f3c6cc}
+
+.plans-compare{padding:24px;overflow:hidden;background:linear-gradient(125deg,#ffffffed,#edf0f5c7 65%,#ffffffe0)}
+.plans-compare h2{font-size:18px;line-height:1.4;font-weight:750;letter-spacing:-.025em;margin:0 0 18px;color:#28303c}
+.plans-table{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;font-size:12px;line-height:1.6;color:#454e5d}
+.plans-feature-column{width:37%}
+.plans-table th,.plans-table td{padding:13px 12px;text-align:center;vertical-align:middle;border-bottom:1px solid #dce1e891;overflow-wrap:anywhere}
+.plans-table thead th{padding-top:10px;padding-bottom:12px;font-size:12px;font-weight:750;color:#313a48}
+.plans-table thead .is-featured{border-radius:12px 12px 0 0;color:#a82337}
+.plans-table .is-featured{background:#fbeef19c}
+.plans-table tbody th{text-align:left;font-weight:600;color:#45505f}
+.plans-table tbody td{font-weight:650;font-variant-numeric:tabular-nums}
+.plans-table tbody tr:last-child :is(th,td){border-bottom:0}
+.plans-table tbody tr:last-child .is-featured{border-radius:0 0 12px 12px}
+.plans-table td>svg{display:inline-block;color:#909baa;vertical-align:middle}
+@media(max-width:640px){
+  .plans-compare{padding:20px 14px}
+  .plans-compare h2{font-size:17px;margin-bottom:14px}
+  .plans-feature-column{width:34%}
+  .plans-table{font-size:11px;line-height:1.5}
+  .plans-table th,.plans-table td{padding:13px 5px}
+  .plans-table thead th{font-size:12px}
+  .plans-brand{display:block;font-size:9px;font-weight:500;line-height:1.4}
+}
+@media(prefers-reduced-motion:reduce){.plans-grid .billing-plan{transition:none}}

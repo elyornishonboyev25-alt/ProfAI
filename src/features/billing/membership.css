@@ -1,0 +1,46 @@
+.billing-simple-page .billing-content{max-width:1080px;gap:24px}
+.membership-plans>.billing-section-heading{margin:8px 0 28px;align-items:center}
+.membership-plans h1{margin:0;font-size:clamp(26px,3vw,32px);font-weight:800;letter-spacing:-.045em;line-height:1.2}
+.membership-plans .plans-grid{margin-top:0;gap:18px}
+.membership-plans .billing-plan{padding:24px;border-radius:22px}
+.membership-plans .billing-plan-top{margin-bottom:18px}
+.membership-plans .billing-icon{width:38px;height:38px;border-radius:12px}
+.membership-plans .billing-icon svg{width:20px;height:20px}
+.membership-plans .billing-plan h3{font-size:23px;letter-spacing:-.04em}
+.membership-plans .billing-plan-description{min-height:40px;font-size:12px;line-height:1.6}
+.membership-plans .billing-plan-price{margin-top:18px}
+.membership-plans .billing-plan-price strong{font-size:38px;letter-spacing:-.055em}
+.membership-plans .billing-plan-price span{font-size:12px}
+.membership-plans .billing-plan-total{font-size:11px;min-height:34px;margin:6px 0 0}
+.membership-plans .billing-plan ul{gap:12px;font-size:12px;line-height:1.6;margin:16px 0 24px;flex:1}
+.membership-plans .billing-plan li svg{margin-top:2px}
+.membership-plans .billing-plan>button{min-height:46px;font-size:12px}
+.membership-plans .billing-plan-featured{transform:none}
+.membership-plans .billing-plan-recommendation{font-size:10px;padding:5px 12px;top:-13px}
+.membership-included{display:flex;align-items:flex-start;gap:9px;margin-top:20px;padding:0 4px;color:#667181}
+.membership-included>svg{color:#af2439;flex:none;margin-top:2px}
+.membership-included p{font-size:12px;line-height:1.7;margin:0;max-width:78ch}
+.membership-offers{padding:0 22px}
+.membership-offers>summary{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:62px;list-style:none;cursor:pointer;font-size:13px;font-weight:700;color:#394252}
+.membership-offers>summary::-webkit-details-marker{display:none}
+.membership-offers>summary>span{display:flex;gap:12px;align-items:center}
+.membership-offers>summary small{color:#ae2438;background:#f9e6ea;border-radius:6px;padding:3px 7px;font-size:11px}
+.membership-offers>summary>svg{color:#7a8493;transition:transform .2s}
+.membership-offers[open]>summary>svg{transform:rotate(180deg)}
+.membership-offers-content{padding:0 0 22px;border-top:1px solid #dbe0e8}
+.membership-offers .promo-center{padding-top:20px}
+.membership-offers .promo-center-head{display:none}
+.membership-offers .promo-grid{gap:14px}
+.membership-offers .promo-tile{padding:20px;border-radius:16px;box-shadow:inset 0 1px #fff;background:#ffffff70}
+@media(min-width:701px){.membership-plans .plans-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){
+  .membership-plans>.billing-section-heading{align-items:flex-start;gap:18px;flex-direction:column;margin-bottom:28px}
+  .membership-plans .plans-grid{gap:24px;grid-template-columns:1fr}
+  .membership-plans .billing-plan{padding:22px}
+  .membership-plans .billing-plan-description{min-height:0}
+  .membership-plans .billing-plan-total{min-height:0}
+  .membership-plans .billing-plan ul{margin-top:20px}
+  .membership-plans .billing-plan-price{margin-top:14px}
+  .membership-offers{padding:0 16px}
+}
+@media(prefers-reduced-motion:reduce){.membership-offers>summary>svg{transition:none}}

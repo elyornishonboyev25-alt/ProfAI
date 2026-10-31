@@ -23,7 +23,7 @@ export default function AITutor() {
         </div>
         <button type="button" onClick={openTalk} className="coach-primary-button" aria-label={text.voice}><Mic2 size={17}/><span>{text.voice}</span></button>
       </header>
-      <UsageBalance compact />
+      <UsageBalance />
       <CoachConnectionStatus/>
       <section className="coach-glass coach-chat-shell"><AIChatWindow variant="page"/></section>
     </div>

@@ -41,7 +41,7 @@ export default function BillingBoundary({ children }: { children: ReactNode }) {
   const access = routeStudyResource(pathname, search)
   const classes = /^\/learning-center(?:\/|$)/.test(pathname)
   if (classes) return <AccountGate classes>{children}</AccountGate>
-  if (pathname === '/sat/mistakes') return <>{children}</>
+  if (pathname.startsWith('/sat/results/')) return <>{children}</>
   const study = /^\/(?:ielts|sat|test|mock)(?:\/|$)/.test(pathname) || ['/ai-tutor', '/writing-lab', '/speaking-lab', '/speaking-community'].includes(pathname)
   // Listening keeps its Start action; the account gate covers its preview as well.
   if (access?.resource.startsWith('test:listening:')) return <AccountGate>{children}</AccountGate>

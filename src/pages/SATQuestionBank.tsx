@@ -608,9 +608,9 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
               <button
                 type="button"
                 className="sat-bank-mock-link"
-                onClick={() => navigate('/sat/mistakes')}
+                onClick={() => navigate('/profile')}
               >
-                Looking for full mock or section results? Open SAT Mistake Lab{' '}
+                Looking for full mock or section results? Open My Results{' '}
                 <ArrowRight size={16} />
               </button>
             </section>

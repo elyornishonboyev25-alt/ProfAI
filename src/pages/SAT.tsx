@@ -268,10 +268,10 @@ export default function SAT() {
         </section>
 
         <section className="mt-6 grid gap-3 sm:grid-cols-2">
-          <button type="button" onClick={() => navigate('/sat/mistakes')} className={`${glassCard} group p-5 text-left hover:-translate-y-1`}>
+          <button type="button" onClick={() => navigate('/profile')} className={`${glassCard} group p-5 text-left hover:-translate-y-1`}>
             <FileSearch className="h-6 w-6 text-red-500" />
-            <span className="mt-4 block text-sm font-extrabold text-[#171823]"> <UiText text={"Mistake lab"} /> </span>
-            <span className="mt-1 block text-[11px] font-medium text-slate-500"> <UiText text={"Review weak domains"} /> </span>
+            <span className="mt-4 block text-sm font-extrabold text-[#171823]"> <UiText text="My Results" /> </span>
+            <span className="mt-1 block text-[11px] font-medium text-slate-500"> <UiText text="Review your answers" /> </span>
           </button>
           <button type="button" onClick={() => navigate('/vocabulary/sat', { state: { from: '/sat' } })} className={`${glassCard} group p-5 text-left hover:-translate-y-1`}>
             <BookOpenText className="h-6 w-6 text-red-500" />

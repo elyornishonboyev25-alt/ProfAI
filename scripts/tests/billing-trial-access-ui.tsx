@@ -25,7 +25,7 @@ export async function run() {
     await mount('/ai-tutor'); assert.equal(visible(), false); assert.ok(element.textContent?.includes('Start for free'))
     useAuthStore.setState({ user: { id: 'access-ui', email: 'free@example.com', role: 'USER', access: account.access } as NonNullable<typeof previousUser> })
     // The Free plan never expires; its monthly limits apply when a test or AI request starts.
-    for (const path of ['/ielts', '/sat', '/sat/question-bank', '/ai-tutor', '/writing-lab', '/speaking-lab', '/results/1/review', '/vocabulary', '/sat/mistakes']) { await mount(path); assert.equal(visible(), true, path) }
+    for (const path of ['/ielts', '/sat', '/sat/question-bank', '/ai-tutor', '/writing-lab', '/speaking-lab', '/results/1/review', '/vocabulary', '/sat/results/saved-attempt']) { await mount(path); assert.equal(visible(), true, path) }
     for (const path of ['/learning-center', '/learning-center/join/ABC', '/learning-center/class']) { await mount(path); assert.equal(visible(), false, path); assert.ok(element.textContent?.includes('Classes are not part of the Free plan')) }
     account = { ...account, canJoinClass: true, access: { kind: 'PREMIUM', tier: 'PRO', active: true, startsAt: new Date().toISOString(), expiresAt: new Date(Date.now() + 3600000).toISOString(), trialDays: null, daysRemaining: null } }
     await mount('/learning-center/join/ABC'); assert.equal(visible(), true)

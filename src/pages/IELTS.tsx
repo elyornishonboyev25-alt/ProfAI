@@ -258,7 +258,7 @@ export default function IELTS() {
           </div>
         </section>
 
-        <button type="button" onClick={() => navigate('/analyze-mistakes')} className={`${GLASS} mt-5 flex w-full items-center justify-between gap-4 p-5 text-left`}><span className="flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-red-50 text-red-600"><FileSearch className="h-5 w-5" /></span><span><b className="block text-base font-black text-slate-900"> <UiText text={"Mistake lab"} /> </b><small className="text-slate-500">Review weak skills and missed answers</small></span></span><ArrowRight className="h-5 w-5 text-red-600" /></button>
+        <button type="button" onClick={() => navigate('/profile')} className={`${GLASS} mt-5 flex w-full items-center justify-between gap-4 p-5 text-left`}><span className="flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-red-50 text-red-600"><FileSearch className="h-5 w-5" /></span><span><b className="block text-base font-black text-slate-900"> <UiText text="My Results" /> </b><small className="text-slate-500"><UiText text="Review your answers" /></small></span></span><ArrowRight className="h-5 w-5 text-red-600" /></button>
       </div>
     </main>
   )

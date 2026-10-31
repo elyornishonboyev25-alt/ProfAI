@@ -10,20 +10,20 @@ export function needsSATSectionBreak(attempt: SATAttempt, modules: SATModule[]) 
 }
 
 /** Finish a module, taking the section break before starting the Math timer. */
-export function advanceSATModule(attempt: SATAttempt, modules: SATModule[], now = Date.now()): SATAttempt {
+export function advanceSATModule(attempt: SATAttempt, modules: SATModule[], now = Date.now(), endBreakEarly = false): SATAttempt {
   if (attempt.status !== 'active') return attempt
   const nextModuleIndex = attempt.currentModuleIndex + 1
   const nextModule = modules[nextModuleIndex]
   if (!nextModule) return attempt
 
-  if (attempt.sectionBreak && now < attempt.sectionBreak.endsAt) return attempt
+  if (attempt.sectionBreak && now < attempt.sectionBreak.endsAt && !endBreakEarly) return attempt
   const finished = attempt.sectionBreak ? attempt : finishModule(attempt, modules, now)
   if (!attempt.sectionBreak && needsSATSectionBreak(attempt, modules)) {
     return { ...finished, sectionBreak: { endsAt: now + SAT_SECTION_BREAK_SECONDS * 1000 } }
   }
 
   // Anchor Math to the saved deadline even if the tab was sleeping or reloaded.
-  const startedAt = attempt.sectionBreak?.endsAt ?? now
+  const startedAt = attempt.sectionBreak ? Math.min(now, attempt.sectionBreak.endsAt) : now
   return {
     ...finished,
     sectionBreak: undefined,

@@ -1,4 +1,5 @@
 import UiText from '@/components/common/UiText'
+import CatalogScore, { type CatalogResult } from './CatalogScore'
 import type { ReactNode } from 'react'
 import {
   ArrowLeft,
@@ -26,6 +27,7 @@ export type CompactIeltsTestRow = {
   detail: string
   available: boolean
   completed?: boolean
+  result?: CatalogResult
 }
 
 type CompactIeltsCatalogProps = {
@@ -207,6 +209,7 @@ export default function CompactIeltsCatalog({
                 </div>
                 <h3 className={`mt-3 font-black tracking-[-0.04em] text-slate-950 ${section === 'listening' ? 'whitespace-nowrap text-[clamp(1rem,2.2vw,1.5rem)]' : 'text-2xl'}`}>{row.title}</h3>
                 <p className="mt-2 line-clamp-2 text-sm font-medium leading-6 text-slate-500">{row.subtitle}</p>
+                {row.result ? <CatalogScore {...row.result} /> : null}
 
                 <div className="mt-auto flex flex-wrap items-end justify-between gap-4 pt-7">
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-bold text-slate-500">

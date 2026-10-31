@@ -244,7 +244,7 @@ export default function SATMockRun() {
     setCalculatorOpen(false)
   }, [])
 
-  const advanceModule = useCallback(() => {
+  const advanceModule = useCallback((endBreakEarly = false) => {
     const current = attemptRef.current
     if (!current || current.status !== 'active') return
     if (current.currentModuleIndex + 1 >= modules.length) {
@@ -253,7 +253,7 @@ export default function SATMockRun() {
     }
     const startedAt = Date.now()
     persistUpdate(value => value.currentModuleIndex === current.currentModuleIndex
-      ? advanceSATModule(value, modules, startedAt) : value)
+      ? advanceSATModule(value, modules, startedAt, endBreakEarly) : value)
     setNow(startedAt)
     setModuleComplete(false)
     setConfirmSubmit(false)
@@ -451,7 +451,7 @@ export default function SATMockRun() {
   }
 
   if (attempt.sectionBreak) {
-    return <SATSectionBreak endsAt={attempt.sectionBreak.endsAt} now={now} onExit={() => {
+    return <SATSectionBreak endsAt={attempt.sectionBreak.endsAt} now={now} onContinue={() => advanceModule(true)} onExit={() => {
       pauseAndSaveAttempt()
       if (fullscreenElement()) void exit()
       navigate(backPath)
@@ -878,7 +878,7 @@ export default function SATMockRun() {
                 </button>
                 <button
                   type="button"
-                  onClick={confirmSubmit ? submitAttempt : advanceModule}
+                  onClick={confirmSubmit ? submitAttempt : () => advanceModule()}
                   className="rounded-xl bg-[#4053d7] px-4 py-3 text-[11px] font-black text-white"
                 >
                   {confirmSubmit ? 'Submit & score' : needsSATSectionBreak(attempt, modules) ? <UiText text="Start 10-minute break" /> : 'Continue to next module'}

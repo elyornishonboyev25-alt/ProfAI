@@ -3,6 +3,7 @@ import { getSpeakingWebSocketUrl } from '@/lib/speakingWebSocketUrl'
 import { createVoiceConnection, type VoiceConnection } from '@/lib/webrtcVoice'
 import { useAuthStore } from '@/store/authStore'
 import { fetchAccount } from '@/lib/profileApi'
+import { requestMicrophone, microphoneError } from '@/lib/microphone'
 
 export type SpeakingMember = { id: string; name: string; avatarUrl: string | null; role: 'speaker' | 'listener'; muted: boolean; hand: boolean; side: string }
 export type SpeakingRoom = { id: string; title: string; topic: string; kind: string; level: string; capacity: number; maxParticipants: number; private: boolean; hostId: string; members: SpeakingMember[]; debate: { running: boolean; turnId: string | null; endsAt: number | null; round: number } }
@@ -13,6 +14,7 @@ export type RoomDraft = { title: string; topic: string; kind: string; level: str
 export function useSpeakingCommunity(enabled: boolean) {
   const accountId = useAuthStore(state => state.user?.id)
   const [connected, setConnected] = useState(false)
+  const [reconnectKey, setReconnectKey] = useState(0)
   const [rooms, setRooms] = useState<SpeakingRoom[]>([])
   const [online, setOnline] = useState(0)
   const [available, setAvailable] = useState<string[]>([])
@@ -112,7 +114,7 @@ export function useSpeakingCommunity(enabled: boolean) {
         return
       }
       socketRef.current = socket
-      handshakeTimer = window.setTimeout(() => socket.close(), 12_000)
+      handshakeTimer = window.setTimeout(() => socket.close(), 25_000)
       socket.onopen = () => { if (!disposed) socket.send(JSON.stringify({ type: 'communityHello', token: useAuthStore.getState().accessToken })) }
       socket.onmessage = event => {
         if (disposed) return
@@ -172,7 +174,7 @@ export function useSpeakingCommunity(enabled: boolean) {
           case 'communityNotice': setNotice(message.message); if (!message.message.startsWith('Invitation sent') && !roomRef.current && !leavingRef.current) stopMedia(); break
         }
       }
-      socket.onerror = () => { if (!disposed) setError('Connection interrupted. Reconnecting to speaking rooms…') }
+      socket.onerror = () => { /* onclose owns recovery and keeps the actual failure visible. */ }
       socket.onclose = () => {
         window.clearTimeout(handshakeTimer)
         if (disposed) return
@@ -185,8 +187,13 @@ export function useSpeakingCommunity(enabled: boolean) {
         setInvitation(null)
         nextPartnerRef.current = false
         leavingRef.current = false
+        const wasInRoom = !!roomRef.current
         stopMedia()
-        if (!disposed) { setError('Connection interrupted. Your microphone has been turned off. Reconnecting…'); retry = window.setTimeout(connect, Math.min(1000 * 2 ** attempts++, 15_000)) }
+        if (!disposed) {
+          if (wasInRoom) setError('Connection interrupted. Your microphone has been turned off. Reconnecting…')
+          else if (attempts >= 2) setError('Speaking rooms are temporarily unavailable. Check your connection or try reconnecting.')
+          retry = window.setTimeout(connect, Math.min(1000 * 2 ** attempts++, 15_000))
+        }
       }
     }
     void connect()
@@ -209,7 +216,13 @@ export function useSpeakingCommunity(enabled: boolean) {
       leavingRef.current = false
       stopMedia()
     }
-  }, [accountId, enabled, send, stopMedia, releaseMicrophone])
+  }, [accountId, enabled, send, stopMedia, releaseMicrophone, reconnectKey])
+
+  useEffect(() => {
+    const reconnect = () => setReconnectKey(value => value + 1)
+    window.addEventListener('online', reconnect)
+    return () => window.removeEventListener('online', reconnect)
+  }, [])
 
   useEffect(() => {
     if (!invitation) return
@@ -259,19 +272,25 @@ export function useSpeakingCommunity(enabled: boolean) {
     setBusy(true)
     setError('')
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false })
+      const stream = await requestMicrophone()
       if (generation !== generationRef.current || roomRef.current?.id !== currentRoom.id) { stream.getTracks().forEach(track => track.stop()); return }
       stream.getAudioTracks().forEach(track => { track.enabled = false })
       localRef.current?.getTracks().forEach(track => track.stop())
       localRef.current = stream
+      stream.getAudioTracks().forEach(track => track.addEventListener('ended', () => {
+        if (localRef.current !== stream || !roomRef.current) return
+        releaseMicrophone()
+        send({ type: 'communityState', muted: true, hand: false, side: self?.side ?? '' })
+        setError('Your microphone was disconnected. Reconnect it and choose Unmute to continue.')
+      }, { once: true }))
       await Promise.all([...peersRef.current.values()].map(async peer => { await peer.ready; await peer.voice.replaceAudioTrack(stream.getAudioTracks()[0]) }))
       if (generation !== generationRef.current) return
       send({ type: 'communityTakeSeat' })
       timeoutRef.current = window.setTimeout(() => { if (pendingRef.current) { releaseMicrophone(); send({ type: 'communityState', muted: true, hand: false, side: self?.side ?? '' }); setError('The stage did not respond. Please try again.') } }, 10_000)
-    } catch {
+    } catch (failure) {
       if (generation !== generationRef.current) return
       releaseMicrophone()
-      setError('Allow microphone access in your browser, then try again.')
+      setError(microphoneError(failure))
     }
   }
   const changeState = (change: Partial<Pick<SpeakingMember, 'muted' | 'hand' | 'side'>>) => {
@@ -285,6 +304,7 @@ export function useSpeakingCommunity(enabled: boolean) {
     connected, rooms, online, available, availablePeople, room, selfId, selfName, self, messages, streams, peerStates, invitation, outgoingInvitation, error, notice, busy, matching, activity, publicProfile,
     resetActivity: () => { nextPartnerRef.current = false; setError(''); setNotice(''); send({ type: 'communityReset' }) },
     clearError: () => setError(''),
+    reconnect: () => { setError(''); setReconnectKey(value => value + 1) },
     create: (draft: RoomDraft) => beginRoomRequest({ type: 'communityCreate', ...draft }),
     join: (roomId: string) => beginRoomRequest({ type: 'communityJoin', roomId, listen: true }),
     takeSeat,

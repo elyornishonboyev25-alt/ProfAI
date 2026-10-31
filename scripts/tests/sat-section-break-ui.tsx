@@ -99,11 +99,11 @@ export async function run() {
     assert.deepEqual(saved().answers, answers, 'Exam keyboard shortcuts are inactive during the break')
 
     await click('Play relaxing music')
-    assert.match(container.querySelector('iframe')!.src, /youtube-nocookie\.com\/embed\/77ZozI0rw7w/)
+    assert.match(container.querySelector('iframe')!.src, /youtube-nocookie\.com\/embed\/6GVgncA9oiw/)
     assert.equal(container.querySelector('[aria-pressed="true"]')?.textContent, 'Turn music off')
     const select = container.querySelector('select')!
     await act(async () => { select.value = '1'; select.dispatchEvent(new Event('change', { bubbles: true })) })
-    assert.match(container.querySelector('iframe')!.src, /QQ-WACJqc4Y/)
+    assert.match(container.querySelector('iframe')!.src, /lCOF9LN_Zxs/)
     // Failed external playback cannot advance, pause or reset the exam break.
     await act(async () => container.querySelector('iframe')!.dispatchEvent(new Event('error')))
     assert.equal(saved().sectionBreak!.endsAt, endsAt)
@@ -153,6 +153,22 @@ export async function run() {
     await click('Continue to next module')
     assert.equal(saved().currentModuleIndex, 3, 'There is no break between Math modules')
     assert.equal(saved().sectionBreak, undefined)
+
+    // Ending the rest early gives Math a fresh full module duration, with no
+    // time charged for the unused part of the break or music left playing.
+    await remount(secondEnglish())
+    await reviewModule()
+    await click('Start 10-minute break')
+    const earlyDeadline = saved().sectionBreak!.endsAt
+    await tick(120_000)
+    await click('Play relaxing music')
+    await click('Start Math now')
+    assert.ok(clock < earlyDeadline)
+    assert.equal(saved().sectionBreak, undefined)
+    assert.equal(saved().currentModuleIndex, 2)
+    assert.equal(saved().moduleStartedAt[test.modules[2].id], clock)
+    assert.equal(moduleSeconds(saved(), test.modules), test.modules[2].durationSeconds)
+    assert.equal(container.querySelector('iframe'), null, 'Early continuation stops music')
 
     // Practice retains its original untimed transition.
     await remount(secondEnglish('practice'))

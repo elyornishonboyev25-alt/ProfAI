@@ -3,6 +3,8 @@ import { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import MockIELTS from '@/pages/MockIELTS'
+import MockIELTSRun from '@/pages/MockIELTSRun'
+import i18n from '@/i18n'
 import FullMockSectionGate from '@/components/ielts/FullMockSectionGate'
 import { getFullMockById, getFullMockCompletedSections, getFullMockResults, saveFullMockSectionResult } from '@/utils/ieltsMockCatalog'
 import { accountStorageFor } from '@/utils/accountStorage'
@@ -10,6 +12,7 @@ import { useAuthStore } from '@/store/authStore'
 
 export async function run() {
   localStorage.clear()
+  await i18n.changeLanguage('en')
   const element = document.getElementById('root')!
   const root = createRoot(element)
   const mock = getFullMockById('full-mock-1')!
@@ -33,17 +36,19 @@ export async function run() {
     accountStorageFor('another-account').setItem('smarttest:full-mock-results:v1', 'other-account-results')
     await act(async () => root.render(<MemoryRouter initialEntries={['/mock/ielts']}><Routes>
       <Route path="/mock/ielts" element={<MockIELTS embedded />} />
+      <Route path="/mock/ielts/:mockId" element={<MockIELTSRun />} />
       <Route path="/test/:type/:id" element={<FullMockSectionGate><Runner /></FullMockSectionGate>} />
     </Routes></MemoryRouter>))
     const completedCard = element.querySelector('.mock-ielts-glass-card')!
     assert.equal(completedCard.tagName, 'ARTICLE', 'No invalid nested interactive buttons')
-    assert.equal(completedCard.querySelector('[aria-label="Review Full Mock 1"]'), null, 'Completed cards launch a retake; review belongs in Mistake Lab')
+    assert.ok(completedCard.textContent?.includes('View results'), 'Completed results remain accessible without resetting the attempt')
     assert.ok(completedCard.textContent?.includes('4/4 completed'))
     const retake = completedCard.querySelector<HTMLButtonElement>('[aria-label="Retake Full Mock 1"]')!
     assert.ok(retake)
     await act(async () => retake.click())
     assert.equal(element.querySelector('video'), null, 'Retake has no video gate')
-    assert.ok(element.querySelector('[data-runner]'), 'Retake starts a fresh Listening runner immediately')
+    assert.equal(element.querySelector('[data-runner]'), null, 'Retake waits for readiness confirmation')
+    assert.ok(element.querySelector('.mock-run-readiness'))
     assert.deepEqual(getFullMockCompletedSections(mock.id), [])
     assert.equal(getFullMockResults('full-mock-2').listening?.band, 8)
     assert.equal(storage.getItem(listeningKey), null, 'Previous final-audio countdown cannot submit a retake')
@@ -55,6 +60,8 @@ export async function run() {
     assert.equal(history.length, 1)
     assert.equal(history[0].overallBand, 7)
     assert.equal(Object.keys(history[0].sections).length, 4)
+    await act(async () => element.querySelector<HTMLButtonElement>('.mock-run-readiness button')!.click())
+    assert.ok(element.querySelector('[data-runner]'), 'Listening starts after explicit readiness confirmation')
     assert.equal((state as { mock: { section: string } }).mock.section, 'listening')
     console.log('PASS: Retake archives all four scores, clears only the selected mock, resets expired timers and intro gates, preserves practice and other accounts')
   } finally { await act(async () => root.unmount()); localStorage.clear(); useAuthStore.setState({ user: null }) }

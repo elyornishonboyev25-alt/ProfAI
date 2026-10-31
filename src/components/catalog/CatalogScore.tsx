@@ -1,0 +1,12 @@
+import UiText from '@/components/common/UiText'
+import './catalog-score.css'
+
+export type CatalogResult = { score: number; maximum: number; label: string; detail?: string }
+
+export default function CatalogScore({ score, maximum, label, detail }: CatalogResult) {
+  const safeScore = Number.isFinite(score) ? Math.max(0, Math.min(maximum, score)) : 0
+  return <div className="catalog-score" aria-label={`${label}: ${safeScore} / ${maximum}${detail ? `, ${detail}` : ''}`}>
+    <div className="catalog-score__value"><span><UiText text={label} /></span><strong>{maximum === 9 ? safeScore.toFixed(1) : safeScore}<small> / {maximum === 9 ? '9.0' : maximum}</small></strong></div>
+    <div className="catalog-score__summary"><span className="catalog-score__saved"><UiText text="Completed" /></span>{detail && <span>{detail}</span>}<span className="catalog-score__meter" aria-hidden="true"><i style={{ width: `${safeScore / maximum * 100}%` }} /></span></div>
+  </div>
+}

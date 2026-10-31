@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Zap } from 'lucide-react'
+import UiText from '@/components/common/UiText'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { useAuthStore } from '@/store/authStore'
 import { useXpNotificationStore, XP_NOTIFICATION_DURATION } from '@/store/xpNotificationStore'
@@ -51,10 +52,10 @@ export function XpNotification({ deferActivityRewards = false }: { deferActivity
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={minimalMotion ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.98 }}
             transition={{ duration: minimalMotion ? 0 : 0.18 }}
-            className="flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-5 py-2.5 text-amber-900 shadow-lg"
+            className="flex items-center gap-3 rounded-2xl border border-white bg-gradient-to-br from-white to-slate-100 px-5 py-3 text-slate-900 shadow-xl"
           >
-            <span aria-hidden="true" className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-400 text-white"><Zap className="h-4 w-4" fill="currentColor" /></span>
-            <span className="text-base font-extrabold tabular-nums">+{current.amount} XP</span>
+            <span aria-hidden="true" className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-700 text-white"><Zap className="h-5 w-5" fill="currentColor" /></span>
+            <span className="text-base font-extrabold tabular-nums">{current.levelUp ? <span className="block text-sm text-red-700"><UiText text="Level up" /> · <UiText text="Level" /> {current.levelUp}</span> : null}+{current.amount} XP</span>
           </motion.div>
         ) : null}
       </AnimatePresence>

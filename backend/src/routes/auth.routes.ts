@@ -1,3 +1,4 @@
+import { resolveLevelFromXp } from '../config/levelConfig.js'
 import crypto from 'node:crypto'
 import { Router } from 'express'
 import { z } from 'zod'
@@ -158,7 +159,7 @@ async function sanitizeUser(user: {
     premium,
     premiumExpiresAt: premium ? wallet.access.expiresAt : null,
     xp: user.xp,
-    level: user.level,
+    level: resolveLevelFromXp(user.xp),
     currentStreak: user.currentStreak,
     nickname: user.nickname ?? null,
     avatarUrl: user.avatarUrl ?? null,

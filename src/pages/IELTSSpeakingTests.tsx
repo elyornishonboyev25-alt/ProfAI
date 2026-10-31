@@ -11,6 +11,7 @@ import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useAccountDataRevision } from '@/hooks/useAccountDataRevision'
 import { accountStorageFor } from '@/utils/accountStorage'
 import { recoverSpeakingDayHistory } from '@/utils/speakingDayHistory'
+import { useSpeakingStore } from '@/store/speakingStore'
 
 export default function IELTSSpeakingTests({ embedded = false }: { embedded?: boolean } = {}) {
   const navigate = useNavigate()
@@ -25,6 +26,7 @@ export default function IELTSSpeakingTests({ embedded = false }: { embedded?: bo
   const deferredSearchTerm = useDeferredValue(searchTerm)
   const revision = useAccountDataRevision()
   const completedTestIds = useMemo(() => getCompletedSpeakingTestIds(user?.id), [user?.id, revision])
+  const sessions = useSpeakingStore(state => state.sessions)
 
   const rows = useMemo<CompactIeltsTestRow[]>(
     () => activeFilter === 'full'
@@ -57,9 +59,14 @@ export default function IELTSSpeakingTests({ embedded = false }: { embedded?: bo
 
   const visibleRows = useMemo(() => {
     const query = deferredSearchTerm.trim().toLowerCase()
-    if (!query) return rows
-    return rows.filter((row) => `${row.title} ${row.subtitle} ${row.badge}`.toLowerCase().includes(query))
-  }, [deferredSearchTerm, rows])
+    const scoredRows = rows.map(row => {
+      const title = activeFilter === 'full' ? row.title : getIeltsSpeakingDayCatalog().find(day => day.id === row.id)?.title
+      const saved = sessions.filter(item => item.userId === (user?.id ?? null) && item.kind === 'examiner' && (item.testId === row.id || item.modeLabel === title)).sort((a, b) => Date.parse(b.date) - Date.parse(a.date))[0]
+      return { ...row, result: saved && completedTestIds.has(row.id) ? { score: saved.overallBand, maximum: 9, label: 'Band score', detail: 'AI assessment' } : undefined }
+    })
+    if (!query) return scoredRows
+    return scoredRows.filter((row) => `${row.title} ${row.subtitle} ${row.badge}`.toLowerCase().includes(query))
+  }, [deferredSearchTerm, rows, sessions, user?.id, activeFilter, completedTestIds])
 
   const handleLaunch = (row: CompactIeltsTestRow) => {
     if (!row.available) return

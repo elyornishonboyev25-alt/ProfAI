@@ -6,7 +6,7 @@ import { getCompletedSpeakingTestIds, getIeltsSpeakingDayCatalog, getSpeakingCom
 export function saveSpeakingDayHistory(owner: string, day: SpeakingDayEntry, result: SpeakingEvaluation, transcript: ExaminerTurn[], attemptKey: string, date?: string) {
   if (result.source !== 'ai' || !result.stats || useSpeakingStore.getState().sessions.some(item => item.userId === (owner === 'guest' ? null : owner) && item.attemptKey === attemptKey)) return
   useSpeakingStore.getState().addSession({
-    userId: owner === 'guest' ? null : owner, modeLabel: day.title, kind: 'examiner', attemptKey, date,
+    userId: owner === 'guest' ? null : owner, testId: day.id, modeLabel: day.title, kind: 'examiner', attemptKey, date,
     overallBand: result.overallBand, fluencyBand: result.fluencyBand, lexicalBand: result.lexicalBand,
     grammarBand: result.grammarBand, pronunciationBand: result.pronunciationBand,
     durationSec: result.stats.durationSec, wordCount: result.stats.wordCount, fillerCount: result.stats.fillerCount,

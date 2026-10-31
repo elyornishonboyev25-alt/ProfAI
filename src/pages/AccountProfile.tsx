@@ -1,6 +1,7 @@
 import { isPremiumUser } from '@/utils/premiumAccess'
 import { useAccountAccess } from '@/features/billing/useAccountAccess'
 import CrownBadge from '@/components/fx/CrownBadge'
+import { learnerLevel } from '@/utils/learnerLevel'
 import { normalizeSATScore as normalizeSatScore, SAT_TARGET_SCORE_MIN } from '@/features/sat/scoreGoals'
 import UiText from '@/components/common/UiText'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
@@ -668,7 +669,7 @@ export default function AccountProfile() {
                   <Lock className="h-3 w-3" /> {user?.email}  <UiText text={"· only you"} /> </span>
               </div>
               <p className="mt-2 text-sm text-slate-500">
-                 <UiText text={"Level"} /> {user?.level ?? 1} · {user?.xp ?? 0}  <UiText text={"XP · Profile"} /> {completion} <UiText text={"% complete"} /> </p>
+                 <UiText text={"Level"} /> {learnerLevel(user?.xp ?? 0).level} · {user?.xp ?? 0}  <UiText text={"XP · Profile"} /> {completion} <UiText text={"% complete"} /> </p>
             </div>
 
             {/* Quick actions */}
@@ -937,7 +938,7 @@ export default function AccountProfile() {
             </div>
             <div className="surface-card p-4 text-center">
               <p className="text-[11px] font-bold uppercase tracking-wide text-blue-700"> <UiText text={"Account level"} /> </p>
-              <p className="mt-1 text-2xl font-black text-slate-900">{user?.level ?? 1}</p>
+              <p className="mt-1 text-2xl font-black text-slate-900">{learnerLevel(user?.xp ?? 0).level}</p>
             </div>
             <div className="surface-card p-4 text-center">
               <p className="text-[11px] font-bold uppercase tracking-wide text-blue-700"> <UiText text={"Visibility"} /> </p>

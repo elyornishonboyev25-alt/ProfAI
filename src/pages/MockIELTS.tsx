@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAccountDataRevision } from '@/hooks/useAccountDataRevision'
 import { useAuthStore } from '@/store/authStore'
-import { useFullscreen } from '@/hooks/useFullscreen'
+import CatalogScore from '@/components/catalog/CatalogScore'
+import UiText from '@/components/common/UiText'
 import {
   ArrowRight,
   BookOpen,
@@ -18,10 +19,9 @@ import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import './mock-ielts.css'
 import {
   formatMockDuration,
-  fullMockLaunchState,
+  getFullMockOverallBand,
   getFullMockCatalog,
   getFullMockCompletedSections,
-  getFullMockPendingSection,
   FULL_MOCK_PROGRESS_EVENT,
   MOCK_SECTION_COUNT,
   retakeFullMock,
@@ -52,7 +52,6 @@ const FILTERS = [
 type MockFilter = (typeof FILTERS)[number]['id']
 
 function IELTSMockCatalog() {
-  const { enter } = useFullscreen()
   const navigate = useNavigate()
   const location = useLocation()
   const from = (location.state as { from?: string } | null)?.from
@@ -198,22 +197,18 @@ function IELTSMockCatalog() {
                 ) : finished ? (
                   <span className="mt-3 inline-flex items-center gap-1 self-start rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-emerald-700"><CheckCircle2 className="h-3.5 w-3.5" /> 4/4 completed</span>
                 ) : null}
+                {finished && getFullMockOverallBand(mock.id) !== null ? <CatalogScore score={getFullMockOverallBand(mock.id)!} maximum={9} label="Overall band" detail="4 skills completed" /> : null}
 
                 <div className="mock-ielts-card-footer mt-auto flex items-end justify-between gap-2 pt-6">
                   <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-500"><Clock3 className="h-4 w-4 shrink-0" /> {formatMockDuration(mock.totalMinutes)}{!finished && ' session'}</span>
                   <div className="mock-ielts-card-actions">
-                  {finished ? <button type="button" className="mock-ielts-glass-open mock-ielts-retake mock-ielts-card-open" aria-label={`Retake Full Mock ${mock.index}`} onClick={() => {
+                  {finished ? <><button type="button" className="mock-ielts-glass-open mock-ielts-card-open" aria-label={`Review Full Mock ${mock.index}`} onClick={() => navigate(`/mock/ielts/${mock.id}`, { state: { from: from ?? 'ielts' } })}><UiText text="View results" /></button><button type="button" className="mock-ielts-glass-open mock-ielts-retake" aria-label={`Retake Full Mock ${mock.index}`} onClick={() => {
                     if (!retakeFullMock(mock.id)) { setRetakeError('Unable to save your previous attempt. Please try again.'); return }
                     setRetakeError('')
-                    void enter()
-                    const first = getFullMockPendingSection(mock.id)
-                    if (first?.launchPath) navigate(first.launchPath, { state: fullMockLaunchState(mock.id, first.key, from ?? 'ielts') })
-                  }}><RotateCcw size={14} /> Retake</button> :
+                    navigate(`/mock/ielts/${mock.id}`, { state: { from: from ?? 'ielts' } })
+                  }}><RotateCcw size={14} /> Retake</button></> :
                   <button type="button" className="mock-ielts-glass-open mock-ielts-card-open" aria-label={`${inProgress ? 'Resume' : 'Start'} Full Mock ${mock.index}`} onClick={() => {
-                    if (!finished) void enter()
-                    const pending = getFullMockPendingSection(mock.id)
-                    if (pending?.launchPath) navigate(pending.launchPath, { state: fullMockLaunchState(mock.id, pending.key, from ?? 'ielts') })
-                    else navigate(`/mock/ielts/${mock.id}`, { state: { from: from ?? 'ielts' } })
+                    navigate(`/mock/ielts/${mock.id}`, { state: { from: from ?? 'ielts' } })
                   }}>{inProgress ? 'Resume' : 'Start'} <ArrowRight size={14} /></button>}
                   </div>
                 </div>

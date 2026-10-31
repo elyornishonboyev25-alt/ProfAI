@@ -17,6 +17,7 @@ export default function IELTSWritingTests({ embedded = false }: { embedded?: boo
   const [activeFilter, setActiveFilter] = useState(navigationState?.catalogSkill === 'writing' ? navigationState.catalogFilter ?? 'full' : 'full')
   const deferredSearchTerm = useDeferredValue(searchTerm)
   const revision = useAccountDataRevision()
+  const history = useMemo(() => getWritingAnalysisHistory(user?.id).sort((a, b) => Date.parse(b.savedAt) - Date.parse(a.savedAt)), [user?.id, revision])
   const completedTaskIds = useMemo(
     () => new Set(getWritingAnalysisHistory(user?.id).map((entry) => entry.testId)),
     [user?.id, revision],
@@ -56,9 +57,14 @@ export default function IELTSWritingTests({ embedded = false }: { embedded?: boo
 
   const visibleRows = useMemo(() => {
     const query = deferredSearchTerm.trim().toLowerCase()
-    if (!query) return rows
-    return rows.filter((row) => `${row.title} ${row.subtitle} ${row.badge}`.toLowerCase().includes(query))
-  }, [deferredSearchTerm, rows])
+    const scoredRows = rows.map(row => {
+      const saved = history.find(entry => activeFilter === 'full' ? entry.fullTest?.id === row.id : entry.testId === row.id)
+      const band = activeFilter === 'full' ? saved?.fullTest?.overallBand : saved?.overallBand
+      return { ...row, result: band !== undefined ? { score: band, maximum: 9, label: 'Band score', detail: 'AI assessment' } : undefined }
+    })
+    if (!query) return scoredRows
+    return scoredRows.filter((row) => `${row.title} ${row.subtitle} ${row.badge}`.toLowerCase().includes(query))
+  }, [deferredSearchTerm, rows, history, activeFilter])
 
   return (
     <CompactIeltsCatalog

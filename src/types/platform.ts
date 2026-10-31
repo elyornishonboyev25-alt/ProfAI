@@ -406,6 +406,9 @@ export type LeaderboardResponse = {
 }
 
 export type LeaderboardRow = {
+  nickname?: string | null
+  level?: number
+  lifetimeXp?: number
   premium?: boolean
   rank: number
   previousRank: number

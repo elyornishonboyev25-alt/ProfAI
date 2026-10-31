@@ -1,4 +1,6 @@
 import CrownBadge from '@/components/fx/CrownBadge'
+import { LevelBadge } from '@/components/profile/LearnerLevel'
+import { Phone } from 'lucide-react'
 import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
@@ -274,7 +276,7 @@ function LearnerCard({ learner, score, featured, index, onOpen, available, canTa
           <span className="community-crown-emblem" aria-hidden="true"><Crown className="h-5 w-5" /></span>
           <span> {t('Top learner')} </span>
         </span>
-      ) : <span className="community-level">{t('Level')} {learner.level}</span>}</div>
+      ) : <LevelBadge xp={learner.xp} />}</div>
       <div className={cn('community-avatar-ring', learner.premium && 'premium-member-avatar')}>
         <div className="community-avatar"><ProfileAvatar src={learner.avatarUrl} name={learner.nickname} alt="" /></div>
         <span className={cn('community-presence', learner.online && 'is-online')} title={t(learner.online ? 'Online now' : 'Offline')} />
@@ -288,7 +290,7 @@ function LearnerCard({ learner, score, featured, index, onOpen, available, canTa
         <span><Flame size={14} /><b>{learner.streak}</b><small> <UiText text={"day streak"} /> </small></span>
         <span><Award size={14} /><b>{learner.badgeCount}</b><small>{t('badges')}</small></span>
       </div>
-      {available ? <button type="button" className="community-speak-button" disabled={!canTalk} onClick={onTalk}><Mic size={17} />{t('Speak together')}<ArrowUpRight size={15} /></button> : null}
+      <button type="button" className="community-speak-button" disabled={!canTalk} onClick={onTalk} title={t(available ? 'Send an invitation. The call starts when they accept.' : learner.online ? 'This learner is busy or not in Speaking Zone.' : 'Calls are available when this learner is online.')}><Phone size={17} />{t(available ? 'Call now' : learner.online ? 'Unavailable' : 'Offline')}<ArrowUpRight size={15} /></button>
       <div className="community-card-footer">
         <span className="community-match-mini" title={t('Based on shared study goals, country and activity')}><i style={{ '--match': `${score * 3.6}deg` } as React.CSSProperties} /><span>{score}%<small>{t('Match')}</small></span></span>
         <button type="button" disabled={!learner.nickname} onClick={onOpen}> <UiText text={"View profile"} /><ArrowUpRight size={15} /></button>

@@ -1,4 +1,5 @@
 import CrownBadge from '@/components/fx/CrownBadge'
+import LearnerLevel, { LevelBadge } from '@/components/profile/LearnerLevel'
 import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
@@ -34,7 +35,7 @@ function Shell({ children, onBack, backLabel }: { children: React.ReactNode; onB
     <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
       <div className="relative mx-auto w-full max-w-6xl space-y-6">
         {onBack ? <button onClick={onBack} className="premium-back-btn">
-          <ArrowLeft className="h-3.5 w-3.5" /> {backLabel}
+          <ArrowLeft className="h-3.5 w-3.5" /> <UiText text={backLabel ?? 'Back'} />
         </button> : null}
         {children}
       </div>
@@ -57,8 +58,8 @@ export default function PublicProfile() {
   const navigate = useNavigate()
   const location = useLocation()
   const returnTo = (location.state as { from?: string } | null)?.from
-  const backPath = returnTo === '/community' || returnTo === '/account' ? returnTo : null
-  const shellBack = { onBack: backPath ? () => navigate(backPath) : undefined, backLabel: backPath === '/community' ? 'Back to Community' : 'Back to Account' }
+  const backPath = ['/community', '/community?mode=partner', '/account', '/leaderboard'].includes(returnTo ?? '') ? returnTo! : null
+  const shellBack = { onBack: backPath ? () => navigate(backPath) : undefined, backLabel: backPath?.startsWith('/community') ? 'Back to Community' : backPath === '/leaderboard' ? 'Back to leaderboard' : 'Back to Account' }
   const user = useAuthStore((state) => state.user)
   const localBadges = useBadgeStore((state) => state.records)
   const [serverData, setServerData] = useState<PublicProfilePayload | null>(null)
@@ -196,7 +197,7 @@ export default function PublicProfile() {
               {p.fieldOfStudy ? <p className="mt-2 text-sm font-semibold text-slate-600">{p.fieldOfStudy}</p> : null}
               {p.bio ? <p className="mt-2 max-w-xl text-sm text-slate-600">{p.bio}</p> : null}
               <div className="mt-3 flex flex-wrap gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white px-3 py-1 text-xs font-bold text-slate-700"><Zap className="h-3.5 w-3.5 text-amber-500" />  <UiText text={"Level"} /> {p.level}</span>
+                <LevelBadge xp={p.xp} />
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white px-3 py-1 text-xs font-bold text-slate-700"><Zap className="h-3.5 w-3.5 text-amber-500" /> {p.xp} XP</span>
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white px-3 py-1 text-xs font-bold text-slate-700"><Flame className="h-3.5 w-3.5 text-orange-500" /> {p.streak}  <UiText text={"day streak"} /> </span>
                 {p.country ? <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white px-3 py-1 text-xs font-bold text-slate-700"><MapPin className="h-3.5 w-3.5 text-blue-500" /> {p.country}</span> : null}
@@ -227,6 +228,7 @@ export default function PublicProfile() {
         </Reveal>
       ) : null}
 
+      <LearnerLevel xp={p.xp} />
       {xpBreakdown.length ? (
         <Reveal>
           <article className="surface-card p-5">

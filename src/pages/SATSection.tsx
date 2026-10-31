@@ -9,6 +9,8 @@ import { getSATSectionTest, isSATSection, SAT_TEST_CATALOG, satAvailabilityNote 
 import './mock-ielts.css'
 import './SATSection.css'
 import SATSectionTabs, { SAT_SECTION_TABS } from '@/components/sat/SATSectionTabs'
+import CatalogScore from '@/components/catalog/CatalogScore'
+import { scoreSATModules } from '@/features/sat/practiceTest4'
 
 const tabs = SAT_SECTION_TABS
 type TabId = 'mocks' | 'reading-writing' | 'math'
@@ -42,9 +44,10 @@ export default function SATSection() {
   const answeredInProgress = inProgress
     ? inProgress.test.modules.flatMap((module) => module.questions).filter((question) => inProgress.attempt?.answers[question.id]?.trim()).length
     : 0
-  const completedTestIds = new Set(loadSATAttemptHistory()
+  const submittedHistory = loadSATAttemptHistory()
     .filter(({ attempt }) => attempt.status === 'submitted')
-    .map(({ attempt }) => attempt.testId))
+    .sort((a, b) => (b.attempt.submittedAt ?? b.attempt.updatedAt ?? 0) - (a.attempt.submittedAt ?? a.attempt.updatedAt ?? 0))
+  const completedTestIds = new Set(submittedHistory.map(({ attempt }) => attempt.testId))
 
 
   return (
@@ -99,6 +102,10 @@ export default function SATSection() {
                 {visibleTests.map((test) => {
                   const attempt = attemptsByTestId.get(test.id)
                   const completed = attempt?.status === 'submitted' || completedTestIds.has(test.id)
+                  const scoredAttempt = attempt?.status === 'submitted' ? attempt : submittedHistory.find(item => item.attempt.testId === test.id)?.attempt
+                  const report = scoredAttempt ? scoreSATModules(test.modules, scoredAttempt.answers) : null
+                  const scoreRange = report ? section === 'math' ? report.mathRange : report.readingWritingRange : null
+                  const score = report ? isFullMock ? report.midpoint : Math.round((scoreRange![0] + scoreRange![1]) / 20) * 10 : null
                   const answered = Object.values(attempt?.answers ?? {}).filter((answer) => answer.trim()).length
                   const note = satAvailabilityNote(test)
                   const expectedModules = isFullMock ? 4 : 2
@@ -127,6 +134,7 @@ export default function SATSection() {
                       </div>
                       <h2 className="mt-3 text-2xl font-black tracking-[-0.04em] text-slate-950">{isFullMock ? 'Full Mock' : 'Practice Test'} {test.mockId}</h2>
                       <p className="mt-2 line-clamp-2 text-sm font-medium leading-6 text-slate-500">{test.badge}</p>
+                      {report && score !== null ? <CatalogScore score={score} maximum={isFullMock ? 1600 : 800} label="Estimated score" detail={`${report.correct}/${test.questionCount} correct`} /> : null}
                       <div className="mt-4 flex flex-wrap gap-1.5" aria-label="SAT sections">
                         {cardSections.map(({ id, label, icon: Icon }) => (
                           <span key={id} title={label} className="inline-flex items-center gap-1 rounded-lg border border-red-100 bg-white/90 px-2 py-1 text-[11px] font-bold text-red-700">

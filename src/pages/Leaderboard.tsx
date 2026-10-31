@@ -16,7 +16,8 @@ import {
   Users,
   Zap,
 } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import LearnerLevel, { LevelBadge } from '@/components/profile/LearnerLevel'
 import UiText from '@/components/common/UiText'
 import { Skeleton } from '@/components/common/Skeleton'
 import LeaderboardAvatar from '@/components/leaderboard/LeaderboardAvatar'
@@ -63,6 +64,7 @@ export default function Leaderboard() {
   const { c } = useCopy()
   const navigate = useNavigate()
   const userId = useAuthStore((state) => state.user?.id)
+  const userXp = useAuthStore((state) => state.user?.xp ?? 0)
   const [period, setPeriod] = useState<'week' | 'month' | 'all'>('week')
   const [data, setData] = useState<LeaderboardResponse | null>(null)
   const [loading, setLoading] = useState(true)
@@ -348,6 +350,7 @@ export default function Leaderboard() {
               </div>
             )}
 
+            <LearnerLevel xp={data?.rows.find(row => row.isCurrentUser)?.lifetimeXp ?? userXp} />
             <section
               className="leaderboard-podium-section"
               aria-labelledby="podium-heading"
@@ -397,13 +400,14 @@ export default function Leaderboard() {
                       </div>
                       <div className="leaderboard-podium-person">
                         <div className="leaderboard-podium-avatar">
-                          <LeaderboardAvatar row={row} size="lg" />
+                          {row.nickname ? <Link to={`/u/${encodeURIComponent(row.nickname)}`} state={{ from: '/leaderboard' }} aria-label={`${c('View profile')}: ${row.fullName}`}><LeaderboardAvatar row={row} size="lg" /></Link> : <LeaderboardAvatar row={row} size="lg" />}
                           <span className="leaderboard-medallion">
                             {row.rank.toString().padStart(2, '0')}
                           </span>
                         </div>
                         <div className="leaderboard-podium-name">
-                          <h3 title={row.fullName}>{row.fullName}</h3>
+                          <h3 title={row.fullName}>{row.nickname ? <Link to={`/u/${encodeURIComponent(row.nickname)}`} state={{ from: '/leaderboard' }}>{row.fullName}</Link> : row.fullName}</h3>
+                          {row.lifetimeXp !== undefined ? <LevelBadge xp={row.lifetimeXp} /> : null}
                           {row.premium ? <CrownBadge size="sm" /> : null}
                           <span>
                             {row.isCurrentUser ? (
@@ -541,10 +545,12 @@ export default function Leaderboard() {
                             </td>
                             <th scope="row">
                               <div className="leaderboard-learner">
+                                {row.nickname ? <Link to={`/u/${encodeURIComponent(row.nickname)}`} state={{ from: '/leaderboard' }} aria-label={`${c('View profile')}: ${row.fullName}`}><LeaderboardAvatar row={row} /></Link> :
                                 <LeaderboardAvatar row={row} />
+                                }
                                 <div>
                                   <p title={row.fullName}>
-                                    {row.fullName}
+                                    {row.nickname ? <Link to={`/u/${encodeURIComponent(row.nickname)}`} state={{ from: '/leaderboard' }}>{row.fullName}</Link> : row.fullName}
                                     {row.premium ? <CrownBadge size="sm" /> : null}
                                     {row.isCurrentUser && (
                                       <span className="leaderboard-you">
@@ -554,6 +560,7 @@ export default function Leaderboard() {
                                   </p>
                                   <small>
                                     {row.testsCompleted} <UiText text="tests" />
+                                    {' '}{row.lifetimeXp !== undefined ? <LevelBadge xp={row.lifetimeXp} /> : null}
                                     <span className="leaderboard-mobile-result">
                                       {' '}
                                       · {resultLabel(row)}

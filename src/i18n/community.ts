@@ -1,6 +1,20 @@
 import { useCopy } from './interface'
 
 const copy: Record<string, [string, string]> = {
+  'Call now': ['Qo‘ng‘iroq qilish', 'Позвонить'],
+  'Call sounds on': ['Qo‘ng‘iroq ovozi yoqilgan', 'Звук звонка включён'],
+  'Call sounds off': ['Qo‘ng‘iroq ovozi o‘chirilgan', 'Звук звонка выключен'],
+  'Unavailable': ['Hozir band', 'Недоступен'],
+  'This learner is busy or not in Speaking Zone.': ['Bu foydalanuvchi band yoki Speaking Zone’da emas.', 'Участник занят или находится вне Speaking Zone.'],
+  'Calls are available when this learner is online.': ['Foydalanuvchi onlayn bo‘lganda qo‘ng‘iroq qilishingiz mumkin.', 'Позвонить можно, когда участник онлайн.'],
+  'Speaking rooms are temporarily unavailable. Check your connection or try reconnecting.': ['Suhbat xonalariga hozir ulanib bo‘lmadi. Internetni tekshiring yoki qayta ulaning.', 'Комнаты временно недоступны. Проверьте интернет или подключитесь заново.'],
+  'Microphone access is blocked. Allow the microphone in your browser site settings, then try again.': ['Mikrofonga ruxsat berilmagan. Brauzerning sayt sozlamalarida mikrofonga ruxsat bering va qayta urining.', 'Доступ к микрофону заблокирован. Разрешите его в настройках сайта и повторите попытку.'],
+  'No microphone found. Connect a microphone and try again.': ['Mikrofon topilmadi. Mikrofonni ulang va qayta urining.', 'Микрофон не найден. Подключите его и повторите попытку.'],
+  'Your microphone is busy. Close other apps using it, then try again.': ['Mikrofon boshqa dasturda band. Uni ishlatayotgan dasturlarni yoping va qayta urining.', 'Микрофон занят. Закройте другие приложения, использующие его, и повторите попытку.'],
+  'Microphone permission is still waiting. Check your browser permission prompt, then try again.': ['Mikrofon ruxsati kutilmoqda. Brauzerning ruxsat oynasini tekshiring va qayta urining.', 'Ожидается разрешение на микрофон. Проверьте запрос браузера и повторите попытку.'],
+  'Your microphone was disconnected. Reconnect it and choose Unmute to continue.': ['Mikrofon uzildi. Qayta ulang va davom etish uchun mikrofonni yoqing.', 'Микрофон отключён. Подключите его и нажмите «Включить микрофон».'],
+  'Microphone access needs a secure connection. Open the site using HTTPS.': ['Mikrofon uchun himoyalangan ulanish kerak. Saytni HTTPS orqali oching.', 'Для микрофона нужно защищённое соединение. Откройте сайт через HTTPS.'],
+  'Your browser does not support microphone access. Open this page in Chrome, Edge, Firefox or Safari.': ['Bu brauzer mikrofondan foydalanishni qo‘llamaydi. Sahifani Chrome, Edge, Firefox yoki Safari’da oching.', 'Браузер не поддерживает микрофон. Откройте страницу в Chrome, Edge, Firefox или Safari.'],
   'Message options': ['Xabar amallari', 'Действия с сообщением'],
   'Edit message': ['Xabarni tahrirlash', 'Редактировать сообщение'],
   'Delete message': ['Xabarni o‘chirish', 'Удалить сообщение'],

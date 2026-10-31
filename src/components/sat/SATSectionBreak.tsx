@@ -6,11 +6,11 @@ import './SATSectionBreak.css'
 
 // Official Soothing Relaxation uploads, embedded directly from YouTube.
 const tracks = [
-  { id: '77ZozI0rw7w', label: 'Piano & water sounds' },
-  { id: 'QQ-WACJqc4Y', label: 'Peaceful piano' },
+  { id: '6GVgncA9oiw', label: 'Piano, cello & guitar' },
+  { id: 'lCOF9LN_Zxs', label: 'Peaceful piano' },
 ]
 
-export default function SATSectionBreak({ endsAt, now, onExit }: { endsAt: number; now: number; onExit: () => void }) {
+export default function SATSectionBreak({ endsAt, now, onExit, onContinue }: { endsAt: number; now: number; onExit: () => void; onContinue: () => void }) {
   const { c } = useCopy()
   const [musicEnabled, setMusicEnabled] = useState(false)
   const [trackIndex, setTrackIndex] = useState(0)
@@ -44,6 +44,8 @@ export default function SATSectionBreak({ endsAt, now, onExit }: { endsAt: numbe
             <p className="sat-section-break__next">{c('Up next: Math Module 1')}</p>
             <p>{c('Math starts automatically when the break ends. Your Math time is reserved until then.')}</p>
             <p className="sat-section-break__tip">{c('Look away from the screen, stretch and take a few slow breaths.')}</p>
+            <button type="button" className="sat-section-break__continue" onClick={onContinue}>{c('Start Math now')}</button>
+            <p>{c('Ready early? End your break and start with your full Math time.')}</p>
           </div>
 
           <div className="sat-section-break__music">
@@ -52,7 +54,7 @@ export default function SATSectionBreak({ endsAt, now, onExit }: { endsAt: numbe
             <p>{c('Enjoy a quiet moment. Music is optional and starts only when you turn it on.')}</p>
             <label htmlFor="sat-break-track">{c('Choose music')}</label>
             <select id="sat-break-track" value={trackIndex} onChange={event => setTrackIndex(Number(event.target.value))}>
-              <option value={0}>{c('Piano & water sounds')}</option>
+              <option value={0}>{c('Piano, cello & guitar')}</option>
               <option value={1}>{c('Peaceful piano')}</option>
             </select>
             <button type="button" className="sat-section-break__music-toggle" aria-pressed={musicEnabled} onClick={() => setMusicEnabled(enabled => !enabled)}>

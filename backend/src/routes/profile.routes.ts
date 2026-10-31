@@ -6,7 +6,7 @@ import { requireAuth } from '../middleware/auth.js'
 import { canUseOwnerNickname } from '../middleware/owner.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { addUtcDays } from '../utils/date.js'
-import { getLevelProgress } from '../config/levelConfig.js'
+import { getLevelProgress, resolveLevelFromXp } from '../config/levelConfig.js'
 import { generateLeaderboard, invalidateLeaderboardCache } from '../services/leaderboard.service.js'
 import { generateSkillAnalytics } from '../services/analytics.service.js'
 import { generateAiCoachReport, isAiCoachProviderError } from '../services/aiCoach.service.js'
@@ -523,7 +523,7 @@ router.get(
         id: user.id,
         fullName: user.fullName,
         email: user.email,
-        level: user.level,
+        level: resolveLevelFromXp(user.xp),
         xp: user.xp,
         currentStreak: learningStreak.currentStreak,
         longestStreak: Math.max(user.longestStreak, learningStreak.longestStreak),
@@ -1528,7 +1528,7 @@ router.post(
             xpEarned: 0,
             originalXp: existing.amount,
             totalXp: current?.xp ?? 0,
-            level: current?.level ?? 1,
+            level: resolveLevelFromXp(current?.xp ?? 0),
           }
         }
       }
@@ -1644,7 +1644,7 @@ router.get(
         lastSeen: user.lastActiveDate,
         streak: user.currentStreak,
         longestStreak: user.longestStreak,
-        level: user.level,
+        level: resolveLevelFromXp(user.xp),
         xp: user.xp,
         memberSince: user.createdAt,
         rank: sessions.length ? rank : null,
@@ -1800,7 +1800,7 @@ router.get(
       nickname: user.nickname ?? null,
       avatarUrl: user.avatarUrl ?? null,
       googleAvatarUrl: user.googleAvatarUrl ?? null,
-      level: user.level,
+      level: resolveLevelFromXp(user.xp),
       xp: user.xp,
       memberSince: user.createdAt,
       profile: serializeProfile(profile),
@@ -2044,7 +2044,7 @@ router.get(
         nickname: u.nickname,
         premium: hasPremiumIdentity(u),
         avatarUrl: u.avatarUrl ?? null,
-        level: u.level,
+        level: resolveLevelFromXp(u.xp),
         xp: u.xp,
         streak: u.currentStreak,
         badgeCount: u._count.skillBadges,
@@ -2124,7 +2124,7 @@ router.get(
         premium: hasPremiumIdentity(user),
         displayName: user.nickname ?? 'Learner',
         avatarUrl: user.avatarUrl ?? null,
-        level: user.level,
+        level: resolveLevelFromXp(user.xp),
         xp: user.xp,
         streak: learningStreak.currentStreak,
         longestStreak: Math.max(user.longestStreak, learningStreak.longestStreak),

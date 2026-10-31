@@ -82,7 +82,10 @@ function resolveStatus(
 
 export default function MockIELTSRun() {
   const { mockId } = useParams<{ mockId: string }>()
-  return <IeltsTestExitGuard mockId={mockId} active={() => !!mockId && getFullMockCompletedSections(mockId).length < 4}>
+  return <IeltsTestExitGuard mockId={mockId} active={() => {
+    const completed = mockId ? getFullMockCompletedSections(mockId).length : 0
+    return completed > 0 && completed < 4
+  }}>
     <MockIELTSRunContent />
   </IeltsTestExitGuard>
 }
@@ -258,6 +261,14 @@ function MockIELTSRunContent() {
                       'Аудирование, чтение, письмо и говорение. Завершите все четыре раздела, чтобы увидеть общий балл.',
                     )}
               </p>
+              <div className="mock-run-readiness">
+                <strong><UiText text={liveDone ? 'Ready to continue?' : 'Ready for your full mock?'} /></strong>
+                <p><UiText text="Find a quiet place and have your headphones ready. The test and timer start only when you choose to begin." /></p>
+                <button type="button" className="mock-run-start" disabled={!mock.sections.some((_, index) => resolveStatus(mock.sections, index, completedSet) === 'current')} onClick={() => {
+                  const next = mock.sections.find((section, index) => resolveStatus(mock.sections, index, completedSet) === 'current')
+                  if (next) launchSection(next)
+                }}><PlayCircle size={19} /><UiText text={liveDone ? 'Continue my mock' : 'I am ready, start Listening'} /></button>
+              </div>
               <div className="mock-run-session">
                 <div>
                   <Clock3 size={18} />

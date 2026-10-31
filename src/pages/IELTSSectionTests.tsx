@@ -93,9 +93,18 @@ export default function IELTSSectionTests({ sectionOverride, embedded = false }:
           detail: `Part ${partNumber} · focused practice`,
         }))
       : rows
+    const scoredRows = filteredByPart.map(row => {
+      const latest = history.filter(entry => entry.testId === row.id && entry.totalQuestions > 0 && (!partNumber ? !entry.isPartial : !entry.isPartial || entry.sectionSummaries.some(part => part.partNumber === partNumber)))
+        .sort((a, b) => Date.parse(b.savedAt) - Date.parse(a.savedAt))[0]
+      const part = partNumber ? latest?.sectionSummaries.find(item => item.partNumber === partNumber) : undefined
+      const result = partNumber
+        ? part ? { score: part.correctAnswers, maximum: part.totalQuestions, label: 'Correct answers', detail: `${Math.round(part.accuracy)}%` } : undefined
+        : latest ? { score: latest.bandScore, maximum: 9, label: 'Band score', detail: `${latest.correctAnswers}/${latest.totalQuestions} correct` } : undefined
+      return { ...row, result }
+    })
     const query = deferredSearchTerm.trim().toLowerCase()
-    if (!query) return filteredByPart
-    return filteredByPart.filter((row) => `${row.title} ${row.subtitle}`.toLowerCase().includes(query))
+    if (!query) return scoredRows
+    return scoredRows.filter((row) => `${row.title} ${row.subtitle}`.toLowerCase().includes(query))
   }, [activeFilter, deferredSearchTerm, rows, track, history])
 
   if (!validSection) return <Navigate to="/ielts" replace />

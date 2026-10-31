@@ -7,6 +7,9 @@ import type { RoomDraft, SpeakingCommunity, SpeakingMember, SpeakingRoom } from 
 import { useCommunityCopy } from '@/i18n/community'
 import { AudioSetup, ConversationToolkit, SpeakingGettingStarted } from './SpeakingTools'
 import SpeakingLaunchpad, { ConversationSpark } from './SpeakingLaunchpad'
+import { useCallFeedback } from '@/hooks/useCallFeedback'
+import { Phone, Volume2, VolumeX, RefreshCw } from 'lucide-react'
+import '@/styles/speaking-calls.css'
 
 const KINDS = { conversation: 'Conversation', debate: 'Debate', ielts: 'IELTS practice' }
 const LEVELS = { all: 'All levels', beginner: 'Beginner', intermediate: 'Intermediate', advanced: 'Advanced' }
@@ -39,6 +42,7 @@ export default function SpeakingHub({ hub, invitedRoom, view = 'rooms' }: { hub:
   const isHost = room?.hostId === hub.selfId
   const blocked = !room && !hub.busy && !hub.invitation && hub.activity !== 'idle'
   const canStart = hub.connected && !hub.busy && !blocked && !hub.invitation
+  const { sound, toggleSound } = useCallFeedback(!!hub.invitation, !!hub.outgoingInvitation)
 
   useEffect(() => { chatRef.current?.scrollTo({ top: chatRef.current.scrollHeight, behavior: 'smooth' }) }, [hub.messages])
   useEffect(() => { if (hub.room) setCreating(false); setCopied(false); setShareUrl('') }, [hub.room?.id])
@@ -57,12 +61,13 @@ export default function SpeakingHub({ hub, invitedRoom, view = 'rooms' }: { hub:
   }
   return <section className="speaking-hub" aria-label="Speaking Zone">
     {invitedRoom && !room ? <div className="hub-invitation"><LockKeyhole size={22} /><div><b>{t('Invitation link')}</b><p>{t('Someone invited you to a speaking room.')}</p></div><button type="button" className="hub-button is-primary" disabled={!canStart} onClick={() => void hub.join(invitedRoom)}>{t('Join invited room')}<ArrowRight size={17} /></button></div> : null}
+    <div className="hub-audio-preferences"><button type="button" className="hub-button" aria-pressed={sound} onClick={toggleSound}>{sound ? <Volume2 size={16} /> : <VolumeX size={16} />}{t(sound ? 'Call sounds on' : 'Call sounds off')}</button>{!hub.connected ? <button type="button" className="hub-button" onClick={hub.reconnect}><RefreshCw size={16} />{t('Reconnect')}</button> : null}</div>
     {hub.error ? <div className="hub-feedback is-error" role="alert"><span>{t(hub.error)}</span><button type="button" onClick={hub.clearError} aria-label={t('Close')}><X size={17} /></button></div> : null}
     {hub.notice && !hub.outgoingInvitation ? <div className="hub-feedback" role="status">{t(hub.notice)}</div> : null}
     {blocked ? <div className="hub-activity-recovery" role="status"><Headphones size={23} /><div><b>{t('You already have an active session')}</b><p>{t('A room, search or invitation is still active in this account. End it to start a new conversation. This also closes it in other tabs.')}</p></div><button type="button" className="hub-button" onClick={hub.resetActivity}><PhoneOff size={16} />{t('End session & start again')}</button></div> : null}
     {view === 'partner' && hub.connected && !hub.publicProfile ? <div className="hub-activity-recovery"><LockKeyhole size={23} /><div><b>{t('Enable your public profile to find a speaking partner.')}</b><p>{t('Your nickname and study goals help other learners find you.')}</p></div><a className="hub-button" href="/profile">{t('Edit profile')}<ArrowRight size={16} /></a></div> : null}
     {hub.invitation ? <div className="hub-invitation" role="status">
-      <span className="hub-invite-icon"><Headphones /></span>
+      <span className="hub-invite-icon"><Phone /></span>
       <div><b>{t('Speaking invitation')}</b><p>@{hub.invitation.from.name} {t('invites you to a private voice conversation.')}</p></div>
       <button type="button" className="hub-button is-primary" disabled={!hub.connected || hub.busy || !!room} onClick={() => void hub.reply(true)}>{t('Accept & join')}</button>
       <button type="button" className="hub-button" onClick={() => void hub.reply(false)}>{t('Decline')}</button>
@@ -116,7 +121,7 @@ export default function SpeakingHub({ hub, invitedRoom, view = 'rooms' }: { hub:
         <div className="hub-room-grid">{visible.map(room => <SocialRoomCard key={room.id} room={room} hub={hub} />)}</div>
         {!visible.length ? <div className="hub-lobby-empty"><span>🫶</span><div><h3>{t(query.trim() || kind !== 'all' || level !== 'all' ? 'No rooms match yet' : 'Be the first voice in the room')}</h3><p>{t(query.trim() || kind !== 'all' || level !== 'all' ? 'Try another topic or open your own room.' : 'A hello is all it takes. Pick a topic above and welcome people in.')}</p></div><button type="button" className="hub-button is-primary" disabled={!canStart} onClick={() => { if (query.trim() || kind !== 'all' || level !== 'all') { setQuery(''); setKind('all'); setLevel('all') } else openStarter(0) }}><Mic size={17} />{t(query.trim() || kind !== 'all' || level !== 'all' ? 'Clear filters' : 'Start talking')}</button></div> : null}
       </section></>}
-      <div className="hub-setup-row"><details className="hub-help"><summary><CircleHelp size={17} />{t('How to start speaking')}<ChevronDown size={15} /></summary><SpeakingGettingStarted partner={view === 'partner'} /></details><AudioSetup disabled={!canStart} /></div>
+      <div className="hub-setup-row"><details className="hub-help"><summary><CircleHelp size={17} />{t('How to start speaking')}<ChevronDown size={15} /></summary><SpeakingGettingStarted partner={view === 'partner'} /></details><AudioSetup disabled={!!room || hub.busy} /></div>
     </>}
     {hub.busy && !room ? <PendingConnection hub={hub} /> : null}
     {creating ? <QuickCreate onClose={() => { if (hub.busy) hub.leave(); setCreating(false) }} onCreate={hub.create} busy={hub.busy} error={hub.error} /> : null}
@@ -131,7 +136,7 @@ function PartnerDiscovery({ hub }: { hub: SpeakingCommunity }) {
   const partners = available.filter(name => name.toLowerCase().includes(query.trim().toLowerCase()))
   return <section className="hub-partner-discovery" aria-label={t('Partner')}>
     <div className="hub-section-label"><div><h2>{t('Choose your partner')} <span className="hub-partner-count">{available.length}</span></h2><small>{t('Send an invitation. The call starts when they accept.')}</small></div><label className="hub-room-search"><Search size={16} /><input value={query} onChange={event => setQuery(event.target.value)} placeholder={t('Search by nickname')} aria-label={t('Search by nickname')} />{query ? <button type="button" onClick={() => setQuery('')} aria-label={t('Clear search')}><X size={15} /></button> : null}</label></div>
-    <div className="hub-partner-grid">{partners.map(name => <article key={name} className="hub-partner-card"><span className="hub-partner-card-label"><span className="hub-live-dot" />{t('Ready to talk')}</span><div className="hub-partner-avatar"><ProfileAvatar src={hub.availablePeople.find(person => person.name === name)?.avatarUrl} name={name} alt="" /><i /></div><div className="hub-partner-identity"><h3>@{name}</h3><span><Headphones size={13} />{t('One-to-one voice practice')}</span></div><div className="hub-partner-card-actions"><button type="button" className="hub-button" disabled={!hub.connected || !hub.publicProfile || hub.activity !== 'idle' || hub.busy || !!hub.invitation} onClick={() => void hub.invite(name)}><Mic size={16} />{t('Invite to talk')}<ArrowRight size={14} /></button><button type="button" className="hub-partner-profile" onClick={() => navigate('/u/' + encodeURIComponent(name), { state: { from: '/community?mode=partner' } })}>{t('View profile')}<ArrowRight size={13} /></button></div></article>)}</div>
+    <div className="hub-partner-grid">{partners.map(name => <article key={name} className="hub-partner-card"><span className="hub-partner-card-label"><span className="hub-live-dot" />{t('Ready to talk')}</span><div className="hub-partner-avatar"><ProfileAvatar src={hub.availablePeople.find(person => person.name === name)?.avatarUrl} name={name} alt="" /><i /></div><div className="hub-partner-identity"><h3>@{name}</h3><span><Headphones size={13} />{t('One-to-one voice practice')}</span></div><div className="hub-partner-card-actions"><button type="button" className="hub-button" disabled={!hub.connected || !hub.publicProfile || hub.activity !== 'idle' || hub.busy || !!hub.invitation} onClick={() => void hub.invite(name)}><Phone size={16} />{t('Call now')}<ArrowRight size={14} /></button><button type="button" className="hub-partner-profile" onClick={() => navigate('/u/' + encodeURIComponent(name), { state: { from: '/community?mode=partner' } })}>{t('View profile')}<ArrowRight size={13} /></button></div></article>)}</div>
     {!partners.length && !hub.busy && !hub.invitation ? <div className="hub-lobby-empty"><Headphones size={28} /><div><h3>{t(!hub.connected ? 'Connecting to partners...' : query.trim() ? 'No partner found' : 'Your next partner is on their way.')}</h3><p>{t(query.trim() ? 'Try another nickname or use random matching.' : 'Join random matching, or invite a learner when they appear online here.')}</p></div>{query.trim() ? <button type="button" className="hub-button" onClick={() => setQuery('')}>{t('Clear search')}</button> : null}</div> : null}
   </section>
 }
@@ -145,7 +150,7 @@ function PendingConnection({ hub }: { hub: SpeakingCommunity }) {
     return () => window.clearInterval(timer)
   }, [hub.outgoingInvitation])
   const outgoing = hub.outgoingInvitation
-  return <div className={cn('hub-pending', outgoing && 'is-inviting')} role="status"><span className="hub-pending-icon">{outgoing ? <Send size={22} /> : <Loader2 className="animate-spin" size={22} />}</span><div><b>{outgoing ? `${t('Waiting for')} @${outgoing.nickname}` : t(hub.matching ? 'Looking for your next conversation…' : 'Connecting…')}</b><p>{t(outgoing ? 'Your invitation is on its way. The call opens when they accept.' : hub.matching ? 'Stay here. We will connect you when another learner is ready.' : 'Preparing your voice room.')}</p>{outgoing ? <small>{Math.max(0, Math.ceil((outgoing.expiresAt - now) / 1000))}s · {t('Invitation expires automatically')}</small> : null}</div><button type="button" className="hub-button" onClick={hub.leave}>{t('Cancel')}</button></div>
+  return <div className={cn('hub-pending', outgoing && 'is-inviting')} role="status"><span className="hub-pending-icon">{outgoing ? <Phone size={22} /> : <Loader2 className="animate-spin" size={22} />}</span><div><b>{outgoing ? `${t('Waiting for')} @${outgoing.nickname}` : t(hub.matching ? 'Looking for your next conversation…' : 'Connecting…')}</b><p>{t(outgoing ? 'Your invitation is on its way. The call opens when they accept.' : hub.matching ? 'Stay here. We will connect you when another learner is ready.' : 'Preparing your voice room.')}</p>{outgoing ? <small>{Math.max(0, Math.ceil((outgoing.expiresAt - now) / 1000))}s · {t('Invitation expires automatically')}</small> : null}</div><button type="button" className="hub-button" onClick={hub.leave}>{t('Cancel')}</button></div>
 }
 
 function DebateStage({ hub }: { hub: SpeakingCommunity }) {

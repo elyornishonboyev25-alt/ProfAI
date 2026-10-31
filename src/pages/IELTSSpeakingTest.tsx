@@ -196,6 +196,7 @@ function SpeakingTestContent() {
         onSaved={(analysis, transcript, launchMode) => {
           markSpeakingTestCompleted(mode.mock.id, user?.id)
           const localSession = addSession({
+            testId: mode.mock.id,
             userId: user?.id ?? null,
             modeLabel: mode.mock.title,
             kind: 'examiner',

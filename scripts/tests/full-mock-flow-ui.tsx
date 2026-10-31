@@ -17,6 +17,11 @@ export async function run() {
   await i18n.changeLanguage('en')
   const originalFetch = globalThis.fetch
   const originalTimeout = globalThis.setTimeout
+  // Rendering 35 full mocks can cross a real second on slower machines.
+  // This suite checks fresh section deadlines, so keep the exam clock stable.
+  const originalNow = Date.now
+  const examNow = originalNow()
+  Date.now = () => examNow
   const originalWindowTimeout = window.setTimeout.bind(window)
   const fast = (ms?: number) => [1200, 1900, 2200, 3000].includes(ms ?? 0) ? 0 : ms
   globalThis.setTimeout = ((fn: (...args: unknown[]) => void, ms?: number, ...args: unknown[]) => originalTimeout(fn, fast(ms), ...args)) as typeof setTimeout
@@ -129,6 +134,7 @@ export async function run() {
     if (root) await act(async () => root!.unmount())
     globalThis.fetch = originalFetch
     globalThis.setTimeout = originalTimeout
+    Date.now = originalNow
     window.setTimeout = originalWindowTimeout
     useAuthStore.getState().clearSession()
     localStorage.clear()

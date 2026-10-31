@@ -1,20 +1,37 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="ivyGoo — SAT, IELTS and study abroad">
-  <defs>
-    <linearGradient id="canvas" x2="1" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#f2f3f5"/></linearGradient>
-    <linearGradient id="crimson" x2="1" y2="1"><stop stop-color="#f4224b"/><stop offset="1" stop-color="#b60025"/></linearGradient>
-  </defs>
-  <rect width="1200" height="630" fill="url(#canvas)"/>
-  <circle cx="1180" cy="40" r="380" fill="#df0030" opacity=".035"/>
-  <rect x="24" y="24" width="1152" height="582" rx="32" fill="#fff" fill-opacity=".6" stroke="#e4e6e9"/>
-  <image href="brand/ivygoo-horizontal.svg" x="76" y="54" width="310" height="114"/>
-  <image href="logo.svg" x="850" y="123" width="260" height="300"/>
-  <g font-family="Segoe UI,Arial,sans-serif">
-    <text x="80" y="211" font-size="18" letter-spacing="2.5" fill="#69717d">YOUR NEXT CHAPTER STARTS HERE</text>
-    <text x="76" y="314" font-size="65" font-weight="800" fill="#22272d">IELTS. SAT.</text>
-    <text x="76" y="394" font-size="65" font-weight="800" fill="#22272d">A bigger future.</text>
-    <text x="80" y="449" font-size="25" fill="#606976">Exam practice, English skills and study-abroad planning.</text>
-    <rect x="78" y="491" width="195" height="57" rx="28" fill="url(#crimson)"/>
-    <text x="175" y="528" text-anchor="middle" font-size="23" font-weight="700" fill="#fff">ivygoo.com</text>
-    <text x="1100" y="527" text-anchor="end" font-size="22" fill="#606976">Prepare. Practice. Progress.</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="IvyGoo: IELTS and SAT practice">
+<defs>
+  <linearGradient id="canvas" x2="1" y2="1"><stop stop-color="#f9fafc"/><stop offset="1" stop-color="#dce1ea"/></linearGradient>
+  <linearGradient id="glass" x2=".9" y2="1"><stop stop-color="#fff" stop-opacity=".96"/><stop offset=".5" stop-color="#f7f8fb" stop-opacity=".82"/><stop offset="1" stop-color="#e4e8f0" stop-opacity=".9"/></linearGradient>
+  <linearGradient id="crimson" x2="1" y2="1"><stop stop-color="#e1405a"/><stop offset="1" stop-color="#a11936"/></linearGradient>
+  <linearGradient id="silver" x2=".9" y2="1"><stop stop-color="#fff"/><stop offset=".5" stop-color="#e1e6ef"/><stop offset="1" stop-color="#f7f8fb"/></linearGradient>
+  <radialGradient id="glow"><stop stop-color="#cc4a65" stop-opacity=".15"/><stop offset="1" stop-color="#cc4a65" stop-opacity="0"/></radialGradient>
+  <filter id="shadow" x="-30%" y="-30%" width="170%" height="180%"><feDropShadow dy="15" stdDeviation="15" flood-color="#35415b" flood-opacity=".12"/></filter>
+</defs>
+<rect width="1200" height="630" fill="url(#canvas)"/>
+<ellipse cx="1060" cy="150" rx="420" ry="350" fill="url(#glow)"/>
+<rect x="26" y="26" width="1148" height="578" rx="36" fill="url(#glass)" stroke="#fff" stroke-width="2"/>
+<path d="M70 29H1110" stroke="#fff" stroke-width="3"/>
+<image href="brand/ivygoo-horizontal.svg" x="70" y="50" width="235" height="87"/>
+<g font-family="Segoe UI,Arial,sans-serif">
+  <text x="78" y="231" font-size="76" font-weight="800" letter-spacing="-3" fill="#252b37">Your next</text>
+  <text x="78" y="317" font-size="76" font-weight="800" letter-spacing="-3" fill="#252b37">chapter starts here.</text>
+  <text x="82" y="376" font-size="25" fill="#616b7e">IELTS. SAT. A world of possibilities.</text>
+  <rect x="80" y="430" width="258" height="62" rx="19" fill="url(#crimson)"/>
+  <text x="209" y="470" text-anchor="middle" font-size="24" font-weight="700" fill="#fff">ivygoo.com</text>
+  <text x="82" y="551" font-size="19" fill="#6b7484">Prepare. Practice. Progress.</text>
+  <g filter="url(#shadow)">
+    <rect x="840" y="174" width="272" height="164" rx="27" fill="url(#silver)" stroke="#fff" stroke-width="2"/>
+    <rect x="859" y="193" width="57" height="37" rx="11" fill="#ffffffc9"/>
+    <text x="888" y="218" text-anchor="middle" font-size="17" font-weight="700" fill="#a8203a">IELTS</text>
+    <text x="861" y="294" font-size="55" font-weight="800" fill="#a8203a" letter-spacing="-2">7.5+</text>
+    <text x="1088" y="288" text-anchor="end" font-size="16" fill="#687286">Target band</text>
+    <rect x="861" y="310" width="229" height="5" rx="3" fill="#d5dce7"/><rect x="861" y="310" width="186" height="5" rx="3" fill="#be2644"/>
+    <rect x="812" y="361" width="300" height="164" rx="27" fill="url(#silver)" stroke="#fff" stroke-width="2"/>
+    <rect x="833" y="381" width="57" height="36" rx="11" fill="#ffffffc9"/>
+    <text x="861" y="406" text-anchor="middle" font-size="17" font-weight="700" fill="#a8203a">SAT</text>
+    <text x="834" y="481" font-size="55" font-weight="800" fill="#252b37" letter-spacing="-2">1500+</text>
+    <text x="1090" y="478" text-anchor="end" font-size="16" fill="#687286">Target</text>
+    <rect x="834" y="497" width="256" height="5" rx="3" fill="#d5dce7"/><rect x="834" y="497" width="233" height="5" rx="3" fill="#be2644"/>
   </g>
+</g>
 </svg>

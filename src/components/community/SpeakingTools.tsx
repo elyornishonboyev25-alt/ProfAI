@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { requestMicrophone, microphoneError } from '@/lib/microphone'
 import { AudioLines, Check, Headphones, Loader2, Mic, MicOff, RefreshCw, Sparkles, Users } from 'lucide-react'
 import { useCommunityCopy } from '@/i18n/community'
 
@@ -17,6 +18,7 @@ export function AudioSetup({ disabled }: { disabled: boolean }) {
   const [state, setState] = useState<'idle' | 'requesting' | 'testing' | 'done' | 'error'>('idle')
   const [volume, setVolume] = useState(0)
   const [heard, setHeard] = useState(false)
+  const [error, setError] = useState('')
   const resources = useRef<{ stream?: MediaStream; context?: AudioContext; frame?: number; timer?: number }>({})
   const generation = useRef(0)
   const stop = () => {
@@ -34,10 +36,11 @@ export function AudioSetup({ disabled }: { disabled: boolean }) {
     stop()
     const request = generation.current
     setState('requesting')
+    setError('')
     setHeard(false)
     setVolume(0)
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false })
+      const stream = await requestMicrophone()
       if (request !== generation.current) { stream.getTracks().forEach(track => track.stop()); return }
       resources.current.stream = stream
       const context = new AudioContext()
@@ -59,15 +62,17 @@ export function AudioSetup({ disabled }: { disabled: boolean }) {
       }
       measure()
       resources.current.timer = window.setTimeout(() => { stop(); setState('done'); setVolume(0) }, 10_000)
-    } catch {
+    } catch (failure) {
       if (request !== generation.current) return
       stop()
       setState('error')
+      setError(microphoneError(failure))
     }
   }
   return <details className="hub-audio-setup">
     <summary><Headphones size={17} />{t('Check your microphone')}<span>{t('Optional · 10 seconds')}</span></summary>
     <div className="hub-audio-setup-body"><div><b>{t('Use headphones for clearer conversations.')}</b><p role="status">{t(state === 'testing' ? 'Say a few words. The meter shows your microphone input.' : state === 'requesting' ? 'Allow microphone access in your browser.' : state === 'error' ? 'Allow microphone access in your browser, then try again.' : state === 'done' ? heard ? 'Microphone works. You are ready to speak.' : 'No sound detected. Check your input device and try again.' : 'Test your mic before joining. The test stops automatically.')}</p></div>
+      {error ? <p role="alert">{t(error)}</p> : null}
       <div className="hub-audio-meter" role="meter" aria-label={t('Microphone input')} aria-valuemin={0} aria-valuemax={100} aria-valuenow={volume}><span style={{ width: `${volume}%` }} /></div>
       <button type="button" className="hub-button" disabled={disabled} onClick={() => { if (state === 'testing' || state === 'requesting') { stop(); setState('done'); setVolume(0) } else void test() }}>{state === 'requesting' ? <Loader2 size={16} className="animate-spin" /> : state === 'testing' ? <MicOff size={16} /> : heard && state === 'done' ? <Check size={16} /> : <Mic size={16} />}{t(state === 'requesting' || state === 'testing' ? 'Stop test' : 'Test microphone')}</button>
     </div>

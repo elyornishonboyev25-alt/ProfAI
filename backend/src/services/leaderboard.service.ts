@@ -2,6 +2,7 @@ import { hasPremiumIdentity, premiumIdentitySelect } from '../utils/premiumIdent
 import { onAccountDeleted } from './accountLifecycle.js'
 import { Difficulty, LeaderboardPeriod, type Prisma, type TestCategory } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
+import { resolveLevelFromXp } from '../config/levelConfig.js'
 import { addUtcDays, getPeriodStart, startOfUtcDay } from '../utils/date.js'
 
 type PeriodInput = 'today' | 'week' | 'month' | 'all'
@@ -30,6 +31,9 @@ export type RankBreakdown = {
 }
 
 type LeaderboardRowCore = {
+  nickname?: string | null
+  level?: number
+  lifetimeXp?: number
   premium: boolean
   rank: number
   previousRank: number
@@ -759,6 +763,9 @@ export async function generateLeaderboard(params: {
       rankDelta,
       rankTrend: rankDelta > 0 ? 'up' : rankDelta < 0 ? 'down' : 'same',
       userId: row.userId,
+      nickname: userMap.get(row.userId)?.nickname ?? null,
+      level: resolveLevelFromXp(userMap.get(row.userId)?.xp ?? 0),
+      lifetimeXp: userMap.get(row.userId)?.xp ?? 0,
       fullName: row.fullName,
       premium: hasPremiumIdentity(userMap.get(row.userId)!),
       avatarUrl: row.avatarUrl,

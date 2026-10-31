@@ -1,3 +1,4 @@
+import { learnerLevel } from './learnerLevel'
 import { accountStorageFor } from '@/utils/accountStorage'
 import { getSATReviewTests, isSATTestComplete } from '@/features/sat/catalog'
 import { loadSATAttempt } from '@/features/sat/attemptStorage'
@@ -45,11 +46,6 @@ const TRACKS: Array<{
   { key: 'IELTS_SPEAKING', label: 'IELTS Speaking', radarLabel: 'Speaking', group: 'IELTS' },
   { key: 'SAT_MATH', label: 'SAT Math', radarLabel: 'SAT Math', group: 'SAT' },
   { key: 'SAT_READING_WRITING', label: 'SAT Reading/Writing', radarLabel: 'SAT R/W', group: 'SAT' },
-]
-
-const LEVEL_THRESHOLDS = [
-  0, 100, 250, 450, 700, 1000, 1400, 1900, 2500, 3200,
-  4000, 5000, 6200, 7600, 9200, 11000, 13000, 15200, 17600, 20200,
 ]
 
 function clamp(value: number, min = 0, max = 100) {
@@ -128,25 +124,7 @@ function trackedMinutes(activity: ActivityLog[string], keys?: Set<ActivityKey>) 
   ), 0)
 }
 
-function resolveLocalLevelProgress(xp: number) {
-  let level = 1
-  LEVEL_THRESHOLDS.forEach((threshold, index) => {
-    if (xp >= threshold) level = index + 1
-  })
-  const currentLevelThreshold = LEVEL_THRESHOLDS[level - 1] ?? 0
-  const nextLevelThreshold = LEVEL_THRESHOLDS[level] ?? currentLevelThreshold + 3000
-  const levelSpan = Math.max(1, nextLevelThreshold - currentLevelThreshold)
-  const xpIntoCurrent = Math.max(0, xp - currentLevelThreshold)
-
-  return {
-    level,
-    currentLevelThreshold,
-    nextLevelThreshold,
-    xpIntoCurrent,
-    levelSpan,
-    progressPercent: clamp((xpIntoCurrent / levelSpan) * 100),
-  }
-}
+const resolveLocalLevelProgress = learnerLevel
 
 function isReadingAttemptSynced(userId: string, scope: 'reading' | 'listening', sourceKey: string) {
   if (typeof window === 'undefined') return false
@@ -599,7 +577,7 @@ export function mergeLocalProfilePerformance(overview: ProfileOverview, userId: 
     profile: {
       ...overview.profile,
       xp: totalXp,
-      level: Math.max(overview.profile.level, levelProgress.level),
+      level: levelProgress.level,
       currentStreak,
       longestStreak: Math.max(overview.profile.longestStreak, currentStreak),
     },
@@ -723,7 +701,7 @@ export function mergeLocalPublicProfilePerformance(
     profile: {
       ...payload.profile,
       xp: totalXp,
-      level: Math.max(payload.profile.level, levelProgress.level),
+      level: levelProgress.level,
       streak: Math.max(payload.profile.streak, localStreak),
       longestStreak: Math.max(payload.profile.longestStreak, localStreak),
     },

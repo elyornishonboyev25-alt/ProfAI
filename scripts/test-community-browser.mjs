@@ -58,7 +58,7 @@ async function main() {
   `
   const bundle = await build({ stdin: { contents: fixture, loader: 'tsx', resolveDir: process.cwd() }, bundle: true, write: false, outfile: join(directory, 'fixture.js'), format: 'iife', tsconfig: 'tsconfig.json', define: { 'import.meta.env': '{}', 'process.env.NODE_ENV': '"production"' }, loader: { '.jpg': 'dataurl', '.png': 'dataurl' } })
   const base = (await postcss([tailwindcss()]).process(await readFile('src/index.css', 'utf8'), { from: 'src/index.css' })).css
-  const css = base + '\n' + (await Promise.all(['src/styles/community.css', 'src/styles/speaking-hub.css'].map(file => readFile(file, 'utf8')))).join('\n')
+  const css = base + '\n' + (bundle.outputFiles.find(file => file.path.endsWith('.css'))?.text ?? '')
   const server = createServer((req, res) => {
     if (req.url.startsWith('/fixture.js')) { res.setHeader('Content-Type', 'text/javascript; charset=utf-8'); res.end(bundle.outputFiles.find(file => file.path.endsWith('.js'))?.text ?? bundle.outputFiles[0].text) }
     else { res.setHeader('Content-Type', 'text/html; charset=utf-8'); res.end(`<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}</style><div id="root"></div><script src="/fixture.js"></script>`) }
@@ -118,7 +118,7 @@ async function main() {
     }
     const host = await page('Host'), guest = await page('Guest', true)
     await host.until(`document.querySelector('.community-speak-button')`)
-    const screenshots = resolve('tmp/community-browser')
+    const screenshots = resolve('output/playwright/community-browser')
     await mkdir(screenshots, { recursive: true })
     async function layout(page, label) {
       await page.send('Page.bringToFront');
@@ -261,7 +261,7 @@ async function main() {
     await host.until(`document.querySelector('.hub-listener i')`)
     await guest.evaluate(`window.rejectMicrophoneOnce=true`)
     await guest.click('Take a seat')
-    await guest.until(`document.querySelector('.hub-feedback.is-error')?.innerText.includes('Allow microphone access')`)
+    await guest.until(`document.querySelector('.hub-feedback.is-error')?.innerText.includes('Microphone access is blocked')`)
     assert.equal(await guest.evaluate(`!!document.querySelector('.hub-room-header') && document.querySelector('.hub-listener')?.innerText.includes('Guest')`), true, 'A denied microphone keeps the learner listening in the room')
     await guest.click('Take a seat')
     await guest.until(`document.querySelectorAll('.hub-speaker:not(.is-empty)').length===2`)
@@ -305,7 +305,7 @@ async function main() {
     await host.click('Leave room')
     await host.click('Partner')
     await host.until(`document.querySelector('.community-speak-button')`)
-    await host.click('Speak together')
+    await host.click('Call now')
     await guest.until(`document.querySelector('.hub-invitation')?.innerText.includes('Host')`)
     await guest.click('Accept & join')
     await host.until(`document.querySelector('.hub-room-header')?.innerText.includes('Private room')`)
@@ -325,17 +325,17 @@ async function main() {
     await host.until("document.querySelector('.hub-partner-card')?.innerText.includes('Guest')");
     await setInput('.hub-partner-discovery .hub-room-search input','  gUeSt  ');
     await host.until("document.querySelectorAll('.hub-partner-card').length===1");
-    await host.click('Invite to talk');
+    await host.click('Call now');
     await host.until("document.querySelector('.hub-pending.is-inviting')?.innerText.includes('@Guest')");
     await guest.until("document.querySelector('.hub-invitation')?.innerText.includes('Host')");
     await host.click('Cancel');
     await guest.until("!document.querySelector('.hub-invitation')");
     await host.until("!document.querySelector('.hub-pending') && document.querySelector('.hub-partner-card')");
-    await host.click('Invite to talk');
+    await host.click('Call now');
     await guest.until("document.querySelector('.hub-invitation')?.innerText.includes('Host')");
     await guest.click('Decline');
     await host.until("!document.querySelector('.hub-pending') && document.querySelector('.hub-partner-card')");
-    await host.click('Invite to talk');
+    await host.click('Call now');
     await guest.until("document.querySelector('.hub-invitation')?.innerText.includes('Host')");
     await guest.click('Accept & join');
     await host.until("document.querySelector('.hub-room-header')?.innerText.includes('Private room')");

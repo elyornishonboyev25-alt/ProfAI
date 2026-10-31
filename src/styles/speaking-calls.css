@@ -1,0 +1,16 @@
+
+.hub-audio-preferences { display:flex; justify-content:flex-end; gap:8px; margin:0 0 16px; flex-wrap:wrap; }
+.hub-audio-preferences .hub-button { min-height:40px; font-size:12px; }
+.hub-invitation,.hub-pending.is-inviting { border:1px solid #d9b1bd; border-radius:24px; padding:24px; background:linear-gradient(130deg,#fffffff2,#edf0f6e6); box-shadow:0 16px 44px #303b5314,inset 0 1px 0 white; }
+.hub-invite-icon,.hub-pending.is-inviting .hub-pending-icon { color:#b02240; background:linear-gradient(135deg,#fff,#e4e8ef); border:1px solid #fff; box-shadow:0 0 0 8px #bd20390a; }
+.hub-invitation .hub-invite-icon svg,.hub-pending.is-inviting .hub-pending-icon svg { animation:call-ringing 1.5s ease-in-out infinite; }
+.hub-partner-card { border-color:#fff; background:linear-gradient(145deg,#fffffff0,#e9edf4d9); box-shadow:0 14px 36px #303b5310,inset 0 1px 0 #fff; }
+.hub-partner-card-actions .hub-button { color:white; background:linear-gradient(135deg,#c72a46,#a01c35); border-color:#b0233e; min-height:46px; }
+.community-page .community-learner-card { background:linear-gradient(145deg,#fffffff0,#eceff5e0); border:1px solid #fff; box-shadow:0 14px 36px #303b5310,inset 0 1px 0 #fff; }
+.community-page .community-card-cover { background:linear-gradient(120deg,#e5e9f0,#f7f8fb 50%,#ecdde4); }
+.community-page .community-speak-button { display:flex; justify-content:center; align-items:center; gap:8px; min-height:46px; border-radius:13px; background:linear-gradient(135deg,#c52a46,#a01d36); color:white; font-weight:700; }
+.community-page .community-speak-button:disabled { background:#e4e7ee; color:#6c7584; border-color:#d8dee7; opacity:1; cursor:not-allowed; box-shadow:none; }
+.hub-call-controls .is-leave { background:#fff3f5; color:#a2203b; border-color:#ddb6c1; }
+.hub-partner-card :focus-visible,.community-card-footer :focus-visible,.leaderboard-learner a:focus-visible,.leaderboard-podium-person a:focus-visible { outline:3px solid #b72240; outline-offset:4px; border-radius:8px; }
+@keyframes call-ringing { 0%,60%,100% { transform:rotate(0); } 10%,30% { transform:rotate(-12deg); } 20%,40% { transform:rotate(12deg); } }
+@media(prefers-reduced-motion:reduce) { .hub-invitation .hub-invite-icon svg,.hub-pending.is-inviting .hub-pending-icon svg { animation:none; } }

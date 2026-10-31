@@ -2,7 +2,7 @@
 // Requires the optional development tool @resvg/resvg-js.
 import { createRequire } from 'node:module'
 import { readFileSync, writeFileSync } from 'node:fs'
-const { Resvg } = createRequire(import.meta.url)('@resvg/resvg-js')
+const Resvg = process.argv.includes('--svg-only') ? null : createRequire(import.meta.url)('@resvg/resvg-js').Resvg
 const publicUrl = new URL('../public/', import.meta.url)
 const source = readFileSync(new URL('og-image-source.svg', publicUrl), 'utf8')
 // Inline SVG markup so embedded original artwork survives standalone exports.
@@ -17,8 +17,10 @@ const svg = source.replace(/<image href="(brand\/ivygoo-horizontal\.svg|logo\.sv
   return inlineSvg(file, placement, file.startsWith('brand/') ? 'wordmark' : 'emblem')
 })
 writeFileSync(new URL('og-image.svg', publicUrl), svg)
+if (!Resvg) { console.log('Updated standalone ivyGoo social SVG'); process.exit(0) }
 const renderer = new Resvg(svg, { fitTo: { mode: 'width', value: 1200 }, font: { loadSystemFonts: true } })
 writeFileSync(new URL('og-image.png', publicUrl), renderer.render().asPng())
+if (!process.argv.includes('--social-only')) {
 // Keep the PNG used by printable reports in sync with the vector wordmark.
 const wordmark = readFileSync(new URL('brand/ivygoo-horizontal.svg', publicUrl), 'utf8')
 writeFileSync(new URL('brand/ivygoo-horizontal.png', publicUrl), new Resvg(wordmark, { fitTo: { mode: 'width', value: 1672 } }).render().asPng())
@@ -28,4 +30,5 @@ const icon = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" v
 for (const [file, size] of [['apple-touch-icon.png', 180], ['ivygoo-icon-192.png', 192], ['ivygoo-icon-512.png', 512]]) {
   writeFileSync(new URL(file, publicUrl), new Resvg(icon, { fitTo: { mode: 'width', value: size } }).render().asPng())
 }
-console.log('Updated ivyGoo social preview and app icons')
+}
+console.log('Updated ivyGoo social preview' + (process.argv.includes('--social-only') ? '' : ' and app icons'))

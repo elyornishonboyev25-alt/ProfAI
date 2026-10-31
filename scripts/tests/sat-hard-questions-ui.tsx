@@ -44,7 +44,7 @@ export async function run() {
     }
   }
   await render('/sat/mocks')
-  assert.deepEqual([...container.querySelectorAll('[role=tab] strong')].map(node => node.textContent), ['Full Mocks', 'Reading & Writing', 'Math', 'Hard Questions'])
+  assert.deepEqual([...container.querySelectorAll('[role=tab] strong')].map(node => node.textContent), ['Full Mocks', 'Reading & Writing', 'Math', 'Hard Questions', 'In process'])
   await click(container.querySelector('#sat-tab-hard-questions'))
   assert.equal(container.querySelectorAll('.hard-tile').length, 100)
   assert.ok(text().includes('English challenge map'))

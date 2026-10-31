@@ -1,4 +1,5 @@
 import IELTSReadingInterface from '@/components/IELTSReadingInterface'
+import { testReturnPath } from '@/utils/testNavigation'
 import UiText from '@/components/common/UiText'
 import ResultBoundary from '@/components/ielts/ResultBoundary'
 import { useEffect, useMemo, useState } from 'react'
@@ -25,6 +26,7 @@ type ReviewLocationState = {
   initialPart?: number
   initialQuestionId?: string
   showCorrectAnswers?: boolean
+  returnTo?: string
 }
 
 type SelectedPart = number | 'all'
@@ -142,7 +144,7 @@ function ResultsReviewContent() {
 
   const goBackToResults = () => {
     if (result && test) {
-      navigate(`/results/${resolvedTestId}`, { state: { result, test } })
+      navigate(`/results/${resolvedTestId}`, { state: { result, test, returnTo: testReturnPath(state, catalogPath) } })
       return
     }
     navigate('/ielts')

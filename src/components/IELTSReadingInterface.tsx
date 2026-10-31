@@ -326,6 +326,9 @@ export default function IELTSReadingInterface({
   const isSelectingTextRef = useRef(false)
   const selectionOriginRef = useRef<HTMLElement | null>(null)
   const startedAtRef = useRef<number | null>(null)
+  const activeSecondsRef = useRef(0)
+  const activeSegmentRef = useRef<number | null>(null)
+  const readActiveSeconds = () => Math.max(0, activeSecondsRef.current + (activeSegmentRef.current === null ? 0 : (Date.now() - activeSegmentRef.current) / 1000))
   const deadlineRef = useRef<number | null>(null)
   const launchPresetAppliedRef = useRef(false)
   const autoListeningStartRef = useRef(false)
@@ -438,6 +441,11 @@ export default function IELTSReadingInterface({
         setFlaggedQuestions(data.flaggedQuestions ?? [])
         setLastActiveQuestionIndex(data.lastActiveQuestionIndex ?? 0)
         startedAtRef.current = typeof data.startedAt === 'number' ? data.startedAt : null
+        // Older drafts used the original start date, including hours spent away.
+        // Migrate only their bounded timer/audio progress; never their wall-clock age.
+        activeSecondsRef.current = Number.isFinite(data.elapsedSeconds) ? Math.max(0, data.elapsedSeconds)
+          : isListening ? Math.max(0, data.audioCurrentTime ?? 0)
+            : Math.max(0, Math.min(test.duration * 60, test.duration * 60 - Math.max(0, data.timeRemaining ?? test.duration * 60)))
         if (isListening) {
           const trackCount = test.continuousAudioUrl ? 1 : (!fullMockId && data.testMode === 'practice' ? restoredParts.length : test.sections.length)
           setCurrentAudioIndex(clamp(Number.isInteger(data.currentAudioIndex) ? data.currentAudioIndex : 0, 0, Math.max(0, trackCount - 1)))
@@ -488,11 +496,24 @@ export default function IELTSReadingInterface({
   }, [isTestActive, isReviewMode, sessionKey, test, badgeUserId])
 
   const pendingSessionRef = useRef<(() => void) | null>(null)
+  const latestSessionRef = useRef<(() => void) | null>(null)
   const sessionSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => {
+    if (!isTestActive || isReviewMode) return
+    const pause = () => { activeSecondsRef.current = readActiveSeconds(); activeSegmentRef.current = null }
+    const update = () => { if (document.hidden) pause(); else if (activeSegmentRef.current === null) activeSegmentRef.current = Date.now() }
+    update()
+    document.addEventListener('visibilitychange', update)
+    window.addEventListener('pagehide', pause)
+    return () => { pause(); document.removeEventListener('visibilitychange', update); window.removeEventListener('pagehide', pause) }
+  }, [isTestActive, isReviewMode, sessionKey])
   const flushSession = useCallback(() => {
     if (sessionSaveTimerRef.current) clearTimeout(sessionSaveTimerRef.current)
     sessionSaveTimerRef.current = null
-    pendingSessionRef.current?.()
+    // Untimed practice may have no rerenders for minutes. Flush its active time
+    // even when the last answer snapshot has already been written.
+    const persist = pendingSessionRef.current ?? latestSessionRef.current
+    persist?.()
     pendingSessionRef.current = null
   }, [])
   useEffect(() => {
@@ -536,8 +557,9 @@ export default function IELTSReadingInterface({
     }
     pendingSessionRef.current = () => {
       if (submissionStartedRef.current) return
-      try { personalStorage.setItem(sessionKey, JSON.stringify(sessionData)) } catch { /* Keep the in-memory attempt usable. */ }
+      try { personalStorage.setItem(sessionKey, JSON.stringify({ ...sessionData, elapsedSeconds: readActiveSeconds() })) } catch { /* Keep the in-memory attempt usable. */ }
     }
+    latestSessionRef.current = pendingSessionRef.current
     if (sessionSaveTimerRef.current) clearTimeout(sessionSaveTimerRef.current)
     sessionSaveTimerRef.current = setTimeout(flushSession, 200)
   }, [
@@ -1581,6 +1603,8 @@ export default function IELTSReadingInterface({
     autoListeningStartRef.current = Boolean(fullMockId && isListening)
     const activate = () => {
       startedAtRef.current = Date.now()
+      activeSecondsRef.current = 0
+      activeSegmentRef.current = Date.now()
       const duration = effectiveMode === 'practice' ? effectiveCustomTime : examDurationMinutes
       deadlineRef.current = isListening || duration === -1 ? null : Date.now() + duration * 60_000
       setIsTestActive(true)
@@ -1627,9 +1651,7 @@ export default function IELTSReadingInterface({
   }, [isReviewMode, isTestActive, fullMockId, launchPreset, test.sections.length, startAccess?.ready])
 
   const getCurrentTimeSpent = () => {
-    const elapsedByClock = Math.max(0, (testMode === 'practice' && customTime !== -1 ? customTime : examDurationMinutes) * 60 - Math.max(0, timeRemaining))
-    const elapsedByTimestamp = startedAtRef.current ? Math.max(0, Math.round((Date.now() - startedAtRef.current) / 1000)) : 0
-    return isListening ? elapsedByTimestamp : Math.max(elapsedByClock, elapsedByTimestamp)
+    return Math.round(readActiveSeconds())
   }
 
   const completeAndSubmitTest = (leaderboardEligible = true) => {

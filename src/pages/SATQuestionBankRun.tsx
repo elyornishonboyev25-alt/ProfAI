@@ -1,3 +1,6 @@
+import AttemptEntryBoundary from '@/components/tests/AttemptEntryBoundary'
+import ConfirmDialog from '@/components/common/ConfirmDialog'
+import SATBrowserExitGuard from '@/components/sat/SATBrowserExitGuard'
 import { useActiveTest } from '@/hooks/useActiveTest'
 import { accountStorageFor } from '@/utils/accountStorage'
 import { useEffect, useRef, useState } from 'react'
@@ -16,6 +19,10 @@ import '@/components/sat/sat-exam-layout.css'
 import './SATQuestionBankRun.css'
 
 export default function SATQuestionBankRun() {
+  return <SATBrowserExitGuard><AttemptEntryBoundary exam="SAT"><SATQuestionBankRunContent /></AttemptEntryBoundary></SATBrowserExitGuard>
+}
+
+function SATQuestionBankRunContent() {
   const userId = useAuthStore((state) => state.user?.id) ?? 'guest'
   const { setId } = useParams()
   return <BankRun key={`${userId}:${setId}`} userId={userId} setId={setId} />
@@ -30,6 +37,7 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
   })
   useActiveTest(Boolean(session))
   const [error, setError] = useState('')
+  const [exitDialog, setExitDialog] = useState(false)
   const [navigatorOpen, setNavigatorOpen] = useState(false)
   const [directionsOpen, setDirectionsOpen] = useState(false)
   const [calculatorOpen, setCalculatorOpen] = useState(false)
@@ -167,6 +175,7 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
   )
   return (
     <main className="sat-bank-run" aria-label="SAT Question Bank practice">
+      <ConfirmDialog open={exitDialog} title="Save and exit?" description="Your answers, notes and highlights will be saved. Continue this set from SAT / In process." confirmLabel="Save & exit" cancelLabel="Continue test" onClose={() => setExitDialog(false)} onConfirm={leave} />
       <header ref={header} className="sat-bank-run-header">
         <div className="sat-bank-run-header-content">
           <div className="sat-bank-run-heading">
@@ -188,7 +197,7 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
             {supported ? <button type="button" onClick={toggle} aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}>
               {isFullscreen ? <Minimize2 size={24} /> : <Maximize2 size={24} />}
             </button> : null}
-            <button type="button" onClick={leave} aria-label="Save and exit practice"><X size={24} /><span>Save & exit</span></button>
+            <button type="button" onClick={() => setExitDialog(true)} aria-label="Save and exit practice"><X size={24} /><span>Save & exit</span></button>
           </div>
         </div>
         <div className="sat-bank-run-divider" />

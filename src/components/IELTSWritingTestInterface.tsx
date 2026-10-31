@@ -1,4 +1,5 @@
 import { useActiveTest } from '@/hooks/useActiveTest'
+import TestLeaderboard from '@/components/results/TestLeaderboard'
 import SubmittedWritingAnswers from '@/components/ielts/SubmittedWritingAnswers'
 import { saveActiveTestPaper, clearActiveTestPaper } from '@/utils/activeTestPaper'
 import { useIeltsAttemptResume } from '@/hooks/useIeltsAttemptResume'
@@ -474,6 +475,7 @@ export default function IELTSWritingTestInterface({
           completedAt: savedEntry.savedAt,
           assignmentId: searchParams.get('assignmentId') ?? undefined,
           breakdown: {
+            testId: task.id,
             taskType: task.taskType,
             taskAchievement: result.taskAchievement,
             coherenceCohesion: result.coherenceCohesion,
@@ -783,6 +785,7 @@ export default function IELTSWritingTestInterface({
               animate={{ opacity: 1, y: 0 }}
               className="space-y-5"
             >
+              <details className="ir-glass p-5"><summary className="cursor-pointer font-bold">Test leaderboard</summary><div className="mt-5"><TestLeaderboard testId={task.id} title={task.title} /></div></details>
               {/* Hero: overall band + XP */}
               <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
                 <div className="relative overflow-hidden rounded-3xl border border-red-100 bg-white p-6 shadow-[0_24px_55px_-36px_rgba(239,68,68,0.45)]">

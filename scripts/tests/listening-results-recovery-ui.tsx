@@ -32,7 +32,7 @@ export async function run() {
   const render = (state?: { result: TestResult; test: typeof test }) => act(async () => root.render(<MemoryRouter key={++renderId} initialEntries={[{ pathname: `/results/${test.id}`, state }]}><Routes><Route path="/results/:testId" element={<ErrorBoundary><Results /></ErrorBoundary>} /></Routes></MemoryRouter>))
   try {
     await render({ result, test })
-    assert.ok(container.textContent?.includes('IELTS Listening Result'), container.textContent ?? '')
+    assert.equal(container.querySelector('.ir-exam-label')?.textContent, 'IELTS Listening')
     assert.ok(container.textContent?.includes('Answer Sheet'))
     const createUrl = URL.createObjectURL, revokeUrl = URL.revokeObjectURL
     const clickAnchor = window.HTMLAnchorElement.prototype.click
@@ -71,7 +71,7 @@ export async function run() {
     const legacyResult = { ...result, answers: { 'lt3-q1': 'answer' } }
     saveReviewState(test.id, { result: legacyResult, test })
     await render()
-    assert.ok(container.textContent?.includes('IELTS Listening Result'), 'Old Listening 3 attempts still render')
+    assert.equal(container.querySelector('.ir-exam-label')?.textContent, 'IELTS Listening', 'Old Listening 3 attempts still render')
     assert.equal(resolveIeltsTestById(test.id, loadReviewState(test.id)?.result)?.sections[0].id, 'lt3-part1', 'Old Listening 3 attempts retain their original paper')
     saveReviewState(test.id, { result, test })
     const storagePrototype = Object.getPrototypeOf(window.localStorage)
@@ -79,7 +79,7 @@ export async function run() {
     storagePrototype.setItem = () => { throw new window.DOMException('Storage full', 'QuotaExceededError') }
     try {
       await render({ result, test })
-      assert.ok(container.textContent?.includes('IELTS Listening Result'), 'A storage write failure must not hide a completed result')
+      assert.equal(container.querySelector('.ir-exam-label')?.textContent, 'IELTS Listening', 'A storage write failure must not hide a completed result')
     } finally { storagePrototype.setItem = setItem }
     const getItem = storagePrototype.getItem
     const post = apiClient.post

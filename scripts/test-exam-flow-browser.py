@@ -1,0 +1,48 @@
+from pathlib import Path
+from playwright.sync_api import sync_playwright
+
+output = Path('../../tmp/exam-flow-previews').resolve()
+output.mkdir(parents=True, exist_ok=True)
+with sync_playwright() as p:
+    browser = p.chromium.launch(channel='msedge', headless=True)
+    page = browser.new_page(viewport={'width': 1440, 'height': 1050}, device_scale_factor=1)
+    errors = []
+    page.on('pageerror', lambda error: errors.append(str(error)))
+    page.goto('http://127.0.0.1:5195', wait_until='networkidle')
+    page.get_by_role('link', name='Reading result', exact=True).click()
+    page.wait_for_selector('.ir-answer-grid')
+    assert not page.get_by_text('AI recommendations', exact=True).count()
+    page.screenshot(path=str(output / 'reading-result-desktop.png'), full_page=True)
+    page.get_by_role('tab', name='Leaderboard', exact=True).click()
+    page.wait_for_selector('.srx-rank-row')
+    page.screenshot(path=str(output / 'reading-leaderboard-desktop.png'), full_page=True)
+    page.get_by_role('button', name='My Results', exact=True).first.click()
+    assert page.url.endswith('/profile')
+    page.goto('http://127.0.0.1:5195/in-process', wait_until='networkidle')
+    page.get_by_role('button', name='Delete unfinished test:').first.click()
+    page.get_by_role('alertdialog').wait_for()
+    page.screenshot(path=str(output / 'delete-confirmation-desktop.png'))
+    page.get_by_role('button', name='Keep test', exact=True).click()
+    page.goto('http://127.0.0.1:5195/sat/hard-questions', wait_until='networkidle')
+    page.screenshot(path=str(output / 'hard-questions-desktop.png'), full_page=True)
+    page.locator('.hard-tile').first.click()
+    page.locator('.hard-question').wait_for()
+    page.screenshot(path=str(output / 'hard-question-desktop.png'))
+    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1')
+    page.locator('.hard-choice').first.click()
+    page.get_by_label('Answer feedback').wait_for()
+    page.get_by_role('button', name='All topics', exact=True).click()
+    page.set_viewport_size({'width': 390, 'height': 844})
+    page.goto('http://127.0.0.1:5195', wait_until='networkidle')
+    page.get_by_role('link', name='Reading result', exact=True).click()
+    page.wait_for_selector('.ir-answer-grid')
+    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1'), 'Results overflow on mobile'
+    page.screenshot(path=str(output / 'reading-result-mobile.png'), full_page=True)
+    page.goto('http://127.0.0.1:5195/sat/hard-questions', wait_until='networkidle')
+    page.screenshot(path=str(output / 'hard-questions-mobile.png'), full_page=True)
+    page.locator('.hard-tile').first.click()
+    page.screenshot(path=str(output / 'hard-question-mobile.png'))
+    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1'), 'Question workspace overflows on mobile'
+    assert not errors, errors
+    browser.close()
+print(f'PASS: desktop/mobile results, test leaderboard, origin-aware Back, in-site deletion and Hard Questions; screenshots in {output}')

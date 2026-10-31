@@ -1,3 +1,4 @@
+import TestLeaderboard from '@/components/results/TestLeaderboard'
 import { motion } from 'framer-motion'
 import {
   ArrowLeft,
@@ -42,6 +43,7 @@ function bandWord(band: number): string {
 }
 
 export default function SpeakingResult({
+  testId,
   evaluation,
   modeLabel,
   transcript,
@@ -52,6 +54,7 @@ export default function SpeakingResult({
   embedded = false,
   onImprovedAnswers,
 }: {
+  testId?: string
   evaluation: SpeakingEvaluation
   modeLabel: string
   transcript?: ExaminerTurn[]
@@ -207,6 +210,7 @@ export default function SpeakingResult({
         </div>
       ) : null}
 
+      {testId && <details className="ir-glass mt-6 p-5"><summary className="cursor-pointer font-bold">Test leaderboard</summary><div className="mt-5"><TestLeaderboard testId={testId} title={modeLabel} eligible={!unavailable} /></div></details>}
       {/* Actions */}
       {!embedded && <div className="mt-6 flex flex-wrap gap-3">
         {!reviewMode ? <button onClick={onRetry} className="arena-primary-btn cta-sheen px-6 py-3">

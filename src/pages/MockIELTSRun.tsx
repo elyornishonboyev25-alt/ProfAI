@@ -1,4 +1,6 @@
 import FullMockResults from '@/components/ielts/FullMockResults'
+import AttemptEntryBoundary from '@/components/tests/AttemptEntryBoundary'
+import { getInProcessAttempts } from '@/utils/inProcessAttempts'
 import IeltsTestExitGuard from '@/components/ielts/IeltsTestExitGuard'
 import { useAccountDataRevision } from '@/hooks/useAccountDataRevision'
 import { useFullscreen } from '@/hooks/useFullscreen'
@@ -82,9 +84,10 @@ function resolveStatus(
 
 export default function MockIELTSRun() {
   const { mockId } = useParams<{ mockId: string }>()
-  return <IeltsTestExitGuard mockId={mockId} active={() => !!mockId && getFullMockCompletedSections(mockId).length < 4}>
+  const owner = useAuthStore(state => state.user?.id ?? 'guest')
+  return <AttemptEntryBoundary exam="IELTS"><IeltsTestExitGuard mockId={mockId} active={() => !!mockId && getInProcessAttempts('IELTS', owner).some(attempt => attempt.mockId === mockId)}>
     <MockIELTSRunContent />
-  </IeltsTestExitGuard>
+  </IeltsTestExitGuard></AttemptEntryBoundary>
 }
 
 function MockIELTSRunContent() {

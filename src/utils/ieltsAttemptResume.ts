@@ -47,7 +47,7 @@ export async function discardIeltsAttempt(owner: string, sessionKey: string) {
   const storage = accountStorageFor(owner)
   const attempts = getIeltsAttemptResumes(owner)
   const attempt = attempts.find(item => item.sessionKey === sessionKey)
-  if (!attempt) return
+  if (!attempt && !storage.getItem(sessionKey)) return
   let session: { audioKey?: string } = {}
   let paper: { sections?: { id: string }[] } = {}
   try { session = JSON.parse(storage.getItem(sessionKey) ?? '{}') ?? {} } catch { /* Malformed draft. */ }

@@ -95,7 +95,7 @@ function StandingRow({ row, sectioned }: { row: SATStandingRow; sectioned: boole
         {formatSATDuration(row.durationSec)}
       </span>
       <span className="srx-rank-total" data-label="Score">
-        {row.total}
+        {row.maxScore === 9 ? row.total.toFixed(1) : row.total}
       </span>
     </li>
   )

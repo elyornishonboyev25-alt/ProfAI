@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "test:exam-flow": "node scripts/test-listening-parts-ui.mjs scripts/tests/unified-exam-flow-ui.tsx && node scripts/test-sat-mistakes-ui.mjs scripts/tests/sat-resume-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/listening-audio-completion.tsx",
     "dev": "concurrently \"npm run dev:web\" \"npm run api:dev\"",
     "dev:web": "vite",
     "api:dev": "npm --prefix backend run dev",

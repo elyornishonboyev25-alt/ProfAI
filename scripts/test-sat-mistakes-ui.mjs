@@ -38,7 +38,7 @@ async function main() {
     const outfile = join(directory, 'suite.cjs')
     await build({
       entryPoints: [process.argv[2] ?? 'scripts/tests/sat-mistakes-ui.tsx'], bundle: true, platform: 'node', format: 'cjs',
-      loader: { '.css': 'empty' },
+      loader: { '.css': 'empty', '.png': 'dataurl', '.jpg': 'dataurl', '.svg': 'dataurl' },
       outfile, tsconfig: 'tsconfig.json', define: { 'import.meta.env': '{}' }, external: ['node:assert/strict'],
     })
     await createRequire(import.meta.url)(outfile).run({ reviewOnly: process.argv.includes('--review-only') })

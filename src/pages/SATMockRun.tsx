@@ -1,3 +1,6 @@
+import AttemptEntryBoundary from '@/components/tests/AttemptEntryBoundary'
+import ConfirmDialog from '@/components/common/ConfirmDialog'
+import { testReturnPath } from '@/utils/testNavigation'
 import { accountStorageFor } from '@/utils/accountStorage'
 import { useActiveTest } from '@/hooks/useActiveTest'
 import { readActiveTestPaper, saveActiveTestPaper } from '@/utils/activeTestPaper'
@@ -32,7 +35,7 @@ import {
   ZoomIn,
   ZoomOut,
 } from 'lucide-react'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import DesmosDrawer from '@/components/sat/DesmosDrawer'
 import SATFormulaSheet from '@/components/sat/SATFormulaSheet'
 import SATQuestionCanvas from '@/components/sat/SATQuestionCanvas'
@@ -78,7 +81,12 @@ function fullscreenElement() {
 }
 
 export default function SATMockRun() {
+  return <AttemptEntryBoundary exam="SAT"><SATMockRunContent /></AttemptEntryBoundary>
+}
+
+function SATMockRunContent() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { mockId = '1' } = useParams<{ mockId: string }>()
   const [searchParams] = useSearchParams()
   const section = isSATSection(searchParams.get('section')) ? searchParams.get('section')! : null
@@ -88,7 +96,7 @@ export default function SATMockRun() {
   }, [mockId, section])
   const diagnostic = !section && searchParams.get('diagnostic') === '1'
   const sectionQuery = section ? `?section=${section}` : diagnostic ? '?diagnostic=1' : ''
-  const backPath = section ? `/sat/${section}` : '/sat'
+  const backPath = testReturnPath(location.state, section ? `/sat/${section}` : '/sat')
   const modules = test.modules
   const user = useAuthStore((state: AuthState) => state.user)
   const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
@@ -206,7 +214,7 @@ export default function SATMockRun() {
   }, [backPath, exit, navigate, pauseAndSaveAttempt])
 
   const exitTest = useCallback(() => {
-    if (attemptRef.current?.mode === 'exam' && attemptRef.current.status === 'active') {
+    if (attemptRef.current?.status === 'active') {
       setMoreOpen(false)
       setExitConfirmOpen(true)
       return
@@ -412,6 +420,8 @@ export default function SATMockRun() {
       <SATReview
         attempt={attempt}
         test={test}
+        onBack={() => navigate(backPath)}
+        backLabel={backPath === '/sat/mocks' ? 'Full mocks' : backPath.includes('in-process') ? 'In process' : section ? 'Section tests' : 'SAT Prep'}
         onStartAgain={() => {
           clearSATAttempt(test.id)
           navigate(`/mock/sat/${test.mockId}${sectionQuery}`)
@@ -893,46 +903,7 @@ export default function SATMockRun() {
           </motion.div>
         ) : null}
 
-        {exitConfirmOpen ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[220] flex items-center justify-center bg-slate-950/95 px-4 text-white"
-          >
-            <motion.section
-              initial={{ scale: 0.94, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="sat-exit-title"
-              aria-describedby="sat-exit-description"
-              className="w-full max-w-lg text-center"
-            >
-              <Save className="mx-auto h-12 w-12 text-indigo-300" />
-              <h1 id="sat-exit-title" className="mt-3 text-3xl font-black"><UiText text="Save and exit?" /></h1>
-              <p id="sat-exit-description" className="mx-auto mt-3 max-w-md text-sm font-medium leading-6 text-white/60">
-                <UiText text="Your answers and remaining time will be saved. You can resume this test later." />
-              </p>
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                <button
-                  type="button"
-                  onClick={continueExam}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3.5 text-sm font-black text-slate-950 shadow-xl"
-                >
-                  <ZoomIn className="h-4 w-4" /> <UiText text="Continue test" />
-                </button>
-                <button
-                  type="button"
-                  onClick={saveAndExit}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#4053d7] px-6 py-3.5 text-sm font-black text-white shadow-xl"
-                >
-                  <Save className="h-4 w-4" /> <UiText text="Save and exit" />
-                </button>
-              </div>
-            </motion.section>
-          </motion.div>
-        ) : null}
+        <ConfirmDialog open={exitConfirmOpen} title="Save and exit?" description="Your answers, notes and remaining SAT time will be saved. Continue later from SAT / In process." confirmLabel="Save & exit" cancelLabel="Continue test" onClose={continueExam} onConfirm={saveAndExit} />
       </AnimatePresence>
     </main>
   )

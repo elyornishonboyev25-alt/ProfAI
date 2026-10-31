@@ -1,4 +1,8 @@
 import { saveActiveTestPaper } from '@/utils/activeTestPaper'
+import ConfirmDialog from '@/components/common/ConfirmDialog'
+import { getInProcessAttempts, discardInProcessAttempt } from '@/utils/inProcessAttempts'
+import { useAuthStore } from '@/store/authStore'
+import '@/styles/exam-flow.css'
 import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
@@ -58,6 +62,7 @@ const modeCards = [
 
 export default function MockSAT() {
   const navigate = useNavigate()
+  const owner = useAuthStore(state => state.user?.id ?? 'guest')
   const location = useLocation()
   const { mockId = '1' } = useParams<{ mockId: string }>()
   const [searchParams] = useSearchParams()
@@ -71,32 +76,47 @@ export default function MockSAT() {
   const { enter } = useFullscreen()
   const [selectedMode, setSelectedMode] = useState<SATMode>(diagnostic ? 'exam' : 'practice')
   const [existingAttempt, setExistingAttempt] = useState(() => loadSATAttempt(test.id))
+  const [replaceMode, setReplaceMode] = useState<SATMode | null>(null)
+  const [discardOpen, setDiscardOpen] = useState(false)
 
   useEffect(() => {
     setExistingAttempt(loadSATAttempt(test.id))
-  }, [test.id])
+  }, [test.id, owner])
 
   const completedQuestions = useMemo(
     () => Object.values(existingAttempt?.answers ?? {}).filter(Boolean).length,
     [existingAttempt],
   )
 
-  const openRunner = async (mode: SATMode, resume = false) => {
+  const discardSaved = async () => {
+    const saved = getInProcessAttempts('SAT', owner).find(attempt => attempt.satId === test.id)
+    if (saved) await discardInProcessAttempt(owner, saved)
+    else clearSATAttempt(test.id)
+  }
+  const openRunner = async (mode: SATMode, resume = false, replacementConfirmed = false) => {
+    if (!resume && existingAttempt?.status === 'active' && !replacementConfirmed) { setReplaceMode(mode); return }
     if (mode === 'exam') await enter()
+    if ((useAuthStore.getState().user?.id ?? 'guest') !== owner) return
 
     if (!resume) {
+      if (existingAttempt?.status === 'active') await discardSaved()
+      if ((useAuthStore.getState().user?.id ?? 'guest') !== owner) return
       const attempt = createSATAttempt(test.id, test.modules, mode)
       saveSATAttempt(attempt)
       saveActiveTestPaper(`profai:sat:${test.id}:attempt:v1`, test)
     }
-    navigate(`/sat/mock/${test.mockId}/run${sectionQuery}`)
+    navigate(`/sat/mock/${test.mockId}/run${sectionQuery}`, { state: { resumeIntent: true, returnTo: backPath } })
   }
 
   const activeAttempt = existingAttempt?.status === 'active'
   const finishedAttempt = existingAttempt?.status === 'submitted'
 
   return (
-    <main className="workspace-page relative min-h-screen overflow-hidden px-4 py-5 text-slate-950 sm:px-6 lg:px-8">
+    <main className="workspace-page exam-flow sat-start-page relative min-h-screen overflow-hidden px-4 py-5 text-slate-950 sm:px-6 lg:px-8">
+      <ConfirmDialog open={replaceMode !== null} title="Replace your unfinished test?" description="Starting again deletes the answers, notes and progress from this unfinished attempt. Your completed results stay in My Results."
+        confirmLabel="Replace & start again" cancelLabel="Keep saved test" destructive onClose={() => setReplaceMode(null)} onConfirm={async () => { if (!replaceMode) return; const mode = replaceMode; await openRunner(mode, false, true); setReplaceMode(null) }} />
+      <ConfirmDialog open={discardOpen} title="Delete saved progress?" description="Your answers and notes for this unfinished test will be deleted. You will need to start it again. Completed results are kept."
+        confirmLabel="Delete progress" cancelLabel="Keep test" destructive onClose={() => setDiscardOpen(false)} onConfirm={async () => { await discardSaved(); setExistingAttempt(null); setDiscardOpen(false) }} />
 
       <div className="relative mx-auto max-w-[88rem]">
         <header className="flex items-center justify-between gap-4 rounded-[1.6rem] border border-white/85 bg-white/70 px-4 py-3 shadow-[0_18px_50px_rgba(15,23,42,.08)] backdrop-blur-2xl sm:px-6">
@@ -248,10 +268,10 @@ export default function MockSAT() {
             </div>
 
             {activeAttempt ? (
-              <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50/85 p-3.5">
+              <div className="mt-4 rounded-2xl border border-white bg-slate-100/80 p-3.5">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.12em] text-amber-700">Saved attempt</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-600">Saved attempt</p>
                     <p className="mt-1 text-sm font-black text-slate-900">
                       {completedQuestions} of {test.questionCount} answered
                     </p>
@@ -259,22 +279,19 @@ export default function MockSAT() {
                       {existingAttempt?.mode === 'exam' ? 'Exam Mode' : 'Practice Mode'} · timer paused · autosaved
                     </p>
                   </div>
-                  <RotateCcw className="h-4 w-4 text-amber-600" />
+                  <RotateCcw className="h-4 w-4 text-red-600" />
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => void openRunner(existingAttempt!.mode, true)}
-                    className="rounded-xl bg-amber-600 px-3 py-2 text-[11px] font-black text-white shadow-sm"
+                    className="rounded-xl bg-red-700 px-3 py-2 text-[11px] font-black text-white shadow-sm"
                   >
                      <UiText text={"Resume"} /> </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      clearSATAttempt(test.id)
-                      setExistingAttempt(null)
-                    }}
-                    className="rounded-xl border border-amber-200 bg-white px-3 py-2 text-[11px] font-black text-amber-700"
+                    onClick={() => setDiscardOpen(true)}
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-black text-slate-600"
                   >
                     Discard
                   </button>
@@ -285,7 +302,7 @@ export default function MockSAT() {
             {finishedAttempt ? (
               <button
                 type="button"
-                onClick={() => navigate(`/sat/mock/${test.mockId}/run${sectionQuery}`)}
+                onClick={() => navigate(`/sat/results/${encodeURIComponent(existingAttempt!.attemptId)}`, { state: { returnTo: `${location.pathname}${location.search}` } })}
                 className="mt-4 flex w-full items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50 p-3.5 text-left"
               >
                 <span>
@@ -301,8 +318,8 @@ export default function MockSAT() {
               onClick={() => void openRunner(selectedMode)}
               className={`mt-4 flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl px-5 py-4 text-sm font-black text-white shadow-[0_18px_36px_rgba(15,23,42,.18)] transition hover:-translate-y-0.5 ${
                 selectedMode === 'exam'
-                  ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700'
-                  : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700'
+                  ? 'bg-gradient-to-r from-red-700 via-red-600 to-rose-600'
+                  : 'bg-gradient-to-r from-red-700 via-red-600 to-rose-600'
               }`}
             >
               {selectedMode === 'exam' ? <Expand className="h-4 w-4" /> : <Clock3 className="h-4 w-4" />}

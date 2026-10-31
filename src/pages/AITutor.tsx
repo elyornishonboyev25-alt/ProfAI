@@ -1,3 +1,4 @@
+import UsageBalance from '@/features/billing/UsageBalance'
 import { Mic2 } from 'lucide-react'
 import AIChatWindow from '@/components/ai/AIChatWindow'
 import CoachConnectionStatus from '@/components/ai/CoachConnectionStatus'
@@ -22,6 +23,7 @@ export default function AITutor() {
         </div>
         <button type="button" onClick={openTalk} className="coach-primary-button" aria-label={text.voice}><Mic2 size={17}/><span>{text.voice}</span></button>
       </header>
+      <UsageBalance compact />
       <CoachConnectionStatus/>
       <section className="coach-glass coach-chat-shell"><AIChatWindow variant="page"/></section>
     </div>

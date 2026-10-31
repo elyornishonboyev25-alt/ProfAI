@@ -107,7 +107,8 @@ export function useAiTutor() {
   const navigate = useNavigate()
   const location = useLocation()
   const user = useAuthStore((state: AuthState) => state.user)
-  const hasPremium = hasPremiumAccess(user)
+  // Every registered learner has a text balance; Live AI checks its own plan.
+  const hasPremium = Boolean(user)
   const ownerKey = user?.id ? `user:${user.id}` : 'guest'
   const coachPreferences = useAiAssistantStore((state) => state.coachPreferencesByOwner[ownerKey] ?? DEFAULT_COACH_PREFERENCES)
 
@@ -518,6 +519,7 @@ export function useAiTutor() {
         await userPersistPromise
       } finally {
         window.clearTimeout(timeout)
+        window.dispatchEvent(new Event('profai:billing-updated'))
         if (activeChatRequest?.controller === controller) activeChatRequest = null
         setSending(false)
       }
@@ -542,6 +544,10 @@ export function useAiTutor() {
 
   // ── Voice control ──────────────────────────────────────────────────────────
   const startVoice = useCallback(async () => {
+    if (!hasPremiumAccess(useAuthStore.getState().user)) {
+      window.dispatchEvent(new CustomEvent('profai:premium-required', { detail: 'Live AI' }))
+      return
+    }
     cancelSpeech()
     cancelCoachAudio()
     unlockCoachAudio()

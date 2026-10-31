@@ -1,11 +1,13 @@
 import { onAccountDeleted } from './accountLifecycle.js'
-import { createHash, randomUUID } from 'node:crypto'
+import { createHash } from 'node:crypto'
 import WebSocket from 'ws'
 import { env } from '../config/env.js'
 import { prisma } from '../lib/prisma.js'
 import { AiGenerationError } from './aiProvider.service.js'
 import { assistantContextSchema, assistantRequestSchema, boundedHistory, coachPersonality, type AssistantContext } from './assistantPolicy.js'
 import { answerAssistant, assistantData, loadAssistantRecords } from './assistant.service.js'
+import { reserveVoiceTime, settleVoiceTime } from './voiceAllowance.service.js'
+import { BillingError } from './billing.service.js'
 
 type VoiceCall = { id: string; userId: string; callId: string; socket: WebSocket; timer: NodeJS.Timeout; abort: AbortController; context: AssistantContext; history: Array<{ role: 'user' | 'assistant'; content: string }> }
 const calls = new Map<string, VoiceCall>()
@@ -36,12 +38,20 @@ async function hangup(callId: string) {
 }
 export async function endVoiceCall(userId: string, id: string) {
   const call = calls.get(id)
-  if (!call || call.userId !== userId) return false
+  if (!call) {
+    const saved = await prisma.voiceAllowanceSession.findFirst({ where: { id, userId, endedAt: null } })
+    if (!saved) return false
+    if (saved.providerCallId) await hangup(saved.providerCallId)
+    await settleVoiceTime(userId, id)
+    return true
+  }
+  if (call.userId !== userId) return false
   calls.delete(id)
   clearTimeout(call.timer)
   call.abort.abort()
   call.socket.close()
   await hangup(call.callId)
+  await settleVoiceTime(userId, id)
   return true
 }
 
@@ -59,6 +69,18 @@ export async function updateVoiceContext(userId: string, id: string, context: As
 
 export async function startVoiceCall(userId: string, sdp: string, context: AssistantContext, history: VoiceCall['history'], signal?: AbortSignal) {
   if (!env.OPENAI_API_KEY) throw new AiGenerationError(503, 'VOICE_NOT_CONFIGURED', 'Natural voice is not connected yet. You can use standard voice or type in chat.')
+  const reservation = await reserveVoiceTime(userId, env.AI_VOICE_MAX_MINUTES * 60)
+  try {
+    return await startReservedVoiceCall(userId, sdp, context, history, reservation.id, reservation.expiresAt, signal)
+  } catch (error) {
+    const saved = await prisma.voiceAllowanceSession.findFirst({ where: { id: reservation.id, userId } })
+    if (saved?.providerCallId) await hangup(saved.providerCallId)
+    await settleVoiceTime(userId, reservation.id, true)
+    throw error
+  }
+}
+
+async function startReservedVoiceCall(userId: string, sdp: string, context: AssistantContext, history: VoiceCall['history'], id: string, expiresAt: Date, signal?: AbortSignal) {
   const records = await loadAssistantRecords(userId, context.threadId)
   const session = {
     type: 'realtime', model: env.AI_VOICE_MODEL, instructions: voiceInstructions(context, assistantData(context, records)),
@@ -80,13 +102,13 @@ export async function startVoiceCall(userId: string, sdp: string, context: Assis
   const location = response.headers.get('location')
   const callId = location?.split('/').pop()?.split('?')[0]
   if (!answer.startsWith('v=') || !callId || !/^[A-Za-z0-9_-]+$/.test(callId)) throw new AiGenerationError(502, 'VOICE_INVALID_SESSION', 'Voice returned an invalid session. Please retry.')
-  const id = randomUUID()
+  await prisma.voiceAllowanceSession.update({ where: { id }, data: { providerCallId: callId } })
   const socketUrl = new URL(env.OPENAI_API_BASE.replace(/\/$/, '') + '/realtime')
   socketUrl.protocol = socketUrl.protocol === 'https:' ? 'wss:' : 'ws:'
   socketUrl.searchParams.set('call_id', callId)
   const socket = new WebSocket(socketUrl, { headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}` } })
   const abort = new AbortController()
-  const call: VoiceCall = { id, userId, callId, socket, abort, context, history: boundedHistory(history), timer: setTimeout(() => { void endVoiceCall(userId, id) }, env.AI_VOICE_MAX_MINUTES * 60000) }
+  const call: VoiceCall = { id, userId, callId, socket, abort, context, history: boundedHistory(history), timer: setTimeout(() => { void endVoiceCall(userId, id).catch(() => {}) }, Math.max(0, expiresAt.getTime() - Date.now())) }
   call.timer.unref()
   const handledTools = new Set<string>()
   let speechVersion = 0
@@ -150,12 +172,20 @@ export async function startVoiceCall(userId: string, sdp: string, context: Assis
       socket.once('error', () => { clearTimeout(timer); reject(new Error('Voice control connection failed.')) })
     })
     signal?.throwIfAborted()
+    if (expiresAt.getTime() <= Date.now()) throw new BillingError('PREMIUM_REQUIRED', 'The Live AI time window ended. Your unused reservation will be returned; try again after your allowance renews.')
     for (const previous of calls.values()) if (previous.userId === userId) await endVoiceCall(userId, previous.id)
     calls.set(id, call)
-    return { id, sdp: answer, maxMinutes: env.AI_VOICE_MAX_MINUTES }
+    return { id, sdp: answer, expiresAt: expiresAt.toISOString(), maxMinutes: Math.max(0, (expiresAt.getTime() - Date.now()) / 60000) }
   } catch (error) {
     clearTimeout(call.timer); socket.close(); await hangup(callId)
     throw error
   }
 }
 export { assistantContextSchema }
+
+// Reclaim provider calls after a process restart or a missed browser disconnect.
+const allowanceCleanup = setInterval(() => {
+  void prisma.voiceAllowanceSession.findMany({ where: { endedAt: null, expiresAt: { lte: new Date() } }, take: 50 })
+    .then(rows => Promise.allSettled(rows.map(row => endVoiceCall(row.userId, row.id)))).catch(() => {})
+}, 15000)
+allowanceCleanup.unref()

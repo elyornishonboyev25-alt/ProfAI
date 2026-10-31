@@ -107,9 +107,9 @@ export default function PromoCode({ wheel, onRedeemed }: { wheel: WheelDiscountS
       <article className="billing-glass promo-tile">
         <span className="promo-tile-icon"><Users size={22} /></span>
         <h3>{text(`${GROUP_MIN_SIZE}+ friends? Pay less each`, `${GROUP_MIN_SIZE}+ do‘st? Har biringizga arzon`, `${GROUP_MIN_SIZE}+ друзей? Дешевле каждому`)}</h3>
-        <p>{text(`Pro ${formatBillingMoney(GROUP_MONTHLY_USD.PRO, 'USD')} and Max ${formatBillingMoney(GROUP_MONTHLY_USD.MAX, 'USD')} per person. One person pays; everyone gets Premium. Each friend can add their own wheel discount.`,
-          `Pro ${formatBillingMoney(GROUP_MONTHLY_USD.PRO, 'USD')}, Max ${formatBillingMoney(GROUP_MONTHLY_USD.MAX, 'USD')} — kishi boshiga. Bir kishi to‘laydi, hammaga Premium. Har bir do‘st barabandan qo‘shimcha chegirma qo‘sha oladi.`,
-          `Pro ${formatBillingMoney(GROUP_MONTHLY_USD.PRO, 'USD')}, Max ${formatBillingMoney(GROUP_MONTHLY_USD.MAX, 'USD')} с человека. Платит один — Premium у всех. Каждый может добавить свою скидку с колеса.`)}</p>
+        <p>{text(`IvyGoo Pro ${formatBillingMoney(GROUP_MONTHLY_USD.PRO, 'USD')} and IvyGoo Elite ${formatBillingMoney(GROUP_MONTHLY_USD.MAX, 'USD')} per person. One person pays; everyone gets Premium. Each friend can add their own wheel discount.`,
+          `IvyGoo Pro ${formatBillingMoney(GROUP_MONTHLY_USD.PRO, 'USD')}, IvyGoo Elite ${formatBillingMoney(GROUP_MONTHLY_USD.MAX, 'USD')} — kishi boshiga. Bir kishi to‘laydi, hammaga Premium. Har bir do‘st barabandan qo‘shimcha chegirma qo‘sha oladi.`,
+          `IvyGoo Pro ${formatBillingMoney(GROUP_MONTHLY_USD.PRO, 'USD')}, IvyGoo Elite ${formatBillingMoney(GROUP_MONTHLY_USD.MAX, 'USD')} с человека. Платит один — Premium у всех. Каждый может добавить свою скидку с колеса.`)}</p>
         <p className="promo-note">{text(`Fewer than ${GROUP_MIN_SIZE} people: only the wheel discount applies.`, `${GROUP_MIN_SIZE} kishidan kam bo‘lsa — faqat baraban chegirmasi.`, `Меньше ${GROUP_MIN_SIZE} человек — только скидка с колеса.`)}</p>
         <a className="billing-secondary" href={`${botUrl}?start=spin`} target="_blank" rel="noopener noreferrer">{text('Build a group in the bot', 'Botda guruh tuzish', 'Собрать группу в боте')}<ArrowRight size={16} /></a>
       </article>

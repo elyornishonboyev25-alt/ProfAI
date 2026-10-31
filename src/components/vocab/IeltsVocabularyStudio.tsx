@@ -14,6 +14,8 @@ import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import '@/styles/ielts-vocabulary.css'
 import VocabularyTestReturn from './VocabularyTestReturn'
 import { getIeltsVocabularyReturnTo, withVocabularyReturnTo } from '@/utils/ieltsTestVocabulary'
+import { useStudyAccessPrompt } from '@/features/billing/useStudyAccessPrompt'
+import StudyAccessChip from '@/features/billing/StudyAccessChip'
 
 const skills = [
   { id: 'listening', label: 'Listening', icon: Headphones, description: '20 words · 1-4 parts' },
@@ -94,6 +96,7 @@ export default function IeltsVocabularyStudio() {
   const { c } = useCopy()
   const { reducedMotion } = useMotionPreferences()
   const [params, setParams] = useSearchParams()
+  const studyAccess = useStudyAccessPrompt()
   const returnTo = getIeltsVocabularyReturnTo(params.get('returnTo'))
   const [query, setQuery] = useState('')
   const [expandedTests, setExpandedTests] = useState<Partial<Record<IeltsVocabularySkill, string | null>>>({})
@@ -175,18 +178,19 @@ export default function IeltsVocabularyStudio() {
               </div>
               <div key={skill} className="ielts-vocab-enter space-y-3">
                 {visible.map((test) => {
+                  const resource = `test:${skill}:${test.sourceTestId}`
                   const number = test.id.split('_').slice(-1)[0]
                   const count = test.sections.reduce((n, section) => n + section.entries.length, 0)
                   const isOpen = (expandedTests[skill] === undefined ? book.tests[0]?.id : expandedTests[skill]) === test.id
                   return <div key={test.id} className={`ielts-vocab-test ${isOpen ? 'is-open' : ''}`}>
-                    <button type="button" aria-label={`Open ${test.title}`} aria-expanded={isOpen} aria-controls={`${test.id}-sections`} onClick={() => setExpandedTests((previous) => ({ ...previous, [skill]: isOpen ? null : test.id }))} className="ielts-vocab-test-toggle flex w-full items-center justify-between gap-4 px-5 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-red-400">
+                    <button type="button" aria-label={`Open ${test.title}`} aria-expanded={isOpen} aria-controls={`${test.id}-sections`} onClick={() => { if (isOpen || studyAccess.open(resource)) setExpandedTests((previous) => ({ ...previous, [skill]: isOpen ? null : test.id })) }} className="ielts-vocab-test-toggle flex w-full items-center justify-between gap-4 px-5 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-red-400">
                       <span className="min-w-0">
                         <span className="block text-base font-bold text-slate-900 sm:text-lg">{test.title}</span>
                         <span className="mt-1 block text-xs font-medium text-slate-500">{count} <UiText text="words" />{test.sections.length > 1 ? ` · ${test.sections.length} ${skill === 'writing' ? 'tasks' : 'parts'}` : ' · 1-4 parts'}</span>
                       </span>
-                      <span className="ielts-vocab-chevron"><ChevronDown aria-hidden="true" className={`h-4 w-4 transition-transform duration-300 motion-reduce:transition-none ${isOpen ? 'rotate-180' : ''}`} /></span>
+                      <StudyAccessChip resource={resource} /><span className="ielts-vocab-chevron"><ChevronDown aria-hidden="true" className={`h-4 w-4 transition-transform duration-300 motion-reduce:transition-none ${isOpen ? 'rotate-180' : ''}`} /></span>
                     </button>
-                    <VocabularyPanel id={`${test.id}-sections`} open={isOpen}>
+                    <VocabularyPanel id={`${test.id}-sections`} open={isOpen && studyAccess.allowed(resource)}>
                       <div className={`ielts-vocab-parts grid gap-2.5 p-3 ${test.sections.length === 3 ? 'md:grid-cols-3' : test.sections.length > 1 ? 'sm:grid-cols-2' : ''}`}>
                         {test.sections.map((section, index) => <button key={section.id} type="button" aria-label={`View ${test.title} ${section.title}`} onClick={() => update({ skill, test: number, part: String(index + 1) })} className="ielts-vocab-part group flex min-w-0 items-center gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2">
                           <span className="min-w-0 flex-1">

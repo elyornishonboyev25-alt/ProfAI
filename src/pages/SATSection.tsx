@@ -1,3 +1,5 @@
+import { useStudyAccessPrompt } from '@/features/billing/useStudyAccessPrompt'
+import StudyAccessChip from '@/features/billing/StudyAccessChip'
 import { useState } from 'react'
 import { ArrowLeft, ArrowRight, CheckCircle2, Clock3, Search } from 'lucide-react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
@@ -19,6 +21,7 @@ function isTabId(value: string | undefined): value is TabId {
 }
 
 export default function SATSection() {
+  const studyAccess = useStudyAccessPrompt()
   const navigate = useNavigate()
   const { section } = useParams<{ section: string }>()
   const [search, setSearch] = useState('')
@@ -119,7 +122,7 @@ export default function SATSection() {
                   const action = attempt?.status === 'active' ? 'Continue' : attempt?.status === 'submitted' ? 'Review' : 'Open'
 
                   return (
-                    <button key={test.id} type="button" onClick={() => navigate(destination, { state: { from: `/sat/${section}` } })}
+                    <button key={test.id} type="button" onClick={() => { if (attempt?.status === 'submitted' || studyAccess.open(`mock:sat:${test.mockId}`)) navigate(destination, { state: { from: `/sat/${section}` } }) }}
                       className="ielts-catalog-card mock-ielts-glass-card group relative flex min-h-[14.5rem] w-full flex-col overflow-hidden p-5 text-left transition-[border-color,box-shadow,transform] duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100 sm:p-6">
                       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
                         <span className="text-[11px] font-black uppercase tracking-[0.18em] text-red-600">SAT {isFullMock ? 'Full Mock' : activeTab.label} {String(test.mockId).padStart(2, '0')}</span>
@@ -134,6 +137,7 @@ export default function SATSection() {
                       </div>
                       <h2 className="mt-3 text-2xl font-black tracking-[-0.04em] text-slate-950">{isFullMock ? 'Full Mock' : 'Practice Test'} {test.mockId}</h2>
                       <p className="mt-2 line-clamp-2 text-sm font-medium leading-6 text-slate-500">{test.badge}</p>
+                      <div className="mt-3"><StudyAccessChip resource={`mock:sat:${test.mockId}`} /></div>
                       {report && score !== null ? <CatalogScore score={score} maximum={isFullMock ? 1600 : 800} label="Estimated score" detail={`${report.correct}/${test.questionCount} correct`} /> : null}
                       <div className="mt-4 flex flex-wrap gap-1.5" aria-label="SAT sections">
                         {cardSections.map(({ id, label, icon: Icon }) => (

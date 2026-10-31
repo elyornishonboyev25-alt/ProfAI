@@ -182,6 +182,7 @@ model User {
   wheelSpin                           WheelSpin?
   featureUsage                        FeatureUsage[]
   resourceUnlocks                     ResourceUnlock[]
+  voiceSessions                       VoiceAllowanceSession[]
   testDiscussionPosts                 TestDiscussionPost[]
   testDiscussionChecks                TestDiscussionCheck[]
   launchGift                          LaunchGift?
@@ -1297,6 +1298,22 @@ model FeatureUsage {
   user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, feature, period])
+}
+
+model VoiceAllowanceSession {
+  id              String    @id
+  userId          String
+  providerCallId  String?
+  startedAt       DateTime  @default(now())
+  expiresAt       DateTime
+  endedAt         DateTime?
+  month           String
+  day             String
+  reservedSeconds Int
+  metered         Boolean   @default(true)
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, endedAt, expiresAt])
 }
 
 model ResourceUnlock {

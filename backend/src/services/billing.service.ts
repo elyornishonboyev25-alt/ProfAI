@@ -3,6 +3,7 @@ import { prisma } from '../lib/prisma.js'
 import { PLAN_QUOTAS, extendBillingExpiry, type AccessFeature, type PlanTier } from '../utils/billingCatalog.js'
 import { resolveAccountAccess } from '../utils/accessEntitlement.js'
 import { isPremiumUser } from '../utils/premium.js'
+import { isFreeStudyResource } from '../utils/studyAccess.js'
 type Tx = Prisma.TransactionClient
 export class BillingError extends Error {
   constructor(public code: string, message: string, public statusCode = 402) { super(message) }
@@ -31,15 +32,17 @@ export async function accountOverview(userId: string, tx: Tx = prisma, now = new
   return { access, tier: access.tier, subscriptions, canJoinClass: access.active, canCreateClass: access.tier === 'MAX' }
 }
 function limitMessage(feature: AccessFeature, tier: PlanTier) {
-  if (tier === 'FREE') return `You have used this month's free ${feature} allowance. Upgrade to Pro ($5.99/month) or Max ($11.99/month) to continue.`
-  return `You have reached this month's ${feature} limit on your plan. Upgrade to Max for more.`
+  const allowance = feature === 'writing' ? 'Writing feedback' : feature === 'speaking' ? 'Speaking feedback' : 'AI'
+  if (tier === 'FREE') return `Your monthly ${allowance} allowance is used up. Continue with IvyGoo Pro or IvyGoo Elite.`
+  if (tier === 'PRO') return `Your monthly ${allowance} allowance is used up. IvyGoo Elite includes more AI capacity.`
+  return `Your monthly ${allowance} allowance is used up. It renews on the first day of next month.`
 }
 /** Spends one unit of a monthly allowance, or refuses when it is used up. */
 export async function consumeQuota(userId: string, feature: AccessFeature) {
   const { access, tier } = await accountOverview(userId)
   // Owners, admins and unlimited grants are never metered.
   const limit = access.kind === 'UNLIMITED' ? null : PLAN_QUOTAS[tier][feature]
-  if (limit === null) return { tier, limit, used: 0 }
+  if (limit === null) return { tier, limit, used: 0, period: usagePeriod() }
   const period = usagePeriod()
   return prisma.$transaction(async tx => {
     await tx.$queryRaw`SELECT 1::int AS locked FROM pg_advisory_xact_lock(hashtextextended(${`usage:${userId}:${feature}`}, 0))`
@@ -47,25 +50,25 @@ export async function consumeQuota(userId: string, feature: AccessFeature) {
     if ((current?.count ?? 0) >= limit) throw new BillingError('PREMIUM_REQUIRED', limitMessage(feature, tier))
     const row = await tx.featureUsage.upsert({ where: { userId_feature_period: { userId, feature, period } },
       create: { userId, feature, period, count: 1 }, update: { count: { increment: 1 } } })
-    return { tier, limit, used: row.count }
+    return { tier, limit, used: row.count, period }
   })
 }
-async function refundQuota(userId: string, feature: AccessFeature) {
-  await prisma.featureUsage.updateMany({ where: { userId, feature, period: usagePeriod(), count: { gt: 0 } }, data: { count: { decrement: 1 } } })
+async function refundQuota(userId: string, feature: AccessFeature, period: string) {
+  await prisma.featureUsage.updateMany({ where: { userId, feature, period, count: { gt: 0 } }, data: { count: { decrement: 1 } } })
 }
 // Every plan, including Free, may reach AI endpoints; each request is metered by withStudyAccess.
 export async function requireStudyAccess(userId: string) {
   await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { id: true } })
 }
 export async function requireClassPlan(userId: string) {
-  if (!(await accountOverview(userId)).canJoinClass) throw new BillingError('CLASS_PLAN_REQUIRED', 'Joining classes requires an active Pro ($5.99/month) or Max ($11.99/month) plan.', 403)
+  if (!(await accountOverview(userId)).canJoinClass) throw new BillingError('CLASS_PLAN_REQUIRED', 'Joining classes requires an active IvyGoo Pro ($5.99/month) or IvyGoo Elite ($11.99/month) plan.', 403)
 }
 export async function requireTeacherPlan(userId: string) {
-  if (!(await accountOverview(userId)).canCreateClass) throw new BillingError('TEACHER_PLAN_REQUIRED', 'Class creation requires an active Max plan ($11.99/month).', 403)
+  if (!(await accountOverview(userId)).canCreateClass) throw new BillingError('TEACHER_PLAN_REQUIRED', 'Class creation requires an active IvyGoo Elite plan ($11.99/month).', 403)
 }
 export function validateResource(feature: AccessFeature, resource: string) {
   const patterns: Partial<Record<AccessFeature, RegExp>> = {
-    test: /^test:(?:reading|listening|sat|database):[A-Za-z0-9_:-]{1,120}$/,
+    test: /^test:(?:reading|listening|writing|speaking|sat|database):[A-Za-z0-9_:-]{1,120}$/,
     mock: /^mock:(?:ielts|sat):[A-Za-z0-9_-]{1,100}$/,
     shadowing: /^shadowing:[A-Za-z0-9_-]{11}$/, podcast: /^podcast:[A-Za-z0-9_-]{11}$/,
   }
@@ -74,6 +77,11 @@ export function validateResource(feature: AccessFeature, resource: string) {
 export async function accessStatus(userId: string, feature: AccessFeature, resource: string) {
   validateResource(feature, resource)
   const { access } = await accountOverview(userId)
+  if (feature === 'test' || feature === 'mock') {
+    const unlocked = access.active || isFreeStudyResource(resource)
+    return { unlocked, expiresAt: access.expiresAt, tier: access.tier, used: 0, limit: null, remaining: null,
+      requiredTier: unlocked ? null : 'PRO' as const }
+  }
   const limit = access.kind === 'UNLIMITED' ? null : PLAN_QUOTAS[access.tier][feature]
   const period = usagePeriod()
   const [row, unlock] = limit === null ? [null, null] : await Promise.all([
@@ -87,6 +95,11 @@ export async function accessStatus(userId: string, feature: AccessFeature, resou
 /** Opening the same test or lesson again in the same month does not spend another start. */
 export async function unlockResource(userId: string, feature: AccessFeature, resource: string) {
   validateResource(feature, resource)
+  if (feature === 'test' || feature === 'mock') {
+    const status = await accessStatus(userId, feature, resource)
+    if (!status.unlocked) throw new BillingError('PREMIUM_REQUIRED', 'Unlock this test and its vocabulary with IvyGoo Pro or IvyGoo Elite.')
+    return { unlocked: true }
+  }
   const period = usagePeriod()
   const existing = await prisma.resourceUnlock.findUnique({ where: { userId_resource_period: { userId, resource, period } } })
   if (existing) return { unlocked: true }
@@ -95,11 +108,11 @@ export async function unlockResource(userId: string, feature: AccessFeature, res
   return { unlocked: true }
 }
 export async function withStudyAccess<T>(userId: string, feature: AccessFeature, operation: () => Promise<T>) {
-  await consumeQuota(userId, feature)
+  const reservation = await consumeQuota(userId, feature)
   try {
     return await operation()
   } catch (error) {
-    await refundQuota(userId, feature).catch(() => undefined)
+    if (reservation.limit !== null) await refundQuota(userId, feature, reservation.period).catch(() => undefined)
     throw error
   }
 }

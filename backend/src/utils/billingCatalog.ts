@@ -24,11 +24,11 @@ export const BILLING_PRODUCTS: BillingProduct[] = (['PRO', 'MAX'] as const).flat
   return { code: `${audience}_${months}`, audience, months, amountUsd, discount }
 }))
 
-/** Monthly allowance per plan; `null` means no monthly limit. */
+/** AI monthly allowances. Voice is measured in seconds; catalog access uses stable IDs. */
 export const PLAN_QUOTAS: Record<PlanTier, Record<AccessFeature, number | null>> = {
-  FREE: { test: 4, mock: 1, writing: 2, speaking: 2, ai: 15, voice: 0, shadowing: 3, podcast: 3 },
-  PRO: { test: null, mock: 4, writing: 30, speaking: 30, ai: 300, voice: 10, shadowing: null, podcast: null },
-  MAX: { test: null, mock: null, writing: 150, speaking: 150, ai: 1500, voice: 60, shadowing: null, podcast: null },
+  FREE: { test: 5, mock: 5, writing: 2, speaking: 2, ai: 50, voice: 0, shadowing: null, podcast: null },
+  PRO: { test: null, mock: null, writing: 30, speaking: 30, ai: 300, voice: 30 * 3600, shadowing: null, podcast: null },
+  MAX: { test: null, mock: null, writing: 150, speaking: 150, ai: 1500, voice: 120 * 3600, shadowing: null, podcast: null },
 }
 
 export function tierOfAudience(audience: string): PlanTier {

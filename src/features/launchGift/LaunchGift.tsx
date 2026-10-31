@@ -56,7 +56,7 @@ function CountUp({ to, format, instant, delay = 0 }: { to: number; format: (valu
   return <span className="launch-gift-count"><span className="launch-gift-count-ghost" aria-hidden="true">{format(to)}</span><span ref={live} aria-hidden="true" /><span className="sr-only">{format(to)}</span></span>
 }
 
-/** Launch campaign: one month of Pro for the first 200 students, announced one second after the site opens. */
+/** Launch campaign: one month of IvyGoo Pro for the first 200 students, announced one second after the site opens. */
 export default function LaunchGift({ enabled }: { enabled: boolean }) {
   const user = useAuthStore(state => state.user)
   const accessToken = useAuthStore(state => state.accessToken)
@@ -186,9 +186,9 @@ function GiftDialog({ gift, stats, closing, onClose }: { gift: AccountGift | nul
 
   const shareUrl = `${window.location.origin}/${gift?.referralCode ? `?ref=${encodeURIComponent(gift.referralCode)}` : ''}`
   const shareMessage = text(
-    `ProfAI is giving 1 month of Pro free to the first ${number(capacity)} students. Only ${number(remaining)} gifts left — get yours:`,
-    `ProfAI birinchi ${number(capacity)} o‘quvchiga 1 oylik Pro’ni bepul beryapti. Atigi ${number(remaining)} ta sovg‘a qoldi — o‘zingiznikini oling:`,
-    `ProfAI дарит месяц Pro бесплатно первым ${number(capacity)} ученикам. Осталось всего ${number(remaining)} подарков — заберите свой:`,
+    `ProfAI is giving 1 month of IvyGoo Pro free to the first ${number(capacity)} students. Only ${number(remaining)} gifts left — get yours:`,
+    `ProfAI birinchi ${number(capacity)} o‘quvchiga 1 oylik IvyGoo Pro’ni bepul beryapti. Atigi ${number(remaining)} ta sovg‘a qoldi — o‘zingiznikini oling:`,
+    `ProfAI дарит месяц IvyGoo Pro бесплатно первым ${number(capacity)} ученикам. Осталось всего ${number(remaining)} подарков — заберите свой:`,
   )
   const share = async () => {
     if (navigator.share) {
@@ -239,16 +239,16 @@ function GiftDialog({ gift, stats, closing, onClose }: { gift: AccountGift | nul
           </h2>
           <p id="launch-gift-intro" className="launch-gift-intro launch-gift-rise" style={rise(.3)}>
             {isGuest
-              ? text('Create your free account and get 1 month of ProfAI Pro — a $6 plan — at no cost. No card needed.',
-                'Bepul ro‘yxatdan o‘ting va 1 oylik ProfAI Pro’ni ($6 lik tarif) tekinga oling. Karta kerak emas.',
-                'Создайте бесплатный аккаунт и получите месяц ProfAI Pro (тариф за $6) без оплаты. Карта не нужна.')
+              ? text('Create your free account and get 1 month of IvyGoo Pro — a $6 plan — at no cost. No card needed.',
+                'Bepul ro‘yxatdan o‘ting va 1 oylik IvyGoo Pro’ni ($6 lik tarif) tekinga oling. Karta kerak emas.',
+                'Создайте бесплатный аккаунт и получите месяц IvyGoo Pro (тариф за $6) без оплаты. Карта не нужна.')
               : gift?.extended
-                ? text('Thank you for being with us. We added 1 extra month of Pro ($6) on top of your current plan.',
-                  'Biz bilan bo‘lganingiz uchun rahmat. Joriy tarifingiz ustiga yana 1 oylik Pro ($6) qo‘shdik.',
-                  'Спасибо, что вы с нами. Мы добавили ещё 1 месяц Pro ($6) к вашему текущему тарифу.')
-                : text('Thank you for joining early. Your account now has 1 month of ProfAI Pro ($6) — completely free.',
-                  'Erta qo‘shilganingiz uchun rahmat. Akkauntingizda endi 1 oylik ProfAI Pro ($6) bor — butunlay bepul.',
-                  'Спасибо, что присоединились рано. На вашем аккаунте теперь месяц ProfAI Pro ($6) — полностью бесплатно.')}
+                ? text('Thank you for being with us. We added 1 extra month of IvyGoo Pro ($6) on top of your current plan.',
+                  'Biz bilan bo‘lganingiz uchun rahmat. Joriy tarifingiz ustiga yana 1 oylik IvyGoo Pro ($6) qo‘shdik.',
+                  'Спасибо, что вы с нами. Мы добавили ещё 1 месяц IvyGoo Pro ($6) к вашему текущему тарифу.')
+                : text('Thank you for joining early. Your account now has 1 month of IvyGoo Pro ($6) — completely free.',
+                  'Erta qo‘shilganingiz uchun rahmat. Akkauntingizda endi 1 oylik IvyGoo Pro ($6) bor — butunlay bepul.',
+                  'Спасибо, что присоединились рано. На вашем аккаунте теперь месяц IvyGoo Pro ($6) — полностью бесплатно.')}
           </p>
         </header>
 
@@ -271,8 +271,8 @@ function GiftDialog({ gift, stats, closing, onClose }: { gift: AccountGift | nul
           <p className="launch-gift-meter-note">{text(`${number(issued)} given · ${number(remaining)} left`, `${number(issued)} ta berildi · ${number(remaining)} ta qoldi`, `${number(issued)} выдано · ${number(remaining)} осталось`)}</p>
           {gift ? (
             <p className="launch-gift-status"><Check size={15} />{until
-              ? text(`Pro is active until ${until}`, `Pro ${until} gacha faol`, `Pro активен до ${until}`)
-              : text('Activating your Pro plan…', 'Pro tarifingiz faollashtirilmoqda…', 'Активируем ваш тариф Pro…')}</p>
+              ? text(`IvyGoo Pro is active until ${until}`, `IvyGoo Pro ${until} gacha faol`, `IvyGoo Pro активен до ${until}`)
+              : text('Activating your IvyGoo Pro plan…', 'IvyGoo Pro tarifingiz faollashtirilmoqda…', 'Активируем ваш тариф IvyGoo Pro…')}</p>
           ) : null}
         </div>
 
@@ -286,7 +286,7 @@ function GiftDialog({ gift, stats, closing, onClose }: { gift: AccountGift | nul
               <button ref={primary} type="button" className="launch-gift-primary" onClick={receive}>
                 <Gift size={18} />{text('Receive your gift', 'Sovg‘ani olish', 'Получить подарок')}<ArrowRight size={17} />
               </button>
-              <p className="launch-gift-hint">{text('Sign up in 30 seconds — Pro turns on automatically.', '30 soniyada ro‘yxatdan o‘ting — Pro avtomatik yoqiladi.', 'Регистрация за 30 секунд — Pro включится автоматически.')}</p>
+              <p className="launch-gift-hint">{text('Sign up in 30 seconds — IvyGoo Pro turns on automatically.', '30 soniyada ro‘yxatdan o‘ting — IvyGoo Pro avtomatik yoqiladi.', 'Регистрация за 30 секунд — IvyGoo Pro включится автоматически.')}</p>
               <button type="button" className="launch-gift-secondary" onClick={onClose}>{text('Maybe later', 'Keyinroq', 'Позже')}</button>
             </>
           ) : (
@@ -302,7 +302,7 @@ function GiftDialog({ gift, stats, closing, onClose }: { gift: AccountGift | nul
                 </button>
               </div>
               <button ref={primary} type="button" className="launch-gift-primary" onClick={onClose}>
-                {text('Start learning with Pro', 'Pro bilan o‘qishni boshlash', 'Начать учиться с Pro')}<ArrowRight size={17} />
+                {text('Start learning with IvyGoo Pro', 'IvyGoo Pro bilan o‘qishni boshlash', 'Начать учиться с IvyGoo Pro')}<ArrowRight size={17} />
               </button>
             </>
           )}

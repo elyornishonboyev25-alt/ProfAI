@@ -1,3 +1,5 @@
+import { useStudyAccessPrompt } from '@/features/billing/useStudyAccessPrompt'
+import StudyAccessChip from '@/features/billing/StudyAccessChip'
 import UiText from '@/components/common/UiText'
 import CatalogScore, { type CatalogResult } from './CatalogScore'
 import type { ReactNode } from 'react'
@@ -84,6 +86,7 @@ export default function CompactIeltsCatalog({
   activeFilter,
   onFilterChange,
 }: CompactIeltsCatalogProps) {
+  const studyAccess = useStudyAccessPrompt()
   const meta = SECTION_META[section]
   const HeroIcon = meta.icon
   const completedCount = rows.filter((row) => row.completed).length
@@ -189,7 +192,7 @@ export default function CompactIeltsCatalog({
                 key={row.id}
                 type="button"
                 disabled={!row.available}
-                onClick={() => onLaunch(row)}
+                onClick={() => { if (studyAccess.open(`test:${section}:${row.id}`)) onLaunch(row) }}
                 className={`ielts-catalog-card group relative flex min-h-[14.5rem] w-full flex-col overflow-hidden rounded-[1.75rem] border p-6 text-left shadow-[0_12px_34px_rgba(30,64,175,.07),inset_0_1px_0_white] transition-[border-color,box-shadow] duration-150 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100 ${
                   row.available
                     ? 'border-red-100/90 bg-[linear-gradient(145deg,rgba(255,255,255,.96),rgba(254,242,242,.62)_58%,rgba(239,246,255,.58))] hover:border-red-200 hover:shadow-[0_18px_42px_rgba(185,28,28,.1),inset_0_1px_0_white]'
@@ -200,6 +203,7 @@ export default function CompactIeltsCatalog({
                   <p className="text-[11px] font-black uppercase tracking-[0.18em] text-red-600">
                     IELTS <UiText text={meta.label} /> {String(row.number).padStart(2, '0')}
                   </p>
+                  <StudyAccessChip resource={`test:${section}:${row.id}`} />
                   {row.completed ? (
                     <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-black text-emerald-700">
                       <CheckCircle2 className="h-3.5 w-3.5" />  <UiText text={"Completed"} /> </span>

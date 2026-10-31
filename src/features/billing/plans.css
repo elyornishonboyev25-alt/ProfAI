@@ -1,4 +1,4 @@
-/* Free · Pro · Max cards and the comparison table: silver glass with Ivygoo red. */
+/* Free, IvyGoo Pro and IvyGoo Elite: silver glass with IvyGoo red. */
 .plans-grid .billing-plan.is-current{outline:2px solid #c9ced8;outline-offset:4px}
 .plans-card-max{border-color:#cfd5de!important;
   background:linear-gradient(150deg,#fdfdfe 0%,#e3e7ee 38%,#f8f9fb 62%,#d7dce4 100%)!important;
@@ -36,3 +36,12 @@
 .plans-no{color:#c3c9d3;display:inline-block}
 @media(max-width:640px){.plans-table{font-size:12px}.plans-table tbody th,.plans-table tbody td{padding:11px 8px}}
 .billing-checkout-discount{margin:10px 0 0;padding:9px 12px;border-radius:11px;font-size:12px;font-weight:700;color:#8f1f2d;background:#fde8eb;border:1px solid #f3c6cc}
+.plans-grid .billing-plan{border-radius:24px;backdrop-filter:blur(24px);transition:border-color .2s,box-shadow .2s}
+.plans-grid .billing-plan h3{letter-spacing:-.045em;font-size:clamp(20px,2vw,25px)}
+.plans-compare{border-color:#fff;background:linear-gradient(125deg,#ffffffed,#edf0f5c7 65%,#ffffffe0);box-shadow:inset 0 1px #fff,0 14px 48px #3540530d}
+.plans-table{min-width:650px}.plans-table thead th{padding:22px 15px}.plans-table thead th strong{letter-spacing:-.025em}.plans-table thead th:first-child{width:36%}.plans-table thead th:last-child{border-radius:18px 18px 0 0;background:linear-gradient(135deg,#f5f7fa,#e0e5ed 60%,#f5f7fa)}
+.plans-table tbody th,.plans-table tbody td{padding:17px 14px}.plans-table tbody th small{line-height:1.7;max-width:270px}.plans-table tbody tr:not(.plans-group):last-child :is(th,td){border-bottom:0}.plans-group th{letter-spacing:.02em;text-transform:none;font-size:12px!important}
+.plans-compare-scroll{border-radius:18px;isolation:isolate}.plans-table thead th:first-child{position:sticky;left:0;z-index:3}.plans-table tbody th{position:sticky;left:0;z-index:1;background:#f8f9fcf7;backdrop-filter:blur(16px)}.plans-table .plans-group th{position:static}
+.plans-mobile-hint{display:none;font-size:11px;color:#707b8c;margin:0}
+@media(max-width:640px){.plans-mobile-hint{display:block}}
+@media(max-width:640px){.plans-table{min-width:650px}.plans-table thead th:first-child{width:160px;min-width:160px}.plans-table tbody th{max-width:160px;font-size:11px}.plans-table tbody th small{font-size:10px}.plans-table tbody td{font-size:11px}.plans-compare{padding:20px 14px}.plans-grid .billing-plan h3{font-size:24px}}

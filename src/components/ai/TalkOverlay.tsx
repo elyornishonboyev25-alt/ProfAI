@@ -8,6 +8,10 @@ import { apiClient } from '@/lib/apiClient'
 import CoachMascot from '@/components/ai/CoachMascot'
 import CoachControls from './CoachControls'
 import { useCopy } from '@/i18n/interface'
+import { useAccountAccess } from '@/features/billing/useAccountAccess'
+import UpgradePrompt from '@/features/billing/UpgradePrompt'
+import StandardLiveSession from '@/features/billing/StandardLiveSession'
+import UsageBalance from '@/features/billing/UsageBalance'
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -250,6 +254,8 @@ function StandardTalkOverlay({ tutor }: { tutor: AiTutorController }) {
 
 export function TalkOverlay() {
   const { language: uiLanguage } = useCopy()
+  const access = useAccountAccess()
+  const canLive = Boolean(access?.active)
   const tutor = useAiTutor()
   const talkOpen = useAiAssistantStore((s) => s.talkOpen)
   const closeTalk = useAiAssistantStore((s) => s.closeTalk)
@@ -261,13 +267,13 @@ export function TalkOverlay() {
   const [capabilityError, setCapabilityError] = useState(false)
   const [capabilityRetry, setCapabilityRetry] = useState(0)
   const dialog = useRef<HTMLDivElement>(null)
-  const live = useRealtimeCoach(tutor, talkOpen && !standard && available === true, mode)
+  const live = useRealtimeCoach(tutor, talkOpen && canLive && !standard && available === true, mode)
   const lang = tutor.voiceLang
   const t = (en: string, uz: string, ru: string) => uiLanguage === 'uz' ? uz : uiLanguage === 'ru' ? ru : en
 
   useEffect(() => {
     if (!talkOpen) { setStandard(false); setDocked(false); setAvailable(null); return }
-    if (!tutor.hasPremium) return
+    if (!canLive || !tutor.hasPremium) return
     const controller = new AbortController()
     const timeout = window.setTimeout(() => controller.abort('timeout'), 8000)
     setAvailable(null); setCapabilityError(false)
@@ -283,10 +289,10 @@ export function TalkOverlay() {
       .catch(() => { if (!controller.signal.aborted || controller.signal.reason === 'timeout') { setAvailable(false); setCapabilityError(true) } })
       .finally(() => window.clearTimeout(timeout))
     return () => { window.clearTimeout(timeout); controller.abort() }
-  }, [talkOpen, tutor.hasPremium, tutor.user?.id, tutor.voiceSupported, live.supported, capabilityRetry])
+  }, [talkOpen, canLive, tutor.hasPremium, tutor.user?.id, tutor.voiceSupported, live.supported, capabilityRetry])
 
   useEffect(() => {
-    if (talkOpen && !standard && available && live.error && spokenReplies && tutor.voiceSupported) setStandard(true)
+    if (talkOpen && !standard && available && live.error && !/Live AI time|IvyGoo|already active/i.test(live.error) && spokenReplies && tutor.voiceSupported) setStandard(true)
   }, [talkOpen, standard, available, live.error, spokenReplies, tutor.voiceSupported])
 
   useEffect(() => {
@@ -310,7 +316,8 @@ export function TalkOverlay() {
   }, [talkOpen, docked, standard])
 
   if (!talkOpen || !tutor.hasPremium) return null
-  if (standard) return <StandardTalkOverlay tutor={tutor} />
+  if (!canLive) return <UpgradePrompt modal reason="voice" onClose={closeTalk} />
+  if (standard) return <StandardLiveSession onEnd={closeTalk}><StandardTalkOverlay tutor={tutor} /></StandardLiveSession>
   const end = () => { live.stop(); tutor.cancelVoice(); closeTalk() }
   const status = available === null ? t('Connecting…', 'Ulanmoqda…', 'Подключение…')
     : live.error || !available ? t('Voice needs attention', 'Ovozli ulanishni tekshiring', 'Проверьте голосовое соединение')
@@ -334,6 +341,7 @@ export function TalkOverlay() {
       <div className="mb-7 mt-8 flex flex-wrap justify-center gap-2" role="group" aria-label={t('Conversation mode', 'Suhbat rejimi', 'Режим разговора')}>
         {(['coach', 'examiner'] as const).map((choice) => <button key={choice} onClick={() => setMode(choice)} aria-pressed={mode === choice} className={`min-h-11 rounded-full border px-5 text-sm font-semibold ${mode === choice ? 'border-white bg-white text-slate-950' : 'border-white/20 text-slate-300 hover:bg-white/10'}`}>{choice === 'coach' ? t('Personal coach', 'Shaxsiy murabbiy', 'Личный наставник') : t('IELTS examiner', 'IELTS imtihon oluvchi', 'Экзаменатор IELTS')}</button>)}
       </div>
+      <UsageBalance compact />
       <CoachMascot state={tutor.voiceState} level={tutor.voiceLevel} size={240} />
       {mode === 'coach' ? <CoachControls compact /> : null}
       <h2 className="mt-6 text-2xl font-bold" aria-live="polite">{status}</h2>

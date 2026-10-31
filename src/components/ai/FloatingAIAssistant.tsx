@@ -6,7 +6,6 @@ import { apiClient } from '@/lib/apiClient'
 import { BrandMark } from '@/components/brand/BrandLogo'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useAiAssistantStore } from '@/store/aiAssistantStore'
-import { hasPremiumAccess } from '@/utils/premiumAccess'
 import type { AiReportResponse } from '@/types/platform'
 import { lazyWithRetry as lazy } from '@/utils/lazyWithRetry'
 
@@ -34,7 +33,7 @@ export function FloatingAIAssistant() {
   const location = useLocation()
   const reduceMotion = useReducedMotion()
   const user = useAuthStore((state: AuthState) => state.user)
-  const hasPremium = hasPremiumAccess(user)
+  const hasPremium = Boolean(user)
   const isOpen = useAiAssistantStore((state) => state.isOpen)
   const open = useAiAssistantStore((state) => state.open)
   const close = useAiAssistantStore((state) => state.close)

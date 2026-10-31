@@ -46,7 +46,7 @@ export async function run() {
     await act(async () => { await new Promise(resolve => setTimeout(resolve, 20)) })
     assert.ok(requests.some(path => path.includes('feature=mock')), 'restart rechecks server access')
     assert.equal(element.textContent?.includes('Paid test content'), false, 'saved review cannot carry free access into a new attempt')
-    assert.ok(element.querySelector('a[href="/premium"]'), 'a used-up monthly allowance offers the plans')
+    assert.ok(element.querySelector('a[href^="/premium"]'), 'locked content offers the plans')
     console.log('PASS: free SAT saved review, restart access recheck and monthly-limit protection')
   } finally {
     await act(async () => root.unmount())

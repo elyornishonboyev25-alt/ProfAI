@@ -11,7 +11,8 @@ import { describeAccess } from '../utils/accessEntitlement.js'
 import { activeDiscount } from '../services/wheel.service.js'
 import { accessStatus, unlockResource, accountOverview, usageSnapshot, lockBilling, fulfillPayment, BillingError } from '../services/billing.service.js'
 import { paymentProviders, checkoutUrl, expireStripeCheckout } from '../services/paymentProviders.service.js'
-import { approvedMedia, educationalCatalog } from '../services/educationalMedia.service.js'
+import { approvedMedia } from '../services/educationalMedia.service.js'
+import { voiceUsageSnapshot } from '../services/voiceAllowance.service.js'
 import { createPaymentQuote, dollarRate, verifyPaymentQuote } from '../services/billingQuote.service.js'
 
 const router = Router()
@@ -48,7 +49,7 @@ router.get('/account', requireAuth, asyncHandler(async (req, res) => {
   const [wallet, orders] = await Promise.all([accountOverview(req.user!.id).then(async overview => ({ ...overview, usage: await usageSnapshot(req.user!.id, overview.tier) })), prisma.paymentRequest.findMany({
     where: { userId: req.user!.id }, orderBy: { createdAt: 'desc' }, take: 20,
     select: { id: true, plan: true, currency: true, amountMinor: true, status: true, method: true, checkoutUrl: true, createdAt: true } })])
-  return res.json({ ...wallet, orders })
+  return res.json({ ...wallet, orders, voiceUsage: await voiceUsageSnapshot(req.user!.id) })
 }))
 const accessSchema = z.object({ feature: z.enum(['test', 'mock', 'shadowing', 'podcast']), resource: z.string().max(180) })
 async function validateLesson(feature: string, resource: string) {
@@ -56,7 +57,7 @@ async function validateLesson(feature: string, resource: string) {
   const id = resource.slice(feature.length + 1)
   const kind = feature === 'podcast' ? 'podcasts' : 'shadowing'
   if (!approvedMedia(kind, id)) throw new BillingError('INVALID_RESOURCE', 'This lesson is unavailable.', 404)
-  return educationalCatalog(kind).slice(0, 3).some(item => item.youtubeId === id)
+  return true
 }
 router.get('/access', requireAuth, asyncHandler(async (req, res) => {
   const payload = accessSchema.parse(req.query)

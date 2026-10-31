@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAccountDataRevision } from '@/hooks/useAccountDataRevision'
+import { useStudyAccessPrompt } from '@/features/billing/useStudyAccessPrompt'
+import StudyAccessChip from '@/features/billing/StudyAccessChip'
 import { useAuthStore } from '@/store/authStore'
 import CatalogScore from '@/components/catalog/CatalogScore'
 import UiText from '@/components/common/UiText'
@@ -52,6 +54,7 @@ const FILTERS = [
 type MockFilter = (typeof FILTERS)[number]['id']
 
 function IELTSMockCatalog() {
+  const studyAccess = useStudyAccessPrompt()
   const navigate = useNavigate()
   const location = useLocation()
   const from = (location.state as { from?: string } | null)?.from
@@ -169,6 +172,7 @@ function IELTSMockCatalog() {
                     <CheckCircle2 className="h-3.5 w-3.5" /> {mock.readyCount}/{MOCK_SECTION_COUNT} ready
                   </span>
                 </div>
+                <div className="mt-3"><StudyAccessChip resource={`mock:ielts:${mock.id}`} /></div>
                 <h2 className="mt-3 text-2xl font-black tracking-[-0.04em] text-slate-950">Full Mock {mock.index}</h2>
                 <p className="mt-2 text-sm font-medium leading-6 text-slate-500">Listening → Reading → Writing → Speaking</p>
 
@@ -203,11 +207,13 @@ function IELTSMockCatalog() {
                   <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-500"><Clock3 className="h-4 w-4 shrink-0" /> {formatMockDuration(mock.totalMinutes)}{!finished && ' session'}</span>
                   <div className="mock-ielts-card-actions">
                   {finished ? <><button type="button" className="mock-ielts-glass-open mock-ielts-card-open" aria-label={`Review Full Mock ${mock.index}`} onClick={() => navigate(`/mock/ielts/${mock.id}`, { state: { from: from ?? 'ielts' } })}><UiText text="View results" /></button><button type="button" className="mock-ielts-glass-open mock-ielts-retake" aria-label={`Retake Full Mock ${mock.index}`} onClick={() => {
+                    if (!studyAccess.open(`mock:ielts:${mock.id}`)) return
                     if (!retakeFullMock(mock.id)) { setRetakeError('Unable to save your previous attempt. Please try again.'); return }
                     setRetakeError('')
                     navigate(`/mock/ielts/${mock.id}`, { state: { from: from ?? 'ielts' } })
                   }}><RotateCcw size={14} /> Retake</button></> :
                   <button type="button" className="mock-ielts-glass-open mock-ielts-card-open" aria-label={`${inProgress ? 'Resume' : 'Start'} Full Mock ${mock.index}`} onClick={() => {
+                    if (!studyAccess.open(`mock:ielts:${mock.id}`)) return
                     navigate(`/mock/ielts/${mock.id}`, { state: { from: from ?? 'ielts' } })
                   }}>{inProgress ? 'Resume' : 'Start'} <ArrowRight size={14} /></button>}
                   </div>

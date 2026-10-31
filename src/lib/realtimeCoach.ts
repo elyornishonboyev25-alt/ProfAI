@@ -111,7 +111,7 @@ export class RealtimeCoach {
       this.channel.onclose = () => this.fail(new Error('Voice ended. Retry to start a new session.'))
       await peer.setLocalDescription(await peer.createOffer())
       if (this.closed) return
-      const session = await apiClient.post<{ id: string; sdp: string; maxMinutes: number }>('/ai/voice/connect', {
+      const session = await apiClient.post<{ id: string; sdp: string; maxMinutes: number; expiresAt?: string }>('/ai/voice/connect', {
         sdp: peer.localDescription?.sdp, context: this.options.context, history,
       }, { signal: this.controller.signal })
       if (this.closed) { void apiClient.post('/ai/voice/end', { id: session.id }).catch(() => {}); return }
@@ -126,7 +126,7 @@ export class RealtimeCoach {
         : 'Briefly greet the learner in their selected language and invite their next question. Use existing context naturally, without listing private memories.' } })
       this.waitForResponse()
       this.meter(stream)
-      this.timer = window.setTimeout(() => this.fail(new Error('This voice session has finished. Start another session to continue.')), session.maxMinutes * 60000)
+      this.timer = window.setTimeout(() => this.fail(new Error('This voice session has finished. Start another session to continue.')), session.expiresAt ? Math.max(0, Date.parse(session.expiresAt) - Date.now()) : session.maxMinutes * 60000)
     } catch (error) {
       if (!this.closed) this.fail(error instanceof Error ? error : new Error('Voice could not connect. Please retry.'))
     }

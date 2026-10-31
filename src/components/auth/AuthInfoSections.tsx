@@ -5,7 +5,7 @@ import { BrandLogo } from '@/components/brand/BrandLogo'
 
 const faqs = [
   { question: 'Can I prepare for both IELTS and SAT?', answer: 'Yes. Both exam arenas live in one account, with practice, full tests, results and review.' },
-  { question: 'Is Ivygoo free to use?', answer: 'Yes. The Free plan is $0 forever, with monthly IELTS, SAT and AI allowances. Pro is $5.99/month and Max is $11.99/month for more tests, mocks and AI feedback. Classes require a paid plan. Saved results and vocabulary stay available.' },
+  { question: 'Is Ivygoo free to use?', answer: 'Yes. Free includes the first 5 tests in each IELTS skill, the first 5 IELTS full mocks and first 5 SAT mocks, plus their vocabulary. Articles, podcasts and shadowing are free. IvyGoo Pro is $5.99/month; IvyGoo Elite is $11.99/month. AI text balance renews monthly; Live AI requires a paid plan.' },
   { question: 'Does Ivygoo support IELTS General Training?', answer: 'Yes. IELTS Academic and General Training preparation are both available.' },
   { question: 'Does Ivygoo submit university applications?', answer: 'No. Ivygoo helps you prepare and organize your plan. You submit applications through each university’s official process.' },
 ]

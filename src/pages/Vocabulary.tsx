@@ -12,6 +12,8 @@ import { articles } from '@/data/articles'
 import { countSavedWords, subscribeSavedWords } from '@/utils/myVocabularyStore'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { CountUp, Reveal, Stagger, StaggerItem, Tilt3D } from '@/components/fx'
+import { useStudyAccessPrompt } from '@/features/billing/useStudyAccessPrompt'
+import StudyAccessChip from '@/features/billing/StudyAccessChip'
 
 const fastTransition = { duration: 0.22, ease: [0.22, 1, 0.36, 1] as const }
 
@@ -24,6 +26,7 @@ function resolveTrack(trackParam?: string): VocabularyTrack | null {
 }
 
 export default function Vocabulary() {
+  const studyAccess = useStudyAccessPrompt()
   const { c } = useCopy()
   const navigate = useNavigate()
   const location = useLocation()
@@ -39,6 +42,7 @@ export default function Vocabulary() {
   const fromSatArena = routeTrack === 'SAT' && (location.state as { from?: string } | null)?.from === '/sat'
   const satNavigationState = fromSatArena ? { from: '/sat' } : undefined
   const selectSatModule = (packId: string, sectionId: string) => {
+    if (!studyAccess.open(`mock:sat:${packId.replace('sat_full_mock_', '')}`)) return
     setSatParams({ mock: packId, module: sectionId }, { state: satNavigationState })
   }
   useEffect(() => {
@@ -82,6 +86,7 @@ export default function Vocabulary() {
   }, [])
 
   const toggleSatPack = (packId: string) => {
+    if (openSatPackId !== packId && !studyAccess.open(`mock:sat:${packId.replace('sat_full_mock_', '')}`)) return
     setOpenSatPackId((previous) => (previous === packId ? null : packId))
   }
 
@@ -296,7 +301,8 @@ export default function Vocabulary() {
                 </div>
                 <div className="ielts-vocab-enter space-y-3">
                   {visibleSatPacks.map((pack) => {
-                    const isOpen = openSatPackId === pack.id
+                    const resource = `mock:sat:${pack.id.replace('sat_full_mock_', '')}`
+                    const isOpen = openSatPackId === pack.id && studyAccess.allowed(resource)
                     const count = pack.sections.reduce((sum, section) => sum + section.entries.length, 0)
                     return (
                       <div key={pack.id} className={`ielts-vocab-test ${isOpen ? 'is-open' : ''}`}>
@@ -305,7 +311,7 @@ export default function Vocabulary() {
                             <span className="block text-base font-bold text-slate-900 sm:text-lg">{pack.title}</span>
                             <span className="mt-1 block text-xs font-medium text-slate-500">{count} <UiText text="words" /> · {pack.sections.length} <UiText text="modules" /></span>
                           </span>
-                          <span className="ielts-vocab-chevron"><ChevronDown aria-hidden="true" className={`h-4 w-4 transition-transform duration-300 motion-reduce:transition-none ${isOpen ? 'rotate-180' : ''}`} /></span>
+                          <StudyAccessChip resource={resource} /><span className="ielts-vocab-chevron"><ChevronDown aria-hidden="true" className={`h-4 w-4 transition-transform duration-300 motion-reduce:transition-none ${isOpen ? 'rotate-180' : ''}`} /></span>
                         </button>
                         <VocabularyPanel id={`${pack.id}-sections`} open={isOpen}>
                           <div className="ielts-vocab-parts grid gap-2.5 p-3 sm:grid-cols-2">

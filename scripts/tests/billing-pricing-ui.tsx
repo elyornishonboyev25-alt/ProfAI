@@ -42,7 +42,7 @@ export async function run() {
     assert.equal(element.querySelectorAll('.billing-plan').length, 3)
     assert.ok(element.querySelector('.plans-table'), 'the comparison table sits below the plans')
     assert.equal(/7 days|free trial/i.test(element.textContent ?? ''), false, 'no trial copy remains')
-    assert.deepEqual([...element.querySelectorAll('.billing-plan h3')].map(node => node.textContent), ['Free', 'Pro', 'Max'])
+    assert.deepEqual([...element.querySelectorAll('.billing-plan h3')].map(node => node.textContent), ['Free', 'IvyGoo Pro', 'IvyGoo Elite'])
     assert.deepEqual([...element.querySelectorAll('.billing-plan-price strong')].map(node => node.textContent), ['$0', '$5.99', '$11.99'])
     assert.deepEqual([...element.querySelectorAll('.plans-table thead small')].map(node => node.textContent), ['$0', '$5.99 / month', '$11.99 / month'])
     assert.ok(element.querySelector('.plans-table')?.textContent?.includes('$4.99 / month'))

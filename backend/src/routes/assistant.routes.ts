@@ -4,6 +4,11 @@ import { answerAssistant } from '../services/assistant.service.js'
 import { AiGenerationError } from '../services/aiProvider.service.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { withStudyAccess, BillingError } from '../services/billing.service.js'
+import { requireLiveSession } from '../services/voiceAllowance.service.js'
+async function withAssistantAccess<T>(userId: string, delivery: string | undefined, operation: () => Promise<T>) {
+  if (delivery === 'voice') { await requireLiveSession(userId); return operation() }
+  return withStudyAccess(userId, 'ai', operation)
+}
 const router = Router()
 
 router.post('/chat', asyncHandler(async (req, res) => {
@@ -12,7 +17,7 @@ router.post('/chat', asyncHandler(async (req, res) => {
   const close = () => { if (!res.writableEnded) controller.abort() }
   res.on('close', close)
   try {
-    return res.json(await withStudyAccess(req.user!.id, 'ai', () => answerAssistant(req.user!.id, payload, controller.signal)))
+    return res.json(await withAssistantAccess(req.user!.id, payload.delivery, () => answerAssistant(req.user!.id, payload, controller.signal)))
   } catch (error) {
     if (controller.signal.aborted) return
     if (error instanceof AiGenerationError) return res.status(error.statusCode).json({ message: error.message, code: error.code })
@@ -27,7 +32,7 @@ router.post('/stream', asyncHandler(async (req, res) => {
   const write = (event: string, data: unknown) => { if (!res.destroyed) res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`) }
   const heartbeat = setInterval(() => { if (!res.destroyed) res.write(': keep-alive\n\n') }, 10000)
   try {
-    const result = await withStudyAccess(req.user!.id, 'ai', async () => {
+    const result = await withAssistantAccess(req.user!.id, payload.delivery, async () => {
       res.status(200).set({ 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache, no-transform', 'X-Accel-Buffering': 'no' })
       res.flushHeaders()
       return answerAssistant(req.user!.id, payload, controller.signal, (reply) => write('reply', { reply }))

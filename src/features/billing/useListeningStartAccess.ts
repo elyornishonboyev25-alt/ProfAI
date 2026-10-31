@@ -34,7 +34,7 @@ export function useListeningStartAccess(resource: string | null, feature: 'test'
       return !controller.signal.aborted
     } catch (failure) {
       if (!controller.signal.aborted) {
-        if (failure instanceof ApiError && failure.code === 'PREMIUM_REQUIRED') navigate('/premium')
+        if (failure instanceof ApiError && failure.code === 'PREMIUM_REQUIRED') window.dispatchEvent(new CustomEvent('profai:premium-required', { detail: 'content' }))
         else setError(failure instanceof Error ? failure.message : 'Could not start the test.')
       }
       return false

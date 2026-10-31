@@ -15,13 +15,6 @@
 .reading-shell .ielts-matching-options.is-letters > p { margin: 0; font-size: 11px; }
 .reading-shell .ielts-matching-options.is-letters ul { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
 .reading-shell .ielts-matching-options.is-letters li { display: grid; place-items: center; min-width: 28px; min-height: 28px; border: 1px solid #dde3ec; border-radius: 6px; background: #fff; font-size: 13px; font-weight: 700; }
-.reading-shell .ielts-answer-review { max-width: 780px; border-color: #fff; background: linear-gradient(145deg,#fff,#edf0f6); box-shadow: 0 28px 90px #16223a35; }
-.reading-shell .ielts-answer-review > div:first-child { background: linear-gradient(130deg,#fff,#e8edf5); border-color: #dce1ea; }
-.reading-shell .ielts-answer-review-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(130px,1fr)); gap: 8px; }
-.reading-shell .ielts-answer-review-grid button { display: flex; align-items: center; gap: 7px; min-height: 58px; padding: 9px; border-color: #dde3ec; background: #ffffffd9; border-radius: 10px; box-shadow: none; }
-.reading-shell .ielts-answer-review-grid button > span:last-child { min-width: 0; font-size: 12px; overflow-wrap: anywhere; }
-.reading-shell .ielts-answer-review-grid button:hover { border-color: #c52d43; background: #fff5f7; }
-.reading-shell .ielts-answer-review-grid .exam-question-number { margin: 0; font-size: 12px; }
 :is(.reading-shell,.ielts-annotation-layer) .ielts-text-tools { box-shadow: 0 8px 24px #1e293b24; }
 :is(.reading-shell,.ielts-annotation-layer) .ielts-text-tools[data-reading-mark-toolbar] { margin: 0; }
 :is(.reading-shell,.ielts-annotation-layer) .ielts-text-tools[data-reading-mark-toolbar] button { margin-top: 0; }

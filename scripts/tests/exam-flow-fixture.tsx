@@ -11,6 +11,7 @@ import TestInterface from '@/pages/TestInterface'
 import SATHardQuestions from '@/pages/SATHardQuestions'
 import MockSAT from '@/pages/MockSAT'
 import SATMockRun from '@/pages/SATMockRun'
+import SATSection from '@/pages/SATSection'
 import InProcessTests from '@/pages/InProcessTests'
 import InProcessPanel from '@/components/tests/InProcessPanel'
 import { useAuthStore } from '@/store/authStore'
@@ -56,6 +57,12 @@ if (!sessionStorage.getItem('flow-fixture-initialized')) {
   const attempt = createSATAttempt(sat.id, sat.modules, 'practice')
   attempt.answers[sat.modules[0].questions[0].id] = 'A'
   saveSATAttempt(attempt)
+  const completedSat = SAT_TEST_CATALOG[1]
+  const completedAttempt = createSATAttempt(completedSat.id, completedSat.modules, 'practice')
+  completedAttempt.status = 'submitted'
+  completedAttempt.submittedAt = Date.parse('2026-10-31T09:00:00Z')
+  completedAttempt.answers = Object.fromEntries(completedSat.modules.flatMap(module => module.questions).slice(0, 30).map(question => [question.id, question.correctAnswer]))
+  saveSATAttempt(completedAttempt)
   sessionStorage.setItem('flow-fixture-initialized', 'true')
 }
 apiClient.get = (async (path: string) => {
@@ -83,6 +90,7 @@ createRoot(document.getElementById('root')!).render(<BrowserRouter><Routes>
   <Route path="/results/:testId" element={<Results />} /><Route path="/test/:type/:id" element={<TestInterface />} />
   <Route path="/sat/in-process" element={<InProcessTests />} />
   <Route path="/sat/mock/:mockId/run" element={<SATMockRun />} />
+  <Route path="/sat/:section" element={<SATSection />} />
   <Route path="/sat/hard-questions" element={<SATHardQuestions />} /><Route path="/mock/sat/:mockId" element={<MockSAT />} />
   <Route path="/in-process" element={<main className="p-6 mx-auto max-w-6xl"><InProcessPanel exam="IELTS" showEmpty /><InProcessPanel exam="SAT" showEmpty /></main>} />
   <Route path="*" element={<Home />} />

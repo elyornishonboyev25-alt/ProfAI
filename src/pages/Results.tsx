@@ -418,18 +418,29 @@ function ResultsContent() {
         {resultTab === 'answers' ? <section className="ir-glass ir-answers" role="tabpanel" id="ielts-result-panel-answers" aria-labelledby="ielts-result-tab-answers">
           <header className="ir-section-heading"><div><BookOpen size={22} /><h2><UiText text="Answer Sheet" /></h2></div><button type="button" className="flow-button" aria-pressed={showCorrectAnswers} onClick={() => setShowCorrectAnswers(value => !value)}>{showCorrectAnswers ? <EyeOff size={16} /> : <Eye size={16} />}<UiText text={showCorrectAnswers ? 'Hide Correct Answers' : 'Show Correct Answers'} /></button></header>
           <div className="ir-outcomes" role="group" aria-label="Filter answers">{(['all', 'correct', 'incorrect', 'skipped'] as const).map(status => <button type="button" key={status} aria-pressed={outcomeFilter === status} onClick={() => setOutcomeFilter(status)}>{status === 'all' ? 'All answers' : status === 'skipped' ? 'Skipped' : status === 'correct' ? 'Correct' : 'Incorrect'} <span>{status === 'all' ? flatQuestionResults.length : flatQuestionResults.filter(question => question.status === status).length}</span></button>)}</div>
-          <div className="ir-answer-grid">{flatQuestionResults.filter(question => outcomeFilter === 'all' || question.status === outcomeFilter).map(question => {
-            const meta = questionMetaMap.get(question.questionId)
-            const userAnswer = formatUserAnswer(question.userAnswer, meta?.question.options)
-            const correctAnswer = formatCorrectAnswer(question.correctAnswer)
-            const status = questionStatusBadge(question.status)
-            return <button type="button" className={`ir-answer is-${question.status}`} key={question.questionId} onClick={() => activateFullReview(question.questionId)} aria-label={`Review question ${question.displayNumber} in ${isListeningTest ? 'listening' : 'passage'}`}>
-              <span className="ir-answer-head"><b>{question.displayNumber}</b><small>{status.label}</small></span>
-              <span className="ir-answer-response"><small>Your answer</small><strong>{userAnswer}</strong></span>
-              {showCorrectAnswers && <span className="ir-answer-correct"><small>Correct answer</small><strong>{correctAnswer}</strong></span>}
-              <span className="ir-answer-link">Review <ChevronRight size={13} /></span>
-            </button>
-          })}</div>
+          <div className={`ir-answer-groups${activeSections.length === 3 ? ' has-three-parts' : ''}${showCorrectAnswers ? ' shows-correct' : ''}`}>
+            {activeSections.map((section, index) => {
+              const sectionQuestions = flatQuestionResults.filter(question => questionMetaMap.get(question.questionId)?.section.id === section.id && (outcomeFilter === 'all' || question.status === outcomeFilter))
+              if (!sectionQuestions.length) return null
+              return <section className="ir-answer-group" key={section.id} aria-labelledby={`ir-part-${section.id}`}>
+                <header className="ir-answer-group-heading"><h3 id={`ir-part-${section.id}`}>Part {sectionQuestions[0].partNumber ?? index + 1}</h3><p>{section.title}</p><span>{sectionQuestions.length}</span></header>
+                <div className="ir-answer-columns" aria-hidden="true"><span>No.</span><span>Your answer</span>{showCorrectAnswers && <span>Correct answer</span>}<span>Status</span><span /></div>
+                <div className="ir-answer-grid">{sectionQuestions.map(question => {
+                  const meta = questionMetaMap.get(question.questionId)
+                  const userAnswer = formatUserAnswer(question.userAnswer, meta?.question.options)
+                  const status = questionStatusBadge(question.status)
+                  const StatusIcon = question.status === 'correct' ? CheckCircle2 : question.status === 'incorrect' ? XCircle : EyeOff
+                  return <button type="button" className={`ir-answer is-${question.status}`} key={question.questionId} onClick={() => activateFullReview(question.questionId)} aria-label={`Review question ${question.displayNumber} in ${isListeningTest ? 'listening' : 'passage'}`}>
+                    <b className="ir-answer-number">{question.displayNumber}</b>
+                    <span className="ir-answer-response"><span className="sr-only">Your answer: </span><strong>{question.status === 'skipped' ? <span className="ir-answer-unanswered">Unanswered</span> : userAnswer}</strong></span>
+                    {showCorrectAnswers && <span className="ir-answer-correct"><span className="sr-only">Correct answer: </span><strong>{formatCorrectAnswer(question.correctAnswer)}</strong></span>}
+                    <span className="ir-answer-status"><StatusIcon size={15} /><span>{status.label}</span></span>
+                    <ChevronRight className="ir-answer-link" size={15} aria-hidden="true" />
+                  </button>
+                })}</div>
+              </section>
+            })}
+          </div>
           {!flatQuestionResults.some(question => outcomeFilter === 'all' || question.status === outcomeFilter) && <p className="ir-empty">No answers match this filter.</p>}
         </section> : <section className="ir-glass ir-leaderboard-panel" role="tabpanel" id="ielts-result-panel-leaderboard" aria-labelledby="ielts-result-tab-leaderboard"><TestLeaderboard testId={resolvedTestId} title={test.title} eligible={!result.isPartial} /></section>}
         <footer className="ir-footer"><button type="button" className="flow-button" onClick={goBack}><ArrowLeft size={16} /><UiText text={backLabel} /></button><button type="button" className="flow-button" disabled={sharingResult} onClick={() => void shareResult()}><Share2 size={16} />{sharingResult ? 'Creating link…' : 'Share result'}</button></footer>

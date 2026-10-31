@@ -6771,7 +6771,7 @@ export default function IELTSReadingInterface({
                   {activeSections.map((section, sIdx) => (
                     <div key={section.id}>
                       <p className="text-sm font-bold text-slate-700 mb-2">Part {resolvePassageNumber(section, sIdx + 1)}: {section.title}</p>
-                      <div className="ielts-answer-review-grid">
+                      <div className="flex flex-wrap gap-2">
                         {section.questions.map((q, qIdx) => {
                           const startIndex = getQuestionGlobalIndex(sIdx, qIdx);
                           const slotCount = getQuestionSlotCount(q);
@@ -6792,8 +6792,8 @@ export default function IELTSReadingInterface({
                                   : 'bg-white border-red-100 text-slate-500 hover:border-red-300'
                               }`}
                             >
-                              <QuestionNumber>{displayNumber}</QuestionNumber>{' '}
-                              <span className={isAnswered ? 'text-slate-900 font-semibold' : 'text-slate-400'}>{isAnswered ? display : 'Unanswered'}</span>
+                              <span className="font-bold text-red-600">{displayNumber}.</span>{' '}
+                              <span className={isAnswered ? 'text-slate-900 font-semibold' : 'text-slate-400'}>{isAnswered ? display : '-'}</span>
                             </button>
                           );
                         })}

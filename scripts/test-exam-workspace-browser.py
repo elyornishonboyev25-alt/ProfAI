@@ -115,7 +115,7 @@ with sync_playwright() as p:
     assert page.locator('.ir-answer-grid').count() == 0
     page.screenshot(path=str(output / 'leaderboard-notice-desktop.png'))
     page.get_by_role('button', name='OK, view results', exact=True).click()
-    page.locator('.ir-answer-grid').wait_for()
+    page.locator('.ir-answer-grid').first.wait_for()
     assert page.evaluate('window.lastResult.leaderboardEligible') is False
 
     page.goto(base + '/test/listening/ielts-listening-1?part=4', wait_until='networkidle')

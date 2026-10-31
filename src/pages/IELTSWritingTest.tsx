@@ -1,3 +1,5 @@
+import AttemptEntryBoundary from '@/components/tests/AttemptEntryBoundary'
+import { testReturnPath } from '@/utils/testNavigation'
 import { readActiveTestPaper } from '@/utils/activeTestPaper'
 import { resolveFullMockRouteState } from '@/utils/fullMockRouteState'
 import FullMockSectionGate from '@/components/ielts/FullMockSectionGate'
@@ -17,11 +19,12 @@ type WritingTestNavState = {
   durationMinutes?: number
   entry?: string
   from?: string
+  returnTo?: string
   mock?: { id: string; section: MockSectionKey }
 } | null
 
 export default function IELTSWritingTest() {
-  return <FullMockSectionGate><WritingTestContent /></FullMockSectionGate>
+  return <AttemptEntryBoundary exam="IELTS"><FullMockSectionGate><WritingTestContent /></FullMockSectionGate></AttemptEntryBoundary>
 }
 
 function WritingTestContent() {
@@ -50,6 +53,7 @@ function WritingTestContent() {
   }
 
   const handleExit = () => {
+    if (navState?.returnTo) { navigate(testReturnPath(navState, '/ielts')); return }
     if (navState?.mock?.id) {
       navigate(`/mock/ielts/${navState.mock.id}`, { state: { from: navState.from } })
       return

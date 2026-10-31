@@ -1,4 +1,5 @@
 import { useActiveTest } from '@/hooks/useActiveTest'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Bookmark, Calculator, Check, CheckCircle2, Flame, Lightbulb, RotateCcw, Search, XCircle } from 'lucide-react'
@@ -14,6 +15,7 @@ import { accountStorageFor } from '@/utils/accountStorage'
 import { useAuthStore } from '@/store/authStore'
 import { useAiAssistantStore } from '@/store/aiAssistantStore'
 import './SATHardQuestions.css'
+import './SATHardQuestionsSilver.css'
 
 type Filter = 'all' | 'unanswered' | 'incorrect' | 'bookmarked'
 export default function SATHardQuestions() {
@@ -100,7 +102,7 @@ function HardWorkspace({ userId }: { userId: string }) {
       {!active && <><SATSectionTabs section="hard-questions" />
       <header className="hard-hero">
         <div className="hard-hero-copy"><span className="hard-eyebrow"><Flame size={16} /> SAT CHALLENGE COLLECTION</span>
-          <h1>Hard questions.<br /><span>Clear breakthroughs.</span></h1>
+          <h1>Hard Questions</h1>
           <p>Go deeper, one question at a time. Advanced questions from the Ivygoo test catalog, grouped by topic with instant explanations.</p>
           <div className="hard-hero-tags"><span><CheckCircle2 size={15} /> Instant feedback</span><span>Untimed practice</span><span>Progress autosaves</span></div>
         </div>
@@ -122,7 +124,8 @@ function HardWorkspace({ userId }: { userId: string }) {
           <div className="hard-stats"><span><strong>{checkedCount}</strong> completed</span><span><strong>{correctCount}</strong> correct</span><span><strong>{checkedCount ? Math.round(correctCount / checkedCount * 100) : 0}%</strong> accuracy</span></div>
         </div>}
         {active && question && prompt ? <>
-          <div className="hard-question-toolbar"><button type="button" onClick={() => openQuestion()}><ArrowLeft size={16} /> All topics</button><span>Question {index + 1} / 100</span>
+          <header className="hard-test-topbar"><button type="button" onClick={() => openQuestion()}><ArrowLeft size={16} />All topics</button><BrandLogo height={32} /><span><Flame size={15} />Hard practice</span></header>
+          <div className="hard-question-toolbar"><strong>{math ? 'Math' : 'Reading & Writing'}</strong><span>Question {index + 1} / {rows.length}</span>
             {math && <button type="button" aria-expanded={calculatorOpen} onClick={() => setCalculatorOpen(value => !value)}><Calculator size={17} /> Calculator</button>}
             <button type="button" aria-pressed={Boolean(state?.bookmarked)} aria-label={state?.bookmarked ? 'Remove bookmark' : 'Bookmark question'} onClick={() => update(active.key, { bookmarked: !state?.bookmarked })}><Bookmark size={17} fill={state?.bookmarked ? 'currentColor' : 'none'} /></button>
           </div>

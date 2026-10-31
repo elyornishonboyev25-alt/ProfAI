@@ -27,7 +27,7 @@ export async function run() {
   }
   const saved = () => loadSATAttempt(test.id)!
   const render = async () => act(async () => root.render(
-    <MemoryRouter initialEntries={['/sat/mock/1/run']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <MemoryRouter initialEntries={[{ pathname: '/sat/mock/1/run', state: { resumeIntent: true } }]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
         <Route path="/sat/mock/:mockId/run" element={<SATMockRun />} />
         <Route path="/sat" element={<p>SAT Arena</p>} />

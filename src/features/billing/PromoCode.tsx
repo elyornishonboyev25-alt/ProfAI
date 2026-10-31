@@ -11,6 +11,9 @@ import './promo.css'
 
 type PromoStatus = { telegramEnabled: boolean; botUsername: string; channelUrl: string }
 type Outcome = { tone: 'success' | 'error'; message: string }
+type RedeemResponse =
+  | { kind: 'PROMO' | 'REFERRAL'; days: number }
+  | { kind: 'CAMPAIGN'; months: number; startsAt: string; expiresAt: string; deferred: boolean; afterLaunchGift: boolean }
 
 /** Ways to pay less: the Telegram wheel, group buying and a friend's invitation code. */
 export default function PromoCode({ wheel, onRedeemed }: { wheel: WheelDiscountState & { refresh: () => Promise<void> }; onRedeemed: () => void }) {
@@ -50,10 +53,21 @@ export default function PromoCode({ wheel, onRedeemed }: { wheel: WheelDiscountS
     if (code.length < 3 || busy) return
     setBusy('apply'); setOutcome(null)
     try {
-      const result = await apiClient.post<{ kind: 'PROMO' | 'REFERRAL'; days: number }>('/promo/redeem', { code })
-      setOutcome({ tone: 'success', message: result.kind === 'REFERRAL'
+      const result = await apiClient.post<RedeemResponse>('/promo/redeem', { code })
+      const message = result.kind === 'CAMPAIGN'
+        ? result.afterLaunchGift
+          ? text(`You are currently using PRO. This code will activate ${result.months} additional months of PRO after your free 1-month PRO ends. Your code is saved; you do not need to enter it again.`,
+            `Hozir PRO’dan foydalanyapsiz. Bu promokod bepul 1 oylik PRO tugagandan keyin amal qiladi va yana ${result.months} oylik PRO beradi. Promokod saqlandi, qayta kiritish shart emas.`,
+            `Вы уже пользуетесь PRO. Промокод добавит ещё ${result.months} месяца PRO после окончания бесплатного месяца. Код сохранён, вводить его повторно не нужно.`)
+          : result.deferred
+            ? text(`Code saved — ${result.months} additional months of PRO will begin after your current access ends. You do not need to enter it again.`,
+              `Promokod saqlandi — joriy obunangiz tugagach, yana ${result.months} oylik PRO boshlanadi. Qayta kiritish shart emas.`,
+              `Код сохранён — ещё ${result.months} месяца PRO начнутся после окончания текущего доступа. Повторный ввод не нужен.`)
+            : text(`Code applied — ${result.months} months of PRO activated.`, `Promokod qo‘llandi — ${result.months} oylik PRO faollashtirildi.`, `Код применён — активировано ${result.months} месяца PRO.`)
+        : result.kind === 'REFERRAL'
         ? text(`Invitation accepted — +${result.days} Premium days. Start our Telegram bot and join the channel so your friend gets their reward too.`, `Taklif qabul qilindi — +${result.days} kun Premium. Do‘stingiz ham mukofot olishi uchun Telegram botga start bering va kanalga obuna bo‘ling.`, `Приглашение принято — +${result.days} дн. Premium. Запустите бота и подпишитесь на канал, чтобы друг тоже получил награду.`)
-        : text(`Code applied — +${result.days} Premium days.`, `Kod qo‘llandi — +${result.days} kun Premium.`, `Код применён — +${result.days} дн. Premium.`) })
+        : text(`Code applied — +${result.days} Premium days.`, `Kod qo‘llandi — +${result.days} kun Premium.`, `Код применён — +${result.days} дн. Premium.`)
+      setOutcome({ tone: 'success', message })
       setCode('')
       onRedeemed()
     } catch (error) {

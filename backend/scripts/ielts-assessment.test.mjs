@@ -95,6 +95,9 @@ test('all six recordings reach the provider; transcript scores exclude missing p
     assert.match(body.systemInstruction.parts[0].text, /Do not anchor to a typical learner band/)
     calls++
     if (calls === 1) {
+      for (const part of body.contents[0].parts.slice(1)) {
+        assert.deepEqual(Object.keys(part.inlineData).sort(), ['data', 'mimeType'], 'Gemini inlineData must not contain application metadata such as answerIndex')
+      }
       assert.deepEqual(body.contents[0].parts.slice(1).map(part => part.inlineData.data), audio.map(clip => clip.data))
       return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify(speaking) }] } }] })
     }
@@ -108,4 +111,44 @@ test('all six recordings reach the provider; transcript scores exclude missing p
   assert.equal(text.pronunciationBand, 0)
   assert.equal(text.overallBand, 7.5)
   assert.equal(text.assessmentMode, 'transcript')
+})
+
+test('malformed or ungrounded audio feedback is regenerated once using every original recording', async (t) => {
+  const nativeFetch = globalThis.fetch, originalUsage = prisma.aiUsageEvent.create
+  env.GEMINI_API_KEY = 'fake-validation-key'; env.GEMINI_MODELS = 'gemini-2.5-flash'
+  prisma.aiUsageEvent.create = async ({ data }) => data
+  t.after(() => { globalThis.fetch = nativeFetch; prisma.aiUsageEvent.create = originalUsage; env.GEMINI_API_KEY = '' })
+  const request = speakingAssessmentSchema.parse({ modeLabel: 'Speaking Full Mock 11', history, durationSec: 200, audio })
+  for (const incomplete of ['{"fluencyBand":8', JSON.stringify({ ...speaking, evidence: speaking.evidence.filter(item => item.criterion !== 'pronunciation') })]) {
+    let calls = 0
+    globalThis.fetch = async (_url, options) => {
+      const body = JSON.parse(options.body)
+      calls++
+      assert.deepEqual(body.contents[0].parts.slice(1).map(part => part.inlineData), audio.map(({ data, mimeType }) => ({ data, mimeType })))
+      assert.deepEqual(JSON.parse(body.contents[0].parts[0].text).history, history)
+      if (calls > 1) assert.match(body.systemInstruction.parts[0].text, /previous response did not pass validation/)
+      return Response.json({ candidates: [{ content: { parts: [{ text: calls === 1 ? incomplete : JSON.stringify(speaking) }] } }] })
+    }
+    assert.equal((await assessSpeakingAudio('recovery-user', request)).overallBand, 8.5)
+    assert.equal(calls, 2)
+  }
+})
+
+test('repeated invalid feedback remains unassessed and regeneration respects cancellation', async (t) => {
+  const nativeFetch = globalThis.fetch, originalUsage = prisma.aiUsageEvent.create
+  env.GEMINI_API_KEY = 'fake-invalid-key'; env.GEMINI_MODELS = 'gemini-2.5-flash'
+  prisma.aiUsageEvent.create = async ({ data }) => data
+  t.after(() => { globalThis.fetch = nativeFetch; prisma.aiUsageEvent.create = originalUsage; env.GEMINI_API_KEY = '' })
+  let calls = 0
+  const controller = new AbortController()
+  globalThis.fetch = async () => {
+    calls++
+    if (calls === 3) controller.abort()
+    return Response.json({ candidates: [{ content: { parts: [{ text: '{}' }] } }] })
+  }
+  const request = speakingAssessmentSchema.parse({ modeLabel: 'Full Mock', history, durationSec: 200, audio })
+  await assert.rejects(assessSpeakingAudio('invalid-user', request), { code: 'SPEAKING_RESULT_INCOMPLETE' })
+  assert.equal(calls, 2, 'Invalid evidence cannot cause an unbounded regeneration loop')
+  await assert.rejects(assessSpeakingAudio('cancel-user', request, controller.signal))
+  assert.equal(calls, 3, 'Cancelled evaluation does not regenerate')
 })

@@ -52,6 +52,7 @@ const SATQuestionBankRun = lazy(() => import('@/pages/SATQuestionBankRun'))
 const SATHardQuestions = lazy(() => import('@/pages/SATHardQuestions'))
 const SATQuestionBank = lazy(() => import('@/pages/SATQuestionBank'))
 const SATResultReview = lazy(() => import('@/pages/SATResultReview'))
+const InProcessTests = lazy(() => import('@/pages/InProcessTests'))
 const SATCalculator = lazy(() => import('@/pages/SATCalculator'))
 const SATMockRun = lazy(() => import('@/pages/SATMockRun'))
 const IELTS = lazy(() => import('@/pages/IELTS'))
@@ -532,6 +533,8 @@ function App() {
                       <Route path="/sat/hard-questions" element={<AnimatedRoute><SATHardQuestions /></AnimatedRoute>} />
                       <Route path="/sat/question-bank" element={<AnimatedRoute><SATQuestionBank /></AnimatedRoute>} />
                       <Route path="/sat/results/:attemptId" element={<AnimatedRoute><SATResultReview /></AnimatedRoute>} />
+                      <Route path="/sat/in-process" element={<AnimatedRoute><InProcessTests /></AnimatedRoute>} />
+                      <Route path="/ielts/in-process" element={<Navigate to="/ielts/tests#in-process" replace />} />
                       <Route
                         path="/sat/mock/:mockId/run"
                         element={

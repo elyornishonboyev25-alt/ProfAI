@@ -9,22 +9,25 @@ import { useAuthStore } from '@/store/authStore'
 import ReviewModeration from '@/components/landing/ReviewModeration'
 import OwnerReportInbox from '@/components/support/OwnerReportInbox'
 import OwnerAccountActivity from '@/components/owner/OwnerAccountActivity'
+import OwnerPromotions from '@/components/owner/OwnerPromotions'
+import OwnerPaymentDetails, { paymentAmount, type OwnerPayment } from '@/components/owner/OwnerPaymentDetails'
+import { useOwnerUpdates, type OwnerSection } from '@/components/owner/useOwnerUpdates'
 import { activityText } from '@/i18n/ownerActivity'
 import './OwnerDashboard.css'
 import { BILLING_PRODUCTS } from '@/features/billing/catalog'
 import { hasOwnerAccess } from '@/utils/ownerAccess'
 
 type Page<T> = { items: T[]; total: number; page: number; pageSize: number }
-type NewUser = { id: string; fullName: string; email: string; createdAt: string }
+type NewUser = { id: string; fullName: string; email: string; createdAt: string; lastSeenAt?: string | null }
 type PremiumGrant = { plan: string; source: string; startsAt: string; expiresAt: string | null }
 type ManagedUser = NewUser & { nickname: string | null; role: string; fixedPremium: boolean; premiumGrant: PremiumGrant | null; billingSubscriptions?: Array<{ plan: string; expiresAt: string }> }
-type PaymentRequest = { id: string; plan: string; amountUzs: number; currency?: string; amountMinor?: number; method?: string; status: string; createdAt: string; user: NewUser }
+type PaymentRequest = OwnerPayment & { method?: string; user: NewUser & { promoCode?: { code: string; redeemedAt: string | null } | null } }
 type Overview = {
   metrics: { totalUsers: number; todayUsers: number; weekUsers: number; totalReports: number; openReports: number }
   users: Page<NewUser>
 }
 
-const paymentStatusLabels: Record<string, string> = { SUBMITTED: 'Needs review', PENDING: 'Pending', APPROVED: 'Approved', REJECTED: 'Rejected', CANCELED: 'Canceled' }
+const paymentStatusLabels: Record<string, string> = { SUBMITTED: 'Needs review', PENDING: 'Pending', PROCESSING: 'Processing', APPROVED: 'Approved', REJECTED: 'Rejected', CANCELED: 'Canceled' }
 const planLabels: Record<string, string> = { MONTHLY: '1 month', QUARTERLY: '3 months', YEARLY: '12 months', UNLIMITED: 'Indefinitely' }
 
 function Pagination({ page, total, pageSize, onChange, language }: { page: number; total: number; pageSize: number; onChange: (page: number) => void; language: OwnerLanguage }) {
@@ -42,12 +45,15 @@ export default function OwnerDashboard() {
   const language = premiumLanguage(i18n.resolvedLanguage ?? i18n.language)
   const t = (text: string, params?: Record<string, string | number>) => ownerText(text, language, params)
   const locale = language === 'uz' ? 'uz-UZ' : language === 'ru' ? 'ru-RU' : 'en-US'
-  const dateFormat = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' })
+  const dateFormat = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Tashkent' })
   const amount = (value: number) => `${new Intl.NumberFormat(locale).format(value)} ${t('UZS')}`
   const user = useAuthStore(state => state.user)
   const isOwner = hasOwnerAccess(user?.email, user?.nickname)
-  const [section, setSection] = useState('activity')
+  const [section, setSection] = useState<OwnerSection>('activity')
+  const [userPeriod, setUserPeriod] = useState('ALL')
+  const [userKind, setUserKind] = useState('JOINED')
   const [overview, setOverview] = useState<Overview | null>(null)
+  const [overviewFailed, setOverviewFailed] = useState(false)
   const [userPage, setUserPage] = useState(1)
   const [reload, setReload] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -58,25 +64,29 @@ export default function OwnerDashboard() {
   const [managedPage, setManagedPage] = useState(1)
   const [managedUsers, setManagedUsers] = useState<Page<ManagedUser> | null>(null)
   const [paymentPage, setPaymentPage] = useState(1)
-  const [paymentStatus, setPaymentStatus] = useState('SUBMITTED')
+  const [paymentStatus, setPaymentStatus] = useState('ALL')
+  const [paymentLoading, setPaymentLoading] = useState(true)
   const [payments, setPayments] = useState<Page<PaymentRequest> | null>(null)
+  const [paymentPromotion, setPaymentPromotion] = useState('ALL')
+  const { counts, markSeen } = useOwnerUpdates(user?.id, isOwner, reload)
   const [grantPlans, setGrantPlans] = useState<Record<string, string>>({})
 
   useEffect(() => {
     if (!isOwner) return
     let active = true
     setLoading(true)
+    setOverviewFailed(false)
     setError('')
-    const query = new URLSearchParams({ userPage: String(userPage) })
+    const query = new URLSearchParams({ userPage: String(userPage), userPeriod, userKind })
     void apiClient.get<Overview>(`/support/owner/overview?${query}`).then(data => {
       if (active) setOverview(data)
     }).catch(() => {
-      if (active) setError(t('Could not load the overview.'))
+      if (active) { setOverviewFailed(true); setError(t('Could not load the overview.')) }
     }).finally(() => {
       if (active) setLoading(false)
     })
     return () => { active = false }
-  }, [isOwner, userPage, reload, language])
+  }, [isOwner, userPage, userPeriod, userKind, reload, language])
 
   useEffect(() => {
     if (!isOwner) return
@@ -91,12 +101,14 @@ export default function OwnerDashboard() {
   useEffect(() => {
     if (!isOwner) return
     let active = true
-    const query = new URLSearchParams({ page: String(paymentPage), status: paymentStatus })
+    setPayments(null)
+    setPaymentLoading(true)
+    const query = new URLSearchParams({ page: String(paymentPage), status: paymentStatus, promotion: paymentPromotion })
     void apiClient.get<Page<PaymentRequest>>(`/billing/owner/requests?${query}`).then(data => {
       if (active) setPayments(data)
-    }).catch(() => { if (active) setError(t('Could not load payment requests.')) })
+    }).catch(() => { if (active) setError(t('Could not load payment requests.')) }).finally(() => { if (active) setPaymentLoading(false) })
     return () => { active = false }
-  }, [isOwner, paymentPage, paymentStatus, reload, language])
+  }, [isOwner, paymentPage, paymentStatus, paymentPromotion, reload, language])
 
   async function grantPremium(person: ManagedUser) {
     setUpdatingId(person.id)
@@ -136,11 +148,12 @@ export default function OwnerDashboard() {
   if (!isOwner) return <Navigate to="/dashboard" replace />
 
   const metrics = overview?.metrics
+  const selectUsers = (period: string) => { setUserPage(1); setUserPeriod(period); setSection('users') }
   const cards = [
-    { label: t('Total users'), value: metrics?.totalUsers, icon: Users },
-    { label: t('Joined today'), value: metrics?.todayUsers, icon: Users },
-    { label: t('Last 7 days'), value: metrics?.weekUsers, icon: Users },
-    { label: t('Open reports'), value: metrics?.openReports, icon: AlertCircle },
+    { label: t(userKind === 'ACTIVE' ? 'Active users' : 'Total users'), value: metrics?.totalUsers, icon: Users, active: section === 'users' && userPeriod === 'ALL', onClick: () => selectUsers('ALL') },
+    { label: t(userKind === 'ACTIVE' ? 'Active today' : 'Joined today'), value: metrics?.todayUsers, icon: Users, active: section === 'users' && userPeriod === 'TODAY', onClick: () => selectUsers('TODAY') },
+    { label: t('Last 7 days'), value: metrics?.weekUsers, icon: Users, active: section === 'users' && userPeriod === 'WEEK', onClick: () => selectUsers('WEEK') },
+    { label: t('Open reports'), value: metrics?.openReports, icon: AlertCircle, active: section === 'reports', onClick: () => setSection('reports') },
   ]
 
   return <div className="owner-dashboard mx-auto w-full max-w-7xl px-4 pb-16 pt-8 sm:px-6 lg:px-8">
@@ -154,33 +167,36 @@ export default function OwnerDashboard() {
     </div>
 
     <nav className="owner-navigation" aria-label={t('Owner dashboard')}>
-      {[{ id: 'activity', label: 'Activity' }, { id: 'users', label: 'Users' }, { id: 'payments', label: 'Payments' }, { id: 'reports', label: 'Reports' }, { id: 'reviews', label: 'Reviews' }].map(item => <button type="button" key={item.id} aria-pressed={section === item.id} className={section === item.id ? 'is-active' : ''} onClick={() => setSection(item.id)}>{activityText(item.label, language)}{item.id === 'reports' && Boolean(overview?.metrics.openReports) && <span>{overview?.metrics.openReports}</span>}</button>)}
+      {([{ id: 'activity', label: 'Activity' }, { id: 'users', label: 'Users' }, { id: 'payments', label: 'Payments' }, { id: 'reports', label: 'Reports' }, { id: 'reviews', label: 'Reviews' }] as const).map(item => <button type="button" key={item.id} aria-pressed={section === item.id} className={section === item.id ? 'is-active' : ''} onClick={() => { markSeen(item.id); setSection(item.id); setReload(value => value + 1) }}>{activityText(item.label, language)}{Boolean(counts?.[item.id]) && <span className="owner-update-badge" aria-label={t('{count} new updates', { count: counts![item.id] })}>{counts![item.id] > 99 ? '99+' : counts![item.id]}</span>}</button>)}
     </nav>
     {section === 'activity' && <OwnerAccountActivity language={language} reload={reload} />}
     {error && <div role="alert" className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</div>}
     {loading && !overview && <p role="status" className="rounded-2xl bg-white p-6 text-slate-600">{t('Loading data…')}</p>}
     {overview && <>
       <div hidden={section !== 'users' && section !== 'reports'}><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {cards.map(card => <div key={card.label} className="owner-metric rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-sm">
+        {cards.map(card => <button type="button" key={card.label} aria-pressed={card.active} onClick={card.onClick} className={`owner-metric rounded-2xl border border-slate-200 bg-white/90 p-5 text-left shadow-sm ${card.active ? 'is-active' : ''}`}>
           <div className="flex items-center justify-between text-sm font-semibold text-slate-600"><span>{card.label}</span><card.icon size={19} className="text-red-600" /></div>
           <div className="mt-3 text-3xl font-black text-slate-950">{card.value ?? '—'}</div>
-        </div>)}
+        </button>)}
       </div>
 
       </div>
       <div hidden={section !== 'reports'}><OwnerReportInbox language={language} reload={reload} onChanged={() => setReload(value => value + 1)} /></div>
       <div hidden={section !== 'users'}><div className="mt-7 grid items-start gap-6">
         <section className="rounded-2xl border border-slate-200 bg-white/95 p-5 shadow-sm sm:p-6">
-          <div className="mb-5 flex items-center justify-between gap-3"><div><h2 className="text-xl font-black text-slate-900">{t('Users')}</h2><p className="mt-1 text-sm text-slate-500">{t('New registrations · total {count}', { count: overview.users.total })}</p></div></div>
-          <div className="owner-users-list grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-xl font-black text-slate-900">{t('Users')}</h2><p className="mt-1 text-sm text-slate-500">{t(userKind === 'ACTIVE' ? 'Active users' : 'New registrations')} · {t(({ ALL: 'All time', TODAY: 'Today', WEEK: 'Last 7 days' } as Record<string, string>)[userPeriod])} · {overview.users.total}</p></div>
+            <select aria-label={t('User activity type')} value={userKind} onChange={event => { setUserKind(event.target.value); setUserPage(1) }} className="rounded-xl border border-slate-200 px-3 py-2 text-sm"><option value="JOINED">{t('New registrations')}</option><option value="ACTIVE">{t('Active users')}</option></select>
+          </div>
+          <p className="mb-4 text-xs text-slate-500">{t('Dates and periods use Tashkent time (UTC+5).')}</p>
+          {loading ? <p role="status" className="py-5 text-sm text-slate-500">{t('Loading data…')}</p> : overviewFailed ? null : <div className="owner-users-list grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {overview.users.items.map(person => <div key={person.id} className="min-w-0 rounded-2xl border border-slate-200/70 bg-white/50 p-4">
               <div className="font-bold text-slate-900">{person.fullName}</div>
               <div className="break-all text-sm text-slate-600">{person.email}</div>
-              <div className="mt-1 text-xs text-slate-500">{dateFormat.format(new Date(person.createdAt))}</div>
+              <div className="mt-1 text-xs text-slate-500">{t(userKind === 'ACTIVE' ? 'Last active:' : 'Joined:')} {userKind === 'ACTIVE' ? person.lastSeenAt ? dateFormat.format(new Date(person.lastSeenAt)) : '—' : dateFormat.format(new Date(person.createdAt))}</div>
             </div>)}
-            {overview.users.items.length === 0 && <p className="py-5 text-sm text-slate-500">{t('No users yet.')}</p>}
-          </div>
-          <Pagination page={userPage} total={overview.users.total} pageSize={overview.users.pageSize} onChange={setUserPage} language={language} />
+            {overview.users.items.length === 0 && <p className="py-5 text-sm text-slate-500">{t('No users found.')}</p>}
+          </div>}
+          {!loading && !overviewFailed && <Pagination page={userPage} total={overview.users.total} pageSize={overview.users.pageSize} onChange={setUserPage} language={language} />}
         </section>
 
       </div></div>
@@ -222,16 +238,18 @@ export default function OwnerDashboard() {
 
     </div>
     <div hidden={section !== 'payments'}><section className="mt-7 rounded-2xl border border-slate-200 bg-white/95 p-5 shadow-sm sm:p-6" aria-labelledby="payment-requests-title">
-      <div className="flex flex-wrap items-center justify-between gap-4"><div><h2 id="payment-requests-title" className="flex items-center gap-2 text-xl font-black text-slate-900"><Wallet size={21} className="text-blue-600" /> {t('Payment requests')}</h2><p className="mt-1 text-sm text-slate-500">{t('Verify that the money reached your card before approval.')}</p></div>
-        <select aria-label={t('Payment request status')} value={paymentStatus} onChange={event => { setPaymentStatus(event.target.value); setPaymentPage(1) }} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"><option value="SUBMITTED">{t('Needs review')}</option><option value="PENDING">{t('Pending')}</option><option value="APPROVED">{t('Approved')}</option><option value="REJECTED">{t('Rejected')}</option><option value="CANCELED">{t('Canceled')}</option><option value="ALL">{t('All')}</option></select>
+      <div className="flex flex-wrap items-center justify-between gap-4"><div><h2 id="payment-requests-title" className="flex items-center gap-2 text-xl font-black text-slate-900"><Wallet size={21} className="text-blue-600" /> {t('Payment requests')}</h2><p className="mt-1 text-sm text-slate-500">{t('Payment amounts, statuses and applied discounts.')}</p></div>
+        <select aria-label={t('Payment request status')} value={paymentStatus} onChange={event => { setPaymentStatus(event.target.value); setPaymentPage(1) }} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"><option value="SUBMITTED">{t('Needs review')}</option><option value="PENDING">{t('Pending')}</option><option value="PROCESSING">{t('Processing')}</option><option value="APPROVED">{t('Approved')}</option><option value="REJECTED">{t('Rejected')}</option><option value="CANCELED">{t('Canceled')}</option><option value="ALL">{t('All')}</option></select>
+        <select aria-label={t('Promotion filter')} value={paymentPromotion} onChange={event => { setPaymentPromotion(event.target.value); setPaymentPage(1) }} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"><option value="ALL">{t('All payments')}</option><option value="DISCOUNTED">{t('Discounted payments')}</option></select>
       </div>
+      {paymentLoading && <p role="status" className="py-5 text-sm text-slate-500">{t('Loading data…')}</p>}
       <div className="mt-5 divide-y divide-slate-100">
-        {payments?.items.map(request => <div key={request.id} className="flex flex-wrap items-center justify-between gap-4 py-4"><div><p className="font-bold text-slate-900">{request.user.fullName} · {request.currency === 'USD' ? `USD ${((request.amountMinor ?? 0) / 100).toFixed(2)}` : amount(request.amountUzs)}</p><p className="break-all text-sm text-slate-600">{request.user.email}</p><p className="mt-1 text-xs text-slate-500">{t('Order:')} {request.id} · {t(planLabels[request.plan] ?? request.plan)} · {dateFormat.format(new Date(request.createdAt))}</p><span className="mt-2 inline-block rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700">{t(paymentStatusLabels[request.status] ?? request.status)}</span></div>
-          {request.status === 'SUBMITTED' && <div className="flex gap-2"><button type="button" disabled={updatingId === request.id} onClick={() => void reviewPayment(request, 'APPROVE')} className="rounded-xl bg-emerald-600 px-3 py-2 text-sm font-bold text-white disabled:opacity-50">{t('Approve payment')}</button><button type="button" disabled={updatingId === request.id} onClick={() => void reviewPayment(request, 'REJECT')} className="rounded-xl border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 disabled:opacity-50">{t('Reject')}</button></div>}
+        {payments?.items.map(request => <div key={request.id} className="flex flex-wrap items-center justify-between gap-4 py-4"><div><p className="font-bold text-slate-900">{request.user.fullName} · {paymentAmount(request, language)}</p><p className="break-all text-sm text-slate-600">{request.user.email}</p>{request.user.promoCode?.redeemedAt && <p className="mt-2 text-xs font-semibold text-rose-800">{t('Account promo code')}: <code>{request.user.promoCode.code}</code></p>}<p className="mt-1 text-xs text-slate-500">{t('Order:')} {request.id} · {t(planLabels[request.plan] ?? request.plan)} · {dateFormat.format(new Date(request.createdAt))}</p><span className="mt-2 inline-block rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700">{t(paymentStatusLabels[request.status] ?? request.status)}</span><OwnerPaymentDetails payment={request} language={language} /></div>
+          {request.status === 'SUBMITTED' && request.method === 'CARD_TRANSFER' && <div className="flex gap-2"><button type="button" disabled={updatingId === request.id} onClick={() => void reviewPayment(request, 'APPROVE')} className="rounded-xl bg-emerald-600 px-3 py-2 text-sm font-bold text-white disabled:opacity-50">{t('Approve payment')}</button><button type="button" disabled={updatingId === request.id} onClick={() => void reviewPayment(request, 'REJECT')} className="rounded-xl border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 disabled:opacity-50">{t('Reject')}</button></div>}
         </div>)}
         {payments?.items.length === 0 && <p className="py-5 text-sm text-slate-500">{t('No requests with this status.')}</p>}
       </div>
       {payments && <Pagination page={paymentPage} total={payments.total} pageSize={payments.pageSize} onChange={setPaymentPage} language={language} />}
-    </section></div>
+    </section>{section === 'payments' && <OwnerPromotions language={language} reload={reload} />}</div>
   </div>
 }

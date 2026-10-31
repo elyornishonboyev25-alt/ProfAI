@@ -7,6 +7,7 @@ import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import CompactIeltsCatalog, { type CompactIeltsTestRow } from '@/components/catalog/CompactIeltsCatalog'
 import { useFeatureTrial } from '@/hooks/useFeatureTrial'
 import { getReadingAnalysisHistory } from '@/utils/readingAnalysisStorage'
+import { getCatalogMockResults, objectiveCatalogResult } from '@/utils/ieltsCatalogResults'
 import { useAccountDataRevision } from '@/hooks/useAccountDataRevision'
 import {
   getIeltsFullTestCatalog,
@@ -35,18 +36,7 @@ export default function IELTSSectionTests({ sectionOverride, embedded = false }:
   const fromMock = navigationState?.entry === 'mock-ielts'
   const revision = useAccountDataRevision()
   const history = useMemo(() => getReadingAnalysisHistory(user?.id), [user?.id, revision])
-
-  const completedTestIds = useMemo(() => {
-    return new Set(
-      history
-        .filter((entry) => !entry.isPartial && entry.totalQuestions > 0)
-        .filter((entry) => {
-          const isListeningAttempt = `${entry.testId} ${entry.testTitle}`.toLowerCase().includes('listening')
-          return track === 'listening' ? isListeningAttempt : !isListeningAttempt
-        })
-        .map((entry) => entry.testId),
-    )
-  }, [track, history])
+  const mockResults = useMemo(() => getCatalogMockResults(user?.id, track), [user?.id, track, revision])
 
   const rows = useMemo<CompactIeltsTestRow[]>(() => {
     if (track === 'reading') {
@@ -59,7 +49,7 @@ export default function IELTSSectionTests({ sectionOverride, embedded = false }:
         durationMinutes: 60,
         detail: `3 passages · ${entry.index === 10 ? 41 : 40} questions`,
         available: isAvailableIeltsTrackTest('reading', entry.testId),
-        completed: completedTestIds.has(entry.testId),
+        ...objectiveCatalogResult(history, entry.testId, 3, undefined, mockResults),
       }))
 
       return liveRows
@@ -74,9 +64,9 @@ export default function IELTSSectionTests({ sectionOverride, embedded = false }:
       durationMinutes: entry.testId === 'ielts-listening-19' ? 41 : entry.testId === 'ielts-listening-15' ? 32 : 30,
       detail: '4 parts · 40 questions',
       available: isAvailableIeltsTrackTest('listening', entry.testId),
-      completed: completedTestIds.has(entry.testId),
+      ...objectiveCatalogResult(history, entry.testId, 4, undefined, mockResults),
     }))
-  }, [completedTestIds, track])
+  }, [history, mockResults, track])
 
   const visibleRows = useMemo(() => {
     const partNumber = activeFilter === 'full' ? null : Number(activeFilter.slice(5))
@@ -86,26 +76,18 @@ export default function IELTSSectionTests({ sectionOverride, embedded = false }:
           title: `${track === 'listening' ? 'Listening' : 'Reading'} Part ${partNumber} · Test ${row.number}`,
           subtitle: row.available ? `Practice Part ${partNumber} from this test` : row.subtitle,
           badge: `Part ${partNumber}`,
-          completed: history.some(entry => entry.testId === row.id && entry.totalQuestions > 0 && (
-            !entry.isPartial || entry.sectionSummaries.some(section => section.partNumber === partNumber)
-          )),
+          band: undefined,
+          progressLabel: undefined,
+          scoreLabel: undefined,
+          ...objectiveCatalogResult(history, row.id, track === 'listening' ? 4 : 3, partNumber, mockResults),
           durationMinutes: track === 'reading' ? 20 : undefined,
           detail: `Part ${partNumber} · focused practice`,
         }))
       : rows
-    const scoredRows = filteredByPart.map(row => {
-      const latest = history.filter(entry => entry.testId === row.id && entry.totalQuestions > 0 && (!partNumber ? !entry.isPartial : !entry.isPartial || entry.sectionSummaries.some(part => part.partNumber === partNumber)))
-        .sort((a, b) => Date.parse(b.savedAt) - Date.parse(a.savedAt))[0]
-      const part = partNumber ? latest?.sectionSummaries.find(item => item.partNumber === partNumber) : undefined
-      const result = partNumber
-        ? part ? { score: part.correctAnswers, maximum: part.totalQuestions, label: 'Correct answers', detail: `${Math.round(part.accuracy)}%` } : undefined
-        : latest ? { score: latest.bandScore, maximum: 9, label: 'Band score', detail: `${latest.correctAnswers}/${latest.totalQuestions} correct` } : undefined
-      return { ...row, result }
-    })
     const query = deferredSearchTerm.trim().toLowerCase()
-    if (!query) return scoredRows
-    return scoredRows.filter((row) => `${row.title} ${row.subtitle}`.toLowerCase().includes(query))
-  }, [activeFilter, deferredSearchTerm, rows, track, history])
+    if (!query) return filteredByPart
+    return filteredByPart.filter((row) => `${row.title} ${row.subtitle}`.toLowerCase().includes(query))
+  }, [activeFilter, deferredSearchTerm, rows, track, history, mockResults])
 
   if (!validSection) return <Navigate to="/ielts" replace />
 

@@ -1,5 +1,5 @@
 import { useEffect, useRef, type KeyboardEvent } from 'react'
-import { BookOpenText, Calculator, Layers3, Flame } from 'lucide-react'
+import { BookOpenText, Calculator, Layers3, Flame, FolderClock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 export const SAT_SECTION_TABS = [
@@ -7,6 +7,7 @@ export const SAT_SECTION_TABS = [
   { id: 'reading-writing', label: 'Reading & Writing', detail: 'Evidence and expression', icon: BookOpenText },
   { id: 'math', label: 'Math', detail: 'Problem solving', icon: Calculator },
   { id: 'hard-questions', label: 'Hard Questions', detail: '100 English · 100 Math', icon: Flame },
+  { id: 'in-process', label: 'In process', detail: 'Continue your saved tests', icon: FolderClock },
 ] as const
 
 
@@ -37,6 +38,7 @@ export default function SATSectionTabs({ section }: { section: TabId }) {
   }
 
   return (
+    <>
         <div className="sticky top-2 z-20 rounded-2xl border border-white bg-white/95 p-2 shadow-[0_12px_35px_rgba(15,23,42,.09)]">
           <div ref={list} role="tablist" aria-label="SAT test sections" className="flex gap-2 overflow-x-auto">
             {SAT_SECTION_TABS.map(({ id, label, detail, icon: Icon }) => (
@@ -50,5 +52,6 @@ export default function SATSectionTabs({ section }: { section: TabId }) {
             ))}
           </div>
         </div>
+    </>
   )
 }

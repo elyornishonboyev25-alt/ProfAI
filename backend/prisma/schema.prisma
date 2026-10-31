@@ -179,6 +179,7 @@ model User {
   referralReceived                    Referral?                            @relation("ReferralInvitee")
   referralRewards                     ReferralReward[]
   promoCode                           PromoCode?
+  campaignRedemptions                 CampaignRedemption[]
   wheelSpin                           WheelSpin?
   featureUsage                        FeatureUsage[]
   resourceUnlocks                     ResourceUnlock[]
@@ -1287,6 +1288,18 @@ model PromoCode {
   redeemedAt DateTime?
   createdAt  DateTime  @default(now())
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CampaignRedemption {
+  userId    String
+  code      String
+  months    Int
+  startsAt  DateTime
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, code])
 }
 
 model FeatureUsage {

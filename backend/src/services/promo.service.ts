@@ -2,6 +2,7 @@ import crypto from 'node:crypto'
 import { env } from '../config/env.js'
 import { prisma } from '../lib/prisma.js'
 import { claimReferral, grantAccessDays, normalizeReferralCode } from './referral.service.js'
+import { CAMPAIGN_PROMO_CODE, redeemCampaignPromo, type CampaignRedeemResult } from './campaignPromo.service.js'
 
 const PROMO_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 const PROMO_PREFIX = 'IVY'
@@ -32,16 +33,17 @@ export async function issuePromoCode(userId: string) {
 }
 
 export type RedeemResult =
+  | CampaignRedeemResult
   | { ok: true; kind: 'PROMO' | 'REFERRAL'; days: number }
   | { ok: false; code: 'INVALID_CODE' | 'ALREADY_USED' | 'SELF_REFERRAL' | 'ALREADY_CLAIMED' | 'TOO_LATE' }
 
 /**
- * The single "promo code" box accepts two kinds of codes:
- * the one the Telegram bot issues to channel subscribers, and a friend's invitation code.
+ * The single code box accepts campaign promos, Telegram rewards and invitations.
  */
 export async function redeemCode(userId: string, rawCode: string): Promise<RedeemResult> {
   const normalized = normalizePromoCode(rawCode)
   if (normalized.length < 4) return { ok: false, code: 'INVALID_CODE' }
+  if (normalized === CAMPAIGN_PROMO_CODE) return redeemCampaignPromo(userId)
 
   const promo = await prisma.promoCode.findUnique({ where: { code: normalized } })
   if (promo) {

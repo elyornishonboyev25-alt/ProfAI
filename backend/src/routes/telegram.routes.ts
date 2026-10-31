@@ -103,7 +103,8 @@ const redeemSchema = z.object({ code: z.string().min(3).max(40) })
 promoRoutes.post('/redeem', authRateLimit, validateBody(redeemSchema), asyncHandler(async (req, res) => {
   const result = await redeemCode(req.user!.id, req.body.code)
   if (!result.ok) return res.status(result.code === 'INVALID_CODE' ? 404 : 409).json({ code: result.code, message: 'This code cannot be applied.' })
-  res.json({ redeemed: true, kind: result.kind, days: result.days })
+  const { ok, ...reward } = result
+  res.json({ redeemed: true, ...reward })
 }))
 
 // Telegram Mini App wheel. Identity comes from signed Telegram launch data, not a site session.

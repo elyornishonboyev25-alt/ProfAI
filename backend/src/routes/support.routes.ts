@@ -24,7 +24,10 @@ router.post('/reports', requireAuth, asyncHandler(async (req, res) => {
 }))
 
 router.get('/owner/overview', requireAuth, requireOwner, asyncHandler(async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store')
   const query = z.object({
+    userPeriod: z.enum(['ALL', 'TODAY', 'WEEK']).default('ALL'),
+    userKind: z.enum(['JOINED', 'ACTIVE']).default('JOINED'),
     userPage: z.coerce.number().int().min(1).max(10000).default(1),
     reportPage: z.coerce.number().int().min(1).max(10000).default(1),
     status: z.enum(['ALL', 'OPEN', 'RESOLVED']).default('ALL'),
@@ -33,29 +36,35 @@ router.get('/owner/overview', requireAuth, requireOwner, asyncHandler(async (req
   }).safeParse(req.query)
   if (!query.success) return res.status(400).json({ message: 'Invalid page or report filter.' })
 
-  const { userPage, reportPage, status, category, q } = query.data
+  const { userPage, userPeriod, userKind, reportPage, status, category, q } = query.data
   const now = new Date()
   const tashkentNow = new Date(now.getTime() + 5 * 60 * 60 * 1000)
   const today = new Date(Date.UTC(tashkentNow.getUTCFullYear(), tashkentNow.getUTCMonth(), tashkentNow.getUTCDate()) - 5 * 60 * 60 * 1000)
   const lastSevenDays = new Date(today)
   lastSevenDays.setUTCDate(lastSevenDays.getUTCDate() - 6)
+  const usersSince = userPeriod === 'TODAY' ? today : userPeriod === 'WEEK' ? lastSevenDays : undefined
+  const userWhere = (since?: Date): Prisma.UserWhereInput => userKind === 'ACTIVE'
+    ? { authSessions: { some: since ? { lastSeenAt: { gte: since, lte: now } } : {} } }
+    : since ? { createdAt: { gte: since, lte: now } } : {}
   const reportWhere: Prisma.IssueReportWhereInput = {
     ...(status === 'ALL' ? {} : { status }),
     ...(category === 'ALL' ? {} : { category }),
     ...(q ? { OR: ['name', 'email', 'description', 'pagePath'].map(field => ({ [field]: { contains: q, mode: 'insensitive' } })) } : {}),
   }
-  const [totalUsers, todayUsers, weekUsers, totalReports, openReports, filteredReports, users, reports] = await Promise.all([
-    prisma.user.count(),
-    prisma.user.count({ where: { createdAt: { gte: today } } }),
-    prisma.user.count({ where: { createdAt: { gte: lastSevenDays } } }),
+  const [totalUsers, todayUsers, weekUsers, totalReports, openReports, filteredReports, users, reports, filteredUsers] = await Promise.all([
+    prisma.user.count({ where: userWhere() }),
+    prisma.user.count({ where: userWhere(today) }),
+    prisma.user.count({ where: userWhere(lastSevenDays) }),
     prisma.issueReport.count(),
     prisma.issueReport.count({ where: { status: 'OPEN' } }),
     prisma.issueReport.count({ where: reportWhere }),
     prisma.user.findMany({
+      where: userWhere(usersSince),
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       skip: (userPage - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
-      select: { id: true, fullName: true, email: true, createdAt: true },
+      select: { id: true, fullName: true, email: true, createdAt: true,
+        authSessions: { orderBy: { lastSeenAt: 'desc' }, take: 1, select: { lastSeenAt: true } } },
     }),
     prisma.issueReport.findMany({
       where: reportWhere,
@@ -64,13 +73,32 @@ router.get('/owner/overview', requireAuth, requireOwner, asyncHandler(async (req
       take: PAGE_SIZE,
       select: { id: true, userId: true, name: true, email: true, category: true, description: true, pagePath: true, status: true, createdAt: true },
     }),
+    prisma.user.count({ where: userWhere(usersSince) }),
   ])
 
   return res.json({
     metrics: { totalUsers, todayUsers, weekUsers, totalReports, openReports },
-    users: { items: users, total: totalUsers, page: userPage, pageSize: PAGE_SIZE },
+    users: { items: users.map(({ authSessions, ...user }) => ({ ...user, lastSeenAt: authSessions?.[0]?.lastSeenAt ?? null })), total: filteredUsers, page: userPage, pageSize: PAGE_SIZE },
     reports: { items: reports, total: filteredReports, page: reportPage, pageSize: PAGE_SIZE },
   })
+}))
+
+// Each owner browser keeps its own read cursors; counts always come from the full catalog.
+router.get('/owner/updates', requireAuth, requireOwner, asyncHandler(async (req, res) => {
+  const cursor = z.string().datetime().default('1970-01-01T00:00:00.000Z')
+  const parsed = z.object({ activity: cursor, users: cursor, payments: cursor, reports: cursor, reviews: cursor }).safeParse(req.query)
+  if (!parsed.success) return res.status(400).json({ message: 'Invalid update cursors.' })
+  res.setHeader('Cache-Control', 'no-store')
+  const checkedAt = new Date()
+  const since = (key: keyof typeof parsed.data) => ({ gt: new Date(parsed.data[key]), lte: checkedAt })
+  const [activity, users, payments, reports, reviews] = await Promise.all([
+    prisma.authSession.count({ where: { loginAt: since('activity'), method: { not: 'RESTORED' } } }),
+    prisma.user.count({ where: { createdAt: since('users') } }),
+    prisma.paymentRequest.count({ where: { updatedAt: since('payments'), status: { in: ['PENDING', 'SUBMITTED', 'PROCESSING', 'APPROVED'] } } }),
+    prisma.issueReport.count({ where: { createdAt: since('reports') } }),
+    prisma.review.count({ where: { createdAt: since('reviews') } }),
+  ])
+  return res.json({ checkedAt, counts: { activity, users, payments, reports, reviews } })
 }))
 
 // Recipient accounts come only from existing reports, never from client-supplied user IDs.

@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import type { Prisma } from '@prisma/client'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma.js'
 import { requireAuth } from '../middleware/auth.js'
@@ -195,16 +196,43 @@ router.delete('/owner/users/:id/grant', requireAuth, requireOwner, asyncHandler(
 }))
 
 router.get('/owner/requests', requireAuth, requireOwner, asyncHandler(async (req, res) => {
-  const parsed = z.object({ page: pageSchema, status: z.enum(['ALL', 'PENDING', 'SUBMITTED', 'APPROVED', 'REJECTED', 'CANCELED']).default('SUBMITTED') }).safeParse(req.query)
+  res.setHeader('Cache-Control', 'no-store')
+  const parsed = z.object({ page: pageSchema, status: z.enum(['ALL', 'PENDING', 'SUBMITTED', 'PROCESSING', 'APPROVED', 'REJECTED', 'CANCELED']).default('ALL'), promotion: z.enum(['ALL', 'DISCOUNTED']).default('ALL') }).safeParse(req.query)
   if (!parsed.success) return res.status(400).json({ message: 'Invalid request filter.' })
-  const { page, status } = parsed.data
-  const where = status === 'ALL' ? {} : { status }
+  const { page, status, promotion } = parsed.data
+  const where: Prisma.PaymentRequestWhereInput = { ...(status === 'ALL' ? {} : { status }), ...(promotion === 'DISCOUNTED' ? { discountPercent: { gt: 0 } } : {}) }
   const [total, items] = await Promise.all([
     prisma.paymentRequest.count({ where }),
     prisma.paymentRequest.findMany({ where, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], skip: (page - 1) * PAGE_SIZE, take: PAGE_SIZE,
       select: { id: true, plan: true, amountUzs: true, status: true, method: true, createdAt: true, reviewedAt: true,
-        currency: true, amountMinor: true,
-        user: { select: { id: true, fullName: true, email: true } } } }),
+        currency: true, amountMinor: true, discountPercent: true, wheelSpinId: true,
+        user: { select: { id: true, fullName: true, email: true,
+          promoCode: { select: { code: true, redeemedAt: true } } } } } }),
+  ])
+  return res.json({ items, total, page, pageSize: PAGE_SIZE })
+}))
+
+// Redeemed codes, referrals and wheel prizes are distinct promotion sources.
+router.get('/owner/promotions', requireAuth, requireOwner, asyncHandler(async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store')
+  const parsed = z.object({ page: pageSchema }).safeParse(req.query)
+  if (!parsed.success) return res.status(400).json({ message: 'Invalid promotion page.' })
+  const { page } = parsed.data
+  const where: Prisma.UserWhereInput = { OR: [
+    { promoCode: { is: { redeemedAt: { not: null } } } },
+    { referralReceived: { isNot: null } }, { wheelSpin: { isNot: null } },
+    { paymentRequests: { some: { discountPercent: { gt: 0 } } } },
+  ] }
+  const [total, items] = await Promise.all([
+    prisma.user.count({ where }),
+    prisma.user.findMany({ where, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], skip: (page - 1) * PAGE_SIZE, take: PAGE_SIZE,
+      select: { id: true, fullName: true, email: true,
+        promoCode: { select: { code: true, days: true, redeemedAt: true } },
+        referralReceived: { select: { createdAt: true, inviter: { select: { fullName: true, referralCode: true } } } },
+        wheelSpin: { select: { id: true, percent: true, expiresAt: true, usedAt: true } },
+        paymentRequests: { where: { discountPercent: { gt: 0 } }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take: 1,
+          select: { id: true, plan: true, status: true, currency: true, amountMinor: true, amountUzs: true, discountPercent: true, wheelSpinId: true, createdAt: true } },
+      } }),
   ])
   return res.json({ items, total, page, pageSize: PAGE_SIZE })
 }))

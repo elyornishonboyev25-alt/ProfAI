@@ -10,6 +10,7 @@ export function waitForIeltsClassSync(testId: string, date: string) {
 }
 
 export function syncIeltsClassResult(type: 'reading' | 'listening', test: IELTSTest, result: TestResult, assignmentId?: string) {
+  if (result.leaderboardEligible === false) return Promise.resolve()
   if (!result.isPartial) {
     // Use the same idempotent attempt endpoint as Results, so class work and
     // review represent one attempt and award XP only once.

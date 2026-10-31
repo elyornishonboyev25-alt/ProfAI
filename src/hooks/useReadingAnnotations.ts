@@ -1,8 +1,8 @@
 import { useLayoutEffect, type RefObject } from 'react'
 import { accountStorageFor } from '@/utils/accountStorage'
-import { textOffsets, textRange } from '@/utils/textRanges'
+import { annotationText, textOffsets, resolveTextQuote } from '@/utils/textRanges'
 
-type Mark = { start: number; end: number; text: string; type: 'highlight' | 'note'; group: string; note: string }
+type Mark = { start: number; end: number; text: string; type: 'highlight' | 'note'; group: string; note: string; prefix?: string; suffix?: string }
 
 /** Store text coordinates, never HTML, so restored notes cannot inject markup. */
 export function useReadingAnnotations(shell: RefObject<HTMLDivElement>, key: string, owner: string, active: boolean) {
@@ -11,12 +11,19 @@ export function useReadingAnnotations(shell: RefObject<HTMLDivElement>, key: str
     const storage = accountStorageFor(owner)
     const containers = Array.from(shell.current.querySelectorAll<HTMLElement>('[data-reading-markable="1"]'))
     let saved: Mark[][] = []
-    try { saved = JSON.parse(storage.getItem(key) ?? '[]') } catch { /* Optional annotations. */ }
+    try {
+      const parsed: unknown = JSON.parse(storage.getItem(key) ?? '[]')
+      saved = Array.isArray(parsed) ? parsed.map(marks => Array.isArray(marks) ? marks.filter((mark): mark is Mark =>
+        mark && Number.isInteger(mark.start) && Number.isInteger(mark.end) && typeof mark.text === 'string' && mark.text.length > 0 &&
+        (mark.type === 'highlight' || mark.type === 'note') && typeof mark.group === 'string' && typeof mark.note === 'string' &&
+        (mark.prefix === undefined || typeof mark.prefix === 'string') && (mark.suffix === undefined || typeof mark.suffix === 'string')) : []) : []
+    } catch { /* Optional annotations. */ }
+    const unresolved: Mark[][] = containers.map(() => [])
     containers.forEach((container, index) => {
       if (container.querySelector('[data-reading-mark="1"]')) return
       for (const mark of saved[index] ?? []) {
-        const range = textRange(container, mark.start, mark.end)
-        if (!range || range.toString() !== mark.text) continue
+        const range = resolveTextQuote(container, mark)
+        if (!range) { unresolved[index].push(mark); continue }
         // Wrap each text fragment independently to preserve the React element tree.
         const walker = document.createTreeWalker(container, 4)
         const fragments: { node: Text; start: number; end: number }[] = []
@@ -58,11 +65,16 @@ export function useReadingAnnotations(shell: RefObject<HTMLDivElement>, key: str
     }
     containers.forEach(container => container.addEventListener('scroll', scheduleScroll, { passive: true }))
     const save = () => {
-      const marks = containers.map(container => Array.from(container.querySelectorAll<HTMLElement>('[data-reading-mark="1"]')).map(node => {
-        const range = document.createRange()
-        range.selectNodeContents(node)
-        return { ...textOffsets(container, range), text: range.toString(), type: node.dataset.markType === 'note' ? 'note' : 'highlight', group: node.dataset.markGroup ?? '', note: node.dataset.note ?? '' }
-      }))
+      const marks = containers.map((container, index) => {
+        const text = annotationText(container)
+        const visible = Array.from(container.querySelectorAll<HTMLElement>('[data-reading-mark="1"]')).map(node => {
+          const range = document.createRange()
+          range.selectNodeContents(node)
+          const offsets = textOffsets(container, range)
+          return { ...offsets, prefix: text.slice(Math.max(0, offsets.start - 24), offsets.start), suffix: text.slice(offsets.end, offsets.end + 24), text: range.toString(), type: node.dataset.markType === 'note' ? 'note' : 'highlight', group: node.dataset.markGroup ?? '', note: node.dataset.note ?? '' }
+        })
+        return [...unresolved[index], ...visible]
+      })
       try { storage.setItem(key, JSON.stringify(marks)) } catch { /* Keep marks visible. */ }
     }
     const observer = new window.MutationObserver(save)

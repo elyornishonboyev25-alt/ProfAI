@@ -83,6 +83,9 @@ export async function run() {
     await mount(sentinel, { pathname: path, state: { resumeIntent: true } })
     assert.ok(element.querySelector('[data-runner]'), 'In process opens the exact saved session directly')
     await mount(sentinel, path)
+    assert.ok(element.querySelector('[data-runner]'), 'Reload of the accepted history entry restores directly')
+    window.sessionStorage.clear() // A catalog launch creates a different browser history entry.
+    await mount(sentinel, path)
     await click('Start a new attempt'); await click('Keep saved test')
     assert.ok(storage.getItem(key))
     await click('Start a new attempt'); await click('Replace & start again')

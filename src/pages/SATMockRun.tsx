@@ -1,3 +1,5 @@
+import LeaderboardEligibilityNotice from '@/components/common/LeaderboardEligibilityNotice'
+import { isSATLeaderboardEligible, minimumSATLeaderboardSeconds } from '@/features/sat/leaderboardEligibility'
 import AttemptEntryBoundary from '@/components/tests/AttemptEntryBoundary'
 import ConfirmDialog from '@/components/common/ConfirmDialog'
 import { testReturnPath } from '@/utils/testNavigation'
@@ -185,6 +187,7 @@ function SATMockRunContent() {
     const report = scoreSATModules(test.modules, attempt.answers)
     const assignmentId = searchParams.get('assignmentId') ?? undefined
     void syncSATAttemptResult(user.id, test, attempt, assignmentId).catch(() => {})
+    if (!isSATLeaderboardEligible(attempt, modules)) return
     void recordXpActivity({
       source: 'SAT_PRACTICE',
       eventKey: sourceKey,
@@ -235,6 +238,8 @@ function SATMockRunContent() {
     persistUpdate((current) => ({
       ...finishModule(current, modules),
       status: 'submitted',
+      leaderboardEligible: isSATLeaderboardEligible(current, modules),
+      eligibilityNoticeAcknowledged: false,
       submittedAt: Date.now(),
       pausedModuleSeconds: undefined,
       timerPausedAt: undefined,
@@ -410,6 +415,7 @@ function SATMockRunContent() {
   }
 
   if (attempt.status === 'submitted') {
+    if (!isSATLeaderboardEligible(attempt, modules) && !attempt.eligibilityNoticeAcknowledged) return <main className="exam-flow attempt-entry"><LeaderboardEligibilityNotice seconds={Math.round(totalTime(attempt, modules))} minimumSeconds={minimumSATLeaderboardSeconds(modules)} onContinue={() => persistUpdate(current => ({ ...current, eligibilityNoticeAcknowledged: true, leaderboardEligible: false }))} /></main>
     return (
       <>
       {diagnostic && user && <div role={baselineStatus === 'error' ? 'alert' : 'status'} className="mx-auto mt-4 max-w-6xl rounded-2xl border border-blue-100 bg-blue-50 px-5 py-4 text-sm text-slate-700">
@@ -572,6 +578,7 @@ function SATMockRunContent() {
             </button>
             <button
               type="button"
+              aria-label="More"
               onClick={() => { setMoreOpen((open) => !open); setToolsOpen(false) }}
               className="flex flex-col items-center px-2 py-1 font-serif text-xs font-bold text-slate-700"
             >

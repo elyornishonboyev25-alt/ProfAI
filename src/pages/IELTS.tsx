@@ -1,6 +1,5 @@
 import { ACCOUNT_DATA_EVENT, accountStorageFor } from '@/utils/accountStorage'
 import UiText from '@/components/common/UiText'
-import InProcessPanel from '@/components/tests/InProcessPanel'
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
@@ -207,7 +206,6 @@ export default function IELTS() {
   return (
     <main className="workspace-page ielts-hub relative min-h-screen overflow-x-clip px-4 pb-16 pt-6 sm:px-6 lg:px-8">
       <div className="relative z-10 mx-auto max-w-[112rem]">
-        <InProcessPanel exam="IELTS" showEmpty />
         {fromMock ? (
           <button type="button" onClick={() => navigate('/ielts/tests#mocks', { state: { from: entry?.from } })} className="route-back-button">
             <ArrowLeft className="h-4 w-4" /> Mock IELTS

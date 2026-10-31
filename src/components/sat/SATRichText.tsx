@@ -1,3 +1,4 @@
+import ExamInstruction from '@/components/common/ExamInstruction'
 import { Fragment, type ReactNode } from 'react'
 
 type Props = {
@@ -248,7 +249,7 @@ function markdownNodes(text: string, keyPrefix: string): ReactNode[] {
     if (token.startsWith('<u>') && token.endsWith('</u>')) return <u key={key}>{token.slice(3, -4)}</u>
     if (token.startsWith('**') && token.endsWith('**')) return <strong key={key}>{inlineNodes(token.slice(2, -2))}</strong>
     if (token.startsWith('*') && token.endsWith('*')) return <em key={key}>{inlineNodes(token.slice(1, -1))}</em>
-    return <Fragment key={key}>{token}</Fragment>
+    return <Fragment key={key}><ExamInstruction text={token} /></Fragment>
   })
 }
 

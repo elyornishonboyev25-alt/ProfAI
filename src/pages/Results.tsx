@@ -1,5 +1,6 @@
 import { accountStorageFor } from '@/utils/accountStorage'
 import UiText from '@/components/common/UiText'
+import LeaderboardEligibilityNotice from '@/components/common/LeaderboardEligibilityNotice'
 import { testReturnLabel, testReturnPath } from '@/utils/testNavigation'
 import TestLeaderboard from '@/components/results/TestLeaderboard'
 import { BrandLogo } from '@/components/brand/BrandLogo'
@@ -351,6 +352,15 @@ function ResultsContent() {
     } finally {
       setSharingResult(false)
     }
+  }
+
+  if (result && test && result.leaderboardEligible === false && result.eligibilityNoticeAcknowledged === false) {
+    return <main className="exam-flow attempt-entry"><LeaderboardEligibilityNotice seconds={result.timeSpent}
+      minimumSeconds={result.leaderboardMinimumSeconds ?? (result.totalQuestions >= 30 ? 1800 : 600)} onContinue={() => {
+        const acknowledged = { ...result, eligibilityNoticeAcknowledged: true }
+        saveReviewState(result.testId, { result: acknowledged, test })
+        navigate(location.pathname + location.search + location.hash, { replace: true, state: { ...state, result: acknowledged, test, mock, from } })
+      }} /></main>
   }
 
   if (!result || !test) {

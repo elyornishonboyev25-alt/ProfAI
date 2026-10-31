@@ -1,3 +1,6 @@
+import LeaderboardEligibilityNotice from './common/LeaderboardEligibilityNotice'
+import { getQuestionSlotCount } from '@/utils/ieltsQuestionSlots'
+import { createPortal } from 'react-dom'
 import { useReadingAnnotations } from '@/hooks/useReadingAnnotations'
 import { useActiveTest } from '@/hooks/useActiveTest'
 import { saveActiveTestPaper, clearActiveTestPaper } from '@/utils/activeTestPaper'
@@ -42,6 +45,8 @@ import Timer from './Timer'
 import { useListeningAutoSubmit } from '../hooks/useListeningAutoSubmit'
 import ListeningReviewCountdown from './ListeningReviewCountdown'
 import UiText from './common/UiText'
+import ExamInstruction from './common/ExamInstruction'
+import QuestionNumber from './common/QuestionNumber'
 import BrandPageLoader from './common/BrandPageLoader'
 import QuestionNavigation from './QuestionNavigation'
 import NotesPanel from './NotesPanel'
@@ -138,13 +143,6 @@ function passageDisplayTitle(section: Section | undefined): string {
     .trim()
 }
 
-function formatShortDuration(totalSeconds: number): string {
-  const safeSeconds = Math.max(0, Math.round(totalSeconds))
-  const minutes = Math.floor(safeSeconds / 60)
-  const seconds = safeSeconds % 60
-  return `${minutes}:${String(seconds).padStart(2, '0')}`
-}
-
 function sanitizeSelectedParts(value: number[] | undefined, sectionCount: number): number[] {
   if (sectionCount <= 0) return []
   // A full test must include every part by default. This also protects a
@@ -158,16 +156,6 @@ function sanitizeSelectedParts(value: number[] | undefined, sectionCount: number
     .sort((left, right) => left - right)
 
   return normalized.length > 0 ? normalized : fallback
-}
-
-function getQuestionSlotCount(question: Question): number {
-  if (
-    (question.type === 'five-true-statements' || question.type === 'drag-drop-summary') &&
-    Array.isArray(question.correctAnswer)
-  ) {
-    return Math.max(1, question.correctAnswer.length)
-  }
-  return 1
 }
 
 function clamp(value: number, min: number, max: number) {
@@ -328,7 +316,8 @@ export default function IELTSReadingInterface({
   const startedAtRef = useRef<number | null>(null)
   const activeSecondsRef = useRef(0)
   const activeSegmentRef = useRef<number | null>(null)
-  const readActiveSeconds = () => Math.max(0, activeSecondsRef.current + (activeSegmentRef.current === null ? 0 : (Date.now() - activeSegmentRef.current) / 1000))
+  const submissionSecondsRef = useRef<number | null>(null)
+  const readActiveSeconds = () => submissionSecondsRef.current ?? Math.max(0, activeSecondsRef.current + (activeSegmentRef.current === null ? 0 : (Date.now() - activeSegmentRef.current) / 1000))
   const deadlineRef = useRef<number | null>(null)
   const launchPresetAppliedRef = useRef(false)
   const autoListeningStartRef = useRef(false)
@@ -357,13 +346,13 @@ export default function IELTSReadingInterface({
   }
 
   useEffect(() => {
-    if (!showModeModal && !showOptionsModal) return
+    if (!showModeModal && !showOptionsModal && !showReviewModal && !noteComposer.open) return
     const before = document.activeElement as HTMLElement | null
     const dialog = testShellRef.current?.querySelector<HTMLElement>('[data-ielts-dialog]')
-    const controls = () => Array.from(dialog?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), select:not(:disabled), [tabindex="0"]') ?? []).filter(node => node.getClientRects().length > 0)
-    const frame = window.requestAnimationFrame(() => controls()[0]?.focus())
+    const controls = () => Array.from(dialog?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex="0"]') ?? []).filter(node => node.getClientRects().length > 0)
+    const frame = window.requestAnimationFrame(() => (dialog?.querySelector<HTMLElement>('[data-dialog-autofocus]') ?? controls()[0])?.focus())
     const keyboard = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') { setShowModeModal(false); setShowOptionsModal(false) }
+      if (event.key === 'Escape') { setShowModeModal(false); setShowOptionsModal(false); setShowReviewModal(false); closeNoteComposer() }
       if (event.key !== 'Tab') return
       const items = controls()
       const first = items[0], last = items[items.length - 1]
@@ -376,7 +365,7 @@ export default function IELTSReadingInterface({
       document.removeEventListener('keydown', keyboard)
       if (before?.isConnected) before.focus()
     }
-  }, [showModeModal, showOptionsModal])
+  }, [showModeModal, showOptionsModal, showReviewModal, noteComposer.open])
 
   useEffect(() => {
     if (!isReviewMode || !reviewPayload?.result) return
@@ -1477,12 +1466,13 @@ export default function IELTSReadingInterface({
   const saveNoteComposer = () => {
     const trimmed = noteComposer.value.trim()
     if ((noteComposer.mode === 'edit' || noteComposer.mode === 'create') && noteComposer.target) {
-      noteComposer.target.dataset.note = trimmed
-      if (trimmed) {
-        noteComposer.target.title = `Note: ${trimmed}`
-      } else {
-        noteComposer.target.removeAttribute('title')
-      }
+      const container = resolveMarkableContainerForNode(noteComposer.target)
+      const nodes = container ? collectRelatedMarkNodes(noteComposer.target, container) : [noteComposer.target]
+      nodes.forEach(node => {
+        node.dataset.note = trimmed
+        if (trimmed) node.title = `Note: ${trimmed}`
+        else node.removeAttribute('title')
+      })
       setHighlightPopover((current) => (current ? { ...current, noteText: trimmed } : null))
       closeNoteComposer()
       return
@@ -1526,10 +1516,12 @@ export default function IELTSReadingInterface({
       setHighlightPopover(null)
       return
     }
-    const rect = target.getBoundingClientRect()
+    const rects = Array.from(target.getClientRects())
+    const rect = rects.find(line => event.clientY >= line.top && event.clientY <= line.bottom && event.clientX >= line.left && event.clientX <= line.right) ?? target.getBoundingClientRect()
+    const anchorX = event.clientX >= rect.left && event.clientX <= rect.right ? event.clientX : rect.left + rect.width / 2
     setHighlightPopover({
-      top: rect.bottom + 10,
-      left: rect.left + rect.width / 2,
+      top: rect.bottom + 7,
+      left: anchorX,
       target,
       markType: target.classList.contains('ielts-note') ? 'note' : 'highlight',
       noteText: target.dataset.note,
@@ -1567,6 +1559,18 @@ export default function IELTSReadingInterface({
       startRequestRef.current = false
     }
     submissionStartedRef.current = false
+    submissionSecondsRef.current = null
+    // A fresh attempt starts with a clean notebook; restored attempts keep theirs.
+    try {
+      if (!personalStorage.getItem(sessionKey)) {
+        personalStorage.removeItem(`${sessionKey}:notes`)
+        personalStorage.removeItem(`ielts-note-${test.id}`)
+        for (const section of test.sections) {
+          personalStorage.removeItem(`${sessionKey}:annotations:${section.id}`)
+          personalStorage.removeItem(`${sessionKey}:annotations:${section.id}:scroll`)
+        }
+      }
+    } catch { /* Optional cleanup must not prevent starting the test. */ }
     if (isListening) {
       stopListeningAudio()
       setAudioStarted(false)
@@ -1654,7 +1658,8 @@ export default function IELTSReadingInterface({
     return Math.round(readActiveSeconds())
   }
 
-  const completeAndSubmitTest = (leaderboardEligible = true) => {
+  const completeAndSubmitTest = (leaderboardEligible = true, eligibilityNoticeAcknowledged = true) => {
+    submissionSecondsRef.current ??= readActiveSeconds()
     const analysis = evaluateReadingAnswers(activeSections, answers)
     const correctCount = analysis.summary.correctAnswers
     const totalQuestions = analysis.summary.totalQuestions
@@ -1677,11 +1682,13 @@ export default function IELTSReadingInterface({
         paperSnapshot: test,
       },
       leaderboardEligible,
+      eligibilityNoticeAcknowledged,
+      leaderboardMinimumSeconds: minimumLeaderboardTimeSec,
     }
     onComplete(result)
     // Full simulation (not partial-part practice) → award an IELTS Reading/Listening
     // band badge with celebration. Practice mode never awards a badge.
-    if (!fullMockId && testMode === 'simulation' && !isPartial) {
+    if (!fullMockId && testMode === 'simulation' && !isPartial && leaderboardEligible) {
       awardBadge({
         userId: badgeUserId,
         track: isListening ? 'IELTS_LISTENING' : 'IELTS_READING',
@@ -1693,14 +1700,15 @@ export default function IELTSReadingInterface({
     clearSession()
   }
 
-  const beginSubmitLoading = (leaderboardEligible = true) => {
+  const beginSubmitLoading = (leaderboardEligible = true, eligibilityNoticeAcknowledged = true) => {
     if (submissionStartedRef.current) return
+    submissionSecondsRef.current ??= readActiveSeconds()
     submissionStartedRef.current = true
     stopListeningAudio()
     setShowSubmitLoading(true)
     window.setTimeout(() => {
       setShowSubmitLoading(false)
-      completeAndSubmitTest(leaderboardEligible)
+      completeAndSubmitTest(leaderboardEligible, eligibilityNoticeAcknowledged)
     }, 3000)
   }
 
@@ -1713,6 +1721,7 @@ export default function IELTSReadingInterface({
   }
 
   const confirmSubmitTest = () => {
+    submissionSecondsRef.current ??= readActiveSeconds()
     setShowSubmitConfirmModal(false)
     const timeSpent = getCurrentTimeSpent()
     if (fullMockId) {
@@ -1740,7 +1749,8 @@ export default function IELTSReadingInterface({
   const handleTimeUp = () => {
     if (isReviewMode || isListening) return
     if (showSubmitLoading) return
-    beginSubmitLoading(getCurrentTimeSpent() >= minimumLeaderboardTimeSec)
+    const eligible = getCurrentTimeSpent() >= minimumLeaderboardTimeSec
+    beginSubmitLoading(eligible, eligible)
   }
 
   useEffect(() => {
@@ -1757,7 +1767,8 @@ export default function IELTSReadingInterface({
       setIntegrityWarning(null)
       stopListeningAudio()
       setIsTestActive(false)
-      completeAndSubmitTest(getCurrentTimeSpent() >= minimumLeaderboardTimeSec)
+      const eligible = getCurrentTimeSpent() >= minimumLeaderboardTimeSec
+      completeAndSubmitTest(eligible, eligible)
     },
     audioFinishedAt,
   )
@@ -2355,7 +2366,7 @@ export default function IELTSReadingInterface({
     return (
       <section className="rounded-2xl border border-red-100 bg-white p-3 shadow-[0_8px_20px_rgba(220,38,38,0.08)]">
         <h4 className="text-xl font-black leading-tight text-slate-900">{title}</h4>
-        <p className="mt-1 text-sm text-slate-700">{instruction}</p>
+        <p className="mt-1 text-sm text-slate-700"><ExamInstruction text={instruction} /></p>
 
         <div className="mt-2 overflow-x-auto rounded-xl border border-slate-300">
           <table className="min-w-[760px] w-full border-collapse text-left text-sm">
@@ -2385,7 +2396,7 @@ export default function IELTSReadingInterface({
                           <BookmarkIcon className={`h-4 w-4 ${isFlagged ? 'fill-current' : ''}`} />
                         </button>
                         <p className="text-[15px] leading-snug text-slate-900">
-                          <span className="mr-2 font-black">{question.number}.</span>
+                          <QuestionNumber>{question.number}</QuestionNumber>
                           {question.text}
                         </p>
                       </div>
@@ -2531,7 +2542,7 @@ export default function IELTSReadingInterface({
     return (
       <section className="rounded-2xl border border-red-100 bg-white p-2.5 shadow-[0_8px_20px_rgba(220,38,38,0.08)]">
         <h4 className="text-xl font-black text-slate-900">{title}</h4>
-        <p className="mt-0.5 text-sm text-slate-700">{instruction}</p>
+        <p className="mt-0.5 text-sm text-slate-700"><ExamInstruction text={instruction} /></p>
         <div className="mt-2 space-y-2 rounded-xl border border-red-100 bg-white px-2.5 py-2">
           {questions.map((question) => {
             const globalIdx = getCurrentSectionGlobalIndex(question.id)
@@ -2549,7 +2560,7 @@ export default function IELTSReadingInterface({
                   >
                     <BookmarkIcon className={`h-4 w-4 ${isFlagged ? 'fill-current' : ''}`} />
                   </button>
-                  <span className="mt-[1px] text-lg font-black leading-none text-red-600">{question.number}.</span>
+                  <QuestionNumber>{question.number}</QuestionNumber>
                   <p className="min-w-0 flex-1 text-[15px] leading-relaxed text-slate-900">
                     {question.text.split(/(______|_+)/).map((part, partIndex) =>
                       /^_+$/.test(part) || part === '______' ? (
@@ -2588,10 +2599,10 @@ export default function IELTSReadingInterface({
 
   const renderShortAnswerGroup = (questions: Question[], title: string, instruction: string) => {
     return (
-      <section className="rounded-2xl border border-red-100 bg-white p-2.5 shadow-[0_8px_20px_rgba(220,38,38,0.08)]">
+      <section className="ielts-short-answer-group rounded-2xl border border-red-100 bg-white p-2.5 shadow-[0_8px_20px_rgba(220,38,38,0.08)]">
         <h4 className="text-xl font-black text-slate-900">{title}</h4>
-        <p className="mt-0.5 text-sm text-slate-700">{instruction}</p>
-        <div className="mt-2 space-y-2 rounded-xl border border-red-100 bg-white px-2.5 py-2">
+        <p className="mt-0.5 text-sm text-slate-700"><ExamInstruction text={instruction} /></p>
+        <div className="ielts-continuous-answers mt-4 rounded-xl border border-slate-200 bg-white p-3">
           {questions.map((question) => {
             const globalIdx = getCurrentSectionGlobalIndex(question.id)
             const isFlagged = flaggedQuestions.includes(globalIdx)
@@ -2599,7 +2610,7 @@ export default function IELTSReadingInterface({
             const isCorrect = meta?.status === 'correct'
             const isWrong = meta?.status === 'incorrect' || meta?.status === 'skipped'
             return (
-              <div key={question.id} id={`question-card-${question.id}`} className="rounded-xl border border-red-100 bg-[#fffdfd] px-3 py-2.5">
+              <div key={question.id} id={`question-card-${question.id}`} className="ielts-short-answer-row px-1 py-3">
                 <div className="flex items-start gap-2">
                   <button
                     type="button"
@@ -2608,7 +2619,7 @@ export default function IELTSReadingInterface({
                   >
                     <BookmarkIcon className={`h-4 w-4 ${isFlagged ? 'fill-current' : ''}`} />
                   </button>
-                  <span className="mt-[1px] text-lg font-black leading-none text-red-600">{question.number}.</span>
+                  <QuestionNumber>{question.number}</QuestionNumber>
                   <div className="min-w-0 flex-1">
                     <p className="text-[15px] font-semibold leading-relaxed text-slate-900">{question.text}</p>
                     <input
@@ -2753,7 +2764,7 @@ export default function IELTSReadingInterface({
     return (
       <section className="rounded-2xl border border-red-100 bg-white p-3 shadow-[0_8px_20px_rgba(220,38,38,0.08)]">
         <h4 className="text-xl font-black text-slate-900">{questions[0]?.groupTitle ?? 'Questions 8-13'}</h4>
-        <p className="mt-1 text-sm text-slate-700">{questions[0]?.instruction}</p>
+        <p className="mt-1 text-sm text-slate-700"><ExamInstruction text={questions[0]?.instruction} /></p>
         <div className="mt-2.5 rounded-xl border border-slate-200 bg-[#fefefe] px-3 py-3">
           <p className="text-center text-lg font-black leading-tight text-slate-900 sm:text-xl">Margaret Preston&apos;s later life</p>
 
@@ -2792,8 +2803,8 @@ export default function IELTSReadingInterface({
     return (
       <section className="ielts-matching-group rounded-2xl border border-red-100 bg-white p-3">
         <h4 className="text-xl font-black text-slate-900">{title}</h4>
-        <p className="mt-1 text-sm text-slate-700">{instruction}</p>
-        <div className="mt-2 rounded-xl border border-red-100 bg-red-50/40 p-3">
+        <p className="mt-1 text-sm text-slate-700"><ExamInstruction text={instruction} /></p>
+        <div className={`ielts-matching-options ${options.every(option => /^[A-Z]$/.test(option)) ? 'is-letters' : ''} mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3`}>
           <p className="text-xs font-black uppercase tracking-[0.12em] text-red-700">{listTitle}</p>
           <ul className="mt-2 space-y-1 text-sm font-semibold text-slate-700">
             {options.map((option) => (
@@ -2812,9 +2823,7 @@ export default function IELTSReadingInterface({
                 className="ielts-matching-row rounded-2xl border border-red-100 bg-white px-3 py-3"
               >
                 <div className="flex flex-wrap items-center gap-3">
-                  <span className="inline-flex h-9 min-w-9 items-center justify-center rounded-xl border border-red-200 bg-red-50 text-lg font-black text-slate-900">
-                    {question.number}
-                  </span>
+                  <QuestionNumber>{question.number}</QuestionNumber>
                   <p className="flex-1 text-[15px] font-bold leading-relaxed text-slate-950">
                     {question.text}
                   </p>
@@ -3030,7 +3039,7 @@ export default function IELTSReadingInterface({
     return (
       <section className={`rounded-2xl border border-red-100 bg-white p-3 shadow-[0_8px_20px_rgba(220,38,38,0.08)] ${isDayOneLayout ? 'day1-question-group' : ''}`}>
         <h4 className={isDayOneLayout ? 'text-[1rem] font-black tracking-tight text-slate-950' : 'text-xl font-black text-slate-900'}>{title}</h4>
-        <p className={isDayOneLayout ? 'mt-1 max-w-[58rem] text-[12.5px] font-medium leading-5 text-slate-600' : 'mt-1 text-sm text-slate-700'}>{instruction}</p>
+        <p className={isDayOneLayout ? 'mt-1 max-w-[58rem] text-[12.5px] font-medium leading-5 text-slate-600' : 'mt-1 text-sm text-slate-700'}><ExamInstruction text={instruction} /></p>
         <div className="mt-2 space-y-2">
           {questions.map((question) => {
             const globalIdx = getCurrentSectionGlobalIndex(question.id)
@@ -3047,12 +3056,12 @@ export default function IELTSReadingInterface({
                     <BookmarkIcon className={`h-4 w-4 ${isFlagged ? 'fill-current' : ''}`} />
                   </button>
                   <p className={isDayOneLayout ? 'text-[13.5px] font-medium leading-[1.55] text-slate-900' : 'text-[15px] font-bold leading-relaxed text-slate-950'}>
-                    <span className="mr-2 font-black text-red-600">{question.number}</span>
+                    <QuestionNumber>{question.number}</QuestionNumber>
                     {question.text}
                   </p>
                 </div>
 
-                <div className={`${isDayOneLayout ? 'space-y-1 pl-7' : 'space-y-1.5 pl-7'}`}>
+                <div className="ielts-statement-options">
                   {options.map((option) => {
                     const state = getChoiceVisualState(question, option)
                     const checked = selectedValue.toUpperCase() === option
@@ -3120,7 +3129,7 @@ export default function IELTSReadingInterface({
     return (
       <section className="rounded-2xl border border-red-100 bg-white p-3 shadow-[0_8px_20px_rgba(220,38,38,0.08)]">
         <h4 className="text-xl font-black text-slate-900">{questions[0]?.groupTitle ?? `Questions ${firstNumber}-${lastNumber}`}</h4>
-        <p className="mt-1 text-sm text-slate-700">{instruction}</p>
+        <p className="mt-1 text-sm text-slate-700"><ExamInstruction text={instruction} /></p>
         <div className="mt-2 rounded-xl border border-slate-200 bg-[#fffdfd] px-3 py-2.5 text-[15px] leading-relaxed text-slate-900">
           {questions.map((question, index) => {
             const meta = getQuestionReviewMeta(question)
@@ -3178,7 +3187,7 @@ export default function IELTSReadingInterface({
     return (
       <section className="rounded-2xl border border-red-100 bg-white p-3 shadow-[0_8px_20px_rgba(220,38,38,0.08)]">
         <h4 className="text-xl font-black text-slate-900">{groupTitle}</h4>
-        <p className="mt-1 text-sm text-slate-700">{instruction}</p>
+        <p className="mt-1 text-sm text-slate-700"><ExamInstruction text={instruction} /></p>
         <div className="mt-2.5 rounded-xl border border-slate-200 bg-[#fefefe] px-3 py-3">
           <p className="text-center text-lg font-black leading-tight text-slate-900 sm:text-xl">{title}</p>
           <p className="mt-2 text-[15px] leading-relaxed text-slate-900">
@@ -3315,10 +3324,10 @@ export default function IELTSReadingInterface({
     </div>
   )
 
-  const selectionToolbarWidth = testMode === 'practice' && askAiEnabled ? 272 : 190
+  const selectionToolbarWidth = testMode === 'practice' && !isReviewMode && askAiEnabled ? 272 : 190
 
-  const renderMarkTools = () => (
-    <>
+  const renderMarkTools = () => createPortal(
+    <div className="ielts-annotation-layer">
       <AnimatePresence>
         {selectionRect && (
           <motion.div
@@ -3355,7 +3364,7 @@ export default function IELTSReadingInterface({
               <ChatBubbleBottomCenterTextIcon className="w-4 h-4 text-red-500" />
               Note
             </button>
-            {testMode === 'practice' && askAiEnabled && (
+            {testMode === 'practice' && !isReviewMode && askAiEnabled && (
               <button
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
@@ -3363,9 +3372,12 @@ export default function IELTSReadingInterface({
                   const sel = window.getSelection()
                   const word = (selectedText || sel?.toString() || '').trim()
                   if (!word) return
-                  const anchor = sel?.anchorNode instanceof Element ? sel.anchorNode : sel?.anchorNode?.parentElement
+                  const node = selectedRangeRef.current?.startContainer ?? sel?.anchorNode
+                  const anchor = node instanceof Element ? node : node?.parentElement
                   const sentence = (anchor?.closest('p, div, li')?.textContent ?? word).replace(/\s+/g, ' ').trim()
-                  setAiLookup({ word, sentence })
+                  setAiLookup({ word, sentence: sentence.slice(0, 2000) })
+                  sel?.removeAllRanges()
+                  selectedRangeRef.current = null
                   setSelectionRect(null)
                 }}
                 className="flex h-9 items-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 px-3 text-xs font-bold text-white transition hover:brightness-110"
@@ -3387,7 +3399,7 @@ export default function IELTSReadingInterface({
             data-reading-mark-toolbar="1"
             role="toolbar"
             aria-label="Edit annotation"
-            style={{ top: Math.max(8, Math.min(window.innerHeight - 160, highlightPopover.top)), left: Math.max(8, Math.min(window.innerWidth - 288, highlightPopover.left - 140)), maxWidth: 'calc(100vw - 16px)' }}
+            style={{ top: Math.max(8, Math.min(window.innerHeight - (highlightPopover.markType === 'note' ? 150 : 50), highlightPopover.top)), left: Math.max(8, Math.min(window.innerWidth - (highlightPopover.markType === 'note' ? 276 : 180) - 8, highlightPopover.left - (highlightPopover.markType === 'note' ? 138 : 90))), width: highlightPopover.markType === 'note' ? 276 : 180, maxWidth: 'calc(100vw - 16px)' }}
             className="ielts-text-tools fixed z-[105] rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg"
           >
             {highlightPopover.markType === 'note' && highlightPopover.noteText ? (
@@ -3416,7 +3428,7 @@ export default function IELTSReadingInterface({
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </div>, document.body
   )
 
   const renderLeftPanel = () => (
@@ -3538,7 +3550,7 @@ export default function IELTSReadingInterface({
 
     const segs = (segments: ListeningSegment[]) =>
       segments.map((segment, index) => {
-        if (typeof segment === 'string') return <span key={index}>{segment}</span>
+        if (typeof segment === 'string') return <span key={index}><ExamInstruction text={segment} /></span>
         return (
           <span key={index}>
             {segment.before ?? ''}
@@ -3580,7 +3592,7 @@ export default function IELTSReadingInterface({
                     <BookmarkIcon className={`h-4 w-4 ${isFlagged ? 'fill-current' : ''}`} />
                   </button>
                   <p className="min-w-0 flex-1 basis-[120px] text-[15px] leading-snug text-slate-900">
-                    <span className="mr-2 font-black">{row.blank}.</span>{row.label}
+                    <QuestionNumber>{row.blank}</QuestionNumber>{row.label}
                   </p>
                   {blankInput(row.blank, 'md')}
                 </div>
@@ -3593,7 +3605,7 @@ export default function IELTSReadingInterface({
       return (
       <div className="my-2">
         <div className="overflow-x-auto rounded-xl border border-slate-300">
-          <table className="w-full border-collapse text-left text-sm">
+          <table className="ielts-listening-table w-full border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-slate-300 bg-slate-50">
                 <th className="px-2 py-2 text-base font-black text-slate-900">Item</th>
@@ -3622,7 +3634,7 @@ export default function IELTSReadingInterface({
                           <BookmarkIcon className={`h-4 w-4 ${isFlagged ? 'fill-current' : ''}`} />
                         </button>
                         <p className="text-[15px] leading-snug text-slate-900">
-                          <span className="mr-2 font-black">{row.blank}</span>
+                          <QuestionNumber>{row.blank}</QuestionNumber>
                           {row.label}
                         </p>
                       </div>
@@ -3715,7 +3727,7 @@ export default function IELTSReadingInterface({
               <BookmarkIcon className={`h-4 w-4 ${isFlagged ? 'fill-current' : ''}`} />
             </button>
             <p className="text-[15px] font-bold leading-relaxed text-slate-950">
-              <span className="mr-2 font-black">{block.blank}</span>
+              <QuestionNumber>{block.blank}</QuestionNumber>
               {block.prompt}
             </p>
           </div>
@@ -3837,7 +3849,7 @@ export default function IELTSReadingInterface({
 
     const renderTable = (block: Extract<ListeningBlock, { kind: 'table' }>) => (
       <div className="my-2 overflow-x-auto rounded-xl border border-slate-300">
-        <table className="w-full border-collapse text-left text-sm">
+        <table className="ielts-listening-table w-full border-collapse text-left text-sm">
           <thead>
             <tr className="border-b border-slate-300 bg-slate-50">
               {block.columns.map((col) => (
@@ -3957,7 +3969,7 @@ export default function IELTSReadingInterface({
     return (
       <section key={groupKey} className="rounded-2xl border border-red-100 bg-white p-3 shadow-[0_8px_20px_rgba(220,38,38,0.08)]">
         <h4 className="text-xl font-black text-slate-900">{group.range}</h4>
-        <p className="mt-1 text-sm text-slate-700">{group.instruction}</p>
+        <p className="mt-1 text-sm text-slate-700"><ExamInstruction text={group.instruction} /></p>
         <div className="mt-2 rounded-xl border border-red-100 bg-white px-3 py-3">
           {blocks.map((block, index) => renderBlock(block, index))}
         </div>
@@ -4095,7 +4107,7 @@ export default function IELTSReadingInterface({
     const sectionNumbers = sectionMeta[currentSectionIndex]?.questionNumbers ?? []
     const firstNum = sectionNumbers[0]
     const lastNum = sectionNumbers[sectionNumbers.length - 1]
-    const totalNum = sectionMeta.reduce((acc, s) => acc + s.questionCount, 0)
+    const totalNum = sectionMeta[currentSectionIndex]?.questionCount ?? 0
     return (
       <div
         className="reading-pane reading-content reading-question-typography h-full overflow-y-auto bg-gradient-to-b from-white via-red-50/20 to-white font-sans scrollbar-thin scrollbar-thumb-red-200"
@@ -6120,19 +6132,7 @@ export default function IELTSReadingInterface({
                   {q.groupTitle && <p className="text-sm font-bold text-red-700 mb-1">{q.groupTitle}</p>}
                   {q.instruction && (
                     <p className="text-sm text-slate-600 italic">
-                      {q.instruction.includes('NO MORE THAN THREE WORDS') ? (
-                        <>
-                          {q.instruction.split(/(NO MORE THAN THREE WORDS)/i).map((part, i) =>
-                            /NO MORE THAN THREE WORDS/i.test(part) ? (
-                              <span key={i} className="text-red-600 font-bold not-italic">{part}</span>
-                            ) : (
-                              <span key={i}>{part}</span>
-                            )
-                          )}
-                        </>
-                      ) : (
-                        q.instruction
-                      )}
+                      <ExamInstruction text={q.instruction} />
                     </p>
                   )}
                 </div>
@@ -6140,7 +6140,7 @@ export default function IELTSReadingInterface({
 
               <div id={`question-card-${q.id}`} className="relative group" onClick={() => setLastActiveQuestionIndex(globalIdx)}>
                 <div className="flex items-start gap-3 mb-3">
-                  <div className={`min-w-[2.4rem] h-9 px-2 rounded-xl flex items-center justify-center font-black text-xs shrink-0 transition-all tracking-[0.02em] ${lastActiveQuestionIndex === globalIdx ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-[0_10px_24px_rgba(220,38,38,0.3)]' : 'bg-red-50 text-red-700 border border-red-100'}`}>{questionRangeDisplay}</div>
+                  <QuestionNumber>{questionRangeDisplay}</QuestionNumber>
                   <button type="button" onClick={(e) => { e.stopPropagation(); handleFlagQuestion(globalIdx); }} className={`p-1.5 rounded-lg shrink-0 transition-all ${isFlagged ? 'text-red-600 bg-red-50' : 'text-slate-400 hover:text-slate-600 hover:bg-red-50/70'}`} title="Flag">
                     <BookmarkIcon className={`w-4 h-4 ${isFlagged ? 'fill-current' : ''}`} />
                   </button>
@@ -6560,7 +6560,7 @@ export default function IELTSReadingInterface({
         const localIndex = card ? currentSection.questions.findIndex(question => card.id === `question-card-${question.id}`) : -1
         if (localIndex >= 0) setLastActiveQuestionIndex(getQuestionGlobalIndex(currentSectionIndex, localIndex))
       }}
-      className={`reading-shell ielts-exam-workspace reading-scale-120 ${isReviewMode && !isListening ? 'ielts-reading-review' : ''} ${isListening ? '' : 'reading-exam-typography'} ${contrastClass} reading-size-${textSizeMode} reading-font-${readingFont} flex flex-col h-dvh overflow-hidden relative z-50 bg-[linear-gradient(160deg,#ffffff_0%,#fff5f5_52%,#fffaf8_100%)] text-slate-900 transition-colors duration-300 font-sans`}
+      className={`reading-shell ielts-exam-workspace reading-scale-120 ${isReviewMode && !isListening ? 'ielts-reading-review' : ''} reading-exam-typography ${isListening ? 'ielts-listening-workspace' : ''} ${contrastClass} reading-size-${textSizeMode} reading-font-${readingFont} flex flex-col h-dvh overflow-hidden relative z-50 bg-[linear-gradient(160deg,#ffffff_0%,#fff5f5_52%,#fffaf8_100%)] text-slate-900 transition-colors duration-300 font-sans`}
     >
       {!isTestActive ? fullMockId ? (
         <div className="flex flex-1 items-center justify-center p-6" role="status">
@@ -6682,9 +6682,9 @@ export default function IELTSReadingInterface({
             ) : (
               <SplitScreen left={renderLeftPanel()} right={renderRightPanel()} className="h-full" />
             )}
-            <NotesPanel testId={test.id} isOpen={showNotes} onClose={() => setShowNotes(false)} />
+            <NotesPanel testId={test.id} storageKey={`${sessionKey}:notes`} isOpen={showNotes} onClose={() => setShowNotes(false)} />
             <WordLookupModal
-              open={testMode === 'practice' && askAiEnabled && Boolean(aiLookup)}
+              open={testMode === 'practice' && !isReviewMode && askAiEnabled && Boolean(aiLookup)}
               word={aiLookup?.word ?? ''}
               sentence={aiLookup?.sentence}
               context={isListening ? 'listening' : 'reading'}
@@ -6758,20 +6758,20 @@ export default function IELTSReadingInterface({
         {showReviewModal && (
           <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-slate-900/70 backdrop-blur-sm" onClick={() => setShowReviewModal(false)} />
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-2xl bg-white rounded-2xl shadow-[0_24px_52px_rgba(220,38,38,0.2)] border border-red-100 overflow-hidden">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} role="dialog" aria-modal="true" aria-labelledby="ielts-review-title" data-ielts-dialog className="ielts-answer-review relative w-full max-w-2xl bg-white rounded-2xl shadow-[0_24px_52px_rgba(220,38,38,0.2)] border border-red-100 overflow-hidden">
               <div className="p-6 border-b border-red-100 bg-gradient-to-r from-red-50/80 to-rose-50/70">
-                <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                <h3 id="ielts-review-title" className="text-xl font-bold text-slate-900 flex items-center gap-2">
                   <EyeIcon className="h-6 w-6 text-red-500" />
                   Review your answers
                 </h3>
-                <p className="text-sm text-slate-500 mt-1">This window is to review your answers only. You cannot change answers here.</p>
+                <p className="text-sm text-slate-500 mt-1">Select a question to return to it. Your answers are saved as you work.</p>
               </div>
               <div className="p-6 max-h-[60vh] overflow-y-auto">
                 <div className="space-y-4">
                   {activeSections.map((section, sIdx) => (
                     <div key={section.id}>
                       <p className="text-sm font-bold text-slate-700 mb-2">Part {resolvePassageNumber(section, sIdx + 1)}: {section.title}</p>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="ielts-answer-review-grid">
                         {section.questions.map((q, qIdx) => {
                           const startIndex = getQuestionGlobalIndex(sIdx, qIdx);
                           const slotCount = getQuestionSlotCount(q);
@@ -6792,8 +6792,8 @@ export default function IELTSReadingInterface({
                                   : 'bg-white border-red-100 text-slate-500 hover:border-red-300'
                               }`}
                             >
-                              <span className="font-bold text-red-600">{displayNumber}.</span>{' '}
-                              <span className={isAnswered ? 'text-slate-900 font-semibold' : 'text-slate-400'}>{isAnswered ? display : '-'}</span>
+                              <QuestionNumber>{displayNumber}</QuestionNumber>{' '}
+                              <span className={isAnswered ? 'text-slate-900 font-semibold' : 'text-slate-400'}>{isAnswered ? display : 'Unanswered'}</span>
                             </button>
                           );
                         })}
@@ -6825,7 +6825,7 @@ export default function IELTSReadingInterface({
                       <div className="p-2 bg-red-600 rounded-xl"><LightBulbIcon className="w-6 h-6 text-white" /></div>
                       Test Setup
                     </h2>
-                    <p className="text-slate-500 text-sm mt-1 font-medium">{focusedPart !== null ? `Part ${focusedPart + 1} · Choose your mode and timing before starting.` : 'Choose your mode, parts and timing before starting.'}</p>
+                    <p className="text-slate-500 text-sm mt-1 font-medium">{focusedPart !== null ? `Part ${focusedPart + 1} · Review your timing before starting.` : 'Choose your parts and timing before starting.'}</p>
                   </div>
                   <button type="button" aria-label="Close test setup" onClick={() => setShowModeModal(false)} className="rounded-full p-2 transition-all group hover:bg-red-500/10">
                     <XMarkIcon className="w-7 h-7 text-slate-400 group-hover:text-red-500" />
@@ -6833,9 +6833,6 @@ export default function IELTSReadingInterface({
                 </div>
 
                 <div className="space-y-8">
-                  <div className="grid grid-cols-2 gap-2" role="group" aria-label="Test mode">
-                    {(['practice', 'simulation'] as const).map(mode => <button type="button" key={mode} aria-pressed={testMode === mode} onClick={() => setTestMode(mode)} className={`rounded-xl border px-4 py-3 text-sm font-semibold ${testMode === mode ? 'border-red-300 bg-red-50 text-red-700' : 'border-slate-200 text-slate-600'}`}>{mode === 'practice' ? 'Practice Mode' : 'Simulation Mode'}</button>)}
-                  </div>
                   {/* Select Parts */}
                   {testMode === 'practice' && <div>
                     <div className="mb-5 flex items-center justify-between">
@@ -6869,7 +6866,7 @@ export default function IELTSReadingInterface({
                               </div>
                               <div className="text-left">
                                 <div className="font-black text-[15px]">{s.title.split(':')[0]}</div>
-                                <div className="text-[11px] opacity-60 font-bold uppercase tracking-wider">{s.questions.length} Questions</div>
+                                <div className="text-[11px] opacity-60 font-bold uppercase tracking-wider">{s.questions.reduce((count, question) => count + getQuestionSlotCount(question), 0)} Questions</div>
                               </div>
                             </div>
                             {isSelected && <CheckIcon className="w-6 h-6" />}
@@ -6924,9 +6921,9 @@ export default function IELTSReadingInterface({
                     </div>
                   </div>}
                   {testMode === 'simulation' && <p className="text-sm leading-6 text-slate-600">{simulationPart !== null ? `Part ${simulationPart + 1}` : 'Full test'} · {isListening ? 'Audio followed by 2 minutes to check answers.' : `${examDurationMinutes} minutes. Answers submit automatically when time expires.`}</p>}
-                  <button type="button" role="switch" aria-checked={askAiEnabled} onClick={toggleAskAi} className="ielts-preference-row">
+                  {testMode === 'practice' && !isReviewMode && <button type="button" role="switch" aria-checked={askAiEnabled} onClick={toggleAskAi} className="ielts-preference-row">
                     <span><strong>Ask AI</strong><small>Word explanations in Practice Mode</small></span><span className="ielts-switch" data-enabled={askAiEnabled} />
-                  </button>
+                  </button>}
 
                   <button type="button"
                     onClick={() => handleStartTest()}
@@ -6961,7 +6958,7 @@ export default function IELTSReadingInterface({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 16, scale: 0.96 }}
               transition={{ duration: 0.44, ease: [0.22, 1, 0.36, 1] }}
-              className="relative w-full max-w-xl overflow-hidden rounded-[30px] border border-red-100 bg-[linear-gradient(160deg,#fff_0%,#fff8f8_52%,#fffaf8_100%)] shadow-[0_30px_70px_rgba(220,38,38,0.22)]"
+              className="ielts-display-settings relative w-full max-w-xl overflow-hidden rounded-[30px] border border-red-100 bg-[linear-gradient(160deg,#fff_0%,#fff8f8_52%,#fffaf8_100%)] shadow-[0_30px_70px_rgba(220,38,38,0.22)]"
             >
               <div className="flex items-center justify-between border-b border-red-100 bg-white/90 px-5 py-4">
                 <div className="flex items-center gap-3">
@@ -6994,11 +6991,8 @@ export default function IELTSReadingInterface({
               <div className="max-h-[70vh] overflow-y-auto px-5 py-5">
                 {optionsPage === 'menu' ? (
                   <div className="grid gap-3">
-                    <button type="button" role="switch" aria-checked={askAiEnabled} onClick={toggleAskAi} className="ielts-preference-row">
+                    {testMode === 'practice' && !isReviewMode && <button type="button" role="switch" aria-checked={askAiEnabled} onClick={toggleAskAi} className="ielts-preference-row">
                       <span><strong>Ask AI</strong><small>Word explanations in Practice Mode</small></span><span className="ielts-switch" data-enabled={askAiEnabled} />
-                    </button>
-                    {!isReviewMode && !isListening && <button type="button" role="switch" aria-checked={!timerHidden} onClick={() => setTimerHidden(value => !value)} className="ielts-preference-row">
-                      <span><strong>Show remaining time</strong><small>Tap the clock to reveal or hide the timer</small></span><span className="ielts-switch" data-enabled={!timerHidden} />
                     </button>}
                     <button
                       type="button"
@@ -7115,7 +7109,7 @@ export default function IELTSReadingInterface({
               initial={{ opacity: 0, y: 14, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 12, scale: 0.96 }}
-              className="relative w-full max-w-lg overflow-hidden rounded-[26px] border border-red-100 bg-[linear-gradient(165deg,#fff_0%,#fff9f8_55%,#fffdfc_100%)] shadow-[0_30px_70px_rgba(220,38,38,0.22)]"
+              data-ielts-dialog role="dialog" aria-modal="true" aria-label="Annotation note" className="ielts-note-composer relative w-full max-w-lg overflow-hidden rounded-[26px] border border-red-100 bg-[linear-gradient(165deg,#fff_0%,#fff9f8_55%,#fffdfc_100%)] shadow-[0_30px_70px_rgba(220,38,38,0.22)]"
             >
               <div className="border-b border-red-100 bg-white/90 px-5 py-4">
                 <p className="text-xs font-black uppercase tracking-[0.12em] text-red-600">Reading note</p>
@@ -7135,7 +7129,9 @@ export default function IELTSReadingInterface({
                   onChange={(event) =>
                     setNoteComposer((current) => ({ ...current, value: event.target.value }))
                   }
-                  rows={5}
+                  rows={4}
+                  data-dialog-autofocus
+                  onKeyDown={event => { if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); saveNoteComposer() } }}
                   autoFocus
                   className="w-full resize-none rounded-2xl border border-red-100 bg-white px-4 py-3 text-sm leading-relaxed text-slate-900 outline-none focus:border-red-300 focus:ring-2 focus:ring-red-100"
                   placeholder="Write your note..."
@@ -7167,66 +7163,7 @@ export default function IELTSReadingInterface({
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {integrityWarning && (
-          <div className="fixed inset-0 z-[121] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-slate-950/55 backdrop-blur-md"
-              onClick={() => setIntegrityWarning(null)}
-            />
-            <motion.div
-              initial={{ opacity: 0, y: 14, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.97 }}
-              transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
-              className="relative w-full max-w-xl overflow-hidden rounded-[30px] border border-red-100 bg-[linear-gradient(160deg,#fff_0%,#fff8f8_52%,#fffaf8_100%)] p-7 text-center shadow-[0_38px_86px_rgba(220,38,38,0.28)]"
-            >
-              <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-red-600 via-rose-500 to-orange-400" />
-              <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-rose-200/45 blur-3xl" />
-              <div className="pointer-events-none absolute -bottom-20 left-4 h-44 w-44 rounded-full bg-orange-200/30 blur-3xl" />
-              <div className="relative mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-red-200 bg-white shadow-[0_14px_30px_rgba(220,38,38,0.2)]">
-                <ClockIcon className="h-8 w-8 text-red-600" />
-              </div>
-              <h3 className="relative mt-5 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
-                Leaderboard integrity check
-              </h3>
-              <p className="relative mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">
-                This {integrityWarning.attemptKind === 'full-test' ? 'full test' : 'passage'} was submitted in{' '}
-                <strong className="text-slate-900">{formatShortDuration(integrityWarning.actualTimeSec)}</strong>.
-                To protect fair rankings, you need at least{' '}
-                <strong className="text-slate-900">{Math.round(integrityWarning.minTimeSec / 60)} minutes</strong>
-                {' '}before submitting for leaderboard points.
-              </p>
-              <div className="relative mt-5 rounded-2xl border border-red-100 bg-white/85 px-4 py-3 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.85)]">
-                <p className="text-xs font-black uppercase tracking-[0.16em] text-red-600">Fair-play notice</p>
-                <p className="mt-1 text-sm leading-6 text-slate-600">
-                  Want the score only? Press <strong className="text-slate-900">Check score</strong> to see your result now
-                  without adding leaderboard points.
-                </p>
-              </div>
-              <div className="relative mt-5 flex flex-col-reverse items-stretch justify-center gap-2 sm:flex-row">
-                <button
-                  type="button"
-                  onClick={() => setIntegrityWarning(null)}
-                  className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"
-                >
-                  Continue working
-                </button>
-                <button
-                  type="button"
-                  onClick={submitWithoutLeaderboardPoints}
-                  className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-red-500 px-5 py-2.5 text-sm font-black text-white shadow-[0_14px_30px_rgba(220,38,38,0.32)] transition hover:brightness-105"
-                >
-                  Check score
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      {integrityWarning && <LeaderboardEligibilityNotice seconds={integrityWarning.actualTimeSec} minimumSeconds={integrityWarning.minTimeSec} onContinue={submitWithoutLeaderboardPoints} />}
 
       <AnimatePresence>
         {showSubmitConfirmModal && (

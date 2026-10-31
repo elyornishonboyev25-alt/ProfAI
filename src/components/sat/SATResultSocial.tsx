@@ -204,7 +204,7 @@ export function SATLeaderboard({
         )}
       </section>
       <p className="sr-estimate-note">
-        Ranked by each learner’s first completed attempt, like a real test day. Ties go to the faster finish. Learners
+        Ranked by each learner’s first eligible completed attempt, like a real test day. Ties go to the faster finish. Learners
         who hide their ranking appear as “Private learner”.
       </p>
     </>

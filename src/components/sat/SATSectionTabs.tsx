@@ -40,14 +40,14 @@ export default function SATSectionTabs({ section }: { section: TabId }) {
   return (
     <>
         <div className="sticky top-2 z-20 rounded-2xl border border-white bg-white/95 p-2 shadow-[0_12px_35px_rgba(15,23,42,.09)]">
-          <div ref={list} role="tablist" aria-label="SAT test sections" className="flex gap-2 overflow-x-auto">
+          <div ref={list} role="tablist" aria-label="SAT test sections" className="exam-section-tabs">
             {SAT_SECTION_TABS.map(({ id, label, detail, icon: Icon }) => (
               <button key={id} id={`sat-tab-${id}`} type="button" role="tab" tabIndex={section === id ? 0 : -1}
                 aria-selected={section === id} aria-controls="sat-test-panel"
                 onKeyDown={(event) => handleTabKeyDown(event, id)} onClick={() => navigate(`/sat/${id}`)}
-                className={`flex min-w-[11rem] flex-1 items-center gap-3 rounded-xl border px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 ${section === id ? 'border-red-200 bg-gradient-to-br from-white to-red-50 text-red-700 shadow-[0_6px_18px_rgba(185,28,28,.08)]' : 'border-transparent text-slate-800 hover:bg-red-50/70'}`}>
+                className={`flex min-w-0 flex-1 items-center gap-3 rounded-xl border px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 ${section === id ? 'border-red-200 bg-gradient-to-br from-white to-red-50 text-red-700 shadow-[0_6px_18px_rgba(185,28,28,.08)]' : 'border-transparent text-slate-800 hover:bg-red-50/70'}`}>
                 <Icon className="h-5 w-5 shrink-0 text-red-600" />
-                <span><strong className="block text-sm">{label}</strong><small className="block whitespace-nowrap text-[11px] font-semibold text-slate-500">{detail}</small></span>
+                <span><strong className="block text-sm">{label}</strong><small className="block text-[11px] font-semibold text-slate-500">{detail}</small></span>
               </button>
             ))}
           </div>

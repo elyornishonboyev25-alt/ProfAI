@@ -26,10 +26,10 @@ createServer(async (req, res) => {
     res.end(extension === '.css' ? css : bundle.outputFiles.find(file => file.path.endsWith(extension))?.text ?? '')
     return
   }
-  if (/\.(png|svg|webp|jpg|woff2?)(\?|$)/.test(req.url)) {
+  if (/\.(png|svg|webp|jpg|woff2?|mp3)(\?|$)/.test(req.url)) {
     const file = resolve(publicRoot, '.' + new URL(req.url, 'http://localhost').pathname)
     if (!file.startsWith(publicRoot + sep)) { res.writeHead(404).end(); return }
-    try { res.setHeader('Content-Type', file.endsWith('.svg') ? 'image/svg+xml' : file.endsWith('.png') ? 'image/png' : 'application/octet-stream'); res.end(await readFile(file)) } catch { res.writeHead(404).end() }
+    try { res.setHeader('Content-Type', file.endsWith('.svg') ? 'image/svg+xml' : file.endsWith('.png') ? 'image/png' : file.endsWith('.mp3') ? 'audio/mpeg' : 'application/octet-stream'); res.end(await readFile(file)) } catch { res.writeHead(404).end() }
     return
   }
   res.setHeader('Content-Type', 'text/html; charset=utf-8')

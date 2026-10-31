@@ -15,8 +15,8 @@ export async function run() {
   let root = createRoot(container)
   const storage = accountStorageFor('guest')
   const sessionKey = `ielts_test_session_${test.id}`
-  const mount = async (preset = true) => {
-    await act(async () => root.render(<StrictMode><MemoryRouter><IELTSReadingInterface test={test} launchPreset={preset ? { mode: 'practice', partIndex: 2, durationMinutes: 20 } : undefined} onComplete={() => {}} onExit={() => {}} /></MemoryRouter></StrictMode>))
+  const mount = async (preset: boolean | 'simulation' = true) => {
+    await act(async () => root.render(<StrictMode><MemoryRouter><IELTSReadingInterface test={test} launchPreset={preset ? { mode: preset === 'simulation' ? 'simulation' : 'practice', partIndex: 2, durationMinutes: 20 } : undefined} onComplete={() => {}} onExit={() => {}} /></MemoryRouter></StrictMode>))
   }
   const click = async (text: string) => {
     const button = Array.from(container.querySelectorAll('button')).find(node => node.textContent?.trim() === text)
@@ -64,14 +64,15 @@ export async function run() {
     assert.ok(container.querySelector('[aria-label="Show remaining time"]'))
     await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Display settings"]')!.click())
     assert.equal(container.querySelector('[role="switch"]')?.getAttribute('aria-checked'), 'false', 'Ask AI preference survives reload')
+    assert.ok(!container.textContent?.includes('Show remaining time'), 'Timer visibility is controlled by the clock only')
     await act(async () => document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true })))
     await act(async () => { await new Promise(resolve => setTimeout(resolve, 600)) })
     assert.equal(container.querySelector('[role="dialog"]'), null)
     await act(async () => root.unmount())
     root = createRoot(container)
     localStorage.clear()
-    await mount()
-    await click('Simulation Mode')
+    await mount('simulation')
+    assert.ok(!Array.from(container.querySelectorAll('button')).some(node => node.textContent?.trim() === 'Simulation Mode'), 'Setup has no simulation-mode tab')
     await click('Start Simulation')
     await flush()
     saved = JSON.parse(storage.getItem(sessionKey)!)

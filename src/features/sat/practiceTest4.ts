@@ -56,6 +56,8 @@ export type HighlightStroke = {
 }
 
 export type SATAttempt = {
+  leaderboardEligible?: boolean
+  eligibilityNoticeAcknowledged?: boolean
   version: 1
   attemptId: string
   testId: string

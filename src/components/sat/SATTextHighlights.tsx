@@ -142,7 +142,7 @@ export default function SATTextHighlights({ children, strokes, onChange, enabled
     }
   }, [enabled, onChange])
 
-  return <div ref={rootRef} className="relative min-h-full min-w-0" onClickCapture={event => {
+  return <div ref={rootRef} className="sat-text-highlight-surface relative min-h-full min-w-0" onClickCapture={event => {
     if ((event.target as Element).closest('[data-sat-highlight-id]')) return
     if (!enabled || !onChange || window.getSelection()?.toString()) return
     const bounds = event.currentTarget.getBoundingClientRect()

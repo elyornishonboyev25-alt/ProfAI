@@ -15,6 +15,7 @@
     "prisma:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
+    "test:exam-leaderboard": "npm run build && node --test scripts/exam-leaderboard-eligibility.test.mjs scripts/ielts-standing.test.mjs scripts/leaderboard.test.mjs",
     "test:realtime": "npm run build && node scripts/smoke-speaking-rooms.mjs",
     "test:community": "npm run build && node scripts/smoke-community.mjs && node scripts/speaking-call-blocks.test.mjs && node scripts/discussion-actions.test.mjs && node --test scripts/community-champion.test.mjs",
     "test:ai-security": "node --test scripts/ai-provider.test.mjs",

@@ -23,7 +23,6 @@ import PremiumOnly from '@/components/premium/PremiumOnly'
 import { ToastViewport } from '@/components/common/ToastViewport'
 import { XpNotification } from '@/components/common/XpNotification'
 import { ErrorBoundary } from '@/components/common/ErrorBoundary'
-import FullscreenToggle from '@/components/common/FullscreenToggle'
 import WordLookupLayer from '@/components/vocab/WordLookupLayer'
 import { sendHeartbeat } from '@/lib/speakingApi'
 import { recordXpActivity, type XpActivitySource } from '@/lib/xpApi'
@@ -442,7 +441,6 @@ function App() {
       {isAuthPage && <div className="liquid-auth-language glass-control"><LanguageSelector /></div>}
       <DeferredRegisterModal />
       <DeferredAchievementCelebration />
-      <FullscreenToggle />
       {!isTestMode ? (
         <>
           {pathname === '/academic-skills' ? <DeferredFloatingAIAssistant /> : null}

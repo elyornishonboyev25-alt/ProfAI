@@ -1,4 +1,6 @@
 import { accountStorageFor } from './accountStorage'
+import { getQuestionSlotCount } from './ieltsQuestionSlots'
+import type { Question } from '@/types/ieltsTypes'
 import { discardIeltsAttempt, getIeltsAttemptResumes, type IeltsAttemptResume } from './ieltsAttemptResume'
 import { clearSATAttempt, loadSATAttempt, loadSATAttemptHistory, deleteSATAttemptHistoryEntry } from '@/features/sat/attemptStorage'
 import { getSATReviewTests } from '@/features/sat/catalog'
@@ -48,8 +50,15 @@ export function getInProcessAttempts(exam: 'IELTS' | 'SAT', owner: string): InPr
   const standalone: InProcessAttempt[] = resumes.filter(attempt => !ieltsMockId(attempt)).map(attempt => {
     const session = parsed(owner, attempt.sessionKey)
     const paper = parsed(owner, `${attempt.sessionKey}:paper`)
-    const answered = Object.values(session.answers ?? (session.answer ? { answer: session.answer } : {})).filter(meaningful).length
-    const total = paper.sections?.reduce((count: number, section: { questions?: unknown[] }) => count + (section.questions?.length ?? 0), 0)
+    const sections = Array.isArray(paper.sections) ? paper.sections.filter((_: unknown, index: number) =>
+      session.testMode === 'practice' && Array.isArray(session.selectedParts) && session.selectedParts.length
+        ? session.selectedParts.includes(index) : typeof session.simulationPart === 'number' ? session.simulationPart === index : true) : null
+    const questions: Question[] | null = sections?.flatMap((section: { questions?: Question[] }) => section.questions ?? []) ?? null
+    const answered = questions ? questions.reduce((count, question) => {
+      const value = session.answers?.[question.id]
+      return count + (Array.isArray(value) ? Math.min(getQuestionSlotCount(question), value.filter(meaningful).length) : meaningful(value) ? 1 : 0)
+    }, 0) : Object.values(session.answers ?? (session.answer ? { answer: session.answer } : {})).filter(meaningful).length
+    const total = questions?.reduce((count, question) => count + getQuestionSlotCount(question), 0)
       ?? paper.tasks?.length ?? (Array.isArray(session.answers) ? session.answers.length : session.answer !== undefined ? 1 : 0)
     return { id: attempt.sessionKey, exam, title: attempt.title, detail: attempt.pathname.includes('/writing/') ? 'Writing' : attempt.pathname.includes('/speaking/') ? 'Speaking' : attempt.pathname.includes('/listening/') ? 'Listening' : 'Reading',
       pathname: attempt.pathname, search: attempt.search, state: attempt.state, answered, total,

@@ -42,7 +42,7 @@ export async function getIeltsStanding(testId: string, viewerId: string) {
   ])
   const ranked = rankFirstIeltsAttempts([
     ...legacy.map(result => ({ userId: result.userId, total: ieltsBandForCorrect(result.correctAnswers), correct: result.correctAnswers, durationSec: result.timeSpentSec, completedAt: result.completedAt })),
-    ...assessments.filter(result => assessmentBelongsToTest(result, testId) && (result.breakdown as { partial?: boolean } | null)?.partial !== true)
+    ...assessments.filter(result => assessmentBelongsToTest(result, testId) && (result.breakdown as { partial?: boolean; leaderboardEligible?: boolean } | null)?.partial !== true && (result.breakdown as { leaderboardEligible?: boolean } | null)?.leaderboardEligible !== false)
       .map(result => ({ userId: result.userId, total: result.score, correct: Number((result.breakdown as { correct?: number } | null)?.correct) || 0, durationSec: result.durationSec, completedAt: result.completedAt })),
   ])
   const top = ranked.slice(0, 50)

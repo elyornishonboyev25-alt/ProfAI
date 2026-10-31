@@ -1,4 +1,5 @@
 import { hasPremiumIdentity, premiumIdentitySelect } from '../utils/premiumIdentity.js'
+import { assessmentCountsForLeaderboard } from './examLeaderboardEligibility.js'
 import { onAccountDeleted } from './accountLifecycle.js'
 import { Difficulty, LeaderboardPeriod, type Prisma, type TestCategory } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
@@ -612,9 +613,10 @@ export async function generateLeaderboard(params: {
         sourceType: { in: ['SAT_BLUEBOOK_MOCK', 'IELTS_WRITING_AI_EVALUATION', 'IELTS_WRITING_FULL_TEST', 'IELTS_SPEAKING_MOCK'] },
         ...(startDate ? { completedAt: { gte: startDate } } : {}),
       },
-      select: { id: true, userId: true, examType: true, accuracy: true, score: true, maxScore: true, durationSec: true, completedAt: true },
+      select: { id: true, userId: true, examType: true, accuracy: true, score: true, maxScore: true, durationSec: true, completedAt: true, breakdown: true },
     })
     for (const result of assessments) {
+      if (!assessmentCountsForLeaderboard(result)) continue
       // A scaled SAT score is not question accuracy. IELTS band-based
       // assessments use the same percentage normalization as the profile.
       const percentage = result.accuracy ?? (result.examType === 'IELTS' && result.maxScore > 0

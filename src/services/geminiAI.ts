@@ -239,6 +239,7 @@ export async function explainWord(
   word: string,
   context: string,
   language = 'en',
+  signal?: AbortSignal,
 ): Promise<WordExplanation> {
   const langLabel = LANGUAGE_LABELS[language] ?? language
   const userMessage = `WORD/PHRASE: ${word}
@@ -247,7 +248,7 @@ EXPLANATION LANGUAGE: ${langLabel}
 
 Explain it now. Return ONLY valid JSON.`
 
-  const raw = await callGeminiAPI(WORD_EXPLANATION_PROMPT, userMessage, 1024, [], 'word_explanation')
+  const raw = await callGeminiAPI(WORD_EXPLANATION_PROMPT, userMessage, 1024, [], 'word_explanation', signal)
   const jsonStr = extractJSON(raw)
 
   try {

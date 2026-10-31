@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useLayoutEffect, useState, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ArrowLeft, FolderClock, Play, RotateCcw } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
@@ -19,8 +19,12 @@ function EntryDecision({ exam, owner, children }: { exam: 'IELTS' | 'SAT'; owner
   const navigate = useNavigate()
   const text = useBillingText()
   const route = resolveFullMockRouteState(location) as { resumeIntent?: boolean; reviewPayload?: unknown; mock?: { id: string }; returnTo?: string } | null
+  // Reload keeps this browser entry; a fresh catalog visit has another key.
+  const entryKey = `exam:accepted-entry:${owner}:${location.key}`
+  const entryValue = `${location.pathname}${location.search}`
   const [existing] = useState(() => {
     if (route?.reviewPayload || route?.resumeIntent) return null
+    try { if (window.sessionStorage.getItem(entryKey) === entryValue) return null } catch { /* The saved-choice screen remains available. */ }
     if (exam === 'IELTS') {
       const mockId = location.pathname.match(/^\/mock\/ielts\/([^/]+)$/)?.[1]
       if (mockId) return getInProcessAttempts('IELTS', owner).find(attempt => attempt.mockId === mockId) ?? null
@@ -32,9 +36,13 @@ function EntryDecision({ exam, owner, children }: { exam: 'IELTS' | 'SAT'; owner
   })
   const [accepted, setAccepted] = useState(!existing)
   const [confirm, setConfirm] = useState(false)
+  useLayoutEffect(() => {
+    if (!accepted) return
+    try { window.sessionStorage.setItem(entryKey, entryValue) } catch { /* Answers use the separate account checkpoint. */ }
+  }, [accepted, entryKey, entryValue])
   if (accepted || !existing) return <>{children}</>
   return <main className="exam-flow attempt-entry"><section className="attempt-entry-card">
-    <FolderClock size={40} strokeWidth={1.5} /><h1>{text('You have a test in progress', 'Bu test bo‘yicha saqlangan jarayon bor', 'У вас есть незавершённый тест')}</h1>
+    <span className="attempt-entry-icon"><FolderClock size={30} strokeWidth={1.5} /></span><h1>{text('You have a test in progress', 'Bu test bo‘yicha saqlangan jarayon bor', 'У вас есть незавершённый тест')}</h1>
     <p className="attempt-entry-title">{existing.title}</p><p>{text('Continue with your saved answers, notes and timing. Starting again replaces the unfinished attempt.', 'Saqlangan javoblar, qaydlar va vaqt bilan davom eting. Yangidan boshlash tugallanmagan urinish o‘rnini almashtiradi.', 'Продолжите с сохранёнными ответами, заметками и временем. Новый тест заменит незавершённую попытку.')}</p>
     <div className="flow-dialog-actions"><button type="button" className="flow-button is-primary" onClick={() => {
       if ('mockId' in existing && existing.mockId) {

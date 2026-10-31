@@ -1,3 +1,4 @@
+import { emphasizeAnswerLimits } from '@/utils/examInstructions'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { BookmarkIcon } from '@heroicons/react/24/outline'
@@ -32,6 +33,11 @@ function prepareSourcePaper(html: string, questions: Question[]) {
   const template = document.createElement('template')
   template.innerHTML = sanitizeSourcePaper(html)
   const fragment = template.content
+  emphasizeAnswerLimits(fragment)
+  for (const row of fragment.querySelectorAll('.mc-question,.tfng-row,.help-select-row,.source-line')) {
+    const number = row.querySelector('b,strong')
+    if (number && /^\s*\d+(?:\s*[-\u2013]\s*\d+)?[.)]?\s*$/.test(number.textContent ?? '')) number.classList.add('exam-question-number')
+  }
   const maps: { key: string; map: SourceMap; alt: string }[] = []
   for (const image of fragment.querySelectorAll<HTMLImageElement>('img')) {
     const map = sourceListeningMapFor(image.getAttribute('src') ?? '')

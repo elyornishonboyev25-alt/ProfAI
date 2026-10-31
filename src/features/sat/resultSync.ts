@@ -1,3 +1,4 @@
+import { isSATLeaderboardEligible } from './leaderboardEligibility'
 import { accountStorageFor } from '@/utils/accountStorage'
 import { moduleTimes, totalTime } from './timing'
 import { learningCenterApi } from '@/features/learningCenter/api'
@@ -26,7 +27,7 @@ export async function syncSATAttemptResult(
   const onlySection = test.modules.every((module) => module.section === test.modules[0]?.section)
   const section = onlySection ? test.modules[0]?.section : null
   const complete = isSATTestComplete(test)
-  if (complete) {
+  if (complete && isSATLeaderboardEligible(attempt, test.modules)) {
     const award = useBadgeStore.getState().awardIfEligible
     if (section) {
       const range = section === 'math' ? report.mathRange : report.readingWritingRange
@@ -70,6 +71,7 @@ export async function syncSATAttemptResult(
     assignmentId,
     breakdown: {
       mode: attempt.mode,
+      leaderboardEligible: isSATLeaderboardEligible(attempt, test.modules),
       moduleElapsedSeconds: moduleTimes(attempt, test.modules),
       readingWritingRange: report.readingWritingRange,
       mathRange: report.mathRange,

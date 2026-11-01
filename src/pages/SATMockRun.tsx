@@ -45,8 +45,7 @@ import SATReview from '@/components/sat/SATReview'
 import SATSectionBreak from '@/components/sat/SATSectionBreak'
 import SATNotes, { SATNoteList } from '@/components/sat/SATNotes'
 import { readSATNotes } from '@/features/sat/notes'
-import SATRichText from '@/components/sat/SATRichText'
-import SATSourceContent from '@/components/sat/SATSourceContent'
+import SATExplanation from '@/components/sat/SATExplanation'
 import '@/components/sat/sat-exam-layout.css'
 import {
   isSATAnswerCorrect,
@@ -673,7 +672,7 @@ function SATMockRunContent() {
                   </div>
                   <details className="mt-3 rounded-lg border border-slate-300 bg-white px-3 py-3">
                     <summary className="cursor-pointer text-xs font-black text-slate-800">Step-by-step explanation</summary>
-                    {currentQuestion.sourceContent ? <SATSourceContent html={currentQuestion.sourceContent.explanation} className="mt-3 text-sm font-medium leading-6 text-slate-700" /> : <SATRichText text={currentQuestion.explanation} className="mt-3 text-sm font-medium leading-6 text-slate-700" />}
+                    <SATExplanation question={currentQuestion} response={attempt.answers[currentQuestion.id]} className="mt-3" />
                   </details>
                 </motion.div>
               ) : null}

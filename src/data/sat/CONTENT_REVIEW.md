@@ -30,3 +30,37 @@ checks the original question images kept for reference.
 
 Run `SAT_TEST_BROWSER=/path/to/chromium npm run test:sat-content-browser` for the
 catalog and saved-review checks.
+
+## Explanation review — 1 November 2026
+
+All 3,942 current questions use the same explanation component in mock practice,
+saved-result review, Question Bank history, and Hard Questions. Solutions show
+the correct answer first, numbered reasoning, and a separate section for
+substantive distractor explanations. Related sentences stay together, and a
+displayed calculation stays with the instruction that introduces it.
+
+- Rewrote all 54 Practice Test 1 math explanations against the existing stems,
+  choices, graph descriptions, and answer keys. The extracted PDF equations
+  had lost the order of symbols, fractions, signs, and exponents. In particular,
+  Math 1 question 12 now calculates the slope from (0, −8) and (−8, 0), obtains
+  −1, and checks the equation y = −x − 8 against both intercepts.
+- Rewrote all 98 Test 7 explanations. Previously, 96 merely repeated the
+  supplied key. They now explain the relevant evidence, grammar rule, or
+  mathematical calculation. The three table questions retain their source HTML
+  and use reviewed explanation text, including native MathML for the slope.
+- Removed generic introductory steps from Tests 4–7 and image filenames from
+  six Test 2 explanations. Source-correction metadata remains in the source
+  data and is omitted from the student-facing solution.
+- All 3,063 rich source explanations retain their MathML, formula images, and
+  tables. The rest of the bank's substantive source reasoning is reorganized,
+  without inventing replacement calculations or changing answer keys.
+- Saved question snapshots resolve the current explanation using their source
+  identity (or prompt and visual assets) and answer key. Learner responses,
+  original choices, timing, and grading stay attached to the saved attempt.
+
+Validation: `npm run test:sat-explanations` checks the complete catalog,
+historical explanations, preserved notation, HTML sanitization, numeric answers,
+and repair of a saved snapshot containing the reported corrupted equation.
+`SAT_TEST_BROWSER=/path/to/chromium npm run test:sat-explanations-browser`
+renders all 3,942 explanations at 1,366px and 390px, decodes formula images,
+checks overflow and empty steps, and opens saved-review modals for regressions.

@@ -37,18 +37,6 @@ function mathSkill(prompt: string): [string, string] {
   return ['Algebra', 'Linear Equations & Functions']
 }
 
-function explanationFor(question: (typeof november2025IntlQuestions)[number]) {
-  const answerText = question.kind === 'multiple-choice'
-    ? question.choices.find((choice) => choice.key === question.correctAnswer)?.text
-    : question.correctAnswer
-
-  return `**Step 1:** Identify the quantities, evidence, or grammar relationship the question is testing.
-
-**Step 2:** ${question.rationale}
-
-**Step 3:** Therefore the correct answer is **${question.correctAnswer}${answerText && answerText !== question.correctAnswer ? ` — ${answerText}` : ''}**.`
-}
-
 function buildQuestion(question: (typeof november2025IntlQuestions)[number]): SATQuestion {
   const section = sectionFor(question.moduleId)
   const [domain, skill] = section === 'reading-writing'
@@ -65,7 +53,7 @@ function buildQuestion(question: (typeof november2025IntlQuestions)[number]): SA
     asset: `/sat/november-2025-intl/questions/${question.id}.jpg`,
     assetWidth: 1920,
     assetHeight: isSplitSource ? 2048 : 1024,
-    explanation: explanationFor(question),
+    explanation: question.rationale,
   }
 }
 

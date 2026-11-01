@@ -3,8 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowLeft, ArrowRight, Bookmark, Calculator, CheckCircle2, ChevronDown, Eye, EyeOff, History, Lightbulb, Pause, Play, RotateCcw, Sheet, Shuffle, XCircle } from 'lucide-react'
 import { BrandLogo } from '@/components/brand/BrandLogo'
 import SATQuestionCanvas from './SATQuestionCanvas'
-import SATSourceContent from './SATSourceContent'
-import SATRichText from './SATRichText'
+import SATExplanation from './SATExplanation'
 import SATFormulaSheet from './SATFormulaSheet'
 import DesmosDrawer from './DesmosDrawer'
 import { isSATAnswerCorrect } from '@/features/sat/practiceTest4'
@@ -96,7 +95,7 @@ export default function PracticeQuestion({ row, index, total, state, onUpdate, o
         <AnimatePresence initial={false}>
           {solutionOpen && checked && <motion.section ref={solution} id="practice-solution" aria-label="Question solution" className="practice-solution" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: .22, ease: 'easeOut' }} onAnimationComplete={() => solution.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })}>
             <div className="practice-solution-inner"><div className="practice-solution-heading"><span><Lightbulb size={20} /></span><div><small>STEP BY STEP</small><h4>Understand the solution</h4></div><strong>Answer: {question.correctAnswer}</strong></div>
-              <div className="practice-solution-content">{question.sourceContent?.explanation ? <SATSourceContent html={question.sourceContent.explanation} /> : <SATRichText text={question.explanation} />}</div>
+              <div className="practice-solution-content"><SATExplanation question={question} response={answer} /></div>
             </div>
           </motion.section>}
         </AnimatePresence>

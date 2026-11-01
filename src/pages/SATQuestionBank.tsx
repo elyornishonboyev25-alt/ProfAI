@@ -22,8 +22,7 @@ import { allQuestions, reviewQuestions, questionKey, readHistory, readAttemptedK
 import SATQuestionCanvas from '@/components/sat/SATQuestionCanvas'
 import SATBankSelect from '@/components/sat/SATBankSelect'
 import { bankDomain, bankSkill } from '@/features/sat/bankTopics'
-import SATRichText from '@/components/sat/SATRichText'
-import SATSourceContent from '@/components/sat/SATSourceContent'
+import SATExplanation from '@/components/sat/SATExplanation'
 import { getSATReviewTests } from '@/features/sat/catalog'
 import { loadSATAttempt, loadSATAttemptHistory } from '@/features/sat/attemptStorage'
 import { isSATAnswerCorrect } from '@/features/sat/practiceTest4'
@@ -507,11 +506,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                         </div>
                         <section className="sat-bank-explanation">
                           <h4>Explanation</h4>
-                          {review.row.question.sourceContent?.explanation ? (
-                            <SATSourceContent html={review.row.question.sourceContent.explanation} />
-                          ) : (
-                            <SATRichText text={review.row.question.explanation} />
-                          )}
+                          <SATExplanation question={review.row.question} response={review.result.answer} />
                         </section>
                       </>
                     ) : (

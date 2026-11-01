@@ -19,6 +19,7 @@ import { splitSATPrompt } from '@/features/sat/promptLayout'
 import { SATNoteList } from './SATNotes'
 import SATRichText from './SATRichText'
 import SATSourceContent from './SATSourceContent'
+import SATExplanation from './SATExplanation'
 import SATChoiceContent from './SATChoiceContent'
 import SATVisual from './SATVisual'
 import SATTextHighlights from './SATTextHighlights'
@@ -123,11 +124,7 @@ function ReviewQuestion({ question, attempt }: { question: SATQuestion; attempt:
               <h3>Why this answer works</h3>
             </div>
           </div>
-          {question.sourceContent ? (
-            <SATSourceContent html={question.sourceContent.explanation} className="sqm-explanation-body" />
-          ) : (
-            <SATRichText text={question.explanation || 'Explanation unavailable.'} className="sqm-explanation-body" />
-          )}
+          <SATExplanation question={question} response={response} className="sqm-explanation-body" />
           <p className="sqm-tip">
             <Lightbulb size={16} />
             Say the rule in your own words before you move on — that is what makes it stick.

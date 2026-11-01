@@ -56,18 +56,6 @@ function mathSkill(prompt: string): [string, string] {
   return ['Algebra', 'Linear Equations & Functions']
 }
 
-function explanationFor(question: JuneQuestion) {
-  const answerText = question.kind === 'multiple-choice'
-    ? question.choices.find((choice) => choice.key === question.correctAnswer)?.text
-    : question.correctAnswer
-
-  return `**Step 1:** Read the notation in the question and identify the relationship being tested.
-
-**Step 2:** ${question.rationale}
-
-**Step 3:** Therefore the correct answer is **${question.correctAnswer}${answerText && answerText !== question.correctAnswer ? ` — ${answerText}` : ''}**.`
-}
-
 const questions = questionsData as JuneQuestion[]
 
 function buildQuestion(question: JuneQuestion): SATQuestion {
@@ -82,7 +70,7 @@ function buildQuestion(question: JuneQuestion): SATQuestion {
     domain,
     skill,
     difficulty: difficulty(question.moduleId, question.number),
-    explanation: explanationFor(question),
+    explanation: question.rationale,
   }
 }
 

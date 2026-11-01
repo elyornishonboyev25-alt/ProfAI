@@ -16,6 +16,7 @@ const fixture = `
 import React from 'react'; import {createRoot} from 'react-dom/client'; import {flushSync} from 'react-dom';
 import {MemoryRouter} from 'react-router-dom';
 import Canvas from './src/components/sat/SATQuestionCanvas'; import SATReview from './src/components/sat/SATReview';
+import SATExplanation from './src/components/sat/SATExplanation';
 import {SAT_TEST_CATALOG} from './src/features/sat/catalog'; import {createSATAttempt} from './src/features/sat/practiceTest4';
 import {useAuthStore} from './src/store/authStore'; import './src/components/sat/sat-exam-layout.css';
 useAuthStore.setState({user:null});
@@ -24,6 +25,9 @@ window.questions=Object.values(SAT_TEST_CATALOG).flatMap(t=>t.modules.flatMap(m=
 window.show=indices=>flushSync(()=>root.render(<>{indices.map(i=><article data-index={i} key={i} style={{marginBottom:40}}>
   <Canvas question={window.questions[i].q} answer='' strokes={[]} onAnswer={()=>{}} onChange={()=>{}} flagged={false} onToggleFlag={()=>{}}/>
 </article>)}</>));
+window.explain=indices=>flushSync(()=>root.render(<main style={{maxWidth:800,margin:'0 auto',padding:12}}>{indices.map(i=><article data-index={i} key={i} style={{marginBottom:40}}>
+  <SATExplanation question={window.questions[i].q}/>
+</article>)}</main>));
 window.review=(index)=>{
  const row=window.questions[index], source=SAT_TEST_CATALOG[row.test];
  const test={...source,questionCount:1,modules:[{...source.modules.find(m=>m.id===row.q.moduleId),questions:[row.q]}]};
@@ -123,7 +127,7 @@ try {
   await waitFor('!!window.questions')
   const count = await evaluate('window.questions.length')
   assert.ok(count >= 3942, 'Audit the entire current catalog')
-  for (const width of process.env.SAT_CONTENT_REVIEW_ONLY ? [] : [1366, 390]) {
+  for (const width of process.env.SAT_CONTENT_REVIEW_ONLY || process.env.SAT_CONTENT_EXPLANATIONS_ONLY ? [] : [1366, 390]) {
     await resize(width)
     for (let start = 0; start < count; start += 20) {
       const indices = Array.from({ length: Math.min(20, count - start) }, (_, index) => start + index)
@@ -132,6 +136,25 @@ try {
       assert.deepEqual(await evaluate(layoutIssues), [], `${width}px, questions ${start}–${start + indices.length}`)
     }
     console.log(`PASS ${width}px: ${count} SAT questions, decoded images, answer alignment, equation systems and overflow`)
+  }
+  if (process.env.SAT_CONTENT_EXPLANATIONS_ONLY) {
+    for (const width of [1366, 390]) {
+      await resize(width)
+      for (let start = 0; start < count; start += 20) {
+        const indices = Array.from({ length: Math.min(20, count - start) }, (_, index) => start + index)
+        await evaluate('window.explain(' + JSON.stringify(indices) + ')')
+        await decodeImages()
+        assert.deepEqual(await evaluate(layoutIssues), [], `${width}px explanations ${start}–${start + indices.length}`)
+        assert.equal(await evaluate("document.querySelectorAll('.sat-explanation-steps').length"), indices.length)
+        assert.deepEqual(await evaluate("[...document.querySelectorAll('.sat-explanation-step')].filter(el=>!el.textContent.trim()&&!el.querySelector('img')).map(el=>({index:el.closest('article').dataset.index,html:el.innerHTML}))"), [], `${width}px, empty steps in questions ${start}–${start + indices.length}`)
+      }
+      console.log(`PASS ${width}px: ${count} SAT explanations, formula images, MathML, tables, numbered steps and viewport overflow`)
+    }
+    await resize(390)
+    const index = await evaluate("window.questions.findIndex(row=>row.test===1&&row.q.id==='math1-12')")
+    await evaluate(`window.explain([${index}])`)
+    const screenshot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true })
+    await writeFile(process.env.SAT_CONTENT_SCREENSHOT || '/tmp/profai-sat-explanation.png', Buffer.from(screenshot.data, 'base64'))
   }
   const find = (test, id) => evaluate(`window.questions.findIndex(row=>row.test===${test}&&row.q.id===${JSON.stringify(id)})`)
   const regression = await Promise.all([[3, 'math2-17'], [3, 'math2-8'], [3, 'math1-12'], [1, 'math2-8'], [6, 'math1-14'], [7, 'rw1-10'], [7, 'rw1-12'], [7, 'math2-15']].map(([test, id]) => find(test, id)))
@@ -144,7 +167,9 @@ try {
     if (row.sourceContent?.context.includes('<table')) assert.equal(await evaluate("document.querySelectorAll('.sat-source-content table').length"), 1)
     if (row.prompt.includes('\\begin{cases}')) assert.equal(await evaluate("document.querySelectorAll('.sat-choice-content mtable').length"), 4)
     await evaluate(`window.review(${index})`)
-    await waitFor("document.querySelectorAll('.sat-choice-content').length>0 || document.body.textContent.includes('Accepted answer')")
+    await waitFor("!!document.querySelector('.srx-review-button')")
+    await evaluate("document.querySelector('.srx-review-button').click()")
+    await waitFor("!!document.querySelector('.sqm-explanation .sat-explanation-steps')")
     await decodeImages()
     assert.deepEqual(await evaluate(layoutIssues), [], 'Saved review retains the same answer and visual layout')
   }

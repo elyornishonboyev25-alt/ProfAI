@@ -186,13 +186,13 @@ function GiftDialog({ gift, stats, closing, onClose }: { gift: AccountGift | nul
 
   const shareUrl = `${window.location.origin}/${gift?.referralCode ? `?ref=${encodeURIComponent(gift.referralCode)}` : ''}`
   const shareMessage = text(
-    `ProfAI is giving 1 month of IvyGoo Pro free to the first ${number(capacity)} students. Only ${number(remaining)} gifts left — get yours:`,
-    `ProfAI birinchi ${number(capacity)} o‘quvchiga 1 oylik IvyGoo Pro’ni bepul beryapti. Atigi ${number(remaining)} ta sovg‘a qoldi — o‘zingiznikini oling:`,
-    `ProfAI дарит месяц IvyGoo Pro бесплатно первым ${number(capacity)} ученикам. Осталось всего ${number(remaining)} подарков — заберите свой:`,
+    `IvyGoo is giving 1 month of IvyGoo Pro free to the first ${number(capacity)} students. Only ${number(remaining)} gifts left — get yours:`,
+    `IvyGoo birinchi ${number(capacity)} o‘quvchiga 1 oylik IvyGoo Pro’ni bepul beryapti. Atigi ${number(remaining)} ta sovg‘a qoldi — o‘zingiznikini oling:`,
+    `IvyGoo дарит месяц IvyGoo Pro бесплатно первым ${number(capacity)} ученикам. Осталось всего ${number(remaining)} подарков — заберите свой:`,
   )
   const share = async () => {
     if (navigator.share) {
-      try { await navigator.share({ title: 'ProfAI', text: shareMessage, url: shareUrl }); return } catch (error) {
+      try { await navigator.share({ title: 'IvyGoo', text: shareMessage, url: shareUrl }); return } catch (error) {
         if ((error as DOMException)?.name === 'AbortError') return
       }
     }
@@ -232,7 +232,7 @@ function GiftDialog({ gift, stats, closing, onClose }: { gift: AccountGift | nul
               <Gift size={34} strokeWidth={1.9} />
             </span>
           </div>
-          <p className="launch-gift-eyebrow launch-gift-rise" style={rise(.18)}><Sparkles size={13} />{text('ProfAI launch gift', 'ProfAI sovg‘asi', 'Подарок от ProfAI')}</p>
+          <p className="launch-gift-eyebrow launch-gift-rise" style={rise(.18)}><Sparkles size={13} />{text('IvyGoo launch gift', 'IvyGoo sovg‘asi', 'Подарок от IvyGoo')}</p>
           <h2 id="launch-gift-title" className="launch-gift-title launch-gift-rise" style={rise(.24)}>
             <span className="launch-gift-amount"><CountUp to={campaignValueUsd} format={value => `$${number(value)}`} instant={reduceMotion} delay={250} /></span>
             <span className="launch-gift-subtitle">{text(`in free Premium for the first ${number(capacity)} students`, `jami bepul Premium — birinchi ${number(capacity)} o‘quvchiga`, `в бесплатном Premium — первым ${number(capacity)} ученикам`)}</span>

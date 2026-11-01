@@ -97,13 +97,16 @@ export async function transcribeSpeakingAudio(audioBase64: string, mimeType: str
       if (text !== null) return text
     }
   }
+  // Safari records AAC in an MP4/M4A container. Gemini accepts audio/m4a,
+  // while the OpenAI file endpoint above expects the original audio/mp4.
+  const geminiMimeType = mimeType === 'audio/mp4' ? 'audio/m4a' : mimeType
   for (const model of env.GEMINI_MODELS.split(',').map((value) => value.trim()).filter(Boolean)) {
     for (const key of geminiKeys()) {
       const text = await request(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
         method: 'POST', headers: { 'x-goog-api-key': key, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: `${transcriptionPrompt} Return JSON: {"text":"verbatim transcript"}.` }] },
-          contents: [{ role: 'user', parts: [{ inlineData: { mimeType, data: audioBase64 } }] }],
+          contents: [{ role: 'user', parts: [{ inlineData: { mimeType: geminiMimeType, data: audioBase64 } }] }],
           generationConfig: { temperature: 0, maxOutputTokens: 4096, responseMimeType: 'application/json' },
         }),
       }, budget, async (response) => {

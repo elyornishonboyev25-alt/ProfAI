@@ -140,7 +140,8 @@ test('speaking audio preserves voice profiles, retries and MP4 transcription', a
   for (const mimeType of ['audio/mp4', 'audio/webm', 'audio/ogg', 'audio/wav']) {
     provider = async (_url, { body }) => {
       const payload = JSON.parse(body)
-      assert.deepEqual(payload.contents[0].parts[0].inlineData, { mimeType, data: audioBase64 })
+      const providerMimeType = mimeType === 'audio/mp4' ? 'audio/m4a' : mimeType
+      assert.deepEqual(payload.contents[0].parts[0].inlineData, { mimeType: providerMimeType, data: audioBase64 }, 'Safari MP4 uses Gemini’s M4A MIME type without changing the recording')
       assert.match(payload.systemInstruction.parts[0].text, /verbatim/)
       return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({ text: 'Um, I like music.' }) }] } }] })
     }

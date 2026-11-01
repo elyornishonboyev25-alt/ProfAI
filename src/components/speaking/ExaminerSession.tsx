@@ -25,7 +25,7 @@ import {
 } from '@/services/speakingAI'
 import { analyseTranscript, mergeStats, type SpeechStats } from '@/lib/speakingScoring'
 import { cancelSpeech, useSpeechRecognition } from '@/lib/speech'
-import { transcribeAnswer, type ExaminerVoice } from '@/lib/speakingAudio'
+import { transcribeAnswer, transcriptionError, type ExaminerVoice } from '@/lib/speakingAudio'
 import { ExaminerPlayback } from '@/lib/examinerPlayback'
 import { AnswerRecording, canRecordAudio, canRecognizeWhileRecording, createAudioContext, microphoneError, requestSpeakingMicrophone } from '@/lib/speakingMedia'
 import { getIeltsSpeakingFullMockCatalog } from '@/utils/ieltsSpeakingCatalog'
@@ -814,7 +814,7 @@ export default function ExaminerSession({
     const [browserText, audioBlob] = await Promise.all([recognition.stop(), stopAudioCapture().catch(() => null)])
     if (disposedRef.current || version !== sessionVersionRef.current) return
     let text = browserText.trim()
-    let transcriptionFailed = false
+    let processingError: string | null = null
     if (audioBlob) {
       pendingAnswerRef.current = { blob: audioBlob, duration: durationSec }
       if (pendingAudioUrlRef.current) URL.revokeObjectURL(pendingAudioUrlRef.current)
@@ -823,7 +823,7 @@ export default function ExaminerSession({
       const controller = new AbortController()
       transcriptionAbortRef.current = controller
       try { text = (await transcribeAnswer(audioBlob, controller.signal)) || text }
-      catch { transcriptionFailed = true }
+      catch (error) { processingError = transcriptionError(error) }
     }
     if (disposedRef.current || version !== sessionVersionRef.current) return
     stopPendingRef.current = false
@@ -833,9 +833,7 @@ export default function ExaminerSession({
       return
     }
     if (!text) {
-      setAnswerError(transcriptionFailed
-        ? 'Your recording is saved, but transcription is unavailable. Listen to it and retry processing, or record again.'
-        : 'No clear words were detected. Listen to your recording, then retry processing or record again.')
+      setAnswerError(processingError ?? 'No clear words were detected. Listen to your recording, then retry processing or record again.')
       return
     }
     setAnswerError(null)
@@ -866,8 +864,8 @@ export default function ExaminerSession({
       pendingAnswerRef.current = null
       setPendingAudioUrl(null)
       submitAnswer(text, pending.duration)
-    } catch {
-      if (!disposedRef.current && version === sessionVersionRef.current) setAnswerError('Your recording is still saved. Processing is unavailable; try again when your connection returns.')
+    } catch (error) {
+      if (!disposedRef.current && version === sessionVersionRef.current) setAnswerError(transcriptionError(error))
     } finally {
       if (!disposedRef.current && version === sessionVersionRef.current) { stopPendingRef.current = false; setStopping(false) }
     }
@@ -1028,7 +1026,7 @@ export default function ExaminerSession({
           <p className="speaking-eyebrow">IELTS Speaking <span className="speaking-header-divider">/</span> AI examiner</p>
           <h1 className="truncate text-lg font-black tracking-tight text-slate-950 sm:text-xl">{modeLabel}</h1>
         </div>
-        <span className={`speaking-header-status ${voiceError || answerError ? 'is-paused' : ''}`}><span /> {voiceError ? 'Examiner audio paused' : answerError ? 'Recording needs attention' : voiceLoading ? 'Preparing examiner audio' : stopping ? 'Processing your answer' : recording ? 'Recording your answer' : phase === 'examiner_speaking' ? 'Examiner speaking' : 'Session in progress'}</span>
+        <span className={`speaking-header-status ${voiceError || answerError ? 'is-paused' : ''}`}><span /> {voiceError ? 'Examiner audio paused' : answerError ? pendingAudioUrl ? 'Answer processing paused' : 'Recording needs attention' : voiceLoading ? 'Preparing examiner audio' : stopping ? 'Processing your answer' : recording ? 'Recording your answer' : phase === 'examiner_speaking' ? 'Examiner speaking' : 'Session in progress'}</span>
         <span className="speaking-part-pill">{activePart > 0 ? isFullMock ? `Part ${activePart} of 3` : `Part ${activePart}` : 'Interview'}</span>
       </header>
 
@@ -1090,7 +1088,7 @@ export default function ExaminerSession({
         <div className="speaking-panel-heading speaking-panel-heading--focus">
           <span className="speaking-panel-icon"><Headphones className="h-[18px] w-[18px]" /></span>
           <div><h2>{canRecord ? 'Your turn' : 'Examiner room'}</h2><p>{canRecord ? 'Respond to the question below' : 'Listen and get ready to respond'}</p></div>
-          <span className={`speaking-phase-chip ${recording ? 'is-recording' : answerError || voiceError ? 'is-error' : ''}`} role="status"><span />{recording ? 'Recording' : voiceError ? 'Audio paused' : voiceLoading ? 'Connecting' : answerError ? 'Mic check' : phase === 'preparing' ? 'Preparing' : isExaminerBusy ? 'Examiner live' : canRecord ? 'Ready' : 'In progress'}</span>
+          <span className={`speaking-phase-chip ${recording ? 'is-recording' : answerError || voiceError ? 'is-error' : ''}`} role="status"><span />{recording ? 'Recording' : voiceError ? 'Audio paused' : voiceLoading ? 'Connecting' : answerError ? pendingAudioUrl ? 'Processing paused' : 'Mic check' : stopping ? 'Processing' : phase === 'preparing' ? 'Preparing' : isExaminerBusy ? 'Examiner live' : canRecord ? 'Ready' : 'In progress'}</span>
         </div>
         <div className="speaking-focus-content">
           <div className={`speaking-examiner-stage ${phase === 'examiner_speaking' ? 'is-speaking' : ''} ${recording ? 'is-listening' : ''}`}>

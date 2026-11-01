@@ -41,7 +41,7 @@ import {
 } from '@/utils/ieltsSpeakingCatalog'
 import { useSpeechRecognition } from '@/lib/speech'
 import { AnswerRecording, canRecordAudio, canRecognizeWhileRecording, microphoneError, requestSpeakingMicrophone } from '@/lib/speakingMedia'
-import { transcribeAnswer } from '@/lib/speakingAudio'
+import { transcribeAnswer, transcriptionError } from '@/lib/speakingAudio'
 import { analyzeSpeakingResponse, evaluateSpeaking, type SpeakingResponseAnalysis, type SpeakingEvaluation, type ExaminerTurn } from '@/services/speakingAI'
 import { analyseTranscript } from '@/lib/speakingScoring'
 import SpeakingResult from '@/components/speaking/SpeakingResult'
@@ -422,6 +422,7 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
       audioStreamRef.current = null
       if (disposedRef.current) return
       let transcript = browserText
+      let processingError: string | null = null
       if (blob.size) {
         audioBlobsRef.current.set(questionIndex, blob)
         const url = URL.createObjectURL(blob)
@@ -429,11 +430,12 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
         updateAnswer({ audioUrl: url }, questionIndex)
         const controller = new AbortController()
         processingAbortRef.current = controller
-        try { transcript = await transcribeAnswer(blob, controller.signal) || transcript } catch { /* Keep the browser's final words and the audio. */ }
+        try { transcript = await transcribeAnswer(blob, controller.signal) || transcript }
+        catch (error) { processingError = transcriptionError(error) }
       }
       if (disposedRef.current) return
       latestTranscriptRef.current = transcript
-      updateAnswer({ spoken: transcript, durationSec, recorded: true, error: transcript ? null : 'Your recording is saved. Retry processing below, or record again if no voice is audible.' }, questionIndex)
+      updateAnswer({ spoken: transcript, durationSec, recorded: true, error: transcript ? null : processingError ?? 'Your recording is saved. Retry processing below, or record again if no voice is audible.' }, questionIndex)
     } finally { stopPendingRef.current = false; if (!disposedRef.current) setStoppingRecording(false) }
   }, [recognition, updateAnswer])
 
@@ -448,8 +450,8 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
     try {
       const text = await transcribeAnswer(blob, controller.signal)
       if (!disposedRef.current) updateAnswer({ spoken: text, error: text ? null : 'No clear words were detected. Listen to your recording and record again.' }, questionIndex)
-    } catch {
-      if (!disposedRef.current) updateAnswer({ error: 'Processing is unavailable. Your recording is saved; please retry.' }, questionIndex)
+    } catch (error) {
+      if (!disposedRef.current) updateAnswer({ error: transcriptionError(error) }, questionIndex)
     } finally { stopPendingRef.current = false; if (!disposedRef.current) setStoppingRecording(false) }
   }, [index, updateAnswer])
 

@@ -41,12 +41,6 @@ export default function SATSection() {
   )
   const testAttempts = tests.map((test) => ({ test, attempt: loadSATAttempt(test.id) }))
   const attemptsByTestId = new Map(testAttempts.map(({ test, attempt }) => [test.id, attempt]))
-  const inProgress = isFullMock ? testAttempts
-    .filter(({ attempt }) => attempt?.status === 'active')
-    .sort((a, b) => (b.attempt?.updatedAt ?? b.attempt?.startedAt ?? 0) - (a.attempt?.updatedAt ?? a.attempt?.startedAt ?? 0))[0] : undefined
-  const answeredInProgress = inProgress
-    ? inProgress.test.modules.flatMap((module) => module.questions).filter((question) => inProgress.attempt?.answers[question.id]?.trim()).length
-    : 0
   const submittedHistory = loadSATAttemptHistory()
     .filter(({ attempt }) => attempt.status === 'submitted')
     .sort((a, b) => (b.attempt.submittedAt ?? b.attempt.updatedAt ?? 0) - (a.attempt.submittedAt ?? a.attempt.updatedAt ?? 0))
@@ -68,27 +62,7 @@ export default function SATSection() {
                   <h1 className="mt-0.5 text-xl font-black tracking-tight text-slate-950">{isFullMock ? 'Full mock exams' : `${activeTab.label} tests`}</h1>
                   <p className="mt-1 text-xs font-semibold text-slate-500">{tests.length} available · {isFullMock ? 'Reading & Writing and Math together' : 'Practice one SAT section at a time'}</p>
                 </div>
-                <div className={`sat-catalog-controls${inProgress?.attempt ? ' sat-catalog-controls--with-progress' : ''}`}>
-                  {inProgress?.attempt ? (
-                    <section aria-labelledby="sat-in-process-heading" data-sat-in-process className="mock-ielts-glass-metric flex min-w-0 items-center gap-3 rounded-2xl px-3 py-2.5">
-                      <div className="min-w-0 flex-1">
-                        <h2 id="sat-in-process-heading" className="flex items-center gap-1 text-[10px] font-black text-amber-700">
-                          <Clock3 className="h-3 w-3" aria-hidden="true" /><UiText text="In process" />
-                        </h2>
-                        <div className="mt-1 flex items-center justify-between gap-2">
-                          <h3 className="truncate text-xs font-black text-slate-950" title={inProgress.test.badge}>Full Mock {inProgress.test.mockId}</h3>
-                          <span aria-hidden="true" className="shrink-0 text-[10px] font-bold text-slate-500">{answeredInProgress}/{inProgress.test.questionCount}</span>
-                        </div>
-                        <p className="sr-only"><UiText text="{{answered}} of {{total}} questions answered" values={{ answered: answeredInProgress, total: inProgress.test.questionCount }} /></p>
-                        <div role="progressbar" aria-label="Saved progress" aria-valuemin={0} aria-valuemax={inProgress.test.questionCount} aria-valuenow={answeredInProgress} className="mt-1.5 h-1 overflow-hidden rounded-full bg-slate-200">
-                          <div className="h-full rounded-full bg-gradient-to-r from-red-700 to-red-400" style={{ width: `${Math.min(100, (answeredInProgress / Math.max(1, inProgress.test.questionCount)) * 100)}%` }} />
-                        </div>
-                      </div>
-                      <button type="button" onClick={() => navigate(`/sat/mock/${inProgress.test.mockId}/run`)} className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-600 text-white shadow-sm transition hover:bg-red-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-200">
-                        <span className="sr-only"><UiText text="Continue test" /></span><ArrowRight className="h-4 w-4" aria-hidden="true" />
-                      </button>
-                    </section>
-                  ) : null}
+                <div className="sat-catalog-controls">
                   <label className="relative block w-full">
                     <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search test..." aria-label="Search SAT tests"

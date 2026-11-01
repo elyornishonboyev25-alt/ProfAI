@@ -157,7 +157,7 @@ export default function SATQuestionModal({
   modules: SATModule[]
   onIndexChange: (next: number) => void
   onClose: () => void
-  onDiscuss: (question: SATQuestion) => void
+  onDiscuss?: (question: SATQuestion) => void
 }) {
   const dialogRef = useRef<HTMLDivElement>(null)
   const bodyRef = useRef<HTMLDivElement>(null)
@@ -262,10 +262,10 @@ export default function SATQuestionModal({
             <strong>
               {index + 1} <span>/ {questions.length}</span>
             </strong>
-            <button type="button" className="sqm-discuss" onClick={() => onDiscuss(question)}>
+            {onDiscuss && <button type="button" className="sqm-discuss" onClick={() => onDiscuss(question)}>
               <MessageSquareText size={15} />
               Discuss
-            </button>
+            </button>}
           </div>
           <button
             type="button"

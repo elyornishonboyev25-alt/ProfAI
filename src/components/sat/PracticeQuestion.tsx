@@ -71,7 +71,7 @@ export default function PracticeQuestion({ row, index, total, state, onUpdate, o
       </div>
     </header>
     <div className="hard-question-toolbar">
-      <strong>{math ? 'Math' : 'Reading & Writing'}</strong><span>Question {index + 1} / {total}</span>
+      <div className="practice-toolbar-meta"><strong>{math ? 'Math' : 'Reading & Writing'}</strong><span>Question {index + 1} / {total}</span><span className="practice-track" aria-hidden="true"><span style={{ width: `${(index + 1) / total * 100}%` }} /></span></div>
       {math && <><button type="button" aria-label="Math reference sheet" aria-expanded={formulasOpen} onClick={() => setFormulasOpen(!formulasOpen)}><Sheet size={17} /> Reference</button><button type="button" aria-label="Calculator" aria-expanded={calculatorOpen} onClick={() => setCalculatorOpen(!calculatorOpen)}><Calculator size={17} /> Calculator</button></>}
       <button type="button" aria-pressed={Boolean(state?.bookmarked)} aria-label={state?.bookmarked ? 'Remove bookmark' : 'Bookmark question'} onClick={() => onUpdate({ bookmarked: !state?.bookmarked })}><Bookmark size={17} fill={state?.bookmarked ? 'currentColor' : 'none'} /></button>
     </div>

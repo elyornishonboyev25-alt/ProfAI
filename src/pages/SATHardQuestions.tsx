@@ -11,8 +11,8 @@ import { accountStorageFor } from '@/utils/accountStorage'
 import { useAuthStore } from '@/store/authStore'
 import { useAiAssistantStore } from '@/store/aiAssistantStore'
 import './SATHardQuestions.css'
-import './SATHardQuestionsSilver.css'
 import '@/components/sat/PracticeQuestion.css'
+import './SATHardQuestionsSilver.css'
 
 type Filter = 'all' | 'unanswered' | 'incorrect' | 'bookmarked' | 'flagged'
 export default function SATHardQuestions() {

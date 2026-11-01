@@ -1,31 +1,5 @@
-import UsageBalance from '@/features/billing/UsageBalance'
-import { Mic2 } from 'lucide-react'
-import AIChatWindow from '@/components/ai/AIChatWindow'
-import CoachConnectionStatus from '@/components/ai/CoachConnectionStatus'
-import CoachMascot from '@/components/ai/CoachMascot'
-import { useAiAssistantStore } from '@/store/aiAssistantStore'
-import { useCopy } from '@/i18n/interface'
-import { coachCopy } from '@/services/ai/coachPreferences'
-import '@/components/ai/coach-studio.css'
+import AITutorWorkspace from '@/components/ai/AITutorWorkspace'
 
 export default function AITutor() {
-  const { language } = useCopy()
-  const text = coachCopy(language)
-  const openTalk = useAiAssistantStore((state) => state.openTalk)
-  const voiceState = useAiAssistantStore((state) => state.voiceState)
-  const voiceLevel = useAiAssistantStore((state) => state.voiceLevel)
-  return <main className="workspace-page coach-studio coach-studio--minimal flex h-full !min-h-0 overflow-hidden px-3 py-3 sm:px-5 sm:py-4 lg:px-6 lg:py-5">
-    <div className="coach-studio-frame">
-      <header className="coach-studio-header">
-        <div className="nova-studio-brand">
-          <button type="button" className="nova-header-avatar" onClick={openTalk} aria-label={text.voice}><CoachMascot state={voiceState} level={voiceLevel} size={64}/></button>
-          <div><span className="coach-studio-eyebrow">IvyGoo / AI</span><h1>Nova <span>IvyGoo Coach</span></h1></div>
-        </div>
-        <button type="button" onClick={openTalk} className="coach-primary-button" aria-label={text.voice}><Mic2 size={17}/><span>{text.voice}</span></button>
-      </header>
-      <UsageBalance />
-      <CoachConnectionStatus/>
-      <section className="coach-glass coach-chat-shell"><AIChatWindow variant="page"/></section>
-    </div>
-  </main>
+  return <AITutorWorkspace />
 }

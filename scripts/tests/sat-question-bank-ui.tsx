@@ -86,6 +86,11 @@ async function highlight(block: string, color: string) {
   await click(document.querySelector(`[aria-label="Highlight ${color}"]`))
   await act(async () => { await new Promise(resolve => setTimeout(resolve, 25)) })
 }
+// Leaving a set always asks first; confirm in the dialog.
+async function saveAndExit() {
+  await click(document.querySelector<HTMLElement>('[aria-label="Save and exit practice"]'))
+  await click([...document.querySelectorAll<HTMLElement>('[role="alertdialog"] button')].find(node => node.textContent?.trim() === 'Save & exit'))
+}
 const path = () => container.querySelector('[data-location]')!.textContent!
 const matching = () => Number(container.querySelector('.sat-bank-panel-title span')!.textContent!.split(' ')[0])
 export async function run() {
@@ -133,7 +138,7 @@ export async function run() {
   assert.equal(container.querySelector('[aria-label="Domain / topic"]')!.textContent, 'All domains')
   assert.equal(container.querySelector('[aria-label="Skill / question type"]')!.textContent, 'All skills')
   assert.equal(document.querySelector('[aria-label="Open Desmos calculator"]'), null)
-  assert.equal(document.querySelector('[role="dialog"]')!.getAttribute('aria-hidden'), 'true')
+  assert.equal(document.querySelector('[aria-label="Desmos Graphing Calculator"]'), null, 'The set builder has no calculator')
   await change('Section', 'math')
   assert.equal(document.querySelector('[aria-label="Open Desmos calculator"]'), null)
   assert.equal(document.querySelector('iframe'), null)
@@ -193,6 +198,8 @@ export async function run() {
   // Reload the separate runner: answers, position and marks must survive.
   const runPath = path()
   await render(runPath)
+  // A reload asks before reopening the saved set.
+  await click(button('Continue saved test'))
   assert.equal(container.querySelectorAll('[data-sat-highlight-id]').length, 2, 'Highlights survive navigation and reload')
   assert.ok(button('Marked for Review'))
   assert.equal(
@@ -213,10 +220,11 @@ export async function run() {
   await click(button('Finish set'))
   assert.match(path(), /view=history&review=/)
   window.Storage.prototype.setItem = originalSetItem
-  assert.match(text(), /1 of 4 correct/)
-  assert.match(text(), /Question 1/)
-  assert.match(text(), /Explanation/)
-  assert.equal(container.querySelectorAll('[role="radio"]:disabled').length, 4)
+  // A finished set opens the same analysis screen as SAT tests.
+  assert.match(text(), /Question Bank Results/)
+  assert.match(text(), /1\/4/)
+  assert.equal(container.querySelector('#sat-result-tab-leaderboard'), null, 'Personal sets have no leaderboard')
+  assert.equal(container.querySelector('#sat-result-tab-discussion'), null, 'Personal sets have no test discussion')
   const saved = JSON.parse(storage.getItem(key)!)
   assert.equal(saved.length, 4)
   assert.equal(saved[0].answer, questions[0].correctAnswer)
@@ -226,42 +234,27 @@ export async function run() {
   assert.equal(saved[1].flagged, false)
   assert.equal(saved[1].answer, wrong)
   assert.equal(saved[2].answer, '')
+  assert.ok(Number.isInteger(saved[0].seconds) && saved[0].seconds >= 0, 'Finished sets record active practice time')
   const reviewPath = path()
   await render(reviewPath)
-  assert.equal(container.querySelectorAll('[data-sat-highlight-id]').length, 2, 'Highlights survive saved review reload')
-  assert.equal(container.querySelector('[data-sat-highlight-id]')!.getAttribute('role'), null, 'Saved review highlights are read-only')
-  await click(container.querySelector('[data-sat-highlight-id]'))
-  assert.equal(document.querySelector('[data-sat-highlight-menu]'), null)
-  assert.match(text(), /1 of 4 correct/)
-  assert.match(text(), /Explanation/)
   const beforeReview = storage.getItem(key)
-  await click(button('Marked for Review 1'))
-  assert.equal(container.querySelectorAll('.sat-bank-number').length, 1)
-  assert.match(container.querySelector('.sat-bank-number')!.getAttribute('aria-label')!, /Marked for Review/)
-  assert.match(container.querySelector('.sat-bank-detail-title')!.textContent!, /Question 1/)
-  await click(
-    [...container.querySelectorAll('button')].find((node) =>
-      node.textContent?.trim().startsWith('Incorrect '),
-    ),
-  )
-  assert.equal(container.querySelectorAll('.sat-bank-number').length, 1)
-  assert.match(
-    container.querySelector('.sat-bank-answer-summary')!.textContent!,
-    new RegExp(`Your answer${wrong}`),
-  )
-  await click(
-    [...container.querySelectorAll('button')].find((node) =>
-      node.textContent?.trim().startsWith('Skipped '),
-    ),
-  )
-  assert.equal(container.querySelectorAll('.sat-bank-number').length, 2)
-  assert.match(text(), /Your answerSkipped/)
-  await click(button('Next'))
-  assert.match(
-    container.querySelector('.sat-bank-detail-title')!.textContent!,
-    /Question 4/,
-  )
-  await click(button('All saved sets'))
+  await click(container.querySelector('#sat-result-tab-questions'))
+  assert.equal(container.querySelectorAll('.srx-q-row').length, 4)
+  await click(container.querySelector('.chip-flagged'))
+  assert.equal(container.querySelectorAll('.srx-q-row').length, 1)
+  await click(container.querySelector('.srx-review-button'))
+  assert.match(document.querySelector('.sqm-dialog')!.textContent!, /Question 1/)
+  assert.match(document.querySelector('.sqm-dialog')!.textContent!, /Why this answer works/)
+  assert.equal(document.querySelectorAll('.sqm-dialog [data-sat-highlight-id]').length, 2, 'Highlights survive saved review reload')
+  assert.equal(document.querySelector('.sqm-discuss'), null, 'Personal sets have no discussion link')
+  await click(document.querySelector('[aria-label="Close question"]'))
+  await click(container.querySelector('.chip-incorrect'))
+  assert.equal(container.querySelectorAll('.srx-q-row').length, 1)
+  assert.match(container.querySelector('.srx-q-row')!.textContent!, new RegExp(`Your Answer${wrong}`))
+  await click(container.querySelector('.chip-unanswered'))
+  assert.equal(container.querySelectorAll('.srx-q-row').length, 2)
+  assert.match(container.querySelector('.srx-q-row')!.textContent!, /Your AnswerUnanswered/)
+  await click(button('Question Bank history'))
   assert.equal(container.querySelectorAll('.sat-bank-history-card').length, 1)
   await click(container.querySelector('.sat-bank-history-card'))
   await click(container.querySelector('[data-router-back]'))
@@ -285,7 +278,7 @@ export async function run() {
   assert.equal(button('Mark for Review')?.getAttribute('aria-pressed'), 'false')
   assert.equal(container.querySelectorAll('.sat-bank-mark-icon').length, 0)
   await click(button('Finish set'))
-  await click(button('Practice'))
+  await click(button('Start fresh'))
   await change('Progress', 'marked')
   assert.match(text(), /No questions match these filters/)
   assert.equal(container.querySelector<HTMLButtonElement>('.sat-bank-build-actions .sat-bank-primary')!.disabled, true)
@@ -301,15 +294,14 @@ export async function run() {
   await click(
     container.querySelectorAll<HTMLButtonElement>('.sat-bank-history-card')[1],
   )
-  assert.match(text(), /Not recorded in older results/)
-  assert.equal(container.querySelectorAll('[data-sat-highlight-id]').length, 0, 'Older results without highlights still open')
-  assert.match(text(), /Explanation/)
-  await click(
-    [...container.querySelectorAll('button')].find((node) =>
-      node.textContent?.trim().startsWith('Correct '),
-    ),
-  )
-  assert.match(text(), /No correct questions in this set/)
+  assert.match(text(), /Question Bank Results/)
+  await click(container.querySelector('#sat-result-tab-questions'))
+  assert.match(container.querySelector('.srx-q-row')!.textContent!, /Your AnswerNot recorded/, 'A missing legacy answer is not shown as skipped')
+  await click(container.querySelector('.srx-review-button'))
+  assert.equal(document.querySelectorAll('.sqm-dialog [data-sat-highlight-id]').length, 0, 'Older results without highlights still open')
+  await click(document.querySelector('[aria-label="Close question"]'))
+  await click(container.querySelector('.chip-correct'))
+  assert.match(text(), /No questions match these filters/)
   await render('/sat/question-bank?review=deleted')
   assert.match(text(), /This saved set is unavailable/)
   assert.equal(container.querySelectorAll('.sat-bank-history-card').length, 2)
@@ -320,8 +312,12 @@ export async function run() {
   storage.setItem(key, JSON.stringify([{ ...saved[0], highlights: [null, { textRange: { start: -1 } }] }]))
   await render('/sat/question-bank?view=history')
   await click(container.querySelector('.sat-bank-history-card'))
-  assert.match(text(), /Explanation/)
-  assert.equal(container.querySelectorAll('[data-sat-highlight-id]').length, 0, 'Malformed annotations do not discard saved answers')
+  assert.match(text(), /Question Bank Results/)
+  await click(container.querySelector('#sat-result-tab-questions'))
+  await click(container.querySelector('.srx-review-button'))
+  assert.equal(document.querySelectorAll('.sqm-dialog [data-sat-highlight-id]').length, 0, 'Malformed annotations do not discard saved answers')
+  await click(document.querySelector('[aria-label="Close question"]'))
+  await click(button('Question Bank history'))
   // A different account cannot see the previous account's practice history.
   await act(async () =>
     useAuthStore.setState({ user: { id: 'another-user' } as never }),
@@ -391,7 +387,8 @@ export async function run() {
   assert.equal(matching(), total - 1)
   await render('/sat/question-bank?view=history')
   await click(container.querySelector('.sat-bank-history-card'))
-  assert.equal(container.querySelector('.sat-bank-answer-summary strong')!.textContent, first.correctAnswer)
+  await click(container.querySelector('#sat-result-tab-questions'))
+  assert.match(container.querySelector('.srx-q-row')!.textContent!, new RegExp(`Your Answer${first.correctAnswer}`))
   // Math practice and saved review share the embedded calculator. Closing it
   // must preserve its iframe and answers, while Reading & Writing hides it.
   await render('/sat/question-bank?section=math&count=4')
@@ -424,13 +421,10 @@ export async function run() {
   await click(button('Next'))
   await click(button('Next'))
   await click(button('Finish set'))
-  assert.equal(document.querySelector('[role="dialog"]')!.getAttribute('aria-hidden'), 'true')
-  assert.ok(document.querySelector('[aria-label="Open Desmos calculator"]'))
+  assert.equal(document.querySelector('[aria-label="Desmos Graphing Calculator"]'), null, 'Finishing closes the practice calculator')
   await render(path())
-  await click(button('Marked for Review 1'))
-  await click(document.querySelector('[aria-label="Open Desmos calculator"]'))
-  assert.equal(document.querySelector('[role="dialog"]')!.getAttribute('aria-hidden'), 'false')
-  await click(button('Practice'))
+  assert.match(text(), /Question Bank Results/)
+  await click(button('Start fresh'))
   await change('Section', 'reading-writing')
   await change('Questions in set', '4')
   await click(button('Start 4 questions'))
@@ -443,9 +437,10 @@ export async function run() {
   delete oldSession.highlights
   storage.setItem(activeKey, JSON.stringify(oldSession))
   await render(readingPath)
+  await click(button('Continue saved test'))
   assert.ok(container.querySelector('.sat-bank-run'), 'Older sessions without highlights still resume')
   await highlight('context', 'pink')
-  await click(document.querySelector('[aria-label="Save and exit practice"]'))
+  await saveAndExit()
   assert.match(text(), /Your answers are saved/)
   await click(button('Resume practice'))
   assert.equal(path(), readingPath)
@@ -465,7 +460,7 @@ export async function run() {
   await click(container.querySelector('[role="radio"]'))
   await click(button('Next'))
   await click(button('Mark for Review'))
-  await click(document.querySelector('[aria-label="Save and exit practice"]'))
+  await saveAndExit()
   await change('Section', 'reading-writing')
   await change('Progress', 'unanswered')
   assert.equal(matching(), total - 2, 'Saved unfinished answers must leave Not attempted; merely marked questions remain')
@@ -476,13 +471,11 @@ export async function run() {
   storage.removeItem('profai:sat:question-bank:guest:attempted:v1')
   await render('/sat/question-bank?section=reading-writing&count=4&status=unanswered')
   assert.equal(matching(), total - 2, 'Existing unfinished sessions count before the attempted ledger is created')
-  const originalConfirm = window.confirm
-  window.confirm = () => true
   await click(button('Start 4 questions'))
-  window.confirm = originalConfirm
+  await click([...document.querySelectorAll<HTMLElement>('[role="alertdialog"] button')].find(node => node.textContent?.trim() === 'Replace & start again'))
   const replacement = loadBankSession('guest')!
   assert.ok(unfinished.keys.slice(0, 2).every(key => !replacement.keys.includes(key)), 'Not attempted must build a set without previously answered questions')
-  await click(document.querySelector('[aria-label="Save and exit practice"]'))
+  await saveAndExit()
   await render('/sat/question-bank?section=reading-writing&status=unanswered')
   assert.equal(matching(), total - 2, 'Replacing an unfinished set must retain earlier attempted progress')
   assert.equal(storage.getItem(key), null, 'Unfinished progress must not create completed sets')
@@ -511,6 +504,6 @@ export async function run() {
   assert.match(text(), /This practice set is unavailable/)
   await act(async () => root.unmount())
   console.log(
-    'SAT question bank: saved answers, storage-quota recovery, full review, filters, unfinished and replaced set progress, account updates, browser back, legacy results, account isolation, saved marks, standalone fullscreen practice, refresh/resume, question navigation, Math Desmos and Reading highlights passed.',
+    'SAT question bank: saved answers, storage-quota recovery, SAT-style result analysis, filters, unfinished and replaced set progress, account updates, browser back, legacy results, account isolation, saved marks, standalone fullscreen practice, refresh/resume, question navigation, Math Desmos and Reading highlights passed.',
   )
 }

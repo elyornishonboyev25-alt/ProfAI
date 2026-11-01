@@ -17,6 +17,7 @@ import { useAuthStore } from '@/store/authStore'
 import { useAiAssistantStore } from '@/store/aiAssistantStore'
 import '@/components/sat/sat-exam-layout.css'
 import './SATQuestionBankRun.css'
+import './SATQuestionBankRunSilver.css'
 
 export default function SATQuestionBankRun() {
   return <SATBrowserExitGuard><AttemptEntryBoundary exam="SAT"><SATQuestionBankRunContent /></AttemptEntryBoundary></SATBrowserExitGuard>
@@ -50,6 +51,21 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
   const navigatorClose = useRef<HTMLButtonElement>(null)
   const directionsButton = useRef<HTMLButtonElement>(null)
   const directionsClose = useRef<HTMLButtonElement>(null)
+  // Count practice time only while the page is visible.
+  const elapsed = useRef(session?.elapsedSeconds ?? 0)
+  const activeSince = useRef<number | null>(Date.now())
+  const activeSeconds = () => elapsed.current + (activeSince.current === null ? 0 : (Date.now() - activeSince.current) / 1000)
+  const timed = (next: BankSession): BankSession => ({ ...next, elapsedSeconds: Math.round(activeSeconds()) })
+  useEffect(() => {
+    const visibility = () => {
+      if (document.visibilityState === 'hidden') {
+        elapsed.current = activeSeconds()
+        activeSince.current = null
+      } else if (activeSince.current === null) activeSince.current = Date.now()
+    }
+    document.addEventListener('visibilitychange', visibility)
+    return () => document.removeEventListener('visibilitychange', visibility)
+  }, [])
   const findQuestion = (key: string) => session?.questions?.[key] ?? reviewQuestions.get(key)
   const current = session ? findQuestion(session.keys[session.index]) : undefined
   const math = current?.question.section === 'math'
@@ -121,7 +137,8 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
       if (opener?.isConnected) opener.focus()
     }
   }, [navigatorOpen, directionsOpen])
-  const update = (next: BankSession) => {
+  const update = (change: BankSession) => {
+    const next = timed(change)
     setSession(next)
     try {
       saveBankSession(userId, next)
@@ -132,7 +149,7 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
   }
   const leave = () => {
     if (session) {
-      try { saveBankSession(userId, session) } catch {
+      try { saveBankSession(userId, timed(session)) } catch {
         setError('Your answers could not be saved. Free up browser storage and try again before leaving.')
         return
       }
@@ -143,6 +160,7 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
   const finish = () => {
     if (!session) return
     const at = new Date().toISOString()
+    const seconds = Math.round(activeSeconds())
     const results: Result[] = session.keys.map((key) => {
       const question = findQuestion(key)!.question
       return {
@@ -151,7 +169,7 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
         answer: session.answers[key]?.trim() ?? '', flagged: session.flagged.includes(key),
         highlights: session.highlights[key] ?? [],
         eliminatedChoices: session.eliminatedChoices?.[key] ?? [],
-        at, setId: session.id,
+        at, setId: session.id, seconds,
       }
     })
     try {

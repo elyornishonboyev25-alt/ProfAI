@@ -55,8 +55,10 @@ const RESULT_TABS = [
   { id: 'discussion', label: 'Discussion', icon: MessageSquareText },
 ] as const
 
-const moduleChip = (module?: { id: string; section: string }) =>
-  module ? `${module.section === 'math' ? 'Math' : 'R&W'} · M${module.id.replace(/\D/g, '') || '1'}` : ''
+const moduleChip = (module?: { id: string; section: string }, bank = false) =>
+  module ? `${module.section === 'math' ? 'Math' : 'R&W'}${bank ? '' : ` · M${module.id.replace(/\D/g, '') || '1'}`}` : ''
+// Question Bank sets are personal practice: no shared ranking or test discussion.
+const BANK_TABS = RESULT_TABS.filter(({ id }) => id !== 'leaderboard' && id !== 'discussion')
 
 type Props = {
   attempt: SATAttempt
@@ -65,6 +67,7 @@ type Props = {
   onBack?: () => void
   backLabel?: string
   historyReview?: boolean
+  variant?: 'test' | 'question-bank'
 }
 
 function ScoreRing({ score, percent, label }: { score: number | null; percent: number; label: string }) {
@@ -111,7 +114,9 @@ function formatPace(seconds: number) {
   return whole >= 60 ? `${Math.floor(whole / 60)}m ${whole % 60}s` : `${whole}s`
 }
 
-export default function SATReview({ attempt, test, onStartAgain, onBack, backLabel, historyReview = false }: Props) {
+export default function SATReview({ attempt, test, onStartAgain, onBack, backLabel, historyReview = false, variant = 'test' }: Props) {
+  const bank = variant === 'question-bank'
+  const tabs = bank ? BANK_TABS : RESULT_TABS
   const navigate = useNavigate()
   const user = useAuthStore((state) => state.user)
   const awardBadge = useBadgeStore((state) => state.awardIfEligible)
@@ -151,7 +156,7 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
 
   useEffect(() => {
     if (!user) return setStanding({ status: 'guest' })
-    if (!submitted || score === null) return setStanding({ status: 'unavailable' })
+    if (bank || !submitted || score === null) return setStanding({ status: 'unavailable' })
     let active = true
     setStanding({ status: 'loading' })
     examResultsApi
@@ -161,7 +166,7 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
     return () => {
       active = false
     }
-  }, [mathScore, rwScore, score, standingReload, submitted, test.id, user])
+  }, [bank, mathScore, rwScore, score, standingReload, submitted, test.id, user])
 
   const platformReady = standing.status === 'ready' && standing.data.participants >= MIN_PLATFORM_PARTICIPANTS
   const percentileFor = useCallback(
@@ -242,25 +247,25 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
     if (index >= 0) setModal({ questions: filteredQuestions, index })
   }
   const handleTabKeys = (event: KeyboardEvent<HTMLDivElement>) => {
-    const index = RESULT_TABS.findIndex((item) => item.id === tab)
+    const index = tabs.findIndex((item) => item.id === tab)
     const next =
       event.key === 'ArrowRight'
-        ? (index + 1) % RESULT_TABS.length
+        ? (index + 1) % tabs.length
         : event.key === 'ArrowLeft'
-          ? (index + RESULT_TABS.length - 1) % RESULT_TABS.length
+          ? (index + tabs.length - 1) % tabs.length
           : event.key === 'Home'
             ? 0
             : event.key === 'End'
-              ? RESULT_TABS.length - 1
+              ? tabs.length - 1
               : null
     if (next === null) return
     event.preventDefault()
-    activateTab(RESULT_TABS[next].id)
-    document.getElementById(`sat-result-tab-${RESULT_TABS[next].id}`)?.focus()
+    activateTab(tabs[next].id)
+    document.getElementById(`sat-result-tab-${tabs[next].id}`)?.focus()
   }
 
   useEffect(() => {
-    if (historyReview || !submitted || !complete || score === null) return
+    if (bank || historyReview || !submitted || !complete || score === null) return
     if (onlySection) {
       awardBadge({
         userId: user?.id ?? null,
@@ -288,7 +293,7 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
           source: 'sat-full-mock',
         })
     })
-  }, [awardBadge, complete, historyReview, onlySection, report.midpoint, score, sections, submitted, user?.id])
+  }, [awardBadge, bank, complete, historyReview, onlySection, report.midpoint, score, sections, submitted, user?.id])
 
   return (
     <main className="sat-results workspace-page">
@@ -304,7 +309,7 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
           <header className="srx-header">
             <div className="srx-title-row">
               <h1>
-                Your SAT <span>Results</span>
+                {bank ? 'Question Bank' : 'Your SAT'} <span>Results</span>
               </h1>
               <button
                 type="button"
@@ -325,7 +330,7 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
               <span>{formatSATDate(attempt.submittedAt ?? attempt.updatedAt)}</span>
               <span>{attempt.mode === 'exam' ? 'Exam mode' : 'Practice mode'}</span>
               <span>
-                {allQuestions.length} questions · {modules.length} modules
+                {allQuestions.length} questions · {bank ? 'Untimed practice set' : `${modules.length} modules`}
               </span>
               <span className={`srx-meta-status ${submitted ? '' : 'is-incomplete'}`}>
                 {submitted ? <CheckCircle2 size={13} /> : <CircleDashed size={13} />}
@@ -348,7 +353,7 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
         )}
         <div className="srx-tabs-wrap">
           <div className="srx-tabs" role="tablist" aria-label="SAT result analysis" onKeyDown={handleTabKeys}>
-            {RESULT_TABS.map(({ id, label, icon: Icon }) => (
+            {tabs.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
                 id={`sat-result-tab-${id}`}
@@ -609,7 +614,7 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
             <div className="srx-perf-grid">
               <section className="sr-card srx-panel-card">
                 <div className="srx-card-head">
-                  <h3>Module breakdown</h3>
+                  <h3>{bank ? 'Section breakdown' : 'Module breakdown'}</h3>
                   <div className="srx-legend">
                     <span>
                       <i className="seg-correct" />
@@ -630,7 +635,7 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
                     <div className="srx-module-top">
                       <div>
                         <span className={`srx-chip ${module.section === 'math' ? 'is-math' : ''}`}>
-                          {moduleChip(module)}
+                          {moduleChip(module, bank)}
                         </span>
                         <strong>{module.title}</strong>
                       </div>
@@ -895,7 +900,7 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
                     <li key={question.id} className={`srx-q-row srx-row-${outcome}`} data-question-id={question.id}>
                       <div className="srx-q-id">
                         <span className={`srx-chip ${question.section === 'math' ? 'is-math' : ''}`}>
-                          {moduleChip(module)}
+                          {moduleChip(module, bank)}
                         </span>
                         <strong>
                           Question {question.number}
@@ -998,7 +1003,7 @@ export default function SATReview({ attempt, test, onStartAgain, onBack, backLab
             modules={modules}
             onIndexChange={(index) => setModal((current) => (current ? { ...current, index } : current))}
             onClose={() => setModal(null)}
-            onDiscuss={discussQuestion}
+            onDiscuss={bank ? undefined : discussQuestion}
           />
         )}
 

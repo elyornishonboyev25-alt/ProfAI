@@ -32,8 +32,4 @@
   .sat-catalog-controls {
     grid-template-columns: 15rem;
   }
-
-  .sat-catalog-controls--with-progress {
-    grid-template-columns: 13rem 15rem;
-  }
 }

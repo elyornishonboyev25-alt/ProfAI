@@ -40,6 +40,7 @@ export const russianAdditions: Record<string, string> = {
   'The break countdown continues if you reload or leave this page.': 'Отсчёт перерыва продолжается, даже если обновить или покинуть страницу.',
   'Start 10-minute break': 'Начать 10-минутный перерыв',
   'In process': 'В процессе',
+  'In progress': 'В процессе',
   '{{answered}} of {{total}} questions answered': 'Отвечено на {{answered}} из {{total}} вопросов',
   'more friend(s) until your next bonus.': 'друзей до следующего бонуса.',
   'friends': 'друзей',

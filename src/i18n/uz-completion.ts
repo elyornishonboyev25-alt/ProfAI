@@ -39,6 +39,7 @@ export const uzbekCompletion: Record<string, string> = {
   'The break countdown continues if you reload or leave this page.': 'Sahifani yangilasangiz yoki undan chiqsangiz ham tanaffus vaqti davom etadi.',
   'Start 10-minute break': '10 daqiqalik tanaffusni boshlash',
   'In process': 'Jarayonda',
+  'In progress': 'Jarayonda',
   '{{answered}} of {{total}} questions answered': '{{total}} ta savoldan {{answered}} tasiga javob berilgan',
   'more friend(s) until your next bonus.': 'ta do‘stdan keyin navbatdagi bonus beriladi.',
   'friends': 'ta do‘st',

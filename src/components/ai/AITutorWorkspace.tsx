@@ -39,6 +39,7 @@ import CoachControls from './CoachControls'
 import CoachMascot from './CoachMascot'
 import CoachConnectionStatus from './CoachConnectionStatus'
 import { useAiTutor } from './useAiTutor'
+import { useSpeechRecognition } from '@/lib/speech'
 import { useAiAssistantStore, type AiAssistantThread } from '@/store/aiAssistantStore'
 import { useAccountAccess } from '@/features/billing/useAccountAccess'
 import { useBillingStore } from '@/features/billing/store'
@@ -52,6 +53,8 @@ import './ai-tutor-workspace.css'
 
 const COPY = {
   en: {
+    dictate: 'Dictate', stopDictation: 'Stop dictation', listening: 'Listening… tap to stop', dictationUnsupported: 'Dictation needs Chrome, Edge or Safari.',
+    micError: 'Microphone is unavailable. Allow microphone access in the address bar and try again.',
     title: 'AI Tutor', newChat: 'New chat', search: 'Search chats', noChats: 'Your conversations will appear here.', noMatch: 'No chats match your search.', loading: 'Loading chats…',
     today: 'Today', yesterday: 'Yesterday', week: 'Previous 7 days', month: 'Previous 30 days', older: 'Older',
     hero: 'What should we work on today?', heroDetail: 'Review your practice tests, get any SAT or IELTS question explained, practise new questions, or study vocabulary.',
@@ -71,6 +74,8 @@ const COPY = {
     ],
   },
   uz: {
+    dictate: 'Ovoz bilan yozish', stopDictation: 'Diktovkani to‘xtatish', listening: 'Tinglayapman… to‘xtatish uchun bosing', dictationUnsupported: 'Ovoz bilan yozish uchun Chrome, Edge yoki Safari kerak.',
+    micError: 'Mikrofon ishlamayapti. Manzil satridan mikrofonga ruxsat bering va qayta urinib ko‘ring.',
     title: 'AI Tutor', newChat: 'Yangi chat', search: 'Chatlarni qidirish', noChats: 'Suhbatlaringiz shu yerda paydo bo‘ladi.', noMatch: 'Qidiruvga mos chat yo‘q.', loading: 'Chatlar yuklanmoqda…',
     today: 'Bugun', yesterday: 'Kecha', week: 'Oxirgi 7 kun', month: 'Oxirgi 30 kun', older: 'Avvalroq',
     hero: 'Bugun nima ustida ishlaymiz?', heroDetail: 'Testlaringizni tahlil qiling, istalgan SAT yoki IELTS savolini tushuntirib oling, yangi savollar yeching yoki lug‘at o‘rganing.',
@@ -90,6 +95,8 @@ const COPY = {
     ],
   },
   ru: {
+    dictate: 'Диктовка', stopDictation: 'Остановить диктовку', listening: 'Слушаю… нажмите, чтобы остановить', dictationUnsupported: 'Для диктовки нужен Chrome, Edge или Safari.',
+    micError: 'Микрофон недоступен. Разрешите доступ в адресной строке и повторите попытку.',
     title: 'AI Tutor', newChat: 'Новый чат', search: 'Поиск чатов', noChats: 'Здесь появятся ваши разговоры.', noMatch: 'Нет чатов по запросу.', loading: 'Загрузка чатов…',
     today: 'Сегодня', yesterday: 'Вчера', week: 'Последние 7 дней', month: 'Последние 30 дней', older: 'Ранее',
     hero: 'Над чем поработаем сегодня?', heroDetail: 'Разберите свои тесты, получите объяснение любого вопроса SAT или IELTS, решайте новые задания или учите слова.',
@@ -140,6 +147,70 @@ function CopyAnswer({ text, labels }: { text: string; labels: { copy: string; co
       window.setTimeout(() => setCopied(false), 1400)
     })
   }}>{copied ? <Check size={14} /> : <Copy size={14} />}{copied ? labels.copied : labels.copy}</button>
+}
+
+// A styled listbox in place of the native select, so the subject picker
+// matches the composer instead of the operating system menu.
+function FocusMenu({ value, label, options, onChange, openUp }: {
+  value: AiWorkspaceId
+  label: string
+  options: Array<{ id: AiWorkspaceId; title: string; detail: string }>
+  onChange: (id: AiWorkspaceId) => void
+  openUp: boolean
+}) {
+  const [open, setOpen] = useState(false)
+  const [active, setActive] = useState(0)
+  const root = useRef<HTMLDivElement | null>(null)
+  const trigger = useRef<HTMLButtonElement | null>(null)
+  const list = useRef<HTMLUListElement | null>(null)
+  const current = options.find((option) => option.id === value) ?? options[0]
+  const Icon = WORKSPACE_ICONS[current.id]
+  useEffect(() => {
+    if (!open) return
+    list.current?.focus()
+    const close = (event: PointerEvent) => {
+      if (!root.current?.contains(event.target as Node)) setOpen(false)
+    }
+    document.addEventListener('pointerdown', close)
+    return () => document.removeEventListener('pointerdown', close)
+  }, [open])
+  const show = () => {
+    setActive(Math.max(0, options.findIndex((option) => option.id === value)))
+    setOpen(true)
+  }
+  const choose = (id: AiWorkspaceId) => {
+    onChange(id)
+    setOpen(false)
+    trigger.current?.focus()
+  }
+  return <div ref={root} className={`tutor-focus ${open ? 'is-open' : ''}`}>
+    <button ref={trigger} type="button" className="tutor-focus-trigger" aria-label={`${label}: ${current.title}`} aria-haspopup="listbox" aria-expanded={open}
+      onClick={() => open ? setOpen(false) : show()}
+      onKeyDown={(event) => { if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); show() } }}>
+      <Icon size={15} aria-hidden="true" /><span>{current.title}</span><ChevronDown size={14} aria-hidden="true" />
+    </button>
+    {open ? <ul ref={list} role="listbox" tabIndex={-1} aria-label={label} aria-activedescendant={`tutor-focus-${options[active].id}`}
+      className={`tutor-focus-menu ${openUp ? 'is-up' : ''}`}
+      onKeyDown={(event) => {
+        if (event.key === 'ArrowDown') { event.preventDefault(); setActive((index) => (index + 1) % options.length) }
+        else if (event.key === 'ArrowUp') { event.preventDefault(); setActive((index) => (index + options.length - 1) % options.length) }
+        else if (event.key === 'Home') { event.preventDefault(); setActive(0) }
+        else if (event.key === 'End') { event.preventDefault(); setActive(options.length - 1) }
+        else if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); choose(options[active].id) }
+        else if (event.key === 'Escape' || event.key === 'Tab') { event.stopPropagation(); setOpen(false); if (event.key === 'Escape') trigger.current?.focus() }
+      }}>
+      <li className="tutor-focus-heading" role="presentation">{label}</li>
+      {options.map((option, index) => {
+        const OptionIcon = WORKSPACE_ICONS[option.id]
+        return <li key={option.id} id={`tutor-focus-${option.id}`} role="option" aria-selected={option.id === value}
+          data-active={index === active} onPointerEnter={() => setActive(index)} onClick={() => choose(option.id)}>
+          <span className="tutor-focus-icon"><OptionIcon size={16} /></span>
+          <span className="tutor-focus-copy"><b>{option.title}</b><small>{option.detail}</small></span>
+          {option.id === value ? <Check size={16} className="tutor-focus-check" /> : null}
+        </li>
+      })}
+    </ul> : null}
+  </div>
 }
 
 function TutorBalance({ text }: { text: (typeof COPY)[PremiumLanguage] }) {
@@ -194,7 +265,6 @@ export default function AITutorWorkspace() {
     : savedChats
   const groups = useMemo(() => groupThreads(visibleChats, text), [visibleChats, text])
   const empty = messages.length === 0
-  const WorkspaceIcon = WORKSPACE_ICONS[workspace.id]
 
   useEffect(() => {
     followLatest.current = true
@@ -223,9 +293,53 @@ export default function AITutorWorkspace() {
     return () => window.removeEventListener('keydown', close)
   }, [railOpen, settingsOpen])
 
-  const submit = (value?: string) => {
+  // Dictation writes speech into the draft live; nothing is sent until the learner sends it.
+  const dictation = useSpeechRecognition(locale === 'uz' ? 'uz-UZ' : locale === 'ru' ? 'ru-RU' : 'en-US')
+  const dictationBase = useRef<string | null>(null)
+  const [dictationError, setDictationError] = useState('')
+  const joinDraft = (base: string, spoken: string) => [base.trimEnd(), spoken].filter(Boolean).join(base.trim() && spoken ? ' ' : '')
+  useEffect(() => {
+    if (dictationBase.current === null || !dictation.listening) return
+    setDraft(joinDraft(dictationBase.current, `${dictation.finalTranscript} ${dictation.interimTranscript}`.trim()))
+  }, [dictation.finalTranscript, dictation.interimTranscript, dictation.listening, setDraft])
+  useEffect(() => {
+    if (dictation.error) setDictationError(text.micError)
+  }, [dictation.error, text.micError])
+  // Leaving the page releases the microphone.
+  const stopDictation = dictation.stop
+  useEffect(() => () => { if (dictationBase.current !== null) void stopDictation() }, [stopDictation])
+  const finishDictation = async () => {
+    const base = dictationBase.current ?? ''
+    dictationBase.current = null
+    const spoken = (await dictation.stop()).trim()
+    const next = joinDraft(base, spoken)
+    setDraft(next)
+    return next
+  }
+  const toggleDictation = async () => {
+    setDictationError('')
+    if (dictation.listening) {
+      await finishDictation()
+      textareaRef.current?.focus()
+      return
+    }
+    if (!dictation.supported) {
+      setDictationError(text.dictationUnsupported)
+      return
+    }
+    dictation.reset()
+    dictationBase.current = draft
+    dictation.start()
+  }
+
+  const submit = async (value?: string) => {
     followLatest.current = true
     setShowJump(false)
+    if (!value && dictation.listening) {
+      const text = await finishDictation()
+      if (text.trim()) void send({ text })
+      return
+    }
     void send(value ? { text: value } : undefined)
   }
   const startNewChat = async () => {
@@ -302,14 +416,12 @@ export default function AITutorWorkspace() {
         event.target.value = ''
       }} />
       <button type="button" className="tutor-icon-button" aria-label={text.attach} title={text.attach} disabled={isSending} onClick={() => fileInputRef.current?.click()}><ImagePlus size={18} /></button>
-      {(voiceSupported || typeof RTCPeerConnection !== 'undefined') ? <button type="button" className="tutor-icon-button" aria-label={text.voice} title={text.voice} onClick={() => { cancelSend(); openTalk() }}><Mic size={18} /></button> : null}
-      <label className="tutor-focus">
-        <WorkspaceIcon size={15} aria-hidden="true" />
-        <select aria-label={coachText.focus} value={workspace.id} onChange={(event) => setWorkspace(event.target.value as AiWorkspaceId)}>
-          {AI_WORKSPACES.map(({ id }) => <option key={id} value={id}>{coachText[id]}</option>)}
-        </select>
-        <ChevronDown size={14} aria-hidden="true" />
-      </label>
+      <button type="button" className={`tutor-icon-button tutor-dictate ${dictation.listening ? 'is-listening' : ''}`}
+        aria-pressed={dictation.listening} aria-label={dictation.listening ? text.stopDictation : text.dictate} title={dictation.listening ? text.stopDictation : text.dictate}
+        disabled={isSending} onClick={() => void toggleDictation()}>{dictation.listening ? <Square size={14} /> : <Mic size={18} />}</button>
+      {dictation.listening ? <span className="tutor-dictating" role="status"><i /><i /><i />{text.listening}</span> : null}
+      <FocusMenu value={workspace.id} label={coachText.focus} onChange={setWorkspace} openUp={!empty}
+        options={AI_WORKSPACES.map(({ id }) => ({ id, title: coachText[id], detail: coachText[`${id}Detail`] }))} />
       <button
         type="button"
         className={`tutor-send ${isSending ? 'is-stop' : ''}`}
@@ -318,6 +430,7 @@ export default function AITutorWorkspace() {
         onClick={() => isSending ? cancelSend() : submit()}
       >{isSending ? <Square size={15} /> : <ArrowUp size={19} />}</button>
     </div>
+    {dictationError ? <p className="tutor-dictation-error" role="status">{dictationError}</p> : null}
   </div>
 
   return <main className="workspace-page tutor-page" onDragOver={(event) => { event.preventDefault(); if (!dragging) setDragging(true) }} onDragLeave={(event) => { if (event.currentTarget === event.target) setDragging(false) }} onDrop={onDrop}>

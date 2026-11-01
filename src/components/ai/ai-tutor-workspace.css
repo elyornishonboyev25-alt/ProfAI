@@ -113,14 +113,38 @@
 .tutor-composer textarea::placeholder { color: var(--tu-faint); }
 /* The whole composer shows focus; the bare textarea never draws its own box. */
 .tutor-page .tutor-composer textarea:is(:focus, :focus-visible) { border: 0; outline: none; box-shadow: none; }
-.tutor-page .tutor-focus select:focus-visible { outline: none; }
-.tutor-focus:focus-within { background: #f2f4f7; box-shadow: 0 0 0 2px rgba(196,30,58,.25); }
 .tutor-composer-bar { display: flex; align-items: center; gap: 4px; }
-.tutor-focus { position: relative; display: inline-flex; align-items: center; gap: 6px; margin-left: auto; padding: 7px 10px; border-radius: 11px; color: var(--tu-text); font-size: 13.5px; font-weight: 650; cursor: pointer; }
-.tutor-focus:hover { background: #f2f4f7; }
-.tutor-focus > svg:first-child { color: var(--tu-red); }
-.tutor-focus select { appearance: none; field-sizing: content; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; outline: none; }
-.tutor-focus > svg:last-child { color: var(--tu-faint); pointer-events: none; }
+/* Subject picker: a glass listbox instead of the operating-system menu. */
+.tutor-focus { position: relative; margin-left: auto; }
+.tutor-focus-trigger { display: inline-flex; align-items: center; gap: 7px; padding: 7px 10px; border: 1px solid transparent; border-radius: 11px; background: transparent; color: var(--tu-text); font-size: 13.5px; font-weight: 700; }
+.tutor-focus-trigger:hover, .tutor-focus.is-open .tutor-focus-trigger { border-color: var(--tu-line-soft); background: #f3f5f8; }
+.tutor-focus-trigger > svg:first-child { color: var(--tu-red); }
+.tutor-focus-trigger > svg:last-child { color: var(--tu-faint); transition: transform .18s; }
+.tutor-focus.is-open .tutor-focus-trigger > svg:last-child { transform: rotate(180deg); color: var(--tu-red); }
+.tutor-focus-menu { position: absolute; z-index: 40; top: calc(100% + 8px); right: 0; width: min(300px, calc(100vw - 32px)); margin: 0; padding: 6px; list-style: none; border: var(--tu-edge); border-radius: 16px; background: rgba(255,255,255,.97); box-shadow: 0 0 0 1px rgba(203,211,223,.75), 0 24px 48px -18px rgba(27,38,58,.4); backdrop-filter: blur(20px) saturate(150%); outline: none; animation: tutor-menu-in .14s ease-out; }
+.tutor-focus-menu.is-up { top: auto; bottom: calc(100% + 8px); }
+@keyframes tutor-menu-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.tutor-focus-heading { padding: 8px 10px 6px; color: var(--tu-faint); font-size: 11px; font-weight: 750; letter-spacing: .06em; text-transform: uppercase; }
+.tutor-focus-menu [role=option] { display: flex; align-items: center; gap: 11px; padding: 9px 10px; border-radius: 11px; color: var(--tu-text); cursor: pointer; }
+.tutor-focus-menu [role=option][data-active=true] { background: #f2f4f7; }
+.tutor-focus-menu [role=option][aria-selected=true] { background: var(--tu-red-soft); }
+.tutor-focus-icon { display: grid; flex-shrink: 0; place-items: center; width: 32px; height: 32px; border: var(--tu-edge); border-radius: 10px; background: var(--tu-silver); box-shadow: var(--tu-shadow-sm); color: var(--tu-red); }
+.tutor-focus-menu [aria-selected=true] .tutor-focus-icon { border-color: transparent; background: var(--tu-red-grad); color: #fff; }
+.tutor-focus-copy { display: grid; flex: 1; min-width: 0; }
+.tutor-focus-copy b { color: var(--tu-ink); font-size: 13.5px; font-weight: 750; }
+.tutor-focus-copy small { overflow: hidden; color: var(--tu-muted); font-size: 11.5px; text-overflow: ellipsis; white-space: nowrap; }
+.tutor-focus-check { flex-shrink: 0; color: var(--tu-red); }
+
+/* Dictation */
+.tutor-dictate.is-listening { background: var(--tu-red-grad); box-shadow: 0 0 0 4px rgba(196,30,58,.14), 0 8px 18px -8px rgba(157,23,48,.7); color: #fff; animation: tutor-mic 1.6s ease-in-out infinite; }
+.tutor-dictate.is-listening:hover { background: var(--tu-red-grad); color: #fff; }
+@keyframes tutor-mic { 0%, 100% { box-shadow: 0 0 0 3px rgba(196,30,58,.16); } 50% { box-shadow: 0 0 0 7px rgba(196,30,58,.06); } }
+.tutor-dictating { display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; color: var(--tu-red); font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+.tutor-dictating i { width: 3px; height: 12px; border-radius: 2px; background: var(--tu-red); animation: tutor-wave .9s ease-in-out infinite; }
+.tutor-dictating i:nth-child(2) { animation-delay: .15s; }
+.tutor-dictating i:nth-child(3) { margin-right: 5px; animation-delay: .3s; }
+@keyframes tutor-wave { 0%, 100% { transform: scaleY(.4); } 50% { transform: scaleY(1); } }
+.tutor-dictation-error { margin-top: 8px; color: #84571a; font-size: 12.5px; }
 .tutor-send { display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; margin-left: 6px; border: 0; border-radius: 12px; background: var(--tu-red-grad); box-shadow: 0 8px 18px -8px rgba(157,23,48,.7); color: #fff; }
 .tutor-send:disabled { background: #e3e7ed; box-shadow: none; color: var(--tu-faint); opacity: 1 !important; }
 .tutor-send.is-stop { background: linear-gradient(160deg, #2a3446, #121927); }
@@ -211,8 +235,9 @@
   .tutor-chips { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; gap: 8px; }
   .tutor-chips button { justify-content: center; padding: 11px 10px; font-size: 13px; text-align: center; }
   .tutor-composer { padding: 12px 10px 8px 14px; border-radius: 18px; }
-  .tutor-focus { padding: 6px 6px; font-size: 12.5px; }
-  .tutor-focus select { max-width: 112px; text-overflow: ellipsis; }
+  .tutor-focus-trigger { padding: 6px; font-size: 12.5px; }
+  .tutor-focus-trigger span { max-width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tutor-dictating { font-size: 0; }
   .tutor-dock { width: calc(100% - 20px); padding-bottom: max(10px, env(safe-area-inset-bottom)); }
   .tutor-message.is-user .tutor-message-body { max-width: 90%; }
   .tutor-avatar { width: 28px; height: 28px; }

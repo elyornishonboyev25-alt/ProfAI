@@ -28,7 +28,7 @@
 }
 .tutor-page button { cursor: pointer; transition: background-color .15s, border-color .15s, box-shadow .15s, color .15s, transform .15s; }
 .tutor-page button:disabled { cursor: not-allowed; opacity: .55; }
-.tutor-page :is(button, input, textarea, select, a):focus-visible { outline: 3px solid rgba(196,30,58,.32); outline-offset: 2px; }
+.tutor-page :is(button, input, select, a):focus-visible { outline: 3px solid rgba(196,30,58,.32); outline-offset: 2px; }
 
 .tutor-icon-button { display: inline-grid; place-items: center; width: 38px; height: 38px; flex-shrink: 0; border: 0; border-radius: 11px; background: transparent; color: var(--tu-muted); }
 .tutor-icon-button:not(:disabled):hover { background: rgba(255,255,255,.85); color: var(--tu-red); }
@@ -111,11 +111,15 @@
 .tutor-composer textarea { display: block; width: 100%; min-height: 30px; max-height: 220px; padding: 4px 4px 8px 0; border: 0; resize: none; background: transparent; color: var(--tu-ink); font-size: 16px; line-height: 1.55; outline: none; }
 .tutor-composer.is-hero textarea { min-height: 52px; font-size: 17px; }
 .tutor-composer textarea::placeholder { color: var(--tu-faint); }
+/* The whole composer shows focus; the bare textarea never draws its own box. */
+.tutor-page .tutor-composer textarea:is(:focus, :focus-visible) { border: 0; outline: none; box-shadow: none; }
+.tutor-page .tutor-focus select:focus-visible { outline: none; }
+.tutor-focus:focus-within { background: #f2f4f7; box-shadow: 0 0 0 2px rgba(196,30,58,.25); }
 .tutor-composer-bar { display: flex; align-items: center; gap: 4px; }
 .tutor-focus { position: relative; display: inline-flex; align-items: center; gap: 6px; margin-left: auto; padding: 7px 10px; border-radius: 11px; color: var(--tu-text); font-size: 13.5px; font-weight: 650; cursor: pointer; }
 .tutor-focus:hover { background: #f2f4f7; }
 .tutor-focus > svg:first-child { color: var(--tu-red); }
-.tutor-focus select { appearance: none; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; outline: none; }
+.tutor-focus select { appearance: none; field-sizing: content; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; outline: none; }
 .tutor-focus > svg:last-child { color: var(--tu-faint); pointer-events: none; }
 .tutor-send { display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; margin-left: 6px; border: 0; border-radius: 12px; background: var(--tu-red-grad); box-shadow: 0 8px 18px -8px rgba(157,23,48,.7); color: #fff; }
 .tutor-send:disabled { background: #e3e7ed; box-shadow: none; color: var(--tu-faint); opacity: 1 !important; }

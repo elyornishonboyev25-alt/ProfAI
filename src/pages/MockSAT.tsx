@@ -31,6 +31,7 @@ import {
   type SATMode,
 } from '@/features/sat/practiceTest4'
 import { getSATSectionTest, isSATSection, isSATTestComplete, satAvailabilityNote } from '@/features/sat/catalog'
+import { getSATSessionTest, satRunSearch } from '@/features/sat/sessionTest'
 import {
   clearSATAttempt,
   loadSATAttempt,
@@ -67,9 +68,9 @@ export default function MockSAT() {
   const { mockId = '1' } = useParams<{ mockId: string }>()
   const [searchParams] = useSearchParams()
   const section = isSATSection(searchParams.get('section')) ? searchParams.get('section')! : null
-  const test = useMemo(() => getSATSectionTest(mockId, section), [mockId, section])
+  const requestedTestId = searchParams.get('testId')
+  const test = useMemo(() => getSATSessionTest(mockId, section, requestedTestId), [mockId, section, requestedTestId, owner])
   const diagnostic = !section && searchParams.get('diagnostic') === '1'
-  const sectionQuery = section ? `?section=${section}` : diagnostic ? '?diagnostic=1' : ''
   const fromMockCatalog = (location.state as { from?: string } | null)?.from === '/sat/mocks'
   const backPath = section ? `/sat/${section}` : fromMockCatalog ? '/sat/mocks' : '/sat'
   const isSectionPractice = Boolean(section)
@@ -98,14 +99,15 @@ export default function MockSAT() {
     if (mode === 'exam') await enter()
     if ((useAuthStore.getState().user?.id ?? 'guest') !== owner) return
 
+    const launchTest = resume ? test : getSATSectionTest(mockId, section)
     if (!resume) {
       if (existingAttempt?.status === 'active') await discardSaved()
       if ((useAuthStore.getState().user?.id ?? 'guest') !== owner) return
-      const attempt = createSATAttempt(test.id, test.modules, mode)
+      const attempt = createSATAttempt(launchTest.id, launchTest.modules, mode)
       saveSATAttempt(attempt)
-      saveActiveTestPaper(`profai:sat:${test.id}:attempt:v1`, test)
+      saveActiveTestPaper(`profai:sat:${launchTest.id}:attempt:v1`, launchTest)
     }
-    navigate(`/sat/mock/${test.mockId}/run${sectionQuery}`, { state: { resumeIntent: true, returnTo: backPath } })
+    navigate(`/sat/mock/${launchTest.mockId}/run${satRunSearch(launchTest, section, diagnostic)}`, { state: { resumeIntent: true, returnTo: backPath } })
   }
 
   const activeAttempt = existingAttempt?.status === 'active'
@@ -141,7 +143,7 @@ export default function MockSAT() {
           >
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-blue-600">
-                <Sparkles className="h-3.5 w-3.5" /> {isSATTestComplete(test) ? (test.mockId >= 9 ? 'New practice mock' : 'New official mock') : 'Partial practice test'}
+                <Sparkles className="h-3.5 w-3.5" /> <UiText text={test.modules.some(module => module.adaptive) ? 'Adaptive practice mock' : isSATTestComplete(test) ? 'Saved practice mock' : 'Partial practice test'} />
               </span>
               <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">
                 {test.badge}
@@ -157,6 +159,10 @@ export default function MockSAT() {
                <UiText text={"All"} /> {test.questionCount} questions from {test.subtitle}, with original graphs,
               autosave, review tools, explanations, and {isSATTestComplete(test) ? 'SAT range scoring' : 'accuracy feedback'}.
             </p>
+
+            {test.modules.some(module => module.adaptive) ? <p className="mt-3 text-sm font-medium leading-6 text-slate-600">
+              <UiText text="Each section starts with a balanced mix of questions. Your first-module answers determine the second module. Scores are practice estimates." />
+            </p> : null}
 
             {satAvailabilityNote(test) ? <p className="mt-4 rounded-xl bg-amber-50 p-4 text-sm font-semibold text-amber-800">{satAvailabilityNote(test)}</p> : null}
 

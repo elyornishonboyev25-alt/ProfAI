@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import assert from 'node:assert/strict'
 import DOMPurify from 'dompurify'
 import SATExplanation from '../../src/components/sat/SATExplanation'
-import { SAT_TEST_CATALOG, getSATReviewTests } from '../../src/features/sat/catalog'
+import { LEGACY_SAT_TEST_CATALOG as SAT_TEST_CATALOG, getSATReviewTests } from '../../src/features/sat/catalog'
 import { buildSATExplanation } from '../../src/features/sat/explanations'
 import type { SATQuestion } from '../../src/features/sat/practiceTest4'
 

@@ -1,5 +1,5 @@
 import { accountStorageFor } from '@/utils/accountStorage'
-import { getSATReviewTests, SAT_TEST_CATALOG, type SATTestDefinition } from './catalog'
+import { getSATReviewTests, satSourceModules, type SATTestDefinition } from './catalog'
 import type { HighlightStroke, SATAttempt, SATModule, SATQuestion } from './practiceTest4'
 
 export type QuestionRow = { key: string; question: SATQuestion; testNumber: number }
@@ -66,10 +66,10 @@ export const questionKey = (question: SATQuestion, testId: string) =>
   `${question.section}:${question.sourceQuestionId ?? `${testId.replace(/-(math|reading-writing)$/, '')}:${question.id}`}`
 export const allQuestions: QuestionRow[] = (() => {
   const used = new Set<string>()
-  return Object.values(SAT_TEST_CATALOG)
+  return getSATReviewTests().filter(test => test.modules.length === 4)
     .sort((a, b) => a.mockId - b.mockId)
     .flatMap((test) =>
-      test.modules.flatMap((module) =>
+      satSourceModules(test).flatMap((module) =>
         module.questions.flatMap((question) => {
           const key = questionKey(question, test.id)
           if (used.has(key)) return []
@@ -82,7 +82,7 @@ export const allQuestions: QuestionRow[] = (() => {
 // Include retired catalog questions when reopening older practice sets.
 export const reviewQuestions = new Map(
   getSATReviewTests().flatMap((test) =>
-    test.modules.flatMap((module) =>
+    satSourceModules(test).flatMap((module) =>
       module.questions.map(
         (question) =>
           [

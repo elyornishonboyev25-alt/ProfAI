@@ -11,7 +11,7 @@ async function load(entryPoint) {
 }
 
 async function main() {
-  const [{ SAT_TEST_CATALOG: catalog }, { satVocabularyPacks: curated }] = await Promise.all([
+  const [{ LEGACY_SAT_TEST_CATALOG: catalog }, { satVocabularyPacks: curated }] = await Promise.all([
     load('src/features/sat/catalog.ts'), load('src/data/satVocabulary.ts'),
   ])
   const directory = await mkdtemp(join(tmpdir(), 'profai-sat-sync-'))

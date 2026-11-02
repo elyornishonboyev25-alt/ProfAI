@@ -1,5 +1,10 @@
 # SAT Question Bank mocks, September 2026
 
+These published fixed allocations are retained for historical attempts and as
+the reviewed question source. New mocks now use the balanced adaptive forms in
+[ADAPTIVE_FORMS.md](./ADAPTIVE_FORMS.md); the former Easy/Medium/Hard mock ranges
+below describe the historical versions only.
+
 ## Delivered content
 
 - Full mocks **10–40**: 31 forms, 98 questions each (27 + 27 Reading and Writing; 22 + 22 Math), 134 minutes.

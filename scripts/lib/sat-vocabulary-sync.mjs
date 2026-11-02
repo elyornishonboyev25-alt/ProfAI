@@ -89,6 +89,23 @@ export async function syncVocabulary({ catalog, curated, cacheDirectory, outputP
       const module = test.modules.find((module) => module.id === moduleId && module.section === 'reading-writing')
       if (!module || !module.questions.length) throw new Error(`${test.title}: missing English ${moduleId}.`)
       const curatedSection = existingPack?.sections.find((section) => section.id === `${packId}_${moduleId}`)
+      if (test.modules.some(item => item.adaptive)) {
+        // Reallocate reviewed vocabulary with the new question order. Reuse
+        // existing meanings/examples locally; builds never need AI for this.
+        const entries = [], terms = new Set(), meanings = new Set()
+        const candidates = [...(curatedSection?.entries ?? []), ...curated.flatMap(pack => pack.sections.flatMap(section => section.entries))]
+        for (const entry of candidates) {
+          const term = normalize(entry.term), meaning = normalize(entry.definition)
+          if (terms.has(term) || meanings.has(meaning)) continue
+          const source = module.questions.find(question => wordPattern(term).test(questionText(question)))
+          if (!source) continue
+          terms.add(term); meanings.add(meaning)
+          entries.push({ ...entry, sourceQuestionId: source.id })
+          if (entries.length === WORD_COUNT) break
+        }
+        sections.push(sectionFrom(test, module, validateModuleEntries(entries, module)))
+        continue
+      }
       if (curatedSection) {
         // Preserve reviewed content and IDs. Stale source references must be fixed,
         // not silently replaced with a fresh AI selection that resets progress.

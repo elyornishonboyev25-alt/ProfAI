@@ -1,5 +1,9 @@
 /** Interface strings missing from the original Russian catalogs. */
 export const russianAdditions: Record<string, string> = {
+  'Adaptive practice mock': 'Адаптивный пробный тест',
+  'Saved practice mock': 'Сохранённый пробный тест',
+  'Previous version score': 'Балл за предыдущую версию',
+  'Each section starts with a balanced mix of questions. Your first-module answers determine the second module. Scores are practice estimates.': 'Каждый раздел начинается со сбалансированного набора вопросов. Ответы в первом модуле определяют второй модуль. Баллы являются приблизительными.',
   'View level progress': 'Посмотреть прогресс уровня',
   'View results': 'Посмотреть результаты',
   'Back to leaderboard': 'Назад к рейтингу',

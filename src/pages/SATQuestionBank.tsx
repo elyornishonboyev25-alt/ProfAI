@@ -26,7 +26,7 @@ import { allQuestions, bankSetReview, questionKey, readHistory, readAttemptedKey
 import SATBankSelect from '@/components/sat/SATBankSelect'
 import SATReview from '@/components/sat/SATReview'
 import { bankDomain, bankSkill } from '@/features/sat/bankTopics'
-import { getSATReviewTests } from '@/features/sat/catalog'
+import { getSATReviewTests, resolveSATTest } from '@/features/sat/catalog'
 import { loadSATAttempt, loadSATAttemptHistory } from '@/features/sat/attemptStorage'
 import { formatSATDuration } from '@/features/sat/resultAnalysis'
 import { isSATAnswerCorrect } from '@/features/sat/practiceTest4'
@@ -60,8 +60,9 @@ function mockResults(): Result[] {
       .map((attempt) => [attempt.attemptId, attempt] as const),
   )
   return [...attempts.values()].flatMap((attempt) => {
-    const test = tests.get(attempt.testId)
-    if (!test) return []
+    const paper = tests.get(attempt.testId)
+    if (!paper) return []
+    const test = resolveSATTest(paper, attempt)
     const timestamp = attempt.submittedAt ?? attempt.updatedAt
     if (!Number.isFinite(timestamp)) return []
     const at = new Date(timestamp).toISOString()

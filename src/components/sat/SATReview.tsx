@@ -39,7 +39,7 @@ import {
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { type SATAttempt, type SATModuleId, type SATQuestion } from '@/features/sat/practiceTest4'
-import { satAvailabilityNote, type SATTestDefinition } from '@/features/sat/catalog'
+import { resolveSATTest, satAvailabilityNote, type SATTestDefinition } from '@/features/sat/catalog'
 import { useAuthStore } from '@/store/authStore'
 import { useBadgeStore } from '@/store/badgeStore'
 
@@ -114,7 +114,8 @@ function formatPace(seconds: number) {
   return whole >= 60 ? `${Math.floor(whole / 60)}m ${whole % 60}s` : `${whole}s`
 }
 
-export default function SATReview({ attempt, test, onStartAgain, onBack, backLabel, historyReview = false, variant = 'test' }: Props) {
+export default function SATReview({ attempt, test: paper, onStartAgain, onBack, backLabel, historyReview = false, variant = 'test' }: Props) {
+  const test = useMemo(() => resolveSATTest(paper, attempt), [paper, attempt])
   const bank = variant === 'question-bank'
   const tabs = bank ? BANK_TABS : RESULT_TABS
   const navigate = useNavigate()

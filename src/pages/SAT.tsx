@@ -16,7 +16,7 @@ import {
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import { loadActivityLog, loadOnboardingProfile } from '@/utils/weeklyPlanner'
-import { getSATReviewTests, getSATSectionTest, isSATTestComplete, SAT_TEST_CATALOG, type SATTestDefinition } from '@/features/sat/catalog'
+import { getSATReviewTests, isSATTestComplete, SAT_TEST_CATALOG, type SATTestDefinition } from '@/features/sat/catalog'
 import { loadSATAttempt, loadSATAttemptHistory } from '@/features/sat/attemptStorage'
 import { scoreSATModules, type SATAttempt } from '@/features/sat/practiceTest4'
 import { ARENA_GLASS_SURFACE } from '@/components/visuals/ArenaVisuals'
@@ -121,14 +121,13 @@ export default function SAT() {
   const profile = loadOnboardingProfile(user?.id)
 
   const attempts = useMemo<AttemptWithTest[]>(() => (
-    Object.values(SAT_TEST_CATALOG)
+    getSATReviewTests().filter(test => test.modules.length === 4)
       .map((test) => ({ test, attempt: loadSATAttempt(test.id) }))
       .filter((item): item is AttemptWithTest => Boolean(item.attempt))
       .sort((a, b) => b.attempt.updatedAt - a.attempt.updatedAt)
   ), [])
   const sectionAttempts = useMemo<AttemptWithTest[]>(() => (
-    Object.values(SAT_TEST_CATALOG)
-      .flatMap((test) => (['math', 'reading-writing'] as const).map((section) => getSATSectionTest(test.mockId, section)))
+    getSATReviewTests().filter(test => test.modules.length === 2)
       .map((test) => ({ test, attempt: loadSATAttempt(test.id) }))
       .filter((item): item is AttemptWithTest => Boolean(item.attempt))
   ), [])

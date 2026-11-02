@@ -98,7 +98,7 @@ const bundled = await build({ entryPoints: ['src/features/sat/catalog.ts', 'src/
 const load = (index) => import(`data:text/javascript;base64,${Buffer.from(bundled.outputFiles[index].text).toString('base64')}`)
 const catalog = await load(0), scoring = await load(1)
 for (let id = 9; id <= 40; id++) {
-  const test = catalog.getSATTest(id)
+  const test = catalog.LEGACY_SAT_TEST_CATALOG[id]
   assert.equal(test.questionCount, 98)
   assert.equal(test.totalDurationSeconds, 134 * 60)
   assert.equal(catalog.isSATTestComplete(test), true)
@@ -109,8 +109,8 @@ for (let id = 9; id <= 40; id++) {
     for (const answer of q.acceptedAnswers ?? [q.correctAnswer]) assert.ok(scoring.isSATAnswerCorrect(q, answer), q.sourceQuestionId)
     assert.equal(scoring.isSATAnswerCorrect(q, ''), false)
   }
-  assert.equal(catalog.getSATSectionTest(id, 'math').questionCount, 44)
-  assert.equal(catalog.getSATSectionTest(id, 'reading-writing').questionCount, 54)
+  assert.equal(catalog.getSATReviewTests().find(review => review.id === `${test.id}-math`).questionCount, 44)
+  assert.equal(catalog.getSATReviewTests().find(review => review.id === `${test.id}-reading-writing`).questionCount, 54)
   if (id >= 10) {
     assert.equal(test.difficulty, id < 20 ? 'Easy' : id < 31 ? 'Medium' : 'Hard')
     const old = catalog.getSATReviewTests().find((review) => review.id === `question-bank-2026-09-20-${id}`)

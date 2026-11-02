@@ -9,7 +9,7 @@ import { SAT_TEST_CATALOG, getSATSectionTest } from '../../src/features/sat/cata
 import { createSATAttempt, scoreSATModules } from '../../src/features/sat/practiceTest4'
 import { saveSATBaseline } from '../../src/features/sat/baseline'
 import { loadOnboardingProfile } from '../../src/utils/weeklyPlanner'
-import '../../src/i18n'
+import i18n from '../../src/i18n'
 
 const container = document.getElementById('root')!
 function Location() {
@@ -18,6 +18,7 @@ function Location() {
 }
 
 export async function run() {
+  await i18n.changeLanguage('en')
   localStorage.clear()
   useAuthStore.setState({ user: { id: 'baseline-user', fullName: 'Test Learner', nickname: 'learner', onboardingCompleted: false } as never })
   let currentSatScore: number | null = null

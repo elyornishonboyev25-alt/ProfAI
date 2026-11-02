@@ -9,6 +9,15 @@
 .sat-source-content math[display='block'] { display: block; overflow-x: auto; padding: .5em 0; }
 .sat-source-content img { display: block; max-width: min(100%, 42rem); max-height: 20rem; width: auto; height: auto; object-fit: contain; margin: .7em auto; }
 .sat-source-content img.math-img { display: inline-block; margin: 0; vertical-align: middle; }
+/* Keep Reading and Writing graphs readable in mocks, practice, and saved review. */
+.sat-exam-canvas[data-sat-section='reading-writing'] .sat-exam-visual,
+.sqm-question[data-sat-section='reading-writing'] .sqm-visual img,
+[data-sat-section='reading-writing'] :is([data-sat-highlight-block='context'], [data-sat-highlight-block='task']) .sat-source-content img:not(.math-img) {
+  width: min(100%, 32rem);
+  max-width: 100%;
+  height: auto;
+  max-height: none;
+}
 .sat-source-content table { border-collapse: collapse; margin: 1em auto; font-size: .85em; max-width: 100%; }
 .sat-source-content th, .sat-source-content td { border: 1px solid #64748b; padding: .3em .5em; text-align: center; }
 .sat-source-content th { font-weight: 700; }

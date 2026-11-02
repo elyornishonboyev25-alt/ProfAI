@@ -42,7 +42,7 @@ function ReviewQuestion({ question, attempt }: { question: SATQuestion; attempt:
   )
   return (
     <SATTextHighlights key={question.id} strokes={attempt.highlights[question.id] ?? []} enabled={false}>
-      <div className="sqm-question">
+      <div className="sqm-question" data-sat-section={question.section}>
         <div className="sqm-tags">
           <span className="sqm-tag is-domain">{question.domain}</span>
           <span className="sqm-tag">{question.skill}</span>

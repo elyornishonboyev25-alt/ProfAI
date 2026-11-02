@@ -5,6 +5,26 @@ import type { SATAttempt } from './practiceTest4'
 
 type ReportPercentile = { value: number; platform: boolean } | null
 
+// The preview scales the whole paper, leaving its printable layout unchanged.
+const REPORT_PREVIEW_SCRIPT = `
+(() => {
+  const fitPage = () => {
+    const page = document.querySelector('.sheet');
+    const toolbar = document.querySelector('.toolbar');
+    if (!page || !toolbar) return;
+    const width = document.documentElement.clientWidth - 32;
+    const height = window.innerHeight - toolbar.offsetTop - toolbar.offsetHeight - 32;
+    const scale = Math.max(0.01, Math.min(1, width / page.offsetWidth, height / page.offsetHeight));
+    document.documentElement.style.setProperty('--report-preview-scale', String(scale));
+  };
+  fitPage();
+  window.addEventListener('resize', fitPage);
+  window.addEventListener('load', fitPage);
+  window.visualViewport?.addEventListener('resize', fitPage);
+  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(fitPage).observe(document.querySelector('.toolbar'));
+})();
+`
+
 function escape(value: unknown) {
   return String(value).replace(
     /[&<>"']/g,
@@ -105,7 +125,7 @@ export function buildSATReportHtml({
     `<footer class="page-foot"><span><b>Ivygoo</b> · Practice score report · ivygoo.com</span><span>Practice scores are estimates, not official SAT results. · Page ${page}</span></footer>`
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(candidate)} — SAT score report | Ivygoo</title><style>${SAT_REPORT_STYLES}</style></head><body>
   <div class="toolbar"><p><strong>Your Ivygoo SAT score report</strong>Preview your scores, then save a copy as PDF or print it.</p><button type="button" onclick="Promise.all(Array.from(document.images, image => image.decode().catch(() => {}))).then(() => window.print())"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></svg>Save as PDF / Print</button></div>
-  <main class="sheet">${masthead}
+  <div class="report-pages"><div class="page-preview"><main class="sheet">${masthead}
   <h1>Your Scores</h1>
   <section class="score-box${single ? ' is-single' : ''}">
     <div><h2>SAT Scores</h2>
@@ -116,13 +136,13 @@ export function buildSATReportHtml({
     </div>
     <div><h2>Knowledge and Skills</h2><p class="ks-intro">View your performance across the ${single ? 4 : 8} content domains measured on the SAT${single ? ' section' : ''}.</p><div class="ks-columns${single ? ' is-single' : ''}">${domainColumns}</div></div>
   </section>
-  ${footer(1)}</main>
-  <main class="sheet details">${masthead}
+  ${footer(1)}</main></div>
+  <div class="page-preview"><main class="sheet details">${masthead}
   <h1>Score <span>details</span></h1>
   <div class="summary"><div><span>Correct</span><b>${a.report.correct}/${a.questions.length}</b></div><div><span>Incorrect</span><b>${a.report.incorrect}</b></div><div><span>Unanswered</span><b>${a.report.unanswered}</b></div><div><span>Accuracy</span><b>${a.report.percent}%</b></div><div><span>Active time</span><b>${escape(formatSATDuration(a.seconds))}</b></div></div>
   <table class="module-table"><thead><tr><th scope="col">Module</th><th scope="col">Correct</th><th scope="col">Incorrect</th><th scope="col">Unanswered</th><th scope="col">Accuracy</th><th scope="col">Time</th></tr></thead><tbody>${moduleRows}</tbody></table>
   ${answerSheet ? `<p class="answer-legend"><span># · Your answer · Correct answer</span><span>✓ correct · ✕ incorrect or unanswered</span></p><div class="answers">${answerSheet}</div>` : ''}
-  ${footer(2)}</main></body></html>`
+  ${footer(2)}</main></div></div><script data-report-preview>${REPORT_PREVIEW_SCRIPT}</script></body></html>`
 }
 
 /** Keep opening synchronous so the learner's click can create the report tab. */

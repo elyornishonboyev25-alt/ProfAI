@@ -90,7 +90,9 @@ export async function run() {
     percentiles: { total: { value: 54.8, platform: true }, rw: { value: 40.9, platform: true }, math: null },
   })
   const page = new window.DOMParser().parseFromString(html, 'text/html')
-  assert.equal(page.querySelectorAll('script').length, 0, 'Report values cannot inject executable HTML')
+  assert.equal(page.querySelectorAll('script').length, 1, 'Only the fixed preview controller is executable')
+  assert.ok(page.querySelector('script[data-report-preview]'))
+  assert.ok(!page.querySelector('script')!.textContent!.includes('bad()'), 'Report values cannot inject executable HTML')
   const images = [...page.querySelectorAll('img')]
   assert.equal(images.length, 2, 'Each report page carries only the original Ivygoo brand artwork')
   assert.ok(

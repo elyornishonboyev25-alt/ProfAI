@@ -20,6 +20,7 @@
     "test:ai-coach-ui": "node scripts/test-listening-parts-ui.mjs scripts/tests/realtime-coach.tsx",
     "test:coach-studio": "node scripts/test-listening-parts-ui.mjs scripts/tests/coach-studio.tsx",
     "test:speaking-browser": "node scripts/test-speaking-browser.mjs",
+    "test:speaking-assessment-browser": "node scripts/test-speaking-assessment-browser.mjs",
     "test:active-test-persistence": "node scripts/test-listening-parts-ui.mjs scripts/tests/active-test-persistence.tsx",
     "test:ielts-resilience": "node scripts/test-listening-parts-ui.mjs scripts/tests/ielts-resilience-ui.tsx",
     "test:ielts-stability": "node scripts/test-listening-parts-ui.mjs scripts/tests/ielts-stability-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/telegram-maps-ui.tsx",
@@ -81,6 +82,7 @@
     "test:sat-adaptive": "npm run validate:sat-adaptive && node scripts/test-sat-mistakes-ui.mjs scripts/tests/sat-adaptive-ui.tsx"
   },
   "dependencies": {
+    "@breezystack/lamejs": "1.2.7",
     "@heroicons/react": "^2.1.5",
     "@hookform/resolvers": "^3.10.0",
     "@types/react": "^18.3.12",

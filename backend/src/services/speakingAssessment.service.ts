@@ -6,7 +6,7 @@ import { FAIR_ASSESSMENT_POLICY, SPEAKING_CALIBRATION, roundIeltsBand } from './
 export const speakingAssessmentSchema = z.object({
   modeLabel: z.string().max(160),
   history: z.array(z.object({ role: z.enum(['examiner', 'candidate']), text: z.string().max(12000) })).min(1).max(80),
-  audio: z.array(z.object({ data: z.string().min(100).max(7500000).regex(/^[A-Za-z0-9+/]+={0,2}$/), mimeType: z.enum(['audio/webm', 'audio/mp4', 'audio/ogg', 'audio/wav']), answerIndex: z.number().int().min(0).max(79) })).min(1).max(80),
+  audio: z.array(z.object({ data: z.string().min(100).max(7500000).regex(/^[A-Za-z0-9+/]+={0,2}$/), mimeType: z.enum(['audio/webm', 'audio/mp4', 'audio/ogg', 'audio/wav', 'audio/mpeg']), answerIndex: z.number().int().min(0).max(79) })).min(1).max(80),
   durationSec: z.number().min(0).max(7200),
 }).strict()
 export const speakingTranscriptSchema = speakingAssessmentSchema.omit({ audio: true }).strict()

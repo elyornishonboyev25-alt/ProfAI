@@ -1,0 +1,10 @@
+html[data-telegram='true'] {
+  padding: var(--tg-content-top, 0px) var(--tg-content-right, 0px) var(--tg-content-bottom, 0px) var(--tg-content-left, 0px);
+  background: #edf0f5;
+  min-height: 100%;
+}
+html[data-telegram='true'] :is(.hard-page-active, .sat-bank-run) {
+  top: var(--tg-content-top, 0px);
+  bottom: var(--tg-content-bottom, 0px);
+  height: calc(100dvh - var(--tg-content-top, 0px) - var(--tg-content-bottom, 0px));
+}

@@ -18,7 +18,7 @@ const INIT_DATA_MAX_AGE_S = 24 * 3600
 export type TelegramWebAppUser = { id: number; first_name?: string; username?: string; language_code?: string }
 
 /** Verifies Telegram Mini App launch data (https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app). */
-export function verifyInitData(initData: string, now = Date.now()): TelegramWebAppUser {
+export function verifyInitData(initData: string, now = Date.now(), maxAgeSeconds = INIT_DATA_MAX_AGE_S): TelegramWebAppUser {
   const token = env.TELEGRAM_BOT_TOKEN.trim()
   if (!token) throw new BillingError('WHEEL_UNAVAILABLE', 'The wheel is not available yet.', 503)
   const params = new URLSearchParams(initData)
@@ -30,9 +30,10 @@ export function verifyInitData(initData: string, now = Date.now()): TelegramWebA
   const actual = Buffer.from(hash, 'hex')
   if (actual.length !== expected.length || !crypto.timingSafeEqual(actual, expected)) throw new BillingError('INVALID_TELEGRAM_SESSION', 'Open the wheel from the Telegram bot.', 401)
   const authDate = Number(params.get('auth_date'))
-  if (!Number.isFinite(authDate) || now / 1000 - authDate > INIT_DATA_MAX_AGE_S) throw new BillingError('INVALID_TELEGRAM_SESSION', 'This session expired. Reopen the wheel from the bot.', 401)
-  const user = JSON.parse(params.get('user') ?? 'null') as TelegramWebAppUser | null
-  if (!user?.id) throw new BillingError('INVALID_TELEGRAM_SESSION', 'Open the wheel from the Telegram bot.', 401)
+  if (!Number.isFinite(authDate) || authDate > now / 1000 + 30 || now / 1000 - authDate > maxAgeSeconds) throw new BillingError('INVALID_TELEGRAM_SESSION', 'This session expired. Reopen IvyGoo from the bot.', 401)
+  let user: TelegramWebAppUser | null = null
+  try { user = JSON.parse(params.get('user') ?? 'null') } catch { /* Invalid signed payloads are still rejected. */ }
+  if (!user || !Number.isSafeInteger(user.id) || user.id <= 0) throw new BillingError('INVALID_TELEGRAM_SESSION', 'Open IvyGoo from the Telegram bot.', 401)
   return user
 }
 

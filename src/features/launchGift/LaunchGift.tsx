@@ -80,11 +80,19 @@ export default function LaunchGift({ enabled }: { enabled: boolean }) {
     // Open one second after the page has finished loading, in its first idle
     // moment, so the entrance never competes with the page's own startup work.
     const showSoon = (show: () => void) => {
+      const showWhenClear = () => {
+        if (cancelled) return
+        if (document.hidden || [...document.querySelectorAll<HTMLElement>('[role="dialog"], [role="alertdialog"], dialog[open]')].some(node => node.getClientRects().length > 0)) {
+          timer = window.setTimeout(showWhenClear, 500)
+          return
+        }
+        show()
+      }
       const schedule = () => {
         onLoad = null
         timer = window.setTimeout(() => {
-          if ('requestIdleCallback' in window) idle = window.requestIdleCallback(show, { timeout: 1500 })
-          else show()
+          if ('requestIdleCallback' in window) idle = window.requestIdleCallback(showWhenClear, { timeout: 1500 })
+          else showWhenClear()
         }, OPEN_DELAY_MS)
       }
       if (document.readyState === 'complete') schedule()

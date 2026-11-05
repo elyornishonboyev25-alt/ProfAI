@@ -3,7 +3,7 @@ import { env } from '../config/env.js'
 import { prisma } from '../lib/prisma.js'
 import { getLearningStreakSnapshot } from './activityStreak.service.js'
 import { ensureReferralCode, normalizeReferralCode, qualifyInvitee, referralSummary, settleReferrals, FRIEND_DAYS, INVITEE_BONUS_DAYS, REFERRAL_TIERS, type TierPayout } from './referral.service.js'
-import { call, chatLang, ensureSubscribed, escapeHtml, isChannelMember, send, setChatLang, siteUrl, telegramEnabled, wheelUrl, type Keyboard, type TgUser } from './telegramApi.js'
+import { call, chatLang, ensureSubscribed, escapeHtml, isChannelMember, miniAppUrl, send, setChatLang, siteUrl, telegramEnabled, wheelUrl, type Keyboard, type TgUser } from './telegramApi.js'
 import { handleGroupCallback, handleGroupText, joinGroups, showGroup } from './telegramGroups.js'
 import { LANGS, tr, type Lang } from './telegramI18n.js'
 import { isSpinUsable, spinFor } from './wheel.service.js'
@@ -94,7 +94,7 @@ async function linkAccount(message: TgMessage, rawCode: string, lang: Lang, anno
   await prisma.wheelSpin.updateMany({ where: { telegramId: chatId, userId: null }, data: { userId: record.userId } }).catch(() => undefined)
   if (message.from) await qualifyReferral(record.userId, message.from.id).catch(() => undefined)
   if (!announce) return record.userId
-  await send(chatId, t.linked, [[{ text: t.btnOpenSite, url: `${siteUrl()}/dashboard` }]])
+  await send(chatId, t.linked, [[{ text: t.btnOpenSite, web_app: { url: miniAppUrl() } }]])
   return record.userId
 }
 
@@ -161,8 +161,9 @@ async function handleCommand(message: TgMessage) {
     const url = referral ? inviteLink(referral) : `${siteUrl()}/register`
     const intro = referral ? t.introReferral(INVITEE_BONUS_DAYS) : t.introDefault
     return send(chatId, `${intro}\n\n${t.startBody}`,
-      [[{ text: t.btnGetDiscount, callback_data: 'sub:check' }], [{ text: referral ? t.btnRegister : t.btnOpenSite, url }]])
+      [[{ text: t.btnGetDiscount, callback_data: 'sub:check' }], [referral ? { text: t.btnRegister, url } : { text: t.btnOpenSite, web_app: { url: miniAppUrl() } }]])
   }
+  if (command === '/app') return send(chatId, t.btnOpenSite, [[{ text: t.btnOpenSite, web_app: { url: miniAppUrl() } }]])
   if (command === '/help') return send(chatId, t.help)
   if (command === '/language' || command === '/lang') return send(chatId, t.chooseLanguage, languageKeyboard())
   if ((command === '/spin' || command === '/promo') && user) return sendDiscountMenu(chatId, user, lang)
@@ -170,11 +171,11 @@ async function handleCommand(message: TgMessage) {
     if (!(await ensureSubscribed(chatId, user.id, 'grp:start', t.reasonGroup, lang))) return
     return showGroup(chatId, user, lang)
   }
-  if (command === '/word') return send(chatId, wordMessage(lang), [[{ text: t.btnVocabulary, url: `${siteUrl()}/vocabulary` }]])
+  if (command === '/word') return send(chatId, wordMessage(lang), [[{ text: t.btnVocabulary, web_app: { url: miniAppUrl('/vocabulary') } }]])
   if (command === '/free') {
     return send(chatId, t.freePlan, [
-      [{ text: 'IELTS', url: `${siteUrl()}/ielts` }, { text: 'SAT', url: `${siteUrl()}/sat` }],
-      [{ text: t.btnVocabularyShort, url: `${siteUrl()}/vocabulary` }, { text: t.btnArticles, url: `${siteUrl()}/articles` }],
+      [{ text: 'IELTS', web_app: { url: miniAppUrl('/ielts') } }, { text: 'SAT', web_app: { url: miniAppUrl('/sat') } }],
+      [{ text: t.btnVocabularyShort, web_app: { url: miniAppUrl('/vocabulary') } }, { text: t.btnArticles, web_app: { url: miniAppUrl('/articles') } }],
       [{ text: t.btnPlans, url: `${siteUrl()}/premium` }],
     ])
   }
@@ -191,7 +192,7 @@ async function handleCommand(message: TgMessage) {
     const body = snapshot.currentStreak > 0
       ? `${t.streakLine(snapshot.currentStreak, snapshot.longestStreak)}\n${today ? t.practicedToday : t.notPracticedToday}`
       : t.noStreak
-    return send(chatId, body, [[{ text: t.btnPractice, url: `${siteUrl()}/dashboard` }]])
+    return send(chatId, body, [[{ text: t.btnPractice, web_app: { url: miniAppUrl() } }]])
   }
   if (command === '/invite' || command === '/rewards') {
     await announcePayouts(await settleReferrals(link.userId).catch(() => []))
@@ -268,7 +269,7 @@ async function runDailyJobs() {
       const claimed = await prisma.telegramLink.updateMany({ where: { userId: link.userId, OR: [{ lastWordAt: null }, { lastWordAt: { lt: startOfToday } }] }, data: { lastWordAt: now } })
       if (!claimed.count) continue
       const lang = await chatLang(link.chatId)
-      await deliver(link.userId, link.chatId, wordMessage(lang), [[{ text: tr(lang).btnVocabulary, url: `${siteUrl()}/vocabulary` }]])
+      await deliver(link.userId, link.chatId, wordMessage(lang), [[{ text: tr(lang).btnVocabulary, web_app: { url: miniAppUrl('/vocabulary') } }]])
       await sleep(60)
     }
   }
@@ -280,7 +281,7 @@ async function runDailyJobs() {
       const { snapshot, today: practisedToday } = await streakText(link.userId)
       if (snapshot.currentStreak > 0 && !practisedToday) {
         const t = tr(await chatLang(link.chatId))
-        await deliver(link.userId, link.chatId, t.streakAlert(snapshot.currentStreak), [[{ text: t.btnPracticeNow, url: `${siteUrl()}/dashboard` }]])
+        await deliver(link.userId, link.chatId, t.streakAlert(snapshot.currentStreak), [[{ text: t.btnPracticeNow, web_app: { url: miniAppUrl() } }]])
         await sleep(60)
       }
     }
@@ -292,14 +293,15 @@ async function publishBotProfile() {
   for (const lang of LANGS) {
     const t = tr(lang)
     const scope = lang === 'en' ? {} : { language_code: lang }
-    const commands = (['spin', 'group', 'invite', 'rewards', 'word', 'streak', 'language', 'help'] as const)
+    const commands: Array<{ command: string; description: string }> = (['spin', 'group', 'invite', 'rewards', 'word', 'streak', 'language', 'help'] as const)
       .map(command => ({ command, description: t.commands[command] }))
+    commands.unshift({ command: 'app', description: t.btnOpenSite })
     await call('setMyCommands', { commands, ...scope }).catch(() => undefined)
     await call('setMyDescription', { description: t.description, ...scope }).catch(() => undefined)
     await call('setMyShortDescription', { short_description: t.shortDescription, ...scope }).catch(() => undefined)
   }
-  // The menu button opens the wheel Mini App directly.
-  await call('setChatMenuButton', { menu_button: { type: 'web_app', text: '🎡 Ivygoo', web_app: { url: wheelUrl() } } }).catch(() => undefined)
+  // Open the full mobile workspace. The discount wheel remains available via /spin.
+  await call('setChatMenuButton', { menu_button: { type: 'web_app', text: 'IvyGoo', web_app: { url: miniAppUrl() } } }).catch(() => undefined)
 }
 
 let started = false

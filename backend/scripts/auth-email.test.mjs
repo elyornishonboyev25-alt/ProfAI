@@ -11,12 +11,14 @@ Object.assign(process.env, {
   REFRESH_TOKEN_SECRET: 'test-refresh-secret-at-least-24-characters',
   RESEND_API_KEY: 'test-email-provider-key',
   GOOGLE_CLIENT_ID: 'test-google-client.apps.googleusercontent.com',
+  TELEGRAM_BOT_TOKEN: '12345:test-telegram-bot-token',
 })
 let codes = []
 let users = []
 let sent = []
 let tokens = []
 let sessions = []
+let telegramLinkedUserId = null
 let providerFails = false
 let revoked = false
 let googleIdentity = { email: 'learner@gmail.com', email_verified: true, name: 'Learner', picture: 'https://example.com/avatar.png' }
@@ -32,6 +34,7 @@ const matches = (row, where) => Object.entries(where).every(([key, value]) => {
   return row[key] === value
 })
 globalThis.prisma = {
+  telegramLink: { findUnique: async ({ where }) => where.chatId === '12345' && telegramLinkedUserId ? { userId: telegramLinkedUserId } : null },
   authVerificationCode: {
     findFirst: async ({ where }) => codes.filter((row) => matches(row, where)).at(-1) ?? null,
     create: async ({ data }) => {
@@ -113,11 +116,63 @@ async function request(purpose = 'SIGN_IN') {
 const deliveredCode = () => sent.at(-1).subject.match(/^\d{6}/)[0]
 beforeEach(() => {
   codes = []; users = []; sent = []; tokens = []; sessions = []; revoked = false; providerFails = false
+  telegramLinkedUserId = null
   env.RESEND_API_KEY = 'test-email-provider-key'
   authRateLimit.resetKey('127.0.0.1')
   googleIdentity = { email: 'learner@gmail.com', email_verified: true, name: 'Learner', picture: 'https://example.com/avatar.png' }
 })
 after(async () => { globalThis.fetch = realFetch; OAuth2Client.prototype.verifyIdToken = realVerifyGoogle; await new Promise((resolve) => server.close(resolve)) })
+
+function telegramData({ id = 12345, age = 0, rawUser } = {}) {
+  const params = new URLSearchParams({ auth_date: String(Math.floor(Date.now() / 1000) - age), user: rawUser ?? JSON.stringify({ id, first_name: 'Learner' }) })
+  const dataCheck = [...params.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([key, value]) => `${key}=${value}`).join('\n')
+  const secret = crypto.createHmac('sha256', 'WebAppData').update(env.TELEGRAM_BOT_TOKEN).digest()
+  params.set('hash', crypto.createHmac('sha256', secret).update(dataCheck).digest('hex'))
+  return params.toString()
+}
+
+test('Telegram Mini App opens only an explicitly linked account using normal device-bound sessions', async () => {
+  const user = await globalThis.prisma.user.create({ data: { email, fullName: 'Linked Learner', passwordHash: 'existing-hash', xp: 725 } })
+  telegramLinkedUserId = user.id
+  const result = await post('/telegram', { initData: telegramData() })
+  assert.equal(result.status, 200)
+  assert.equal(result.body.user.id, user.id)
+  assert.equal(result.body.user.xp, 725)
+  assert.ok(result.body.accessToken && result.body.refreshToken)
+  assert.equal(sessions[0].method, 'TELEGRAM')
+  assert.equal(tokens[0].sessionId, sessions[0].id)
+  assert.equal(users.length, 1, 'Telegram never creates or guesses a website account')
+})
+
+test('Telegram rejects unlinked, tampered, expired, future-dated and malformed launch data', async () => {
+  const unlinked = await post('/telegram', { initData: telegramData() })
+  assert.equal(unlinked.status, 401)
+  assert.equal(unlinked.body.code, 'TELEGRAM_NOT_LINKED')
+  for (const initData of [telegramData().replace('12345', '99999'), telegramData({ age: 301 }), telegramData({ age: -120 }), telegramData({ rawUser: '{invalid-json' }), telegramData({ id: -1 })]) {
+    const result = await post('/telegram', { initData })
+    assert.equal(result.status, 401)
+    assert.equal(result.body.code, 'INVALID_TELEGRAM_SESSION')
+  }
+  assert.equal(sessions.length, 0)
+  assert.equal(tokens.length, 0)
+})
+
+test('Telegram cannot bypass the active-device lock or the three-device limit', async () => {
+  const user = await globalThis.prisma.user.create({ data: { email, fullName: 'Linked Learner', passwordHash: 'existing-hash' } })
+  telegramLinkedUserId = user.id
+  const device = number => ({ 'X-Device-Id': `${number}${'1'.repeat(7)}-1111-4111-8111-111111111111` })
+  assert.equal((await post('/telegram', { initData: telegramData() }, device(1))).status, 200)
+  assert.equal((await post('/telegram', { initData: telegramData() }, device(2))).body.code, 'ACCOUNT_IN_USE')
+  for (const number of [2, 3]) {
+    sessions.forEach(row => { row.usageUntil = new Date(0) })
+    assert.equal((await post('/telegram', { initData: telegramData() }, device(number))).status, 200)
+  }
+  sessions.forEach(row => { row.usageUntil = new Date(0) })
+  const fourth = await post('/telegram', { initData: telegramData() }, device(4))
+  assert.equal(fourth.status, 403)
+  assert.equal(fourth.body.code, 'DEVICE_LIMIT_REACHED')
+  assert.equal(tokens.length, 3, 'Denied devices never receive tokens')
+})
 
 test('Google quick signup creates a Gmail account without a password and reuses it on return', async () => {
   const first = await post('/google', { idToken: 'verified-test-token', allowCreate: true })

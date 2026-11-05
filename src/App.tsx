@@ -19,6 +19,9 @@ import SATBrowserExitGuard from '@/components/sat/SATBrowserExitGuard'
 import BillingBoundary from '@/features/billing/BillingBoundary'
 import BillingNotice from '@/features/billing/BillingNotice'
 import LaunchGift from '@/features/launchGift/LaunchGift'
+import CompanionPrompts from '@/features/companion/CompanionPrompts'
+import { useTelegramApp } from '@/hooks/useTelegramApp'
+import { telegramLaunch } from '@/lib/telegramWebApp'
 import PremiumOnly from '@/components/premium/PremiumOnly'
 import { ToastViewport } from '@/components/common/ToastViewport'
 import { XpNotification } from '@/components/common/XpNotification'
@@ -210,6 +213,7 @@ function App() {
   const user = useAuthStore((state: AuthState) => state.user)
   const accountData = useAccountDataSync(user?.id)
   const hydrated = useAuthStore((state: AuthState) => state.hydrated)
+  const telegramBooting = useTelegramApp()
   const accessToken = useAuthStore((state: AuthState) => state.accessToken)
   const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
   const isExamModeActive = useAiAssistantStore((state) => state.isExamModeActive)
@@ -392,7 +396,7 @@ function App() {
   // sidebar and expands the page to full width. Keep one neutral shell visible
   // until the session state is authoritative so that layout can never flash or
   // settle into the wrong mode.
-  if (!hydrated) {
+  if (!hydrated || telegramBooting) {
     return (
       <div className="app-shell relative min-h-screen text-[#1E293B]">
         <AnimatedBackground />
@@ -418,7 +422,8 @@ function App() {
       <ToastViewport />
       <XpNotification deferActivityRewards={isTestMode || isExamModeActive} />
       <BillingNotice />
-      <LaunchGift enabled={!isTestMode && !isExamModeActive && !isAuthPage && !isLearningCenterMode && pathname !== '/onboarding' && pathname !== '/focus'} />
+      <LaunchGift enabled={!telegramLaunch && !isTestMode && !isExamModeActive && !isAuthPage && !isLearningCenterMode && pathname !== '/onboarding' && pathname !== '/focus'} />
+      <CompanionPrompts enabled={!isTestMode && !isExamModeActive && !isGuestDiagnostic && !isLearningCenterMode && pathname !== '/onboarding' && pathname !== '/focus' && pathname !== '/spin' && !pathname.startsWith('/shared/')} />
       <ClassAssignmentContext />
       {isAuthPage && <div className="liquid-auth-language glass-control"><LanguageSelector /></div>}
       <DeferredRegisterModal />

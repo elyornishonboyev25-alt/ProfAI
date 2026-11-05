@@ -24,6 +24,7 @@ import { reserveLaunchGiftAtSignup } from '../services/launchGift.service.js'
 import { sendAuthCode, type AuthCodePurpose } from '../services/authEmail.service.js'
 import { AuthSessionError, assertDeviceAvailable, createAuthSession, requestDevice, sessionDeviceKey, DEVICE_USAGE_WINDOW_MS, type DeviceSignals } from '../services/authActivity.service.js'
 import activityRoutes from './authActivity.routes.js'
+import { verifyInitData } from '../services/wheel.service.js'
 
 const router = Router()
 
@@ -499,6 +500,16 @@ router.post(
     return res.status(201).json({ user: await sanitizeUser(user), ...tokens })
   }),
 )
+
+router.post('/telegram', authRateLimit, validateBody(z.object({ initData: z.string().min(10).max(4096) })), asyncHandler(async (req, res) => {
+  const identity = verifyInitData(req.body.initData, Date.now(), 5 * 60)
+  const link = await prisma.telegramLink.findUnique({ where: { chatId: String(identity.id) }, select: { userId: true } })
+  if (!link) return res.status(401).json({ code: 'TELEGRAM_NOT_LINKED', message: 'Sign in and connect your account to the Telegram bot first.' })
+  const user = await prisma.user.findUnique({ where: { id: link.userId }, include: { profile: { select: { onboardingCompletedAt: true } } } })
+  if (!user) return res.status(401).json({ code: 'ACCOUNT_DELETED', message: 'This account no longer exists.' })
+  const tokens = await issueAuthTokens({ userId: user.id, role: user.role, ipAddress: req.ip, userAgent: req.headers['user-agent'], ...requestDevice(req), method: 'TELEGRAM' })
+  return res.json({ user: await sanitizeUser(user), ...tokens })
+}))
 
 router.post(
   '/email/login',

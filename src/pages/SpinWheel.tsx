@@ -2,31 +2,14 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties }
 import { ApiError, apiClient } from '@/lib/apiClient'
 import { useCountdown } from '@/features/billing/useWheelDiscount'
 import { WheelSound } from '@/features/wheel/wheelSound'
+import { loadTelegramWebApp as loadTelegram, type TelegramWebApp } from '@/lib/telegramWebApp'
 import '@/styles/spin-wheel.css'
-
-type TelegramWebApp = {
-  initData: string
-  initDataUnsafe?: { user?: { language_code?: string; first_name?: string } }
-  ready: () => void
-  expand: () => void
-  openLink: (url: string) => void
-  openTelegramLink: (url: string) => void
-  setHeaderColor?: (color: string) => void
-  setBackgroundColor?: (color: string) => void
-  HapticFeedback?: {
-    notificationOccurred: (type: 'success' | 'error' | 'warning') => void
-    impactOccurred: (style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft') => void
-    selectionChanged: () => void
-  }
-}
-declare global { interface Window { Telegram?: { WebApp?: TelegramWebApp } } }
 
 type Lang = 'uz' | 'ru' | 'en'
 type Spin = { percent: number; expiresAt: string; used: boolean; active: boolean }
 type WheelState = { subscribed: boolean | null; linked: boolean; channelUrl: string; segments: number[]; spin: Spin | null; language?: Lang; test?: boolean }
 type Phase = 'idle' | 'windup' | 'spinning' | 'settled'
 
-const SDK_URL = 'https://telegram.org/js/telegram-web-app.js'
 const DEFAULT_SEGMENTS = [50, 10, 15, 5, 25, 15, 20, 10]
 const PRIZES = [50, 25, 20, 15, 10, 5]
 const SPIN_MS = 6400
@@ -42,18 +25,6 @@ const DEMO = import.meta.env.DEV && typeof window !== 'undefined' && new URLSear
 function detectLang(code?: string): Lang {
   const base = (code ?? '').toLowerCase().slice(0, 2)
   return base === 'uz' ? 'uz' : RUSSIAN_SPEAKING.includes(base) ? 'ru' : 'en'
-}
-
-function loadTelegram(): Promise<TelegramWebApp | null> {
-  if (window.Telegram?.WebApp) return Promise.resolve(window.Telegram.WebApp)
-  return new Promise(resolve => {
-    const script = document.createElement('script')
-    script.src = SDK_URL
-    script.async = true
-    script.onload = () => resolve(window.Telegram?.WebApp ?? null)
-    script.onerror = () => resolve(null)
-    document.head.appendChild(script)
-  })
 }
 
 function demoApp(): TelegramWebApp {

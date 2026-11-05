@@ -38,7 +38,6 @@ import ReportIssueModal from '@/components/support/ReportIssueModal'
 import '@/styles/responsive-workspace.css'
 
 const AchievementCelebration = lazy(() => import('@/components/achievements/AchievementCelebration'))
-const FloatingAIAssistant = lazy(() => import('@/components/ai/FloatingAIAssistant'))
 const TalkOverlay = lazy(() => import('@/components/ai/TalkOverlay'))
 const Landing = lazy(() => import('@/pages/Landing'))
 const SpinWheel = lazy(() => import('@/pages/SpinWheel'))
@@ -116,23 +115,6 @@ function xpSourceForActivity(activityKey: ReturnType<typeof routeToActivityKey>)
 
 function RouteLoader() {
   return <BrandPageLoader compact label="Opening page" />
-}
-
-function DeferredFloatingAIAssistant() {
-  const [ready, setReady] = useState(false)
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => setReady(true), 180)
-    return () => window.clearTimeout(timeoutId)
-  }, [])
-
-  if (!ready) return null
-
-  return (
-    <Suspense fallback={null}>
-      <FloatingAIAssistant />
-    </Suspense>
-  )
 }
 
 function DeferredTalkOverlay() {
@@ -443,7 +425,6 @@ function App() {
       <DeferredAchievementCelebration />
       {!isTestMode ? (
         <>
-          {pathname === '/academic-skills' ? <DeferredFloatingAIAssistant /> : null}
           {!isExamModeActive && !isAuthPage && !isGuestExperience && !isLearningCenterMode ? <DeferredTalkOverlay /> : null}
           {!isLearningCenterMode ? <WordLookupLayer /> : null}
         </>

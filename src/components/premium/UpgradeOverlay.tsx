@@ -1,3 +1,4 @@
+import { useCopy } from '@/i18n/interface'
 import UiText from '@/components/common/UiText'
 import { Crown, Sparkles, X } from 'lucide-react'
 import { motion } from 'framer-motion'
@@ -18,6 +19,7 @@ interface UpgradeOverlayProps {
  * (see ENFORCE_PREMIUM) — dormant in the current open product state.
  */
 export default function UpgradeOverlay({ used = FREE_ATTEMPT_LIMIT, onClose, className = '' }: UpgradeOverlayProps) {
+  const { c: uiCopy } = useCopy()
   const navigate = useNavigate()
   const { minimalMotion } = useMotionPreferences()
 
@@ -38,7 +40,7 @@ export default function UpgradeOverlay({ used = FREE_ATTEMPT_LIMIT, onClose, cla
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={uiCopy("Close")}
             className="absolute right-4 top-4 rounded-xl border border-blue-100 bg-white p-2 text-slate-500 transition hover:bg-blue-50 hover:text-blue-700"
           >
             <X className="h-4 w-4" />
@@ -56,8 +58,7 @@ export default function UpgradeOverlay({ used = FREE_ATTEMPT_LIMIT, onClose, cla
 
         <h3 className="mt-3 text-2xl font-black tracking-tight text-slate-900"> <UiText text={"Upgrade to Premium"} /> </h3>
         <p className="mt-2 text-sm leading-6 text-slate-600">
-          You&apos;ve used your {used}/{FREE_ATTEMPT_LIMIT} free test attempts. Unlock unlimited attempts, full mock
-          arenas, and every premium track. AI coaching stays free for everyone.
+          <UiText text={"You've used your"} /> {used}/{FREE_ATTEMPT_LIMIT} <UiText text={"free test attempts. Unlock unlimited attempts, full mock arenas, and every premium track. AI coaching stays free for everyone."} />
         </p>
 
         <div className="mt-6 flex flex-wrap justify-center gap-2">
@@ -67,7 +68,7 @@ export default function UpgradeOverlay({ used = FREE_ATTEMPT_LIMIT, onClose, cla
             className="cta-sheen interactive-lift inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-5 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.32)]"
           >
             <Crown className="h-4 w-4" />
-            View Plans
+            <UiText text={"View Plans"} />
           </button>
           {onClose ? (
             <button
@@ -75,7 +76,7 @@ export default function UpgradeOverlay({ used = FREE_ATTEMPT_LIMIT, onClose, cla
               onClick={onClose}
               className="inline-flex items-center rounded-xl border border-blue-200 bg-white px-5 py-2.5 text-sm font-bold text-blue-700 transition hover:bg-blue-50"
             >
-              Maybe later
+              <UiText text={"Maybe later"} />
             </button>
           ) : null}
         </div>

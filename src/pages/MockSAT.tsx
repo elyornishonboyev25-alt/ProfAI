@@ -1,3 +1,4 @@
+import { useCopy } from '@/i18n/interface'
 import { saveActiveTestPaper } from '@/utils/activeTestPaper'
 import ConfirmDialog from '@/components/common/ConfirmDialog'
 import { getInProcessAttempts, discardInProcessAttempt } from '@/utils/inProcessAttempts'
@@ -62,6 +63,7 @@ const modeCards = [
 ] as const
 
 export default function MockSAT() {
+  const { c: uiCopy } = useCopy()
   const navigate = useNavigate()
   const owner = useAuthStore(state => state.user?.id ?? 'guest')
   const location = useLocation()
@@ -115,10 +117,10 @@ export default function MockSAT() {
 
   return (
     <main className="workspace-page exam-flow sat-start-page relative min-h-screen overflow-hidden px-4 py-5 text-slate-950 sm:px-6 lg:px-8">
-      <ConfirmDialog open={replaceMode !== null} title="Replace your unfinished test?" description="Starting again deletes the answers, notes and progress from this unfinished attempt. Your completed results stay in My Results."
-        confirmLabel="Replace & start again" cancelLabel="Keep saved test" destructive onClose={() => setReplaceMode(null)} onConfirm={async () => { if (!replaceMode) return; const mode = replaceMode; await openRunner(mode, false, true); setReplaceMode(null) }} />
-      <ConfirmDialog open={discardOpen} title="Delete saved progress?" description="Your answers and notes for this unfinished test will be deleted. You will need to start it again. Completed results are kept."
-        confirmLabel="Delete progress" cancelLabel="Keep test" destructive onClose={() => setDiscardOpen(false)} onConfirm={async () => { await discardSaved(); setExistingAttempt(null); setDiscardOpen(false) }} />
+      <ConfirmDialog open={replaceMode !== null} title={uiCopy("Replace your unfinished test?")} description={uiCopy("Starting again deletes the answers, notes and progress from this unfinished attempt. Your completed results stay in My Results.")}
+        confirmLabel={uiCopy("Replace & start again")} cancelLabel={uiCopy("Keep saved test")} destructive onClose={() => setReplaceMode(null)} onConfirm={async () => { if (!replaceMode) return; const mode = replaceMode; await openRunner(mode, false, true); setReplaceMode(null) }} />
+      <ConfirmDialog open={discardOpen} title={uiCopy("Delete saved progress?")} description={uiCopy("Your answers and notes for this unfinished test will be deleted. You will need to start it again. Completed results are kept.")}
+        confirmLabel={uiCopy("Delete progress")} cancelLabel={uiCopy("Keep test")} destructive onClose={() => setDiscardOpen(false)} onConfirm={async () => { await discardSaved(); setExistingAttempt(null); setDiscardOpen(false) }} />
 
       <div className="relative mx-auto max-w-[88rem]">
         <header className="flex items-center justify-between gap-4 rounded-[1.6rem] border border-white/85 bg-white/70 px-4 py-3 shadow-[0_18px_50px_rgba(15,23,42,.08)] backdrop-blur-2xl sm:px-6">
@@ -131,7 +133,7 @@ export default function MockSAT() {
             onClick={() => navigate(backPath)}
             className="route-back-button"
           >
-            <ArrowLeft className="h-3.5 w-3.5" /> {isSectionPractice ? 'Section tests' : fromMockCatalog ? 'Full mocks' : 'SAT Prep'}
+            <ArrowLeft className="h-3.5 w-3.5" /> {isSectionPractice ? <UiText text={"Section tests"} /> : fromMockCatalog ? <UiText text={"Full mocks"} /> : <UiText text={"SAT Prep"} />}
           </button>
         </header>
 
@@ -150,14 +152,13 @@ export default function MockSAT() {
               </span>
             </div>
             <h1 className="mt-5 max-w-3xl text-4xl font-black leading-[1.03] tracking-[-0.045em] sm:text-5xl lg:text-6xl">
-              Your real SAT,
+              <UiText text={"Your real SAT,"} />
               <span className="block bg-gradient-to-r from-blue-600 via-indigo-500 to-orange-400 bg-clip-text text-transparent">
-                beautifully simulated.
+                <UiText text={"beautifully simulated."} />
               </span>
             </h1>
             <p className="mt-4 max-w-2xl text-sm font-medium leading-7 text-slate-600 sm:text-base">
-               <UiText text={"All"} /> {test.questionCount} questions from {test.subtitle}, with original graphs,
-              autosave, review tools, explanations, and {isSATTestComplete(test) ? 'SAT range scoring' : 'accuracy feedback'}.
+               <UiText text={"All"} /> {test.questionCount} <UiText text={"questions from"} /> {test.subtitle}<UiText text={", with original graphs, autosave, review tools, explanations, and"} /> {isSATTestComplete(test) ? <UiText text={"SAT range scoring"} /> : <UiText text={"accuracy feedback"} />}.
             </p>
 
             {test.modules.some(module => module.adaptive) ? <p className="mt-3 text-sm font-medium leading-6 text-slate-600">
@@ -175,7 +176,7 @@ export default function MockSAT() {
               ].map(([value, label]) => (
                 <div key={label} className="rounded-2xl border border-white bg-white/85 p-3 shadow-sm">
                   <p className="text-xl font-black tracking-tight text-slate-950">{value}</p>
-                  <p className="mt-0.5 text-[9px] font-black uppercase tracking-[0.12em] text-slate-400">{label}</p>
+                  <p className="mt-0.5 text-[9px] font-black uppercase tracking-[0.12em] text-slate-400"><UiText text={label} /></p>
                 </div>
               ))}
             </div>
@@ -194,8 +195,8 @@ export default function MockSAT() {
                       <Icon className="h-4 w-4" />
                     </span>
                     <div>
-                      <p className="text-xs font-black">{feature.title}</p>
-                      <p className="mt-1 text-[10px] font-semibold leading-4 text-slate-500">{feature.copy}</p>
+                      <p className="text-xs font-black"><UiText text={feature.title} /></p>
+                      <p className="mt-1 text-[10px] font-semibold leading-4 text-slate-500"><UiText text={feature.copy} /></p>
                     </div>
                   </div>
                 )
@@ -210,10 +211,10 @@ export default function MockSAT() {
             className="rounded-[2rem] border border-white/90 bg-white/78 p-4 shadow-[0_28px_70px_rgba(15,23,42,.1)] backdrop-blur-2xl sm:p-6"
           >
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-600">Before you begin</p>
-              <h2 className="mt-1 text-2xl font-black tracking-tight">Choose your test mode</h2>
+              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-600"><UiText text={"Before you begin"} /></p>
+              <h2 className="mt-1 text-2xl font-black tracking-tight"><UiText text={"Choose your test mode"} /></h2>
               <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
-                You can choose again when starting a fresh attempt.
+                <UiText text={"You can choose again when starting a fresh attempt."} />
               </p>
             </div>
 
@@ -245,8 +246,8 @@ export default function MockSAT() {
                           <div>
                             <p className={`text-[9px] font-black uppercase tracking-[0.14em] ${
                               mode.color === 'red' ? 'text-blue-600' : 'text-blue-600'
-                            }`}>{mode.eyebrow}</p>
-                            <p className="mt-0.5 text-lg font-black text-slate-950">{mode.title}</p>
+                            }`}><UiText text={mode.eyebrow} /></p>
+                            <p className="mt-0.5 text-lg font-black text-slate-950"><UiText text={mode.title} /></p>
                           </div>
                           <span className={`flex h-6 w-6 items-center justify-center rounded-full border ${
                             selected
@@ -258,11 +259,11 @@ export default function MockSAT() {
                             <Check className="h-3.5 w-3.5" />
                           </span>
                         </div>
-                        <p className="mt-2 text-[11px] font-medium leading-5 text-slate-600">{mode.description}</p>
+                        <p className="mt-2 text-[11px] font-medium leading-5 text-slate-600"><UiText text={mode.description} /></p>
                         <div className="mt-3 flex flex-wrap gap-1.5">
                           {mode.points.map((point) => (
                             <span key={point} className="rounded-lg border border-white bg-white/80 px-2 py-1 text-[9px] font-black text-slate-500">
-                              {point}
+                              <UiText text={point} />
                             </span>
                           ))}
                         </div>
@@ -277,12 +278,12 @@ export default function MockSAT() {
               <div className="mt-4 rounded-2xl border border-white bg-slate-100/80 p-3.5">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-600">Saved attempt</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-600"><UiText text={"Saved attempt"} /></p>
                     <p className="mt-1 text-sm font-black text-slate-900">
-                      {completedQuestions} of {test.questionCount} answered
+                      {completedQuestions} <UiText text={"of"} /> {test.questionCount} <UiText text={"answered"} />
                     </p>
                     <p className="mt-1 text-[10px] font-semibold text-slate-500">
-                      {existingAttempt?.mode === 'exam' ? 'Exam Mode' : 'Practice Mode'} · timer paused · autosaved
+                      {existingAttempt?.mode === 'exam' ? <UiText text={"Exam Mode"} /> : <UiText text={"Practice Mode"} />} <UiText text={"· timer paused · autosaved"} />
                     </p>
                   </div>
                   <RotateCcw className="h-4 w-4 text-red-600" />
@@ -299,7 +300,7 @@ export default function MockSAT() {
                     onClick={() => setDiscardOpen(true)}
                     className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-black text-slate-600"
                   >
-                    Discard
+                    <UiText text={"Discard"} />
                   </button>
                 </div>
               </div>
@@ -312,8 +313,8 @@ export default function MockSAT() {
                 className="mt-4 flex w-full items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50 p-3.5 text-left"
               >
                 <span>
-                  <span className="block text-[10px] font-black uppercase tracking-[0.12em] text-emerald-700">Completed attempt</span>
-                  <span className="mt-1 block text-sm font-black text-slate-900">Open score & review</span>
+                  <span className="block text-[10px] font-black uppercase tracking-[0.12em] text-emerald-700"><UiText text={"Completed attempt"} /></span>
+                  <span className="mt-1 block text-sm font-black text-slate-900"><UiText text={"Open score & review"} /></span>
                 </span>
                 <FileCheck2 className="h-5 w-5 text-emerald-600" />
               </button>
@@ -329,12 +330,12 @@ export default function MockSAT() {
               }`}
             >
               {selectedMode === 'exam' ? <Expand className="h-4 w-4" /> : <Clock3 className="h-4 w-4" />}
-               <UiText text={"Start"} /> {selectedMode === 'exam' ? 'Exam' : 'Practice'} Mode
+               <UiText text={"Start"} /> {selectedMode === 'exam' ? <UiText text={"Exam"} /> : <UiText text={"Practice"} />} <UiText text={"Mode"} />
               <ArrowRight className="h-4 w-4" />
             </button>
             <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[9px] font-bold text-slate-400">
               <LockKeyhole className="h-3 w-3" />
-              Progress and notes stay on this device.
+              <UiText text={"Progress and notes stay on this device."} />
             </p>
           </motion.aside>
         </section>

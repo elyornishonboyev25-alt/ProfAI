@@ -1,3 +1,4 @@
+import { useCopy } from '@/i18n/interface'
 import LeaderboardEligibilityNotice from '@/components/common/LeaderboardEligibilityNotice'
 import { isSATLeaderboardEligible, minimumSATLeaderboardSeconds } from '@/features/sat/leaderboardEligibility'
 import AttemptEntryBoundary from '@/components/tests/AttemptEntryBoundary'
@@ -87,6 +88,7 @@ export default function SATMockRun() {
 }
 
 function SATMockRunContent() {
+  const { c: uiCopy } = useCopy()
   const navigate = useNavigate()
   const location = useLocation()
   const { mockId = '1' } = useParams<{ mockId: string }>()
@@ -406,10 +408,10 @@ function SATMockRunContent() {
       <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
         <div className="max-w-md rounded-3xl border border-slate-200 bg-white p-7 text-center shadow-xl">
           <ShieldAlert className="mx-auto h-10 w-10 text-red-600" />
-          <h1 className="mt-4 text-2xl font-black">No SAT attempt found</h1>
-          <p className="mt-2 text-sm leading-6 text-slate-500">Choose Practice or Exam Mode before opening the test.</p>
+          <h1 className="mt-4 text-2xl font-black"><UiText text={"No SAT attempt found"} /></h1>
+          <p className="mt-2 text-sm leading-6 text-slate-500"><UiText text={"Choose Practice or Exam Mode before opening the test."} /></p>
           <button type="button" onClick={() => navigate(`/mock/sat/${test.mockId}${sectionQuery}`)} className="mt-5 rounded-xl bg-red-600 px-5 py-3 text-sm font-black text-white">
-            Choose test mode
+            <UiText text={"Choose test mode"} />
           </button>
         </div>
       </main>
@@ -451,17 +453,17 @@ function SATMockRunContent() {
           <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-red-500/15 text-red-300 ring-1 ring-red-400/25">
             <ShieldAlert className="h-8 w-8" />
           </span>
-          <p className="mt-5 text-[10px] font-black uppercase tracking-[0.18em] text-red-300">Exam integrity</p>
-          <h1 className="mt-2 text-3xl font-black">Attempt ended</h1>
+          <p className="mt-5 text-[10px] font-black uppercase tracking-[0.18em] text-red-300"><UiText text={"Exam integrity"} /></p>
+          <h1 className="mt-2 text-3xl font-black"><UiText text={"Attempt ended"} /></h1>
           <p className="mt-3 text-sm font-medium leading-6 text-white/65">
-            This exam attempt has ended and cannot be resumed. Start a new attempt to take the test again.
+            <UiText text={"This exam attempt has ended and cannot be resumed. Start a new attempt to take the test again."} />
           </p>
           <button
             type="button"
             onClick={() => navigate(backPath)}
             className="mt-6 w-full rounded-2xl bg-white px-5 py-3.5 text-sm font-black text-slate-950"
           >
-            Return to SAT Arena
+            <UiText text={"Return to SAT Arena"} />
           </button>
         </motion.section>
       </main>
@@ -510,10 +512,10 @@ function SATMockRunContent() {
         <div className="relative mx-auto grid max-w-[112rem] grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 px-4 py-3 sm:px-6 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:px-8">
           <div className="min-w-0 font-serif">
             <h1 className="truncate font-serif text-base font-bold text-slate-800 sm:text-xl lg:text-2xl">
-              Section {sectionNumber}, Module {moduleNumber}: {sectionTitle}
+              <UiText text={"Section"} /> {sectionNumber}<UiText text={", Module"} /> {moduleNumber}: {sectionTitle}
             </h1>
             <button type="button" onClick={() => setDirectionsOpen(true)} className="mt-0.5 text-sm font-bold text-[#2355ed] hover:underline sm:text-base">
-              Directions
+              <UiText text={"Directions"} />
             </button>
           </div>
 
@@ -523,7 +525,7 @@ function SATMockRunContent() {
             className="flex min-w-24 items-center justify-center gap-2 font-serif text-2xl font-bold tabular-nums sm:text-3xl"
             title={timerVisible ? 'Hide timer' : 'Show timer'}
           >
-            {timerVisible ? formatTime(testSeconds) : 'Hidden'}
+            {timerVisible ? formatTime(testSeconds) : <UiText text={"Hidden"} />}
             <EyeOff className="h-5 w-5 text-slate-600" />
           </button>
 
@@ -538,13 +540,13 @@ function SATMockRunContent() {
                     setToolsOpen(false)
                     setMoreOpen(false)
                   }}
-                  aria-label="Open SAT formula sheet"
+                  aria-label={uiCopy("Open SAT formula sheet")}
                   aria-expanded={formulaSheetOpen}
                   aria-controls="sat-formula-sheet"
-                  title="Formula Sheet"
+                  title={uiCopy("Formula Sheet")}
                   className={`flex h-12 items-center justify-center gap-2 rounded-xl px-3 font-serif text-sm font-bold transition sm:px-4 ${formulaSheetOpen ? 'bg-[#4053d7] text-white' : 'bg-sky-50 text-sky-800 hover:bg-sky-100'}`}
                 >
-                  <Sheet className="h-5 w-5" /> <span className="hidden xl:inline">Formula Sheet</span>
+                  <Sheet className="h-5 w-5" /> <span className="hidden xl:inline"><UiText text={"Formula Sheet"} /></span>
                 </button>
                 <button
                   type="button"
@@ -556,7 +558,7 @@ function SATMockRunContent() {
                   }}
                   aria-expanded={calculatorOpen}
                   aria-label={calculatorOpen ? 'Close Desmos calculator' : 'Open Desmos calculator'}
-                  title={calculatorOpen ? 'Close Desmos' : 'Open Desmos'}
+                  title={calculatorOpen ? uiCopy("Close Desmos") : 'Open Desmos'}
                   className={`flex h-12 items-center justify-center gap-2 rounded-xl px-3 font-serif text-sm font-bold transition sm:px-4 ${
                     calculatorOpen
                       ? 'bg-red-600 text-white shadow-[0_8px_20px_rgba(220,38,38,.22)]'
@@ -567,20 +569,20 @@ function SATMockRunContent() {
                 </button>
               </>
             ) : null}
-            <button type="button" onClick={() => setNavigatorOpen(true)} className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-600" aria-label="Open question navigator">
+            <button type="button" onClick={() => setNavigatorOpen(true)} className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-600" aria-label={uiCopy("Open question navigator")}>
               <FileText className="h-6 w-6" />
             </button>
             <button
               type="button"
-              aria-label="Highlights & Notes" aria-expanded={toolsOpen}
+              aria-label={uiCopy("Highlights & Notes")} aria-expanded={toolsOpen}
               onClick={() => { setToolsOpen((open) => !open); setMoreOpen(false) }}
               className="flex items-center gap-2 px-2 py-2 font-serif text-sm font-bold text-slate-700 sm:text-base"
             >
-              <NotebookPen className="h-6 w-6" /> <span className="hidden sm:inline">Highlights & Notes</span>
+              <NotebookPen className="h-6 w-6" /> <span className="hidden sm:inline"><UiText text={"Highlights & Notes"} /></span>
             </button>
             <button
               type="button"
-              aria-label="More"
+              aria-label={uiCopy("More")}
               onClick={() => { setMoreOpen((open) => !open); setToolsOpen(false) }}
               className="flex flex-col items-center px-2 py-1 font-serif text-xs font-bold text-slate-700"
             >
@@ -591,17 +593,17 @@ function SATMockRunContent() {
           {toolsOpen ? (
             <div className="absolute right-4 top-[calc(100%+.5rem)] z-50 max-h-[calc(100dvh-8rem)] w-[min(22rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl border border-slate-300 bg-white p-4 shadow-2xl">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-black">Highlights & Notes</p>
-                <button type="button" aria-label="Close highlights and notes" onClick={() => setToolsOpen(false)} className="text-slate-500"><X className="h-4 w-4" /></button>
+                <p className="text-sm font-black"><UiText text={"Highlights & Notes"} /></p>
+                <button type="button" aria-label={uiCopy("Close highlights and notes")} onClick={() => setToolsOpen(false)} className="text-slate-500"><X className="h-4 w-4" /></button>
               </div>
-              <p className="mt-4 text-xs font-medium text-slate-600">Select text to highlight it in one of four colors. Click a highlight to remove it.</p>
+              <p className="mt-4 text-xs font-medium text-slate-600"><UiText text={"Select text to highlight it in one of four colors. Click a highlight to remove it."} /></p>
               <div className="mt-3 flex items-center gap-2">
-                <button type="button" onClick={() => changeHighlights(currentStrokes.slice(0, -1))} disabled={!currentStrokes.length} className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 disabled:opacity-30" title="Undo"><Undo2 className="h-4 w-4" /></button>
-                <button type="button" onClick={() => changeHighlights([])} disabled={!currentStrokes.length} className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 disabled:opacity-30" title="Clear"><Trash2 className="h-4 w-4" /></button>
+                <button type="button" onClick={() => changeHighlights(currentStrokes.slice(0, -1))} disabled={!currentStrokes.length} className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 disabled:opacity-30" title={uiCopy("Undo")}><Undo2 className="h-4 w-4" /></button>
+                <button type="button" onClick={() => changeHighlights([])} disabled={!currentStrokes.length} className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 disabled:opacity-30" title={uiCopy("Clear")}><Trash2 className="h-4 w-4" /></button>
               </div>
               <div className="mt-3 max-h-[min(18rem,40dvh)] overflow-y-auto"><SATNoteList value={attempt.notes[currentQuestion.id]} /></div>
               <button type="button" onClick={openNotes} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-black px-3 py-3 text-xs font-black text-white">
-                <NotebookPen className="h-4 w-4" /> {readSATNotes(attempt.notes[currentQuestion.id]).length ? `Manage notes (${readSATNotes(attempt.notes[currentQuestion.id]).length})` : 'Add note'}
+                <NotebookPen className="h-4 w-4" /> {readSATNotes(attempt.notes[currentQuestion.id]).length ? <UiText text={"Manage notes ({{value1}})"} values={{ value1: String(readSATNotes(attempt.notes[currentQuestion.id]).length) }} /> : <UiText text={"Add note"} />}
               </button>
             </div>
           ) : null}
@@ -609,13 +611,13 @@ function SATMockRunContent() {
           {moreOpen ? (
             <div className="absolute right-4 top-[calc(100%+.5rem)] z-50 w-56 rounded-2xl border border-slate-300 bg-white p-2 shadow-2xl">
               <div className="flex items-center gap-1 rounded-xl px-2 py-2">
-                <button type="button" aria-label="Zoom out" disabled={zoom <= 0.7} onClick={() => setZoom((value) => Math.max(0.7, Number((value - 0.1).toFixed(2))))} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-slate-100 disabled:opacity-30"><ZoomOut className="h-4 w-4" /></button>
+                <button type="button" aria-label={uiCopy("Zoom out")} disabled={zoom <= 0.7} onClick={() => setZoom((value) => Math.max(0.7, Number((value - 0.1).toFixed(2))))} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-slate-100 disabled:opacity-30"><ZoomOut className="h-4 w-4" /></button>
                 <span className="min-w-16 flex-1 text-center text-xs font-black tabular-nums">{Math.round(zoom * 100)}%</span>
-                <button type="button" aria-label="Zoom in" disabled={zoom >= 1.6} onClick={() => setZoom((value) => Math.min(1.6, Number((value + 0.1).toFixed(2))))} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-slate-100 disabled:opacity-30"><ZoomIn className="h-4 w-4" /></button>
+                <button type="button" aria-label={uiCopy("Zoom in")} disabled={zoom >= 1.6} onClick={() => setZoom((value) => Math.min(1.6, Number((value + 0.1).toFixed(2))))} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-slate-100 disabled:opacity-30"><ZoomIn className="h-4 w-4" /></button>
               </div>
-              <button type="button" onClick={() => { setZoom(1); setMoreOpen(false) }} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black hover:bg-slate-100"><Undo2 className="h-4 w-4" /> Reset zoom</button>
+              <button type="button" onClick={() => { setZoom(1); setMoreOpen(false) }} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black hover:bg-slate-100"><Undo2 className="h-4 w-4" /> <UiText text={"Reset zoom"} /></button>
               {supported && <button type="button" onClick={toggle} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black hover:bg-slate-100">
-                <ZoomIn className="h-4 w-4" /> {isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                <ZoomIn className="h-4 w-4" /> {isFullscreen ? <UiText text={"Exit fullscreen"} /> : <UiText text={"Enter fullscreen"} />}
               </button>}
               <button type="button" onClick={exitTest} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black text-[#4053d7] hover:bg-indigo-50"><Save className="h-4 w-4" /> <UiText text="Save and exit" /></button>
             </div>
@@ -653,7 +655,7 @@ function SATMockRunContent() {
           practicePanel={attempt.mode === 'practice' ? (
             <div className="mt-7 border-t border-slate-300 pt-5">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-xs font-bold text-slate-500">Your response is saved automatically.</p>
+                <p className="text-xs font-bold text-slate-500"><UiText text={"Your response is saved automatically."} /></p>
                 {currentAnswer ? <button type="button" onClick={() => updateAnswer('')} className="text-xs font-black text-red-700"> <UiText text={"Clear"} /> </button> : null}
               </div>
               <button
@@ -662,19 +664,19 @@ function SATMockRunContent() {
                 onClick={() => setCheckedQuestions((current) => [...new Set([...current, currentQuestion.id])])}
                 className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-black px-4 py-3.5 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-35"
               >
-                <Lightbulb className="h-4 w-4" /> {practiceChecked ? 'Answer checked' : 'Check answer'}
+                <Lightbulb className="h-4 w-4" /> {practiceChecked ? <UiText text={"Answer checked"} /> : <UiText text={"Check answer"} />}
               </button>
               {practiceChecked ? (
                 <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={`mt-4 rounded-xl border-2 p-4 ${practiceCorrect ? 'border-emerald-600 bg-emerald-50' : 'border-red-600 bg-red-50'}`}>
                   <div className="flex items-start gap-3">
                     {practiceCorrect ? <Sparkles className="mt-0.5 h-5 w-5 text-emerald-700" /> : <XCircle className="mt-0.5 h-5 w-5 text-red-700" />}
                     <div>
-                      <p className={`font-serif text-base font-bold ${practiceCorrect ? 'text-emerald-900' : 'text-red-900'}`}>{practiceCorrect ? 'Correct answer' : `Incorrect — correct answer: ${currentQuestion.correctAnswer}`}</p>
-                      <p className="mt-1 text-xs font-semibold text-slate-600">Review the reasoning before moving to the next question.</p>
+                      <p className={`font-serif text-base font-bold ${practiceCorrect ? 'text-emerald-900' : 'text-red-900'}`}>{practiceCorrect ? <UiText text={"Correct answer"} /> : <UiText text={"Incorrect — correct answer: {{value1}}"} values={{ value1: String(currentQuestion.correctAnswer) }} />}</p>
+                      <p className="mt-1 text-xs font-semibold text-slate-600"><UiText text={"Review the reasoning before moving to the next question."} /></p>
                     </div>
                   </div>
                   <details className="mt-3 rounded-lg border border-slate-300 bg-white px-3 py-3">
-                    <summary className="cursor-pointer text-xs font-black text-slate-800">Step-by-step explanation</summary>
+                    <summary className="cursor-pointer text-xs font-black text-slate-800"><UiText text={"Step-by-step explanation"} /></summary>
                     <SATExplanation question={currentQuestion} response={attempt.answers[currentQuestion.id]} className="mt-3" />
                   </details>
                 </motion.div>
@@ -692,14 +694,14 @@ function SATMockRunContent() {
         <div className="mx-auto grid min-h-20 max-w-[112rem] grid-cols-[1fr_auto] items-center gap-3 px-4 py-2 sm:px-6 md:grid-cols-[1fr_auto_1fr] lg:px-8">
           <p className="hidden truncate font-serif text-lg font-bold text-slate-800 md:block">{learnerName}</p>
           <button type="button" onClick={() => setNavigatorOpen(true)} className="inline-flex h-12 items-center justify-center gap-3 rounded-2xl bg-black px-5 font-serif text-base font-bold text-white sm:text-lg">
-            Question {questionIndex + 1} of {currentModule.questions.length} <ChevronDown className="h-4 w-4" />
+            <UiText text={"Question"} /> {questionIndex + 1} <UiText text={"of"} /> {currentModule.questions.length} <ChevronDown className="h-4 w-4" />
           </button>
           <div className="flex items-center justify-end gap-2">
             <button type="button" disabled={questionIndex === 0} onClick={() => goToQuestion(questionIndex - 1)} className="h-12 rounded-full bg-[#4053d7] px-5 font-serif text-base font-bold text-white disabled:cursor-not-allowed disabled:opacity-50 sm:px-7 sm:text-lg"> <UiText text={"Back"} /> </button>
             {questionIndex < currentModule.questions.length - 1 ? (
               <button type="button" onClick={() => goToQuestion(questionIndex + 1)} className="h-12 rounded-full bg-[#4053d7] px-5 font-serif text-base font-bold text-white sm:px-7 sm:text-lg"> <UiText text={"Next"} /> </button>
             ) : (
-              <button type="button" onClick={endCurrentModule} className="h-12 rounded-full bg-black px-5 font-serif text-sm font-bold text-white sm:px-7 sm:text-base">Review module</button>
+              <button type="button" onClick={endCurrentModule} className="h-12 rounded-full bg-black px-5 font-serif text-sm font-bold text-white sm:px-7 sm:text-base"><UiText text={"Review module"} /></button>
             )}
           </div>
         </div>
@@ -729,18 +731,18 @@ function SATMockRunContent() {
             >
               <header className="flex items-center justify-between border-b border-slate-300 px-5 py-4 sm:px-7">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-[0.12em] text-[#4053d7]">Test directions</p>
-                  <h2 className="mt-1 font-serif text-xl font-bold sm:text-2xl">Section {sectionNumber}, Module {moduleNumber}: {sectionTitle}</h2>
+                  <p className="text-xs font-black uppercase tracking-[0.12em] text-[#4053d7]"><UiText text={"Test directions"} /></p>
+                  <h2 className="mt-1 font-serif text-xl font-bold sm:text-2xl"><UiText text={"Section"} /> {sectionNumber}<UiText text={", Module"} /> {moduleNumber}: {sectionTitle}</h2>
                 </div>
                 <button type="button" onClick={() => setDirectionsOpen(false)} className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300"><X className="h-4 w-4" /></button>
               </header>
               <div className="px-5 py-6 font-serif text-base leading-7 text-slate-700 sm:px-7 sm:text-lg">
                 {currentModule.section === 'reading-writing' ? (
-                  <p>Read each passage carefully and choose the answer that is best supported by the text and standard written English. You may move between questions in this module and mark any question for review.</p>
+                  <p><UiText text={"Read each passage carefully and choose the answer that is best supported by the text and standard written English. You may move between questions in this module and mark any question for review."} /></p>
                 ) : (
-                  <p>Solve each problem and select or enter the best answer. Desmos is built into the Math toolbar and opens without leaving the test. You may move between questions in this module and mark any question for review.</p>
+                  <p><UiText text={"Solve each problem and select or enter the best answer. Desmos is built into the Math toolbar and opens without leaving the test. You may move between questions in this module and mark any question for review."} /></p>
                 )}
-                <p className="mt-4">Your answers, notes, highlights, and current position are saved automatically on this device.</p>
+                <p className="mt-4"><UiText text={"Your answers, notes, highlights, and current position are saved automatically on this device."} /></p>
               </div>
               <footer className="flex justify-end border-t border-slate-300 bg-slate-50 px-5 py-4 sm:px-7">
                 <button type="button" onClick={() => setDirectionsOpen(false)} className="rounded-full bg-[#4053d7] px-6 py-3 font-serif text-base font-bold text-white"> <UiText text={"Continue"} /> </button>
@@ -765,7 +767,7 @@ function SATMockRunContent() {
               <header className="flex items-center justify-between border-b border-slate-300 bg-white px-5 py-4">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#4053d7]">{currentModule.shortTitle}</p>
-                  <h2 className="mt-1 font-serif text-xl font-bold">Question navigator</h2>
+                  <h2 className="mt-1 font-serif text-xl font-bold"><UiText text={"Question navigator"} /></h2>
                 </div>
                 <button type="button" onClick={() => setNavigatorOpen(false)} className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-600">
                   <X className="h-4 w-4" />
@@ -803,17 +805,17 @@ function SATMockRunContent() {
                 <div className="mt-5 flex flex-wrap gap-3 text-[9px] font-black text-slate-500">
                   {attempt.mode === 'practice' ? <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-emerald-600" />  <UiText text={"Correct"} /> </span> : null}
                   {attempt.mode === 'practice' ? <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-red-600" />  <UiText text={"Incorrect"} /> </span> : null}
-                  <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-slate-950" /> Answered</span>
+                  <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-slate-950" /> <UiText text={"Answered"} /></span>
                   <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded border border-slate-300 bg-slate-50" />  <UiText text={"Unanswered"} /> </span>
-                  <span className="inline-flex items-center gap-1.5"><Flag className="h-3 w-3 fill-amber-400 text-amber-500" /> Flagged</span>
+                  <span className="inline-flex items-center gap-1.5"><Flag className="h-3 w-3 fill-amber-400 text-amber-500" /> <UiText text={"Flagged"} /></span>
                 </div>
               </div>
               <footer className="flex items-center justify-between gap-3 border-t border-slate-300 bg-[#e7edf8] px-5 py-4">
                 <p className="text-[10px] font-bold text-slate-500">
-                  {answeredInModule} answered · {currentModule.questions.length - answeredInModule} remaining
+                  {answeredInModule} <UiText text={"answered ·"} /> {currentModule.questions.length - answeredInModule} <UiText text={"remaining"} />
                 </p>
                 <button type="button" onClick={endCurrentModule} className="rounded-full bg-[#4053d7] px-5 py-2.5 text-[10px] font-black text-white">
-                  Finish module
+                  <UiText text={"Finish module"} />
                 </button>
               </footer>
             </motion.section>
@@ -841,10 +843,10 @@ function SATMockRunContent() {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#4053d7]">Private notes</p>
-                  <h2 id="sat-note-title" className="mt-1 font-serif text-xl font-bold">Question {currentQuestion.number}</h2>
+                  <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#4053d7]"><UiText text={"Private notes"} /></p>
+                  <h2 id="sat-note-title" className="mt-1 font-serif text-xl font-bold"><UiText text={"Question"} /> {currentQuestion.number}</h2>
                 </div>
-                <button type="button" aria-label="Close notes" onClick={() => setNotesOpen(false)} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-500">
+                <button type="button" aria-label={uiCopy("Close notes")} onClick={() => setNotesOpen(false)} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-500">
                   <X className="h-4 w-4" />
                 </button>
               </div>
@@ -872,15 +874,15 @@ function SATMockRunContent() {
                 <ListChecks className="h-7 w-7" />
               </span>
               <p className="mt-5 text-[10px] font-black uppercase tracking-[0.14em] text-[#4053d7]">
-                {confirmSubmit ? 'Final submission' : 'Module ready'}
+                {confirmSubmit ? <UiText text={"Final submission"} /> : <UiText text={"Module ready"} />}
               </p>
               <h2 className="mt-1 font-serif text-2xl font-bold tracking-tight">
-                {confirmSubmit ? 'Submit your SAT attempt?' : `${currentModule.shortTitle} complete`}
+                {confirmSubmit ? <UiText text={"Submit your SAT attempt?"} /> : <UiText text={"{{value1}} complete"} values={{ value1: String(currentModule.shortTitle) }} />}
               </h2>
               <p className="mt-2 text-sm font-medium leading-6 text-slate-500">
-                You answered {answeredInModule} of {currentModule.questions.length} questions.
+                <UiText text={"You answered"} /> {answeredInModule} <UiText text={"of"} /> {currentModule.questions.length} <UiText text={"questions."} />
                 {currentModule.questions.length - answeredInModule > 0
-                  ? ` ${currentModule.questions.length - answeredInModule} unanswered question(s) will remain blank.`
+                  ? <UiText text={" {{value1}} unanswered question(s) will remain blank."} values={{ value1: String(currentModule.questions.length - answeredInModule) }} />
                   : ' Every question has a response.'}
               </p>
               <div className="mt-5 grid grid-cols-2 gap-3">
@@ -893,26 +895,26 @@ function SATMockRunContent() {
                   }}
                   className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-[11px] font-black text-slate-600"
                 >
-                  Review answers
+                  <UiText text={"Review answers"} />
                 </button>
                 <button
                   type="button"
                   onClick={confirmSubmit ? submitAttempt : () => advanceModule()}
                   className="rounded-xl bg-[#4053d7] px-4 py-3 text-[11px] font-black text-white"
                 >
-                  {confirmSubmit ? 'Submit & score' : needsSATSectionBreak(attempt, modules) ? <UiText text="Start 10-minute break" /> : 'Continue to next module'}
+                  {confirmSubmit ? <UiText text={"Submit & score"} /> : needsSATSectionBreak(attempt, modules) ? <UiText text="Start 10-minute break" /> : <UiText text={"Continue to next module"} />}
                 </button>
               </div>
               {!confirmSubmit && attempt.mode === 'practice' && currentModule.section === 'reading-writing' && modules[moduleIndex + 1]?.section === 'math' ? (
                 <p className="mt-4 rounded-xl bg-blue-50 px-3 py-2 text-center text-[10px] font-bold text-blue-700">
-                  Recommended: take a 10-minute break before beginning Math.
+                  <UiText text={"Recommended: take a 10-minute break before beginning Math."} />
                 </p>
               ) : null}
             </motion.section>
           </motion.div>
         ) : null}
 
-        <ConfirmDialog open={exitConfirmOpen} title="Save and exit?" description="Your answers, notes and remaining SAT time will be saved. Continue later from SAT / In process." confirmLabel="Save & exit" cancelLabel="Continue test" onClose={continueExam} onConfirm={saveAndExit} />
+        <ConfirmDialog open={exitConfirmOpen} title={uiCopy("Save and exit?")} description={uiCopy("Your answers, notes and remaining SAT time will be saved. Continue later from SAT / In process.")} confirmLabel={uiCopy("Save & exit")} cancelLabel={uiCopy("Continue test")} onClose={continueExam} onConfirm={saveAndExit} />
       </AnimatePresence>
     </main>
   )

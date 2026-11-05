@@ -48,6 +48,7 @@ export function VocabularyPanel({ open, id, children }: { open: boolean; id: str
 }
 
 export function IeltsVocabularyWord({ entry, accent = 'red' }: { entry: VocabularyEntry; accent?: 'red' | 'blue' }) {
+  const { c: uiCopy } = useCopy()
   const { speak } = usePronunciation()
   const { reducedMotion } = useMotionPreferences()
   const [contextOpen, setContextOpen] = useState(false)
@@ -60,7 +61,7 @@ export function IeltsVocabularyWord({ entry, accent = 'red' }: { entry: Vocabula
           <VocabularyTranslation entry={entry} className="mt-1 break-words text-xs font-medium leading-5 text-red-600" />
         </div>
         <div className="flex shrink-0 items-center">
-          <button type="button" onClick={() => speak(entry.term)} aria-label={`Pronounce ${entry.term}`} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400">
+          <button type="button" onClick={() => speak(entry.term)} aria-label={uiCopy("Pronounce {{value1}}", { value1: String(entry.term) })} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400">
             <Volume2 aria-hidden="true" className="h-4 w-4" />
           </button>
           <SaveWordButton entry={entry} iconOnly accent={accent} />
@@ -138,7 +139,7 @@ export default function IeltsVocabularyStudio() {
           </div>
         </header>
 
-        <nav aria-label="IELTS vocabulary skills" className="grid grid-cols-2 gap-2 rounded-[1.5rem] border border-white/90 bg-white/95 p-3 shadow-[0_14px_40px_rgba(30,64,175,0.07)] lg:grid-cols-4">
+        <nav aria-label={c("IELTS vocabulary skills")} className="grid grid-cols-2 gap-2 rounded-[1.5rem] border border-white/90 bg-white/95 p-3 shadow-[0_14px_40px_rgba(30,64,175,0.07)] lg:grid-cols-4">
           {skills.map((item) => {
             const Icon = item.icon
             const active = item.id === skill
@@ -157,7 +158,7 @@ export default function IeltsVocabularyStudio() {
                 <div><p className="text-xs font-extrabold uppercase tracking-[0.2em] text-red-500">IELTS {activeSkill.label.toUpperCase()}</p><h2 className="mt-2 text-2xl font-black text-slate-950 sm:text-3xl">{selected.title}</h2></div>
                 <span className="rounded-full border border-red-100 bg-white/80 px-4 py-2 text-xs font-bold text-slate-600"><UiText text="Advanced & essential vocabulary" /></span>
               </div>
-              {selected.sections.length > 1 ? <div className="mt-6 flex flex-wrap gap-2" role="group" aria-label="Vocabulary sections">
+              {selected.sections.length > 1 ? <div className="mt-6 flex flex-wrap gap-2" role="group" aria-label={c("Vocabulary sections")}>
                 {selected.sections.map((section, index) => <button key={section.id} type="button" aria-pressed={selectedPart.id === section.id} onClick={() => update({ skill, test: params.get('test')!, part: String(index + 1) })} className={`rounded-full border px-6 py-3 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 ${selectedPart.id === section.id ? 'border-red-200 bg-red-50 text-red-700' : 'border-slate-200 bg-white/80 text-slate-600 hover:border-red-200'}`}>{section.title}</button>)}
               </div> : null}
               <div className="my-6 flex flex-col items-start justify-between gap-4 rounded-2xl border border-white bg-white/70 p-5 sm:flex-row">
@@ -183,7 +184,7 @@ export default function IeltsVocabularyStudio() {
                   const count = test.sections.reduce((n, section) => n + section.entries.length, 0)
                   const isOpen = (expandedTests[skill] === undefined ? book.tests[0]?.id : expandedTests[skill]) === test.id
                   return <div key={test.id} className={`ielts-vocab-test ${isOpen ? 'is-open' : ''}`}>
-                    <button type="button" aria-label={`Open ${test.title}`} aria-expanded={isOpen} aria-controls={`${test.id}-sections`} onClick={() => { if (isOpen || studyAccess.open(resource)) setExpandedTests((previous) => ({ ...previous, [skill]: isOpen ? null : test.id })) }} className="ielts-vocab-test-toggle flex w-full items-center justify-between gap-4 px-5 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-red-400">
+                    <button type="button" aria-label={c("Open {{value1}}", { value1: String(test.title) })} aria-expanded={isOpen} aria-controls={`${test.id}-sections`} onClick={() => { if (isOpen || studyAccess.open(resource)) setExpandedTests((previous) => ({ ...previous, [skill]: isOpen ? null : test.id })) }} className="ielts-vocab-test-toggle flex w-full items-center justify-between gap-4 px-5 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-red-400">
                       <span className="min-w-0">
                         <span className="block text-base font-bold text-slate-900 sm:text-lg">{test.title}</span>
                         <span className="mt-1 block text-xs font-medium text-slate-500">{count} <UiText text="words" />{test.sections.length > 1 ? ` · ${test.sections.length} ${skill === 'writing' ? 'tasks' : 'parts'}` : ' · 1-4 parts'}</span>
@@ -192,7 +193,7 @@ export default function IeltsVocabularyStudio() {
                     </button>
                     <VocabularyPanel id={`${test.id}-sections`} open={isOpen && studyAccess.allowed(resource)}>
                       <div className={`ielts-vocab-parts grid gap-2.5 p-3 ${test.sections.length === 3 ? 'md:grid-cols-3' : test.sections.length > 1 ? 'sm:grid-cols-2' : ''}`}>
-                        {test.sections.map((section, index) => <button key={section.id} type="button" aria-label={`View ${test.title} ${section.title}`} onClick={() => update({ skill, test: number, part: String(index + 1) })} className="ielts-vocab-part group flex min-w-0 items-center gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2">
+                        {test.sections.map((section, index) => <button key={section.id} type="button" aria-label={c("View {{value1}} {{value2}}", { value1: String(test.title), value2: String(section.title) })} onClick={() => update({ skill, test: number, part: String(index + 1) })} className="ielts-vocab-part group flex min-w-0 items-center gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2">
                           <span className="min-w-0 flex-1">
                             <span className="mb-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
                               <span className="ielts-vocab-part-label">{section.title}</span>

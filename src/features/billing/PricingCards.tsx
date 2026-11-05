@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useNavigate } from 'react-router-dom'
 import { ArrowUpRight, Check, Crown, Rocket, Sparkles } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
@@ -46,7 +47,7 @@ export default function PricingCards({ months, onChoose, disabled = false, produ
   return <div className="billing-plan-grid billing-plan-grid-simple plans-grid">
     <article className={`billing-glass billing-plan billing-plan-free ${tier === 'FREE' && user ? 'is-current' : ''}`}>
       <div className="billing-plan-top"><span className="billing-icon"><Sparkles size={24} /></span><span className="billing-saving">{text('Free forever', 'Doimiy bepul', 'Навсегда бесплатно')}</span></div>
-      <h3>Free</h3><p className="billing-plan-description">{text('Start practising today. No card, no time limit.', 'Bugunoq boshlang. Karta va muddat yo‘q.', 'Начните сегодня. Без карты и срока.')}</p>
+      <h3><UiText text={"Free"} /></h3><p className="billing-plan-description">{text('Start practising today. No card, no time limit.', 'Bugunoq boshlang. Karta va muddat yo‘q.', 'Начните сегодня. Без карты и срока.')}</p>
       <div className="billing-plan-price"><strong>$0</strong><span>{text('/ forever', '/ doimiy', '/ навсегда')}</span></div>
       <p className="billing-plan-total">{text('Your free tests stay open.', 'Bepul testlaringiz doim ochiq.', 'Бесплатные тесты остаются доступными.')}</p>
       <ul>{planHighlights('FREE', text).map(item => <li key={item}><Check size={16} />{item}</li>)}</ul>

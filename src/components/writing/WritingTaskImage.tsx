@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import type { WritingTask } from '@/data/writingTestData'
 import { useEffect, useId, useState } from 'react'
 import MobilePhoneSalesChart from './MobilePhoneSalesChart'
@@ -72,8 +73,8 @@ function TaskImage({ task, className = '' }: Props) {
     return () => window.clearTimeout(timer)
   }, [status, retry])
   const recovery = status === 'failed' ? <div role="alert" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-    <p>The task image could not load. Your writing is saved.</p>
-    <button type="button" onClick={() => { setStatus('loading'); setRetry(value => value + 1) }} className="mt-2 rounded-lg border border-amber-300 bg-white px-3 py-2 font-bold">Retry image</button>
+    <p><UiText text={"The task image could not load. Your writing is saved."} /></p>
+    <button type="button" onClick={() => { setStatus('loading'); setRetry(value => value + 1) }} className="mt-2 rounded-lg border border-amber-300 bg-white px-3 py-2 font-bold"><UiText text={"Retry image"} /></button>
   </div> : null
 
   const alt = task.imageAlt ?? `${task.title} Task 1 visual`

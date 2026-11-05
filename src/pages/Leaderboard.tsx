@@ -509,7 +509,7 @@ export default function Leaderboard() {
                     <table className="leaderboard-table">
                       <caption className="sr-only">
                         {PERIODS.find((item) => item.value === period)?.label}{' '}
-                        leaderboard, ordered by XP
+                        <UiText text={"leaderboard, ordered by XP"} />
                       </caption>
                       <thead>
                         <tr>

@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import { useActiveTest } from '@/hooks/useActiveTest'
 import { useAuthStore } from '@/store/authStore'
 import { accountStorageFor } from '@/utils/accountStorage'
@@ -233,6 +235,7 @@ export default function ExaminerSession({
   onExit: () => void
   onSaved: (evaluation: SpeakingEvaluation, transcript: ExaminerTurn[]) => void
 }) {
+  const { c: uiCopy } = useCopy()
   const recognition = useSpeechRecognition('en-US')
   const owner = useAuthStore(state => state.user?.id ?? 'guest')
   const legacySessionKey = `profai:speaking:examiner:${modeLabel}:${JSON.stringify(config)}`
@@ -962,7 +965,7 @@ export default function ExaminerSession({
     )
   }
   if (phase === 'result' && evalError) {
-    return <div className="speaking-exam speaking-exam-v2 mx-auto max-w-xl px-4 py-12"><div className="speaking-start-guide text-center"><p className="speaking-eyebrow">Speaking session complete</p><h2 className="mt-3 text-2xl font-black text-slate-900">Your feedback is still processing</h2><p className="mt-3 text-sm text-slate-600">{evalError}</p><button onClick={() => void runEvaluation()} className="speaking-record-button mt-6">Try feedback again</button><button onClick={onExit} className="speaking-text-switch mt-3">Return to Speaking tests</button></div></div>
+    return <div className="speaking-exam speaking-exam-v2 mx-auto max-w-xl px-4 py-12"><div className="speaking-start-guide text-center"><p className="speaking-eyebrow"><UiText text={"Speaking session complete"} /></p><h2 className="mt-3 text-2xl font-black text-slate-900"><UiText text={"Your feedback is still processing"} /></h2><p className="mt-3 text-sm text-slate-600">{evalError}</p><button onClick={() => void runEvaluation()} className="speaking-record-button mt-6"><UiText text={"Try feedback again"} /></button><button onClick={onExit} className="speaking-text-switch mt-3"><UiText text={"Return to Speaking tests"} /></button></div></div>
   }
 
   // ── Render: pre-start gate ───────────────────────────────────────────────
@@ -971,39 +974,39 @@ export default function ExaminerSession({
       <div className="speaking-exam speaking-exam-v2 mx-auto max-w-xl px-4 py-12">
         <div className="speaking-start-guide text-center" role="status">
           <p className="speaking-eyebrow">IELTS Speaking</p>
-          <h1 className="mt-3 text-2xl font-black text-slate-900">{answerError ? 'Microphone access needed' : 'Connecting your microphone'}</h1>
-          <p className="mt-3 text-sm text-slate-600">{answerError || 'Allow microphone access to begin your Speaking test automatically.'}</p>
-          {answerError && <button onClick={() => void beginSession()} disabled={starting} className="speaking-record-button mt-6 disabled:opacity-60">{starting ? 'Connecting microphone…' : 'Try again'}</button>}
-          <button onClick={onExit} className="speaking-text-switch mt-4">Exam overview</button>
+          <h1 className="mt-3 text-2xl font-black text-slate-900">{answerError ? <UiText text={"Microphone access needed"} /> : <UiText text={"Connecting your microphone"} />}</h1>
+          <p className="mt-3 text-sm text-slate-600">{answerError || <UiText text={"Allow microphone access to begin your Speaking test automatically."} />}</p>
+          {answerError && <button onClick={() => void beginSession()} disabled={starting} className="speaking-record-button mt-6 disabled:opacity-60">{starting ? <UiText text={"Connecting microphone…"} /> : <UiText text={"Try again"} />}</button>}
+          <button onClick={onExit} className="speaking-text-switch mt-4"><UiText text={"Exam overview"} /></button>
         </div>
       </div>
     )
     return (
       <div className="speaking-exam speaking-exam-v2 mx-auto max-w-6xl px-4 py-6 sm:px-6">
         <header className="speaking-session-header mb-5">
-          <button onClick={onExit} className="speaking-icon-button" aria-label="Back to Speaking tests"><ArrowLeft className="h-5 w-5" /></button>
+          <button onClick={onExit} className="speaking-icon-button" aria-label={uiCopy("Back to Speaking tests")}><ArrowLeft className="h-5 w-5" /></button>
           <span className="speaking-session-mark"><Mic className="h-6 w-6" /></span>
-          <div className="min-w-0 flex-1"><p className="speaking-eyebrow">IELTS Speaking <span className="speaking-header-divider">/</span> AI examiner</p><h1 className="truncate text-lg font-black text-slate-900">{modeLabel}</h1></div>
-          <span className="speaking-part-pill">Ready to begin</span>
+          <div className="min-w-0 flex-1"><p className="speaking-eyebrow">IELTS Speaking <span className="speaking-header-divider">/</span> <UiText text={"AI examiner"} /></p><h1 className="truncate text-lg font-black text-slate-900"><UiText text={modeLabel} /></h1></div>
+          <span className="speaking-part-pill"><UiText text={"Ready to begin"} /></span>
         </header>
         <div className="speaking-start-layout">
           <section className="speaking-start-hero">
-            <div className="speaking-start-topline"><span className="speaking-start-orb"><Mic className="h-8 w-8" /></span><span className="speaking-start-duration"><Clock3 className="h-4 w-4" /> {config.mode === 'full_mock' ? '11–14 min' : 'Speaking practice'}</span></div>
-            <p className="speaking-start-kicker">IELTS SPEAKING · AI EXAMINER</p>
-            <h2>Step into the<br />speaking room.</h2>
-            <p>Listen to the examiner and answer naturally. Recording starts automatically, and you can finish a turn early when you are done.</p>
-            <div className="speaking-start-examiner"><span className="speaking-start-examiner-avatar">{examiner.name[0]}</span><span><strong>{examiner.name}</strong><small>AI examiner · English voice</small></span><span className="speaking-start-examiner-wave" aria-hidden><i /><i /><i /><i /><i /></span></div>
-            <div className="speaking-start-features"><span><AudioLines className="h-4 w-4" /> Natural questions</span><span><Mic className="h-4 w-4" /> Automatic recording</span><span><CheckCircle2 className="h-4 w-4" /> Band estimate</span></div>
+            <div className="speaking-start-topline"><span className="speaking-start-orb"><Mic className="h-8 w-8" /></span><span className="speaking-start-duration"><Clock3 className="h-4 w-4" /> {config.mode === 'full_mock' ? <UiText text={"11–14 min"} /> : 'Speaking practice'}</span></div>
+            <p className="speaking-start-kicker"><UiText text={"IELTS SPEAKING · AI EXAMINER"} /></p>
+            <h2><UiText text={"Step into the"} /><br /><UiText text={"speaking room."} /></h2>
+            <p><UiText text={"Listen to the examiner and answer naturally. Recording starts automatically, and you can finish a turn early when you are done."} /></p>
+            <div className="speaking-start-examiner"><span className="speaking-start-examiner-avatar">{examiner.name[0]}</span><span><strong>{examiner.name}</strong><small><UiText text={"AI examiner · English voice"} /></small></span><span className="speaking-start-examiner-wave" aria-hidden><i /><i /><i /><i /><i /></span></div>
+            <div className="speaking-start-features"><span><AudioLines className="h-4 w-4" /> <UiText text={"Natural questions"} /></span><span><Mic className="h-4 w-4" /> <UiText text={"Automatic recording"} /></span><span><CheckCircle2 className="h-4 w-4" /> <UiText text={"Band estimate"} /></span></div>
           </section>
           <section className="speaking-start-guide">
-            <p className="speaking-eyebrow">Before you begin</p>
-            <h3>{config.mode === 'full_mock' ? 'Three parts. One conversation.' : 'Get ready to speak.'}</h3>
-            {config.mode === 'full_mock' ? <div className="speaking-start-parts" aria-label="Speaking test structure"><div><span>01</span><strong>Interview</strong><small>Familiar topics · 4–5 min</small></div><div><span>02</span><strong>Long turn</strong><small>1 min prep · 2 min maximum</small></div><div><span>03</span><strong>Discussion</strong><small>Related ideas · 4–5 min</small></div></div> : null}
-            <div className="speaking-start-tip"><span><Volume2 className="h-4 w-4" /></span><div><strong>Listen first</strong><p>Your microphone starts after the examiner finishes speaking.</p></div></div>
-            <div className="speaking-start-tip"><span><Mic className="h-4 w-4" /></span><div><strong>Speak freely</strong><p>Recording ends after a short pause. No buttons are needed.</p></div></div>
+            <p className="speaking-eyebrow"><UiText text={"Before you begin"} /></p>
+            <h3>{config.mode === 'full_mock' ? <UiText text={"Three parts. One conversation."} /> : <UiText text={"Get ready to speak."} />}</h3>
+            {config.mode === 'full_mock' ? <div className="speaking-start-parts" aria-label={uiCopy("Speaking test structure")}><div><span>01</span><strong><UiText text={"Interview"} /></strong><small><UiText text={"Familiar topics · 4–5 min"} /></small></div><div><span>02</span><strong><UiText text={"Long turn"} /></strong><small><UiText text={"1 min prep · 2 min maximum"} /></small></div><div><span>03</span><strong><UiText text={"Discussion"} /></strong><small><UiText text={"Related ideas · 4–5 min"} /></small></div></div> : null}
+            <div className="speaking-start-tip"><span><Volume2 className="h-4 w-4" /></span><div><strong><UiText text={"Listen first"} /></strong><p><UiText text={"Your microphone starts after the examiner finishes speaking."} /></p></div></div>
+            <div className="speaking-start-tip"><span><Mic className="h-4 w-4" /></span><div><strong><UiText text={"Speak freely"} /></strong><p><UiText text={"Recording ends after a short pause. No buttons are needed."} /></p></div></div>
             {answerError ? <p role="alert" className="speaking-inline-error">{answerError}</p> : null}
-            <button onClick={() => void beginSession()} disabled={starting} className="speaking-record-button mt-6 disabled:opacity-60">{starting ? 'Connecting microphone…' : saved ? 'Resume speaking test' : 'Begin speaking test'} {starting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowLeft className="h-4 w-4 rotate-180" />}</button>
-            <p className="speaking-start-note">AI-generated examiner voice · practice simulation · estimated score, not an official IELTS result</p>
+            <button onClick={() => void beginSession()} disabled={starting} className="speaking-record-button mt-6 disabled:opacity-60">{starting ? <UiText text={"Connecting microphone…"} /> : saved ? <UiText text={"Resume speaking test"} /> : <UiText text={"Begin speaking test"} />} {starting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowLeft className="h-4 w-4 rotate-180" />}</button>
+            <p className="speaking-start-note"><UiText text={"AI-generated examiner voice · practice simulation · estimated score, not an official IELTS result"} /></p>
           </section>
         </div>
       </div>
@@ -1020,30 +1023,30 @@ export default function ExaminerSession({
   return (
     <div className="speaking-exam speaking-exam-v2 mx-auto max-w-7xl px-4 pb-8 pt-4 sm:px-6">
       <header className="speaking-session-header">
-        <button onClick={onExit} className="speaking-icon-button" aria-label="End session"><ArrowLeft className="h-5 w-5" /></button>
+        <button onClick={onExit} className="speaking-icon-button" aria-label={uiCopy("End session")}><ArrowLeft className="h-5 w-5" /></button>
         <span className="speaking-session-mark"><Mic className="h-6 w-6" /></span>
         <div className="min-w-0 flex-1">
-          <p className="speaking-eyebrow">IELTS Speaking <span className="speaking-header-divider">/</span> AI examiner</p>
-          <h1 className="truncate text-lg font-black tracking-tight text-slate-950 sm:text-xl">{modeLabel}</h1>
+          <p className="speaking-eyebrow">IELTS Speaking <span className="speaking-header-divider">/</span> <UiText text={"AI examiner"} /></p>
+          <h1 className="truncate text-lg font-black tracking-tight text-slate-950 sm:text-xl"><UiText text={modeLabel} /></h1>
         </div>
-        <span className={`speaking-header-status ${voiceError || answerError ? 'is-paused' : ''}`}><span /> {voiceError ? 'Examiner audio paused' : answerError ? pendingAudioUrl ? 'Answer processing paused' : 'Recording needs attention' : voiceLoading ? 'Preparing examiner audio' : stopping ? 'Processing your answer' : recording ? 'Recording your answer' : phase === 'examiner_speaking' ? 'Examiner speaking' : 'Session in progress'}</span>
-        <span className="speaking-part-pill">{activePart > 0 ? isFullMock ? `Part ${activePart} of 3` : `Part ${activePart}` : 'Interview'}</span>
+        <span className={`speaking-header-status ${voiceError || answerError ? 'is-paused' : ''}`}><span /> {voiceError ? <UiText text={"Examiner audio paused"} /> : answerError ? pendingAudioUrl ? <UiText text={"Answer processing paused"} /> : <UiText text={"Recording needs attention"} /> : voiceLoading ? <UiText text={"Preparing examiner audio"} /> : stopping ? <UiText text={"Processing your answer"} /> : recording ? <UiText text={"Recording your answer"} /> : phase === 'examiner_speaking' ? <UiText text={"Examiner speaking"} /> : <UiText text={"Session in progress"} />}</span>
+        <span className="speaking-part-pill">{activePart > 0 ? isFullMock ? <UiText text={"Part {{value1}} of 3"} values={{ value1: String(activePart) }} /> : <UiText text={"Part {{value1}}"} values={{ value1: String(activePart) }} /> : <UiText text={"Interview"} />}</span>
       </header>
 
-      {isFullMock ? <nav className="speaking-journey" aria-label="Speaking test parts">
+      {isFullMock ? <nav className="speaking-journey" aria-label={uiCopy("Speaking test parts")}>
         {[1, 2, 3].map((part) => <div key={part} className={`speaking-journey-step ${activePart === part ? 'is-active' : activePart > part ? 'is-complete' : ''}`} aria-current={activePart === part ? 'step' : undefined}>
           <span className="speaking-journey-number">{activePart > part ? <CheckCircle2 className="h-4 w-4" /> : String(part).padStart(2, '0')}</span>
-          <span className="speaking-journey-text"><strong>Part {part}</strong><small>{part === 1 ? 'Interview' : part === 2 ? 'Long turn' : 'Discussion'}</small></span>
+          <span className="speaking-journey-text"><strong><UiText text={"Part"} /> {part}</strong><small>{part === 1 ? <UiText text={"Interview"} /> : part === 2 ? <UiText text={"Long turn"} /> : <UiText text={"Discussion"} />}</small></span>
           {part < 3 ? <span className="speaking-journey-line" /> : null}
         </div>)}
       </nav> : null}
 
       <main className="speaking-session-grid">
-      <section className="speaking-transcript-panel" aria-label="Speaking conversation">
+      <section className="speaking-transcript-panel" aria-label={uiCopy("Speaking conversation")}>
         <div className="speaking-panel-heading">
           <span className="speaking-panel-icon"><MessageSquareText className="h-[18px] w-[18px]" /></span>
-          <div><h2>Session log</h2><p>Questions and captured turns</p></div>
-          <span className="speaking-turn-count">{answeredCount} {answeredCount === 1 ? 'answer' : 'answers'}</span>
+          <div><h2><UiText text={"Session log"} /></h2><p><UiText text={"Questions and captured turns"} /></p></div>
+          <span className="speaking-turn-count">{answeredCount} {answeredCount === 1 ? <UiText text={"answer"} /> : <UiText text={"answers"} />}</span>
         </div>
         <div className="speaking-conversation" role="log" aria-live="polite" aria-relevant="additions text">
         {visibleTurns.map((turn) => (
@@ -1055,20 +1058,20 @@ export default function ExaminerSession({
           >
             <span className="speaking-turn-avatar" aria-hidden>{turn.role === 'candidate' ? <Mic className="h-4 w-4" /> : <AudioLines className="h-4 w-4" />}</span>
             <div className="speaking-turn-bubble">
-              <span className="speaking-turn-name">{turn.role === 'candidate' ? 'You' : examinerLabel}</span>
-              <p title={turn.text}>{turn.text || 'No clear speech captured'}</p>
-              {turn.role === 'candidate' && turn.durationSec ? <span className="speaking-answer-duration">{formatClock(Math.round(turn.durationSec))} recorded</span> : null}
+              <span className="speaking-turn-name">{turn.role === 'candidate' ? <UiText text={"You"} /> : examinerLabel}</span>
+              <p title={turn.text}>{turn.text || <UiText text={"No clear speech captured"} />}</p>
+              {turn.role === 'candidate' && turn.durationSec ? <span className="speaking-answer-duration">{formatClock(Math.round(turn.durationSec))} <UiText text={"recorded"} /></span> : null}
             </div>
           </motion.div>
         ))}
 
-        {answeredCount === 0 ? <div className="speaking-transcript-empty"><span><Headphones className="h-5 w-5" /></span><strong>Stay with the conversation</strong><p>Your spoken answers will appear here as captured turns. Keep your attention on the examiner’s question.</p></div> : null}
+        {answeredCount === 0 ? <div className="speaking-transcript-empty"><span><Headphones className="h-5 w-5" /></span><strong><UiText text={"Stay with the conversation"} /></strong><p><UiText text={"Your spoken answers will appear here as captured turns. Keep your attention on the examiner’s question."} /></p></div> : null}
 
 
         {phase === 'thinking' ? (
           <div className="flex justify-start">
             <div className="inline-flex items-center gap-2 rounded-2xl rounded-tl-sm border border-red-100 bg-white px-4 py-2.5 text-sm text-slate-500">
-              <Loader2 className="h-4 w-4 animate-spin text-red-500" /> Examiner is thinking…
+              <Loader2 className="h-4 w-4 animate-spin text-red-500" /> <UiText text={"Examiner is thinking…"} />
             </div>
           </div>
         ) : null}
@@ -1076,67 +1079,67 @@ export default function ExaminerSession({
         {phase === 'evaluating' ? (
           <div className="flex justify-center py-6">
             <div className="inline-flex items-center gap-2 rounded-full border border-red-100 bg-white px-4 py-2 text-sm font-semibold text-slate-600">
-              <Loader2 className="h-4 w-4 animate-spin text-red-500" /> Grading your speaking…
+              <Loader2 className="h-4 w-4 animate-spin text-red-500" /> <UiText text={"Grading your speaking…"} />
             </div>
           </div>
         ) : null}
         </div>
-        <div className="speaking-transcript-footer"><ShieldCheck className="h-3.5 w-3.5" /><span>All turns are saved for review</span>{chat.length > 3 ? <div className="speaking-log-nav"><button type="button" onClick={() => setLogOffset((offset) => Math.min(offset + 1, Math.ceil(chat.length / 3) - 1))} disabled={visibleLogStart === 0} aria-label="Earlier turns"><ChevronLeft className="h-4 w-4" /></button><span>{visibleLogStart + 1}–{Math.min(chat.length, visibleLogStart + 3)} / {chat.length}</span><button type="button" onClick={() => setLogOffset((offset) => Math.max(0, offset - 1))} disabled={logOffset === 0} aria-label="Later turns"><ChevronRight className="h-4 w-4" /></button></div> : null}</div>
+        <div className="speaking-transcript-footer"><ShieldCheck className="h-3.5 w-3.5" /><span><UiText text={"All turns are saved for review"} /></span>{chat.length > 3 ? <div className="speaking-log-nav"><button type="button" onClick={() => setLogOffset((offset) => Math.min(offset + 1, Math.ceil(chat.length / 3) - 1))} disabled={visibleLogStart === 0} aria-label={uiCopy("Earlier turns")}><ChevronLeft className="h-4 w-4" /></button><span>{visibleLogStart + 1}–{Math.min(chat.length, visibleLogStart + 3)} / {chat.length}</span><button type="button" onClick={() => setLogOffset((offset) => Math.max(0, offset - 1))} disabled={logOffset === 0} aria-label={uiCopy("Later turns")}><ChevronRight className="h-4 w-4" /></button></div> : null}</div>
       </section>
 
-      <section className="speaking-focus-panel" aria-label="Current question and response controls">
+      <section className="speaking-focus-panel" aria-label={uiCopy("Current question and response controls")}>
         <div className="speaking-panel-heading speaking-panel-heading--focus">
           <span className="speaking-panel-icon"><Headphones className="h-[18px] w-[18px]" /></span>
-          <div><h2>{canRecord ? 'Your turn' : 'Examiner room'}</h2><p>{canRecord ? 'Respond to the question below' : 'Listen and get ready to respond'}</p></div>
-          <span className={`speaking-phase-chip ${recording ? 'is-recording' : answerError || voiceError ? 'is-error' : ''}`} role="status"><span />{recording ? 'Recording' : voiceError ? 'Audio paused' : voiceLoading ? 'Connecting' : answerError ? pendingAudioUrl ? 'Processing paused' : 'Mic check' : stopping ? 'Processing' : phase === 'preparing' ? 'Preparing' : isExaminerBusy ? 'Examiner live' : canRecord ? 'Ready' : 'In progress'}</span>
+          <div><h2>{canRecord ? <UiText text={"Your turn"} /> : <UiText text={"Examiner room"} />}</h2><p>{canRecord ? <UiText text={"Respond to the question below"} /> : <UiText text={"Listen and get ready to respond"} />}</p></div>
+          <span className={`speaking-phase-chip ${recording ? 'is-recording' : answerError || voiceError ? 'is-error' : ''}`} role="status"><span />{recording ? <UiText text={"Recording"} /> : voiceError ? <UiText text={"Audio paused"} /> : voiceLoading ? <UiText text={"Connecting"} /> : answerError ? pendingAudioUrl ? <UiText text={"Processing paused"} /> : <UiText text={"Mic check"} /> : stopping ? <UiText text={"Processing"} /> : phase === 'preparing' ? <UiText text={"Preparing"} /> : isExaminerBusy ? <UiText text={"Examiner live"} /> : canRecord ? <UiText text={"Ready"} /> : <UiText text={"In progress"} />}</span>
         </div>
         <div className="speaking-focus-content">
           <div className={`speaking-examiner-stage ${phase === 'examiner_speaking' ? 'is-speaking' : ''} ${recording ? 'is-listening' : ''}`}>
             <div className="speaking-examiner-avatar" aria-hidden><span>{examiner.name[0]}</span><i /></div>
-            <div className="speaking-examiner-identity"><span>YOUR EXAMINER</span><strong>{examiner.name}</strong><small>{examiner.gender === 'male' ? 'Male' : 'Female'} · {voiceSource === 'neural' ? 'Natural AI voice' : voiceSource === 'device' ? 'English device voice' : 'English voice'}</small></div>
-            <div className="speaking-examiner-state"><span className="speaking-examiner-state-icon">{voiceLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : recording || answerError ? <Mic className="h-4 w-4" /> : phase === 'examiner_speaking' ? <Volume2 className="h-4 w-4" /> : <AudioLines className="h-4 w-4" />}</span><span>{voiceLoading ? 'Preparing the question' : voiceError ? 'Tap to resume examiner audio' : stopping ? 'Processing answer' : answerError ? pendingAudioUrl ? 'Recording saved · retry processing' : 'Microphone needs attention' : recording ? 'Listening to you' : phase === 'examiner_speaking' ? 'Asking a question' : phase === 'preparing' ? 'Preparation time' : phase === 'thinking' ? 'Preparing the next question' : 'In the exam room'}</span></div>
+            <div className="speaking-examiner-identity"><span><UiText text={"YOUR EXAMINER"} /></span><strong>{examiner.name}</strong><small>{examiner.gender === 'male' ? <UiText text={"Male"} /> : <UiText text={"Female"} />} · {voiceSource === 'neural' ? <UiText text={"Natural AI voice"} /> : voiceSource === 'device' ? <UiText text={"English device voice"} /> : <UiText text={"English voice"} />}</small></div>
+            <div className="speaking-examiner-state"><span className="speaking-examiner-state-icon">{voiceLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : recording || answerError ? <Mic className="h-4 w-4" /> : phase === 'examiner_speaking' ? <Volume2 className="h-4 w-4" /> : <AudioLines className="h-4 w-4" />}</span><span>{voiceLoading ? <UiText text={"Preparing the question"} /> : voiceError ? <UiText text={"Tap to resume examiner audio"} /> : stopping ? <UiText text={"Processing answer"} /> : answerError ? pendingAudioUrl ? <UiText text={"Recording saved · retry processing"} /> : <UiText text={"Microphone needs attention"} /> : recording ? <UiText text={"Listening to you"} /> : phase === 'examiner_speaking' ? <UiText text={"Asking a question"} /> : phase === 'preparing' ? <UiText text={"Preparation time"} /> : phase === 'thinking' ? <UiText text={"Preparing the next question"} /> : <UiText text={"In the exam room"} />}</span></div>
           </div>
           {cueCard && (phase === 'preparing' || isExaminerBusy || canRecord) ? (
             <div className="speaking-question-card speaking-question-card--cue">
-              <div className="speaking-question-meta"><span>PART 02 · TASK CARD</span><strong className={canRecord && speakLeft <= 30 ? 'is-urgent' : ''}>{phase === 'preparing' ? `PREP ${formatClock(prepLeft)}` : canRecord ? `SPEAK ${formatClock(speakLeft)}` : 'LISTEN'}</strong></div>
+              <div className="speaking-question-meta"><span><UiText text={"PART 02 · TASK CARD"} /></span><strong className={canRecord && speakLeft <= 30 ? 'is-urgent' : ''}>{phase === 'preparing' ? <UiText text={"PREP {{value1}}"} values={{ value1: String(formatClock(prepLeft)) }} /> : canRecord ? <UiText text={"SPEAK {{value1}}"} values={{ value1: String(formatClock(speakLeft)) }} /> : <UiText text={"LISTEN"} />}</strong></div>
               {(phase === 'preparing' || canRecord) ? <div className="speaking-timer-track" role="progressbar" aria-label={phase === 'preparing' ? 'Preparation time remaining' : 'Speaking time remaining'} aria-valuenow={phase === 'preparing' ? prepLeft : speakLeft} aria-valuemin={0} aria-valuemax={phase === 'preparing' ? 60 : 120}><span style={{ width: `${phase === 'preparing' ? (prepLeft / 60) * 100 : (speakLeft / 120) * 100}%` }} /></div> : null}
               <h3>{cueCard.title}</h3>
               <p className="speaking-question-hint">You should say:</p>
               <ul className="speaking-cue-list">{cueCard.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>
-              {phase === 'preparing' || canRecord ? <><label className="speaking-notes-label" htmlFor="speaking-prep-notes">Your notes <span>Keywords and ideas</span></label><textarea id="speaking-prep-notes" className="speaking-prep-notes" value={prepNotes} onChange={(event) => setPrepNotes(event.target.value)} maxLength={1000} readOnly={phase !== 'preparing'} placeholder="Plan your answer here…" /></> : null}
-              {canRecord ? <p className="speaking-timer-help">The examiner moves on when you finish speaking or the two-minute limit is reached.</p> : null}
+              {phase === 'preparing' || canRecord ? <><label className="speaking-notes-label" htmlFor="speaking-prep-notes"><UiText text={"Your notes"} /> <span><UiText text={"Keywords and ideas"} /></span></label><textarea id="speaking-prep-notes" className="speaking-prep-notes" value={prepNotes} onChange={(event) => setPrepNotes(event.target.value)} maxLength={1000} readOnly={phase !== 'preparing'} placeholder={uiCopy("Plan your answer here…")} /></> : null}
+              {canRecord ? <p className="speaking-timer-help"><UiText text={"The examiner moves on when you finish speaking or the two-minute limit is reached."} /></p> : null}
             </div>
           ) : (
             <div className="speaking-question-card">
-              <div className="speaking-question-meta"><span>{canRecord ? 'CURRENT QUESTION' : 'EXAMINER PROMPT'}</span><span>{activePart > 0 ? `PART 0${activePart}` : 'INTERVIEW'}</span></div>
-              <h3>{currentPrompt || 'The examiner is preparing your next question.'}</h3>
-              <p className="speaking-question-hint">{canRecord ? activePart === 3 ? 'Develop your opinion and explain why.' : 'Answer naturally in your own words.' : 'Recording starts when the examiner finishes speaking.'}</p>
+              <div className="speaking-question-meta"><span>{canRecord ? <UiText text={"CURRENT QUESTION"} /> : <UiText text={"EXAMINER PROMPT"} />}</span><span>{activePart > 0 ? <UiText text={"PART 0{{value1}}"} values={{ value1: String(activePart) }} /> : <UiText text={"INTERVIEW"} />}</span></div>
+              <h3>{currentPrompt || <UiText text={"The examiner is preparing your next question."} />}</h3>
+              <p className="speaking-question-hint">{canRecord ? activePart === 3 ? <UiText text={"Develop your opinion and explain why."} /> : <UiText text={"Answer naturally in your own words."} /> : <UiText text={"Recording starts when the examiner finishes speaking."} />}</p>
             </div>
           )}
 
           <div className={`speaking-response-station ${recording ? 'is-live' : ''}`}>
-            <div className="speaking-response-title"><span className="speaking-response-icon"><AudioLines className="h-[18px] w-[18px]" /></span><div><h3>Your response</h3><p>Voice answer</p></div></div>
+            <div className="speaking-response-title"><span className="speaking-response-icon"><AudioLines className="h-[18px] w-[18px]" /></span><div><h3><UiText text={"Your response"} /></h3><p><UiText text={"Voice answer"} /></p></div></div>
             {isExaminerBusy ? (
-              <div className="speaking-wait-state"><div className="speaking-wait-orb"><AudioLines className="h-7 w-7" /></div><strong>{voiceError ? 'Examiner audio paused' : phase === 'thinking' ? 'Preparing the next question…' : 'Examiner is speaking…'}</strong><p>Take a moment to listen before you answer.</p>
-                {voiceError ? <><p role="alert" className="speaking-inline-error">{voiceError}</p><button className="speaking-record-button" onClick={() => { setVoiceError(null); if (playbackRef.current?.canResume) playbackRef.current.resume(); else promptReplayRef.current?.(false) }}><Volume2 className="h-4 w-4" /> Play examiner</button><button className="speaking-text-switch" onClick={() => promptReplayRef.current?.(true)}>Use matching device voice</button></> : null}
+              <div className="speaking-wait-state"><div className="speaking-wait-orb"><AudioLines className="h-7 w-7" /></div><strong>{voiceError ? <UiText text={"Examiner audio paused"} /> : phase === 'thinking' ? <UiText text={"Preparing the next question…"} /> : <UiText text={"Examiner is speaking…"} />}</strong><p><UiText text={"Take a moment to listen before you answer."} /></p>
+                {voiceError ? <><p role="alert" className="speaking-inline-error">{voiceError}</p><button className="speaking-record-button" onClick={() => { setVoiceError(null); if (playbackRef.current?.canResume) playbackRef.current.resume(); else promptReplayRef.current?.(false) }}><Volume2 className="h-4 w-4" /> <UiText text={"Play examiner"} /></button><button className="speaking-text-switch" onClick={() => promptReplayRef.current?.(true)}><UiText text={"Use matching device voice"} /></button></> : null}
               </div>
             ) : canRecord ? (
               <div className="speaking-input-state">
-                <div className={`speaking-waveform ${recording ? 'is-recording' : ''}`}><span className="speaking-waveform-icon"><Mic className="h-6 w-6" /></span><MicVisualizer stream={micStream} active={recording} bars={24} audioContext={voiceContextRef.current} /><span className="speaking-waveform-label">{stopping ? 'Processing your answer…' : answerError ? pendingAudioUrl ? 'Recording saved' : 'Recording needs attention' : recording ? speechDetected ? 'Voice detected' : 'Listening for your voice' : 'Microphone ready'}</span>{recording || stopping ? <span className="speaking-record-clock">{formatClock(recordSeconds)}</span> : null}</div>
-                <p className="speaking-record-hint">{stopping ? 'Processing your saved recording.' : answerError ? pendingAudioUrl ? 'Listen to your saved answer below.' : 'Check your microphone, then retry this question.' : recording ? speechDetected ? 'Keep speaking naturally. Your turn ends after a short pause.' : 'Start speaking whenever you are ready.' : 'Recording starts automatically when the examiner finishes.'}</p>
-                {recording ? <button type="button" className="speaking-finish-answer" onClick={() => void handleStopRecording()}><Square className="h-3 w-3 fill-current" /> Finish answer</button> : null}
+                <div className={`speaking-waveform ${recording ? 'is-recording' : ''}`}><span className="speaking-waveform-icon"><Mic className="h-6 w-6" /></span><MicVisualizer stream={micStream} active={recording} bars={24} audioContext={voiceContextRef.current} /><span className="speaking-waveform-label">{stopping ? <UiText text={"Processing your answer…"} /> : answerError ? pendingAudioUrl ? <UiText text={"Recording saved"} /> : <UiText text={"Recording needs attention"} /> : recording ? speechDetected ? <UiText text={"Voice detected"} /> : <UiText text={"Listening for your voice"} /> : <UiText text={"Microphone ready"} />}</span>{recording || stopping ? <span className="speaking-record-clock">{formatClock(recordSeconds)}</span> : null}</div>
+                <p className="speaking-record-hint">{stopping ? <UiText text={"Processing your saved recording."} /> : answerError ? pendingAudioUrl ? <UiText text={"Listen to your saved answer below."} /> : <UiText text={"Check your microphone, then retry this question."} /> : recording ? speechDetected ? <UiText text={"Keep speaking naturally. Your turn ends after a short pause."} /> : <UiText text={"Start speaking whenever you are ready."} /> : <UiText text={"Recording starts automatically when the examiner finishes."} />}</p>
+                {recording ? <button type="button" className="speaking-finish-answer" onClick={() => void handleStopRecording()}><Square className="h-3 w-3 fill-current" /> <UiText text={"Finish answer"} /></button> : null}
                 {answerError ? <p role="alert" className="speaking-inline-error">{answerError}</p> : null}
-                {pendingAudioUrl && !recording ? <audio controls preload="metadata" src={pendingAudioUrl} className="mt-3 w-full" aria-label="Your saved answer" /> : null}
-                {pendingAudioUrl && answerError ? <button disabled={stopping} onClick={() => void retryProcessing()} className="speaking-record-button">Retry processing saved answer</button> : null}
-                {answerError ? <button disabled={stopping} onClick={() => void retryMicrophone()} className="speaking-record-button">{pendingAudioUrl ? 'Record this answer again' : 'Retry microphone'}</button> : null}
+                {pendingAudioUrl && !recording ? <audio controls preload="metadata" src={pendingAudioUrl} className="mt-3 w-full" aria-label={uiCopy("Your saved answer")} /> : null}
+                {pendingAudioUrl && answerError ? <button disabled={stopping} onClick={() => void retryProcessing()} className="speaking-record-button"><UiText text={"Retry processing saved answer"} /></button> : null}
+                {answerError ? <button disabled={stopping} onClick={() => void retryMicrophone()} className="speaking-record-button">{pendingAudioUrl ? <UiText text={"Record this answer again"} /> : <UiText text={"Retry microphone"} />}</button> : null}
               </div>
             ) : (
-              <div className="speaking-wait-state"><div className="speaking-wait-orb"><Loader2 className="h-7 w-7 animate-spin" /></div><strong>{phase === 'evaluating' ? 'Preparing your feedback…' : 'Get ready to answer'}</strong><p>{phase === 'preparing' ? 'Use this time to plan your long turn.' : 'Your next prompt is coming up.'}</p></div>
+              <div className="speaking-wait-state"><div className="speaking-wait-orb"><Loader2 className="h-7 w-7 animate-spin" /></div><strong>{phase === 'evaluating' ? <UiText text={"Preparing your feedback…"} /> : <UiText text={"Get ready to answer"} />}</strong><p>{phase === 'preparing' ? <UiText text={"Use this time to plan your long turn."} /> : <UiText text={"Your next prompt is coming up."} />}</p></div>
             )}
           </div>
           {evalError ? <p role="alert" className="speaking-inline-error">{evalError}</p> : null}
         </div>
-        <div className="speaking-focus-footer"><CheckCircle2 className="h-4 w-4" /> Detailed feedback and an estimated band appear after the session.</div>
+        <div className="speaking-focus-footer"><CheckCircle2 className="h-4 w-4" /> <UiText text={"Detailed feedback and an estimated band appear after the session."} /></div>
       </section>
       </main>
     </div>

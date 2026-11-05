@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from 'react'
 import { cn } from '@/components/ui/utils'
 
@@ -26,8 +28,9 @@ export function ArenaCard({ className, ...props }: HTMLAttributes<HTMLElement>) 
 }
 
 export function LoadingState({ rows = 3, className }: { rows?: number; className?: string }) {
+  const { c: uiCopy } = useCopy()
   return (
-    <div className={cn('arena-loading', className)} role="status" aria-label="Loading content">
+    <div className={cn('arena-loading', className)} role="status" aria-label={uiCopy("Loading content")}>
       {Array.from({ length: rows }, (_, index) => <span key={index} style={{ '--row': index } as React.CSSProperties} />)}
     </div>
   )
@@ -48,7 +51,7 @@ export function StatusChip({ className, ...props }: HTMLAttributes<HTMLSpanEleme
 export function Metric({ label, value, className }: { label: ReactNode; value: ReactNode; className?: string }) {
   return (
     <div className={cn('ui-metric', className)}>
-      <span className="ui-metric-label">{label}</span>
+      <span className="ui-metric-label"><UiText text={label} /></span>
       <strong className="ui-metric-value">{value}</strong>
     </div>
   )
@@ -70,8 +73,8 @@ export function EmptyState({
   return (
     <div className={cn('ui-empty-state', className)}>
       {icon ? <div className="ui-empty-icon">{icon}</div> : null}
-      <h3>{title}</h3>
-      {description ? <p>{description}</p> : null}
+      <h3><UiText text={title} /></h3>
+      {description ? <p><UiText text={description} /></p> : null}
       {action ? <div className="mt-4">{action}</div> : null}
     </div>
   )

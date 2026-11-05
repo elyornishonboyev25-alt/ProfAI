@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import LandingPlans from '@/features/billing/LandingPlans'
 import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from 'react'
 import { motion, useInView, useMotionValue, useReducedMotion, useSpring } from 'framer-motion'
@@ -92,7 +93,7 @@ function Hero({ onStart, onExplore }: { onStart: () => void; onExplore: () => vo
         </motion.div>
         <motion.div className="lx-hero-trust" {...rise(.32)}>
           <span><Check size={15} /> {t(['IELTS Academic & General', 'IELTS Academic va General', 'IELTS Academic и General'])}</span>
-          <span><Check size={15} /> Digital SAT</span>
+          <span><Check size={15} /> <UiText text={"Digital SAT"} /></span>
           <span><Check size={15} /> {t(['Free plan · $0', 'Bepul tarif · $0', 'Бесплатный тариф · $0'])}</span>
         </motion.div>
       </div>

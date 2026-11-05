@@ -171,7 +171,7 @@ function ResultsReviewContent() {
             onClick={() => navigate(catalogPath)}
             className="route-back-button mt-5"
           >
-            <ArrowLeft className="h-4 w-4" /> Back to {skill === 'listening' ? 'Listening' : 'Reading'} Tests </button>
+            <ArrowLeft className="h-4 w-4" /> <UiText text={"Back to"} /> {skill === 'listening' ? <UiText text={"Listening"} /> : <UiText text={"Reading"} />} <UiText text={"Tests"} /> </button>
         </div>
       </div>
     )
@@ -193,7 +193,7 @@ function ResultsReviewContent() {
               onClick={() => navigate(catalogPath)}
               className="premium-back-btn-sm normal-case tracking-normal text-slate-700"
             >
-               {skill === 'listening' ? 'Listening' : 'Reading'} Catalog </button>
+               {skill === 'listening' ? <UiText text={"Listening"} /> : <UiText text={"Reading"} />} <UiText text={"Catalog"} /> </button>
             <span className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-black tracking-wide text-white">
                <UiText text={"FULL REVIEW"} /> </span>
           </div>
@@ -209,7 +209,7 @@ function ResultsReviewContent() {
               }`}
             >
               {showCorrectAnswers ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-              {showCorrectAnswers ? 'Hide Correct Answers' : 'Show Correct Answers'}
+              {showCorrectAnswers ? <UiText text={"Hide Correct Answers"} /> : <UiText text={"Show Correct Answers"} />}
             </button>
             <button type="button"
               onClick={startRetake}
@@ -229,7 +229,7 @@ function ResultsReviewContent() {
                  <UiText text={"Worked Test Window"} /> </p>
               <h1 className="mt-1 text-2xl font-black text-slate-900 sm:text-3xl">{test.title}</h1>
               <p className="mt-1 text-sm text-slate-500">
-                {selectedPart === 'all' ? 'All parts' : `Part ${selectedPart}`}  <UiText text={"| Accuracy"} /> {selectedSummary.accuracy}%
+                {selectedPart === 'all' ? <UiText text={"All parts"} /> : <UiText text={"Part {{value1}}"} values={{ value1: String(selectedPart) }} />}  <UiText text={"| Accuracy"} /> {selectedSummary.accuracy}%
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -334,7 +334,7 @@ function ResultsReviewContent() {
                       </span>
                     </div>
                     <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${badge.tone}`}>
-                      {badge.label}
+                      <UiText text={badge.label} />
                     </span>
                   </div>
 

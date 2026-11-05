@@ -236,7 +236,7 @@ function MockIELTSRunContent() {
                   {text('All mocks', 'Barcha mocklar', 'Все тесты')}
                 </button>
                 <span className="mock-run-chip">FULL MOCK {mock.index}</span>
-                {supported && !isFullscreen && <button type="button" className="mock-run-back" onClick={() => void enter()}><Maximize2 size={16} /> Full screen</button>}
+                {supported && !isFullscreen && <button type="button" className="mock-run-back" onClick={() => void enter()}><Maximize2 size={16} /> <UiText text={"Full screen"} /></button>}
               </nav>
               <p className="mock-run-eyebrow">IELTS ACADEMIC</p>
               <h1>
@@ -244,7 +244,7 @@ function MockIELTSRunContent() {
                   text('Your mock results.', 'Mock natijalaringiz.', 'Ваши результаты.')
                 ) : (
                   <>
-                    IELTS <span>Full Mock {mock.index}</span>
+                    IELTS <span><UiText text={"Full Mock"} /> {mock.index}</span>
                   </>
                 )}
               </h1>
@@ -389,7 +389,7 @@ function MockIELTSRunContent() {
                     <p>
                       <Clock3 size={13} />
                       {section.durationMinutes} <UiText text="min" /> <span>·</span>
-                      {section.meta}
+                      <UiText text={section.meta} />
                     </p>
                   </div>
                   <div className="mock-run-skill-band">
@@ -456,7 +456,7 @@ function MockIELTSRunContent() {
                         <div className="mock-run-responses">
                           {saved.review.map((item, responseIndex) => (
                             <div key={responseIndex}>
-                              <h4>{item.label}</h4>
+                              <h4><UiText text={item.label} /></h4>
                               <p>
                                 {item.response ||
                                   text('No response recorded.', 'Javob yozilmagan.', 'Ответ не записан.')}

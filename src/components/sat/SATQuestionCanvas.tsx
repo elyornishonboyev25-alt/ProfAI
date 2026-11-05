@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import { useMemo, useState, type ReactNode } from 'react'
 import { Bookmark, FileImage, Undo2 } from 'lucide-react'
 import type { HighlightStroke, SATQuestion } from '@/features/sat/practiceTest4'
@@ -50,6 +52,7 @@ export default function SATQuestionCanvas({
   practicePanel,
   practiceLayout = false,
 }: Props) {
+  const { c: uiCopy } = useCopy()
   const [eliminatorOpen, setEliminatorOpen] = useState(false)
   const { context, task } = useMemo(() => splitSATPrompt(question.prompt), [question.prompt])
   const hasSeparateSource = question.section !== 'math' && Boolean(question.visual || question.sourceContent?.context?.trim() || context.trim())
@@ -72,7 +75,7 @@ export default function SATQuestionCanvas({
                 imageClassName="sat-exam-visual mx-auto w-auto max-w-full object-contain"
               />
               <figcaption className="mt-3 flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-500">
-                <FileImage className="h-4 w-4" /> Reference visual · not drawn to scale unless stated
+                <FileImage className="h-4 w-4" /> <UiText text={"Reference visual · not drawn to scale unless stated"} />
               </figcaption>
             </figure>
           ) : null}
@@ -105,12 +108,12 @@ export default function SATQuestionCanvas({
             className={`sat-question-bookmark flex flex-1 items-center gap-2 px-4 text-left font-serif text-sm font-bold transition sm:text-base ${flagged ? 'text-[#3d4fd2]' : 'text-slate-600 hover:text-slate-950'}`}
           >
             <Bookmark className={`h-5 w-5 ${flagged ? 'fill-[#3d4fd2]' : 'fill-slate-500'}`} />
-            {readOnly ? 'Answer review' : flagged ? 'Marked for Review' : 'Mark for Review'}
+            {readOnly ? <UiText text={"Answer review"} /> : flagged ? <UiText text={"Marked for Review"} /> : <UiText text={"Mark for Review"} />}
           </button>
           {!readOnly && question.kind === 'multiple-choice' && onEliminatedChoicesChange ? <button
             type="button"
-            aria-label="Answer eliminator"
-            title="Cross out answer choices"
+            aria-label={uiCopy("Answer eliminator")}
+            title={uiCopy("Cross out answer choices")}
             aria-pressed={eliminatorOpen}
             onClick={() => setEliminatorOpen((open) => !open)}
             className={`m-1.5 flex h-10 w-12 shrink-0 items-center justify-center rounded-xl border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 ${eliminatorOpen ? 'border-[#4053d7] bg-[#e8ecff] text-[#4053d7]' : 'border-slate-300 bg-[#f4f4f4] text-slate-600 hover:bg-white'}`}
@@ -131,8 +134,8 @@ export default function SATQuestionCanvas({
 
           {question.kind === 'multiple-choice' ? (
             <>
-            {eliminatorOpen && !readOnly ? <p className="mt-3 text-xs font-semibold text-slate-600">Cross out choices you want to rule out. Use Undo to restore a choice.</p> : null}
-            <div className="mt-4 space-y-2" role="radiogroup" aria-label={`Question ${question.number} answer choices`}>
+            {eliminatorOpen && !readOnly ? <p className="mt-3 text-xs font-semibold text-slate-600"><UiText text={"Cross out choices you want to rule out. Use Undo to restore a choice."} /></p> : null}
+            <div className="mt-4 space-y-2" role="radiogroup" aria-label={uiCopy("Question {{value1}} answer choices", { value1: String(question.number) })}>
               {question.choices.map((choice) => {
                 const selected = answer === choice.key
                 const eliminated = eliminatedChoices.includes(choice.key)
@@ -172,8 +175,8 @@ export default function SATQuestionCanvas({
                   </button>
                   {!readOnly && onEliminatedChoicesChange && (eliminatorOpen || eliminated) ? <button
                     type="button"
-                    aria-label={`${eliminated ? 'Restore' : 'Eliminate'} choice ${choice.key}`}
-                    title={eliminated ? `Restore choice ${choice.key}` : `Eliminate choice ${choice.key}`}
+                    aria-label={uiCopy("{{value1}} choice {{value2}}", { value1: String(eliminated ? 'Restore' : 'Eliminate'), value2: String(choice.key) })}
+                    title={eliminated ? uiCopy("Restore choice {{value1}}", { value1: String(choice.key) }) : uiCopy("Eliminate choice {{value1}}", { value1: String(choice.key) })}
                     aria-pressed={eliminated}
                     className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-400 text-slate-700 hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600"
                     onClick={() => onEliminatedChoicesChange(eliminated ? eliminatedChoices.filter((key) => key !== choice.key) : [...eliminatedChoices, choice.key])}
@@ -187,14 +190,14 @@ export default function SATQuestionCanvas({
             </>
           ) : (
             <div className="mt-5">
-              <label htmlFor="student-response" className="font-serif text-base font-bold text-slate-800">Enter your answer</label>
+              <label htmlFor="student-response" className="font-serif text-base font-bold text-slate-800"><UiText text={"Enter your answer"} /></label>
               <input
                 id="student-response"
                 readOnly={readOnly}
                 value={answer}
                 onChange={(event) => onAnswer(event.target.value)}
                 inputMode="decimal"
-                placeholder="e.g. 3/10 or 0.3"
+                placeholder={uiCopy("e.g. 3/10 or 0.3")}
                 className={`mt-2 h-12 w-full rounded-xl border-2 px-4 font-serif text-lg font-bold text-black outline-none ${
                   answerState === 'correct'
                     ? 'border-emerald-600 bg-emerald-50 focus:ring-2 focus:ring-emerald-600/20'
@@ -203,7 +206,7 @@ export default function SATQuestionCanvas({
                       : 'border-black bg-white focus:border-[#4053d7] focus:ring-2 focus:ring-[#4053d7]/20'
                 }`}
               />
-              <p className="mt-2 text-xs font-semibold leading-5 text-slate-500">Fractions and equivalent decimals are accepted.</p>
+              <p className="mt-2 text-xs font-semibold leading-5 text-slate-500"><UiText text={"Fractions and equivalent decimals are accepted."} /></p>
             </div>
           )}
 

@@ -1,3 +1,4 @@
+import { useCopy } from '@/i18n/interface'
 import LeaderboardEligibilityNotice from './common/LeaderboardEligibilityNotice'
 import { getQuestionSlotCount } from '@/utils/ieltsQuestionSlots'
 import { createPortal } from 'react-dom'
@@ -224,6 +225,7 @@ export default function IELTSReadingInterface({
   fullMockId,
   startAccess,
 }: IELTSReadingInterfaceProps) {
+  const { c: uiCopy } = useCopy()
   const isReviewMode = Boolean(reviewPayload?.result)
   const isListening = test.module === 'Listening'
   const startRequestRef = useRef(false)
@@ -1044,21 +1046,21 @@ export default function IELTSReadingInterface({
         : meta.status === 'skipped' ? 'border-slate-200 bg-slate-100 text-slate-600' : 'border-red-200 bg-red-50 text-red-700'
       return <div className={`${className} reading-review-feedback rounded-lg border ${active ? 'border-slate-300' : 'border-slate-200'} bg-slate-50 px-3 py-3`}>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="text-xs font-semibold text-slate-600">Question {question.number}</span>
+          <span className="text-xs font-semibold text-slate-600"><UiText text={"Question"} /> {question.number}</span>
           <span className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 text-[11px] font-semibold ${tone}`}>
             {meta.status === 'correct' ? <CheckIcon className="h-3 w-3" /> : meta.status === 'incorrect' ? <XMarkIcon className="h-3 w-3" /> : null}{status}
           </span>
         </div>
         <dl className="mt-2 grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 text-xs leading-5">
-          <dt className="text-slate-500">Your answer</dt><dd className="break-words font-medium text-slate-800">{formatUserAnswer(answers[question.id], question.options)}</dd>
-          <dt className="text-slate-500">Correct answer</dt><dd className="break-words font-semibold text-emerald-800">{formatCorrectAnswer(meta.correctAnswer)}</dd>
+          <dt className="text-slate-500"><UiText text={"Your answer"} /></dt><dd className="break-words font-medium text-slate-800">{formatUserAnswer(answers[question.id], question.options)}</dd>
+          <dt className="text-slate-500"><UiText text={"Correct answer"} /></dt><dd className="break-words font-semibold text-emerald-800">{formatCorrectAnswer(meta.correctAnswer)}</dd>
         </dl>
-        <button type="button" aria-label={`Show evidence for question ${question.number}`} aria-pressed={active}
+        <button type="button" aria-label={uiCopy("Show evidence for question {{value1}}", { value1: String(question.number) })} aria-pressed={active}
           onClick={() => {
             const section = sectionMeta[currentSectionIndex]
             setLastActiveQuestionIndex(section.startIndex + section.questionIds.indexOf(question.id))
           }} className={`mt-3 inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 ${active ? 'border-red-200 bg-red-50 text-red-700' : 'border-slate-200 bg-white text-slate-700 hover:border-red-200 hover:text-red-700'}`}>
-          <DocumentTextIcon className="h-3.5 w-3.5" />{active ? 'Evidence selected' : 'View in passage'}
+          <DocumentTextIcon className="h-3.5 w-3.5" />{active ? <UiText text={"Evidence selected"} /> : <UiText text={"View in passage"} />}
         </button>
       </div>
     }
@@ -1066,7 +1068,7 @@ export default function IELTSReadingInterface({
       return (
         <div className={`${className} rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 shadow-[0_8px_18px_rgba(16,185,129,0.16)]`}>
           <p className="text-xs font-black uppercase tracking-[0.1em] text-emerald-700">
-            Question {question.number} - Correct
+            <UiText text={"Question"} /> {question.number} <UiText text={"- Correct"} />
           </p>
         </div>
       )
@@ -1075,10 +1077,10 @@ export default function IELTSReadingInterface({
     return (
       <div className={`${className} rounded-xl border border-red-300 bg-red-50 px-3 py-2 shadow-[0_8px_18px_rgba(239,68,68,0.16)]`}>
         <p className="text-xs font-black uppercase tracking-[0.1em] text-red-700">
-          Question {question.number} - Wrong
+          <UiText text={"Question"} /> {question.number} <UiText text={"- Wrong"} />
         </p>
         <p className="mt-1 text-xs font-bold text-slate-700">
-          Correct answer:{' '}
+          <UiText text={"Correct answer:"} />{' '}
           <span className="rounded-md border border-emerald-200 bg-emerald-100 px-1.5 py-0.5 text-emerald-800">
             {correct}
           </span>
@@ -1910,7 +1912,7 @@ export default function IELTSReadingInterface({
                       type="button"
                       onClick={() => handleFlagQuestion(globalIdx)}
                       className={`mt-1 rounded-md p-1 transition ${isFlagged ? 'bg-red-100 text-red-700' : 'text-slate-400 hover:bg-red-50 hover:text-red-600'}`}
-                      title={`Flag question ${question.number}`}
+                      title={uiCopy("Flag question {{value1}}", { value1: String(question.number) })}
                     >
                       <BookmarkIcon className={`h-4 w-4 ${isFlagged ? 'fill-current' : ''}`} />
                     </button>
@@ -1971,7 +1973,7 @@ export default function IELTSReadingInterface({
               type="button"
               onClick={() => handleFlagQuestion(globalIdx)}
               className={`mt-0.5 rounded-md p-1 transition ${isFlagged ? 'bg-red-100 text-red-700' : 'text-slate-400 hover:bg-red-50 hover:text-red-600'}`}
-              title={`Flag question ${question.number}`}
+              title={uiCopy("Flag question {{value1}}", { value1: String(question.number) })}
             >
               <BookmarkIcon className={`h-4 w-4 ${isFlagged ? 'fill-current' : ''}`} />
             </button>
@@ -2442,7 +2444,7 @@ export default function IELTSReadingInterface({
                             }}
                             disabled={isReviewMode}
                             className="group inline-flex h-10 w-full items-center justify-center rounded-lg border border-transparent bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-200 disabled:cursor-not-allowed"
-                            aria-label={`Question ${question.number}, choose ${label}`}
+                            aria-label={uiCopy("Question {{value1}}, choose {{value2}}", { value1: String(question.number), value2: String(label) })}
                           >
                             <span className={`inline-flex h-4 w-4 items-center justify-center rounded-full border-2 transition ${dotTone}`}>
                               <span
@@ -2567,7 +2569,7 @@ export default function IELTSReadingInterface({
                         <input
                           key={`${question.id}-sentence-${partIndex}`}
                           type="text"
-                          aria-label={`Answer for question ${question.number}`}
+                          aria-label={uiCopy("Answer for question {{value1}}", { value1: String(question.number) })}
                           value={(answers[question.id] as string) || ''}
                           onChange={(event) => handleAnswerChange(question.id, event.target.value)}
                           disabled={isReviewMode}
@@ -2627,7 +2629,7 @@ export default function IELTSReadingInterface({
                       value={(answers[question.id] as string) || ''}
                       onChange={(event) => handleAnswerChange(question.id, event.target.value)}
                       disabled={isReviewMode}
-                      placeholder="Type your answer..."
+                      placeholder={uiCopy("Type your answer...")}
                       className={`mt-2 h-9 w-full rounded-lg border px-3 text-sm font-semibold text-slate-800 outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 disabled:cursor-not-allowed disabled:bg-slate-100 ${
                         isReviewMode && reviewShowCorrectAnswers
                           ? isWrong
@@ -2680,7 +2682,7 @@ export default function IELTSReadingInterface({
                       type="button"
                       onClick={() => handleFlagQuestion(globalIdx)}
                       className={`mt-1 rounded-md p-1 transition ${isFlagged ? 'bg-red-100 text-red-700' : 'text-slate-400 hover:bg-red-50 hover:text-red-600'}`}
-                      title={`Flag question ${question.number}`}
+                      title={uiCopy("Flag question {{value1}}", { value1: String(question.number) })}
                     >
                       <BookmarkIcon className={`h-4 w-4 ${isFlagged ? 'fill-current' : ''}`} />
                     </button>
@@ -2828,7 +2830,7 @@ export default function IELTSReadingInterface({
                     {question.text}
                   </p>
                   <CompactSelect
-                    label={`Answer for question ${question.number}`}
+                    label={uiCopy("Answer for question {{value1}}", { value1: String(question.number) })}
                     options={options}
                     value={answers[question.id] as string}
                     onChange={(val) => handleAnswerChange(question.id, val)}
@@ -2837,7 +2839,7 @@ export default function IELTSReadingInterface({
                   <button
                     type="button"
                     onClick={() => handleFlagQuestion(globalIdx)}
-                    aria-label={`Bookmark question ${question.number}`}
+                    aria-label={uiCopy("Bookmark question {{value1}}", { value1: String(question.number) })}
                     aria-pressed={isFlagged}
                     className={`rounded-md p-1 transition ${isFlagged ? 'bg-red-100 text-red-700' : 'text-slate-400 hover:bg-red-50 hover:text-red-600'}`}
                   >
@@ -3247,10 +3249,10 @@ export default function IELTSReadingInterface({
       <div className="my-auto max-w-5xl w-full shrink-0 relative z-10">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
           <h1 className="text-5xl lg:text-6xl font-black mb-6 tracking-tight bg-gradient-to-r from-red-600 via-rose-500 to-orange-400 bg-clip-text text-transparent">
-            {isListening ? 'Academic Listening Test' : 'Academic Reading Test'}
+            {isListening ? <UiText text={"Academic Listening Test"} /> : <UiText text={"Academic Reading Test"} />}
           </h1>
           <p className="text-slate-600 text-lg font-light max-w-2xl mx-auto italic">
-            Experience the authentic IELTS Computer-Delivered environment with Ivygoo precision.
+            <UiText text={"Experience the authentic IELTS Computer-Delivered environment with Ivygoo precision."} />
           </p>
         </motion.div>
 
@@ -3261,24 +3263,24 @@ export default function IELTSReadingInterface({
                 <LightBulbIcon className="w-8 h-8 text-white" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-slate-900">Practice Mode</h3>
-                <span className="text-xs font-bold text-red-500 uppercase tracking-widest">Casual Learning</span>
+                <h3 className="text-2xl font-bold text-slate-900"><UiText text={"Practice Mode"} /></h3>
+                <span className="text-xs font-bold text-red-500 uppercase tracking-widest"><UiText text={"Casual Learning"} /></span>
               </div>
             </div>
             <p className="text-slate-600 text-[15px] leading-relaxed mb-8 flex-1 italic group-hover:text-slate-700 transition-colors">
-              Focus on accuracy and comprehension at your own pace. Perfect for initial preparation and understanding complex question types.
+              <UiText text={"Focus on accuracy and comprehension at your own pace. Perfect for initial preparation and understanding complex question types."} />
             </p>
             <div className="space-y-4 mb-10">
               <div className="flex items-center gap-3 text-xs font-semibold text-slate-500">
-                <div className="w-1.5 h-1.5 rounded-full bg-red-500" /> {isListening ? <UiText text="Audio followed by 2 minutes to check answers" /> : 'Customizable session time'}
+                <div className="w-1.5 h-1.5 rounded-full bg-red-500" /> {isListening ? <UiText text="Audio followed by 2 minutes to check answers" /> : <UiText text={"Customizable session time"} />}
               </div>
               <div className="flex items-center gap-3 text-xs font-semibold text-slate-500">
-                <div className="w-1.5 h-1.5 rounded-full bg-rose-500" /> Select specific parts to practice
+                <div className="w-1.5 h-1.5 rounded-full bg-rose-500" /> <UiText text={"Select specific parts to practice"} />
               </div>
             </div>
             <div className="flex items-center gap-3">
               <button type="button" disabled={startAccess?.busy} onClick={(event) => { event.stopPropagation(); setTestMode('practice'); setShowModeModal(true); }} className="w-full px-3 py-4 bg-gradient-to-r from-red-600 to-rose-600 border border-red-500 rounded-2xl text-white text-sm font-bold flex items-center justify-center shadow-lg shadow-red-500/25 group-hover:from-red-500 group-hover:to-rose-500 transition-all disabled:opacity-50">
-                Enter Practice Library
+                <UiText text={"Enter Practice Library"} />
               </button>
 
             </div>
@@ -3290,34 +3292,34 @@ export default function IELTSReadingInterface({
                 <ComputerDesktopIcon className="w-8 h-8 text-white" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-slate-900">Simulation Mode</h3>
-                <span className="text-xs font-bold text-red-600 uppercase tracking-widest">Exam Simulation</span>
+                <h3 className="text-2xl font-bold text-slate-900"><UiText text={"Simulation Mode"} /></h3>
+                <span className="text-xs font-bold text-red-600 uppercase tracking-widest"><UiText text={"Exam Simulation"} /></span>
               </div>
             </div>
             <p className="text-slate-600 text-[15px] leading-relaxed mb-8 flex-1 italic group-hover:text-slate-700 transition-colors">
-              Authentic IELTS CD environment. Replicates the high-pressure conditions of the real exam with strict timing and official layout standards.
+              <UiText text={"Authentic IELTS CD environment. Replicates the high-pressure conditions of the real exam with strict timing and official layout standards."} />
             </p>
             <div className="space-y-4 mb-10">
               <div className="flex items-center gap-3 text-xs font-bold text-rose-400">
-                <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" /> {isListening ? <UiText text="Finishes 2 minutes after the audio ends" /> : `Strict ${test.duration}-minute limit`}
+                <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" /> {isListening ? <UiText text="Finishes 2 minutes after the audio ends" /> : <UiText text={"Strict {{value1}}-minute limit"} values={{ value1: String(test.duration) }} />}
               </div>
               <div className="flex items-center gap-3 text-xs font-semibold text-slate-500">
-                <div className="w-1.5 h-1.5 rounded-full bg-red-500" /> Official scoring algorithms
+                <div className="w-1.5 h-1.5 rounded-full bg-red-500" /> <UiText text={"Official scoring algorithms"} />
               </div>
             </div>
             <div className="flex items-center gap-3">
               <button type="button" disabled={startAccess?.busy} aria-busy={startAccess?.busy} onClick={event => { event.stopPropagation(); void handleStartTest({ mode: 'simulation' }) }} className="w-full px-3 py-4 bg-gradient-to-r from-red-600 to-rose-600 rounded-2xl text-white text-sm font-bold flex items-center justify-center shadow-lg shadow-red-500/20 transform group-hover:scale-[1.02] transition-all disabled:opacity-50">
-                Launch Final Simulation
+                <UiText text={"Launch Final Simulation"} />
               </button>
 
             </div>
           </PremiumCard>
         </div>
-        {startAccess?.error && <p role="alert" className="mt-4 text-sm text-red-600">{startAccess.error}</p>}
+        {startAccess?.error && <p role="alert" className="mt-4 text-sm text-red-600"><UiText text={startAccess.error} /></p>}
 
         <motion.div className="mt-16 text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
           <button type="button" onClick={onExit} className="text-sm text-slate-500 hover:text-red-600 transition-colors flex items-center gap-2 mx-auto px-6 py-2 rounded-full border border-white/5 hover:bg-white/5">
-            <ArrowLeftIcon className="w-4 h-4" /> Return to {isListening ? 'Listening' : 'Reading'} Tests
+            <ArrowLeftIcon className="w-4 h-4" /> <UiText text={"Return to"} /> {isListening ? <UiText text={"Listening"} /> : <UiText text={"Reading"} />} <UiText text={"Tests"} />
           </button>
         </motion.div>
       </div>
@@ -3337,7 +3339,7 @@ export default function IELTSReadingInterface({
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             data-reading-selection-toolbar="1"
             role="toolbar"
-            aria-label="Text tools"
+            aria-label={uiCopy("Text tools")}
             className="ielts-text-tools fixed z-[100] flex max-w-[calc(100vw-16px)] items-center justify-between gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-lg"
             style={{
               width: selectionToolbarWidth,
@@ -3350,10 +3352,10 @@ export default function IELTSReadingInterface({
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => applyHighlight('highlight')}
               className="group flex h-9 items-center gap-2 rounded-xl border border-red-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-red-300 hover:bg-red-50/60"
-              title="Highlight"
+              title={uiCopy("Highlight")}
             >
               <div className="h-4 w-4 rounded bg-[#f3c85b] shadow-[0_4px_10px_rgba(243,200,91,0.4)]" />
-              Highlight
+              <UiText text={"Highlight"} />
             </button>
             <button
               type="button"
@@ -3362,7 +3364,7 @@ export default function IELTSReadingInterface({
               className="flex h-9 items-center gap-2 rounded-xl border border-red-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-red-300 hover:bg-red-50/60"
             >
               <ChatBubbleBottomCenterTextIcon className="w-4 h-4 text-red-500" />
-              Note
+              <UiText text={"Note"} />
             </button>
             {testMode === 'practice' && !isReviewMode && askAiEnabled && (
               <button
@@ -3381,10 +3383,10 @@ export default function IELTSReadingInterface({
                   setSelectionRect(null)
                 }}
                 className="flex h-9 items-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 px-3 text-xs font-bold text-white transition hover:brightness-110"
-                title="Ask AI to explain this word"
+                title={uiCopy("Ask AI to explain this word")}
               >
                 <SparklesIcon className="w-4 h-4" />
-                Ask AI
+                <UiText text={"Ask AI"} />
               </button>
             )}
           </motion.div>
@@ -3398,7 +3400,7 @@ export default function IELTSReadingInterface({
             exit={{ opacity: 0, y: -6 }}
             data-reading-mark-toolbar="1"
             role="toolbar"
-            aria-label="Edit annotation"
+            aria-label={uiCopy("Edit annotation")}
             style={{ top: Math.max(8, Math.min(window.innerHeight - (highlightPopover.markType === 'note' ? 150 : 50), highlightPopover.top)), left: Math.max(8, Math.min(window.innerWidth - (highlightPopover.markType === 'note' ? 276 : 180) - 8, highlightPopover.left - (highlightPopover.markType === 'note' ? 138 : 90))), width: highlightPopover.markType === 'note' ? 276 : 180, maxWidth: 'calc(100vw - 16px)' }}
             className="ielts-text-tools fixed z-[105] rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg"
           >
@@ -3414,7 +3416,7 @@ export default function IELTSReadingInterface({
                 className="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-amber-200 bg-white px-4 py-2 text-sm font-semibold text-amber-900 hover:bg-amber-50"
               >
                 <ChatBubbleBottomCenterTextIcon className="h-4 w-4" />
-                Edit note
+                <UiText text={"Edit note"} />
               </button>
             ) : null}
             <button
@@ -3423,7 +3425,7 @@ export default function IELTSReadingInterface({
               className="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-red-100 bg-gradient-to-r from-white via-red-50/65 to-white px-4 py-2 text-sm font-semibold text-slate-700 hover:border-red-300 hover:bg-red-50 hover:text-red-700"
             >
               <XMarkIcon className="h-4 w-4" />
-              {highlightPopover.markType === 'note' ? 'Delete note' : 'Remove highlight'}
+              {highlightPopover.markType === 'note' ? <UiText text={"Delete note"} /> : <UiText text={"Remove highlight"} />}
             </button>
           </motion.div>
         )}
@@ -3508,7 +3510,7 @@ export default function IELTSReadingInterface({
         <span id={`question-card-${question.id}`} className={onDiagram ? 'relative inline-flex w-full flex-col items-start align-middle' : `listening-answer-slot mx-1 my-1.5 inline-flex max-w-full ${widthCls} flex-col items-start align-middle leading-normal`}>
           <input
             type="text"
-            aria-label={`Question ${number}: ${question.text}`}
+            aria-label={uiCopy("Question {{value1}}: {{value2}}", { value1: String(number), value2: String(question.text) })}
             maxLength={onDiagram ? 1 : undefined}
             autoComplete="off"
             autoCapitalize={onDiagram ? 'characters' : undefined}
@@ -3533,7 +3535,7 @@ export default function IELTSReadingInterface({
             }`}
           />
           {onDiagram && !isReviewMode ? (
-            <button type="button" aria-label={`Flag question ${number}`} aria-pressed={flaggedQuestions.includes(getCurrentSectionGlobalIndex(question.id))} onClick={() => handleFlagQuestion(getCurrentSectionGlobalIndex(question.id))}
+            <button type="button" aria-label={uiCopy("Flag question {{value1}}", { value1: String(number) })} aria-pressed={flaggedQuestions.includes(getCurrentSectionGlobalIndex(question.id))} onClick={() => handleFlagQuestion(getCurrentSectionGlobalIndex(question.id))}
               style={{ top: 4 }}
               className="absolute left-full ml-1.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300">
               <BookmarkIcon className={`pointer-events-none h-3.5 w-3.5 ${flaggedQuestions.includes(getCurrentSectionGlobalIndex(question.id)) ? 'fill-red-500 text-red-500' : ''}`} />
@@ -3587,7 +3589,7 @@ export default function IELTSReadingInterface({
                     type="button"
                     onClick={() => handleFlagQuestion(globalIdx)}
                     className={`rounded-md p-1 transition ${isFlagged ? 'bg-red-100 text-red-700' : 'text-slate-400 hover:bg-red-50 hover:text-red-600'}`}
-                    aria-label={`Flag question ${row.blank}`}
+                    aria-label={uiCopy("Flag question {{value1}}", { value1: String(row.blank) })}
                   >
                     <BookmarkIcon className={`h-4 w-4 ${isFlagged ? 'fill-current' : ''}`} />
                   </button>
@@ -3672,7 +3674,7 @@ export default function IELTSReadingInterface({
                             disabled={isReviewMode}
                             onClick={(event) => { event.stopPropagation(); handleAnswerChange(question.id, letter) }}
                             className="inline-flex h-10 w-full items-center justify-center rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-200 disabled:cursor-not-allowed"
-                            aria-label={`Question ${row.blank}, choose ${letter}`}
+                            aria-label={uiCopy("Question {{value1}}, choose {{value2}}", { value1: String(row.blank), value2: String(letter) })}
                           >
                             <span className={`inline-flex h-4 w-4 items-center justify-center rounded-full border-2 transition ${dotTone}`}>
                               <span
@@ -3795,7 +3797,7 @@ export default function IELTSReadingInterface({
               type="button"
               onClick={() => handleFlagQuestion(primaryIndex)}
               className={`mt-0.5 rounded-md p-1 transition ${isFlagged ? 'bg-red-100 text-red-700' : 'text-slate-400 hover:bg-red-50 hover:text-red-600'}`}
-              aria-label={`Flag questions ${block.blanks.join(' and ')}`}
+              aria-label={uiCopy("Flag questions {{value1}}", { value1: String(block.blanks.join(' and ')) })}
             >
               <BookmarkIcon className={`h-4 w-4 ${isFlagged ? 'fill-current' : ''}`} />
             </button>
@@ -3933,7 +3935,7 @@ export default function IELTSReadingInterface({
               questions={currentSection.questions.map(question => ({ ...question, text: mapRows.find(row => row.blank === question.number)?.label ?? question.text }))}
               answers={answers} onAnswer={handleAnswerChange}
               onQuestionFocus={id => setLastActiveQuestionIndex(getCurrentSectionGlobalIndex(id))}
-              renderFlag={question => <button type="button" className="source-question-flag" aria-label={`Flag question ${question.number}`}
+              renderFlag={question => <button type="button" className="source-question-flag" aria-label={uiCopy("Flag question {{value1}}", { value1: String(question.number) })}
                 aria-pressed={flaggedQuestions.includes(getCurrentSectionGlobalIndex(question.id))}
                 onClick={() => handleFlagQuestion(getCurrentSectionGlobalIndex(question.id))}><BookmarkIcon className="h-4 w-4" /></button>}
               review={isReviewMode} showCorrectAnswers={reviewShowCorrectAnswers} reviewQuestions={reviewQuestionMap} />
@@ -3995,7 +3997,7 @@ export default function IELTSReadingInterface({
             : 'Ready'
 
     return (
-      <section className="mb-5 rounded-2xl border border-red-100 bg-white p-4 shadow-[0_10px_26px_rgba(220,38,38,0.10)]" aria-label="Listening audio player">
+      <section className="mb-5 rounded-2xl border border-red-100 bg-white p-4 shadow-[0_10px_26px_rgba(220,38,38,0.10)]" aria-label={uiCopy("Listening audio player")}>
         <div className="flex flex-wrap items-center gap-3">
           <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${audioError ? 'bg-red-100 text-red-600' : 'bg-red-600 text-white'}`}>
             <SpeakerWaveIcon className={`h-5 w-5 ${isAudioPlaying ? 'animate-pulse' : ''}`} />
@@ -4003,13 +4005,13 @@ export default function IELTSReadingInterface({
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <p className="text-sm font-black text-slate-900">Listening audio</p>
+                <p className="text-sm font-black text-slate-900"><UiText text={"Listening audio"} /></p>
                 <p className="text-xs text-slate-500">
                   {isReviewMode
-                    ? 'Review mode — playback and seeking are available.'
+                    ? <UiText text={"Review mode — playback and seeking are available."} />
                     : practiceControls
-                      ? 'Practice mode — pause or skip 10 seconds at a time.'
-                      : fullMockId ? 'Full mock — the recording plays once, continuously.' : 'Simulation mode — the recording plays continuously.'}
+                      ? <UiText text={"Practice mode — pause or skip 10 seconds at a time."} />
+                      : fullMockId ? <UiText text={"Full mock — the recording plays once, continuously."} /> : <UiText text={"Simulation mode — the recording plays continuously."} />}
                 </p>
               </div>
               <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.1em] ${
@@ -4019,17 +4021,17 @@ export default function IELTSReadingInterface({
                     ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
                     : 'border-slate-200 bg-slate-50 text-slate-600'
               }`}>
-                {statusLabel}
+                <UiText text={statusLabel} />
               </span>
             </div>
           </div>
           {practiceControls ? (
-            <div className="flex w-full items-center justify-end gap-2 sm:w-auto" aria-label="Practice audio controls">
+            <div className="flex w-full items-center justify-end gap-2 sm:w-auto" aria-label={uiCopy("Practice audio controls")}>
               <button
                 type="button"
                 onClick={() => skipPracticeAudio(-10)}
                 disabled={!canControlPracticeAudio || audioCurrentTime <= 0}
-                aria-label="Back 10 seconds"
+                aria-label={uiCopy("Back 10 seconds")}
                 className="inline-flex h-10 items-center justify-center gap-1 rounded-xl border border-red-200 bg-red-50 px-3 text-xs font-bold text-red-700 transition hover:bg-red-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <BackwardIcon className="h-4 w-4" /> 10s
@@ -4041,13 +4043,13 @@ export default function IELTSReadingInterface({
                 className="inline-flex h-10 min-w-[92px] items-center justify-center gap-2 rounded-xl bg-red-600 px-3 text-sm font-bold text-white shadow-[0_10px_20px_rgba(220,38,38,0.24)] transition hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
               >
                 {isAudioPlaying ? <PauseIcon className="h-4 w-4" /> : <PlayIcon className="h-4 w-4" />}
-                {isAudioPlaying ? 'Pause' : 'Resume'}
+                {isAudioPlaying ? <UiText text={"Pause"} /> : <UiText text={"Resume"} />}
               </button>
               <button
                 type="button"
                 onClick={() => skipPracticeAudio(10)}
                 disabled={!canControlPracticeAudio || audioDuration <= 0 || audioCurrentTime >= audioDuration}
-                aria-label="Forward 10 seconds"
+                aria-label={uiCopy("Forward 10 seconds")}
                 className="inline-flex h-10 items-center justify-center gap-1 rounded-xl border border-red-200 bg-red-50 px-3 text-xs font-bold text-red-700 transition hover:bg-red-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 10s <ForwardIcon className="h-4 w-4" />
@@ -4061,7 +4063,7 @@ export default function IELTSReadingInterface({
               className="inline-flex h-10 min-w-[104px] items-center justify-center gap-2 rounded-xl bg-red-600 px-4 text-sm font-bold text-white shadow-[0_10px_20px_rgba(220,38,38,0.24)] transition hover:bg-red-500 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
             >
               {isAudioPlaying ? <PauseIcon className="h-4 w-4" /> : <PlayIcon className="h-4 w-4" />}
-              {isAudioPlaying ? 'Pause' : audioDone ? 'Replay' : 'Play'}
+              {isAudioPlaying ? <UiText text={"Pause"} /> : audioDone ? <UiText text={"Replay"} /> : <UiText text={"Play"} />}
             </button>
           ) : null}
         </div>
@@ -4077,10 +4079,10 @@ export default function IELTSReadingInterface({
               onChange={handleReviewAudioSeek}
               disabled={!hasAudioSource || safeDuration <= 0 || Boolean(audioError)}
               className="h-2 w-full cursor-pointer appearance-none rounded-full bg-red-100 accent-red-600 disabled:cursor-not-allowed disabled:opacity-50"
-              aria-label="Seek Listening audio"
+              aria-label={uiCopy("Seek Listening audio")}
             />
           ) : (
-            <div className="h-2 overflow-hidden rounded-full bg-red-100" aria-label={`Audio progress ${Math.round(progress)} percent`}>
+            <div className="h-2 overflow-hidden rounded-full bg-red-100" aria-label={uiCopy("Audio progress {{value1}} percent", { value1: String(Math.round(progress)) })}>
               <div className="h-full rounded-full bg-gradient-to-r from-red-600 to-rose-500 transition-[width] duration-300" style={{ width: `${progress}%` }} />
             </div>
           )}
@@ -4096,7 +4098,7 @@ export default function IELTSReadingInterface({
           </p>
         ) : !hasAudioSource ? (
           <p className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800" role="alert">
-            No audio source is configured for this test.
+            <UiText text={"No audio source is configured for this test."} />
           </p>
         ) : null}
       </section>
@@ -4119,7 +4121,7 @@ export default function IELTSReadingInterface({
             <div className="flex flex-wrap items-center justify-between gap-3 bg-gradient-to-r from-red-600 via-red-500 to-rose-500 px-5 py-3 text-white">
               <div className="flex flex-wrap items-center gap-3">
                 <span className="rounded-lg bg-white/20 px-2.5 py-1 text-xs font-black uppercase tracking-[0.14em]">
-                  {currentSection?.partLabel ?? `Part ${currentSectionIndex + 1}`}
+                  {currentSection?.partLabel ?? <UiText text={"Part {{value1}}"} values={{ value1: String(currentSectionIndex + 1) }} />}
                 </span>
                 <p className="text-sm font-semibold text-white/95">
                   {currentSection?.partInstruction ?? `Listen and answer the questions for ${currentSection?.title}.`}
@@ -4129,15 +4131,15 @@ export default function IELTSReadingInterface({
                 {isAudioPlaying ? (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.1em] backdrop-blur-sm">
                     <SpeakerWaveIcon className="h-3.5 w-3.5 animate-pulse" />
-                    Audio playing
+                    <UiText text={"Audio playing"} />
                   </span>
                 ) : audioDone ? (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.1em]">
-                    Audio finished
+                    <UiText text={"Audio finished"} />
                   </span>
                 ) : null}
                 <span className="rounded-lg bg-white/15 px-2.5 py-1 text-[11px] font-bold tracking-wide">
-                  {firstNum}-{lastNum} · {totalNum} questions
+                  {firstNum}-{lastNum} · {totalNum} <UiText text={"questions"} />
                 </span>
               </div>
             </div>
@@ -6141,7 +6143,7 @@ export default function IELTSReadingInterface({
               <div id={`question-card-${q.id}`} className="relative group" onClick={() => setLastActiveQuestionIndex(globalIdx)}>
                 <div className="flex items-start gap-3 mb-3">
                   <QuestionNumber>{questionRangeDisplay}</QuestionNumber>
-                  <button type="button" onClick={(e) => { e.stopPropagation(); handleFlagQuestion(globalIdx); }} className={`p-1.5 rounded-lg shrink-0 transition-all ${isFlagged ? 'text-red-600 bg-red-50' : 'text-slate-400 hover:text-slate-600 hover:bg-red-50/70'}`} title="Flag">
+                  <button type="button" onClick={(e) => { e.stopPropagation(); handleFlagQuestion(globalIdx); }} className={`p-1.5 rounded-lg shrink-0 transition-all ${isFlagged ? 'text-red-600 bg-red-50' : 'text-slate-400 hover:text-slate-600 hover:bg-red-50/70'}`} title={uiCopy("Flag")}>
                     <BookmarkIcon className={`w-4 h-4 ${isFlagged ? 'fill-current' : ''}`} />
                   </button>
                 </div>
@@ -6150,7 +6152,7 @@ export default function IELTSReadingInterface({
                   {isMatching ? (
                     <div className="flex flex-wrap items-center gap-2.5">
                       <CompactSelect
-                        label={`Answer for question ${q.number}`}
+                        label={uiCopy("Answer for question {{value1}}", { value1: String(q.number) })}
                         options={q.options || []}
                         value={answers[q.id] as string}
                         onChange={(val) => handleAnswerChange(q.id, val)}
@@ -6537,7 +6539,7 @@ export default function IELTSReadingInterface({
                                 : 'border-red-200 bg-white'
                             : 'border-red-200 bg-white'
                         }`}
-                        placeholder="Type your answer..."
+                        placeholder={uiCopy("Type your answer...")}
                       />
                       {reviewHint(q)}
                     </div>
@@ -6565,26 +6567,26 @@ export default function IELTSReadingInterface({
       {!isTestActive ? fullMockId ? (
         <div className="flex flex-1 items-center justify-center p-6" role="status">
           <div className="max-w-md text-center">
-            <h1 className="text-2xl font-black text-slate-900">Preparing your <span className="text-red-600">{isListening ? 'Listening' : 'Reading'} test</span></h1>
-            {startAccess?.error ? <><p role="alert" className="mt-4 text-red-600">{startAccess.error}</p><button type="button" disabled={startAccess.busy} className="mt-4 rounded-xl bg-red-600 px-6 py-3 font-bold text-white disabled:opacity-50" onClick={() => void handleStartTest()}>Try again</button></> : <p className="mt-3 text-slate-600">Your full mock will start automatically.</p>}
+            <h1 className="text-2xl font-black text-slate-900"><UiText text={"Preparing your"} /> <span className="text-red-600">{isListening ? <UiText text={"Listening"} /> : <UiText text={"Reading"} />} <UiText text={"test"} /></span></h1>
+            {startAccess?.error ? <><p role="alert" className="mt-4 text-red-600"><UiText text={startAccess.error} /></p><button type="button" disabled={startAccess.busy} className="mt-4 rounded-xl bg-red-600 px-6 py-3 font-bold text-white disabled:opacity-50" onClick={() => void handleStartTest()}><UiText text={"Try again"} /></button></> : <p className="mt-3 text-slate-600"><UiText text={"Your full mock will start automatically."} /></p>}
           </div>
         </div>
       ) : renderStartScreen() : (
         <>
           <header className="reading-toolbar ielts-exam-header bg-white/95 border-b border-red-100 min-h-16 flex items-center justify-between px-4 z-20 relative shadow-[0_10px_24px_rgba(220,38,38,0.09)] backdrop-blur-md">
             <div className="flex items-center gap-3 shrink-0">
-              <button type="button" onClick={handleExitTest} className="premium-back-btn-sm normal-case tracking-normal text-slate-700" title="Exit">
+              <button type="button" onClick={handleExitTest} className="premium-back-btn-sm normal-case tracking-normal text-slate-700" title={uiCopy("Exit")}>
                 <ArrowLeftIcon className="h-4 w-4 text-red-600" />
-                <span className={`${isReviewMode && !isListening ? 'hidden sm:inline' : ''} text-sm font-semibold text-slate-700`}>Back</span>
+                <span className={`${isReviewMode && !isListening ? 'hidden sm:inline' : ''} text-sm font-semibold text-slate-700`}><UiText text={"Back"} /></span>
               </button>
               <div className="flex items-center gap-2">
                 <span className={`${isReviewMode && !isListening ? 'hidden sm:inline' : ''} text-2xl font-black text-red-600`}>IELTS</span>
-                <span className={`ielts-exam-skill ${isReviewMode && !isListening ? 'text-sm sm:text-xl' : 'text-xl'} font-semibold text-slate-500`}>{isListening ? 'Listening' : 'Reading'}</span>
-                {isReviewMode && !isListening && <span data-reading-review-badge className="rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-semibold text-slate-600">Review</span>}
+                <span className={`ielts-exam-skill ${isReviewMode && !isListening ? 'text-sm sm:text-xl' : 'text-xl'} font-semibold text-slate-500`}>{isListening ? <UiText text={"Listening"} /> : <UiText text={"Reading"} />}</span>
+                {isReviewMode && !isListening && <span data-reading-review-badge className="rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-semibold text-slate-600"><UiText text={"Review"} /></span>}
                 {isListening && isAudioPlaying ? (
                   <span className="ml-2 hidden items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-red-600 sm:inline-flex">
                     <SpeakerWaveIcon className="h-3.5 w-3.5" />
-                    Audio playing
+                    <UiText text={"Audio playing"} />
                   </span>
                 ) : null}
               </div>
@@ -6592,7 +6594,7 @@ export default function IELTSReadingInterface({
 
             {!isReviewMode && !isListening ? (
               <div className="ielts-exam-timer absolute left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-2xl border border-red-100 bg-white/95 px-2 py-1 shadow-[0_14px_30px_rgba(220,38,38,0.16)]">
-                <button type="button" onClick={() => setTimerHidden(value => !value)} aria-label={timerHidden ? 'Show remaining time' : 'Hide remaining time'} aria-pressed={timerHidden} className="ielts-timer-toggle inline-flex h-10 items-center gap-2 rounded-xl px-3 text-slate-700">
+                <button type="button" onClick={() => setTimerHidden(value => !value)} aria-label={timerHidden ? uiCopy("Show remaining time") : uiCopy("Hide remaining time")} aria-pressed={timerHidden} className="ielts-timer-toggle inline-flex h-10 items-center gap-2 rounded-xl px-3 text-slate-700">
                   <ClockIcon className="h-4 w-4" />
                   <span hidden={timerHidden}>
                   <Timer
@@ -6610,38 +6612,38 @@ export default function IELTSReadingInterface({
               </div>
             ) : isReviewMode && isListening ? (
               <div className="absolute left-1/2 -translate-x-1/2 hidden sm:flex items-center gap-2 rounded-2xl border border-red-100 bg-white px-3 py-2 shadow-[0_12px_26px_rgba(220,38,38,0.15)]">
-                <span className="text-xs font-black uppercase tracking-[0.12em] text-red-600">Review Mode</span>
+                <span className="text-xs font-black uppercase tracking-[0.12em] text-red-600"><UiText text={"Review Mode"} /></span>
               </div>
             ) : null}
 
             <div className="flex items-center gap-2 shrink-0">
-              <button type="button" onClick={toggleFullscreen} aria-label={isFullscreen ? 'Exit full screen' : 'Full screen'} className="p-2.5 rounded-xl text-slate-600 hover:bg-red-50 transition-colors" title="Full screen">
+              <button type="button" onClick={toggleFullscreen} aria-label={isFullscreen ? uiCopy("Exit full screen") : uiCopy("Full screen")} className="p-2.5 rounded-xl text-slate-600 hover:bg-red-50 transition-colors" title={uiCopy("Full screen")}>
                 {isFullscreen ? <ArrowsPointingInIcon className="h-5 w-5" /> : <ArrowsPointingOutIcon className="h-5 w-5" />}
               </button>
-              <button type="button" onClick={() => { setOptionsPage('menu'); setShowOptionsModal(true) }} aria-label="Display settings" className="p-2.5 rounded-xl text-slate-600 hover:bg-red-50 transition-colors" title="Menu">
+              <button type="button" onClick={() => { setOptionsPage('menu'); setShowOptionsModal(true) }} aria-label={uiCopy("Display settings")} className="p-2.5 rounded-xl text-slate-600 hover:bg-red-50 transition-colors" title={uiCopy("Menu")}>
                 <Bars3Icon className="h-5 w-5" />
               </button>
               {!isReviewMode ? (
                 <>
-                  <button type="button" onClick={() => setShowNotes(!showNotes)} aria-label="Notes" aria-pressed={showNotes} className="p-2.5 rounded-xl text-slate-600 hover:bg-red-50 transition-colors" title="Notes">
+                  <button type="button" onClick={() => setShowNotes(!showNotes)} aria-label={uiCopy("Notes")} aria-pressed={showNotes} className="p-2.5 rounded-xl text-slate-600 hover:bg-red-50 transition-colors" title={uiCopy("Notes")}>
                     <DocumentTextIcon className="h-5 w-5" />
                   </button>
-                  <button type="button" onClick={() => setShowReviewModal(true)} className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-600 hover:bg-red-50 transition-colors border border-transparent hover:border-red-100" title="Review">
+                  <button type="button" onClick={() => setShowReviewModal(true)} className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-600 hover:bg-red-50 transition-colors border border-transparent hover:border-red-100" title={uiCopy("Review")}>
                     <EyeIcon className="h-5 w-5" />
-                    <span className="text-sm font-semibold hidden sm:inline">Review</span>
+                    <span className="text-sm font-semibold hidden sm:inline"><UiText text={"Review"} /></span>
                   </button>
                   <div className="hidden lg:flex items-center gap-3 rounded-2xl border border-red-200 bg-white px-3 py-2">
                     <div className="text-right">
-                      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-red-600">Final Check</p>
-                      <p className="text-xs font-semibold text-slate-600">{submitPreview.answered}/{submitPreview.total} answered</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-red-600"><UiText text={"Final Check"} /></p>
+                      <p className="text-xs font-semibold text-slate-600">{submitPreview.answered}/{submitPreview.total} <UiText text={"answered"} /></p>
                     </div>
                     <button type="button" onClick={openSubmitModal} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-sm font-bold shadow-[0_14px_26px_rgba(220,38,38,0.34)] transition-all border border-red-700/20">
-                      <span>Submit</span>
+                      <span><UiText text={"Submit"} /></span>
                       <PaperAirplaneIcon className="h-4 w-4" />
                     </button>
                   </div>
                   <button type="button" onClick={openSubmitModal} className="lg:hidden flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-sm font-bold shadow-[0_14px_26px_rgba(220,38,38,0.34)] transition-all border border-red-700/20">
-                    <span>Submit</span>
+                    <span><UiText text={"Submit"} /></span>
                     <PaperAirplaneIcon className="h-4 w-4" />
                   </button>
                 </>
@@ -6649,7 +6651,7 @@ export default function IELTSReadingInterface({
                 <button
                   type="button"
                   onClick={() => setReviewShowCorrectAnswers((value) => !value)}
-                  aria-label={reviewShowCorrectAnswers ? 'Hide Correct Answers' : 'Show Correct Answers'}
+                  aria-label={reviewShowCorrectAnswers ? uiCopy("Hide Correct Answers") : uiCopy("Show Correct Answers")}
                   aria-pressed={reviewShowCorrectAnswers}
                   className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition ${
                     reviewShowCorrectAnswers
@@ -6658,7 +6660,7 @@ export default function IELTSReadingInterface({
                   }`}
                 >
                   <EyeIcon className="h-4 w-4" />
-                  <span className={isListening ? '' : 'hidden sm:inline'}>{reviewShowCorrectAnswers ? 'Hide Correct Answers' : 'Show Correct Answers'}</span>
+                  <span className={isListening ? '' : 'hidden sm:inline'}>{reviewShowCorrectAnswers ? <UiText text={"Hide Correct Answers"} /> : <UiText text={"Show Correct Answers"} />}</span>
                 </button>
               )}
             </div>
@@ -6736,17 +6738,17 @@ export default function IELTSReadingInterface({
               </div>
               <p className="mt-5 text-[15px] leading-relaxed text-slate-700">
                 {testMode === 'practice'
-                  ? 'You will be listening to an audio clip during this practice test. You can pause it or skip 10 seconds backward or forward while answering.'
-                  : 'You will be listening to an audio clip during this test. You will not be permitted to pause or rewind the audio while answering the questions.'}
+                  ? <UiText text={"You will be listening to an audio clip during this practice test. You can pause it or skip 10 seconds backward or forward while answering."} />
+                  : <UiText text={"You will be listening to an audio clip during this test. You will not be permitted to pause or rewind the audio while answering the questions."} />}
               </p>
-              <p className="mt-4 text-[15px] font-semibold text-slate-900">To continue, click Play.</p>
+              <p className="mt-4 text-[15px] font-semibold text-slate-900"><UiText text={"To continue, click Play."} /></p>
               <button
                 type="button"
                 onClick={startListeningAudio}
                 className="mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-6 py-3 text-base font-bold text-white shadow-lg transition hover:bg-slate-800"
               >
                 <PlayIcon className="h-5 w-5" />
-                Play
+                <UiText text={"Play"} />
               </button>
             </motion.div>
           </motion.div>
@@ -6762,15 +6764,15 @@ export default function IELTSReadingInterface({
               <div className="p-6 border-b border-red-100 bg-gradient-to-r from-red-50/80 to-rose-50/70">
                 <h3 id="ielts-review-title" className="text-xl font-bold text-slate-900 flex items-center gap-2">
                   <EyeIcon className="h-6 w-6 text-red-500" />
-                  Review your answers
+                  <UiText text={"Review your answers"} />
                 </h3>
-                <p className="text-sm text-slate-500 mt-1">Select a question to return to it. Your answers are saved as you work.</p>
+                <p className="text-sm text-slate-500 mt-1"><UiText text={"Select a question to return to it. Your answers are saved as you work."} /></p>
               </div>
               <div className="p-6 max-h-[60vh] overflow-y-auto">
                 <div className="space-y-4">
                   {activeSections.map((section, sIdx) => (
                     <div key={section.id}>
-                      <p className="text-sm font-bold text-slate-700 mb-2">Part {resolvePassageNumber(section, sIdx + 1)}: {section.title}</p>
+                      <p className="text-sm font-bold text-slate-700 mb-2"><UiText text={"Part"} /> {resolvePassageNumber(section, sIdx + 1)}: <UiText text={section.title} /></p>
                       <div className="flex flex-wrap gap-2">
                         {section.questions.map((q, qIdx) => {
                           const startIndex = getQuestionGlobalIndex(sIdx, qIdx);
@@ -6804,7 +6806,7 @@ export default function IELTSReadingInterface({
               </div>
               <div className="p-4 border-t border-red-100 flex justify-end">
                 <button type="button" onClick={() => setShowReviewModal(false)} className="px-4 py-2 rounded-xl bg-red-50 text-red-700 font-semibold hover:bg-red-100 transition-colors border border-red-200">
-                  Close
+                  <UiText text={"Close"} />
                 </button>
               </div>
             </motion.div>
@@ -6823,11 +6825,11 @@ export default function IELTSReadingInterface({
                   <div>
                     <h2 id="ielts-setup-title" className="flex items-center gap-3 text-2xl font-bold tracking-tight text-slate-800">
                       <div className="p-2 bg-red-600 rounded-xl"><LightBulbIcon className="w-6 h-6 text-white" /></div>
-                      Test Setup
+                      <UiText text={"Test Setup"} />
                     </h2>
-                    <p className="text-slate-500 text-sm mt-1 font-medium">{focusedPart !== null ? `Part ${focusedPart + 1} · Review your timing before starting.` : 'Choose your parts and timing before starting.'}</p>
+                    <p className="text-slate-500 text-sm mt-1 font-medium">{focusedPart !== null ? <UiText text={"Part {{value1}} · Review your timing before starting."} values={{ value1: String(focusedPart + 1) }} /> : <UiText text={"Choose your parts and timing before starting."} />}</p>
                   </div>
-                  <button type="button" aria-label="Close test setup" onClick={() => setShowModeModal(false)} className="rounded-full p-2 transition-all group hover:bg-red-500/10">
+                  <button type="button" aria-label={uiCopy("Close test setup")} onClick={() => setShowModeModal(false)} className="rounded-full p-2 transition-all group hover:bg-red-500/10">
                     <XMarkIcon className="w-7 h-7 text-slate-400 group-hover:text-red-500" />
                   </button>
                 </div>
@@ -6836,8 +6838,8 @@ export default function IELTSReadingInterface({
                   {/* Select Parts */}
                   {testMode === 'practice' && <div>
                     <div className="mb-5 flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-500 uppercase tracking-[0.12em]">Select {isListening ? 'Parts' : 'Passages'}</span>
-                      <span className="text-[10px] font-black bg-red-500/10 text-red-500 px-2 py-0.5 rounded uppercase">{selectedParts.length} Selected</span>
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-[0.12em]"><UiText text={"Select"} /> {isListening ? <UiText text={"Parts"} /> : <UiText text={"Passages"} />}</span>
+                      <span className="text-[10px] font-black bg-red-500/10 text-red-500 px-2 py-0.5 rounded uppercase">{selectedParts.length} <UiText text={"Selected"} /></span>
                     </div>
                     <div className="grid grid-cols-1 gap-2.5">
                       {test.sections.map((s, i) => {
@@ -6866,7 +6868,7 @@ export default function IELTSReadingInterface({
                               </div>
                               <div className="text-left">
                                 <div className="font-black text-[15px]">{s.title.split(':')[0]}</div>
-                                <div className="text-[11px] opacity-60 font-bold uppercase tracking-wider">{s.questions.reduce((count, question) => count + getQuestionSlotCount(question), 0)} Questions</div>
+                                <div className="text-[11px] opacity-60 font-bold uppercase tracking-wider">{s.questions.reduce((count, question) => count + getQuestionSlotCount(question), 0)} <UiText text={"Questions"} /></div>
                               </div>
                             </div>
                             {isSelected && <CheckIcon className="w-6 h-6" />}
@@ -6878,7 +6880,7 @@ export default function IELTSReadingInterface({
 
                   {/* Reading-only wall-clock duration. Listening follows its audio. */}
                   {!isListening && testMode === 'practice' && <div>
-                    <span className="mb-5 block text-xs font-black uppercase tracking-[0.2em] text-slate-400">2. Session Duration</span>
+                    <span className="mb-5 block text-xs font-black uppercase tracking-[0.2em] text-slate-400"><UiText text={"2. Session Duration"} /></span>
                     <div className="relative">
                       <button type="button"
                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -6887,9 +6889,9 @@ export default function IELTSReadingInterface({
                         <div className="flex items-center gap-4">
                           <div className="p-2 bg-red-500/10 rounded-lg"><ClockIcon className="w-6 h-6 text-red-500" /></div>
                           <div className="text-left">
-                            <div className="text-xs font-black text-slate-400 uppercase tracking-wider">Current Limit</div>
+                            <div className="text-xs font-black text-slate-400 uppercase tracking-wider"><UiText text={"Current Limit"} /></div>
                             <div className="text-lg font-black text-slate-800">
-                              {customTime === -1 ? 'Unlimited Time' : `${customTime} Minutes`}
+                              {customTime === -1 ? <UiText text={"Unlimited Time"} /> : <UiText text={"{{value1}} Minutes"} values={{ value1: String(customTime) }} />}
                             </div>
                           </div>
                         </div>
@@ -6920,9 +6922,9 @@ export default function IELTSReadingInterface({
                       </AnimatePresence>
                     </div>
                   </div>}
-                  {testMode === 'simulation' && <p className="text-sm leading-6 text-slate-600">{simulationPart !== null ? `Part ${simulationPart + 1}` : 'Full test'} · {isListening ? 'Audio followed by 2 minutes to check answers.' : `${examDurationMinutes} minutes. Answers submit automatically when time expires.`}</p>}
+                  {testMode === 'simulation' && <p className="text-sm leading-6 text-slate-600">{simulationPart !== null ? <UiText text={"Part {{value1}}"} values={{ value1: String(simulationPart + 1) }} /> : <UiText text={"Full test"} />} · {isListening ? <UiText text={"Audio followed by 2 minutes to check answers."} /> : <UiText text={"{{value1}} minutes. Answers submit automatically when time expires."} values={{ value1: String(examDurationMinutes) }} />}</p>}
                   {testMode === 'practice' && !isReviewMode && <button type="button" role="switch" aria-checked={askAiEnabled} onClick={toggleAskAi} className="ielts-preference-row">
-                    <span><strong>Ask AI</strong><small>Word explanations in Practice Mode</small></span><span className="ielts-switch" data-enabled={askAiEnabled} />
+                    <span><strong><UiText text={"Ask AI"} /></strong><small><UiText text={"Word explanations in Practice Mode"} /></small></span><span className="ielts-switch" data-enabled={askAiEnabled} />
                   </button>}
 
                   <button type="button"
@@ -6931,10 +6933,10 @@ export default function IELTSReadingInterface({
                     aria-busy={startAccess?.busy}
                     className="flex w-full items-center justify-center gap-3 rounded-3xl border border-red-700/20 bg-gradient-to-r from-red-600 via-rose-600 to-red-500 py-5 text-lg font-black text-white shadow-2xl shadow-red-500/30 transition-all hover:scale-[1.01] hover:from-red-500 hover:via-rose-500 hover:to-red-400 active:scale-[0.98]"
                   >
-                    {testMode === 'practice' ? 'Start Training Session' : 'Start Simulation'}
+                    {testMode === 'practice' ? <UiText text={"Start Training Session"} /> : <UiText text={"Start Simulation"} />}
                     <CheckIcon className="w-6 h-6" />
                   </button>
-                  {startAccess?.error && <p role="alert" className="mt-3 text-sm text-red-600">{startAccess.error}</p>}
+                  {startAccess?.error && <p role="alert" className="mt-3 text-sm text-red-600"><UiText text={startAccess.error} /></p>}
                 </div>
               </div>
             </motion.div>
@@ -6953,7 +6955,7 @@ export default function IELTSReadingInterface({
               onClick={() => setShowOptionsModal(false)}
             />
             <motion.div
-              data-ielts-dialog role="dialog" aria-modal="true" aria-label="Display settings"
+              data-ielts-dialog role="dialog" aria-modal="true" aria-label={uiCopy("Display settings")}
               initial={{ opacity: 0, y: 24, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 16, scale: 0.96 }}
@@ -6972,16 +6974,16 @@ export default function IELTSReadingInterface({
                     </button>
                   ) : null}
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-red-600">IELTS menu</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-red-600"><UiText text={"IELTS menu"} /></p>
                     <h3 className="text-xl font-black text-slate-900">
-                      {optionsPage === 'contrast' ? 'Contrast' : optionsPage === 'text-size' ? 'Text size' : optionsPage === 'font' ? 'Reading font' : 'Display settings'}
+                      {optionsPage === 'contrast' ? <UiText text={"Contrast"} /> : optionsPage === 'text-size' ? <UiText text={"Text size"} /> : optionsPage === 'font' ? <UiText text={"Reading font"} /> : <UiText text={"Display settings"} />}
                     </h3>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowOptionsModal(false)}
-                  aria-label="Close display settings"
+                  aria-label={uiCopy("Close display settings")}
                   className="rounded-xl border border-red-100 bg-white p-2 text-slate-600 hover:bg-red-50"
                 >
                   <XMarkIcon className="h-5 w-5" />
@@ -6992,7 +6994,7 @@ export default function IELTSReadingInterface({
                 {optionsPage === 'menu' ? (
                   <div className="grid gap-3">
                     {testMode === 'practice' && !isReviewMode && <button type="button" role="switch" aria-checked={askAiEnabled} onClick={toggleAskAi} className="ielts-preference-row">
-                      <span><strong>Ask AI</strong><small>Word explanations in Practice Mode</small></span><span className="ielts-switch" data-enabled={askAiEnabled} />
+                      <span><strong><UiText text={"Ask AI"} /></strong><small><UiText text={"Word explanations in Practice Mode"} /></small></span><span className="ielts-switch" data-enabled={askAiEnabled} />
                     </button>}
                     <button
                       type="button"
@@ -7000,8 +7002,8 @@ export default function IELTSReadingInterface({
                       className="flex w-full items-center justify-between rounded-2xl border border-red-100 bg-white px-4 py-4 text-left shadow-[0_12px_24px_rgba(220,38,38,0.08)] hover:border-red-300"
                     >
                       <div>
-                        <p className="text-lg font-black text-slate-900">Contrast</p>
-                        <p className="mt-1 text-sm text-slate-600">Apply contrast to whole reading workspace.</p>
+                        <p className="text-lg font-black text-slate-900"><UiText text={"Contrast"} /></p>
+                        <p className="mt-1 text-sm text-slate-600"><UiText text={"Apply contrast to whole reading workspace."} /></p>
                       </div>
                       <ChevronDownIcon className="-rotate-90 h-5 w-5 text-slate-500" />
                     </button>
@@ -7011,8 +7013,8 @@ export default function IELTSReadingInterface({
                       className="flex w-full items-center justify-between rounded-2xl border border-red-100 bg-white px-4 py-4 text-left shadow-[0_12px_24px_rgba(220,38,38,0.08)] hover:border-red-300"
                     >
                       <div>
-                        <p className="text-lg font-black text-slate-900">Text size</p>
-                        <p className="mt-1 text-sm text-slate-600">Scale text across passage and questions.</p>
+                        <p className="text-lg font-black text-slate-900"><UiText text={"Text size"} /></p>
+                        <p className="mt-1 text-sm text-slate-600"><UiText text={"Scale text across passage and questions."} /></p>
                       </div>
                       <ChevronDownIcon className="-rotate-90 h-5 w-5 text-slate-500" />
                     </button>
@@ -7022,8 +7024,8 @@ export default function IELTSReadingInterface({
                       className="flex w-full items-center justify-between rounded-2xl border border-red-100 bg-white px-4 py-4 text-left shadow-[0_12px_24px_rgba(220,38,38,0.08)] hover:border-red-300"
                     >
                       <div>
-                        <p className="text-lg font-black text-slate-900">Reading font</p>
-                        <p className="mt-1 text-sm text-slate-600">Switch the passage between Sans and a book-like Serif.</p>
+                        <p className="text-lg font-black text-slate-900"><UiText text={"Reading font"} /></p>
+                        <p className="mt-1 text-sm text-slate-600"><UiText text={"Switch the passage between Sans and a book-like Serif."} /></p>
                       </div>
                       <ChevronDownIcon className="-rotate-90 h-5 w-5 text-slate-500" />
                     </button>
@@ -7109,18 +7111,18 @@ export default function IELTSReadingInterface({
               initial={{ opacity: 0, y: 14, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 12, scale: 0.96 }}
-              data-ielts-dialog role="dialog" aria-modal="true" aria-label="Annotation note" className="ielts-note-composer relative w-full max-w-lg overflow-hidden rounded-[26px] border border-red-100 bg-[linear-gradient(165deg,#fff_0%,#fff9f8_55%,#fffdfc_100%)] shadow-[0_30px_70px_rgba(220,38,38,0.22)]"
+              data-ielts-dialog role="dialog" aria-modal="true" aria-label={uiCopy("Annotation note")} className="ielts-note-composer relative w-full max-w-lg overflow-hidden rounded-[26px] border border-red-100 bg-[linear-gradient(165deg,#fff_0%,#fff9f8_55%,#fffdfc_100%)] shadow-[0_30px_70px_rgba(220,38,38,0.22)]"
             >
               <div className="border-b border-red-100 bg-white/90 px-5 py-4">
-                <p className="text-xs font-black uppercase tracking-[0.12em] text-red-600">Reading note</p>
+                <p className="text-xs font-black uppercase tracking-[0.12em] text-red-600"><UiText text={"Reading note"} /></p>
                 <h3 className="mt-1 text-2xl font-black text-slate-900">
-                  {noteComposer.mode === 'edit' ? 'Edit note' : 'Add note'}
+                  {noteComposer.mode === 'edit' ? <UiText text={"Edit note"} /> : <UiText text={"Add note"} />}
                 </h3>
               </div>
               <div className="px-5 py-5">
                 {noteComposer.mode === 'create' && noteComposer.selectionPreview ? (
                   <div className="mb-3 rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3">
-                    <p className="text-[11px] font-black uppercase tracking-[0.1em] text-amber-800">Selected text</p>
+                    <p className="text-[11px] font-black uppercase tracking-[0.1em] text-amber-800"><UiText text={"Selected text"} /></p>
                     <p className="mt-1 text-sm leading-relaxed text-amber-950">{noteComposer.selectionPreview}</p>
                   </div>
                 ) : null}
@@ -7134,12 +7136,12 @@ export default function IELTSReadingInterface({
                   onKeyDown={event => { if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); saveNoteComposer() } }}
                   autoFocus
                   className="w-full resize-none rounded-2xl border border-red-100 bg-white px-4 py-3 text-sm leading-relaxed text-slate-900 outline-none focus:border-red-300 focus:ring-2 focus:ring-red-100"
-                  placeholder="Write your note..."
+                  placeholder={uiCopy("Write your note...")}
                 />
                 <p className="mt-2 text-[11px] font-medium text-slate-500">
                   {noteComposer.mode === 'edit'
-                    ? 'Optional: you can edit note text or leave it empty and keep only the color mark.'
-                    : 'Optional: start typing to attach note text. Empty note still keeps the color mark.'}
+                    ? <UiText text={"Optional: you can edit note text or leave it empty and keep only the color mark."} />
+                    : <UiText text={"Optional: start typing to attach note text. Empty note still keeps the color mark."} />}
                 </p>
               </div>
               <div className="flex items-center justify-end gap-2 border-t border-red-100 bg-white px-5 py-4">
@@ -7148,14 +7150,14 @@ export default function IELTSReadingInterface({
                   onClick={closeNoteComposer}
                   className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                 >
-                  Cancel
+                  <UiText text={"Cancel"} />
                 </button>
                 <button
                   type="button"
                   onClick={saveNoteComposer}
                   className="rounded-xl border border-red-500 bg-gradient-to-r from-red-600 to-rose-600 px-4 py-2 text-sm font-bold text-white hover:from-red-500 hover:to-rose-500"
                 >
-                  Save note
+                  <UiText text={"Save note"} />
                 </button>
               </div>
             </motion.div>
@@ -7181,9 +7183,9 @@ export default function IELTSReadingInterface({
               exit={{ opacity: 0, y: 10, scale: 0.96 }}
               className="relative w-full max-w-lg rounded-2xl border border-red-100 bg-white p-6 text-center shadow-[0_30px_70px_rgba(220,38,38,0.25)]"
             >
-              <h3 className="text-3xl font-black text-slate-900">Submit this test?</h3>
+              <h3 className="text-3xl font-black text-slate-900"><UiText text={"Submit this test?"} /></h3>
               <p className="mt-2 text-sm text-slate-600">
-                {fullMockId ? 'Your answers will be saved and the next section will start automatically.' : 'After submitting, your result will be generated and the test session will end.'}
+                {fullMockId ? <UiText text={"Your answers will be saved and the next section will start automatically."} /> : <UiText text={"After submitting, your result will be generated and the test session will end."} />}
               </p>
               <div className="mt-5 flex items-center justify-center gap-3">
                 <button
@@ -7191,14 +7193,14 @@ export default function IELTSReadingInterface({
                   onClick={() => setShowSubmitConfirmModal(false)}
                   className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                 >
-                  Cancel
+                  <UiText text={"Cancel"} />
                 </button>
                 <button
                   type="button"
                   onClick={confirmSubmitTest}
                   className="rounded-xl border border-red-500 bg-gradient-to-r from-red-600 to-rose-600 px-4 py-2 text-sm font-bold text-white hover:from-red-500 hover:to-rose-500"
                 >
-                  Submit test
+                  <UiText text={"Submit test"} />
                 </button>
               </div>
             </motion.div>
@@ -7214,7 +7216,7 @@ export default function IELTSReadingInterface({
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[119] flex items-center justify-center bg-white p-4"
           >
-            <BrandPageLoader compact label="Your results are almost here" detail="Finalizing score report and review insights..." />
+            <BrandPageLoader compact label={uiCopy("Your results are almost here")} detail="Finalizing score report and review insights..." />
           </motion.div>
         )}
       </AnimatePresence>

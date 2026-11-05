@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import { accountStorage } from '@/utils/accountStorage'
 import { SaveWordButton } from './SaveWordButton'
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
@@ -191,10 +193,10 @@ const ACTIVITY_CARDS: Array<{ mode: ActivityMode; title: string; desc: string; x
 function ActivityPreview({ mode, entry }: { mode: ActivityMode; entry?: VocabularyEntry }) {
   const term = entry?.term ?? 'discover'
   return <div className={`vocab-activity-preview vocab-preview-${mode}`} aria-hidden="true">
-    {mode === 'flashcards' ? <><div className="vocab-mini-card vocab-mini-card-back" /><div className="vocab-mini-card"><span>ENGLISH</span><strong>{term}</strong><div className="vocab-mini-rule" /><span>FLIP TO EXPLORE <RotateCcw size={12} /></span></div></> : null}
-    {mode === 'matching' ? <><div className="vocab-mini-pair"><span>{term}</span><Link2 size={16} /><span>{entry?.synonym ?? 'find out'}</span></div><div className="vocab-mini-pair is-matched"><span><Check size={12} /> paired</span><span>+1 <Gem size={12} /></span></div></> : null}
-    {mode === 'quiz' ? <><div className="vocab-mini-question">What does <strong>{term}</strong> mean?</div><div className="vocab-mini-options"><span><i>A</i><b /></span><span className="is-correct"><i>B</i><b /><Check size={12} /></span><span><i>C</i><b /></span></div></> : null}
-    {mode === 'typing' ? <><div className="vocab-mini-keyboard">{term.slice(0, 8).split('').map((char, index) => <span key={index}>{char}</span>)}<i /></div><div className="vocab-mini-caption"><Keyboard size={13} /> A little recall. A lasting memory.</div></> : null}
+    {mode === 'flashcards' ? <><div className="vocab-mini-card vocab-mini-card-back" /><div className="vocab-mini-card"><span><UiText text={"ENGLISH"} /></span><strong>{term}</strong><div className="vocab-mini-rule" /><span><UiText text={"FLIP TO EXPLORE"} /> <RotateCcw size={12} /></span></div></> : null}
+    {mode === 'matching' ? <><div className="vocab-mini-pair"><span>{term}</span><Link2 size={16} /><span>{entry?.synonym ?? 'find out'}</span></div><div className="vocab-mini-pair is-matched"><span><Check size={12} /> <UiText text={"paired"} /></span><span>+1 <Gem size={12} /></span></div></> : null}
+    {mode === 'quiz' ? <><div className="vocab-mini-question"><UiText text={"What does"} /> <strong>{term}</strong> <UiText text={"mean?"} /></div><div className="vocab-mini-options"><span><i>A</i><b /></span><span className="is-correct"><i>B</i><b /><Check size={12} /></span><span><i>C</i><b /></span></div></> : null}
+    {mode === 'typing' ? <><div className="vocab-mini-keyboard">{term.slice(0, 8).split('').map((char, index) => <span key={index}>{char}</span>)}<i /></div><div className="vocab-mini-caption"><Keyboard size={13} /> <UiText text={"A little recall. A lasting memory."} /></div></> : null}
   </div>
 }
 
@@ -222,11 +224,11 @@ export function ActivityPicker({ basePath, entriesCount, navigationState, previe
                 <span className="vocab-xp-chip">{card.xp}</span>
               </div>
               <div className="vocab-activity-body">
-                <div><h4>{card.title}</h4><p className="vocab-activity-description">{card.desc}</p></div>
+                <div><h4><UiText text={card.title} /></h4><p className="vocab-activity-description"><UiText text={card.desc} /></p></div>
                 <ActivityPreview mode={card.mode} entry={previewEntry} />
               </div>
               <div className="vocab-activity-card-footer">
-                <p className="inline-flex items-center gap-1">Start with {entriesCount} terms <ArrowRight className="h-3.5 w-3.5" /></p>
+                <p className="inline-flex items-center gap-1"><UiText text={"Start with"} /> {entriesCount} <UiText text={"terms"} /> <ArrowRight className="h-3.5 w-3.5" /></p>
                 <span className="vocab-activity-arrow"><ArrowRight className="h-4 w-4" /></span>
               </div>
             </Link>
@@ -239,6 +241,7 @@ export function ActivityPicker({ basePath, entriesCount, navigationState, previe
 
 // ================================================================ Flashcards
 export function FlashcardsActivity({ entries, masteryKey, onComplete }: { entries: VocabularyEntry[]; masteryKey: string; onComplete?: (accuracy: number) => void }) {
+  const { c: uiCopy } = useCopy()
   const language = useVocabularyLanguage()
   const { reducedMotion } = useMotionPreferences()
   const meaningId = useId()
@@ -307,10 +310,10 @@ export function FlashcardsActivity({ entries, masteryKey, onComplete }: { entrie
     return (
       <motion.section initial={reducedMotion ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="vocab-result text-center">
         <ScoreRing pct={pct} />
-        <h3 className="mt-4 text-3xl font-black text-slate-900">Flashcards complete</h3>
-        <p className="mt-2 text-lg text-slate-600">{count} / {deck.length} marked “I know it”</p>
-        <p className="mt-2 text-sm text-slate-500">Reach at least 80% to earn XP once for this activity.</p>
-        <button onClick={() => { sessionAnswers.current = {}; completionReported.current = false; setIndex(0); setFlipped(false); setFinished(false) }} className="mt-5 inline-flex items-center gap-2 rounded-xl vocab-primary-button px-5 py-2.5 text-sm font-semibold text-white"><RotateCcw className="h-4 w-4" /> Try again</button>
+        <h3 className="mt-4 text-3xl font-black text-slate-900"><UiText text={"Flashcards complete"} /></h3>
+        <p className="mt-2 text-lg text-slate-600">{count} / {deck.length} <UiText text={"marked “I know it”"} /></p>
+        <p className="mt-2 text-sm text-slate-500"><UiText text={"Reach at least 80% to earn XP once for this activity."} /></p>
+        <button onClick={() => { sessionAnswers.current = {}; completionReported.current = false; setIndex(0); setFlipped(false); setFinished(false) }} className="mt-5 inline-flex items-center gap-2 rounded-xl vocab-primary-button px-5 py-2.5 text-sm font-semibold text-white"><RotateCcw className="h-4 w-4" /> <UiText text={"Try again"} /></button>
       </motion.section>
     )
   }
@@ -318,18 +321,18 @@ export function FlashcardsActivity({ entries, masteryKey, onComplete }: { entrie
 
   return (
     <div className="vocab-flashcards">
-      <div className="vocab-session-heading"><span className="vocab-session-icon"><Layers size={20} /></span><div><p className="vocab-content-label">EXPLORE & REMEMBER</p><h2>One word. A new possibility.</h2></div></div>
+      <div className="vocab-session-heading"><span className="vocab-session-icon"><Layers size={20} /></span><div><p className="vocab-content-label"><UiText text={"EXPLORE & REMEMBER"} /></p><h2><UiText text={"One word. A new possibility."} /></h2></div></div>
       <section className="vocab-flash-progress">
         <div className="flex items-center justify-between text-sm font-semibold">
-          <p className="text-slate-700">Card {index + 1} / {deck.length}</p>
-          <p className="inline-flex items-center gap-1 text-emerald-600"><CheckCircle2 className="h-4 w-4" /> {masteredCount} mastered</p>
+          <p className="text-slate-700"><UiText text={"Card"} /> {index + 1} / {deck.length}</p>
+          <p className="inline-flex items-center gap-1 text-emerald-600"><CheckCircle2 className="h-4 w-4" /> {masteredCount} <UiText text={"mastered"} /></p>
         </div>
-        <div className="vocab-progress-track" role="progressbar" aria-label="Cards explored" aria-valuenow={index + 1} aria-valuemin={0} aria-valuemax={deck.length}>
+        <div className="vocab-progress-track" role="progressbar" aria-label={uiCopy("Cards explored")} aria-valuenow={index + 1} aria-valuemin={0} aria-valuemax={deck.length}>
           <motion.div animate={{ width: `${progress}%` }} transition={{ duration: 0.36, ease: EASE }} className="vocab-progress-fill" />
         </div>
       </section>
 
-      <div className="vocab-flash-save"><SaveWordButton entry={current} /><WordDetailsButton entry={current} label="Meaning & examples" /></div>
+      <div className="vocab-flash-save"><SaveWordButton entry={current} /><WordDetailsButton entry={current} label={uiCopy("Meaning & examples")} /></div>
       <div className="vocab-flash-scene">
         <motion.button
           type="button"
@@ -344,18 +347,18 @@ export function FlashcardsActivity({ entries, masteryKey, onComplete }: { entrie
             {/* front */}
             <div style={{ backfaceVisibility: 'hidden' }} aria-hidden={flipped} className="vocab-flash-face vocab-flash-front">
               <div className="flex items-center justify-between pr-24">
-                <span className="vocab-flash-label">Term</span>
+                <span className="vocab-flash-label"><UiText text={"Term"} /></span>
               </div>
               <div className="flex flex-1 flex-col items-center justify-center text-center">
                 <span className="vocab-flash-ornament" aria-hidden="true"><Layers size={30} strokeWidth={1.2} /></span>
                 <p className="vocab-flash-term" lang="en">{current.term}</p>
-                <p className="vocab-flash-instruction">Tap or press Space to flip</p>
+                <p className="vocab-flash-instruction"><UiText text={"Tap or press Space to flip"} /></p>
               </div>
-              {known[current.id] ? <span className="absolute bottom-4 left-5 inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-700"><Check className="h-3 w-3" /> Mastered</span> : null}
+              {known[current.id] ? <span className="absolute bottom-4 left-5 inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-700"><Check className="h-3 w-3" /> <UiText text={"Mastered"} /></span> : null}
             </div>
             {/* back */}
             <div id={meaningId} style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }} aria-hidden={!flipped} className="vocab-flash-face vocab-flash-back">
-              <span className="vocab-flash-label">Meaning & translation</span>
+              <span className="vocab-flash-label"><UiText text={"Meaning & translation"} /></span>
               <p className="vocab-flash-back-term" lang="en">{current.term}</p>
               <div className="vocab-flash-meaning" data-bilingual={Boolean(translation)}>
               {translation ? (
@@ -365,12 +368,12 @@ export function FlashcardsActivity({ entries, masteryKey, onComplete }: { entrie
                 </div>
               ) : null}
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-700">Meaning (EN)</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-blue-700"><UiText text={"Meaning (EN)"} /></p>
                 <p className="vocab-flash-definition">{current.definition}</p>
               </div>
               </div>
-              <p className="vocab-flash-detail-note">Open Meaning & examples for the full word guide.</p>
-              {current.synonym ? <p className="vocab-flash-synonym"><span>Synonym</span> {current.synonym}</p> : null}
+              <p className="vocab-flash-detail-note"><UiText text={"Open Meaning & examples for the full word guide."} /></p>
+              {current.synonym ? <p className="vocab-flash-synonym"><span><UiText text={"Synonym"} /></span> {current.synonym}</p> : null}
             </div>
           </motion.div>
         </motion.button>
@@ -382,10 +385,10 @@ export function FlashcardsActivity({ entries, masteryKey, onComplete }: { entrie
               else speak(current.term)
             }}
             className="vocab-flash-listen"
-            aria-label={speakingCurrent ? `Stop pronunciation of ${current.term}` : `Listen to pronunciation of ${current.term}`}
+            aria-label={speakingCurrent ? uiCopy("Stop pronunciation of {{value1}}", { value1: String(current.term) }) : uiCopy("Listen to pronunciation of {{value1}}", { value1: String(current.term) })}
           >
             {speakingCurrent ? <Square className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
-            {speakingCurrent ? 'Stop' : 'Listen'}
+            {speakingCurrent ? <UiText text={"Stop"} /> : <UiText text={"Listen"} />}
           </button>
         ) : null}
       </div>
@@ -394,18 +397,18 @@ export function FlashcardsActivity({ entries, masteryKey, onComplete }: { entrie
       <div className="vocab-flash-controls">
       <div className="vocab-flash-mastery">
         <button onClick={() => mark(false)} className="inline-flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-700 transition hover:bg-amber-100">
-          <RefreshCw className="h-4 w-4" /> Still learning
+          <RefreshCw className="h-4 w-4" /> <UiText text={"Still learning"} />
         </button>
         <button onClick={() => mark(true)} className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100">
-          <Check className="h-4 w-4" /> I know it
+          <Check className="h-4 w-4" /> <UiText text={"I know it"} />
         </button>
       </div>
 
-      <p className="vocab-flash-shortcuts"><kbd>Space</kbd> flip · <kbd>←</kbd> <kbd>→</kbd> navigate</p>
+      <p className="vocab-flash-shortcuts"><kbd><UiText text={"Space"} /></kbd> <UiText text={"flip ·"} /> <kbd>←</kbd> <kbd>→</kbd> <UiText text={"navigate"} /></p>
       <div className="vocab-flash-navigation">
-        <button disabled={index === 0} onClick={() => go(-1)} className="inline-flex items-center rounded-xl border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-blue-50"><ArrowLeft className="mr-1 h-4 w-4" /> Prev</button>
-        <button onClick={() => { window.clearTimeout(advanceTimer.current); stop(); setDeck((p) => [...p.slice(0, index), ...shuffle(p.slice(index))]); setFlipped(false) }} className="inline-flex items-center rounded-xl vocab-primary-button px-4 py-2 text-sm font-semibold text-white"><Shuffle className="mr-1 h-4 w-4" /> Shuffle</button>
-        <button onClick={() => go(1)} className="inline-flex items-center rounded-xl border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-blue-50">{index === deck.length - 1 ? 'Finish' : 'Next'} <ArrowRight className="ml-1 h-4 w-4" /></button>
+        <button disabled={index === 0} onClick={() => go(-1)} className="inline-flex items-center rounded-xl border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-blue-50"><ArrowLeft className="mr-1 h-4 w-4" /> <UiText text={"Prev"} /></button>
+        <button onClick={() => { window.clearTimeout(advanceTimer.current); stop(); setDeck((p) => [...p.slice(0, index), ...shuffle(p.slice(index))]); setFlipped(false) }} className="inline-flex items-center rounded-xl vocab-primary-button px-4 py-2 text-sm font-semibold text-white"><Shuffle className="mr-1 h-4 w-4" /> <UiText text={"Shuffle"} /></button>
+        <button onClick={() => go(1)} className="inline-flex items-center rounded-xl border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-blue-50">{index === deck.length - 1 ? <UiText text={"Finish"} /> : <UiText text={"Next"} />} <ArrowRight className="ml-1 h-4 w-4" /></button>
       </div>
       </div>
     </div>
@@ -414,6 +417,7 @@ export function FlashcardsActivity({ entries, masteryKey, onComplete }: { entrie
 
 // ================================================================ Matching
 export function MatchingActivity({ entries, rewardKey, onComplete }: { entries: VocabularyEntry[]; rewardKey: string; onComplete?: (accuracy: number) => void }) {
+  const { c: uiCopy } = useCopy()
   const [rows, setRows] = useState(() => window.innerWidth < 640 || window.innerHeight < 650 ? 3 : 6)
   const [wordPage, setWordPage] = useState(0)
   const [meaningPage, setMeaningPage] = useState(0)
@@ -555,27 +559,27 @@ export function MatchingActivity({ entries, rewardKey, onComplete }: { entries: 
 
   return (
     <div className="vocab-matching">
-      <div className="vocab-session-heading"><span className="vocab-session-icon"><Link2 size={20} /></span><div><p className="vocab-content-label">CONNECT THE MEANING</p><h2>Find the perfect pair.</h2></div></div>
+      <div className="vocab-session-heading"><span className="vocab-session-icon"><Link2 size={20} /></span><div><p className="vocab-content-label"><UiText text={"CONNECT THE MEANING"} /></p><h2><UiText text={"Find the perfect pair."} /></h2></div></div>
       <section className="vocab-matching-rewards" role={allDone ? 'status' : undefined}>
         <div>
-          <p className="flex items-center gap-1 text-xs font-bold uppercase tracking-[0.16em] text-blue-600">{allDone ? <><Trophy className="h-3.5 w-3.5" /> All groups matched!</> : 'Matching · +1 / group · +5 all-clear'}</p>
-          <p className="mt-1 text-sm font-semibold text-slate-700">{allDone ? (replayMode ? 'Great practice — rewards already collected.' : 'Group rewards and the all-clear bonus are applied.') : replayMode ? 'Replay mode — rewards already collected.' : `Earned here: ${sectionReward.totalDiamonds} diamonds`}</p>
+          <p className="flex items-center gap-1 text-xs font-bold uppercase tracking-[0.16em] text-blue-600">{allDone ? <><Trophy className="h-3.5 w-3.5" /> <UiText text={"All groups matched!"} /></> : 'Matching · +1 / group · +5 all-clear'}</p>
+          <p className="mt-1 text-sm font-semibold text-slate-700">{allDone ? (replayMode ? 'Great practice — rewards already collected.' : 'Group rewards and the all-clear bonus are applied.') : replayMode ? <UiText text={"Replay mode — rewards already collected."} /> : <UiText text={"Earned here: {{value1}} diamonds"} values={{ value1: String(sectionReward.totalDiamonds) }} />}</p>
         </div>
         <div className="vocab-wallet">
-          <p className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-[0.14em] text-blue-600"><Gem className="h-3.5 w-3.5" /> Wallet</p>
+          <p className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-[0.14em] text-blue-600"><Gem className="h-3.5 w-3.5" /> <UiText text={"Wallet"} /></p>
           <p className="text-2xl font-black text-slate-900">{diamondBank}</p>
         </div>
       </section>
 
       {groups.length > 1 ? (
-        <section className="vocab-matching-groups" aria-label="Matching groups">
+        <section className="vocab-matching-groups" aria-label={uiCopy("Matching groups")}>
           {groups.map((group, i) => {
             const done = Boolean(completedGroups[i])
             const claimed = sectionReward.awardedGroups.includes(i)
             return (
               <button key={i} aria-pressed={activeGroupIndex === i} onClick={() => { window.clearTimeout(groupAdvanceTimer.current); window.clearTimeout(wrongPairTimer.current); setWrongPair(null); setActiveGroupIndex(i); setSelectedWord(null); setSelectedDef(null) }} className={`rounded-xl border text-left transition ${activeGroupIndex === i ? 'border-blue-400 bg-blue-50 shadow-sm' : 'border-slate-200 bg-white hover:border-blue-300'}`}>
-                <p className="text-sm font-bold text-slate-900">Group {i + 1}</p>
-                <p className={`mt-1 text-xs font-semibold ${done ? 'text-emerald-600' : claimed ? 'text-amber-600' : 'text-slate-500'}`}>{done ? 'Solved now' : claimed ? 'Reward claimed' : `${group.length} pairs`}</p>
+                <p className="text-sm font-bold text-slate-900"><UiText text={"Group"} /> {i + 1}</p>
+                <p className={`mt-1 text-xs font-semibold ${done ? 'text-emerald-600' : claimed ? 'text-amber-600' : 'text-slate-500'}`}>{done ? <UiText text={"Solved now"} /> : claimed ? <UiText text={"Reward claimed"} /> : <UiText text={"{{value1}} pairs"} values={{ value1: String(group.length) }} />}</p>
               </button>
             )
           })}
@@ -584,13 +588,13 @@ export function MatchingActivity({ entries, rewardKey, onComplete }: { entries: 
 
       <section className="vocab-matching-board">
         <div className="vocab-matching-board-heading">
-          <h3 className="text-lg font-black text-slate-900">Group {activeGroupIndex + 1} board</h3>
+          <h3 className="text-lg font-black text-slate-900"><UiText text={"Group"} /> {activeGroupIndex + 1} <UiText text={"board"} /></h3>
           <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-sm font-bold text-blue-700">{activeMatchedCount} / {activeGroup.length}</span>
         </div>
-        <p className="vocab-matching-instruction" role="status">{allDone ? 'Every pair is connected. Well done!' : wrongPair ? 'That pair does not match. Try another meaning.' : selectedWord || selectedDef ? 'Now choose its match in the other column.' : 'Select a term and its meaning, in either order.'}</p>
+        <p className="vocab-matching-instruction" role="status">{allDone ? <UiText text={"Every pair is connected. Well done!"} /> : wrongPair ? <UiText text={"That pair does not match. Try another meaning."} /> : selectedWord || selectedDef ? <UiText text={"Now choose its match in the other column."} /> : <UiText text={"Select a term and its meaning, in either order."} />}</p>
         <div className="vocab-matching-columns">
           <div className="vocab-matching-column" style={{ gridTemplateRows: `auto repeat(${visibleTerms.length}, minmax(0, 1fr)) auto` }}>
-            <p className="px-1 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Terms</p>
+            <p className="px-1 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400"><UiText text={"Terms"} /></p>
             {visibleTerms.map((it) => (
               <div key={it.id} className="relative">
                 <button disabled={Boolean(activeMatches[`term:${it.id}`])} aria-pressed={selectedWord?.id === it.id} onClick={() => pickWord(activeGroupIndex, it.id)} className={`vocab-matching-cell vocab-matching-term font-semibold ${cellClass(Boolean(activeMatches[`term:${it.id}`]), selectedWord?.id === it.id, wrongPair?.wordId === it.id)}`}>
@@ -602,17 +606,17 @@ export function MatchingActivity({ entries, rewardKey, onComplete }: { entries: 
                 </div>
               </div>
             ))}
-            <ColumnPager label="terms" page={wordPage} count={Math.ceil(activeGroup.length / rows)} onChange={setWordPage} />
+            <ColumnPager label={uiCopy("terms")} page={wordPage} count={Math.ceil(activeGroup.length / rows)} onChange={setWordPage} />
           </div>
           <div className="vocab-matching-column" style={{ gridTemplateRows: `auto repeat(${visibleMeanings.length}, minmax(0, 1fr)) auto` }}>
-            <p className="px-1 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Meanings</p>
+            <p className="px-1 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400"><UiText text={"Meanings"} /></p>
             {visibleMeanings.map((it) => (
               <div key={it.id} className="vocab-matching-meaning-cell"><button disabled={Boolean(activeMatches[`definition:${it.id}`])} aria-pressed={selectedDef?.id === it.id} onClick={() => pickDef(activeGroupIndex, it.id)} className={`vocab-matching-cell ${cellClass(Boolean(activeMatches[`definition:${it.id}`]), selectedDef?.id === it.id, wrongPair?.defId === it.id)}`}>
                 {activeMatches[`definition:${it.id}`] ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" /> : null}
                 <span title={it.definition}>{it.definition}</span>
               </button><TextDetailsButton text={it.definition} /></div>
             ))}
-            <ColumnPager label="meanings" page={meaningPage} count={Math.ceil(activeDefs.length / rows)} onChange={setMeaningPage} />
+            <ColumnPager label={uiCopy("meanings")} page={meaningPage} count={Math.ceil(activeDefs.length / rows)} onChange={setMeaningPage} />
           </div>
         </div>
       </section>
@@ -634,10 +638,10 @@ function CelebrationOverlay({ celebration }: { celebration: MatchingCelebration 
             </motion.div>
           ))}
           <motion.div initial={{ scale: 0.82, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.85, opacity: 0, y: 20 }} transition={{ duration: 0.32, ease: EASE }} className="relative overflow-hidden rounded-[1.8rem] border border-amber-200 bg-gradient-to-br from-white via-amber-50 to-orange-100 px-8 py-7 text-center shadow-[0_24px_62px_rgba(245,158,11,0.35)]">
-            <p className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.16em] text-amber-700"><Sparkles className="h-4 w-4" /> Diamond Reward</p>
+            <p className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.16em] text-amber-700"><Sparkles className="h-4 w-4" /> <UiText text={"Diamond Reward"} /></p>
             <p className="mt-2 text-5xl font-black text-slate-900">+{celebration.amount}</p>
-            <p className="mt-2 text-sm font-semibold text-amber-700">{celebration.reason}</p>
-            <p className="mt-1 text-sm text-slate-600">Wallet: {celebration.total} diamonds</p>
+            <p className="mt-2 text-sm font-semibold text-amber-700"><UiText text={celebration.reason} /></p>
+            <p className="mt-1 text-sm text-slate-600"><UiText text={"Wallet:"} /> {celebration.total} <UiText text={"diamonds"} /></p>
           </motion.div>
         </motion.div>
       ) : null}
@@ -647,6 +651,7 @@ function CelebrationOverlay({ celebration }: { celebration: MatchingCelebration 
 
 // ================================================================ Quiz
 export function QuizActivity({ entries, onComplete }: { entries: VocabularyEntry[]; onComplete?: (accuracy: number) => void }) {
+  const { c: uiCopy } = useCopy()
   const questions = useMemo(() => shuffle(entries).slice(0, Math.min(10, entries.length)), [entries])
   const [index, setIndex] = useState(0)
   const [picked, setPicked] = useState<string | null>(null)
@@ -685,23 +690,23 @@ export function QuizActivity({ entries, onComplete }: { entries: VocabularyEntry
       <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="vocab-result relative overflow-hidden text-center">
         <Burst count={24} play={pct >= 70} />
         <ScoreRing pct={pct} />
-        <h3 className="mt-4 text-3xl font-black text-slate-900">{pct >= 80 ? 'Excellent!' : pct >= 50 ? 'Good effort!' : 'Keep practising'}</h3>
-        <p className="mt-1 text-lg text-slate-600">You scored <span className="font-bold text-blue-600">{score}</span> / {questions.length}</p>
+        <h3 className="mt-4 text-3xl font-black text-slate-900">{pct >= 80 ? <UiText text={"Excellent!"} /> : pct >= 50 ? <UiText text={"Good effort!"} /> : <UiText text={"Keep practising"} />}</h3>
+        <p className="mt-1 text-lg text-slate-600"><UiText text={"You scored"} /> <span className="font-bold text-blue-600">{score}</span> / {questions.length}</p>
         <MistakeReview entries={mistakes} />
-        <button onClick={restart} className="mt-5 inline-flex items-center gap-2 rounded-xl vocab-primary-button px-5 py-2.5 text-sm font-semibold text-white"><RotateCcw className="h-4 w-4" /> Try again</button>
+        <button onClick={restart} className="mt-5 inline-flex items-center gap-2 rounded-xl vocab-primary-button px-5 py-2.5 text-sm font-semibold text-white"><RotateCcw className="h-4 w-4" /> <UiText text={"Try again"} /></button>
       </motion.section>
     )
   }
 
   return (
     <section className="vocab-question vocab-quiz">
-      <div className="vocab-session-heading"><span className="vocab-session-icon"><CheckCircle2 size={20} /></span><div><p className="vocab-content-label">RECOGNISE & UNDERSTAND</p><h2>Put your knowledge to the test.</h2></div><span className="vocab-session-score">{score} correct</span></div>
-      <div className="vocab-progress-track" role="progressbar" aria-label="Quiz progress" aria-valuenow={index + 1} aria-valuemin={0} aria-valuemax={questions.length}>
+      <div className="vocab-session-heading"><span className="vocab-session-icon"><CheckCircle2 size={20} /></span><div><p className="vocab-content-label"><UiText text={"RECOGNISE & UNDERSTAND"} /></p><h2><UiText text={"Put your knowledge to the test."} /></h2></div><span className="vocab-session-score">{score} <UiText text={"correct"} /></span></div>
+      <div className="vocab-progress-track" role="progressbar" aria-label={uiCopy("Quiz progress")} aria-valuenow={index + 1} aria-valuemin={0} aria-valuemax={questions.length}>
         <motion.div animate={{ width: `${((index + 1) / questions.length) * 100}%` }} transition={{ ease: EASE }} className="vocab-progress-fill" />
       </div>
       <SaveWordButton entry={current} />
       <div className="vocab-quiz-heading flex items-start justify-between gap-3">
-        <h3 className="text-xl font-bold text-slate-900">What does <span className="text-blue-600">“{current.term}”</span> mean?</h3>
+        <h3 className="text-xl font-bold text-slate-900"><UiText text={"What does"} /> <span className="text-blue-600">“{current.term}”</span> <UiText text={"mean?"} /></h3>
         <AnimatePresence>
           {combo >= 2 ? (
             <motion.span
@@ -712,12 +717,12 @@ export function QuizActivity({ entries, onComplete }: { entries: VocabularyEntry
               transition={{ type: 'spring', stiffness: 380, damping: 16 }}
               className="inline-flex shrink-0 items-center gap-1 rounded-full border border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50 px-2.5 py-1 text-xs font-black text-amber-700 shadow-[0_6px_14px_rgba(245,158,11,0.25)]"
             >
-              🔥 x{combo} combo
+              🔥 x{combo} <UiText text={"combo"} />
             </motion.span>
           ) : null}
         </AnimatePresence>
         {isSupported ? (
-          <button aria-label={speakingCurrent ? `Stop pronunciation of ${current.term}` : `Listen to pronunciation of ${current.term}`} onClick={() => (speakingCurrent ? stop() : speak(current.term))} className="shrink-0 rounded-lg border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50">
+          <button aria-label={speakingCurrent ? uiCopy("Stop pronunciation of {{value1}}", { value1: String(current.term) }) : uiCopy("Listen to pronunciation of {{value1}}", { value1: String(current.term) })} onClick={() => (speakingCurrent ? stop() : speak(current.term))} className="shrink-0 rounded-lg border border-blue-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50">
             {speakingCurrent ? <Square className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
           </button>
         ) : null}
@@ -747,11 +752,11 @@ export function QuizActivity({ entries, onComplete }: { entries: VocabularyEntry
           )
         })}
       </div>
-      {locked ? <div className="vocab-answer-feedback" data-correct={picked === current.definition}><p role="status">{picked === current.definition ? 'Correct — well remembered!' : 'Not quite. The correct meaning is highlighted.'}</p><WordDetailsButton entry={current} /></div> : null}
+      {locked ? <div className="vocab-answer-feedback" data-correct={picked === current.definition}><p role="status">{picked === current.definition ? <UiText text={"Correct — well remembered!"} /> : <UiText text={"Not quite. The correct meaning is highlighted."} />}</p><WordDetailsButton entry={current} /></div> : null}
       <div className="vocab-question-footer">
-        <p className="text-sm font-semibold text-slate-500">Question {index + 1} / {questions.length}</p>
+        <p className="text-sm font-semibold text-slate-500"><UiText text={"Question"} /> {index + 1} / {questions.length}</p>
         <button onClick={next} disabled={!locked} className="inline-flex items-center gap-1 rounded-xl vocab-primary-button px-5 py-2 text-sm font-semibold text-white disabled:opacity-40">
-          {index === questions.length - 1 ? 'Finish' : 'Next'} <ArrowRight className="h-4 w-4" />
+          {index === questions.length - 1 ? <UiText text={"Finish"} /> : <UiText text={"Next"} />} <ArrowRight className="h-4 w-4" />
         </button>
       </div>
     </section>
@@ -776,6 +781,7 @@ function ScoreRing({ pct }: { pct: number }) {
 
 // ================================================================ Typing
 export function TypingActivity({ entries, onComplete }: { entries: VocabularyEntry[]; onComplete?: (accuracy: number) => void }) {
+  const { c: uiCopy } = useCopy()
   const questions = useMemo(() => shuffle(entries).slice(0, Math.min(10, entries.length)), [entries])
   const [index, setIndex] = useState(0)
   const [value, setValue] = useState('')
@@ -811,22 +817,22 @@ export function TypingActivity({ entries, onComplete }: { entries: VocabularyEnt
     return (
       <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="vocab-result text-center">
         <ScoreRing pct={pct} />
-        <h3 className="mt-4 text-3xl font-black text-slate-900">Typing complete</h3>
-        <p className="mt-1 text-lg text-slate-600">Accuracy <span className="font-bold text-blue-600">{score}</span> / {questions.length}</p>
+        <h3 className="mt-4 text-3xl font-black text-slate-900"><UiText text={"Typing complete"} /></h3>
+        <p className="mt-1 text-lg text-slate-600"><UiText text={"Accuracy"} /> <span className="font-bold text-blue-600">{score}</span> / {questions.length}</p>
         <MistakeReview entries={mistakes} />
-        <button onClick={restart} className="mt-5 inline-flex items-center gap-2 rounded-xl vocab-primary-button px-5 py-2.5 text-sm font-semibold text-white"><RotateCcw className="h-4 w-4" /> Try again</button>
+        <button onClick={restart} className="mt-5 inline-flex items-center gap-2 rounded-xl vocab-primary-button px-5 py-2.5 text-sm font-semibold text-white"><RotateCcw className="h-4 w-4" /> <UiText text={"Try again"} /></button>
       </motion.section>
     )
   }
 
   return (
     <section className="vocab-question vocab-typing">
-      <div className="vocab-session-heading"><span className="vocab-session-icon"><Keyboard size={20} /></span><div><p className="vocab-content-label">RECALL & SPELL</p><h2>Make the word your own.</h2></div><span className="vocab-session-score">{score} correct</span></div>
-      <div className="vocab-progress-track" role="progressbar" aria-label="Typing progress" aria-valuenow={index + 1} aria-valuemin={0} aria-valuemax={questions.length}>
+      <div className="vocab-session-heading"><span className="vocab-session-icon"><Keyboard size={20} /></span><div><p className="vocab-content-label"><UiText text={"RECALL & SPELL"} /></p><h2><UiText text={"Make the word your own."} /></h2></div><span className="vocab-session-score">{score} <UiText text={"correct"} /></span></div>
+      <div className="vocab-progress-track" role="progressbar" aria-label={uiCopy("Typing progress")} aria-valuenow={index + 1} aria-valuemin={0} aria-valuemax={questions.length}>
         <motion.div animate={{ width: `${((index + 1) / questions.length) * 100}%` }} transition={{ ease: EASE }} className="vocab-progress-fill" />
       </div>
       {checked ? <SaveWordButton entry={current} /> : null}
-      <label htmlFor="vocab-typing-answer" className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Type the term that matches this meaning</label>
+      <label htmlFor="vocab-typing-answer" className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400"><UiText text={"Type the term that matches this meaning"} /></label>
       <div className="vocab-typing-prompt">
         <BrainCircuit className="mt-0.5 h-5 w-5 shrink-0 text-sky-600" />
         <p className="text-[15px] font-semibold leading-6 text-slate-800">{current.definition}</p>
@@ -845,7 +851,7 @@ export function TypingActivity({ entries, onComplete }: { entries: VocabularyEnt
           if (checked) next()
           else check()
         }}
-        placeholder="Type the word…"
+        placeholder={uiCopy("Type the word…")}
         disabled={checked}
         className={`mt-4 w-full rounded-xl border px-4 py-3 text-base outline-none transition ${
           checked ? (correct ? 'border-emerald-400 bg-emerald-50 text-emerald-800' : 'border-red-400 bg-red-50 text-red-700') : 'border-slate-200 focus:border-sky-400 focus:ring-2 focus:ring-sky-100'
@@ -856,12 +862,12 @@ export function TypingActivity({ entries, onComplete }: { entries: VocabularyEnt
         {checked ? (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
             <div role="status" className={`vocab-answer-feedback mt-3 rounded-xl px-4 py-2.5 text-sm font-semibold ${correct ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
-              <p>{correct ? '✓ Correct!' : <>Answer: <span className="font-black">{current.term}</span></>}</p>
+              <p>{correct ? <UiText text={"✓ Correct!"} /> : <><UiText text={"Answer:"} /> <span className="font-black">{current.term}</span></>}</p>
               <WordDetailsButton entry={current} />
             </div>
           </motion.div>
         ) : reveal ? (
-          <p className="mt-3 text-sm text-slate-500">Hint: starts with <span className="font-bold text-slate-700">“{current.term.slice(0, Math.ceil(current.term.length / 3))}…”</span></p>
+          <p className="mt-3 text-sm text-slate-500"><UiText text={"Hint: starts with"} /> <span className="font-bold text-slate-700">“{current.term.slice(0, Math.ceil(current.term.length / 3))}…”</span></p>
         ) : null}
       </AnimatePresence>
 
@@ -869,13 +875,13 @@ export function TypingActivity({ entries, onComplete }: { entries: VocabularyEnt
         <div className="flex items-center gap-2">
           <p className="text-sm font-semibold text-slate-500">{index + 1} / {questions.length}</p>
           {!checked ? (
-            <button onClick={() => setReveal(true)} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-500 hover:bg-slate-50"><Eye className="h-3.5 w-3.5" /> Hint</button>
+            <button onClick={() => setReveal(true)} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-500 hover:bg-slate-50"><Eye className="h-3.5 w-3.5" /> <UiText text={"Hint"} /></button>
           ) : null}
         </div>
         {checked ? (
-          <button ref={nextRef} onClick={next} className="inline-flex items-center gap-1 rounded-xl vocab-primary-button px-5 py-2 text-sm font-semibold text-white">{index === questions.length - 1 ? 'Finish' : 'Next'} <ArrowRight className="h-4 w-4" /></button>
+          <button ref={nextRef} onClick={next} className="inline-flex items-center gap-1 rounded-xl vocab-primary-button px-5 py-2 text-sm font-semibold text-white">{index === questions.length - 1 ? <UiText text={"Finish"} /> : <UiText text={"Next"} />} <ArrowRight className="h-4 w-4" /></button>
         ) : (
-          <button onClick={check} disabled={!value.trim()} className="inline-flex items-center gap-1 rounded-xl vocab-primary-button px-5 py-2 text-sm font-semibold text-white disabled:opacity-40"><Check className="h-4 w-4" /> Check</button>
+          <button onClick={check} disabled={!value.trim()} className="inline-flex items-center gap-1 rounded-xl vocab-primary-button px-5 py-2 text-sm font-semibold text-white disabled:opacity-40"><Check className="h-4 w-4" /> <UiText text={"Check"} /></button>
         )}
       </div>
     </section>
@@ -883,11 +889,13 @@ export function TypingActivity({ entries, onComplete }: { entries: VocabularyEnt
 }
 
 function MistakeReview({ entries }: { entries: VocabularyEntry[] }) {
-  if (!entries.length) return <p className="vocab-result-note">Every answer correct. Keep the momentum going.</p>
-  return <div className="vocab-mistake-review"><VocabularyLibrary entries={entries} label="Review words to practise" /></div>
+  const { c: uiCopy } = useCopy()
+  if (!entries.length) return <p className="vocab-result-note"><UiText text={"Every answer correct. Keep the momentum going."} /></p>
+  return <div className="vocab-mistake-review"><VocabularyLibrary entries={entries} label={uiCopy("Review words to practise")} /></div>
 }
 
 function ColumnPager({ label, page, count, onChange }: { label: string; page: number; count: number; onChange: (page: number) => void }) {
+  const { c: uiCopy } = useCopy()
   if (count <= 1) return null
-  return <div className="vocab-column-pager"><button type="button" aria-label={`Previous ${label}`} disabled={page === 0} onClick={() => onChange(page - 1)}><ArrowLeft size={13} /></button><span>{page + 1} / {count}</span><button type="button" aria-label={`Next ${label}`} disabled={page >= count - 1} onClick={() => onChange(page + 1)}><ArrowRight size={13} /></button></div>
+  return <div className="vocab-column-pager"><button type="button" aria-label={uiCopy("Previous {{value1}}", { value1: String(label) })} disabled={page === 0} onClick={() => onChange(page - 1)}><ArrowLeft size={13} /></button><span>{page + 1} / {count}</span><button type="button" aria-label={uiCopy("Next {{value1}}", { value1: String(label) })} disabled={page >= count - 1} onClick={() => onChange(page + 1)}><ArrowRight size={13} /></button></div>
 }

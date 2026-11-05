@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import { analyzeSATResult, formatSATDate, formatSATDuration, satAnswerStatus } from '@/features/sat/resultAnalysis'
 import { openSATReport } from '@/features/sat/resultReport'
 import { bankDomain } from '@/features/sat/bankTopics'
@@ -101,7 +103,7 @@ function ScoreRing({ score, percent, label }: { score: number | null; percent: n
       </svg>
       <div>
         <strong>{score ?? `${percent}%`}</strong>
-        <span>{score === null ? 'accuracy' : '/ 800'}</span>
+        <span>{score === null ? <UiText text={"accuracy"} /> : '/ 800'}</span>
       </div>
     </div>
   )
@@ -115,6 +117,7 @@ function formatPace(seconds: number) {
 }
 
 export default function SATReview({ attempt, test: paper, onStartAgain, onBack, backLabel, historyReview = false, variant = 'test' }: Props) {
+  const { c: uiCopy } = useCopy()
   const test = useMemo(() => resolveSATTest(paper, attempt), [paper, attempt])
   const bank = variant === 'question-bank'
   const tabs = bank ? BANK_TABS : RESULT_TABS
@@ -303,57 +306,56 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
           <div className="sr-topbar">
             <button type="button" className="sr-back" onClick={onBack ?? (() => navigate(backPath))}>
               <ArrowLeft size={15} />
-              {returnLabel}
+              <UiText text={returnLabel} />
             </button>
             <BrandLogo height={42} />
           </div>
           <header className="srx-header">
             <div className="srx-title-row">
               <h1>
-                {bank ? 'Question Bank' : 'Your SAT'} <span>Results</span>
+                {bank ? <UiText text={"Question Bank"} /> : <UiText text={"Your SAT"} />} <span><UiText text={"Results"} /></span>
               </h1>
               {!bank && <button
                 type="button"
                 className="srx-download"
                 disabled={!submitted}
                 onClick={downloadReport}
-                title="Open your score report to save as PDF or print"
+                title={uiCopy("Open your score report to save as PDF or print")}
               >
                 <ArrowDownToLine size={17} />
-                Download Report
+                <UiText text={"Download Report"} />
               </button>}
             </div>
             <p className="srx-subtitle">
-              An in-depth analysis of your performance. See your strengths and where you can improve.
+              <UiText text={"An in-depth analysis of your performance. See your strengths and where you can improve."} />
             </p>
             <div className="srx-meta">
               <span className="srx-meta-test">{test.title}</span>
               <span>{formatSATDate(attempt.submittedAt ?? attempt.updatedAt)}</span>
-              <span>{attempt.mode === 'exam' ? 'Exam mode' : 'Practice mode'}</span>
+              <span>{attempt.mode === 'exam' ? <UiText text={"Exam mode"} /> : <UiText text={"Practice mode"} />}</span>
               <span>
-                {allQuestions.length} questions · {bank ? 'Untimed practice set' : `${modules.length} modules`}
+                {allQuestions.length} <UiText text={"questions ·"} /> {bank ? <UiText text={"Untimed practice set"} /> : <UiText text={"{{value1}} modules"} values={{ value1: String(modules.length) }} />}
               </span>
               <span className={`srx-meta-status ${submitted ? '' : 'is-incomplete'}`}>
                 {submitted ? <CheckCircle2 size={13} /> : <CircleDashed size={13} />}
-                {submitted ? 'Completed' : 'Saved incomplete'}
+                {submitted ? <UiText text={"Completed"} /> : <UiText text={"Saved incomplete"} />}
               </span>
             </div>
           </header>
         </section>
         {!submitted && (
           <p className="sr-notice">
-            This attempt was saved before submission. You can review your saved answers; a score is available after
-            completion.
+            <UiText text={"This attempt was saved before submission. You can review your saved answers; a score is available after completion."} />
           </p>
         )}
         {!bank && satAvailabilityNote(test) && <p className="sr-notice">{satAvailabilityNote(test)}</p>}
         {!bank && reportError && (
           <p className="sr-notice" role="alert">
-            Your browser blocked the report tab. Allow pop-ups for Ivygoo, then select Download Report again.
+            <UiText text={"Your browser blocked the report tab. Allow pop-ups for Ivygoo, then select Download Report again."} />
           </p>
         )}
         <div className="srx-tabs-wrap">
-          <div className="srx-tabs" role="tablist" aria-label="SAT result analysis" onKeyDown={handleTabKeys}>
+          <div className="srx-tabs" role="tablist" aria-label={uiCopy("SAT result analysis")} onKeyDown={handleTabKeys}>
             {tabs.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
@@ -366,7 +368,7 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
                 onClick={() => activateTab(id)}
               >
                 <Icon size={16} />
-                <span>{label}</span>
+                <span><UiText text={label} /></span>
               </button>
             ))}
           </div>
@@ -388,37 +390,37 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
                     <section
                       key={section.id}
                       className={`sr-card srx-score-card ${index === 0 ? 'is-first' : 'is-last'}`}
-                      aria-label={`${section.label} result`}
+                      aria-label={uiCopy("{{value1}} result", { value1: String(section.label) })}
                     >
-                      <h2>{section.label}</h2>
+                      <h2><UiText text={section.label} /></h2>
                       <ScoreRing score={section.score} percent={section.percent} label={section.label} />
                       <p className="srx-score-counts">
-                        <b className="tone-correct">{section.correct} Correct</b>
+                        <b className="tone-correct">{section.correct} <UiText text={"Correct"} /></b>
                         <span aria-hidden="true">·</span>
-                        <b className="tone-wrong">{section.total - section.correct} Wrong</b>
+                        <b className="tone-wrong">{section.total - section.correct} <UiText text={"Wrong"} /></b>
                       </p>
                       <p className="srx-percentile">
                         {percentileText(entry) ??
                           (section.score === null ? 'Score shown after the full section is completed.' : '')}
                       </p>
                       <button type="button" className="srx-card-link" onClick={() => showReview(null, 'all')}>
-                        {section.unanswered ? `${section.unanswered} unanswered · ` : ''}
-                        Review answers
+                        {section.unanswered ? <UiText text={"{{value1}} unanswered · "} values={{ value1: String(section.unanswered) }} /> : ''}
+                        <UiText text={"Review answers"} />
                         <ChevronRight size={14} />
                       </button>
                     </section>
                   )
                 })}
-              <section className="sr-card srx-score-card srx-total-card" aria-label="Overall result">
+              <section className="sr-card srx-score-card srx-total-card" aria-label={uiCopy("Overall result")}>
                 <span className="srx-total-glow" aria-hidden="true" />
                 <h2>
                   {!submitted
-                    ? 'Saved incomplete'
+                    ? <UiText text={"Saved incomplete"} />
                     : score === null
-                      ? 'Accuracy'
+                      ? <UiText text={"Accuracy"} />
                       : sections.length === 1
-                        ? `${sections[0].label} Score`
-                        : 'Total Score'}
+                        ? <UiText text={"{{value1}} Score"} values={{ value1: String(sections[0].label) }} />
+                        : <UiText text={"Total Score"} />}
                 </h2>
                 <div className="srx-total-number">
                   <strong>{!submitted ? '—' : (score ?? `${report.percent}%`)}</strong>
@@ -426,37 +428,37 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
                 </div>
                 <p className="srx-percentile">
                   {!submitted
-                    ? 'Finish the test to see your score.'
+                    ? <UiText text={"Finish the test to see your score."} />
                     : score === null
-                      ? 'Based on the available modules.'
+                      ? <UiText text={"Based on the available modules."} />
                       : percentileText(percentileFor('total', score, maximum === 800 ? 800 : 1600), true)}
                 </p>
                 {score !== null && (
                   <div className="srx-total-range">
                     <span>
-                      Estimated range{' '}
+                      <UiText text={"Estimated range"} />{' '}
                       <b>
                         {range[0]}–{range[1]}
                       </b>
                     </span>
                     <span>
-                      <b>{report.correct}</b>/{allQuestions.length} correct
+                      <b>{report.correct}</b>/{allQuestions.length} <UiText text={"correct"} />
                     </span>
                   </div>
                 )}
                 {sections.length === 1 && (
                   <p className="srx-score-counts">
-                    <b className="tone-correct">{sections[0].correct} Correct</b>
+                    <b className="tone-correct">{sections[0].correct} <UiText text={"Correct"} /></b>
                     <span aria-hidden="true">·</span>
-                    <b className="tone-wrong">{sections[0].total - sections[0].correct} Wrong</b>
+                    <b className="tone-wrong">{sections[0].total - sections[0].correct} <UiText text={"Wrong"} /></b>
                   </p>
                 )}
               </section>
             </div>
             <p className="sr-estimate-note">
-              Practice scores are estimates, not official SAT results. Accuracy reflects the questions in this attempt.
+              <UiText text={"Practice scores are estimates, not official SAT results. Accuracy reflects the questions in this attempt."} />
             </p>
-            <div className="sr-summary-strip" aria-label="Attempt summary">
+            <div className="sr-summary-strip" aria-label={uiCopy("Attempt summary")}>
               {[
                 {
                   label: 'Correct',
@@ -487,7 +489,7 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
                 <div key={label}>
                   <Icon size={19} />
                   <div>
-                    <span>{label}</span>
+                    <span><UiText text={label} /></span>
                     <strong>{value}</strong>
                   </div>
                 </div>
@@ -499,18 +501,18 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
                   <Target size={21} />
                 </span>
                 <div>
-                  <p className="sr-eyebrow">{priorities.length ? 'Your next focus' : 'Keep the momentum'}</p>
-                  <h2>{priorities[0]?.domain ?? 'A clean sweep. Keep going.'}</h2>
+                  <p className="sr-eyebrow">{priorities.length ? <UiText text={"Your next focus"} /> : <UiText text={"Keep the momentum"} />}</p>
+                  <h2>{priorities[0]?.domain ?? <UiText text={"A clean sweep. Keep going."} />}</h2>
                   <p>
                     {priorities[0]?.guidance ??
-                      'You answered every question correctly. Try a new test to check your skills on fresh material.'}
+                      <UiText text={"You answered every question correctly. Try a new test to check your skills on fresh material."} />}
                   </p>
                   <button
                     type="button"
                     className="sr-text-button"
                     onClick={() => (priorities[0] ? showReview(priorities[0].key) : showReview(null, 'all'))}
                   >
-                    {priorities.length ? 'Review weak spots' : 'Explore your answers'}
+                    {priorities.length ? <UiText text={"Review weak spots"} /> : <UiText text={"Explore your answers"} />}
                     <ArrowRight size={15} />
                   </button>
                 </div>
@@ -521,16 +523,16 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
                 </span>
                 <div>
                   <p className="sr-eyebrow">
-                    {strongest?.correct ? 'Highest domain accuracy' : 'Build your foundation'}
+                    {strongest?.correct ? <UiText text={"Highest domain accuracy"} /> : <UiText text={"Build your foundation"} />}
                   </p>
-                  <h2>{strongest?.correct ? strongest.domain : 'Start with one skill.'}</h2>
+                  <h2>{strongest?.correct ? strongest.domain : <UiText text={"Start with one skill."} />}</h2>
                   <p>
                     {strongest?.correct
-                      ? `${strongest.correct} of ${strongest.total} correct · ${strongest.percent}% accuracy. ${strongest.percent >= 80 ? 'Keep this skill sharp as you work on your next focus.' : 'This was your best domain result in this attempt. Review its missed questions to build consistency.'}`
-                      : 'Review an explanation, write down the rule, then try a similar question without notes.'}
+                      ? <UiText text={"{{value1}} of {{value2}} correct · {{value3}}% accuracy. {{value4}}"} values={{ value1: String(strongest.correct), value2: String(strongest.total), value3: String(strongest.percent), value4: String(strongest.percent >= 80 ? 'Keep this skill sharp as you work on your next focus.' : 'This was your best domain result in this attempt. Review its missed questions to build consistency.') }} />
+                      : <UiText text={"Review an explanation, write down the rule, then try a similar question without notes."} />}
                   </p>
                   <button type="button" className="sr-text-button" onClick={() => setTab('domains')}>
-                    Explore knowledge & skills
+                    <UiText text={"Explore knowledge & skills"} />
                     <ArrowRight size={15} />
                   </button>
                 </div>
@@ -538,12 +540,12 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
             </div>
             <section className="sr-card sr-next-steps">
               <div>
-                <p className="sr-eyebrow">Your next practice session</p>
-                <h2>Turn the review into a plan.</h2>
+                <p className="sr-eyebrow"><UiText text={"Your next practice session"} /></p>
+                <h2><UiText text={"Turn the review into a plan."} /></h2>
                 <p>
                   {analysis.prioritySkills.length
-                    ? 'Start with the skills that account for the most missed questions.'
-                    : 'Keep your skills sharp with a fresh set of questions.'}
+                    ? <UiText text={"Start with the skills that account for the most missed questions."} />
+                    : <UiText text={"Keep your skills sharp with a fresh set of questions."} />}
                 </p>
               </div>
               <ol>
@@ -551,14 +553,14 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
                   <li key={skill.key}>
                     <span>{String(index + 1).padStart(2, '0')}</span>
                     <div>
-                      <strong>{skill.skill}</strong>
+                      <strong><UiText text={skill.skill} /></strong>
                       <small>
-                        {skill.domain} · {skill.total - skill.correct} to revisit
+                        <UiText text={skill.domain} /> · {skill.total - skill.correct} <UiText text={"to revisit"} />
                       </small>
                     </div>
                     <button
                       type="button"
-                      aria-label={`Review ${skill.skill}`}
+                      aria-label={uiCopy("Review {{value1}}", { value1: String(skill.skill) })}
                       onClick={() => showReview(`${skill.section}:${skill.domain}`)}
                     >
                       <ArrowRight size={16} />
@@ -569,8 +571,8 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
                   <li>
                     <span>01</span>
                     <div>
-                      <strong>Challenge yourself with a new test</strong>
-                      <small>Check that you can apply these skills to unfamiliar questions.</small>
+                      <strong><UiText text={"Challenge yourself with a new test"} /></strong>
+                      <small><UiText text={"Check that you can apply these skills to unfamiliar questions."} /></small>
                     </div>
                   </li>
                 )}
@@ -588,9 +590,9 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
             className="sr-panel"
           >
             <div className="srx-center-heading">
-              <p className="sr-eyebrow">The bigger picture</p>
-              <h2>How your test unfolded</h2>
-              <p>Accuracy and time for every module, difficulty level and skill.</p>
+              <p className="sr-eyebrow"><UiText text={"The bigger picture"} /></p>
+              <h2><UiText text={"How your test unfolded"} /></h2>
+              <p><UiText text={"Accuracy and time for every module, difficulty level and skill."} /></p>
             </div>
             <div className="srx-stat-row">
               {(
@@ -606,7 +608,7 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
                     <Icon size={20} />
                   </span>
                   <div>
-                    <small>{label}</small>
+                    <small><UiText text={label} /></small>
                     <strong>{value}</strong>
                   </div>
                 </div>
@@ -615,19 +617,19 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
             <div className="srx-perf-grid">
               <section className="sr-card srx-panel-card">
                 <div className="srx-card-head">
-                  <h3>{bank ? 'Section breakdown' : 'Module breakdown'}</h3>
+                  <h3>{bank ? <UiText text={"Section breakdown"} /> : <UiText text={"Module breakdown"} />}</h3>
                   <div className="srx-legend">
                     <span>
                       <i className="seg-correct" />
-                      Correct
+                      <UiText text={"Correct"} />
                     </span>
                     <span>
                       <i className="seg-incorrect" />
-                      Incorrect
+                      <UiText text={"Incorrect"} />
                     </span>
                     <span>
                       <i className="seg-unanswered" />
-                      Unanswered
+                      <UiText text={"Unanswered"} />
                     </span>
                   </div>
                 </div>
@@ -645,7 +647,7 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
                     <div
                       className="srx-stack"
                       role="img"
-                      aria-label={`${module.correct} correct, ${module.incorrect} incorrect, ${module.unanswered} unanswered`}
+                      aria-label={uiCopy("{{value1}} correct, {{value2}} incorrect, {{value3}} unanswered", { value1: String(module.correct), value2: String(module.incorrect), value3: String(module.unanswered) })}
                     >
                       {(['correct', 'incorrect', 'unanswered'] as const).map((key) => (
                         <span
@@ -657,39 +659,39 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
                     </div>
                     <div className="srx-module-meta">
                       <span className="pill-correct">
-                        <b>{module.correct}</b> correct
+                        <b>{module.correct}</b> <UiText text={"correct"} />
                       </span>
                       <span className="pill-incorrect">
-                        <b>{module.incorrect}</b> incorrect
+                        <b>{module.incorrect}</b> <UiText text={"incorrect"} />
                       </span>
                       <span className="pill-unanswered">
-                        <b>{module.unanswered}</b> unanswered
+                        <b>{module.unanswered}</b> <UiText text={"unanswered"} />
                       </span>
                       <span className="srx-time">
                         <Clock3 size={14} />
-                        {module.started ? formatSATDuration(module.seconds) : 'Not started'}
+                        {module.started ? formatSATDuration(module.seconds) : <UiText text={"Not started"} />}
                       </span>
                     </div>
                   </div>
                 ))}
                 {!attempt.moduleElapsedSeconds && (
-                  <p className="srx-note">Timing for this older attempt is estimated from saved timestamps.</p>
+                  <p className="srx-note"><UiText text={"Timing for this older attempt is estimated from saved timestamps."} /></p>
                 )}
               </section>
               <div className="srx-perf-side">
                 <section className="sr-card srx-panel-card">
                   <div className="srx-card-head">
-                    <h3>Accuracy by difficulty</h3>
+                    <h3><UiText text={"Accuracy by difficulty"} /></h3>
                   </div>
                   {analysis.difficulty.map((row) => (
                     <div className="srx-bar-row" key={row.label}>
                       <div className="srx-bar-label">
                         <strong>
                           <i className={`level-${row.label.toLowerCase()}`} />
-                          {row.label}
+                          <UiText text={row.label} />
                         </strong>
                         <span>
-                          {row.correct}/{row.total} correct
+                          {row.correct}/{row.total} <UiText text={"correct"} />
                         </span>
                         <b className={`srx-percent-sm ${tier(row.percent)}`}>{row.percent}%</b>
                       </div>
@@ -701,7 +703,7 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
                 </section>
                 <section className="sr-card srx-panel-card">
                   <div className="srx-card-head">
-                    <h3>Time per question</h3>
+                    <h3><UiText text={"Time per question"} /></h3>
                   </div>
                   {analysis.modules.map((module) => (
                     <div className="srx-pace-row" key={module.id}>
@@ -713,7 +715,7 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
                   ))}
                   <p className="srx-note">
                     {attempt.mode === 'practice'
-                      ? 'Untimed practice: understand each solution first, then build speed.'
+                      ? <UiText text={"Untimed practice: understand each solution first, then build speed."} />
                       : 'Test-day pace is about 71 s per R&W question and 95 s per Math question.'}
                   </p>
                 </section>
@@ -722,10 +724,10 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
             <section className="sr-card srx-panel-card">
               <div className="srx-card-head">
                 <div>
-                  <p className="sr-eyebrow">Beyond the domain</p>
-                  <h3>Skill-by-skill breakdown</h3>
+                  <p className="sr-eyebrow"><UiText text={"Beyond the domain"} /></p>
+                  <h3><UiText text={"Skill-by-skill breakdown"} /></h3>
                 </div>
-                <span className="srx-count-pill">{analysis.skills.length} skills</span>
+                <span className="srx-count-pill">{analysis.skills.length} <UiText text={"skills"} /></span>
               </div>
               <div className="srx-skill-list">
                 {analysis.skills.map((skill) => (
@@ -736,15 +738,15 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
                     onClick={() => showReview(`${skill.section}:${skill.domain}`, 'all')}
                   >
                     <span className="srx-skill-name">
-                      <strong>{skill.skill}</strong>
-                      <span>{skill.domain}</span>
+                      <strong><UiText text={skill.skill} /></strong>
+                      <span><UiText text={skill.domain} /></span>
                     </span>
                     <span className="srx-meter">
                       <span className={tier(skill.percent)} style={{ width: `${skill.percent}%` }} />
                     </span>
                     <b className={`srx-percent-sm ${tier(skill.percent)}`}>{skill.percent}%</b>
                     <span className="srx-skill-count">
-                      {skill.correct}/{skill.total} correct
+                      {skill.correct}/{skill.total} <UiText text={"correct"} />
                     </span>
                   </button>
                 ))}
@@ -762,9 +764,9 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
             className="sr-panel"
           >
             <div className="srx-center-heading">
-              <p className="sr-eyebrow">Knowledge & skills</p>
-              <h2>Know your strengths. Choose your focus.</h2>
-              <p>Each domain shows how you did on its questions in this attempt.</p>
+              <p className="sr-eyebrow"><UiText text={"Knowledge & skills"} /></p>
+              <h2><UiText text={"Know your strengths. Choose your focus."} /></h2>
+              <p><UiText text={"Each domain shows how you did on its questions in this attempt."} /></p>
             </div>
             <div className={`srx-domain-columns ${sections.length === 1 ? 'is-single' : ''}`}>
               {sections.map((section) => (
@@ -774,9 +776,9 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
                       {section.id === 'math' ? <GraduationCap size={22} /> : <BookOpen size={22} />}
                     </span>
                     <div>
-                      <h3>{section.label}</h3>
+                      <h3><UiText text={section.label} /></h3>
                       <span>
-                        {section.correct}/{section.total} correct
+                        {section.correct}/{section.total} <UiText text={"correct"} />
                       </span>
                     </div>
                     <b className={`srx-percent ${tier(section.percent)}`}>{section.percent}%</b>
@@ -786,7 +788,7 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
                     .map((domain) => (
                       <article key={domain.key} className="sr-card srx-domain-card">
                         <div className="srx-domain-top">
-                          <h4>{domain.domain}</h4>
+                          <h4><UiText text={domain.domain} /></h4>
                           <b className={`srx-percent ${tier(domain.percent)}`}>
                             {domain.percent}
                             <small>%</small>
@@ -795,7 +797,7 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
                         <div
                           className={`srx-segments ${tier(domain.percent)}`}
                           role="img"
-                          aria-label={`${domain.domain}: ${domain.percent}% accuracy`}
+                          aria-label={uiCopy("{{value1}}: {{value2}}% accuracy", { value1: String(domain.domain), value2: String(domain.percent) })}
                         >
                           {Array.from({ length: SKILL_BAR_SEGMENTS }, (_, index) => (
                             <i key={index} className={index < filledSegments(domain.percent) ? 'on' : ''} />
@@ -803,21 +805,21 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
                         </div>
                         <div className="srx-domain-meta">
                           <span>
-                            <b>{domain.correct}</b> / {domain.total} correct
+                            <b>{domain.correct}</b> / {domain.total} <UiText text={"correct"} />
                           </span>
                           <span className={`srx-badge ${tier(domain.percent)}`}>
-                            {domain.percent >= 80 ? 'Strong' : domain.percent >= 50 ? 'Developing' : 'Focus area'}
+                            {domain.percent >= 80 ? <UiText text={"Strong"} /> : domain.percent >= 50 ? <UiText text={"Developing"} /> : <UiText text={"Focus area"} />}
                           </span>
                         </div>
-                        <p>{domain.guidance}</p>
+                        <p><UiText text={domain.guidance} /></p>
                         <button
                           type="button"
                           className="srx-domain-cta"
                           onClick={() => showReview(domain.key, domain.correct < domain.total ? 'missed' : 'all')}
                         >
                           {domain.correct < domain.total
-                            ? `Review ${domain.total - domain.correct} missed`
-                            : 'Review answers'}
+                            ? <UiText text={"Review {{value1}} missed"} values={{ value1: String(domain.total - domain.correct) }} />
+                            : <UiText text={"Review answers"} />}
                           <ArrowRight size={15} />
                         </button>
                       </article>
@@ -837,13 +839,13 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
             className="sr-panel"
           >
             <div className="srx-center-heading">
-              <p className="sr-eyebrow">From answer to understanding</p>
-              <h2>Question Review</h2>
-              <p>Your answer, the correct answer and a full explanation for every question.</p>
+              <p className="sr-eyebrow"><UiText text={"From answer to understanding"} /></p>
+              <h2><UiText text={"Question Review"} /></h2>
+              <p><UiText text={"Your answer, the correct answer and a full explanation for every question."} /></p>
             </div>
             <div className="srx-review-controls">
               {sections.length > 1 && (
-                <div className="srx-segment" role="group" aria-label="Section">
+                <div className="srx-segment" role="group" aria-label={uiCopy("Section")}>
                   {(
                     [
                       ['all', 'All'],
@@ -857,12 +859,12 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
                       aria-pressed={sectionFilter === value}
                       onClick={() => setSectionFilter(value)}
                     >
-                      {label}
+                      <UiText text={label} />
                     </button>
                   ))}
                 </div>
               )}
-              <div className="srx-status-chips" role="group" aria-label="Filter by outcome">
+              <div className="srx-status-chips" role="group" aria-label={uiCopy("Filter by outcome")}>
                 {(
                   [
                     ['all', 'All'],
@@ -879,20 +881,20 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
                     aria-pressed={filter === value}
                     onClick={() => chooseFilter(value, moduleFilter, domainFilter)}
                   >
-                    {label}
+                    <UiText text={label} />
                     <span>{allQuestions.filter((q) => matches(q, value, moduleFilter, domainFilter)).length}</span>
                   </button>
                 ))}
               </div>
               {(domainFilter || moduleFilter !== 'all') && (
                 <button type="button" className="srx-clear-filter" onClick={() => chooseFilter(filter, 'all', null)}>
-                  {domainFilter ? domains.find((d) => d.key === domainFilter)?.domain : 'Module filter'}
+                  {domainFilter ? domains.find((d) => d.key === domainFilter)?.domain : <UiText text={"Module filter"} />}
                   <X size={13} />
                 </button>
               )}
             </div>
             {filteredQuestions.length ? (
-              <ol className="sr-card srx-question-list" aria-label="Questions">
+              <ol className="sr-card srx-question-list" aria-label={uiCopy("Questions")}>
                 {filteredQuestions.map((question) => {
                   const module = modules.find((m) => m.id === question.moduleId)
                   const outcome = satAnswerStatus(question, attempt)
@@ -904,27 +906,27 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
                           {moduleChip(module, bank)}
                         </span>
                         <strong>
-                          Question {question.number}
+                          <UiText text={"Question"} /> {question.number}
                           {attempt.flagged.includes(question.id) && (
-                            <Flag size={12} aria-label="Flagged" className="srx-flag" />
+                            <Flag size={12} aria-label={uiCopy("Flagged")} className="srx-flag" />
                           )}
                         </strong>
                       </div>
                       <div className="srx-q-answer">
-                        <span>Your Answer</span>
-                        <b className={`tone-${outcome}`}>{response || 'Unanswered'}</b>
+                        <span><UiText text={"Your Answer"} /></span>
+                        <b className={`tone-${outcome}`}>{response || <UiText text={"Unanswered"} />}</b>
                       </div>
                       <div className="srx-q-answer">
-                        <span>Correct Answer</span>
+                        <span><UiText text={"Correct Answer"} /></span>
                         <b className="tone-correct">{question.correctAnswer}</b>
                       </div>
                       <button
                         type="button"
                         className="srx-review-button"
-                        aria-label={`Review ${module?.shortTitle ?? ''} question ${question.number}`}
+                        aria-label={uiCopy("Review {{value1}} question {{value2}}", { value1: String(module?.shortTitle ?? ''), value2: String(question.number) })}
                         onClick={() => openQuestion(question.id)}
                       >
-                        Review
+                        <UiText text={"Review"} />
                         <ChevronRight size={15} />
                       </button>
                     </li>
@@ -934,7 +936,7 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
             ) : (
               <div className="sr-card srx-empty">
                 <BookOpenCheck size={30} />
-                <h3>No questions match these filters.</h3>
+                <h3><UiText text={"No questions match these filters."} /></h3>
                 <button
                   type="button"
                   className="sr-button"
@@ -943,7 +945,7 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
                     chooseFilter('all', 'all', null)
                   }}
                 >
-                  Show all questions
+                  <UiText text={"Show all questions"} />
                 </button>
               </div>
             )}
@@ -958,9 +960,9 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
             className="sr-panel"
           >
             <div className="srx-center-heading">
-              <p className="sr-eyebrow">Test-day ranking</p>
-              <h2>Leaderboard</h2>
-              <p>See how your first attempt compares with every learner who took {test.title}.</p>
+              <p className="sr-eyebrow"><UiText text={"Test-day ranking"} /></p>
+              <h2><UiText text={"Leaderboard"} /></h2>
+              <p><UiText text={"See how your first attempt compares with every learner who took"} /> {test.title}.</p>
             </div>
             <SATLeaderboard
               standing={standing}
@@ -981,9 +983,9 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
             className="sr-panel"
           >
             <div className="srx-center-heading">
-              <p className="sr-eyebrow">Learn together</p>
-              <h2>Discussion</h2>
-              <p>Ask about a question, share a strategy, or help someone who is stuck.</p>
+              <p className="sr-eyebrow"><UiText text={"Learn together"} /></p>
+              <h2><UiText text={"Discussion"} /></h2>
+              <p><UiText text={"Ask about a question, share a strategy, or help someone who is stuck."} /></p>
             </div>
             <SATDiscussion
               testId={test.id}
@@ -1011,16 +1013,16 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
         <footer className="sr-footer">
           <span>
             <Check size={13} />
-            Your progress, one practice at a time.
+            <UiText text={"Your progress, one practice at a time."} />
           </span>
           <div>
             <button type="button" className="sr-button" onClick={onBack ?? (() => navigate(backPath))}>
-              Back to {returnLabel}
+              <UiText text={"Back to"} /> <UiText text={returnLabel} />
             </button>
             {onStartAgain && (
               <button type="button" className="sr-button sr-button-dark" onClick={onStartAgain}>
                 <RotateCcw size={14} />
-                Start fresh
+                <UiText text={"Start fresh"} />
               </button>
             )}
           </div>

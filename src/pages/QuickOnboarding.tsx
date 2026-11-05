@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRight, Camera, ChevronLeft, Minus, Plus, Target } from 'lucide-react'
@@ -40,6 +41,7 @@ function ScoreInput({ exam, target, label, placeholder, value, onChange }: {
   value: string
   onChange: (value: string) => void
 }) {
+  const { c: uiCopy } = useCopy()
   const { min, max, step } = scoreLimits(exam, target)
   const id = `${exam.toLowerCase()}-${target ? 'target' : 'current'}-score`
   const parsed = parseScore(value, exam, target)
@@ -50,7 +52,7 @@ function ScoreInput({ exam, target, label, placeholder, value, onChange }: {
   }
 
   return <div className="liquid-form-field">
-    <label htmlFor={id}>{label}</label>
+    <label htmlFor={id}><UiText text={label} /></label>
     <div className={`liquid-score-input ${parsed !== null && Number.isNaN(parsed) ? 'is-invalid' : ''}`}>
       <input id={id} type="text" inputMode={exam === 'IELTS' ? 'decimal' : 'numeric'} autoComplete="off" placeholder={placeholder} value={value} aria-invalid={parsed !== null && Number.isNaN(parsed)} onKeyDown={event => {
         if (event.key === 'ArrowUp' && parsed !== max) { event.preventDefault(); nudge(1) }
@@ -60,8 +62,8 @@ function ScoreInput({ exam, target, label, placeholder, value, onChange }: {
         if (exam === 'IELTS' ? /^\d{0,2}(?:\.\d{0,1})?$/.test(next) : /^\d{0,4}$/.test(next)) onChange(next)
       }} />
       <div className="liquid-score-controls">
-        <button type="button" aria-label={`Decrease ${exam} ${target ? 'target' : 'current'} score`} disabled={parsed === null || parsed === min} onClick={() => nudge(-1)}><Minus size={16} /></button>
-        <button type="button" aria-label={`Increase ${exam} ${target ? 'target' : 'current'} score`} disabled={parsed === max} onClick={() => nudge(1)}><Plus size={16} /></button>
+        <button type="button" aria-label={uiCopy("Decrease {{value1}} {{value2}} score", { value1: String(exam), value2: String(target ? 'target' : 'current') })} disabled={parsed === null || parsed === min} onClick={() => nudge(-1)}><Minus size={16} /></button>
+        <button type="button" aria-label={uiCopy("Increase {{value1}} {{value2}} score", { value1: String(exam), value2: String(target ? 'target' : 'current') })} disabled={parsed === max} onClick={() => nudge(1)}><Plus size={16} /></button>
       </div>
     </div>
   </div>
@@ -209,7 +211,7 @@ export default function QuickOnboarding() {
   }
 
   const scoreCard = (exam: Exam, current: string, target: string, setCurrent: (value: string) => void, setTarget: (value: string) => void) => {
-    return <section className="liquid-score-card" aria-label={`${exam} scores`} key={exam}>
+    return <section className="liquid-score-card" aria-label={c("{{value1}} scores", { value1: String(exam) })} key={exam}>
       <div className="liquid-score-card-heading"><span><Target size={19} /></span><div><strong>{exam}</strong><small>{c(exam === 'IELTS' ? 'Band score' : 'Total score')}</small></div></div>
       <div className="liquid-score-fields">
         <ScoreInput exam={exam} target={false} label={c('Current score')} placeholder={c('Not sure yet')} value={current} onChange={value => { setCurrent(value); setError('') }} />

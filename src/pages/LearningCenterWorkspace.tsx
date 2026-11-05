@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import '@/features/learningCenter/learning-center.css'
 import { ErrorState, secondaryButton } from '@/features/learningCenter/components'
 import { useEffect, useRef, type ComponentType } from 'react'
@@ -30,6 +32,7 @@ const NAV_ITEMS: NavItem[] = [
 ]
 
 export default function LearningCenterWorkspacePage() {
+  const { c: uiCopy } = useCopy()
   const { workspaceSlug = '' } = useParams()
   const location = useLocation()
   const reducedMotion = useReducedMotion()
@@ -45,8 +48,8 @@ export default function LearningCenterWorkspacePage() {
     if (active) navigation.current?.scrollTo({ left: Math.max(0, active.offsetLeft - 12), behavior: reducedMotion ? 'auto' : 'smooth' })
   }, [section, workspaceSlug, reducedMotion, loading])
 
-  if (loading && !data) return <div className="learning-center grid min-h-screen place-items-center"><BrandPageLoader label="Opening Classes" /></div>
-  if (error) return <div className="learning-center mx-auto max-w-2xl px-5 py-12"><ErrorState message={error} onRetry={() => void refetch()} /><Link to="/learning-center" className={`${secondaryButton} mt-4`}>Back to Classes</Link></div>
+  if (loading && !data) return <div className="learning-center grid min-h-screen place-items-center"><BrandPageLoader label={uiCopy("Opening Classes")} /></div>
+  if (error) return <div className="learning-center mx-auto max-w-2xl px-5 py-12"><ErrorState message={error} onRetry={() => void refetch()} /><Link to="/learning-center" className={`${secondaryButton} mt-4`}><UiText text={"Back to Classes"} /></Link></div>
   if (!workspace) return <Navigate to="/learning-center" replace />
 
   const manager = workspace.role === 'OWNER' || workspace.role === 'ADMIN'
@@ -60,21 +63,21 @@ export default function LearningCenterWorkspacePage() {
         <section className={`lc-workspace-banner ${workspace.coverUrl ? 'has-cover' : ''}`}>
           {workspace.coverUrl && <img className="lc-workspace-banner-image" src={workspace.coverUrl} alt="" />}
           <div className="relative z-10 min-w-0">
-            <Link to="/learning-center" className="lc-banner-back"><ArrowLeft className="h-4 w-4" /> Back to Classes</Link>
-            <p className="lc-banner-eyebrow"><GraduationCap className="h-4 w-4" /> {workspace.role} CLASS</p>
+            <Link to="/learning-center" className="lc-banner-back"><ArrowLeft className="h-4 w-4" /> <UiText text={"Back to Classes"} /></Link>
+            <p className="lc-banner-eyebrow"><GraduationCap className="h-4 w-4" /> <UiText text={workspace.role} /> <UiText text={"CLASS"} /></p>
             <h1 className="mt-4 break-words text-3xl font-black tracking-[-.055em] text-slate-950 sm:text-4xl">{workspace.name}</h1>
-            <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-slate-600 sm:text-base">{workspace.city || 'Your learning space'} · {workspace.memberCount} members · {workspace.groupCount} groups</p>
+            <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-slate-600 sm:text-base">{workspace.city || <UiText text={"Your learning space"} />} · {workspace.memberCount} <UiText text={"members ·"} /> {workspace.groupCount} <UiText text={"groups"} /></p>
           </div>
           <div className="relative z-10 flex flex-wrap gap-2">
-            <Link to="/dashboard" className={secondaryButton}>Dashboard <ArrowUpRight className="h-4 w-4" /></Link>
+            <Link to="/dashboard" className={secondaryButton}><UiText text={"Dashboard"} /> <ArrowUpRight className="h-4 w-4" /></Link>
           </div>
         </section>
 
-        <nav ref={navigation} aria-label="Class sections" className="lc-section-nav">
+        <nav ref={navigation} aria-label={uiCopy("Class sections")} className="lc-section-nav">
           {nav.map((item) => {
             const Icon = item.icon
             const active = section === item.key
-            return <Link key={item.key} to={`/learning-center/${workspace.slug}${item.key === 'overview' ? '' : `/${item.key}`}`} aria-current={active ? 'page' : undefined} className={`lc-section-link ${active ? 'is-active' : ''}`}><Icon className="h-[18px] w-[18px]" /><span>{item.label}</span></Link>
+            return <Link key={item.key} to={`/learning-center/${workspace.slug}${item.key === 'overview' ? '' : `/${item.key}`}`} aria-current={active ? 'page' : undefined} className={`lc-section-link ${active ? 'is-active' : ''}`}><Icon className="h-[18px] w-[18px]" /><span><UiText text={item.label} /></span></Link>
           })}
         </nav>
 

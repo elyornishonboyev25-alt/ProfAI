@@ -537,13 +537,13 @@ export default function AiCoach() {
         >
           <p className="inline-flex items-center gap-2 rounded-full border border-indigo-400/30 bg-indigo-500/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.2em] text-indigo-200">
             <Sparkles className="h-3.5 w-3.5" />
-            AI Analysis - Study Brain
+            <UiText text={"AI Analysis - Study Brain"} />
           </p>
           <h1 className="mt-4 text-3xl font-black tracking-tight text-white sm:text-5xl">
-            Hi {personaName}, where should we start?
+            <UiText text={"Hi"} /> {personaName}<UiText text={", where should we start?"} />
           </h1>
           <p className="mt-3 max-w-4xl text-sm leading-7 text-slate-300 sm:text-base">
-            Study-first AI workspace: multilingual chat memory, IELTS/SAT navigation commands, speaking evaluator, and adaptive performance intelligence.
+            <UiText text={"Study-first AI workspace: multilingual chat memory, IELTS/SAT navigation commands, speaking evaluator, and adaptive performance intelligence."} />
           </p>
         </motion.section>
 
@@ -556,8 +556,8 @@ export default function AiCoach() {
 
         {state === 'error' ? (
           <section className="rounded-3xl border border-indigo-400/40 bg-indigo-500/10 p-6 text-indigo-100">
-            <h2 className="text-xl font-black">AI Analysis load failed</h2>
-            <p className="mt-2 text-sm text-indigo-100/90">{errorMessage ?? 'Unexpected error.'}</p>
+            <h2 className="text-xl font-black"><UiText text={"AI Analysis load failed"} /></h2>
+            <p className="mt-2 text-sm text-indigo-100/90">{errorMessage ?? <UiText text={"Unexpected error."} />}</p>
             <div className="mt-4 flex flex-wrap gap-2">
               <button
                 type="button"
@@ -571,7 +571,7 @@ export default function AiCoach() {
                   onClick={() => navigate('/login')}
                   className="rounded-xl border border-slate-500/40 bg-slate-800/60 px-4 py-2 text-sm font-semibold text-slate-100 hover:bg-slate-700/70"
                 >
-                  Login required
+                  <UiText text={"Login required"} />
                 </button>
               ) : null}
             </div>
@@ -589,7 +589,7 @@ export default function AiCoach() {
               >
                 <div className="mb-4 flex items-center gap-2 text-xs font-black uppercase tracking-[0.16em] text-slate-300">
                   <Bot className="h-4 w-4 text-indigo-300" />
-                  Study Chat
+                  <UiText text={"Study Chat"} />
                 </div>
                 <AIChatWindow variant="analysis" />
               </motion.article>
@@ -605,7 +605,7 @@ export default function AiCoach() {
                   <div className="flex items-center justify-between gap-2">
                     <h2 className="inline-flex items-center gap-2 text-lg font-black text-white">
                       <Mic className="h-4 w-4 text-indigo-300" />
-                      Speaking Coach (English-only)
+                      <UiText text={"Speaking Coach (English-only)"} />
                     </h2>
                     {speechSupported ? (
                       <button
@@ -618,12 +618,12 @@ export default function AiCoach() {
                         }`}
                       >
                         {isListening ? <MicOff className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}
-                        {isListening ? 'Stop mic' : 'Start mic'}
+                        {isListening ? <UiText text={"Stop mic"} /> : <UiText text={"Start mic"} />}
                       </button>
                     ) : null}
                   </div>
                   <p className="mt-2 text-xs text-slate-400">
-                    Realtime voice mode + IELTS part-based practice with rubric scoring (fluency, grammar, pronunciation, lexical).
+                    <UiText text={"Realtime voice mode + IELTS part-based practice with rubric scoring (fluency, grammar, pronunciation, lexical)."} />
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <button
@@ -635,7 +635,7 @@ export default function AiCoach() {
                           : 'border-slate-700 bg-slate-900/70 text-slate-300'
                       }`}
                     >
-                      Conversation
+                      <UiText text={"Conversation"} />
                     </button>
                     <button
                       type="button"
@@ -646,7 +646,7 @@ export default function AiCoach() {
                           : 'border-slate-700 bg-slate-900/70 text-slate-300'
                       }`}
                     >
-                      IELTS Mock
+                      <UiText text={"IELTS Mock"} />
                     </button>
                     {speakingMode === 'mock' ? (
                       <div className="flex flex-wrap gap-1.5">
@@ -684,7 +684,7 @@ export default function AiCoach() {
                   <textarea
                     value={speakingText}
                     onChange={(event) => setSpeakingText(event.target.value)}
-                    placeholder="Speak or type in English. Example: I'd like to describe a place that inspires me..."
+                    placeholder={c("Speak or type in English. Example: I'd like to describe a place that inspires me...")}
                     className="mt-3 h-36 w-full resize-none rounded-2xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 outline-none focus:border-indigo-400/70 focus:ring-2 focus:ring-indigo-500/20"
                   />
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -694,7 +694,7 @@ export default function AiCoach() {
                       disabled={isEvaluatingSpeaking || speakingText.trim().length < 20}
                       className="rounded-xl border border-indigo-400/40 bg-gradient-to-r from-indigo-500 to-blue-500 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      {isEvaluatingSpeaking ? 'Evaluating...' : 'Evaluate speaking'}
+                      {isEvaluatingSpeaking ? <UiText text={"Evaluating..."} /> : <UiText text={"Evaluate speaking"} />}
                     </button>
                     <button
                       type="button"
@@ -702,14 +702,14 @@ export default function AiCoach() {
                       disabled={isSendingSpeakingTurn || speakingText.trim().length < 2}
                       className="rounded-xl border border-slate-500/40 bg-slate-900/80 px-4 py-2 text-sm font-semibold text-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      {isSendingSpeakingTurn ? 'AI replying...' : 'Talk with AI'}
+                      {isSendingSpeakingTurn ? <UiText text={"AI replying..."} /> : <UiText text={"Talk with AI"} />}
                     </button>
                     <button
                       type="button"
                       onClick={startNaturalVoice}
                       className="rounded-xl border border-slate-500/40 bg-slate-900/80 px-4 py-2 text-sm font-semibold text-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      Start voice session
+                      <UiText text={"Start voice session"} />
                     </button>
                     <button
                       type="button"
@@ -720,7 +720,7 @@ export default function AiCoach() {
                           : 'border-slate-600 bg-slate-900/70 text-slate-200'
                       }`}
                     >
-                      Voice reply: {voiceReplyEnabled ? 'ON' : 'OFF'}
+                      <UiText text={"Voice reply:"} /> {voiceReplyEnabled ? <UiText text={"ON"} /> : <UiText text={"OFF"} />}
                     </button>
                   </div>
                   {speakingError ? <p className="mt-2 text-xs text-indigo-200">{speakingError}</p> : null}
@@ -736,7 +736,7 @@ export default function AiCoach() {
                           }`}
                         >
                           <p className="mb-1 text-[10px] font-black uppercase tracking-[0.12em] text-slate-400">
-                            {turn.role === 'assistant' ? 'AI' : 'You'}
+                            {turn.role === 'assistant' ? 'AI' : <UiText text={"You"} />}
                           </p>
                           <p>{turn.text}</p>
                         </div>
@@ -746,12 +746,12 @@ export default function AiCoach() {
 
                   {evaluation ? (
                     <div className="mt-4 space-y-3 rounded-2xl border border-slate-700 bg-slate-900/70 p-3">
-                      <p className="text-sm font-bold text-white">Estimated Band: {evaluation.overallBand.toFixed(1)}</p>
+                      <p className="text-sm font-bold text-white"><UiText text={"Estimated Band:"} /> {evaluation.overallBand.toFixed(1)}</p>
                       <div className="grid gap-2 text-xs text-slate-300 sm:grid-cols-2">
-                        <p>Fluency: {evaluation.fluencyBand.toFixed(1)}</p>
-                        <p>Grammar: {evaluation.grammarBand.toFixed(1)}</p>
-                        <p>Pronunciation: {evaluation.feedback.assessmentMode === 'audio' ? evaluation.pronunciationBand.toFixed(1) : 'Not assessed from text'}</p>
-                        <p>Lexical: {evaluation.lexicalBand.toFixed(1)}</p>
+                        <p><UiText text={"Fluency:"} /> {evaluation.fluencyBand.toFixed(1)}</p>
+                        <p><UiText text={"Grammar:"} /> {evaluation.grammarBand.toFixed(1)}</p>
+                        <p><UiText text={"Pronunciation:"} /> {evaluation.feedback.assessmentMode === 'audio' ? evaluation.pronunciationBand.toFixed(1) : <UiText text={"Not assessed from text"} />}</p>
+                        <p><UiText text={"Lexical:"} /> {evaluation.lexicalBand.toFixed(1)}</p>
                       </div>
                       <div className="space-y-2">
                         {(evaluation.feedback.improvementPriorities ?? []).slice(0, 4).map((entry) => (
@@ -773,20 +773,20 @@ export default function AiCoach() {
                 >
                   <h2 className="inline-flex items-center gap-2 text-lg font-black text-white">
                     <ChartColumnIncreasing className="h-4 w-4 text-indigo-300" />
-                    Performance Insights
+                    <UiText text={"Performance Insights"} />
                   </h2>
                   <p className="mt-2 text-xs text-slate-400">
-                    Band estimates are shown only for modules you have actually practiced.
+                    <UiText text={"Band estimates are shown only for modules you have actually practiced."} />
                   </p>
 
                   <div className="mt-3 rounded-2xl border border-slate-700 bg-slate-900/60 p-3">
-                    <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Current status</p>
+                    <p className="text-xs uppercase tracking-[0.12em] text-slate-400"><UiText text={"Current status"} /></p>
                     <p className="mt-1 text-lg font-bold text-white">
                       {overallWorkedBand !== null
-                        ? `Estimated multi-module band ${overallWorkedBand.toFixed(1)}`
+                        ? <UiText text={"Estimated multi-module band {{value1}}"} values={{ value1: String(overallWorkedBand.toFixed(1)) }} />
                         : trackedModules.length === 1
-                          ? `Only ${trackedModules[0].label} worked (${trackedModules[0].band.toFixed(1)})`
-                          : 'No evaluated modules yet'}
+                          ? <UiText text={"Only {{value1}} worked ({{value2}})"} values={{ value1: String(trackedModules[0].label), value2: String(trackedModules[0].band.toFixed(1)) }} />
+                          : <UiText text={"No evaluated modules yet"} />}
                     </p>
                   </div>
 
@@ -794,13 +794,13 @@ export default function AiCoach() {
                     {trackedModules.slice(0, 4).map((module) => (
                       <div key={module.key} className="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2">
                         <div className="flex items-center justify-between gap-2">
-                          <p className="text-sm font-semibold text-white">{module.label}</p>
+                          <p className="text-sm font-semibold text-white"><UiText text={module.label} /></p>
                           <span className="rounded-full border border-indigo-400/40 bg-indigo-500/10 px-2 py-0.5 text-xs font-semibold text-indigo-100">
                              <UiText text={"Band"} /> {module.band.toFixed(1)}
                           </span>
                         </div>
                         <p className="mt-1 text-xs text-slate-400">
-                          Attempts {module.attempts}  <UiText text={"| Accuracy"} /> {module.accuracy.toFixed(1)}% | SkillPower {module.skillPower.toFixed(1)}
+                          <UiText text={"Attempts"} /> {module.attempts}  <UiText text={"| Accuracy"} /> {module.accuracy.toFixed(1)}% | SkillPower {module.skillPower.toFixed(1)}
                         </p>
                       </div>
                     ))}
@@ -808,7 +808,7 @@ export default function AiCoach() {
 
                   {trackChartData.length > 0 ? (
                     <div className="mt-4 rounded-2xl border border-slate-700 bg-slate-900/60 p-3">
-                      <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Track skill distribution</p>
+                      <p className="text-xs uppercase tracking-[0.12em] text-slate-400"><UiText text={"Track skill distribution"} /></p>
                       <div className="mt-2 h-40 w-full">
                         <ResponsiveContainer>
                           <BarChart data={trackChartData}>
@@ -825,7 +825,7 @@ export default function AiCoach() {
 
                   {weeklyMomentumData.length > 0 ? (
                     <div className="mt-4 rounded-2xl border border-slate-700 bg-slate-900/60 p-3">
-                      <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Weekly XP momentum</p>
+                      <p className="text-xs uppercase tracking-[0.12em] text-slate-400"><UiText text={"Weekly XP momentum"} /></p>
                       <div className="mt-2 h-40 w-full">
                         <ResponsiveContainer>
                           <LineChart data={weeklyMomentumData}>
@@ -852,10 +852,10 @@ export default function AiCoach() {
               >
                 <h2 className="inline-flex items-center gap-2 text-lg font-black text-white">
                   <BookOpenText className="h-4 w-4 text-indigo-300" />
-                  Vocab Arena
+                  <UiText text={"Vocab Arena"} />
                 </h2>
                 <p className="mt-2 text-xs text-slate-400">
-                  Create test-linked notebooks (example: reading-full-test-1). Training mode help stays vocabulary-only.
+                  <UiText text={"Create test-linked notebooks (example: reading-full-test-1). Training mode help stays vocabulary-only."} />
                 </p>
 
                 <div className="mt-4 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
@@ -871,7 +871,7 @@ export default function AiCoach() {
                     className="inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-400/40 bg-indigo-500/20 px-4 py-2 text-sm font-semibold text-indigo-100 hover:bg-indigo-500/30"
                   >
                     <Plus className="h-4 w-4" />
-                    Add notebook
+                    <UiText text={"Add notebook"} />
                   </button>
                 </div>
 
@@ -898,7 +898,7 @@ export default function AiCoach() {
                   <input
                     value={itemTerm}
                     onChange={(event) => setItemTerm(event.target.value)}
-                    placeholder="Word / phrase"
+                    placeholder={c("Word / phrase")}
                     className="h-10 rounded-xl border border-slate-700 bg-slate-950/70 px-3 text-sm text-slate-100 outline-none focus:border-indigo-400/70 focus:ring-2 focus:ring-indigo-500/20"
                   />
                   <input
@@ -910,7 +910,7 @@ export default function AiCoach() {
                   <input
                     value={itemNotes}
                     onChange={(event) => setItemNotes(event.target.value)}
-                    placeholder="Usage note (optional)"
+                    placeholder={c("Usage note (optional)")}
                     className="h-10 rounded-xl border border-slate-700 bg-slate-950/70 px-3 text-sm text-slate-100 outline-none focus:border-indigo-400/70 focus:ring-2 focus:ring-indigo-500/20"
                   />
                   <div className="flex flex-wrap items-center gap-2">
@@ -920,7 +920,7 @@ export default function AiCoach() {
                       onClick={() => void (editingItemId ? saveEditingItem() : addVocabularyItem())}
                       className="rounded-xl border border-indigo-400/40 bg-gradient-to-r from-indigo-500 to-blue-500 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      {editingItemId ? 'Save changes' : 'Add vocabulary'}
+                      {editingItemId ? <UiText text={"Save changes"} /> : <UiText text={"Add vocabulary"} />}
                     </button>
                     {editingItemId ? (
                       <button
@@ -933,7 +933,7 @@ export default function AiCoach() {
                         }}
                         className="rounded-xl border border-slate-600 bg-slate-900/70 px-3 py-2 text-xs font-semibold text-slate-200"
                       >
-                        Cancel edit
+                        <UiText text={"Cancel edit"} />
                       </button>
                     ) : null}
                   </div>
@@ -954,13 +954,13 @@ export default function AiCoach() {
                             onClick={() => startEditingItem(item)}
                             className="rounded-lg border border-slate-600 bg-slate-900/60 px-2 py-1 text-[11px] font-semibold text-slate-200"
                           >
-                            Edit
+                            <UiText text={"Edit"} />
                           </button>
                           <button
                             type="button"
                             onClick={() => void deleteVocabularyItem(item.id)}
                             className="rounded-lg border border-indigo-400/30 bg-indigo-500/10 p-1.5 text-indigo-100"
-                            aria-label="Delete vocabulary item"
+                            aria-label={c("Delete vocabulary item")}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
@@ -970,7 +970,7 @@ export default function AiCoach() {
                   ))}
                   {selectedNotebook && selectedNotebook.items.length === 0 ? (
                     <p className="rounded-xl border border-dashed border-slate-700 bg-slate-950/50 px-3 py-5 text-center text-xs text-slate-400">
-                      Notebook is empty. Add your first word.
+                      <UiText text={"Notebook is empty. Add your first word."} />
                     </p>
                   ) : null}
                 </div>
@@ -984,35 +984,35 @@ export default function AiCoach() {
               >
                 <h2 className="inline-flex items-center gap-2 text-lg font-black text-white">
                   <Activity className="h-4 w-4 text-indigo-300" />
-                  Study Memory + Safety
+                  <UiText text={"Study Memory + Safety"} />
                 </h2>
                 <div className="mt-3 space-y-2">
                   <div className="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-200">
                     <p className="inline-flex items-center gap-2 font-semibold text-white">
                       <Languages className="h-4 w-4 text-indigo-300" />
-                      Language memory
+                      <UiText text={"Language memory"} />
                     </p>
                     <p className="mt-1 text-xs text-slate-400">
-                      Preferred locale: {preferences?.preferredLocale ?? 'en'} · Tone: {preferences?.toneStyle ?? 'sweet'}
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-200">
-                    <p className="font-semibold text-white">Training vs exam guardrails</p>
-                    <p className="mt-1 text-xs text-slate-400">
-                      Exam/full-test mode blocks helper actions. Training mode allows vocabulary-only assistance for reading/listening.
+                      <UiText text={"Preferred locale:"} /> {preferences?.preferredLocale ?? 'en'} <UiText text={"· Tone:"} /> {preferences?.toneStyle ?? 'sweet'}
                     </p>
                   </div>
                   <div className="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-200">
-                    <p className="font-semibold text-white">Command launcher</p>
+                    <p className="font-semibold text-white"><UiText text={"Training vs exam guardrails"} /></p>
                     <p className="mt-1 text-xs text-slate-400">
-                      Supports: “reading full test 2”, “passage 2 for 20 min”, “listening full test 2 part 3”.
+                      <UiText text={"Exam/full-test mode blocks helper actions. Training mode allows vocabulary-only assistance for reading/listening."} />
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-200">
+                    <p className="font-semibold text-white"><UiText text={"Command launcher"} /></p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      <UiText text={"Supports: “reading full test 2”, “passage 2 for 20 min”, “listening full test 2 part 3”."} />
                     </p>
                   </div>
                 </div>
 
                 {report ? (
                   <div className="mt-4 rounded-2xl border border-slate-700 bg-slate-950/60 p-3">
-                    <p className="text-xs uppercase tracking-[0.14em] text-slate-400">AI summary</p>
+                    <p className="text-xs uppercase tracking-[0.14em] text-slate-400"><UiText text={"AI summary"} /></p>
                     <p className="mt-2 text-sm leading-7 text-slate-200">{report.executiveSummary}</p>
                   </div>
                 ) : null}

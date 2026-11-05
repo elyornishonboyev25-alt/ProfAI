@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 ﻿import { memo, useMemo } from 'react'
 import { ChevronLeftIcon, ChevronRightIcon, FlagIcon } from '@heroicons/react/24/outline'
 
@@ -42,6 +44,7 @@ const QuestionNavigation = memo(function QuestionNavigation({
     onFlag,
     flagged = []
 }: QuestionNavigationProps) {
+  const { c: uiCopy } = useCopy()
 
     const totalQuestions = useMemo(() =>
         sections.reduce((acc, section) => acc + section.questionCount, 0),
@@ -85,12 +88,12 @@ const QuestionNavigation = memo(function QuestionNavigation({
                                 `}
                                 onClick={() => !isActive && onSectionChange(idx)}
                             >
-                                <button type="button" aria-label={`Go to Part ${section.partNumber}`} aria-pressed={isActive} onClick={event => { event.stopPropagation(); onSectionChange(idx) }} className={`flex items-center gap-2 whitespace-nowrap px-4 py-2.5 ${isActive ? 'border-r border-red-100 bg-red-50/50' : ''}`}>
+                                <button type="button" aria-label={uiCopy("Go to Part {{value1}}", { value1: String(section.partNumber) })} aria-pressed={isActive} onClick={event => { event.stopPropagation(); onSectionChange(idx) }} className={`flex items-center gap-2 whitespace-nowrap px-4 py-2.5 ${isActive ? 'border-r border-red-100 bg-red-50/50' : ''}`}>
                                     <span className={`text-sm font-bold ${isActive ? 'text-slate-900' : 'text-slate-500'}`}>
-                                        Part {section.partNumber}
+                                        <UiText text={"Part"} /> <UiText text={section.partNumber} />
                                     </span>
                                     <span className="text-xs font-medium text-slate-400">
-                                        {isActive ? ':' : `| ${answeredInSection} of ${section.questionCount} solved`}
+                                        {isActive ? ':' : <UiText text={"| {{value1}} of {{value2}} solved"} values={{ value1: String(answeredInSection), value2: String(section.questionCount) }} />}
                                     </span>
                                     {flaggedInSection > 0 ? (
                                         <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-amber-700">
@@ -122,7 +125,7 @@ const QuestionNavigation = memo(function QuestionNavigation({
                                             return (
                                                 <button type="button"
                                                     key={`${questionId}-${localIndex}`}
-                                                    aria-label={`Question ${questionNumber}${isAnswered ? ', answered' : ', unanswered'}${isFlagged ? ', bookmarked' : ''}`}
+                                                    aria-label={uiCopy("Question {{value1}}{{value2}}{{value3}}", { value1: String(questionNumber), value2: String(isAnswered ? ', answered' : ', unanswered'), value3: String(isFlagged ? ', bookmarked' : '') })}
                                                     aria-current={isCurrent ? 'step' : undefined}
                                                     onClick={(event) => {
                                                         event.stopPropagation()
@@ -159,8 +162,8 @@ const QuestionNavigation = memo(function QuestionNavigation({
                                 ? 'border-amber-200 bg-amber-50 text-amber-600'
                                 : 'border-red-100 bg-white text-slate-400 hover:bg-red-50 hover:text-red-500'
                                 }`}
-                            title="Flag Question"
-                            aria-label="Bookmark current question"
+                            title={uiCopy("Flag Question")}
+                            aria-label={uiCopy("Bookmark current question")}
                             aria-pressed={flagged.includes(currentQuestionIndex)}
                         >
                             <FlagIcon className="h-4 w-4" />
@@ -170,7 +173,7 @@ const QuestionNavigation = memo(function QuestionNavigation({
                     <button type="button"
                         onClick={() => onNavigate(Math.max(0, currentQuestionIndex - 1))}
                         disabled={currentQuestionIndex === 0}
-                        aria-label="Previous question"
+                        aria-label={uiCopy("Previous question")}
                         className="flex h-9 w-9 items-center justify-center rounded-lg border border-red-100 bg-white text-slate-600 shadow-sm hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         <ChevronLeftIcon className="h-4 w-4" />
@@ -179,10 +182,10 @@ const QuestionNavigation = memo(function QuestionNavigation({
                     <button type="button"
                         onClick={() => onNavigate(Math.min(totalQuestions - 1, currentQuestionIndex + 1))}
                         disabled={currentQuestionIndex >= totalQuestions - 1}
-                        aria-label="Next question"
+                        aria-label={uiCopy("Next question")}
                         className="flex h-9 items-center gap-1 rounded-lg bg-gradient-to-r from-red-600 to-rose-600 px-4 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(220,38,38,0.3)] transition-colors hover:from-red-500 hover:to-rose-500 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                        <span>Next</span>
+                        <span><UiText text={"Next"} /></span>
                         <ChevronRightIcon className="h-4 w-4" />
                     </button>
                 </div>

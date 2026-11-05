@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRight, Clock3, Crown, Headphones, ShieldCheck, Sparkles, Target } from 'lucide-react'
@@ -95,12 +96,11 @@ export default function Mock() {
               </div>
               <span className="premium-top-chip mt-5 inline-flex items-center gap-1.5">
                 <Sparkles className="h-3.5 w-3.5" />
-                Premium only
+                <UiText text={"Premium only"} />
               </span>
-              <h3 className="mt-3 text-2xl font-black tracking-tight text-slate-900">Free mock exams used up</h3>
+              <h3 className="mt-3 text-2xl font-black tracking-tight text-slate-900"><UiText text={"Free mock exams used up"} /></h3>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                You&apos;ve used your {mockTrial.limit} free mock exams. Subscribe to Premium for unlimited full-length
-                IELTS &amp; SAT mock simulations with AI analysis.
+                <UiText text={"You've used your"} /> {mockTrial.limit} <UiText text={"free mock exams. Subscribe to Premium for unlimited full-length IELTS & SAT mock simulations with AI analysis."} />
               </p>
               <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
                 <button
@@ -109,14 +109,14 @@ export default function Mock() {
                   className="cta-sheen inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-5 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.34)]"
                 >
                   <Crown className="h-4 w-4" />
-                  Subscribe to Premium
+                  <UiText text={"Subscribe to Premium"} />
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowMockGate(false)}
                   className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50"
                 >
-                  Maybe later
+                  <UiText text={"Maybe later"} />
                 </button>
               </div>
             </motion.div>
@@ -130,7 +130,7 @@ export default function Mock() {
           backLabel="Dashboard"
           onBack={() => navigate('/dashboard')}
           eyebrow="Mock Exam Center"
-          title={<>Real exam pressure. <span className="bg-gradient-to-r from-blue-700 via-indigo-600 to-orange-500 bg-clip-text text-transparent">Clear controlled practice.</span></>}
+          title={<><UiText text={"Real exam pressure."} /> <span className="bg-gradient-to-r from-blue-700 via-indigo-600 to-orange-500 bg-clip-text text-transparent"><UiText text={"Clear controlled practice."} /></span></>}
           subtitle="Choose IELTS or Digital SAT and enter a distraction-free simulation with official pacing, locked section flow and actionable review."
           filters={tracks.map((track) => ({ id: track.id, label: track.id === 'ielts' ? 'IELTS full mock' : 'Digital SAT mock' }))}
           activeFilter=""
@@ -144,14 +144,14 @@ export default function Mock() {
           ]}
           badge={!mockTrial.isPremium && Number.isFinite(mockTrial.remaining) ? (
             <span className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-4 text-[10px] font-black uppercase tracking-[0.12em] text-amber-700">
-              <Sparkles className="h-3.5 w-3.5" /> {Math.max(0, mockTrial.remaining)}/{mockTrial.limit} free mocks left
+              <Sparkles className="h-3.5 w-3.5" /> {Math.max(0, mockTrial.remaining)}/{mockTrial.limit} <UiText text={"free mocks left"} />
             </span>
           ) : undefined}
           actions={(
             <div className="flex flex-wrap gap-2 text-[10px] font-bold text-slate-600">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white bg-white/75 px-3 py-1.5"><Clock3 className="h-3.5 w-3.5 text-blue-600" /> Full-length timing</span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white bg-white/75 px-3 py-1.5"><Target className="h-3.5 w-3.5 text-blue-600" /> Real exam pressure</span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white bg-white/75 px-3 py-1.5"><ShieldCheck className="h-3.5 w-3.5 text-blue-600" /> Section lock flow</span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white bg-white/75 px-3 py-1.5"><Clock3 className="h-3.5 w-3.5 text-blue-600" /> <UiText text={"Full-length timing"} /></span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white bg-white/75 px-3 py-1.5"><Target className="h-3.5 w-3.5 text-blue-600" /> <UiText text={"Real exam pressure"} /></span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white bg-white/75 px-3 py-1.5"><ShieldCheck className="h-3.5 w-3.5 text-blue-600" /> <UiText text={"Section lock flow"} /></span>
             </div>
           )}
         />
@@ -172,19 +172,19 @@ export default function Mock() {
                     <span className="text-5xl font-black tracking-[-0.08em] text-white/80">0{index + 1}</span>
                   </div>
                   <div className={`mt-6 inline-flex w-fit items-center gap-2 rounded-full border bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${labelToneClass(track.tone)}`}>
-                    {track.subtitle}
+                    <UiText text={track.subtitle} />
                   </div>
-                  <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-950">{track.title}</h2>
-                  <p className="mt-2 max-w-xl text-sm font-medium leading-6 text-slate-600">{track.description}</p>
+                  <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-950"><UiText text={track.title} /></h2>
+                  <p className="mt-2 max-w-xl text-sm font-medium leading-6 text-slate-600"><UiText text={track.description} /></p>
                   <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
                     {track.chips.map((chip) => (
                       <span key={chip} className="rounded-full border border-white bg-white/85 px-3 py-1 text-slate-600 shadow-sm">
-                        {chip}
+                        <UiText text={chip} />
                       </span>
                     ))}
                   </div>
                   <span className={`mt-auto inline-flex items-center gap-1 pt-7 text-sm font-black transition group-hover:translate-x-1 ${linkToneClass(track.tone)}`}>
-                    Enter {track.title} <ArrowRight className="h-4 w-4" />
+                    <UiText text={"Enter"} /> <UiText text={track.title} /> <ArrowRight className="h-4 w-4" />
                   </span>
                 </button>
               </Tilt3D>

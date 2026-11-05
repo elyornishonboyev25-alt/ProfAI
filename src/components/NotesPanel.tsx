@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import { accountStorageFor } from '@/utils/accountStorage'
 import { useAuthStore } from '@/store/authStore'
 import { useState, useEffect, useRef } from 'react'
@@ -5,6 +7,7 @@ import { XMarkIcon, DocumentTextIcon } from '@heroicons/react/24/outline'
 
 interface NotesPanelProps { testId: string; storageKey?: string; isOpen: boolean; onClose: () => void }
 export default function NotesPanel({ testId, storageKey, isOpen, onClose }: NotesPanelProps) {
+  const { c: uiCopy } = useCopy()
   const owner = useAuthStore(state => state.user?.id ?? 'guest')
   const storage = accountStorageFor(owner)
   const key = storageKey ?? `ielts-note-${testId}`
@@ -23,13 +26,13 @@ export default function NotesPanel({ testId, storageKey, isOpen, onClose }: Note
     return () => { if (before?.isConnected) before.focus() }
   }, [isOpen])
   if (!isOpen) return null
-  return <aside className="ielts-notes-panel" aria-label="Test notes" onKeyDown={event => { if (event.key === 'Escape') { event.stopPropagation(); onClose() } }}>
-    <header><div><DocumentTextIcon className="h-5 w-5 text-red-600" /><h3>Test notes</h3><button type="button" aria-label="Close notes" onClick={onClose}><XMarkIcon className="h-5 w-5" /></button></div><p>Keep key clues and vocabulary here. Notes save as you type.</p></header>
-    <textarea ref={input} aria-label="Your test notes" value={note} onChange={event => {
+  return <aside className="ielts-notes-panel" aria-label={uiCopy("Test notes")} onKeyDown={event => { if (event.key === 'Escape') { event.stopPropagation(); onClose() } }}>
+    <header><div><DocumentTextIcon className="h-5 w-5 text-red-600" /><h3><UiText text={"Test notes"} /></h3><button type="button" aria-label={uiCopy("Close notes")} onClick={onClose}><XMarkIcon className="h-5 w-5" /></button></div><p><UiText text={"Keep key clues and vocabulary here. Notes save as you type."} /></p></header>
+    <textarea ref={input} aria-label={uiCopy("Your test notes")} value={note} onChange={event => {
       const value = event.target.value
       setNote(value)
       try { storage.setItem(key, value); setError(false) } catch { setError(true) }
-    }} placeholder="Write a note..." spellCheck={false} />
-    <footer><span role="status">{error ? 'Could not save. Keep this page open.' : 'Saved on this device'}</span><span>{note.length} characters</span></footer>
+    }} placeholder={uiCopy("Write a note...")} spellCheck={false} />
+    <footer><span role="status">{error ? <UiText text={"Could not save. Keep this page open."} /> : <UiText text={"Saved on this device"} />}</span><span>{note.length} <UiText text={"characters"} /></span></footer>
   </aside>
 }

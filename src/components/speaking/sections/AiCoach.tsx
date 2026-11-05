@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { MessageCircle, Sparkles, Trophy, Wand2 } from 'lucide-react'
@@ -20,6 +22,7 @@ const FREE_TALK_TOPICS = [
 // "AI Coach" section — the AI is used ONLY for a Full Mock exam or free open-topic
 // conversation (no isolated Part 1/2/3 drills here; those live in IELTS Speaking).
 export default function AiCoach() {
+  const { c: uiCopy } = useCopy()
   const user = useAuthStore((state: AuthState) => state.user)
   const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
   const addSession = useSpeakingStore((s) => s.addSession)
@@ -81,14 +84,13 @@ export default function AiCoach() {
         <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-red-600 to-rose-600 text-white shadow-[0_12px_24px_rgba(220,38,38,0.28)]">
           <Trophy className="h-6 w-6" />
         </span>
-        <h3 className="mt-4 text-xl font-black text-slate-900">Full IELTS Mock</h3>
-        <p className="text-xs font-semibold uppercase tracking-wide text-red-600">~14 min · graded</p>
+        <h3 className="mt-4 text-xl font-black text-slate-900"><UiText text={"Full IELTS Mock"} /></h3>
+        <p className="text-xs font-semibold uppercase tracking-wide text-red-600"><UiText text={"~14 min · graded"} /></p>
         <p className="mt-2 text-sm leading-6 text-slate-600">
-          The complete exam — Part 1, 2 and 3 back to back. The AI examiner speaks each question, asks adaptive
-          follow-ups, and gives you a full band score with feedback at the end.
+          <UiText text={"The complete exam — Part 1, 2 and 3 back to back. The AI examiner speaks each question, asks adaptive follow-ups, and gives you a full band score with feedback at the end."} />
         </p>
         <button onClick={() => setConfig({ mode: 'full_mock' })} className="arena-primary-btn cta-sheen mt-5 w-full justify-center py-3">
-          <Wand2 className="mr-2 h-5 w-5" /> Start Full Mock
+          <Wand2 className="mr-2 h-5 w-5" /> <UiText text={"Start Full Mock"} />
         </button>
       </motion.div>
 
@@ -98,17 +100,16 @@ export default function AiCoach() {
         <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-red-600 text-white shadow-[0_12px_24px_rgba(220,38,38,0.28)]">
           <MessageCircle className="h-6 w-6" />
         </span>
-        <h3 className="mt-4 text-xl font-black text-slate-900">Free Talk</h3>
-        <p className="text-xs font-semibold uppercase tracking-wide text-red-600">Open conversation</p>
+        <h3 className="mt-4 text-xl font-black text-slate-900"><UiText text={"Free Talk"} /></h3>
+        <p className="text-xs font-semibold uppercase tracking-wide text-red-600"><UiText text={"Open conversation"} /></p>
         <p className="mt-2 text-sm leading-6 text-slate-600">
-          Just chat naturally with the AI about anything you like. Great for building fluency and confidence — pick a
-          topic or type your own, then start talking.
+          <UiText text={"Just chat naturally with the AI about anything you like. Great for building fluency and confidence — pick a topic or type your own, then start talking."} />
         </p>
 
         <input
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
-          placeholder="Type any topic… (optional)"
+          placeholder={uiCopy("Type any topic… (optional)")}
           className="input mt-4"
           maxLength={60}
         />
@@ -126,7 +127,7 @@ export default function AiCoach() {
           ))}
         </div>
         <button onClick={() => setConfig({ mode: 'free_talk', topic: topic.trim() })} className="arena-primary-btn mt-5 w-full justify-center py-3">
-          <Sparkles className="mr-2 h-5 w-5" /> Start Free Talk
+          <Sparkles className="mr-2 h-5 w-5" /> <UiText text={"Start Free Talk"} />
         </button>
       </motion.div>
     </div>

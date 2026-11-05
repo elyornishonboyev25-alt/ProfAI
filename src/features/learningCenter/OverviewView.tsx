@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -19,6 +21,7 @@ import { learningCenterApi } from './api'
 import { Avatar, CenterPageHeading, CenterPanel, CenterSkeleton, ErrorState, MetricCard, StatusBadge, Trend } from './components'
 
 export default function OverviewView({ slug }: { slug: string }) {
+  const { c: uiCopy } = useCopy()
   const navigate = useNavigate()
   const [days, setDays] = useState(90)
   const { data, loading, error, refetch } = useAsyncData(() => learningCenterApi.overview(slug, days), [slug, days])
@@ -36,8 +39,8 @@ export default function OverviewView({ slug }: { slug: string }) {
     <div className="space-y-6">
       <CenterPageHeading
         eyebrow="Learning center overview"
-        title="Overview"
-        description="Live academic operations across every IELTS and SAT cohort — from first diagnostic to target score."
+        title={uiCopy("Overview")}
+        description={uiCopy("Live academic operations across every IELTS and SAT cohort — from first diagnostic to target score.")}
         action={(
           <div className="flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
             {[30, 90, 180].map((value) => (
@@ -48,20 +51,20 @@ export default function OverviewView({ slug }: { slug: string }) {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Total students" value={data.metrics.totalStudents} note={`${data.metrics.satStudents} SAT · ${data.metrics.ieltsStudents} IELTS`} icon={Users} accent="blue" />
-        <MetricCard label="Average SAT" value={data.metrics.averageSat || '—'} note="Current center average" icon={GraduationCap} accent="violet" />
-        <MetricCard label="Average IELTS" value={data.metrics.averageIelts || '—'} note="Across active IELTS learners" icon={BookOpenCheck} accent="red" />
-        <MetricCard label="Students improving" value={`${data.metrics.studentsImproving}%`} note={`${data.metrics.activeTeachers} active teachers`} icon={TrendingUp} accent="emerald" />
+        <MetricCard label={uiCopy("Total students")} value={data.metrics.totalStudents} note={`${data.metrics.satStudents} SAT · ${data.metrics.ieltsStudents} IELTS`} icon={Users} accent="blue" />
+        <MetricCard label={uiCopy("Average SAT")} value={data.metrics.averageSat || '—'} note="Current center average" icon={GraduationCap} accent="violet" />
+        <MetricCard label={uiCopy("Average IELTS")} value={data.metrics.averageIelts || '—'} note="Across active IELTS learners" icon={BookOpenCheck} accent="red" />
+        <MetricCard label={uiCopy("Students improving")} value={`${data.metrics.studentsImproving}%`} note={`${data.metrics.activeTeachers} active teachers`} icon={TrendingUp} accent="emerald" />
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.7fr)_minmax(20rem,.8fr)]">
         <CenterPanel className="p-5 sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[.18em] text-red-700">Performance pulse</p>
-              <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950">Learning activity</h2>
+              <p className="text-[10px] font-bold uppercase tracking-[.18em] text-red-700"><UiText text={"Performance pulse"} /></p>
+              <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950"><UiText text={"Learning activity"} /></h2>
             </div>
-            <div className="flex items-center gap-4 text-[11px] font-bold text-slate-500"><span className="flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-red-700" /> Test attempts</span><span className="flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-slate-500" /> Active students</span></div>
+            <div className="flex items-center gap-4 text-[11px] font-bold text-slate-500"><span className="flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-red-700" /> <UiText text={"Test attempts"} /></span><span className="flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-slate-500" /> <UiText text={"Active students"} /></span></div>
           </div>
           <div className="mt-5 h-72">
             {chart.length ? (
@@ -79,37 +82,37 @@ export default function OverviewView({ slug }: { slug: string }) {
                   <Area type="monotone" dataKey="activeStudents" stroke="#8792a4" strokeWidth={2} fill="url(#centerStudents)" />
                 </AreaChart>
               </ResponsiveContainer>
-            ) : <div className="grid h-full place-items-center text-sm font-semibold text-slate-400">Activity appears after students complete their first test.</div>}
+            ) : <div className="grid h-full place-items-center text-sm font-semibold text-slate-400"><UiText text={"Activity appears after students complete their first test."} /></div>}
           </div>
         </CenterPanel>
 
         <CenterPanel className="bg-[radial-gradient(circle_at_90%_0%,rgba(207,214,223,.7),transparent_48%),linear-gradient(145deg,#fff,#f3f4f6_62%,#fff0f1)] p-5 text-slate-950 sm:p-6">
           <div className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-red-200/30 blur-2xl" />
-          <div className="relative flex items-center justify-between"><span className="grid h-11 w-11 place-items-center rounded-2xl border border-red-100 bg-white/80"><BrainCircuit className="h-5 w-5 text-red-700" /></span><span className="rounded-full border border-red-100 bg-red-50/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[.14em] text-red-700">Live intelligence</span></div>
-          <h2 className="relative mt-5 text-2xl font-bold tracking-[-.04em]">Ivygoo Performance Signal</h2>
-          <p className="relative mt-2 text-sm leading-6 text-slate-600">Every score, completion and learning streak is translated into an actionable teaching signal.</p>
+          <div className="relative flex items-center justify-between"><span className="grid h-11 w-11 place-items-center rounded-2xl border border-red-100 bg-white/80"><BrainCircuit className="h-5 w-5 text-red-700" /></span><span className="rounded-full border border-red-100 bg-red-50/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[.14em] text-red-700"><UiText text={"Live intelligence"} /></span></div>
+          <h2 className="relative mt-5 text-2xl font-bold tracking-[-.04em]"><UiText text={"Ivygoo Performance Signal"} /></h2>
+          <p className="relative mt-2 text-sm leading-6 text-slate-600"><UiText text={"Every score, completion and learning streak is translated into an actionable teaching signal."} /></p>
           <div className="relative mt-6 space-y-3">
-            <Signal label="Assignment completion" value={`${data.metrics.assignmentsCompleted}%`} icon={CheckCircle2} />
-            <Signal label="Groups monitored" value={String(data.metrics.groups)} icon={Activity} />
-            <Signal label="Students needing attention" value={String(data.needsAttention.length)} icon={Target} />
+            <Signal label={uiCopy("Assignment completion")} value={`${data.metrics.assignmentsCompleted}%`} icon={CheckCircle2} />
+            <Signal label={uiCopy("Groups monitored")} value={String(data.metrics.groups)} icon={Activity} />
+            <Signal label={uiCopy("Students needing attention")} value={String(data.needsAttention.length)} icon={Target} />
           </div>
-          <button type="button" onClick={() => navigate(`/learning-center/${slug}/students?status=NEEDS_ATTENTION`)} className="relative mt-6 inline-flex items-center gap-2 text-xs font-bold text-red-700 hover:text-red-900">Open intervention queue <ArrowRight className="h-4 w-4" /></button>
+          <button type="button" onClick={() => navigate(`/learning-center/${slug}/students?status=NEEDS_ATTENTION`)} className="relative mt-6 inline-flex items-center gap-2 text-xs font-bold text-red-700 hover:text-red-900"><UiText text={"Open intervention queue"} /> <ArrowRight className="h-4 w-4" /></button>
         </CenterPanel>
       </div>
 
       <div className="grid gap-5 xl:grid-cols-2">
-        <StudentList title="Top improving students" eyebrow="Momentum leaders" students={data.topImproving} icon={<Sparkles className="h-5 w-5" />} empty="Progress leaders appear after at least two test results." onOpen={(id) => navigate(`/learning-center/${slug}/students/${id}`)} />
-        <StudentList title="Students who need attention" eyebrow="Intervention queue" students={data.needsAttention} icon={<Target className="h-5 w-5" />} empty="No students currently require urgent attention." onOpen={(id) => navigate(`/learning-center/${slug}/students/${id}`)} />
+        <StudentList title={uiCopy("Top improving students")} eyebrow="Momentum leaders" students={data.topImproving} icon={<Sparkles className="h-5 w-5" />} empty="Progress leaders appear after at least two test results." onOpen={(id) => navigate(`/learning-center/${slug}/students/${id}`)} />
+        <StudentList title={uiCopy("Students who need attention")} eyebrow="Intervention queue" students={data.needsAttention} icon={<Target className="h-5 w-5" />} empty="No students currently require urgent attention." onOpen={(id) => navigate(`/learning-center/${slug}/students/${id}`)} />
       </div>
 
       {data.teacherPerformance.length ? (
         <CenterPanel className="p-5 sm:p-6">
-          <div className="flex items-center justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-red-700">Team performance</p><h2 className="mt-1 text-xl font-bold text-slate-950">Teacher cohort outcomes</h2></div><UserRoundCheck className="h-6 w-6 text-red-600" /></div>
+          <div className="flex items-center justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-red-700"><UiText text={"Team performance"} /></p><h2 className="mt-1 text-xl font-bold text-slate-950"><UiText text={"Teacher cohort outcomes"} /></h2></div><UserRoundCheck className="h-6 w-6 text-red-600" /></div>
           <div className="mt-5 grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
             {data.teacherPerformance.map((teacher) => (
               <article key={`${teacher.id}-${teacher.groupName}`} className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
                 <div className="flex items-center gap-3"><Avatar name={teacher.fullName} url={teacher.avatarUrl} /><div className="min-w-0"><p className="truncate text-sm font-bold text-slate-900">{teacher.fullName}</p><p className="truncate text-xs font-semibold text-slate-500">{teacher.groupName}</p></div></div>
-                <div className="mt-4 flex items-end justify-between"><div><p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Group score</p><p className="text-xl font-bold text-slate-950">{teacher.averageScore}%</p></div><p className="text-xs font-bold text-emerald-600">{teacher.improving}/{teacher.students} improving</p></div>
+                <div className="mt-4 flex items-end justify-between"><div><p className="text-[10px] font-bold uppercase tracking-wider text-slate-400"><UiText text={"Group score"} /></p><p className="text-xl font-bold text-slate-950">{teacher.averageScore}%</p></div><p className="text-xs font-bold text-emerald-600">{teacher.improving}/{teacher.students} <UiText text={"improving"} /></p></div>
               </article>
             ))}
           </div>
@@ -120,22 +123,22 @@ export default function OverviewView({ slug }: { slug: string }) {
 }
 
 function Signal({ label, value, icon: Icon }: { label: string; value: string; icon: typeof Activity }) {
-  return <div className="flex items-center justify-between rounded-2xl border border-slate-200/80 bg-white/75 px-4 py-3"><span className="flex items-center gap-2 text-xs font-bold text-slate-700"><Icon className="h-4 w-4" />{label}</span><strong className="text-lg font-bold">{value}</strong></div>
+  return <div className="flex items-center justify-between rounded-2xl border border-slate-200/80 bg-white/75 px-4 py-3"><span className="flex items-center gap-2 text-xs font-bold text-slate-700"><Icon className="h-4 w-4" /><UiText text={label} /></span><strong className="text-lg font-bold">{value}</strong></div>
 }
 
 function StudentList({ title, eyebrow, students, icon, empty, onOpen }: { title: string; eyebrow: string; students: CenterOverviewStudent[]; icon: React.ReactNode; empty: string; onOpen: (id: string) => void }) {
   return (
     <CenterPanel className="p-5 sm:p-6">
-      <div className="flex items-center justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-red-700">{eyebrow}</p><h2 className="mt-1 text-xl font-bold text-slate-950">{title}</h2></div><span className="grid h-10 w-10 place-items-center rounded-xl bg-red-50 text-red-700">{icon}</span></div>
+      <div className="flex items-center justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-red-700"><UiText text={eyebrow} /></p><h2 className="mt-1 text-xl font-bold text-slate-950"><UiText text={title} /></h2></div><span className="grid h-10 w-10 place-items-center rounded-xl bg-red-50 text-red-700">{icon}</span></div>
       <div className="mt-4 divide-y divide-slate-100">
         {students.length ? students.map((student) => (
           <button key={student.id} type="button" onClick={() => onOpen(student.id)} className="group flex w-full items-center gap-3 py-3 text-left">
             <Avatar name={student.fullName} url={student.avatarUrl} />
-            <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="truncate text-sm font-bold text-slate-900">{student.fullName}</p><StatusBadge status={student.status} /></div><p className="mt-0.5 text-[11px] font-semibold text-slate-400">{student.attempts} attempts · {student.currentSat ? `SAT ${student.currentSat}` : student.currentIelts ? `IELTS ${student.currentIelts}` : 'Baseline pending'}</p></div>
+            <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="truncate text-sm font-bold text-slate-900">{student.fullName}</p><StatusBadge status={student.status} /></div><p className="mt-0.5 text-[11px] font-semibold text-slate-400">{student.attempts} <UiText text={"attempts ·"} /> {student.currentSat ? `SAT ${student.currentSat}` : student.currentIelts ? `IELTS ${student.currentIelts}` : <UiText text={"Baseline pending"} />}</p></div>
             <Trend value={student.improvement} compact />
             <ArrowRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-1 group-hover:text-red-700" />
           </button>
-        )) : <p className="py-10 text-center text-sm font-semibold text-slate-400">{empty}</p>}
+        )) : <p className="py-10 text-center text-sm font-semibold text-slate-400"><UiText text={empty} /></p>}
       </div>
     </CenterPanel>
   )

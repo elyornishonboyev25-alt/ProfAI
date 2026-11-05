@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, AudioLines, Check, ChevronDown, CircleHelp, Copy, Crown, Hand, Headphones, Loader2, LockKeyhole, MessageCircle, Mic, MicOff, PhoneOff, Plus, Radio, Search, Send, Settings2, Users, X, Shuffle, Swords, Timer, Play, Pause, SkipForward } from 'lucide-react'
@@ -27,6 +29,7 @@ function roomTone(room: SpeakingRoom) {
 }
 
 export default function SpeakingHub({ hub, invitedRoom, view = 'rooms' }: { hub: SpeakingCommunity; invitedRoom: string | null; view?: 'rooms' | 'partner' | 'hidden' }) {
+  const { c: uiCopy } = useCopy()
   const t = useCommunityCopy()
   const [creating, setCreating] = useState(false)
   const [kind, setKind] = useState('all')
@@ -61,7 +64,7 @@ export default function SpeakingHub({ hub, invitedRoom, view = 'rooms' }: { hub:
     setShareUrl(url.toString())
     try { await navigator.clipboard.writeText(url.toString()); setCopied(true) } catch { setCopied(false) }
   }
-  return <section className="speaking-hub" aria-label="Speaking Zone">
+  return <section className="speaking-hub" aria-label={uiCopy("Speaking Zone")}>
     {invitedRoom && !room ? <div className="hub-invitation"><LockKeyhole size={22} /><div><b>{t('Invitation link')}</b><p>{t('Someone invited you to a speaking room.')}</p></div><button type="button" className="hub-button is-primary" disabled={!canStart} onClick={() => void hub.join(invitedRoom)}>{t('Join invited room')}<ArrowRight size={17} /></button></div> : null}
     <div className="hub-audio-preferences"><button type="button" className="hub-button" aria-pressed={sound} onClick={toggleSound}>{sound ? <Volume2 size={16} /> : <VolumeX size={16} />}{t(sound ? 'Call sounds on' : 'Call sounds off')}</button>{!hub.connected ? <button type="button" className="hub-button" onClick={hub.reconnect}><RefreshCw size={16} />{t('Reconnect')}</button> : null}</div>
     {hub.error ? <div className="hub-feedback is-error" role="alert"><span>{t(hub.error)}</span><button type="button" onClick={hub.clearError} aria-label={t('Close')}><X size={17} /></button></div> : null}
@@ -72,7 +75,7 @@ export default function SpeakingHub({ hub, invitedRoom, view = 'rooms' }: { hub:
     <IncomingCall key={hub.invitation?.id ?? 'no-call'} hub={hub} />
     {room ? <>
       <header className="hub-room-header">
-        <div><span className="hub-eyebrow"><Radio size={14} />{t(room.private ? 'Private room' : 'Live')} · English</span><h1>{room.title}</h1></div>
+        <div><span className="hub-eyebrow"><Radio size={14} />{t(room.private ? 'Private room' : 'Live')} <UiText text={"· English"} /></span><h1>{room.title}</h1></div>
         <div className="hub-room-header-actions"><span><Users size={16} />{room.members.length} {t('participants')}</span><button type="button" className="hub-button" onClick={() => void share()}>{copied ? <Check size={17} /> : <Copy size={17} />}{t(copied ? 'Link copied' : 'Invite friends')}</button></div>
       </header>
       {shareUrl ? <label className="hub-share-link">{t('Invitation link')}<input readOnly value={shareUrl} onFocus={event => event.target.select()} /></label> : null}
@@ -175,7 +178,7 @@ function SocialRoomCard({ room, hub }: { room: SpeakingRoom; hub: SpeakingCommun
   const speakers = room.members.filter(member => member.role === 'speaker')
   const full = room.members.length >= room.maxParticipants
   return <article className={`hub-room-card tone-${roomTone(room)}`}>
-    <div className="hub-room-cover"><div className="hub-room-tags"><span>English</span><span><Radio size={11} />{t('Live')}</span></div><span className="hub-room-cover-emoji" aria-hidden="true">{room.kind === 'debate' ? '💬' : room.kind === 'ielts' ? '🎯' : '☕'}</span><h3>{room.title}</h3><div className="hub-card-host"><span><ProfileAvatar src={host?.avatarUrl} name={host?.name} alt="" /></span><b>@{host?.name}</b><small>{t('Host')}</small></div></div>
+    <div className="hub-room-cover"><div className="hub-room-tags"><span><UiText text={"English"} /></span><span><Radio size={11} />{t('Live')}</span></div><span className="hub-room-cover-emoji" aria-hidden="true">{room.kind === 'debate' ? '💬' : room.kind === 'ielts' ? '🎯' : '☕'}</span><h3>{room.title}</h3><div className="hub-card-host"><span><ProfileAvatar src={host?.avatarUrl} name={host?.name} alt="" /></span><b>@{host?.name}</b><small>{t('Host')}</small></div></div>
     <div className="hub-room-card-body"><div className="hub-room-card-info"><span>{t(KINDS[room.kind as keyof typeof KINDS])}</span><span>{t(LEVELS[room.level as keyof typeof LEVELS])}</span></div><p>{room.topic}</p><div className="hub-card-stage">{Array.from({ length: Math.min(room.capacity, 6) }, (_, index) => <span key={index} className={cn('hub-card-seat', !speakers[index] && 'is-open')}>{speakers[index] ? <ProfileAvatar src={speakers[index].avatarUrl} name={speakers[index].name} alt="" /> : <Mic size={13} />}</span>)}<small>{Math.max(0, room.capacity - speakers.length)} {t('open seats')}</small></div><div className="hub-room-card-bottom"><span><Headphones size={15} /><b>{room.members.length}</b>{t('in room')}</span><button type="button" className="hub-button" disabled={full || !hub.connected || hub.busy || hub.activity !== 'idle' || !!hub.invitation} onClick={() => void hub.join(room.id)}>{t(full ? 'Room full' : 'Enter room')}<ArrowRight size={15} /></button></div></div>
   </article>
 }

@@ -1,3 +1,4 @@
+import { useCopy } from '@/i18n/interface'
 import AttemptEntryBoundary from '@/components/tests/AttemptEntryBoundary'
 import { testReturnPath } from '@/utils/testNavigation'
 import { useActiveTest } from '@/hooks/useActiveTest'
@@ -116,6 +117,7 @@ export default function IELTSSpeakingTest() {
 }
 
 function SpeakingTestContent() {
+  const { c: uiCopy } = useCopy()
   const navigate = useNavigate()
   const location = useLocation()
   const { id } = useParams<{ id: string }>()
@@ -166,9 +168,9 @@ function SpeakingTestContent() {
     content = (
       <div className="mx-auto max-w-2xl px-4 py-10">
         <button onClick={exitTest} className="premium-back-btn mb-4">
-          <ArrowLeft className="h-3.5 w-3.5" /> Back to Speaking Tests
+          <ArrowLeft className="h-3.5 w-3.5" /> <UiText text={"Back to Speaking Tests"} />
         </button>
-        <p className="text-sm text-slate-600">Speaking test not found.</p>
+        <p className="text-sm text-slate-600"><UiText text={"Speaking test not found."} /></p>
       </div>
     )
   } else if (mode.kind === 'mock') {
@@ -276,7 +278,7 @@ function SpeakingTestContent() {
     <>
       <AnimatePresence>
         {booting && mode ? (
-          <TestLaunchOverlay title="Your test will begin shortly" subtitle="Preparing your Speaking test" />
+          <TestLaunchOverlay title={uiCopy("Your test will begin shortly")} subtitle="Preparing your Speaking test" />
         ) : null}
       </AnimatePresence>
       {content}
@@ -286,6 +288,7 @@ function SpeakingTestContent() {
 
 // ── Day runner (one Part with N questions; AI analysis per question) ────────
 function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit: () => void; onComplete: () => void }) {
+  const { c: uiCopy } = useCopy()
   const recognition = useSpeechRecognition('en-US')
 
   const owner = useAuthStore(state => state.user?.id ?? 'guest')
@@ -540,22 +543,22 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
     } finally { if (!disposedRef.current) setEvaluating(false) }
   }
 
-  if (evaluating) return <div className="surface-card mx-auto mt-8 max-w-2xl p-8 text-center"><Loader2 className="mx-auto h-8 w-8 animate-spin text-red-500" /><p className="mt-3 text-sm font-semibold text-slate-700">Assessing all your answers using the IELTS criteria…</p></div>
+  if (evaluating) return <div className="surface-card mx-auto mt-8 max-w-2xl p-8 text-center"><Loader2 className="mx-auto h-8 w-8 animate-spin text-red-500" /><p className="mt-3 text-sm font-semibold text-slate-700"><UiText text={"Assessing all your answers using the IELTS criteria…"} /></p></div>
   if (finished && evaluation) return <SpeakingResult testId={day.id} evaluation={evaluation} transcript={history} modeLabel={day.title} onRetry={() => setFinished(false)} onRegrade={() => void finishPractice()} onExit={onExit} />
-  if (finished) return <div className="surface-card mx-auto mt-8 max-w-2xl p-6 text-center"><p className="text-sm text-slate-600">Your saved answers are ready for assessment using the IELTS criteria.</p><button onClick={() => void finishPractice()} className="arena-primary-btn mt-4">Assess saved answers</button></div>
+  if (finished) return <div className="surface-card mx-auto mt-8 max-w-2xl p-6 text-center"><p className="text-sm text-slate-600"><UiText text={"Your saved answers are ready for assessment using the IELTS criteria."} /></p><button onClick={() => void finishPractice()} className="arena-primary-btn mt-4"><UiText text={"Assess saved answers"} /></button></div>
 
   return (
     <div className="ielts-speaking-workspace mx-auto max-w-5xl px-4 py-6 sm:px-6">
       <header className="speaking-exam-header mb-4">
-        <button onClick={onExit} disabled={recording || stoppingRecording} className="speaking-icon-button disabled:opacity-50" aria-label="Back to roadmap"><ArrowLeft className="h-5 w-5" /></button>
-        <div className="min-w-0 flex-1"><p className="speaking-eyebrow">IELTS Speaking · Part {day.part}</p><h1 className="truncate text-lg font-black text-slate-900">{day.title}</h1><p className="text-xs text-slate-500">{day.subtitle}</p></div>
+        <button onClick={onExit} disabled={recording || stoppingRecording} className="speaking-icon-button disabled:opacity-50" aria-label={uiCopy("Back to roadmap")}><ArrowLeft className="h-5 w-5" /></button>
+        <div className="min-w-0 flex-1"><p className="speaking-eyebrow"><UiText text={"IELTS Speaking · Part"} /> {day.part}</p><h1 className="truncate text-lg font-black text-slate-900">{day.title}</h1><p className="text-xs text-slate-500">{day.subtitle}</p></div>
         <span className="speaking-part-pill">{index + 1} / {items.length}</span>
       </header>
 
-      <div className="mb-5 rounded-2xl border border-red-100 bg-white/90 p-3 shadow-sm" aria-label={`${completedCount} of ${items.length} questions reviewed`}>
+      <div className="mb-5 rounded-2xl border border-red-100 bg-white/90 p-3 shadow-sm" aria-label={uiCopy("{{value1}} of {{value2}} questions reviewed", { value1: String(completedCount), value2: String(items.length) })}>
         <div className="mb-2 flex items-center justify-between text-xs font-bold text-slate-600">
-          <span>Speaking progress</span>
-          <span>{completedCount}/{items.length} feedback ready</span>
+          <span><UiText text={"Speaking progress"} /></span>
+          <span>{completedCount}/{items.length} <UiText text={"feedback ready"} /></span>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-red-100">
           <div className="h-full rounded-full bg-gradient-to-r from-red-600 to-rose-500 transition-all" style={{ width: `${items.length ? (completedCount / items.length) * 100 : 0}%` }} />
@@ -570,7 +573,7 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
               key={i}
               onClick={() => selectQuestion(i)}
               disabled={recording}
-              aria-label={`Question ${i + 1}${answers[i].analysis ? ', feedback ready' : ''}`}
+              aria-label={uiCopy("Question {{value1}}{{value2}}", { value1: String(i + 1), value2: String(answers[i].analysis ? ', feedback ready' : '') })}
               aria-current={i === index ? 'step' : undefined}
               className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-black transition ${
                 i === index
@@ -585,10 +588,10 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
           ))}
         </div>
         <div className="flex items-center gap-1">
-          <button onClick={goPrev} disabled={index === 0 || recording} aria-label="Previous question" className="rounded-xl border border-rose-200 bg-white px-2 py-1 text-xs font-bold text-slate-700 disabled:opacity-40">
+          <button onClick={goPrev} disabled={index === 0 || recording} aria-label={uiCopy("Previous question")} className="rounded-xl border border-rose-200 bg-white px-2 py-1 text-xs font-bold text-slate-700 disabled:opacity-40">
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <button onClick={goNext} disabled={index === items.length - 1 || recording} aria-label="Next question" className="rounded-xl border border-rose-200 bg-white px-2 py-1 text-xs font-bold text-slate-700 disabled:opacity-40">
+          <button onClick={goNext} disabled={index === items.length - 1 || recording} aria-label={uiCopy("Next question")} className="rounded-xl border border-rose-200 bg-white px-2 py-1 text-xs font-bold text-slate-700 disabled:opacity-40">
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
@@ -601,16 +604,16 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
         animate={{ opacity: 1, y: 0 }}
         className="surface-card p-5"
       >
-        <p className="text-xs font-bold uppercase tracking-wide text-rose-600">Question {index + 1} of {items.length}</p>
+        <p className="text-xs font-bold uppercase tracking-wide text-rose-600"><UiText text={"Question"} /> {index + 1} <UiText text={"of"} /> {items.length}</p>
         <p className="mt-2 text-lg font-bold leading-7 text-slate-900">{question.prompt}</p>
 
         {isPart2 ? (
           <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
             <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 font-bold text-amber-700">
-              <Timer className="h-3.5 w-3.5" /> Prep {prepLeft}s
+              <Timer className="h-3.5 w-3.5" /> <UiText text={"Prep"} /> {prepLeft}s
             </span>
             <span className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-3 py-1 font-bold text-rose-700">
-              <Mic className="h-3.5 w-3.5" /> Speak {speakLeft}s
+              <Mic className="h-3.5 w-3.5" /> <UiText text={"Speak"} /> {speakLeft}s
             </span>
           </div>
         ) : null}
@@ -623,7 +626,7 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
               className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700 transition hover:bg-rose-100"
             >
               <Eye className="h-3.5 w-3.5" />
-              {answer.revealedSample ? 'Hide sample answer' : 'Show sample answer'}
+              {answer.revealedSample ? <UiText text={"Hide sample answer"} /> : <UiText text={"Show sample answer"} />}
             </button>
             <AnimatePresence>
               {answer.revealedSample ? (
@@ -633,7 +636,7 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
                   exit={{ opacity: 0, height: 0 }}
                   className="mt-2 overflow-hidden rounded-2xl border border-emerald-100 bg-emerald-50/50 p-3"
                 >
-                  <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700">Model answer · Band 8</p>
+                  <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700"><UiText text={"Model answer · Band 8"} /></p>
                   <p className="text-sm leading-7 text-slate-700">{question.sample}</p>
                 </motion.div>
               ) : null}
@@ -646,20 +649,20 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
       <div className="surface-card mt-4 p-5">
         {typingMode ? (
           <div>
-            <p className="mb-2 text-xs font-semibold text-slate-500">Type your answer:</p>
+            <p className="mb-2 text-xs font-semibold text-slate-500"><UiText text={"Type your answer:"} /></p>
             <textarea
               value={draft}
               onChange={(e) => setDrafts((current) => current.map((value, position) => position === index ? e.target.value : value))}
               className="input min-h-[100px] w-full resize-y"
-              placeholder="Type a full, developed answer here..."
+              placeholder={uiCopy("Type a full, developed answer here...")}
             />
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <button onClick={submitTyped} disabled={!draft.trim() || answer.loading} className="arena-primary-btn justify-center disabled:opacity-50">
-                <Send className="mr-2 h-4 w-4" /> Submit for AI feedback
+                <Send className="mr-2 h-4 w-4" /> <UiText text={"Submit for AI feedback"} />
               </button>
               {canRecordAudio() ? (
                 <button onClick={() => setTypingMode(false)} className="text-xs font-medium text-slate-500 hover:text-rose-600">
-                  <Mic className="mr-1 inline h-3 w-3" /> Use microphone instead
+                  <Mic className="mr-1 inline h-3 w-3" /> <UiText text={"Use microphone instead"} />
                 </button>
               ) : null}
             </div>
@@ -668,22 +671,22 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
           <div className="flex flex-col items-center gap-3">
             {!recording ? (
               <button disabled={stoppingRecording} onClick={() => void startRecording()} className="arena-primary-btn cta-sheen px-6 py-3 disabled:opacity-50">
-                <Mic className="mr-2 h-5 w-5" /> Record answer
+                <Mic className="mr-2 h-5 w-5" /> <UiText text={"Record answer"} />
               </button>
             ) : (
               <button onClick={() => void stopRecording()} disabled={stoppingRecording} className="arena-primary-btn bg-gradient-to-r from-slate-800 to-slate-700 px-6 py-3 disabled:opacity-50">
-                <Square className="mr-2 h-4 w-4 fill-white" /> {stoppingRecording ? 'Saving...' : 'Stop & save'}
+                <Square className="mr-2 h-4 w-4 fill-white" /> {stoppingRecording ? <UiText text={"Saving..."} /> : <UiText text={"Stop & save"} />}
               </button>
             )}
 
             {!recording && answer.spoken ? (
               <button onClick={submitSpoken} disabled={answer.loading || stoppingRecording} className="arena-secondary-btn text-sm disabled:opacity-50">
-                <Send className="mr-1.5 h-4 w-4" /> Send for AI analysis
+                <Send className="mr-1.5 h-4 w-4" /> <UiText text={"Send for AI analysis"} />
               </button>
             ) : null}
 
             <button onClick={() => setTypingMode(true)} disabled={recording || stoppingRecording} className="inline-flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-rose-600 disabled:opacity-50">
-              <Pencil className="h-3 w-3" /> Type instead
+              <Pencil className="h-3 w-3" /> <UiText text={"Type instead"} />
             </button>
             {recognition.error ? <p className="text-xs text-red-600">{recognition.error}</p> : null}
           </div>
@@ -700,7 +703,7 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
         {answer.audioUrl && !recording ? (
           <div className="mt-3 flex items-center gap-3">
             <span className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-rose-700">
-              <Play className="h-3.5 w-3.5" /> Your recording
+              <Play className="h-3.5 w-3.5" /> <UiText text={"Your recording"} />
             </span>
             <audio controls src={answer.audioUrl} className="h-9 max-w-[260px] flex-1">
               <track kind="captions" />
@@ -709,15 +712,15 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
         ) : null}
 
         {answer.error ? <p className="mt-3 text-sm text-red-600">{answer.error}</p> : null}
-        {answer.audioUrl && !answer.spoken && !recording ? <button disabled={stoppingRecording} onClick={() => void retryTranscription()} className="arena-secondary-btn mt-3 disabled:opacity-50">{stoppingRecording ? 'Processing recording…' : 'Retry processing saved answer'}</button> : null}
+        {answer.audioUrl && !answer.spoken && !recording ? <button disabled={stoppingRecording} onClick={() => void retryTranscription()} className="arena-secondary-btn mt-3 disabled:opacity-50">{stoppingRecording ? <UiText text={"Processing recording…"} /> : <UiText text={"Retry processing saved answer"} />}</button> : null}
       </div>
 
       {/* AI feedback */}
       {answer.loading ? (
         <div className="surface-card mt-4 flex flex-col items-center p-8 text-center">
           <Loader2 className="h-8 w-8 animate-spin text-rose-500" />
-          <p className="mt-3 text-sm font-bold text-slate-900">AI is analysing your answer…</p>
-          <p className="mt-1 text-xs text-slate-500">Grammar errors · corrected version · Band 8+ model</p>
+          <p className="mt-3 text-sm font-bold text-slate-900"><UiText text={"AI is analysing your answer…"} /></p>
+          <p className="mt-1 text-xs text-slate-500"><UiText text={"Grammar errors · corrected version · Band 8+ model"} /></p>
         </div>
       ) : null}
 
@@ -731,7 +734,7 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
           <ChevronLeft className="mr-1 h-4 w-4" />  <UiText text={"Previous"} /> </button>
         {index < items.length - 1 ? (
           <button onClick={goNext} disabled={recording || stoppingRecording} className="arena-primary-btn disabled:opacity-50">
-            Next question <ChevronRight className="ml-1 h-4 w-4" />
+            <UiText text={"Next question"} /> <ChevronRight className="ml-1 h-4 w-4" />
           </button>
         ) : (
           <button
@@ -740,7 +743,7 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
             className="arena-primary-btn disabled:cursor-not-allowed disabled:opacity-50"
             title={canComplete ? 'Finish test' : 'Complete every question first'}
           >
-            {evaluating ? 'Assessing your answers…' : 'Finish day'} <CheckCircle2 className="ml-1 h-4 w-4" />
+            {evaluating ? <UiText text={"Assessing your answers…"} /> : <UiText text={"Finish day"} />} <CheckCircle2 className="ml-1 h-4 w-4" />
           </button>
         )}
       </div>
@@ -758,23 +761,23 @@ function AnalysisCard({ analysis, onRetry }: { analysis: SpeakingResponseAnalysi
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="inline-flex items-center gap-2 text-lg font-black text-slate-900">
-          <Sparkles className="h-5 w-5 text-rose-600" /> AI Feedback
+          <Sparkles className="h-5 w-5 text-rose-600" /> <UiText text={"AI Feedback"} />
         </h3>
         <div className="flex items-center gap-2">
           {analysis.estimatedBand > 0 ? (
             <span className="rounded-full bg-gradient-to-r from-rose-600 to-red-600 px-3 py-1 text-sm font-black text-white">
-              Band ~{analysis.estimatedBand.toFixed(1)}
+              <UiText text={"Band ~"} />{analysis.estimatedBand.toFixed(1)}
             </span>
           ) : null}
           <button onClick={onRetry} className="arena-secondary-btn text-xs">
-            <RefreshCw className="mr-1 h-3 w-3" /> Re-run
+            <RefreshCw className="mr-1 h-3 w-3" /> <UiText text={"Re-run"} />
           </button>
         </div>
       </div>
 
       {analysis.source === 'offline' ? (
         <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-          AI is temporarily unavailable. Try again in a moment for full feedback.
+          <UiText text={"AI is temporarily unavailable. Try again in a moment for full feedback."} />
         </p>
       ) : null}
 
@@ -782,7 +785,7 @@ function AnalysisCard({ analysis, onRetry }: { analysis: SpeakingResponseAnalysi
       {analysis.correctedVersion ? (
         <div className="mt-4 rounded-2xl border border-sky-100 bg-sky-50/50 p-4">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-bold uppercase tracking-wide text-sky-700">AI corrected version</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-sky-700"><UiText text={"AI corrected version"} /></p>
             <CopyButton text={analysis.correctedVersion} />
           </div>
           <p className="mt-2 text-sm leading-7 text-slate-700">{analysis.correctedVersion}</p>
@@ -796,7 +799,7 @@ function AnalysisCard({ analysis, onRetry }: { analysis: SpeakingResponseAnalysi
       {analysis.issues.length > 0 ? (
         <div className="mt-3">
           <p className="inline-flex items-center gap-1 text-sm font-black text-slate-900">
-            <TriangleAlert className="h-4 w-4 text-rose-600" /> Mistakes ({analysis.issues.length})
+            <TriangleAlert className="h-4 w-4 text-rose-600" /> <UiText text={"Mistakes ("} />{analysis.issues.length})
           </p>
           <div className="mt-2 space-y-2">
             {analysis.issues.map((issue, i) => (
@@ -819,7 +822,7 @@ function AnalysisCard({ analysis, onRetry }: { analysis: SpeakingResponseAnalysi
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         {analysis.strengths.length > 0 ? (
           <div className="rounded-2xl border border-emerald-100 bg-emerald-50/40 p-3">
-            <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">Strengths</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-emerald-700"><UiText text={"Strengths"} /></p>
             <ul className="mt-1 space-y-1 text-xs text-slate-700">
               {analysis.strengths.map((s, i) => (
                 <li key={i} className="flex gap-2">
@@ -832,7 +835,7 @@ function AnalysisCard({ analysis, onRetry }: { analysis: SpeakingResponseAnalysi
         {analysis.suggestions.length > 0 ? (
           <div className="rounded-2xl border border-amber-100 bg-amber-50/40 p-3">
             <p className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-amber-700">
-              <Lightbulb className="h-3 w-3" /> Suggestions
+              <Lightbulb className="h-3 w-3" /> <UiText text={"Suggestions"} />
             </p>
             <ul className="mt-1 space-y-1 text-xs text-slate-700">
               {analysis.suggestions.map((s, i) => (
@@ -858,7 +861,7 @@ function CopyButton({ text }: { text: string }) {
       }}
       className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-bold text-slate-600 transition hover:bg-slate-50"
     >
-      <Clipboard className="h-3 w-3" /> {copied ? 'Copied' : 'Copy'}
+      <Clipboard className="h-3 w-3" /> {copied ? <UiText text={"Copied"} /> : <UiText text={"Copy"} />}
     </button>
   )
 }

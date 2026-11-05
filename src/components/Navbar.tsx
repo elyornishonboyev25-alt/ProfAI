@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import { BrandLogo } from '@/components/brand/BrandLogo'
 import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -22,6 +24,7 @@ interface NavbarProps {
 }
 
 export default function Navbar({ darkMode, setDarkMode, toggleLanguage, currentLang }: NavbarProps) {
+  const { c: uiCopy } = useCopy()
   const { t: _t } = useTranslation()
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -69,7 +72,7 @@ export default function Navbar({ darkMode, setDarkMode, toggleLanguage, currentL
             <button
               onClick={toggleLanguage}
               className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-200 border border-transparent hover:border-white/5"
-              title="Change Language"
+              title={uiCopy("Change Language")}
             >
               <div className="flex items-center space-x-1">
                 <LanguageIcon className="h-5 w-5" />
@@ -80,7 +83,7 @@ export default function Navbar({ darkMode, setDarkMode, toggleLanguage, currentL
             <button
               onClick={() => setDarkMode(!darkMode)}
               className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors duration-200 border border-transparent hover:border-white/5"
-              title="Toggle Theme"
+              title={uiCopy("Toggle Theme")}
             >
               {darkMode ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
             </button>
@@ -90,7 +93,7 @@ export default function Navbar({ darkMode, setDarkMode, toggleLanguage, currentL
               className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-500/30 transition-all duration-200"
             >
               <UserIcon className="h-5 w-5" />
-              <span className="text-sm font-medium">Profile</span>
+              <span className="text-sm font-medium"><UiText text={"Profile"} /></span>
             </Link>
           </div>
 
@@ -131,7 +134,7 @@ export default function Navbar({ darkMode, setDarkMode, toggleLanguage, currentL
                 className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-white/5 hover:text-white"
               >
                 <LanguageIcon className="h-5 w-5" />
-                <span>Language: {currentLang.toUpperCase()}</span>
+                <span><UiText text={"Language:"} /> {currentLang.toUpperCase()}</span>
               </button>
 
               <Link
@@ -140,7 +143,7 @@ export default function Navbar({ darkMode, setDarkMode, toggleLanguage, currentL
                 className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-slate-400 hover:bg-white/5 hover:text-white"
               >
                 <UserIcon className="h-5 w-5" />
-                <span>Profile</span>
+                <span><UiText text={"Profile"} /></span>
               </Link>
             </div>
           </div>

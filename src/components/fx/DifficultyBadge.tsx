@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 export type Difficulty = 'easy' | 'medium' | 'hard'
 
 const map: Record<Difficulty, { label: string; cls: string; dot: string }> = {
@@ -17,7 +18,7 @@ export default function DifficultyBadge({ level, className = '' }: DifficultyBad
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${d.cls} ${className}`}>
       <span className={`h-1.5 w-1.5 rounded-full ${d.dot}`} />
-      {d.label}
+      <UiText text={d.label} />
     </span>
   )
 }

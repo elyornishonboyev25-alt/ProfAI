@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useEffect, useRef, useState } from 'react'
 import { ClockIcon } from '@heroicons/react/24/outline'
 
@@ -76,7 +77,7 @@ export default function Timer({
   if (variant === 'readingCompact') {
     return (
       <span className={`font-mono text-base font-semibold tracking-[0.08em] ${isLowTime ? 'text-red-600' : 'text-slate-700'}`}>
-        {displayTime === -1 ? 'Unlimited' : formatTime(displayTime)}
+        {displayTime === -1 ? <UiText text={"Unlimited"} /> : formatTime(displayTime)}
       </span>
     )
   }
@@ -91,7 +92,7 @@ export default function Timer({
     `}>
       <ClockIcon className="h-5 w-5" />
       <span className="text-lg">
-        {displayTime === -1 ? 'Unlimited' : formatTime(displayTime)}
+        {displayTime === -1 ? <UiText text={"Unlimited"} /> : formatTime(displayTime)}
       </span>
     </div>
   )

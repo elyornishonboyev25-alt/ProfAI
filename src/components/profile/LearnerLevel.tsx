@@ -48,7 +48,7 @@ export default function LearnerLevel({ xp }: { xp: number }) {
     <button type="button" className="learner-level-close" aria-label={c('Close')} onClick={() => setOpen(false)}><X size={19} /></button>
     <div className="learner-level-heading"><LevelBadge xp={xp} /><div><h2 id={titleId}>{c('Level')} {progress.level}</h2><span>{Math.max(0, xp).toLocaleString()} XP</span></div></div>
     <p className="learner-level-next">{progress.level === 10 ? <UiText text="You reached the highest level" /> : <>{c('Level')} {progress.level}<ChevronRight size={15} />{c('Level')} {progress.level + 1}</>}</p>
-    <div className="learner-level-progress" role="progressbar" aria-label="Progress to next level" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress.progressPercent)}><span style={{ width: `${progress.progressPercent}%` }} /></div>
+    <div className="learner-level-progress" role="progressbar" aria-label={c("Progress to next level")} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress.progressPercent)}><span style={{ width: `${progress.progressPercent}%` }} /></div>
     <p>{progress.level === 10 ? <UiText text="Level 10 unlocked. Keep building your lifetime XP." /> : <>{progress.remaining.toLocaleString()} XP <UiText text="to the next level" /></>}</p>
     <details><summary><UiText text="How levels work" /></summary><p><UiText text="Earn XP from completed tests, vocabulary practice and active study. Higher levels need more XP. Daily limits and duplicate checks keep progress fair. Your level uses lifetime XP, even when the leaderboard shows a weekly or monthly score." /></p></details>
     </dialog>}

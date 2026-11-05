@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
@@ -145,7 +146,7 @@ export default function Home() {
                   {stat.value}
                 </div>
                 <div className="text-gray-600 dark:text-gray-400">
-                  {stat.label}
+                  <UiText text={stat.label} />
                 </div>
               </motion.div>
             ))}
@@ -157,10 +158,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Why Choose Ivygoo?
+              <UiText text={"Why Choose Ivygoo?"} />
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              Experience the future of test preparation with our innovative features.
+              <UiText text={"Experience the future of test preparation with our innovative features."} />
             </p>
           </div>
           
@@ -178,10 +179,10 @@ export default function Home() {
                   <feature.icon className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
-                  {feature.title}
+                  <UiText text={feature.title} />
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  {feature.description}
+                  <UiText text={feature.description} />
                 </p>
               </motion.div>
             ))}
@@ -193,10 +194,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Exam Preparation Categories
+              <UiText text={"Exam Preparation Categories"} />
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              Comprehensive preparation for all major standardized tests.
+              <UiText text={"Comprehensive preparation for all major standardized tests."} />
             </p>
           </div>
           
@@ -216,10 +217,10 @@ export default function Home() {
                   <category.icon className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                  {category.name}
+                  <UiText text={category.name} />
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400 text-sm">
-                  Start practicing now
+                  <UiText text={"Start practicing now"} />
                 </p>
               </Link>
             ))}
@@ -231,10 +232,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              What Our Students Say
+              <UiText text={"What Our Students Say"} />
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              Join thousands of successful students who achieved their goals.
+              <UiText text={"Join thousands of successful students who achieved their goals."} />
             </p>
           </div>
           
@@ -273,16 +274,16 @@ export default function Home() {
       <section className="py-20 bg-gradient-to-r from-primary-500 to-primary-600">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6">
-            Ready to Start Your Journey?
+            <UiText text={"Ready to Start Your Journey?"} />
           </h2>
           <p className="text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
-            Join thousands of students who are already improving their scores with Ivygoo.
+            <UiText text={"Join thousands of students who are already improving their scores with Ivygoo."} />
           </p>
           <Link
             to="/tests"
             className="btn bg-white text-primary-600 hover:bg-gray-100 text-lg px-8 py-3 inline-flex items-center"
           >
-            Get Started Now
+            <UiText text={"Get Started Now"} />
             <ArrowRightIcon className="ml-2 h-5 w-5" />
           </Link>
         </div>

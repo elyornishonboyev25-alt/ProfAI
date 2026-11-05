@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -40,6 +42,7 @@ function speak(text: string) {
 }
 
 export function WordLookupModal({ open, word, sentence, context, origin, onClose }: WordLookupModalProps) {
+  const { c: uiCopy } = useCopy()
   const [language, setLanguage] = useState('en')
   const [retry, setRetry] = useState(0)
   const [customLang, setCustomLang] = useState('')
@@ -136,7 +139,7 @@ export function WordLookupModal({ open, word, sentence, context, origin, onClose
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
-          <button className="absolute inset-0 cursor-default bg-slate-900/45 backdrop-blur-sm" onClick={onClose} aria-label="Close" />
+          <button className="absolute inset-0 cursor-default bg-slate-900/45 backdrop-blur-sm" onClick={onClose} aria-label={uiCopy("Close")} />
 
           <motion.div
             role="dialog"
@@ -154,7 +157,7 @@ export function WordLookupModal({ open, word, sentence, context, origin, onClose
                 <div className="min-w-0">
                   <p className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-white/85">
                     <Sparkles className="h-3.5 w-3.5" />
-                    AI Word Helper · {contextLabel}
+                    <UiText text={"AI Word Helper ·"} /> {contextLabel}
                   </p>
                   <h3 className="mt-1 break-words text-2xl font-black leading-tight">{result?.term || word}</h3>
                   {result?.partOfSpeech ? (
@@ -167,11 +170,11 @@ export function WordLookupModal({ open, word, sentence, context, origin, onClose
                   <button
                     onClick={() => speak(result?.term || word)}
                     className="rounded-lg p-2 text-white/90 transition hover:bg-white/15"
-                    aria-label="Pronounce"
+                    aria-label={uiCopy("Pronounce")}
                   >
                     <Volume2 className="h-4.5 w-4.5" />
                   </button>
-                  <button onClick={onClose} className="rounded-lg p-2 text-white/90 transition hover:bg-white/15" aria-label="Close">
+                  <button onClick={onClose} className="rounded-lg p-2 text-white/90 transition hover:bg-white/15" aria-label={uiCopy("Close")}>
                     <X className="h-4.5 w-4.5" />
                   </button>
                 </div>
@@ -182,7 +185,7 @@ export function WordLookupModal({ open, word, sentence, context, origin, onClose
             <div className="flex flex-wrap items-center gap-1.5 border-b border-slate-100 bg-slate-50/70 px-5 py-2.5">
               <span className="mr-1 inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">
                 <Languages className="h-3.5 w-3.5" />
-                Explain in
+                <UiText text={"Explain in"} />
               </span>
               {LANGUAGE_CHIPS.map((chip) => (
                 <button
@@ -204,7 +207,7 @@ export function WordLookupModal({ open, word, sentence, context, origin, onClose
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') applyCustomLanguage()
                   }}
-                  placeholder="Other…"
+                  placeholder={uiCopy("Other…")}
                   className="h-7 w-20 rounded-full border border-slate-200 bg-white px-3 text-xs outline-none focus:border-slate-300"
                 />
               </div>
@@ -215,15 +218,15 @@ export function WordLookupModal({ open, word, sentence, context, origin, onClose
               {loading ? (
                 <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
                   <Loader2 className="h-7 w-7 animate-spin text-red-500" />
-                  <p className="text-sm font-medium text-slate-500">AI is explaining this word…</p>
+                  <p className="text-sm font-medium text-slate-500"><UiText text={"AI is explaining this word…"} /></p>
                 </div>
               ) : error ? (
-                <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}<button type="button" className="mt-3 block font-bold underline" onClick={() => setRetry(value => value + 1)}>Try again</button></div>
+                <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}<button type="button" className="mt-3 block font-bold underline" onClick={() => setRetry(value => value + 1)}><UiText text={"Try again"} /></button></div>
               ) : result ? (
                 <div className="space-y-3.5">
                   {result.explanation ? (
                     <div className="rounded-2xl border border-slate-100 bg-gradient-to-br from-blue-50/80 to-white px-4 py-3">
-                      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-red-600">Simple explanation</p>
+                      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-red-600"><UiText text={"Simple explanation"} /></p>
                       <p className="mt-1.5 text-[15px] leading-7 text-slate-800">{result.explanation}</p>
                     </div>
                   ) : null}
@@ -231,11 +234,11 @@ export function WordLookupModal({ open, word, sentence, context, origin, onClose
                   {result.definition ? (
                     <div className="grid gap-2 sm:grid-cols-2">
                       <div className="rounded-xl border border-slate-100 bg-white px-4 py-3 shadow-sm">
-                        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Definition</p>
+                        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400"><UiText text={"Definition"} /></p>
                         <p className="mt-1 text-sm leading-6 text-slate-800">{result.definition}</p>
                       </div>
                       <div className="rounded-xl border border-slate-100 bg-white px-4 py-3 shadow-sm">
-                        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Synonym</p>
+                        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400"><UiText text={"Synonym"} /></p>
                         <p className="mt-1 text-sm font-semibold leading-6 text-red-700">{result.synonym || '—'}</p>
                       </div>
                     </div>
@@ -243,7 +246,7 @@ export function WordLookupModal({ open, word, sentence, context, origin, onClose
 
                   {result.example ? (
                     <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
-                      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Example</p>
+                      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400"><UiText text={"Example"} /></p>
                       <p className="mt-1 text-sm italic leading-6 text-slate-700">“{result.example}”</p>
                     </div>
                   ) : null}
@@ -253,7 +256,7 @@ export function WordLookupModal({ open, word, sentence, context, origin, onClose
 
             {/* footer */}
             <div className="flex items-center justify-between gap-3 border-t border-slate-100 bg-white px-5 py-3">
-              <p className="text-[11px] text-slate-400">{origin ? `From: ${origin}` : 'Saved words appear in Vocabulary Arena'}</p>
+              <p className="text-[11px] text-slate-400">{origin ? <UiText text={"From: {{value1}}"} values={{ value1: String(origin) }} /> : <UiText text={"Saved words appear in Vocabulary Arena"} />}</p>
               <button
                 onClick={handleSave}
                 disabled={!result?.definition || saved}
@@ -264,7 +267,7 @@ export function WordLookupModal({ open, word, sentence, context, origin, onClose
                 }`}
               >
                 {saved ? <Check className="h-4 w-4" /> : <BookmarkPlus className="h-4 w-4" />}
-                {saved ? 'Saved to My Words' : 'Save word'}
+                {saved ? <UiText text={"Saved to My Words"} /> : <UiText text={"Save word"} />}
               </button>
             </div>
           </motion.div>

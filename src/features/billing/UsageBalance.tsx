@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { AudioLines, ArrowUpRight, Sparkles } from 'lucide-react'
@@ -34,6 +35,6 @@ export default function UsageBalance({ compact = false }: { compact?: boolean })
       <div className="usage-meter" role="progressbar" aria-label={text('Monthly AI balance remaining', 'Qolgan oylik AI balansi', 'Остаток месячного баланса AI')} aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent ?? undefined}><span style={{ width: `${percent ?? 0}%` }} /></div>
       {!compact && <p>{error ? text('Balance unavailable.', 'Balansni yuklab bo‘lmadi.', 'Баланс недоступен.') : text('Renews on the 1st of each month. Live AI time is separate.', 'Har oyning 1-sanasida yangilanadi. Live AI vaqti alohida.', 'Обновляется 1-го числа. Время Live AI учитывается отдельно.')}{error && <button onClick={() => void refresh()}>{text('Retry', 'Qayta urinish', 'Повторить')}</button>}</p>}
     </div>
-    {(!compact || access?.active) && <div className="usage-voice-balance"><AudioLines size={18} /><div><strong>Live AI</strong>{!access?.active ? <Link to="/premium">IvyGoo Pro / IvyGoo Elite<ArrowUpRight size={13} /></Link> : unlimited ? <p>{text('Unlimited access', 'Cheksiz kirish', 'Безлимитный доступ')}</p> : voice ? <p><span>{text('Today', 'Bugun', 'Сегодня')}: <b>{hours(Math.max(0, (voice.daily.limit ?? 0) - voice.daily.used))}</b></span><span>{text('This month', 'Shu oy', 'За месяц')}: <b>{hours(Math.max(0, (voice.monthly.limit ?? 0) - voice.monthly.used))}</b></span></p> : <p>—</p>}</div></div>}
+    {(!compact || access?.active) && <div className="usage-voice-balance"><AudioLines size={18} /><div><strong><UiText text={"Live AI"} /></strong>{!access?.active ? <Link to="/premium">IvyGoo Pro / IvyGoo Elite<ArrowUpRight size={13} /></Link> : unlimited ? <p>{text('Unlimited access', 'Cheksiz kirish', 'Безлимитный доступ')}</p> : voice ? <p><span>{text('Today', 'Bugun', 'Сегодня')}: <b>{hours(Math.max(0, (voice.daily.limit ?? 0) - voice.daily.used))}</b></span><span>{text('This month', 'Shu oy', 'За месяц')}: <b>{hours(Math.max(0, (voice.monthly.limit ?? 0) - voice.monthly.used))}</b></span></p> : <p>—</p>}</div></div>}
   </section>
 }

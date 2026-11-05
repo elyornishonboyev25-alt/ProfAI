@@ -1,3 +1,4 @@
+import { useCopy } from '@/i18n/interface'
 import CrownBadge from '@/components/fx/CrownBadge'
 import LearnerLevel from '@/components/profile/LearnerLevel'
 import UiText from '@/components/common/UiText'
@@ -54,6 +55,7 @@ function Info({ icon, title, text }: { icon: React.ReactNode; title: string; tex
 }
 
 export default function PublicProfile() {
+  const { c: uiCopy } = useCopy()
   const { nickname = '' } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
@@ -156,9 +158,9 @@ export default function PublicProfile() {
     return (
       <Shell {...shellBack}>
         {error.status === 403 ? (
-          <Info icon={<Lock className="h-6 w-6" />} title="This profile is private" text="This learner has chosen to keep their profile hidden." />
+          <Info icon={<Lock className="h-6 w-6" />} title={uiCopy("This profile is private")} text="This learner has chosen to keep their profile hidden." />
         ) : (
-          <Info icon={<AtSign className="h-6 w-6" />} title="Profile not found" text={error.message} />
+          <Info icon={<AtSign className="h-6 w-6" />} title={uiCopy("Profile not found")} text={error.message} />
         )}
       </Shell>
     )
@@ -191,8 +193,8 @@ export default function PublicProfile() {
                 {p.isSelf ? <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700"> <UiText text={"YOU"} /> </span> : null}
               </div>
               <p className="mt-1 text-sm font-semibold text-slate-500">
-                {p.online ? <span className="text-emerald-600">● Online now</span> : 'Offline'}
-                {' · '}Member since {new Date(p.memberSince).toLocaleDateString()}
+                {p.online ? <span className="text-emerald-600"><UiText text={"● Online now"} /></span> : <UiText text={"Offline"} />}
+                {' · '}<UiText text={"Member since"} /> {new Date(p.memberSince).toLocaleDateString()}
               </p>
               {p.fieldOfStudy ? <p className="mt-2 text-sm font-semibold text-slate-600">{p.fieldOfStudy}</p> : null}
               {p.bio ? <p className="mt-2 max-w-xl text-sm text-slate-600">{p.bio}</p> : null}
@@ -205,7 +207,7 @@ export default function PublicProfile() {
             </div>
             {p.isSelf ? (
               <button onClick={() => navigate('/account')} className="arena-secondary-btn justify-center">
-                <Pencil className="mr-2 h-4 w-4" /> Edit profile
+                <Pencil className="mr-2 h-4 w-4" /> <UiText text={"Edit profile"} />
               </button>
             ) : null}
           </div>
@@ -216,12 +218,12 @@ export default function PublicProfile() {
       {v.showResults && data.stats ? (
         <Reveal>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Kpi icon={<BarChart3 className="h-4 w-4" />} label="Tests" value={<CountUp value={data.stats.totalAttempts} />} />
-            <Kpi icon={<Trophy className="h-4 w-4" />} label="Avg Score" value={<CountUp value={data.stats.averageScore} decimals={1} suffix="%" />} />
-            <Kpi icon={<Award className="h-4 w-4" />} label="Accuracy" value={<CountUp value={data.stats.averageAccuracy} decimals={1} suffix="%" />} />
+            <Kpi icon={<BarChart3 className="h-4 w-4" />} label={uiCopy("Tests")} value={<CountUp value={data.stats.totalAttempts} />} />
+            <Kpi icon={<Trophy className="h-4 w-4" />} label={uiCopy("Avg Score")} value={<CountUp value={data.stats.averageScore} decimals={1} suffix="%" />} />
+            <Kpi icon={<Award className="h-4 w-4" />} label={uiCopy("Accuracy")} value={<CountUp value={data.stats.averageAccuracy} decimals={1} suffix="%" />} />
             <Kpi
               icon={<Trophy className="h-4 w-4" />}
-              label="Rank"
+              label={uiCopy("Rank")}
               value={v.showLeaderboard && data.competitive ? `#${data.competitive.rank}` : '—'}
             />
           </div>
@@ -233,14 +235,14 @@ export default function PublicProfile() {
           <article className="surface-card p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="inline-flex items-center gap-2 text-base font-black text-slate-900">
-                <Zap className="h-4 w-4 text-amber-500" /> XP sources
+                <Zap className="h-4 w-4 text-amber-500" /> <UiText text={"XP sources"} />
               </h3>
-              <span className="text-xs font-bold text-slate-400">Exact earned totals</span>
+              <span className="text-xs font-bold text-slate-400"><UiText text={"Exact earned totals"} /></span>
             </div>
             <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               {xpBreakdown.map((item) => (
                 <div key={item.label} className="rounded-xl border border-blue-100 bg-gradient-to-br from-white to-blue-50 px-3 py-3">
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{item.label}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400"><UiText text={item.label} /></p>
                   <p className="mt-1 text-lg font-black text-slate-900">{item.amount.toLocaleString()} XP</p>
                 </div>
               ))}
@@ -255,7 +257,7 @@ export default function PublicProfile() {
           <Reveal>
             <article className="surface-card p-5">
               <h3 className="mb-2 inline-flex items-center gap-2 text-base font-black text-slate-900">
-                <BarChart3 className="h-4 w-4 text-blue-600" /> Skill averages
+                <BarChart3 className="h-4 w-4 text-blue-600" /> <UiText text={"Skill averages"} />
               </h3>
               {data.skillAnalytics?.trackBreakdown.some((metric) => metric.attempts > 0) ? (
                 <div className="mt-5 space-y-4">
@@ -264,7 +266,7 @@ export default function PublicProfile() {
                     .map((metric) => (
                       <div key={metric.key}>
                         <div className="mb-1.5 flex items-center justify-between gap-3 text-xs">
-                          <span className="font-bold text-slate-700">{metric.label}</span>
+                          <span className="font-bold text-slate-700"><UiText text={metric.label} /></span>
                           <span className="font-black text-blue-600">{metric.accuracy.toFixed(1)}%</span>
                         </div>
                         <div className="h-2.5 overflow-hidden rounded-full bg-blue-50">
@@ -274,7 +276,7 @@ export default function PublicProfile() {
                           />
                         </div>
                         <p className="mt-1 text-[10px] font-semibold text-slate-400">
-                          {metric.attempts} {metric.attempts === 1 ? 'attempt' : 'attempts'} · skill power {metric.skillPower.toFixed(1)}
+                          {metric.attempts} {metric.attempts === 1 ? <UiText text={"attempt"} /> : <UiText text={"attempts"} />} <UiText text={"· skill power"} /> {metric.skillPower.toFixed(1)}
                         </p>
                       </div>
                     ))}
@@ -284,8 +286,8 @@ export default function PublicProfile() {
                   <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
                     <BarChart3 className="h-5 w-5" />
                   </span>
-                  <p className="mt-3 text-sm font-bold text-slate-600">No scored practice yet</p>
-                  <p className="mt-1 max-w-xs text-xs text-slate-400">Completed IELTS and SAT results will appear here automatically.</p>
+                  <p className="mt-3 text-sm font-bold text-slate-600"><UiText text={"No scored practice yet"} /></p>
+                  <p className="mt-1 max-w-xs text-xs text-slate-400"><UiText text={"Completed IELTS and SAT results will appear here automatically."} /></p>
                 </div>
               )}
             </article>
@@ -300,14 +302,14 @@ export default function PublicProfile() {
                 <ProgressRing value={Math.min(100, data.competitive.rankingScore)} size={96} from="#f59e0b" to="#2563eb">
                   <div className="text-center leading-none">
                     <p className="text-xl font-black text-slate-900">#{data.competitive.rank}</p>
-                    <p className="text-[9px] font-bold uppercase tracking-wide text-slate-400">rank</p>
+                    <p className="text-[9px] font-bold uppercase tracking-wide text-slate-400"><UiText text={"rank"} /></p>
                   </div>
                 </ProgressRing>
                 <div>
                   <h3 className="inline-flex items-center gap-2 text-base font-black text-slate-900">
                     <Trophy className="h-4 w-4 text-blue-600" />  <UiText text={"Leaderboard"} /> </h3>
-                  <p className="mt-1 text-sm font-bold text-slate-700">{data.competitive.divisionLabel} division</p>
-                  <p className="text-xs text-slate-500">Ranking score {Math.round(data.competitive.rankingScore)}</p>
+                  <p className="mt-1 text-sm font-bold text-slate-700">{data.competitive.divisionLabel} <UiText text={"division"} /></p>
+                  <p className="text-xs text-slate-500"><UiText text={"Ranking score"} /> {Math.round(data.competitive.rankingScore)}</p>
                 </div>
               </article>
             </Reveal>
@@ -319,7 +321,7 @@ export default function PublicProfile() {
                 <img src="/assets/admission/campus-hero.webp" alt="" className="absolute inset-0 h-full w-full object-cover opacity-35" />
                 <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-white/45" />
                 <h3 className="relative inline-flex items-center gap-2 text-base font-black text-slate-900">
-                  <GraduationCap className="h-4 w-4 text-blue-600" /> Dream university
+                  <GraduationCap className="h-4 w-4 text-blue-600" /> <UiText text={"Dream university"} />
                 </h3>
                 <button
                   onClick={() => navigate(`/admission/universities/${targetUniversity.slug}`)}
@@ -346,7 +348,7 @@ export default function PublicProfile() {
             <div className="achievement-collection mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
               {showcaseBadges.map((b) => (
                 <AchievementCard key={b.id} track={b.track} band={b.band} tier={b.tier} pinned={b.pinned} compact>
-                  {b.pinned ? <span className="mt-3 inline-flex items-center gap-1 text-[10px] font-bold text-red-700"><Star className="h-3 w-3 fill-current" /> Pinned</span> : null}
+                  {b.pinned ? <span className="mt-3 inline-flex items-center gap-1 text-[10px] font-bold text-red-700"><Star className="h-3 w-3 fill-current" /> <UiText text={"Pinned"} /></span> : null}
                 </AchievementCard>
               ))}
             </div>
@@ -360,7 +362,7 @@ export default function PublicProfile() {
 function Kpi({ icon, label, value }: { icon: React.ReactNode; label: string; value: React.ReactNode }) {
   return (
     <div className="surface-card p-4">
-      <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-blue-600">{icon} {label}</span>
+      <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-blue-600">{icon} <UiText text={label} /></span>
       <p className="mt-1 text-2xl font-black text-slate-900">{value}</p>
     </div>
   )

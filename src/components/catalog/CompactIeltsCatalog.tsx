@@ -1,3 +1,4 @@
+import { useCopy } from '@/i18n/interface'
 import { useStudyAccessPrompt } from '@/features/billing/useStudyAccessPrompt'
 import StudyAccessChip from '@/features/billing/StudyAccessChip'
 import UiText from '@/components/common/UiText'
@@ -86,6 +87,7 @@ export default function CompactIeltsCatalog({
   activeFilter,
   onFilterChange,
 }: CompactIeltsCatalogProps) {
+  const { c: uiCopy } = useCopy()
   const studyAccess = useStudyAccessPrompt()
   const meta = SECTION_META[section]
   const HeroIcon = meta.icon
@@ -113,11 +115,11 @@ export default function CompactIeltsCatalog({
             <h1 className="mt-2 text-[2.7rem] font-black leading-none tracking-[-0.065em] text-slate-950 sm:text-6xl lg:text-[4.8rem]">
               IELTS <span className="bg-gradient-to-r from-red-700 via-red-600 to-rose-500 bg-clip-text text-transparent"><UiText text={meta.label} /></span>
             </h1>
-            <p className="mt-4 max-w-2xl text-sm font-semibold leading-6 text-slate-600 sm:text-base">{meta.summary}</p>
+            <p className="mt-4 max-w-2xl text-sm font-semibold leading-6 text-slate-600 sm:text-base"><UiText text={meta.summary} /></p>
             <div className="mt-5 flex flex-wrap gap-2">
               <span className="rounded-full border border-red-100 bg-white/72 px-3 py-1.5 text-[11px] font-black text-red-700">{rows.length}  <UiText text={"tests"} /> </span>
-              <span className="rounded-full border border-slate-200/80 bg-white/72 px-3 py-1.5 text-[11px] font-black text-slate-600">{meta.detail}</span>
-              <span className="rounded-full border border-emerald-100 bg-emerald-50/80 px-3 py-1.5 text-[11px] font-black text-emerald-700">Progress saved</span>
+              <span className="rounded-full border border-slate-200/80 bg-white/72 px-3 py-1.5 text-[11px] font-black text-slate-600"><UiText text={meta.detail} /></span>
+              <span className="rounded-full border border-emerald-100 bg-emerald-50/80 px-3 py-1.5 text-[11px] font-black text-emerald-700"><UiText text={"Progress saved"} /></span>
             </div>
           </div>
 
@@ -130,11 +132,11 @@ export default function CompactIeltsCatalog({
                 <HeroIcon className="h-11 w-11" strokeWidth={1.55} />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-black uppercase tracking-[0.17em] text-slate-400">Test library</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.17em] text-slate-400"><UiText text={"Test library"} /></p>
                 <p className="mt-1 text-3xl font-black tracking-[-0.05em] text-slate-950">{availableCount}</p>
-                <p className="text-xs font-bold text-slate-500">available now</p>
+                <p className="text-xs font-bold text-slate-500"><UiText text={"available now"} /></p>
                 <div className="mt-4 flex items-center gap-2 text-xs font-black text-emerald-700">
-                  <CheckCircle2 className="h-4 w-4" /> {completedCount} completed
+                  <CheckCircle2 className="h-4 w-4" /> {completedCount} <UiText text={"completed"} />
                 </div>
               </div>
             </div>
@@ -158,7 +160,7 @@ export default function CompactIeltsCatalog({
                 type="search"
                 value={searchTerm}
                 onChange={(event) => onSearchChange(event.target.value)}
-                placeholder="Search test..."
+                placeholder={uiCopy("Search test...")}
                 className="h-11 w-full rounded-full border border-white/90 bg-white/86 pl-10 pr-4 text-sm text-slate-900 shadow-[0_8px_22px_rgba(30,64,175,.06)] outline-none transition placeholder:text-slate-400 focus:border-red-300 focus:bg-white focus:ring-4 focus:ring-red-100"
               />
             </label>
@@ -166,7 +168,7 @@ export default function CompactIeltsCatalog({
         </div>
 
         {filters && activeFilter && onFilterChange ? (
-          <div className="ielts-catalog-filters relative mt-5 flex flex-wrap gap-2" role="group" aria-label={`${meta.label} test type`}>
+          <div className="ielts-catalog-filters relative mt-5 flex flex-wrap gap-2" role="group" aria-label={uiCopy("{{value1}} test type", { value1: String(meta.label) })}>
             {filters.map((filter) => (
               <button
                 key={filter.value}
@@ -183,7 +185,7 @@ export default function CompactIeltsCatalog({
 
         {rows.length === 0 ? (
           <div className="relative mt-5 rounded-[1.75rem] border border-dashed border-blue-200 bg-white/64 px-4 py-12 text-center text-sm font-semibold text-slate-500">
-            No tests found.
+            <UiText text={"No tests found."} />
           </div>
         ) : (
           <div className="ielts-catalog-grid relative mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -207,28 +209,28 @@ export default function CompactIeltsCatalog({
                   {row.completed ? (
                     <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-black text-emerald-700">
                       <CheckCircle2 className="h-3.5 w-3.5" />
-                      {row.band !== undefined && <strong>Band {row.band.toFixed(1)} ·</strong>}
+                      {row.band !== undefined && <strong><UiText text={"Band"} /> {row.band.toFixed(1)} ·</strong>}
                       <UiText text={"Completed"} /> </span>
                   ) : row.progressLabel ? (
-                    <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-black text-amber-700">{row.progressLabel}</span>
+                    <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-black text-amber-700"><UiText text={row.progressLabel} /></span>
                   ) : !row.available ? (
                     <Lock className="h-5 w-5 shrink-0 text-slate-400" />
                   ) : null}
                 </div>
                 <h3 className={`mt-3 font-black tracking-[-0.04em] text-slate-950 ${section === 'listening' ? 'whitespace-nowrap text-[clamp(1rem,2.2vw,1.5rem)]' : 'text-2xl'}`}>{row.title}</h3>
                 <p className="mt-2 line-clamp-2 text-sm font-medium leading-6 text-slate-500">{row.subtitle}</p>
-                {row.result ? <CatalogScore {...row.result} /> : row.band !== undefined ? <CatalogScore score={row.band} maximum={9} label="Band score" detail={row.scoreLabel} /> : row.scoreLabel ? (() => {
+                {row.result ? <CatalogScore {...row.result} /> : row.band !== undefined ? <CatalogScore score={row.band} maximum={9} label={uiCopy("Band score")} detail={row.scoreLabel} /> : row.scoreLabel ? (() => {
                   const count = /^(\d+)\/(\d+) correct$/.exec(row.scoreLabel)
-                  return count && Number(count[2]) > 0 ? <CatalogScore score={Number(count[1])} maximum={Number(count[2])} label="Correct answers" detail={row.scoreLabel} completed={!!row.completed} /> : <p className="mt-2 text-sm font-bold text-slate-600">{row.scoreLabel}</p>
+                  return count && Number(count[2]) > 0 ? <CatalogScore score={Number(count[1])} maximum={Number(count[2])} label={uiCopy("Correct answers")} detail={row.scoreLabel} completed={!!row.completed} /> : <p className="mt-2 text-sm font-bold text-slate-600"><UiText text={row.scoreLabel} /></p>
                 })() : null}
 
                 <div className="mt-auto flex flex-wrap items-end justify-between gap-4 pt-7">
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-bold text-slate-500">
                     {row.durationMinutes ? <span className="inline-flex items-center gap-1.5"><Clock3 className="h-4 w-4" />{row.durationMinutes}  <UiText text={"min"} /> </span> : null}
-                    <span>{row.detail}</span>
+                    <span><UiText text={row.detail} /></span>
                   </div>
                   <span className={`inline-flex items-center gap-1.5 text-sm font-black ${row.available ? 'text-red-700' : 'text-amber-600'}`}>
-                    {row.available ? row.completed ? 'Retake' : 'Open' : 'Coming soon'}
+                    {row.available ? row.completed ? <UiText text={"Retake"} /> : <UiText text={"Open"} /> : <UiText text={"Coming soon"} />}
                     {row.available ? <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /> : null}
                   </span>
                 </div>

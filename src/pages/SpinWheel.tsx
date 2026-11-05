@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { ApiError, apiClient } from '@/lib/apiClient'
 import { useCountdown } from '@/features/billing/useWheelDiscount'
@@ -269,7 +270,7 @@ export default function SpinWheel() {
   if (app === null) return <main className="spin-page"><section className="spin-card">
     <img src="/ivygoo-icon-192.png" alt="" className="spin-card-logo" />
     <h1>{t('Chegirma barabani', 'Колесо скидок', 'Discount wheel')}</h1>
-    <p>Barabanni Telegram bot ichida oching. · Откройте колесо в Telegram-боте. · Open the wheel inside the Telegram bot.</p>
+    <p><UiText text="Open the wheel inside the Telegram bot." /></p>
     <a className="spin-primary" href="https://t.me/IvyGoo_bot?start=spin">@IvyGoo_bot</a>
   </section></main>
 

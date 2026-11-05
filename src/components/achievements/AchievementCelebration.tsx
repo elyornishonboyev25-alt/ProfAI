@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRight, Share2, X } from 'lucide-react'
@@ -13,6 +15,7 @@ const COLORS = ['#e2e8f0', '#e24653', '#ffffff', '#aeb9cc']
 const GLOW: Record<number, string> = { 6: '#d8a178', 7: '#e8bd65', 8: '#cbd3df', 9: '#a8dce8' }
 
 export default function AchievementCelebration() {
+  const { c: uiCopy } = useCopy()
   const current = useCelebrationStore((state) => state.current)
   const dismiss = useCelebrationStore((state) => state.dismiss)
   const pushToast = useToastStore((state) => state.pushToast)
@@ -82,42 +85,42 @@ export default function AchievementCelebration() {
             animate={{ y: '95vh', opacity: [0, 1, 1, 0], rotate: piece.rotate }}
             transition={{ delay: piece.delay, duration: piece.duration, ease: 'easeIn' }} />)}
         </div>
-        <motion.section ref={dialogRef} role="dialog" aria-modal="true" aria-label={`${meta.title} achievement unlocked`}
+        <motion.section ref={dialogRef} role="dialog" aria-modal="true" aria-label={uiCopy("{{value1}} achievement unlocked", { value1: String(meta.title) })}
           initial={minimalMotion ? { opacity: 0 } : { opacity: 0, scale: .83, y: 25 }}
           animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: .94 }}
           transition={{ type: 'spring', stiffness: 230, damping: 22 }} onClick={(event) => event.stopPropagation()}
           className="achievement-dialog relative my-auto w-full max-w-[600px] overflow-hidden rounded-[2rem] border border-white/65 px-5 pb-7 pt-8 text-center text-white sm:px-11">
           <div style={{ backgroundColor: GLOW[tier] }} className="pointer-events-none absolute left-1/2 top-28 h-72 w-72 -translate-x-1/2 rounded-full opacity-30 blur-[65px]" />
-          <button type="button" onClick={dismiss} aria-label="Close achievement" className="absolute right-4 top-4 z-10 rounded-full border border-white/30 bg-white/10 p-2 text-white/80 transition hover:bg-white/20 hover:text-white"><X className="h-4 w-4" /></button>
-          <p className="relative text-[11px] font-bold uppercase tracking-[.28em] text-white/85">Ivygoo Honors</p>
-          <h2 className="relative mt-2 text-[clamp(1.8rem,5.5vw,3rem)] font-black leading-tight tracking-[-.05em] drop-shadow-[0_3px_12px_rgba(0,0,0,.3)]">Achievement Unlocked!</h2>
+          <button type="button" onClick={dismiss} aria-label={uiCopy("Close achievement")} className="absolute right-4 top-4 z-10 rounded-full border border-white/30 bg-white/10 p-2 text-white/80 transition hover:bg-white/20 hover:text-white"><X className="h-4 w-4" /></button>
+          <p className="relative text-[11px] font-bold uppercase tracking-[.28em] text-white/85"><UiText text={"Ivygoo Honors"} /></p>
+          <h2 className="relative mt-2 text-[clamp(1.8rem,5.5vw,3rem)] font-black leading-tight tracking-[-.05em] drop-shadow-[0_3px_12px_rgba(0,0,0,.3)]"><UiText text={"Achievement Unlocked!"} /></h2>
           <motion.div className="relative mx-auto mt-1 flex justify-center drop-shadow-[0_18px_22px_rgba(0,0,0,.32)]"
             initial={minimalMotion ? undefined : { scale: .5, rotate: -15 }} animate={{ scale: 1, rotate: 0 }}
             transition={{ delay: .16, type: 'spring', stiffness: 170, damping: 15 }}>
             <SkillBadge track={current.track} band={current.band} size={250} />
           </motion.div>
-          <p className="relative mt-1 text-xl font-extrabold tracking-tight">{meta.title}</p>
-          <p className="relative mt-1 text-xs font-semibold text-white/85">{TIER_NAME[tier]} medal · Tier {tier} · {meta.label}</p>
-          <p className="relative mt-3 text-3xl font-black tracking-tight">{formatAchievementScore(current.track, current.band)} <span className="text-sm font-semibold tracking-normal text-white/80">{meta.group === 'IELTS' ? 'band' : 'score'}</span></p>
+          <p className="relative mt-1 text-xl font-extrabold tracking-tight"><UiText text={meta.title} /></p>
+          <p className="relative mt-1 text-xs font-semibold text-white/85">{TIER_NAME[tier]} <UiText text={"medal · Tier"} /> {tier} · <UiText text={meta.label} /></p>
+          <p className="relative mt-3 text-3xl font-black tracking-tight">{formatAchievementScore(current.track, current.band)} <span className="text-sm font-semibold tracking-normal text-white/80">{meta.group === 'IELTS' ? <UiText text={"band"} /> : <UiText text={"score"} />}</span></p>
           <div className="relative mx-auto mt-6 max-w-md">
             <div className="flex items-center justify-between gap-3 text-xs font-semibold text-white/85">
-              <span>{next === null ? 'Highest tier achieved' : `Progress to Tier ${tier + 1}`}</span>
-              <span>{next === null ? 'Complete' : `${formatAchievementScore(current.track, next)} target`}</span>
+              <span>{next === null ? <UiText text={"Highest tier achieved"} /> : <UiText text={"Progress to Tier {{value1}}"} values={{ value1: String(tier + 1) }} />}</span>
+              <span>{next === null ? <UiText text={"Complete"} /> : <UiText text={"{{value1}} target"} values={{ value1: String(formatAchievementScore(current.track, next)) }} />}</span>
             </div>
             <div className="mt-2 h-3 overflow-hidden rounded-full border border-white/45 bg-white/30 shadow-inner">
               <motion.div initial={{ width: 0 }} animate={{ width: `${progress}%` }} transition={{ delay: .5, duration: .8 }}
                 className="h-full rounded-full bg-[linear-gradient(90deg,#a52738,#ef424a,#ffc1b2)] shadow-[0_0_12px_rgba(255,85,96,.6)]" />
             </div>
-            <p className="mt-2 text-sm text-white/85">{next === null ? 'You reached the highest honor for this exam.' : `${formatAchievementScore(current.track, gap)} more ${meta.group === 'IELTS' ? 'band points' : 'points'} to Tier ${tier + 1}`}</p>
+            <p className="mt-2 text-sm text-white/85">{next === null ? <UiText text={"You reached the highest honor for this exam."} /> : <UiText text={"{{value1}} more {{value2}} to Tier {{value3}}"} values={{ value1: String(formatAchievementScore(current.track, gap)), value2: String(meta.group === 'IELTS' ? 'band points' : 'points'), value3: String(tier + 1) }} />}</p>
           </div>
           <div className="relative mt-7 grid gap-3 sm:grid-cols-2">
             <button type="button" onClick={() => { dismiss(); navigate('/account#achievements') }}
               className="achievement-btn">
-              View collection <ArrowRight className="h-4 w-4" />
+              <UiText text={"View collection"} /> <ArrowRight className="h-4 w-4" />
             </button>
             <button type="button" onClick={() => void share()}
               className="achievement-btn achievement-btn--red">
-              <Share2 className="h-4 w-4" /> Share
+              <Share2 className="h-4 w-4" /> <UiText text={"Share"} />
             </button>
           </div>
         </motion.section>

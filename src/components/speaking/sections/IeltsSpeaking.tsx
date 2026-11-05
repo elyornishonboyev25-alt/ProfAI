@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useEffect, useRef, useState } from 'react'
 import { AnswerRecording, canRecordAudio, microphoneError } from '@/lib/speakingMedia'
 import { motion } from 'framer-motion'
@@ -22,13 +23,12 @@ export default function IeltsSpeaking() {
       <div className="surface-card p-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="inline-flex items-center gap-2 text-xl font-black text-slate-900">
-            <BookOpen className="h-5 w-5 text-red-600" /> IELTS Speaking Library
+            <BookOpen className="h-5 w-5 text-red-600" /> <UiText text={"IELTS Speaking Library"} />
           </h2>
-          <span className="soft-chip">Questions + model answers</span>
+          <span className="soft-chip"><UiText text={"Questions + model answers"} /></span>
         </div>
         <p className="mt-2 text-sm text-slate-600">
-          Practise real exam-style questions. Each one has a hidden Band 8 model answer — try answering aloud first, then
-          reveal it to compare.
+          <UiText text={"Practise real exam-style questions. Each one has a hidden Band 8 model answer — try answering aloud first, then reveal it to compare."} />
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           {([1, 2, 3] as Part[]).map((p) => (
@@ -41,7 +41,7 @@ export default function IeltsSpeaking() {
                   : 'border-red-200 bg-white text-slate-700 hover:border-red-300'
               }`}
             >
-              Part {p}
+              <UiText text={"Part"} /> {p}
             </button>
           ))}
         </div>
@@ -144,7 +144,7 @@ function CueCardPractice({ card }: { card: Part2Card }) {
           <p className="text-lg font-black text-slate-900">{card.title}</p>
           {phase !== 'idle' ? (
             <span className={`rounded-full px-3 py-1 text-xs font-bold text-white ${phase === 'prep' ? 'bg-amber-500' : 'bg-red-600'}`}>
-              {phase === 'prep' ? `Prep ${seconds}s` : `Speak ${seconds}s`}
+              {phase === 'prep' ? <UiText text={"Prep {{value1}}s"} values={{ value1: String(seconds) }} /> : <UiText text={"Speak {{value1}}s"} values={{ value1: String(seconds) }} />}
             </span>
           ) : null}
         </div>
@@ -158,13 +158,13 @@ function CueCardPractice({ card }: { card: Part2Card }) {
         <div className="mt-4 flex flex-wrap gap-2">
           {phase === 'idle' ? (
             <button onClick={startPrep} className="arena-primary-btn text-sm">
-              <Timer className="mr-1.5 h-4 w-4" /> Start 1-min prep
+              <Timer className="mr-1.5 h-4 w-4" /> <UiText text={"Start 1-min prep"} />
             </button>
           ) : (
-            <button onClick={reset} className="arena-secondary-btn text-sm">Reset timer</button>
+            <button onClick={reset} className="arena-secondary-btn text-sm"><UiText text={"Reset timer"} /></button>
           )}
           {phase === 'prep' ? (
-            <button onClick={startSpeak} className="arena-secondary-btn text-sm">Skip to speaking</button>
+            <button onClick={startSpeak} className="arena-secondary-btn text-sm"><UiText text={"Skip to speaking"} /></button>
           ) : null}
         </div>
       </motion.div>
@@ -174,7 +174,7 @@ function CueCardPractice({ card }: { card: Part2Card }) {
       <SampleToggle revealed={revealed} onToggle={() => setRevealed((v) => !v)} sample={card.sample} />
 
       <div className="surface-card p-4">
-        <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Rounding-off question</p>
+        <p className="text-xs font-bold uppercase tracking-wide text-slate-500"><UiText text={"Rounding-off question"} /></p>
         <p className="mt-1 text-sm font-semibold text-slate-800">{card.followUp}</p>
       </div>
     </div>
@@ -202,7 +202,7 @@ function TopicList({
           }`}
         >
           {it.icon ? <span>{it.icon}</span> : null}
-          <span className="truncate capitalize">{it.label}</span>
+          <span className="truncate capitalize"><UiText text={it.label} /></span>
         </button>
       ))}
     </div>
@@ -232,7 +232,7 @@ function SampleToggle({ revealed, onToggle, sample, compact }: { revealed: boole
         className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-bold text-red-700 transition hover:bg-red-100"
       >
         {revealed ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-        {revealed ? 'Hide sample answer' : 'Show sample answer'}
+        {revealed ? <UiText text={"Hide sample answer"} /> : <UiText text={"Show sample answer"} />}
       </button>
       {revealed ? (
         <motion.div
@@ -240,7 +240,7 @@ function SampleToggle({ revealed, onToggle, sample, compact }: { revealed: boole
           animate={{ opacity: 1, height: 'auto' }}
           className="mt-2 overflow-hidden rounded-2xl border border-emerald-100 bg-emerald-50/50 p-3"
         >
-          <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700">Model answer · Band 8</p>
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700"><UiText text={"Model answer · Band 8"} /></p>
           <p className="text-sm leading-7 text-slate-700">{sample}</p>
         </motion.div>
       ) : null}
@@ -317,15 +317,15 @@ function SelfRecorder() {
   return (
     <div className="surface-card flex flex-wrap items-center gap-3 p-4">
       <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-red-600">
-        <Mic className="h-4 w-4" /> Record yourself
+        <Mic className="h-4 w-4" /> <UiText text={"Record yourself"} />
       </span>
       {!recording ? (
         <button disabled={busy} onClick={() => void start()} className="arena-secondary-btn text-sm disabled:opacity-50">
-          <Play className="mr-1.5 h-3.5 w-3.5" /> Record
+          <Play className="mr-1.5 h-3.5 w-3.5" /> <UiText text={"Record"} />
         </button>
       ) : (
         <button disabled={busy} onClick={() => void stop()} className="arena-primary-btn bg-gradient-to-r from-slate-800 to-slate-700 text-sm disabled:opacity-50">
-          <Square className="mr-1.5 h-3.5 w-3.5 fill-white" /> Stop
+          <Square className="mr-1.5 h-3.5 w-3.5 fill-white" /> <UiText text={"Stop"} />
         </button>
       )}
       {error ? <p role="alert" className="w-full text-sm text-red-600">{error}</p> : null}
@@ -335,7 +335,7 @@ function SelfRecorder() {
         </audio>
       ) : (
         <span className="inline-flex items-center gap-1 text-xs text-slate-400">
-          <Pause className="h-3.5 w-3.5" /> {unsupported ? 'Recording not supported here' : 'Record to compare with the model answer'}
+          <Pause className="h-3.5 w-3.5" /> {unsupported ? <UiText text={"Recording not supported here"} /> : <UiText text={"Record to compare with the model answer"} />}
         </span>
       )}
     </div>

@@ -300,7 +300,7 @@ export default function Profile() {
                   <div key={group.label} className="mr-group">
                     <h3 className="mr-group-title">
                       <CalendarDays aria-hidden="true" />
-                      <span>{group.label}</span>
+                      <span><UiText text={group.label} /></span>
                       <small>{group.items.length}</small>
                     </h3>
                     <ol className="mr-rows">

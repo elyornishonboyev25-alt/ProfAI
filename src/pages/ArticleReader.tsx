@@ -1,3 +1,5 @@
+import { translateInterface } from '@/i18n/interface'
+import { useCopy } from '@/i18n/interface'
 import { textOffsets, clipTextRange } from '@/utils/textRanges'
 import { BrandLogo } from '@/components/brand/BrandLogo'
 import UiText from '@/components/common/UiText'
@@ -140,7 +142,7 @@ function renderRichText(
             event.stopPropagation()
             if (!window.getSelection()?.toString()) onMarkClick(match.highlight.id, event.currentTarget)
           }}
-          title="Highlightni boshqarish"
+          title={translateInterface('Manage highlight')}
           style={{ backgroundColor: HIGHLIGHT_BG[match.highlight.color], color: 'inherit' }}
           className="cursor-text rounded-sm [box-decoration-break:clone] [-webkit-box-decoration-break:clone]"
         >
@@ -168,6 +170,7 @@ function renderRichText(
 }
 
 export default function ArticleReader() {
+  const { c: uiCopy } = useCopy()
   const { slug } = useParams<{ slug: string }>()
   const article = slug ? getArticleBySlug(slug) : undefined
 
@@ -402,11 +405,11 @@ export default function ArticleReader() {
           <main className="min-w-0 space-y-5">
             <header className="article-reader-glass article-reader-header-glass flex min-h-[7rem] items-center justify-between gap-5 rounded-[2.35rem] px-5 py-4 sm:px-8 lg:px-10">
               <div className="flex min-w-0 items-center gap-5 lg:gap-10">
-                <Link to="/dashboard" className="flex shrink-0 items-center gap-2.5" aria-label="Ivygoo home">
+                <Link to="/dashboard" className="flex shrink-0 items-center gap-2.5" aria-label={uiCopy("Ivygoo home")}>
                   <BrandLogo height={56} />
                 </Link>
 
-                <nav aria-label="Breadcrumb" className="hidden min-w-0 items-center gap-3 text-[1.12rem] font-medium text-slate-500 md:flex lg:text-[1.28rem]">
+                <nav aria-label={uiCopy("Breadcrumb")} className="hidden min-w-0 items-center gap-3 text-[1.12rem] font-medium text-slate-500 md:flex lg:text-[1.28rem]">
                   <Link to="/dashboard" className="transition hover:text-red-700"> <UiText text={"Home"} /> </Link>
                   <ChevronRight className="h-5 w-5 shrink-0 text-slate-400" />
                   <Link to="/articles" className="transition hover:text-red-700"> <UiText text={"Library"} /> </Link>
@@ -428,7 +431,7 @@ export default function ArticleReader() {
                 className={`article-reader-icon-button grid h-[4.7rem] w-[4.7rem] shrink-0 place-items-center rounded-[1.7rem] transition hover:-translate-y-0.5 ${
                   bookmarked ? 'text-red-700' : 'text-red-600 hover:text-red-800'
                 }`}
-                title={bookmarked ? 'Remove bookmark' : 'Save article'}
+                title={bookmarked ? uiCopy("Remove bookmark") : 'Save article'}
               >
                 <Bookmark className="h-8 w-8" fill={bookmarked ? 'currentColor' : 'none'} />
               </button>
@@ -550,7 +553,7 @@ export default function ArticleReader() {
                           <button
                             type="button"
                             onClick={() => speakWord(entry.term)}
-                            aria-label={`Pronounce ${entry.term}`}
+                            aria-label={uiCopy("Pronounce {{value1}}", { value1: String(entry.term) })}
                             className={`rounded-lg p-1.5 ${prefs.theme === 'dark' ? 'text-slate-400 hover:text-rose-300' : 'text-red-500 hover:bg-red-50 hover:text-red-700'}`}
                           >
                             <Volume2 className="h-3.5 w-3.5" />
@@ -602,7 +605,7 @@ export default function ArticleReader() {
                       onClick={() => updatePrefs({ fontScale: prefs.fontScale - FONT_SCALE_STEP })}
                       disabled={prefs.fontScale <= FONT_SCALE_MIN + 0.001}
                       className="grid h-10 w-10 place-items-center rounded-xl text-base font-black text-slate-700 transition hover:bg-white disabled:opacity-35"
-                      aria-label="Smaller text"
+                      aria-label={uiCopy("Smaller text")}
                     >
                       A−
                     </button>
@@ -612,7 +615,7 @@ export default function ArticleReader() {
                       onClick={() => updatePrefs({ fontScale: prefs.fontScale + FONT_SCALE_STEP })}
                       disabled={prefs.fontScale >= FONT_SCALE_MAX - 0.001}
                       className="grid h-10 w-10 place-items-center rounded-xl text-lg font-black text-slate-900 transition hover:bg-white disabled:opacity-35"
-                      aria-label="Larger text"
+                      aria-label={uiCopy("Larger text")}
                     >
                       A+
                     </button>
@@ -631,7 +634,7 @@ export default function ArticleReader() {
                         key={value}
                         type="button"
                         onClick={() => updatePrefs({ theme: value })}
-                        aria-label={`${label} reading theme`}
+                        aria-label={uiCopy("{{value1}} reading theme", { value1: String(label) })}
                         aria-pressed={prefs.theme === value}
                         title={label}
                         className={`grid h-10 w-10 place-items-center rounded-xl transition ${
@@ -650,14 +653,14 @@ export default function ArticleReader() {
                     onClick={() => updatePrefs({ font: prefs.font === 'serif' ? 'sans' : 'serif' })}
                     className="article-reader-segmented rounded-[1.15rem] px-3 py-3 text-sm font-bold text-slate-700 transition hover:-translate-y-0.5 hover:text-red-700"
                   >
-                    {prefs.font === 'serif' ? 'Serif font' : 'Sans font'}
+                    {prefs.font === 'serif' ? <UiText text={"Serif font"} /> : <UiText text={"Sans font"} />}
                   </button>
                   <button
                     type="button"
                     onClick={() => updatePrefs({ width: prefs.width === 'cozy' ? 'wide' : 'cozy' })}
                     className="article-reader-segmented rounded-[1.15rem] px-3 py-3 text-sm font-bold text-slate-700 transition hover:-translate-y-0.5 hover:text-red-700"
                   >
-                    {prefs.width === 'cozy' ? 'Cozy width' : 'Wide width'}
+                    {prefs.width === 'cozy' ? <UiText text={"Cozy width"} /> : <UiText text={"Wide width"} />}
                   </button>
                 </div>
               </div>
@@ -726,7 +729,7 @@ export default function ArticleReader() {
                 onClick={() => onHighlight(color)}
                 className="grid h-7 w-7 place-items-center rounded-lg transition hover:scale-110"
                 style={{ backgroundColor: HIGHLIGHT_BG[color] }}
-                aria-label={`Highlight ${color}`}
+                aria-label={uiCopy("Highlight {{value1}}", { value1: String(color) })}
               >
                 <HighlighterIcon className="h-3.5 w-3.5" style={{ color: HIGHLIGHT_SWATCH[color] }} />
               </button>
@@ -777,7 +780,7 @@ export default function ArticleReader() {
       <AnimatePresence>
         {notesOpen ? (
           <motion.div className="fixed inset-0 z-[100]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <button className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setNotesOpen(false)} aria-label="Close notes" />
+            <button className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setNotesOpen(false)} aria-label={uiCopy("Close notes")} />
             <motion.aside
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
@@ -789,7 +792,7 @@ export default function ArticleReader() {
                 <h3 className="inline-flex items-center gap-2 font-black text-slate-900">
                   <StickyNote className="h-5 w-5 text-red-600" />
                    <UiText text={"Reading notes"} /> </h3>
-                <button onClick={() => setNotesOpen(false)} aria-label="Close notes" className="rounded-lg p-1.5 text-slate-500 hover:bg-red-100 hover:text-red-700">
+                <button onClick={() => setNotesOpen(false)} aria-label={uiCopy("Close notes")} className="rounded-lg p-1.5 text-slate-500 hover:bg-red-100 hover:text-red-700">
                   <X className="h-5 w-5" />
                 </button>
               </div>
@@ -807,7 +810,7 @@ export default function ArticleReader() {
                 <textarea
                   value={noteDraft}
                   onChange={(e) => setNoteDraft(e.target.value)}
-                  placeholder="Write a note, an idea, or a question…"
+                  placeholder={uiCopy("Write a note, an idea, or a question…")}
                   rows={3}
                   className="w-full resize-none rounded-xl border border-slate-200 bg-white p-3 text-sm leading-6 text-slate-800 outline-none focus:border-red-300 focus:ring-2 focus:ring-red-100"
                 />
@@ -832,7 +835,7 @@ export default function ArticleReader() {
                         <span className="text-[10px] uppercase tracking-wide text-slate-400">
                           {new Date(note.createdAt).toLocaleDateString()}
                         </span>
-                        <button onClick={() => removeNote(slug, note.id)} aria-label="Delete note" className="text-slate-400 hover:text-red-600">
+                        <button onClick={() => removeNote(slug, note.id)} aria-label={uiCopy("Delete note")} className="text-slate-400 hover:text-red-600">
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>

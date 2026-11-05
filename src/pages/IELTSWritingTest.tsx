@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import AttemptEntryBoundary from '@/components/tests/AttemptEntryBoundary'
 import { testReturnPath } from '@/utils/testNavigation'
 import { readActiveTestPaper } from '@/utils/activeTestPaper'
@@ -94,12 +95,12 @@ function WritingTestContent() {
             <Clock3 className="h-7 w-7" />
           </span>
           <h1 className="mt-4 text-3xl font-black text-slate-900">
-            {task || fullTest ? 'Writing Test Coming Soon' : 'Test Not Found'}
+            {task || fullTest ? <UiText text={"Writing Test Coming Soon"} /> : <UiText text={"Test Not Found"} />}
           </h1>
           <p className="mt-2 text-sm text-slate-600">
             {task || fullTest
-              ? 'This writing test is currently in preview mode. Writing Full Test 1 is live now.'
-              : 'The requested writing test could not be found.'}
+              ? <UiText text={"This writing test is currently in preview mode. Writing Full Test 1 is live now."} />
+              : <UiText text={"The requested writing test could not be found."} />}
           </p>
           <div className="mt-5 flex flex-wrap justify-center gap-2">
             <button
@@ -107,7 +108,7 @@ function WritingTestContent() {
               className="route-back-button"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back to Writing Tests
+              <UiText text={"Back to Writing Tests"} />
             </button>
           </div>
         </div>

@@ -937,20 +937,20 @@ export default function Podcast() {
           value={Math.min(currentTime, duration || 0)}
           onChange={(event) => seekTo(Number(event.target.value))}
           className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-          aria-label="Seek"
+          aria-label={c("Seek")}
         />
       </div>
 
       {/* Buttons */}
       <div className="podcast-player-buttons pointer-events-auto flex flex-wrap items-center justify-between gap-1 sm:gap-2">
         <div className="flex items-center gap-0.5 sm:gap-1">
-          <button type="button" onClick={togglePlay} className={controlButton} aria-label={playing ? 'Pause' : 'Play'}>
+          <button type="button" onClick={togglePlay} className={controlButton} aria-label={playing ? c("Pause") : c("Play")}>
             {playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 translate-x-0.5" />}
           </button>
-          <button type="button" onClick={() => skip(-10)} className={controlButton} aria-label="Back 10 seconds" title="Back 10s (J)">
+          <button type="button" onClick={() => skip(-10)} className={controlButton} aria-label={c("Back 10 seconds")} title={c("Back 10s (J)")}>
             <RotateCcw className="h-[18px] w-[18px]" />
           </button>
-          <button type="button" onClick={() => skip(10)} className={controlButton} aria-label="Forward 10 seconds" title="Forward 10s (L)">
+          <button type="button" onClick={() => skip(10)} className={controlButton} aria-label={c("Forward 10 seconds")} title={c("Forward 10s (L)")}>
             <RotateCw className="h-[18px] w-[18px]" />
           </button>
 
@@ -967,7 +967,7 @@ export default function Podcast() {
               value={muted ? 0 : volume}
               onChange={(event) => applyVolume(Number(event.target.value))}
               className="podcast-volume hidden h-1 w-16 cursor-pointer sm:block"
-              aria-label="Volume"
+              aria-label={c("Volume")}
             />
           </div>
 
@@ -991,8 +991,8 @@ export default function Podcast() {
               type="button"
               onClick={() => setOpenMenu((m) => (m === 'speed' ? null : 'speed'))}
               className="inline-flex h-9 items-center gap-0.5 rounded-xl px-1.5 text-xs font-bold text-slate-200 transition hover:bg-white/15 hover:text-white sm:gap-1 sm:px-2"
-              aria-label="Playback speed"
-              title="Speed"
+              aria-label={c("Playback speed")}
+              title={c("Speed")}
             >
               <Gauge className="h-4 w-4" />
               {speed}×
@@ -1005,7 +1005,7 @@ export default function Podcast() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 8, scale: 0.96 }}
                   transition={{ duration: minimalMotion ? 0 : 0.16 }}
-                  role="dialog" aria-modal="true" aria-label="Playback speed options" onClick={event => event.stopPropagation()} className="w-40 max-h-[80dvh] overflow-y-auto rounded-xl border border-white/10 bg-slate-900 p-2 shadow-2xl"
+                  role="dialog" aria-modal="true" aria-label={c("Playback speed options")} onClick={event => event.stopPropagation()} className="w-40 max-h-[80dvh] overflow-y-auto rounded-xl border border-white/10 bg-slate-900 p-2 shadow-2xl"
                 >
                   {SPEEDS.map((rate) => (
                     <button
@@ -1034,13 +1034,13 @@ export default function Podcast() {
             onClick={toggleCaptions}
             className={`${controlButton} ${captionsOn ? 'bg-white/15 text-white' : ''}`}
             aria-pressed={captionsOn}
-            aria-label="Captions"
-            title="Captions (C)"
+            aria-label={c("Captions")}
+            title={c("Captions (C)")}
           >
             {captionsOn ? <Captions className="h-[18px] w-[18px]" /> : <CaptionsOff className="h-[18px] w-[18px]" />}
           </button>
 
-          <button type="button" onClick={addBookmark} className={`${controlButton} hidden sm:inline-flex`} aria-label="Add bookmark" title="Bookmark (N)">
+          <button type="button" onClick={addBookmark} className={`${controlButton} hidden sm:inline-flex`} aria-label={c("Add bookmark")} title={c("Bookmark (N)")}>
             <BookmarkPlus className="h-[18px] w-[18px]" />
           </button>
 
@@ -1050,8 +1050,8 @@ export default function Podcast() {
               type="button"
               onClick={() => setOpenMenu((m) => (m === 'settings' ? null : 'settings'))}
               className={`${controlButton} ${openMenu === 'settings' ? 'bg-white/15 text-white' : ''}`}
-              aria-label="Settings"
-              title="Settings"
+              aria-label={c("Settings")}
+              title={c("Settings")}
             >
               <Settings className="h-[18px] w-[18px]" />
             </button>
@@ -1063,7 +1063,7 @@ export default function Podcast() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 8, scale: 0.96 }}
                   transition={{ duration: minimalMotion ? 0 : 0.16 }}
-                  role="dialog" aria-modal="true" aria-label="Player settings" onClick={event => event.stopPropagation()} className="w-80 max-w-full max-h-[80dvh] space-y-3 overflow-y-auto rounded-2xl border border-white/10 bg-slate-900 p-4 shadow-2xl"
+                  role="dialog" aria-modal="true" aria-label={c("Player settings")} onClick={event => event.stopPropagation()} className="w-80 max-w-full max-h-[80dvh] space-y-3 overflow-y-auto rounded-2xl border border-white/10 bg-slate-900 p-4 shadow-2xl"
                 >
                   {/* A–B loop */}
                   <div>
@@ -1103,7 +1103,7 @@ export default function Podcast() {
                   {/* Loop video */}
                   <button
                     type="button"
-                    aria-label="Loop whole video"
+                    aria-label={c("Loop whole video")}
                     aria-pressed={loopVideo}
                     onClick={() => setLoopVideo((v) => !v)}
                     className="flex w-full items-center justify-between rounded-lg bg-white/5 px-2.5 py-2 text-xs font-semibold text-slate-200 transition hover:bg-white/10"
@@ -1128,7 +1128,7 @@ export default function Podcast() {
                             captionSize === size.value ? 'bg-red-500/30 text-white' : 'bg-white/10 text-slate-300 hover:bg-white/20'
                           }`}
                         >
-                          {size.label}
+                          <UiText text={size.label} />
                         </button>
                       ))}
                     </div>
@@ -1183,8 +1183,8 @@ export default function Podcast() {
               type="button"
               onClick={toggleMini}
               className={`${controlButton} hidden sm:inline-flex ${mini ? 'bg-white/15 text-white' : ''}`}
-              aria-label="Mini player"
-              title="Mini player"
+              aria-label={c("Mini player")}
+              title={c("Mini player")}
             >
               <PictureInPicture2 className="h-[18px] w-[18px]" />
             </button>
@@ -1195,14 +1195,14 @@ export default function Podcast() {
               type="button"
               onClick={toggleTheater}
               className={`${controlButton} hidden sm:inline-flex ${theater ? 'bg-white/15 text-white' : ''}`}
-              aria-label="Theater mode"
-              title="Theater (T)"
+              aria-label={c("Theater mode")}
+              title={c("Theater (T)")}
             >
               <Monitor className="h-[18px] w-[18px]" />
             </button>
           ) : null}
 
-          <button type="button" onClick={toggleFullscreen} className={controlButton} aria-label="Fullscreen" title="Fullscreen (F)">
+          <button type="button" onClick={toggleFullscreen} className={controlButton} aria-label={c("Fullscreen")} title={c("Fullscreen (F)")}>
             {isFs ? <Minimize className="h-[18px] w-[18px]" /> : <Maximize className="h-[18px] w-[18px]" />}
           </button>
         </div>
@@ -1262,7 +1262,7 @@ export default function Podcast() {
               type="button"
               onClick={() => setMini(false)}
               className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur transition hover:bg-black/80"
-              aria-label="Close mini player"
+              aria-label={c("Close mini player")}
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -1335,7 +1335,7 @@ export default function Podcast() {
                   playerRef.current?.playVideo()
                 }}
                 className="podcast-play-orb flex h-16 w-16 items-center justify-center rounded-full text-white transition hover:scale-105"
-                aria-label="Replay"
+                aria-label={c("Replay")}
               >
                 <RotateCcw className="h-7 w-7" />
               </button>
@@ -1356,7 +1356,7 @@ export default function Podcast() {
               exit={{ opacity: 0 }}
               transition={{ duration: minimalMotion ? 0 : 0.2 }}
               className="podcast-cover group absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-slate-950 px-6 text-center"
-              aria-label="Play"
+              aria-label={c("Play")}
             >
               <img
                 src={artworkUrl}
@@ -1397,7 +1397,7 @@ export default function Podcast() {
 
   return (
     <div className="workspace-page podcast-library educational-podcast min-h-screen overflow-hidden px-3 pb-12 pt-4 text-slate-900 sm:px-6 lg:px-8">
-      {pendingEpisode && <div className="billing-lesson-dialog" role="dialog" aria-modal="true" aria-label="Podcast access"><AccessGate key={pendingEpisode.youtubeId} feature="podcast" resource={`podcast:${pendingEpisode.youtubeId}`} onCancel={() => setPendingEpisode(null)} onUnlocked={() => { const item = pendingEpisode; setPendingEpisode(null); void openEpisode(item, true) }} /></div>}
+      {pendingEpisode && <div className="billing-lesson-dialog" role="dialog" aria-modal="true" aria-label={c("Podcast access")}><AccessGate key={pendingEpisode.youtubeId} feature="podcast" resource={`podcast:${pendingEpisode.youtubeId}`} onCancel={() => setPendingEpisode(null)} onUnlocked={() => { const item = pendingEpisode; setPendingEpisode(null); void openEpisode(item, true) }} /></div>}
       <div className="podcast-aurora podcast-aurora-one" />
       <div className="podcast-aurora podcast-aurora-two" />
       <div className="podcast-aurora podcast-aurora-three" />
@@ -1431,7 +1431,7 @@ export default function Podcast() {
                 <div><p className="text-[10px] font-black uppercase tracking-[0.24em] text-red-600"> <UiText text={"Featured episode"} /> </p><h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950">{episode.title}</h2></div>
                 <span className="hidden rounded-full border border-white/80 bg-white/55 px-3 py-1 text-xs font-bold text-slate-600 backdrop-blur-xl sm:inline-flex">
                   {captionsAvailable ? <Languages className="mr-1.5 h-3.5 w-3.5 text-red-500" /> : <Headphones className="mr-1.5 h-3.5 w-3.5 text-red-500" />}
-                  {captionsAvailable ? 'English captions' : 'Audio ready'}
+                  {captionsAvailable ? <UiText text={"English captions"} /> : <UiText text={"Audio ready"} />}
                 </span>
               </div>
               <div className="relative">
@@ -1494,18 +1494,18 @@ export default function Podcast() {
                         <div className="podcast-transcript-empty mt-3">
                           <span className="podcast-transcript-orb"><Captions className="h-5 w-5" /></span>
                           <div>
-                            <p className="text-sm font-black text-slate-800">{captionsAvailable ? 'Captions live on the player' : 'Podcast ready without a transcript'}</p>
+                            <p className="text-sm font-black text-slate-800">{captionsAvailable ? <UiText text={"Captions live on the player"} /> : <UiText text={"Podcast ready without a transcript"} />}</p>
                             <p className="mt-1 text-xs leading-5 text-slate-500">
                               {captionsAvailable
                                 ? <> <UiText text={"Press"} /> <b className="text-red-600">C</b>  <UiText text={"or use the CC control to show English subtitles."} /> </>
-                                : 'Playback, speed, loops and bookmarks still work normally. YouTube CC will appear if the creator enables it.'}
+                                : <UiText text={"Playback, speed, loops and bookmarks still work normally. YouTube CC will appear if the creator enables it."} />}
                             </p>
                           </div>
                         </div>
                       )}
                     </article>
-                    <article className="podcast-detail-card"><div className="flex items-center justify-between"><h3><Bookmark className="h-4 w-4 text-amber-500" /> <UiText text={"Bookmarks"} /> </h3><button type="button" onClick={addBookmark} className="podcast-mini-action"><Plus className="h-3 w-3" /> <UiText text={"Add"} /> </button></div>{bookmarks.length ? <div className="mt-3 space-y-2">{bookmarks.map((time) => <div key={time} className="flex items-center gap-2 rounded-xl bg-white/55 p-2"><button type="button" onClick={() => { seekTo(time); playerRef.current?.playVideo() }} className="flex-1 text-left font-mono text-xs font-bold">{formatTime(time)}</button><button type="button" onClick={() => removeBookmark(time)} aria-label="Remove bookmark"><Trash2 className="h-3.5 w-3.5 text-slate-400" /></button></div>)}</div> : <p className="mt-3 text-xs leading-5 text-slate-500"> <UiText text={"Press"} /> <b>N</b>  <UiText text={"to save the current moment on this device."} /> </p>}</article>
-                    <article className="podcast-detail-card"><h3><Sparkles className="h-4 w-4 text-red-500" /> <UiText text={"Practice flow"} /> </h3><div className="mt-3 space-y-2">{LISTEN_STEPS.map((step, index) => { const Icon = step.icon; return <div key={step.title} className="flex items-center gap-2 rounded-xl bg-white/50 p-2"><span className="flex h-7 w-7 items-center justify-center rounded-lg bg-red-500 text-white"><Icon className="h-3.5 w-3.5" /></span><p className="text-xs font-bold"><span className="text-red-500">{index + 1}.</span> {step.title}</p></div> })}</div></article>
+                    <article className="podcast-detail-card"><div className="flex items-center justify-between"><h3><Bookmark className="h-4 w-4 text-amber-500" /> <UiText text={"Bookmarks"} /> </h3><button type="button" onClick={addBookmark} className="podcast-mini-action"><Plus className="h-3 w-3" /> <UiText text={"Add"} /> </button></div>{bookmarks.length ? <div className="mt-3 space-y-2">{bookmarks.map((time) => <div key={time} className="flex items-center gap-2 rounded-xl bg-white/55 p-2"><button type="button" onClick={() => { seekTo(time); playerRef.current?.playVideo() }} className="flex-1 text-left font-mono text-xs font-bold">{formatTime(time)}</button><button type="button" onClick={() => removeBookmark(time)} aria-label={c("Remove bookmark")}><Trash2 className="h-3.5 w-3.5 text-slate-400" /></button></div>)}</div> : <p className="mt-3 text-xs leading-5 text-slate-500"> <UiText text={"Press"} /> <b>N</b>  <UiText text={"to save the current moment on this device."} /> </p>}</article>
+                    <article className="podcast-detail-card"><h3><Sparkles className="h-4 w-4 text-red-500" /> <UiText text={"Practice flow"} /> </h3><div className="mt-3 space-y-2">{LISTEN_STEPS.map((step, index) => { const Icon = step.icon; return <div key={step.title} className="flex items-center gap-2 rounded-xl bg-white/50 p-2"><span className="flex h-7 w-7 items-center justify-center rounded-lg bg-red-500 text-white"><Icon className="h-3.5 w-3.5" /></span><p className="text-xs font-bold"><span className="text-red-500">{index + 1}.</span> <UiText text={step.title} /></p></div> })}</div></article>
                   </div>
                 </motion.div>
               ) : null}
@@ -1520,9 +1520,9 @@ export default function Podcast() {
             </div>
             <div className="podcast-continue-progress mt-6 h-2 overflow-hidden rounded-full bg-white/65"><div className="podcast-continue-progress-fill h-full rounded-full bg-gradient-to-r from-red-700 to-red-400 transition-all duration-300" style={{ width: `${Math.max(3, progress)}%` }} /></div>
             <div className="mt-6 flex items-center justify-center gap-7">
-              <button type="button" onClick={() => skip(-10)} className="podcast-skip-button" aria-label="Back 10 seconds"><SkipBack className="h-5 w-5 fill-current" /></button>
-              <button type="button" onClick={togglePlay} className="podcast-play-orb flex h-16 w-16 items-center justify-center rounded-full text-white" aria-label={playing ? 'Pause' : 'Play'}>{playing ? <Pause className="h-6 w-6 fill-current" /> : <Play className="h-6 w-6 translate-x-0.5 fill-current" />}</button>
-              <button type="button" onClick={() => skip(10)} className="podcast-skip-button" aria-label="Forward 10 seconds"><SkipForward className="h-5 w-5 fill-current" /></button>
+              <button type="button" onClick={() => skip(-10)} className="podcast-skip-button" aria-label={c("Back 10 seconds")}><SkipBack className="h-5 w-5 fill-current" /></button>
+              <button type="button" onClick={togglePlay} className="podcast-play-orb flex h-16 w-16 items-center justify-center rounded-full text-white" aria-label={playing ? c("Pause") : c("Play")}>{playing ? <Pause className="h-6 w-6 fill-current" /> : <Play className="h-6 w-6 translate-x-0.5 fill-current" />}</button>
+              <button type="button" onClick={() => skip(10)} className="podcast-skip-button" aria-label={c("Forward 10 seconds")}><SkipForward className="h-5 w-5 fill-current" /></button>
             </div>
             <div className="mt-6 grid grid-cols-3 gap-2 border-t border-white/55 pt-5 text-center">
               <button type="button" onClick={toggleCaptions} className={`podcast-quick-tool ${captionsOn ? 'is-active' : ''}`}><Captions className="h-4 w-4" /><span>CC</span></button>
@@ -1558,7 +1558,7 @@ export default function Podcast() {
                   type="button"
                   onClick={() => setShowHelp(false)}
                   className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/10 hover:text-white"
-                  aria-label="Close"
+                  aria-label={c("Close")}
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -1566,7 +1566,7 @@ export default function Podcast() {
               <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-1.5 sm:grid-cols-2">
                 {SHORTCUTS.map((row) => (
                   <div key={row.keys + row.action} className="flex items-center justify-between gap-3 py-1">
-                    <span className="text-sm text-slate-300">{row.action}</span>
+                    <span className="text-sm text-slate-300"><UiText text={row.action} /></span>
                     <kbd className="shrink-0 rounded-md border border-white/10 bg-white/5 px-2 py-0.5 font-mono text-[11px] font-semibold text-slate-200">
                       {row.keys}
                     </kbd>

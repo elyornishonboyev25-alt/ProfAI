@@ -253,6 +253,7 @@ function StandardTalkOverlay({ tutor }: { tutor: AiTutorController }) {
 }
 
 export function TalkOverlay() {
+  const { c: uiCopy } = useCopy()
   const { language: uiLanguage } = useCopy()
   const access = useAccountAccess()
   const canLive = Boolean(access?.active)
@@ -331,7 +332,7 @@ export function TalkOverlay() {
     <button onClick={end} className="flex h-10 w-10 items-center justify-center rounded-full text-slate-500 hover:bg-red-50" aria-label={t('End voice', 'Suhbatni tugatish', 'Завершить разговор')}><X size={18} /></button>
   </div>
 
-  return <div ref={dialog} role="dialog" aria-modal="true" aria-label="Ivygoo voice" className="coach-voice-stage fixed inset-0 z-[200] overflow-y-auto bg-slate-950 text-white">
+  return <div ref={dialog} role="dialog" aria-modal="true" aria-label={uiCopy("Ivygoo voice")} className="coach-voice-stage fixed inset-0 z-[200] overflow-y-auto bg-slate-950 text-white">
     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(159,18,57,.28),transparent_65%)]" />
     <div className="relative mx-auto flex min-h-full max-w-3xl flex-col items-center px-5 pb-10 pt-5 text-center">
       <div className="flex w-full items-center justify-between gap-3">

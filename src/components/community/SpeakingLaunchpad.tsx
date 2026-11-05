@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useState } from 'react'
 import { ArrowRight, AudioLines, Headphones, Mic, MicOff, Plus, RefreshCw, Shuffle, Sparkles, Users } from 'lucide-react'
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
@@ -52,7 +53,7 @@ export default function SpeakingLaunchpad({ hub, partner, canStart, onCreate, on
       <div className="zone-orbit zone-orbit-outer" /><div className="zone-orbit zone-orbit-inner" />
       <div className="zone-orbit-dot zone-orbit-dot-one" /><div className="zone-orbit-dot zone-orbit-dot-two" />
       <div className="zone-art-note"><span>✦</span>{t('Your voice belongs here.')}</div>
-      <div className="zone-hello"><span>{t('It starts with…')}</span><b>Hello<span>!</span></b><AudioLines size={22} /></div>
+      <div className="zone-hello"><span>{t('It starts with…')}</span><b><UiText text={"Hello"} /><span>!</span></b><AudioLines size={22} /></div>
       <div className="zone-mic-halo"><div className="zone-mic-sculpture"><Mic size={66} strokeWidth={1.3} /><span className="zone-mic-light" /></div></div>
       <div className="zone-wave">{Array.from({ length: 23 }, (_, index) => <i key={index} style={{ '--wave-height': `${14 + Math.round(Math.sin(index * .95) ** 2 * 35)}px`, '--wave-delay': `${index * -.12}s` } as React.CSSProperties} />)}</div>
       <div className="zone-art-label"><span /><b>{t('A little courage. A real connection.')}</b></div>

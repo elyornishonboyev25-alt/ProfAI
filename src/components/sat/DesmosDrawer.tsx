@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { createPortal } from 'react-dom'
 import './DesmosDrawer.css'
@@ -56,6 +58,7 @@ function initialPanelSize(): PanelSize {
 }
 
 export default function DesmosDrawer({ open, preload = false, docked, onDockedChange, onClose, workspace, allowDocking = true }: Props) {
+  const { c: uiCopy } = useCopy()
   const [expanded, setExpanded] = useState(false)
   const [dockWidth, setDockWidth] = useState<number | null>(null)
   const dockResizeRef = useRef<{ startX: number; width: number } | null>(null)
@@ -211,7 +214,7 @@ export default function DesmosDrawer({ open, preload = false, docked, onDockedCh
     <aside
       ref={panelRef}
       role="dialog"
-      aria-label="Desmos Graphing Calculator"
+      aria-label={uiCopy("Desmos Graphing Calculator")}
       aria-hidden={!open}
       style={floatingStyle}
       className={`desmos-panel ${docked ? 'desmos-docked' : 'desmos-floating'} ${expanded ? 'desmos-expanded' : ''} ${workspace ? 'desmos-bank' : ''} fixed flex-col overflow-hidden border border-[#c9cdd2] bg-white shadow-[0_28px_80px_rgba(15,23,42,0.3)] transition-[border-radius,box-shadow] duration-200 ${
@@ -235,9 +238,9 @@ export default function DesmosDrawer({ open, preload = false, docked, onDockedCh
           </span>
           <div className="flex min-w-0 items-baseline gap-2">
             <p className="truncate text-[13px] font-bold text-[#333]">Desmos</p>
-            <p className="hidden truncate text-[11px] font-medium text-[#777] sm:block">Graphing Calculator</p>
+            <p className="hidden truncate text-[11px] font-medium text-[#777] sm:block"><UiText text={"Graphing Calculator"} /></p>
           </div>
-          {!docked && !expanded ? <span className="hidden items-center gap-1 text-[10px] font-semibold text-slate-400 lg:flex"><Move className="h-3 w-3" /> Drag to move</span> : null}
+          {!docked && !expanded ? <span className="hidden items-center gap-1 text-[10px] font-semibold text-slate-400 lg:flex"><Move className="h-3 w-3" /> <UiText text={"Drag to move"} /></span> : null}
         </div>
 
         <div className="desmos-controls flex items-center gap-1">
@@ -246,7 +249,7 @@ export default function DesmosDrawer({ open, preload = false, docked, onDockedCh
             className="desmos-control">
             {expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
           </button>
-          {!docked && !expanded ? <button type="button" onClick={resetPosition} aria-label="Reset Desmos position" title="Reset position" className="desmos-control desmos-desktop"><RotateCcw className="h-4 w-4" /></button> : null}
+          {!docked && !expanded ? <button type="button" onClick={resetPosition} aria-label={uiCopy("Reset Desmos position")} title={uiCopy("Reset position")} className="desmos-control desmos-desktop"><RotateCcw className="h-4 w-4" /></button> : null}
           {allowDocking && <button
             type="button"
             onClick={() => { setExpanded(false); onDockedChange(!docked) }}
@@ -256,22 +259,22 @@ export default function DesmosDrawer({ open, preload = false, docked, onDockedCh
           >
             <Columns2 className="h-4 w-4" strokeWidth={2.4} />
           </button>}
-          <button type="button" onClick={reloadCalculator} aria-label="Reload Desmos" title="Reload Desmos" className="flex h-8 w-8 items-center justify-center rounded-md text-[#666] transition-colors hover:bg-[#e7e7e7] hover:text-[#222]">
+          <button type="button" onClick={reloadCalculator} aria-label={uiCopy("Reload Desmos")} title={uiCopy("Reload Desmos")} className="flex h-8 w-8 items-center justify-center rounded-md text-[#666] transition-colors hover:bg-[#e7e7e7] hover:text-[#222]">
             <RefreshCw className="h-3.5 w-3.5" />
           </button>
           <span className="mx-0.5 h-5 w-px bg-[#d5d8dc]" />
-          <button ref={closeRef} type="button" onClick={onClose} aria-label="Close Desmos" title="Close Desmos" className="flex h-8 w-8 items-center justify-center rounded-md text-[#555] transition-colors hover:bg-[#e5e5e5] hover:text-[#111]">
+          <button ref={closeRef} type="button" onClick={onClose} aria-label={uiCopy("Close Desmos")} title={uiCopy("Close Desmos")} className="flex h-8 w-8 items-center justify-center rounded-md text-[#555] transition-colors hover:bg-[#e5e5e5] hover:text-[#111]">
             <X className="h-4 w-4" />
           </button>
         </div>
       </header>
 
       {workspace && docked && !expanded ? <div
-        role="separator" aria-orientation="vertical" aria-label="Resize calculator panel"
+        role="separator" aria-orientation="vertical" aria-label={uiCopy("Resize calculator panel")}
         aria-valuemin={320} aria-valuemax={Math.max(320, window.innerWidth - 380)}
         aria-valuenow={dockWidth ?? Math.round(window.innerWidth * .5)}
         tabIndex={open ? 0 : -1} className="desmos-resize-handle"
-        title="Drag to resize · Arrow keys adjust width · Double-click to reset"
+        title={uiCopy("Drag to resize · Arrow keys adjust width · Double-click to reset")}
         onPointerDown={(event) => {
           dockResizeRef.current = { startX: event.clientX, width: panelRef.current?.getBoundingClientRect().width ?? 400 }
           event.currentTarget.setPointerCapture(event.pointerId)
@@ -295,7 +298,7 @@ export default function DesmosDrawer({ open, preload = false, docked, onDockedCh
         {mounted ? (
           <iframe
             key={reload}
-            title="Official Desmos Graphing Calculator"
+            title={uiCopy("Official Desmos Graphing Calculator")}
             src={DESMOS_GRAPHING_URL}
             sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-downloads allow-popups allow-popups-to-escape-sandbox allow-presentation"
             allow="clipboard-read; clipboard-write; fullscreen"
@@ -315,12 +318,12 @@ export default function DesmosDrawer({ open, preload = false, docked, onDockedCh
           <div role="status" aria-live="polite" className="absolute inset-0 z-10 flex items-center justify-center bg-[#fafafa] text-[#555]">
             <div className="w-full max-w-[15rem] px-5 text-center">
               <LoaderCircle className="mx-auto h-6 w-6 animate-spin text-[#2d9f67]" />
-              <p className="mt-3 text-xs font-bold">Loading Desmos Graphing Calculator…</p>
+              <p className="mt-3 text-xs font-bold"><UiText text={"Loading Desmos Graphing Calculator…"} /></p>
               {slow ? (
                 <>
-                  <p className="mt-1.5 text-[10px] leading-4 text-[#777]">The connection is taking longer than expected.</p>
-                  <button type="button" onClick={reloadCalculator} className="mt-3 rounded-md bg-[#2d9f67] px-3 py-2 text-[12px] font-bold text-white hover:bg-[#258458]">Try again</button>
-                  <a href={DESMOS_GRAPHING_URL} target="_blank" rel="noopener noreferrer" className="mt-3 flex items-center justify-center gap-1 text-xs underline">Open Desmos in a new tab <ExternalLink className="h-3 w-3" /></a>
+                  <p className="mt-1.5 text-[10px] leading-4 text-[#777]"><UiText text={"The connection is taking longer than expected."} /></p>
+                  <button type="button" onClick={reloadCalculator} className="mt-3 rounded-md bg-[#2d9f67] px-3 py-2 text-[12px] font-bold text-white hover:bg-[#258458]"><UiText text={"Try again"} /></button>
+                  <a href={DESMOS_GRAPHING_URL} target="_blank" rel="noopener noreferrer" className="mt-3 flex items-center justify-center gap-1 text-xs underline"><UiText text={"Open Desmos in a new tab"} /> <ExternalLink className="h-3 w-3" /></a>
                 </>
               ) : null}
             </div>

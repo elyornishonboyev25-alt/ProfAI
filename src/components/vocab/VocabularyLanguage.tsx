@@ -1,3 +1,4 @@
+import { useCopy } from '@/i18n/interface'
 import { useSyncExternalStore } from 'react'
 import type { VocabularyEntry } from '@/data/vocabularyCollections'
 import { getVocabularyTranslation, type VocabularyLanguage } from '@/utils/vocabularyTranslation'
@@ -28,8 +29,9 @@ export function useVocabularyLanguage() {
 }
 
 export function VocabularyLanguageToggle({ accent = 'red' }: { accent?: 'red' | 'blue' }) {
+  const { c: uiCopy } = useCopy()
   const language = useVocabularyLanguage()
-  return <div role="group" aria-label="Vocabulary translation language" className="inline-flex shrink-0 items-center gap-1 rounded-full border border-slate-200 bg-white/90 p-1">
+  return <div role="group" aria-label={uiCopy("Vocabulary translation language")} className="inline-flex shrink-0 items-center gap-1 rounded-full border border-slate-200 bg-white/90 p-1">
     {(['uz', 'ru'] as const).map((value) => <button
       key={value} type="button" lang={value} aria-pressed={language === value}
       onClick={() => {

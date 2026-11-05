@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { type FormEvent, type TouchEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useReducedMotion } from 'framer-motion'
@@ -178,7 +179,7 @@ function CommentDialog({ onClose, onSubmitted }: { onClose: () => void; onSubmit
           {errorField === 'name' && error && <p id="landing-comment-name-error" className="landing-comment-field-error" role="alert">{error}</p>}
         </div>
         <div className="landing-comment-row">
-          <div className="landing-comment-field"><label htmlFor="landing-comment-exam">{c('Preparation area')}</label><div className="landing-comment-select"><select id="landing-comment-exam" value={exam} onChange={event => { setExam(event.target.value as ReviewExam); setBandBefore(''); setBandAfter(''); if (errorField === 'scores') { setError(''); setErrorField(null) } }}><option value="General">{c('General')}</option><option value="IELTS">IELTS</option><option value="SAT">Digital SAT</option></select><ChevronDown size={17} aria-hidden="true" /></div></div>
+          <div className="landing-comment-field"><label htmlFor="landing-comment-exam">{c('Preparation area')}</label><div className="landing-comment-select"><select id="landing-comment-exam" value={exam} onChange={event => { setExam(event.target.value as ReviewExam); setBandBefore(''); setBandAfter(''); if (errorField === 'scores') { setError(''); setErrorField(null) } }}><option value="General">{c('General')}</option><option value="IELTS">IELTS</option><option value="SAT"><UiText text={"Digital SAT"} /></option></select><ChevronDown size={17} aria-hidden="true" /></div></div>
           <div className="landing-comment-field"><label htmlFor="landing-comment-rating">{c('Rating (optional)')}</label><div className="landing-comment-select"><select id="landing-comment-rating" value={rating} onChange={event => setRating(event.target.value)}><option value="">{c('No rating')}</option>{[5, 4, 3, 2, 1].map(value => <option key={value} value={value}>{value} / 5</option>)}</select><ChevronDown size={17} aria-hidden="true" /></div></div>
         </div>
         {(exam === 'IELTS' || exam === 'SAT') && <div className="landing-comment-score-group">

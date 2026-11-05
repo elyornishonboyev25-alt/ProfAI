@@ -209,10 +209,10 @@ export default function TestRunner() {
     return (
       <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-red-700">
-          <p>{error ?? 'Unable to load this test.'}</p>
+          <p>{error ?? <UiText text={"Unable to load this test."} />}</p>
           <button className="premium-back-btn mt-3" onClick={() => navigate('/dashboard')}>
             <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
+            <UiText text={"Back to Dashboard"} />
           </button>
         </div>
       </div>
@@ -225,7 +225,7 @@ export default function TestRunner() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-[#1F2937]">{test.title}</h1>
-            <p className="mt-1 text-sm text-[#6B7280]">{test.category} | {test.difficulty} | {test.questions.length}  <UiText text={"questions"} /> </p>
+            <p className="mt-1 text-sm text-[#6B7280]">{test.category} | <UiText text={test.difficulty} /> | {test.questions.length}  <UiText text={"questions"} /> </p>
           </div>
           <div className="inline-flex items-center rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700">
             <Clock3 className="mr-2 h-4 w-4" />
@@ -236,7 +236,7 @@ export default function TestRunner() {
         <div className="mt-5">
           <div className="mb-2 flex items-center justify-between text-xs text-[#6B7280]">
             <span> <UiText text={"Progress"} /> </span>
-            <span>{answeredCount}/{test.questions.length} answered</span>
+            <span>{answeredCount}/{test.questions.length} <UiText text={"answered"} /></span>
           </div>
           <div className="h-2.5 rounded-full bg-slate-100">
             <motion.div
@@ -309,13 +309,13 @@ export default function TestRunner() {
 
       <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_10px_24px_rgba(31,41,55,0.06)]">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-[#6B7280]">Submit your answers to compute weighted score, XP, and level progression.</p>
+          <p className="text-sm text-[#6B7280]"><UiText text={"Submit your answers to compute weighted score, XP, and level progression."} /></p>
           <button
             disabled={submitting || Boolean(result)}
             onClick={() => void submitAttempt()}
             className="rounded-xl bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
           >
-            {submitting ? 'Submitting...' : result ? 'Submitted' : 'Submit Attempt'}
+            {submitting ? <UiText text={"Submitting..."} /> : result ? <UiText text={"Submitted"} /> : <UiText text={"Submit Attempt"} />}
           </button>
         </div>
       </section>
@@ -330,18 +330,18 @@ export default function TestRunner() {
           >
             {result.leveledUp ? <LevelUpConfetti /> : null}
             <div className="relative z-10">
-              <h2 className="text-2xl font-semibold text-indigo-900">Attempt Results</h2>
+              <h2 className="text-2xl font-semibold text-indigo-900"><UiText text={"Attempt Results"} /></h2>
               <p className="mt-2 text-sm text-indigo-800">
-                Final Score <span className="font-bold">{result.finalScore.toFixed(1)}%</span> | XP Earned{' '}
+                <UiText text={"Final Score"} /> <span className="font-bold">{result.finalScore.toFixed(1)}%</span> <UiText text={"| XP Earned"} />{' '}
                 <span className="font-bold">+{result.xpEarned}</span>
               </p>
               <p className="mt-1 text-sm text-indigo-800">
-                 <UiText text={"Correct"} /> {result.correctAnswers}/{result.totalQuestions} | Level {result.levelBefore} to {result.levelAfter}
+                 <UiText text={"Correct"} /> {result.correctAnswers}/{result.totalQuestions} <UiText text={"| Level"} /> {result.levelBefore} <UiText text={"to"} /> {result.levelAfter}
               </p>
 
               {result.leveledUp ? (
                 <p className="mt-3 inline-flex items-center rounded-full bg-white px-3 py-1 text-xs font-semibold text-indigo-700">
-                  <Sparkles className="mr-1.5 h-4 w-4" /> Level up unlocked
+                  <Sparkles className="mr-1.5 h-4 w-4" /> <UiText text={"Level up unlocked"} />
                 </p>
               ) : null}
 
@@ -349,7 +349,7 @@ export default function TestRunner() {
                 <div className="mt-4 space-y-2">
                   {result.unlockedAchievements.map((achievement) => (
                     <p key={achievement.id} className="rounded-lg border border-indigo-200 bg-white px-3 py-2 text-sm text-indigo-800">
-                      Achievement: <span className="font-semibold">{achievement.title}</span> (+{achievement.xpReward} XP)
+                      <UiText text={"Achievement:"} /> <span className="font-semibold"><UiText text={achievement.title} /></span> (+{achievement.xpReward} XP)
                     </p>
                   ))}
                 </div>

@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import { motion } from 'framer-motion'
 import {
   BookOpen,
@@ -49,18 +51,19 @@ function isCompleted(day: LessonPathDay, module: CoreModule) {
 }
 
 export function LessonPath({ days, onOpenModule }: LessonPathProps) {
+  const { c: uiCopy } = useCopy()
   const { allowHoverMotion, minimalMotion } = useMotionPreferences()
 
   return (
     <section className="panel-surface p-5">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-semibold text-slate-900">Daily Learning Path</h2>
-          <p className="mt-1 text-sm text-slate-600">Vocabulary - Reading - Listening flow is preserved. New modules are visual placeholders.</p>
+          <h2 className="text-xl font-semibold text-slate-900"><UiText text={"Daily Learning Path"} /></h2>
+          <p className="mt-1 text-sm text-slate-600"><UiText text={"Vocabulary - Reading - Listening flow is preserved. New modules are visual placeholders."} /></p>
         </div>
         <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
           <Sparkles className="h-3.5 w-3.5" />
-          Path
+          <UiText text={"Path"} />
         </span>
       </div>
 
@@ -68,9 +71,9 @@ export function LessonPath({ days, onOpenModule }: LessonPathProps) {
         {days.map((day) => (
           <article key={day.id} className="rounded-2xl border border-blue-100 bg-white/85 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
             <div className="mb-3 flex items-center justify-between">
-              <p className="text-sm font-semibold uppercase tracking-[0.12em] text-blue-700">{day.label}</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.12em] text-blue-700"><UiText text={day.label} /></p>
               <span className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700">
-                6 nodes
+                <UiText text={"6 nodes"} />
               </span>
             </div>
 
@@ -107,9 +110,9 @@ export function LessonPath({ days, onOpenModule }: LessonPathProps) {
                         {completed ? <CheckCircle2 className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
                       </span>
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-slate-900">{module.label}</p>
+                        <p className="text-sm font-semibold text-slate-900"><UiText text={module.label} /></p>
                         <p className="text-xs text-slate-500">
-                          {completed ? 'Completed' : unlocked ? 'Available' : 'Locked'}
+                          {completed ? <UiText text={"Completed"} /> : unlocked ? <UiText text={"Available"} /> : <UiText text={"Locked"} />}
                         </p>
                       </div>
                       {!unlocked ? <Lock className="ml-auto h-4 w-4 text-slate-400" /> : null}
@@ -122,7 +125,7 @@ export function LessonPath({ days, onOpenModule }: LessonPathProps) {
                   return (
                     <div
                       key={`${day.id}_${module.key}`}
-                      title="Coming Soon"
+                      title={uiCopy("Coming Soon")}
                       className="relative cursor-not-allowed rounded-xl border border-slate-200 bg-slate-100/85 px-3 py-3 opacity-70 blur-[0.25px]"
                     >
                       <div className="flex items-center gap-3">
@@ -133,8 +136,8 @@ export function LessonPath({ days, onOpenModule }: LessonPathProps) {
                           </span>
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-slate-700">{module.label}</p>
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Coming Soon</p>
+                          <p className="text-sm font-semibold text-slate-700"><UiText text={module.label} /></p>
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500"><UiText text={"Coming Soon"} /></p>
                         </div>
                       </div>
                     </div>
@@ -148,7 +151,7 @@ export function LessonPath({ days, onOpenModule }: LessonPathProps) {
 
       {!minimalMotion ? (
         <p className="mt-4 text-xs text-slate-500">
-          Locked placeholders are intentionally non-clickable and stay disabled until future release.
+          <UiText text={"Locked placeholders are intentionally non-clickable and stay disabled until future release."} />
         </p>
       ) : null}
     </section>

@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { Minus } from 'lucide-react'
 import { useBillingText } from './copy'
 
@@ -21,7 +22,7 @@ export default function PlanComparison() {
       <colgroup><col className="plans-feature-column" /><col /><col /><col /></colgroup>
       <thead><tr>
         <th scope="col"><span className="sr-only">{text('Feature', 'Imkoniyat', 'Возможность')}</span></th>
-        <th scope="col">Free</th>
+        <th scope="col"><UiText text={"Free"} /></th>
         <th scope="col" className="is-featured"><span className="plans-brand">IvyGoo </span>Pro</th>
         <th scope="col"><span className="plans-brand">IvyGoo </span>Elite</th>
       </tr></thead>

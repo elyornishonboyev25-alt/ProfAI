@@ -1,3 +1,4 @@
+import { useCopy } from '@/i18n/interface'
 import UiText from '@/components/common/UiText'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -9,6 +10,7 @@ import { getCompletedLessons, subscribeLessonProgress } from '@/utils/admissionP
 import './admission-lessons.css'
 
 export default function AdmissionLessons() {
+  const { c: uiCopy } = useCopy()
   const [completed, setCompleted] = useState<Set<string>>(() => getCompletedLessons())
   useEffect(() => subscribeLessonProgress(() => setCompleted(getCompletedLessons())), [])
 
@@ -56,7 +58,7 @@ export default function AdmissionLessons() {
           <span className="lessons-resume-action"><UiText text={nextLesson ? 'Continue' : 'Explore universities →'} /><ArrowRight size={18} aria-hidden="true" /></span>
         </Link>
 
-        <nav className="lessons-phase-navigation" aria-label="Study-abroad phases">
+        <nav className="lessons-phase-navigation" aria-label={uiCopy("Study-abroad phases")}>
           {lessonPhases.map((phase, index) => {
             const phaseLessons = getLessonsByPhase(phase.id)
             const done = phaseLessons.filter((lesson) => completed.has(lesson.slug)).length

@@ -1,3 +1,4 @@
+import { useCopy } from '@/i18n/interface'
 import UiText from '@/components/common/UiText'
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
@@ -42,6 +43,7 @@ const PERIOD_LABELS = {
 } as const
 
 function CampusHeroMedia({ name, image }: { name: string; image: ReturnType<typeof useUniversityCampusImage> }) {
+  const { c: uiCopy } = useCopy()
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
@@ -60,7 +62,7 @@ function CampusHeroMedia({ name, image }: { name: string; image: ReturnType<type
       {image ? (
         <img
           src={image.src}
-          alt={`${name} campus`}
+          alt={uiCopy("{{value1}} campus", { value1: String(name) })}
           className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-80' : 'opacity-0'}`}
           loading="eager"
           decoding="async"
@@ -74,6 +76,7 @@ function CampusHeroMedia({ name, image }: { name: string; image: ReturnType<type
 }
 
 export default function AdmissionUniversity() {
+  const { c: uiCopy } = useCopy()
   const navigate = useNavigate()
   const location = useLocation()
   const { slug } = useParams<{ slug: string }>()
@@ -101,7 +104,7 @@ export default function AdmissionUniversity() {
           <p className="mt-2 text-slate-500"> <UiText text={"This profile doesn’t exist or hasn’t been added yet."} /> </p>
           <button type="button" onClick={() => navigate('/admission/universities')} className="premium-back-btn mt-6">
             <ArrowLeft className="h-3.5 w-3.5" />
-            Back to rankings
+            <UiText text={"Back to rankings"} />
           </button>
         </div>
       </div>
@@ -169,7 +172,7 @@ export default function AdmissionUniversity() {
                   className="route-back-button"
                 >
                   <ArrowLeft className="h-3.5 w-3.5" />
-                  {admissionReturnTo === '/admission/shortlist' ? 'Back to Shortlist' : admissionReturnTo === '/admission' ? 'Back to Matches' : 'Back to Universities'}
+                  {admissionReturnTo === '/admission/shortlist' ? <UiText text={"Back to Shortlist"} /> : admissionReturnTo === '/admission' ? <UiText text={"Back to Matches"} /> : <UiText text={"Back to Universities"} />}
                 </button>
                 <button
                   type="button"
@@ -178,7 +181,7 @@ export default function AdmissionUniversity() {
                   className={`inline-flex min-h-10 items-center gap-2 rounded-full border border-white/80 bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.08em] shadow-lg backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/90 ${shortlisted ? 'text-red-600' : 'text-slate-900'}`}
                 >
                   <Heart className="h-4 w-4" fill={shortlisted ? 'currentColor' : 'none'} />
-                  {shortlisted ? 'Shortlisted' : 'Add to shortlist'}
+                  {shortlisted ? <UiText text={"Shortlisted"} /> : <UiText text={"Add to shortlist"} />}
                 </button>
               </div>
 
@@ -187,7 +190,7 @@ export default function AdmissionUniversity() {
                 <div className="min-w-0">
                   <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[12px] font-bold backdrop-blur">
                     <Trophy className="h-3.5 w-3.5" />
-                    {typeof u.rank === 'number' ? `${formatUniversityRank(u, '#')} · ${QS_EDITION}` : 'Official university profile'}
+                    {typeof u.rank === 'number' ? `${formatUniversityRank(u, '#')} · ${QS_EDITION}` : <UiText text={"Official university profile"} />}
                   </div>
                   <h1 className="text-3xl font-black leading-tight tracking-tight sm:text-4xl">{u.name}</h1>
                   <p className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-white/80">
@@ -195,7 +198,7 @@ export default function AdmissionUniversity() {
                     {u.countryEmoji} {u.city}, {u.country}
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-white/15 px-3 py-1 text-[12px] font-semibold text-white/90">{u.type}</span>
+                    <span className="rounded-full bg-white/15 px-3 py-1 text-[12px] font-semibold text-white/90"><UiText text={u.type} /></span>
                     {typeof u.founded === 'number' ? (
                       <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-[12px] font-semibold text-white/90">
                         <CalendarDays className="h-3.5 w-3.5" />
@@ -219,12 +222,12 @@ export default function AdmissionUniversity() {
               {/* Highlight stat cards */}
               <div className="mt-7 grid gap-3 sm:grid-cols-3">
                 <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/70">QS World Ranking</p>
-                  <p className="mt-1 text-3xl font-black">{typeof u.rank === 'number' ? formatUniversityRank(u, '#') : 'Not ranked'}</p>
-                  <p className="text-[12px] font-medium text-white/70">{typeof u.rank === 'number' ? QS_EDITION : 'No QS rank listed'}</p>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/70"><UiText text={"QS World Ranking"} /></p>
+                  <p className="mt-1 text-3xl font-black">{typeof u.rank === 'number' ? formatUniversityRank(u, '#') : <UiText text={"Not ranked"} />}</p>
+                  <p className="text-[12px] font-medium text-white/70">{typeof u.rank === 'number' ? QS_EDITION : <UiText text={"No QS rank listed"} />}</p>
                 </div>
                 <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/70">Overall Score</p>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/70"><UiText text={"Overall Score"} /></p>
                   <p className="mt-1 text-3xl font-black">
                     {typeof u.overallScore === 'number' ? <CountUp value={u.overallScore} decimals={Number.isInteger(u.overallScore) ? 0 : 1} /> : '—'}
                   </p>
@@ -232,7 +235,7 @@ export default function AdmissionUniversity() {
                 </div>
                 <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
                   <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/70">
-                    {typeof u.subjectRank === 'number' ? 'Subject Ranking' : 'Citations / Faculty'}
+                    {typeof u.subjectRank === 'number' ? <UiText text={"Subject Ranking"} /> : <UiText text={"Citations / Faculty"} />}
                   </p>
                   <p className="mt-1 text-3xl font-black">
                     {typeof u.subjectRank === 'number'
@@ -240,7 +243,7 @@ export default function AdmissionUniversity() {
                       : (u.indicators.citationsPerFaculty ?? '—')}
                   </p>
                   <p className="text-[12px] font-medium text-white/70">
-                    {typeof u.subjectRank === 'number' ? 'QS WUR by Subject' : 'QS indicator'}
+                    {typeof u.subjectRank === 'number' ? <UiText text={"QS WUR by Subject"} /> : <UiText text={"QS indicator"} />}
                   </p>
                 </div>
               </div>
@@ -253,7 +256,7 @@ export default function AdmissionUniversity() {
                 className="absolute bottom-2 right-4 z-10 text-[9px] font-semibold text-white/55 transition hover:text-white/90"
                 onClick={(event) => event.stopPropagation()}
               >
-                Campus photo · Wikimedia Commons
+                <UiText text={"Campus photo · Wikimedia Commons"} />
               </a>
             )}
           </section>
@@ -267,7 +270,7 @@ export default function AdmissionUniversity() {
                 <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-white" style={{ background: accent }}>
                   <GraduationCap className="h-4 w-4" />
                 </span>
-                About {u.shortName}
+                <UiText text={"About"} /> {u.shortName}
               </h2>
               <p className="mt-4 flex-1 text-[15px] leading-7 text-slate-600">{u.about}</p>
               <p className="mt-3 text-[14px] font-semibold italic text-slate-500">{u.tagline}</p>
@@ -277,7 +280,7 @@ export default function AdmissionUniversity() {
                 {keyFacts.map((fact) => (
                   <div key={fact.label} className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
                     <fact.icon className="h-4 w-4" style={{ color: accent }} />
-                    <p className="mt-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">{fact.label}</p>
+                    <p className="mt-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400"><UiText text={fact.label} /></p>
                     <p className="mt-0.5 text-[13px] font-black leading-snug text-slate-900">{fact.value}</p>
                   </div>
                 ))}
@@ -291,14 +294,14 @@ export default function AdmissionUniversity() {
                 <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-white" style={{ background: accent }}>
                   <RadarIcon className="h-3.5 w-3.5" />
                 </span>
-                QS Performance
+                <UiText text={"QS Performance"} />
               </h2>
               {indicators.length > 0 ? (
                 <>
                   <div className="mt-2 h-64 w-full sm:h-72">
                     <UniversityRadar indicators={u.indicators} accent={accent} />
                   </div>
-                  <p className="text-center text-[11px] font-medium text-slate-400">All indicators scored out of 100</p>
+                  <p className="text-center text-[11px] font-medium text-slate-400"><UiText text={"All indicators scored out of 100"} /></p>
                 </>
               ) : (
                 <div className="mt-5 flex flex-1 items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm font-semibold text-slate-500">
@@ -315,7 +318,7 @@ export default function AdmissionUniversity() {
               <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-white" style={{ background: accent }}>
                 <Trophy className="h-4 w-4" />
               </span>
-              Rankings &amp; Ratings
+              <UiText text={"Rankings & Ratings"} />
             </h2>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
@@ -323,17 +326,17 @@ export default function AdmissionUniversity() {
               {typeof u.subjectRank === 'number' ? (
                 <RankCard icon={Star} label="QS WUR Ranking by Subject" value={`#${u.subjectRank}`} accent={accent} />
               ) : (
-                <RankCard icon={Award} label="Overall Score" value={typeof u.overallScore === 'number' ? String(u.overallScore) : 'Not listed'} accent={accent} />
+                <RankCard icon={Award} label={uiCopy("Overall Score")} value={typeof u.overallScore === 'number' ? String(u.overallScore) : 'Not listed'} accent={accent} />
               )}
               {typeof u.sustainabilityRank === 'number' ? (
                 <RankCard icon={Leaf} label="QS Sustainability Ranking" value={`#${u.sustainabilityRank}`} accent={accent} />
               ) : (
-                <RankCard icon={Globe2} label="Location" value={`${u.countryEmoji} ${u.city}`} accent={accent} />
+                <RankCard icon={Globe2} label={uiCopy("Location")} value={`${u.countryEmoji} ${u.city}`} accent={accent} />
               )}
             </div>
 
             {/* Indicator breakdown */}
-            <h3 className="mt-7 text-sm font-bold uppercase tracking-[0.12em] text-slate-400">Ranking criteria</h3>
+            <h3 className="mt-7 text-sm font-bold uppercase tracking-[0.12em] text-slate-400"><UiText text={"Ranking criteria"} /></h3>
             <div className="mt-4 grid gap-x-8 gap-y-4 sm:grid-cols-2">
               {indicators.map(({ meta, value }) => (
                 <div key={meta.key}>
@@ -368,8 +371,7 @@ export default function AdmissionUniversity() {
                   ))}
                 </div>
                 <p className="mt-3 text-[12px] font-medium text-slate-500">
-                  A decade-plus at <span className="font-bold" style={{ color: accent }}>#{u.rank}</span> — among the most
-                  stable records in global higher education.
+                  <UiText text={"A decade-plus at"} /> <span className="font-bold" style={{ color: accent }}>#{u.rank}</span> <UiText text={"— among the most stable records in global higher education."} />
                 </p>
               </div>
             ) : null}
@@ -384,7 +386,7 @@ export default function AdmissionUniversity() {
                 <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-white" style={{ background: accent }}>
                   <Award className="h-4 w-4" />
                 </span>
-                Admission · Bachelor
+                <UiText text={"Admission · Bachelor"} />
               </h2>
               <p className="mt-2 text-[13px] text-slate-500">{u.admission.note}</p>
               <div className="mt-5">
@@ -393,9 +395,9 @@ export default function AdmissionUniversity() {
               <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {u.admission.bachelor.map((req) => (
                   <div key={req.label} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 text-center">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">{req.label}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400"><UiText text={req.label} /></p>
                     <p className="mt-1.5 text-base font-black leading-snug text-slate-900">{req.value}</p>
-                    {req.detail ? <p className="mt-1 text-[10px] leading-4 text-slate-500">{req.detail}</p> : null}
+                    {req.detail ? <p className="mt-1 text-[10px] leading-4 text-slate-500"><UiText text={req.detail} /></p> : null}
                     {req.sourceUrl ? (
                       <a href={req.sourceUrl} target="_blank" rel="noreferrer noopener" className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-red-600 hover:underline">
                          <UiText text={"Official source"} /> <ExternalLink className="h-3 w-3" />
@@ -404,7 +406,7 @@ export default function AdmissionUniversity() {
                   </div>
                 ))}
               </div>
-              {u.admission.verifiedAt ? <p className="mt-3 text-right text-[10px] font-medium text-slate-400">Verified {u.admission.verifiedAt}</p> : null}
+              {u.admission.verifiedAt ? <p className="mt-3 text-right text-[10px] font-medium text-slate-400"><UiText text={"Verified"} /> {u.admission.verifiedAt}</p> : null}
             </section>
           </Reveal>
         ) : (
@@ -412,11 +414,11 @@ export default function AdmissionUniversity() {
             <section className="rounded-[1.6rem] border border-slate-200 bg-white p-6 shadow-[0_14px_36px_rgba(15,23,42,0.05)] sm:p-8">
               <h2 className="flex items-center gap-2 text-xl font-black tracking-tight text-slate-900">
                 <Award className="h-5 w-5" style={{ color: accent }} />
-                IELTS · Programme requirements
+                <UiText text={"IELTS · Programme requirements"} />
               </h2>
               <p className="mt-2 text-[13px] leading-5 text-slate-500">
                 {u.ieltsDirectory
-                  ? 'Scores from the official IELTS recognition directory are indicative. Requirements vary by programme and degree level; confirm your course and component scores with the university.'
+                  ? <UiText text={"Scores from the official IELTS recognition directory are indicative. Requirements vary by programme and degree level; confirm your course and component scores with the university."} />
                   : 'IELTS, SAT and other entry requirements have not yet been verified for this profile. Check the university’s current requirements for your chosen programme.'}
               </p>
               {u.ieltsDirectory?.scores.length ? (
@@ -424,22 +426,22 @@ export default function AdmissionUniversity() {
                   {u.ieltsDirectory.scores.map((entry, index) => (
                     <div key={`${entry.programme}-${index}`} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                       <p className="text-[13px] font-bold text-slate-700">{entry.programme}</p>
-                      <p className="mt-1.5 text-base font-black text-slate-900">IELTS Academic · {entry.minimum === null ? 'Score not listed' : entry.minimum.toFixed(1)}</p>
+                      <p className="mt-1.5 text-base font-black text-slate-900"><UiText text={"IELTS Academic ·"} /> {entry.minimum === null ? <UiText text={"Score not listed"} /> : entry.minimum.toFixed(1)}</p>
                       {entry.detail ? <p className="mt-1 text-[12px] leading-5 text-slate-500">{entry.detail}</p> : null}
                     </div>
                   ))}
                 </div>
-              ) : u.ieltsDirectory ? <p className="mt-4 text-sm text-slate-500">The directory does not list an IELTS Academic score for this institution.</p> : null}
+              ) : u.ieltsDirectory ? <p className="mt-4 text-sm text-slate-500"><UiText text={"The directory does not list an IELTS Academic score for this institution."} /></p> : null}
               <div className="mt-4 flex flex-wrap items-center gap-4 text-[12px] font-semibold">
                 {u.ieltsDirectory ? (
                   <>
-                    <a href={u.ieltsDirectory.sourceUrl} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 text-red-600 hover:underline">IELTS official directory <ExternalLink className="h-3 w-3" /></a>
-                    <span className="text-slate-400">Checked {u.ieltsDirectory.checkedAt}</span>
+                    <a href={u.ieltsDirectory.sourceUrl} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 text-red-600 hover:underline"><UiText text={"IELTS official directory"} /> <ExternalLink className="h-3 w-3" /></a>
+                    <span className="text-slate-400"><UiText text={"Checked"} /> {u.ieltsDirectory.checkedAt}</span>
                   </>
                 ) : (
-                  <a href={`https://ielts.org/take-a-test/why-choose-ielts/who-accepts-ielts?q=${encodeURIComponent(u.name)}`} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 text-red-600 hover:underline">Find in IELTS directory <ExternalLink className="h-3 w-3" /></a>
+                  <a href={`https://ielts.org/take-a-test/why-choose-ielts/who-accepts-ielts?q=${encodeURIComponent(u.name)}`} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 text-red-600 hover:underline"><UiText text={"Find in IELTS directory"} /> <ExternalLink className="h-3 w-3" /></a>
                 )}
-                {u.website ? <a href={u.website} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 text-red-600 hover:underline">University website <ExternalLink className="h-3 w-3" /></a> : null}
+                {u.website ? <a href={u.website} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 text-red-600 hover:underline"><UiText text={"University website"} /> <ExternalLink className="h-3 w-3" /></a> : null}
               </div>
             </section>
           </Reveal>
@@ -455,14 +457,14 @@ export default function AdmissionUniversity() {
                     <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-white" style={{ background: accent }}>
                       <CircleDollarSign className="h-4 w-4" />
                     </span>
-                    Cost of Living
+                    <UiText text={"Cost of Living"} />
                   </h2>
                   <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[12px] font-bold text-slate-700">
                     {money(cost.amount, cost.currency)}{cost.maxAmount ? `–${money(cost.maxAmount, cost.currency)}` : ''} / {PERIOD_LABELS[cost.period]}
                   </span>
                 </div>
                 <div className="mt-5 flex-1 rounded-2xl border border-slate-200 bg-slate-50/70 p-5">
-                  <p className="text-sm font-black leading-snug text-slate-900">{cost.label}</p>
+                  <p className="text-sm font-black leading-snug text-slate-900"><UiText text={cost.label} /></p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {cost.includes.map((item) => (
                       <span key={item} className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-bold text-slate-600">{item}</span>
@@ -471,7 +473,7 @@ export default function AdmissionUniversity() {
                   {cost.note ? <p className="mt-4 text-[12px] leading-5 text-slate-500">{cost.note}</p> : null}
                 </div>
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-[11px] font-semibold text-slate-400">
-                  <span>{cost.academicYear ? `Published period: ${cost.academicYear}` : 'Current official published figure'} · Verified {cost.verifiedAt}</span>
+                  <span>{cost.academicYear ? <UiText text={"Published period: {{value1}}"} values={{ value1: String(cost.academicYear) }} /> : <UiText text={"Current official published figure"} />} <UiText text={"· Verified"} /> {cost.verifiedAt}</span>
                   <a href={cost.sourceUrl} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 font-bold text-red-600 hover:underline">
                      <UiText text={"Official cost source"} /> <ExternalLink className="h-3 w-3" />
                   </a>
@@ -481,9 +483,9 @@ export default function AdmissionUniversity() {
           ) : (
             <Reveal delay={0.04} className="h-full">
               <section className="h-full rounded-[1.6rem] border border-slate-200 bg-white p-6 sm:p-8">
-                <h2 className="flex items-center gap-2 text-xl font-black text-slate-900"><CircleDollarSign className="h-5 w-5" style={{ color: accent }} /> Cost of Living</h2>
-                <p className="mt-3 text-[13px] leading-5 text-slate-500">A current living-cost budget has not yet been verified for this profile. Check accommodation, food, transport, insurance and tuition separately when planning your budget.</p>
-                {u.website ? <a href={u.website} target="_blank" rel="noreferrer noopener" className="mt-4 inline-flex items-center gap-1 text-[12px] font-bold text-red-600 hover:underline">University website <ExternalLink className="h-3 w-3" /></a> : null}
+                <h2 className="flex items-center gap-2 text-xl font-black text-slate-900"><CircleDollarSign className="h-5 w-5" style={{ color: accent }} /> <UiText text={"Cost of Living"} /></h2>
+                <p className="mt-3 text-[13px] leading-5 text-slate-500"><UiText text={"A current living-cost budget has not yet been verified for this profile. Check accommodation, food, transport, insurance and tuition separately when planning your budget."} /></p>
+                {u.website ? <a href={u.website} target="_blank" rel="noreferrer noopener" className="mt-4 inline-flex items-center gap-1 text-[12px] font-bold text-red-600 hover:underline"><UiText text={"University website"} /> <ExternalLink className="h-3 w-3" /></a> : null}
               </section>
             </Reveal>
           )}
@@ -527,7 +529,7 @@ export default function AdmissionUniversity() {
                  <UiText text={"Students & Staff"} /> </h2>
               <div className="mt-5 grid gap-4 sm:grid-cols-3">
                 <StudentStat
-                  label="Total students"
+                  label={uiCopy("Total students")}
                   total={students.total}
                   parts={[
                     { label: 'Undergraduate', value: students.undergraduate ?? 0, color: accent },
@@ -535,7 +537,7 @@ export default function AdmissionUniversity() {
                   ]}
                 />
                 <StudentStat
-                  label="International students"
+                  label={uiCopy("International students")}
                   total={students.international ?? 0}
                   parts={[
                     { label: 'Undergraduate', value: students.internationalUndergraduate ?? 0, color: accent },
@@ -543,7 +545,7 @@ export default function AdmissionUniversity() {
                   ]}
                 />
                 <StudentStat
-                  label="Total faculty staff"
+                  label={uiCopy("Total faculty staff")}
                   total={students.facultyStaff ?? 0}
                   parts={[
                     { label: 'Domestic', value: students.domesticStaffPct ?? 0, color: accent, isPct: true },
@@ -575,7 +577,7 @@ export default function AdmissionUniversity() {
         <Reveal delay={0.04}>
           <p className="flex items-center justify-center gap-2 pb-2 text-center text-[12px] font-medium text-slate-400">
             <Sparkles className="h-3.5 w-3.5" />
-            Rankings from {QS_EDITION}; admissions and student costs from university sources and indicative programme scores from the official IELTS directory.
+            <UiText text={"Rankings from"} /> {QS_EDITION}<UiText text={"; admissions and student costs from university sources and indicative programme scores from the official IELTS directory."} />
           </p>
         </Reveal>
       </div>
@@ -600,7 +602,7 @@ function RankCard({
     <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
       <Icon className="h-5 w-5" style={{ color: accent }} />
       <p className="mt-2 text-2xl font-black text-slate-900">{value}</p>
-      <p className="mt-0.5 text-[12px] font-semibold leading-snug text-slate-500">{label}</p>
+      <p className="mt-0.5 text-[12px] font-semibold leading-snug text-slate-500"><UiText text={label} /></p>
     </div>
   )
 }
@@ -617,7 +619,7 @@ function StudentStat({
   const sum = parts.reduce((s, p) => s + p.value, 0) || 1
   return (
     <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5">
-      <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">{label}</p>
+      <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400"><UiText text={label} /></p>
       <p className="mt-1 text-3xl font-black text-slate-900">{total.toLocaleString()}</p>
       <div className="mt-3 flex h-2 w-full overflow-hidden rounded-full bg-slate-200">
         {parts.map((p) => (
@@ -629,7 +631,7 @@ function StudentStat({
           <div key={p.label} className="flex items-center justify-between text-[12px]">
             <span className="inline-flex items-center gap-1.5 font-medium text-slate-500">
               <span className="inline-block h-2 w-2 rounded-full" style={{ background: p.color }} />
-              {p.label}
+              <UiText text={p.label} />
             </span>
             <span className="font-bold text-slate-800">{p.isPct ? `${p.value}%` : p.value.toLocaleString()}</span>
           </div>

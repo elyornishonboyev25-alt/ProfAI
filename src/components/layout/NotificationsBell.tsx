@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
@@ -39,6 +41,7 @@ function relativeTime(value: string, language: string) {
 
 /** Bell button and notification panel with class assignments and activity. */
 export default function NotificationsBell() {
+  const { c: uiCopy } = useCopy()
   const { i18n } = useTranslation()
   const language = premiumLanguage(i18n.resolvedLanguage ?? i18n.language ?? 'en')
   const supportLabel = ownerText('Support team', language)
@@ -202,8 +205,8 @@ export default function NotificationsBell() {
         ref={bellRef}
         type="button"
         onClick={() => setOpen((value) => !value)}
-        aria-label="Notifications"
-        title={unreadCount > 0 ? `${unreadCount} unread notifications` : 'No unread notifications'}
+        aria-label={uiCopy("Notifications")}
+        title={unreadCount > 0 ? uiCopy("{{value1}} unread notifications", { value1: String(unreadCount) }) : 'No unread notifications'}
         aria-expanded={open}
         className="profai-notifications-bell interactive-lift relative rounded-xl border border-slate-200 bg-white/90 p-2 text-slate-700 transition hover:bg-red-50 hover:text-red-700"
       >
@@ -218,7 +221,7 @@ export default function NotificationsBell() {
           <>
             <motion.button
               type="button"
-              aria-label="Close notifications"
+              aria-label={uiCopy("Close notifications")}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -234,7 +237,7 @@ export default function NotificationsBell() {
               transition={{ duration: minimalMotion ? 0 : 0.24, ease: [0.22, 1, 0.36, 1] }}
               role="dialog"
               aria-modal="true"
-              aria-label="Notifications panel"
+              aria-label={uiCopy("Notifications panel")}
               tabIndex={-1}
               className="profai-notifications-panel fixed bottom-4 left-4 right-4 top-[4.75rem] z-[120] flex min-h-0 flex-col overflow-hidden rounded-[1.8rem] sm:left-auto sm:w-[27rem]"
             >
@@ -257,7 +260,7 @@ export default function NotificationsBell() {
               ) : null}
               <button
                 onClick={() => setOpen(false)}
-                aria-label="Close notifications"
+                aria-label={uiCopy("Close notifications")}
                 className="profai-notifications-close rounded-full p-2 text-slate-500 transition hover:bg-white hover:text-red-700"
               >
                 <X className="h-4 w-4" />
@@ -288,7 +291,7 @@ export default function NotificationsBell() {
                           {notification.metadata?.kind === 'CLASS_ASSIGNMENT' ? <ClipboardCheck className="h-4 w-4" /> : ['ISSUE_REPORT_REPLY', 'TEACHER_NOTE'].includes(String(notification.metadata?.kind)) ? <MessageSquareText className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
                         </span>
                         <span className="min-w-0 flex-1">
-                          {notification.metadata?.kind === 'ISSUE_REPORT_REPLY' && <span className="mb-1 block text-[9px] font-bold uppercase tracking-wide text-red-700">{supportLabel}</span>}
+                          {notification.metadata?.kind === 'ISSUE_REPORT_REPLY' && <span className="mb-1 block text-[9px] font-bold uppercase tracking-wide text-red-700"><UiText text={supportLabel} /></span>}
                           {notification.metadata?.kind === 'TEACHER_NOTE' && <span className="mb-1 block text-[10px] font-bold text-red-700">{textFor('Teacher note')}{typeof notification.metadata.authorName === 'string' ? ` · ${notification.metadata.authorName}` : ''}</span>}
                           {notification.metadata?.kind === 'CLASS_ASSIGNMENT' && <span className="mb-1 block text-[10px] font-bold text-red-700">{textFor('Class assignment')}{typeof notification.metadata.examTrack === 'string' ? ` · ${notification.metadata.examTrack}` : ''}</span>}
                           <span className={`block text-[13px] font-black text-slate-900 ${expandedReply === notification.id ? 'break-words' : 'truncate'}`}>{notification.title}</span>
@@ -311,18 +314,18 @@ export default function NotificationsBell() {
                 <div className="flex items-center gap-2">
                   <Flame className="h-5 w-5 text-white" />
                   <p className="text-sm font-black">
-                    {streak > 0 ? `${streak}-day streak` : 'Start your streak today'}
+                    {streak > 0 ? <UiText text={"{{value1}}-day streak"} values={{ value1: String(streak) }} /> : <UiText text={"Start your streak today"} />}
                   </p>
                 </div>
                 <p className="mt-1 text-[12px] leading-5 text-white/90">
                   {streak > 0 && !todayActive
-                    ? 'Practice today to keep it alive!'
+                    ? <UiText text={"Practice today to keep it alive!"} />
                     : streak > 0
-                      ? 'Today is done — see you tomorrow.'
-                      : 'One session a day builds the habit.'}
+                      ? <UiText text={"Today is done — see you tomorrow."} />
+                      : <UiText text={"One session a day builds the habit."} />}
                 </p>
                 {week.length > 0 ? (
-                  <div className="mt-3 grid grid-cols-7 gap-1.5" aria-label="This week's activity">
+                  <div className="mt-3 grid grid-cols-7 gap-1.5" aria-label={uiCopy("This week's activity")}>
                     {week.slice(-7).map((day) => (
                       <span
                         key={day.date}
@@ -342,7 +345,7 @@ export default function NotificationsBell() {
               {badges.length > 0 ? (
                 <div>
                   <p className="mb-2 text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">
-                    Latest achievements
+                    <UiText text={"Latest achievements"} />
                   </p>
                   <div className="space-y-2">
                     {badges.map((badge) => (
@@ -357,10 +360,10 @@ export default function NotificationsBell() {
                         <SkillBadge track={badge.track} band={badge.band} size={46} showBand={false} />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-[13px] font-bold text-slate-900">
-                            {TRACK_META[badge.track].title} · Tier {badge.tier}
+                            {TRACK_META[badge.track].title} <UiText text={"· Tier"} /> {badge.tier}
                           </span>
                           <span className="block text-[11px] text-slate-500">
-                            {TRACK_META[badge.track].group === 'SAT' ? 'Score' : 'Band'} {formatAchievementScore(badge.track, badge.band)} ·{' '}
+                            {TRACK_META[badge.track].group === 'SAT' ? <UiText text={"Score"} /> : <UiText text={"Band"} />} {formatAchievementScore(badge.track, badge.band)} ·{' '}
                             {new Date(badge.unlockedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                           </span>
                         </span>
@@ -383,8 +386,8 @@ export default function NotificationsBell() {
                   <Sparkles className="h-4 w-4" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-[13px] font-bold text-slate-900">Full Mock is waiting</span>
-                  <span className="block text-[11px] text-slate-500">Run all four sections in official order</span>
+                  <span className="block text-[13px] font-bold text-slate-900"><UiText text={"Full Mock is waiting"} /></span>
+                  <span className="block text-[11px] text-slate-500"><UiText text={"Run all four sections in official order"} /></span>
                 </span>
                 <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
               </button>

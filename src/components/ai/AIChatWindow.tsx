@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useEffect, useId, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
@@ -253,8 +254,8 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
   if (!user) {
     return (
       <section className="rounded-2xl border border-red-100 bg-white p-4 text-slate-900">
-        <h3 className="text-sm font-semibold">AI Study Buddy</h3>
-        <p className="mt-1 text-xs text-slate-600">Sign in to chat with your AI tutor.</p>
+        <h3 className="text-sm font-semibold"><UiText text={"AI Study Buddy"} /></h3>
+        <p className="mt-1 text-xs text-slate-600"><UiText text={"Sign in to chat with your AI tutor."} /></p>
       </section>
     )
   }
@@ -262,8 +263,8 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
   if (!hasPremium) {
     return (
       <section className="rounded-2xl border border-red-100 bg-white p-4 text-slate-900">
-        <h3 className="text-sm font-semibold">Premium AI Tutor</h3>
-        <p className="mt-2 text-xs leading-5 text-slate-600">The AI tutor is available for Premium users.</p>
+        <h3 className="text-sm font-semibold"><UiText text={"Premium AI Tutor"} /></h3>
+        <p className="mt-2 text-xs leading-5 text-slate-600"><UiText text={"The AI tutor is available for Premium users."} /></p>
       </section>
     )
   }
@@ -491,7 +492,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
           <VoiceOrb state={voiceState} level={voiceLevel} size={isPage ? 48 : 40} />
           <div>
             <p className="flex items-center gap-1.5 text-sm font-black text-slate-900">
-              Ivygoo Coach
+              <UiText text={"Ivygoo Coach"} />
               <Sparkles className="h-3 w-3 text-red-500" />
             </p>
             <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500/80">
@@ -627,7 +628,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                 ) : null}
                 {message.role === 'assistant' ? <><span className="coach-answer-author">Nova</span><AiMessageContent content={message.content} /></> : <p className="whitespace-pre-wrap">{message.content}</p>}
                 {message.role === 'assistant' && message.content ? <CopyButton text={message.content} /> : null}
-                {message.status === 'interrupted' ? <p className="mt-2 text-xs text-amber-700">{uiLanguage === 'uz' ? 'Javob to‘xtatildi' : uiLanguage === 'ru' ? 'Ответ остановлен' : 'Response stopped'}</p> : null}
+                {message.status === 'interrupted' ? <p className="mt-2 text-xs text-amber-700">{uiLanguage === 'uz' ? 'Javob to‘xtatildi' : uiLanguage === 'ru' ? 'Ответ остановлен' : <UiText text={"Response stopped"} />}</p> : null}
               </motion.article>
             ))}
             {isSending && !messages.some((message) => message.status === 'streaming' && message.content) ? (

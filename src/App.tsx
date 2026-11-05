@@ -1,3 +1,4 @@
+import { useCopy } from '@/i18n/interface'
 import { useAccountDataSync } from '@/hooks/useAccountDataSync'
 import { Suspense, useEffect, useState, type ReactNode } from 'react'
 import { Navigate, Routes, Route, useLocation, useNavigate } from 'react-router-dom'
@@ -117,7 +118,8 @@ function xpSourceForActivity(activityKey: ReturnType<typeof routeToActivityKey>)
 }
 
 function RouteLoader() {
-  return <BrandPageLoader compact label="Opening page" />
+  const { c: uiCopy } = useCopy()
+  return <BrandPageLoader compact label={uiCopy("Opening page")} />
 }
 
 function DeferredTalkOverlay() {
@@ -201,6 +203,7 @@ function LegacySpeakingRedirect() {
 }
 
 function App() {
+  const { c: uiCopy } = useCopy()
   const [reportOpen, setReportOpen] = useState(false)
   useEffect(() => {
     const openReport = () => setReportOpen(true)
@@ -542,8 +545,8 @@ function App() {
                         element={
                           <AnimatedRoute>
                             <PremiumOnly
-                              title="Vocabulary Arena is Premium"
-                              description="Grow your word power with the Articles and My-Words vocabulary tracks on Ivygoo Premium."
+                              title={uiCopy("Vocabulary Arena is Premium")}
+                              description={uiCopy("Grow your word power with the Articles and My-Words vocabulary tracks on Ivygoo Premium.")}
                               perks={['Articles & My-Words tracks', 'Spaced practice activities', 'AI vocabulary help']}
                             >
                               <Vocabulary />
@@ -556,8 +559,8 @@ function App() {
                         element={
                           <AnimatedRoute>
                             <PremiumOnly
-                              title="Vocabulary Arena is Premium"
-                              description="Grow your word power with the Articles and My-Words vocabulary tracks on Ivygoo Premium."
+                              title={uiCopy("Vocabulary Arena is Premium")}
+                              description={uiCopy("Grow your word power with the Articles and My-Words vocabulary tracks on Ivygoo Premium.")}
                               perks={['Articles & My-Words tracks', 'Spaced practice activities', 'AI vocabulary help']}
                             >
                               <Vocabulary />

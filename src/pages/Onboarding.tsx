@@ -1,3 +1,4 @@
+import { useCopy } from '@/i18n/interface'
 import { accountStorage } from '@/utils/accountStorage'
 import { normalizeSATScore as normalizeSatScore, SAT_TARGET_SCORE_MIN } from '@/features/sat/scoreGoals'
 import UiText from '@/components/common/UiText'
@@ -148,6 +149,7 @@ const slideVariants = {
 }
 
 export default function Onboarding() {
+  const { c: uiCopy } = useCopy()
   const navigate = useNavigate()
   const user = useAuthStore((state: AuthState) => state.user)
   const setUserAvatar = useAuthStore((state: AuthState) => state.setUserAvatar)
@@ -441,7 +443,7 @@ export default function Onboarding() {
           </button>
           <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white/85 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.14em] text-blue-700 shadow-sm backdrop-blur">
             <Sparkles className="h-3 w-3" />
-            Smart onboarding
+            <UiText text={"Smart onboarding"} />
           </span>
         </div>
 
@@ -465,7 +467,7 @@ export default function Onboarding() {
                     {done ? <CheckCircle2 className="h-3.5 w-3.5" /> : item.id}
                   </span>
                   <span className={`hidden text-xs font-bold sm:block ${active ? 'text-slate-900' : done ? 'text-blue-600' : 'text-slate-400'}`}>
-                    {item.label}
+                    <UiText text={item.label} />
                   </span>
                 </div>
                 {index < STEP_META.length - 1 ? (
@@ -504,11 +506,11 @@ export default function Onboarding() {
                 )}
               </span>
               <div>
-                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-blue-600">{meta.eyebrow}</p>
+                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-blue-600"><UiText text={meta.eyebrow} /></p>
                 <h1 className="mt-0.5 text-[1.6rem] font-black leading-tight tracking-tight text-slate-900 sm:text-3xl">
-                  {meta.title}
+                  <UiText text={meta.title} />
                 </h1>
-                <p className="mt-1.5 text-sm leading-6 text-slate-500">{meta.hint}</p>
+                <p className="mt-1.5 text-sm leading-6 text-slate-500"><UiText text={meta.hint} /></p>
               </div>
             </div>
 
@@ -529,7 +531,7 @@ export default function Onboarding() {
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                           <div className="relative mx-auto shrink-0 sm:mx-0">
                             <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-[5px] border-white bg-gradient-to-br from-blue-500 to-indigo-700 text-2xl font-black text-white shadow-[0_14px_30px_rgba(37,99,235,0.3)] ring-4 ring-blue-200">
-                              <ProfileAvatar src={avatarPreview} name={`${firstName} ${lastName}`} alt="Selected avatar" />
+                              <ProfileAvatar src={avatarPreview} name={`${firstName} ${lastName}`} alt={uiCopy("Selected avatar")} />
                             </div>
                             <span className="absolute bottom-1 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white ring-4 ring-white">
                               <Camera className="h-3.5 w-3.5" />
@@ -538,12 +540,12 @@ export default function Onboarding() {
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center justify-between gap-2">
                               <div>
-                                <p className="text-sm font-black text-slate-900">Your Ivygoo identity</p>
-                                <p className="text-[11px] text-slate-500">Your initials appear until you upload a photo.</p>
+                                <p className="text-sm font-black text-slate-900"><UiText text={"Your Ivygoo identity"} /></p>
+                                <p className="text-[11px] text-slate-500"><UiText text={"Your initials appear until you upload a photo."} /></p>
                               </div>
                               <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-blue-200 bg-white px-3 py-2 text-[11px] font-black text-blue-700 shadow-sm transition hover:bg-blue-50">
                                 <Upload className="h-3.5 w-3.5" />
-                                {avatarUploading ? 'Saving…' : 'Upload photo'}
+                                {avatarUploading ? <UiText text={"Saving…"} /> : <UiText text={"Upload photo"} />}
                                 <input
                                   type="file"
                                   accept="image/png,image/jpeg,image/webp"
@@ -562,7 +564,7 @@ export default function Onboarding() {
                         </div>
                       </div>
                       <label className="block">
-                        <span className="mb-1.5 block text-xs font-black uppercase tracking-[0.1em] text-slate-500">First name</span>
+                        <span className="mb-1.5 block text-xs font-black uppercase tracking-[0.1em] text-slate-500"><UiText text={"First name"} /></span>
                         <div className="relative">
                           <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400" />
                           <input
@@ -570,14 +572,14 @@ export default function Onboarding() {
                             value={firstName}
                             onChange={(event) => setFirstName(event.target.value)}
                             onKeyDown={(event) => event.key === 'Enter' && nameReady && handleContinue()}
-                            placeholder="Enter first name"
+                            placeholder={uiCopy("Enter first name")}
                             className="h-12 w-full rounded-2xl border border-blue-100 bg-white pl-11 pr-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
                           />
                         </div>
                       </label>
                       <div className="sm:col-span-2">
                         <span className="mb-2 block text-xs font-black uppercase tracking-[0.1em] text-slate-500">
-                          Avatar style
+                          <UiText text={"Avatar style"} />
                         </span>
                         <div className="grid gap-2 sm:grid-cols-3">
                           {([
@@ -595,26 +597,26 @@ export default function Onboarding() {
                                   : 'border-slate-200 bg-white hover:border-blue-200'
                               }`}
                             >
-                              <span className={`text-sm font-black ${gender === value ? 'text-blue-700' : 'text-slate-800'}`}>{label}</span>
-                              <span className="mt-0.5 block text-[10px] text-slate-500">{detail}</span>
+                              <span className={`text-sm font-black ${gender === value ? 'text-blue-700' : 'text-slate-800'}`}><UiText text={label} /></span>
+                              <span className="mt-0.5 block text-[10px] text-slate-500"><UiText text={detail} /></span>
                             </button>
                           ))}
                         </div>
                       </div>
                       <label className="block">
-                        <span className="mb-1.5 block text-xs font-black uppercase tracking-[0.1em] text-slate-500">Last name</span>
+                        <span className="mb-1.5 block text-xs font-black uppercase tracking-[0.1em] text-slate-500"><UiText text={"Last name"} /></span>
                         <input
                           value={lastName}
                           onChange={(event) => setLastName(event.target.value)}
                           onKeyDown={(event) => event.key === 'Enter' && nameReady && handleContinue()}
-                          placeholder="Enter last name"
+                          placeholder={uiCopy("Enter last name")}
                           className="h-12 w-full rounded-2xl border border-blue-100 bg-white px-4 text-sm font-semibold text-slate-900 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
                         />
                       </label>
                       <div className="sm:col-span-2 flex items-center gap-3 rounded-2xl border border-blue-100 bg-blue-50/60 p-4">
                         <Flame className="h-5 w-5 shrink-0 text-blue-500" />
                         <p className="text-xs leading-relaxed text-slate-600">
-                          Your plan, XP, streaks and certificates are saved to your account — pick up exactly where you left off on any device.
+                          <UiText text={"Your plan, XP, streaks and certificates are saved to your account — pick up exactly where you left off on any device."} />
                         </p>
                       </div>
                     </div>
@@ -631,7 +633,7 @@ export default function Onboarding() {
                             list="world-country-options"
                             value={country}
                             onChange={(event) => setCountry(event.target.value)}
-                            placeholder="Start typing a country..."
+                            placeholder={uiCopy("Start typing a country...")}
                             autoComplete="off"
                             className="h-12 w-full rounded-2xl border border-blue-100 bg-white pl-11 pr-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
                           />
@@ -644,7 +646,7 @@ export default function Onboarding() {
                       </label>
                       <label className="block">
                         <span className="mb-1.5 block text-xs font-black uppercase tracking-[0.1em] text-slate-500">
-                          Current grade
+                          <UiText text={"Current grade"} />
                         </span>
                         <div className="relative">
                           <School className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400" />
@@ -653,14 +655,14 @@ export default function Onboarding() {
                             onChange={(event) => setGradeLevel(event.target.value)}
                             className="h-12 w-full appearance-none rounded-2xl border border-blue-100 bg-white pl-11 pr-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
                           >
-                            {GRADE_LEVELS.map((grade) => <option key={grade}>{grade}</option>)}
+                            {GRADE_LEVELS.map((grade) => <option key={grade} value={grade}><UiText text={grade} /></option>)}
                           </select>
                         </div>
                       </label>
                       <div className="sm:col-span-2 rounded-[1.5rem] border border-blue-100 bg-gradient-to-br from-white to-blue-50/70 p-5">
-                        <p className="text-sm font-black text-slate-900">Why we ask this</p>
+                        <p className="text-sm font-black text-slate-900"><UiText text={"Why we ask this"} /></p>
                         <p className="mt-1 text-sm leading-6 text-slate-600">
-                          Your school stage changes the balance between exam preparation, university research and application deadlines. This information stays private.
+                          <UiText text={"Your school stage changes the balance between exam preparation, university research and application deadlines. This information stays private."} />
                         </p>
                       </div>
                     </div>
@@ -695,8 +697,8 @@ export default function Onboarding() {
                             <span className={`mb-2.5 inline-flex h-10 w-10 items-center justify-center rounded-xl ${selected ? 'bg-white/20' : 'bg-blue-50'}`}>
                               <Icon className={`h-5 w-5 ${selected ? 'text-white' : 'text-blue-600'}`} />
                             </span>
-                            <p className={`text-lg font-black ${selected ? 'text-white' : 'text-slate-900'}`}>{card.label}</p>
-                            <p className={`mt-0.5 text-[11px] font-medium leading-tight ${selected ? 'text-blue-100' : 'text-slate-500'}`}>{card.subtitle}</p>
+                            <p className={`text-lg font-black ${selected ? 'text-white' : 'text-slate-900'}`}><UiText text={card.label} /></p>
+                            <p className={`mt-0.5 text-[11px] font-medium leading-tight ${selected ? 'text-blue-100' : 'text-slate-500'}`}><UiText text={card.subtitle} /></p>
                             <div className="mt-2.5 flex flex-wrap gap-1">
                               {card.modules.map((mod) => (
                                 <span
@@ -720,10 +722,10 @@ export default function Onboarding() {
                           <div className="rounded-2xl border border-blue-100 bg-blue-50/45 p-4">
                             <div className="flex items-center gap-2">
                               <BookOpen className="h-4 w-4 text-blue-600" />
-                              <p className="text-xs font-black uppercase tracking-[0.1em] text-slate-700">IELTS profile</p>
+                              <p className="text-xs font-black uppercase tracking-[0.1em] text-slate-700"><UiText text={"IELTS profile"} /></p>
                             </div>
                             <label className="mt-3 block">
-                              <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-400">Booked exam date</span>
+                              <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-400"><UiText text={"Booked exam date"} /></span>
                               <input
                                 type="date"
                                 min={new Date().toISOString().slice(0, 10)}
@@ -738,8 +740,8 @@ export default function Onboarding() {
                             <div className="mt-2 grid grid-cols-2 gap-2">
                               <label>
                                 <span className="mb-1 flex items-center justify-between gap-1 text-[10px] font-bold text-slate-400">
-                                  Current band
-                                  <button type="button" onClick={() => setCurrentIeltsScore(null)} className="text-blue-600 hover:text-blue-700">Not taken yet</button>
+                                  <UiText text={"Current band"} />
+                                  <button type="button" onClick={() => setCurrentIeltsScore(null)} className="text-blue-600 hover:text-blue-700"><UiText text={"Not taken yet"} /></button>
                                 </span>
                                 <input
                                   type="number"
@@ -753,7 +755,7 @@ export default function Onboarding() {
                                 />
                               </label>
                               <label>
-                                <span className="mb-1 block text-[10px] font-bold text-slate-400">Target band</span>
+                                <span className="mb-1 block text-[10px] font-bold text-slate-400"><UiText text={"Target band"} /></span>
                                 <input type="number" min={0} max={9} step={0.5} value={targetIeltsScore} onChange={(event) => setTargetIeltsScore(Number(event.target.value))} className="h-10 w-full rounded-xl border border-blue-100 bg-white px-3 text-sm font-black text-slate-800 outline-none focus:border-blue-300" />
                               </label>
                             </div>
@@ -764,10 +766,10 @@ export default function Onboarding() {
                           <div className="rounded-2xl border border-blue-100 bg-blue-50/45 p-4">
                             <div className="flex items-center gap-2">
                               <Calculator className="h-4 w-4 text-blue-600" />
-                              <p className="text-xs font-black uppercase tracking-[0.1em] text-slate-700">SAT profile</p>
+                              <p className="text-xs font-black uppercase tracking-[0.1em] text-slate-700"><UiText text={"SAT profile"} /></p>
                             </div>
                             <label className="mt-3 block">
-                              <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-400">Official test date</span>
+                              <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-400"><UiText text={"Official test date"} /></span>
                               <select
                                 value={satExamDate}
                                 onChange={(event) => {
@@ -782,8 +784,8 @@ export default function Onboarding() {
                             <div className="mt-2 grid grid-cols-2 gap-2">
                               <label>
                                 <span className="mb-1 flex items-center justify-between gap-1 text-[10px] font-bold text-slate-400">
-                                  Current score
-                                  <button type="button" onClick={() => setCurrentSatScore(null)} className="text-blue-600 hover:text-blue-700">Not taken yet</button>
+                                  <UiText text={"Current score"} />
+                                  <button type="button" onClick={() => setCurrentSatScore(null)} className="text-blue-600 hover:text-blue-700"><UiText text={"Not taken yet"} /></button>
                                 </span>
                                 <input
                                   type="number"
@@ -819,13 +821,13 @@ export default function Onboarding() {
                         <div className="flex items-center gap-2">
                           <CalendarRange className="h-4 w-4 text-blue-500" />
                           <div>
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Study runway</p>
-                            <p className="text-sm font-black text-slate-800">{resolvedDays} days until the nearest exam</p>
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400"><UiText text={"Study runway"} /></p>
+                            <p className="text-sm font-black text-slate-800">{resolvedDays} <UiText text={"days until the nearest exam"} /></p>
                           </div>
                         </div>
                         {!selectedExamDate ? (
                           <label className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-                            I have
+                            <UiText text={"I have"} />
                             <input
                               type="number"
                               min={1}
@@ -836,13 +838,13 @@ export default function Onboarding() {
                               }}
                               className="h-9 w-20 rounded-lg border border-slate-200 bg-white px-2 text-sm font-bold text-slate-800 outline-none focus:border-blue-300"
                             />
-                            days
+                            <UiText text={"days"} />
                           </label>
                         ) : null}
                       </div>
 
                       <p className="mb-3 mt-6 text-xs font-black uppercase tracking-[0.1em] text-slate-500">
-                        Hours you can study daily <span className="font-medium normal-case text-slate-400">(min 3h)</span>
+                        <UiText text={"Hours you can study daily"} /> <span className="font-medium normal-case text-slate-400"><UiText text={"(min 3h)"} /></span>
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {HOURS_OPTIONS.map((hours) => {
@@ -858,7 +860,7 @@ export default function Onboarding() {
                             >
                               <span className={`text-lg font-black ${active ? 'text-white' : 'text-slate-800'}`}>{hours}h</span>
                               <span className={`text-[9px] font-semibold uppercase ${active ? 'text-blue-100' : 'text-slate-400'}`}>
-                                {hours === 3 ? 'min' : hours === 4 ? 'good' : hours === 5 ? 'great' : 'max'}
+                                {hours === 3 ? <UiText text={"min"} /> : hours === 4 ? 'good' : hours === 5 ? 'great' : 'max'}
                               </span>
                             </button>
                           )
@@ -900,10 +902,10 @@ export default function Onboarding() {
                           )
                         })}
                       </div>
-                      <p className="mt-2 text-[11px] text-slate-500">Choose up to three destinations. Options include every country represented in the Top Universities catalog.</p>
+                      <p className="mt-2 text-[11px] text-slate-500"><UiText text={"Choose up to three destinations. Options include every country represented in the Top Universities catalog."} /></p>
                       <label className="mt-5 block">
                         <span className="mb-1.5 block text-xs font-black uppercase tracking-[0.1em] text-slate-500">
-                          Intended field of study
+                          <UiText text={"Intended field of study"} />
                         </span>
                         <div className="relative">
                           <GraduationCap className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400" />
@@ -911,7 +913,7 @@ export default function Onboarding() {
                             list="popular-study-fields"
                             value={fieldOfStudy}
                             onChange={(event) => setFieldOfStudy(event.target.value)}
-                            placeholder="Type or choose a study field..."
+                            placeholder={uiCopy("Type or choose a study field...")}
                             autoComplete="off"
                             className="h-12 w-full rounded-2xl border border-blue-100 bg-white pl-11 pr-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
                           />
@@ -920,7 +922,7 @@ export default function Onboarding() {
                           </datalist>
                         </div>
                       </label>
-                      <div className="mt-3 flex flex-wrap gap-2" aria-label="Popular fields of study">
+                      <div className="mt-3 flex flex-wrap gap-2" aria-label={uiCopy("Popular fields of study")}>
                         {POPULAR_STUDY_FIELDS.slice(0, 9).map((field) => (
                           <button
                             key={field}
@@ -932,7 +934,7 @@ export default function Onboarding() {
                                 : 'border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:text-blue-600'
                             }`}
                           >
-                            {field}
+                            <UiText text={field} />
                           </button>
                         ))}
                       </div>
@@ -945,47 +947,47 @@ export default function Onboarding() {
                         <div className="h-1 w-full bg-gradient-to-r from-blue-600 to-indigo-500" />
                         <div className="grid gap-3 p-5 sm:grid-cols-2">
                           <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Learner</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400"><UiText text={"Learner"} /></p>
                             <p className="mt-1 text-base font-black text-slate-900">{firstName} {lastName}</p>
                           </div>
                           <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Background</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400"><UiText text={"Background"} /></p>
                             <p className="mt-1 text-base font-black text-slate-900">{gradeLevel}</p>
                             <p className="text-[11px] text-slate-500">{country}</p>
                           </div>
                           <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Study abroad goal</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400"><UiText text={"Study abroad goal"} /></p>
                             <p className="mt-1 text-base font-black text-slate-900">{fieldOfStudy}</p>
                             <p className="line-clamp-1 text-[11px] text-slate-500">{targetCountries.join(' · ')}</p>
                           </div>
                           <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
                             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400"> <UiText text={"Target exam"} /> </p>
-                            <p className="mt-1 text-base font-black text-slate-900">{selectedExamCard.label}</p>
+                            <p className="mt-1 text-base font-black text-slate-900"><UiText text={selectedExamCard.label} /></p>
                             <p className="text-[11px] text-slate-500">
                               {targetExam === 'IELTS'
-                                ? `${currentIeltsScore ?? 'Not taken yet'} → ${targetIeltsScore} band`
+                                ? <UiText text={"{{value1}} → {{value2}} band"} values={{ value1: String(currentIeltsScore ?? 'Not taken yet'), value2: String(targetIeltsScore) }} />
                                 : targetExam === 'SAT'
-                                  ? `${currentSatScore ?? 'Not taken yet'} → ${targetSatScore} score`
+                                  ? <UiText text={"{{value1}} → {{value2}} score"} values={{ value1: String(currentSatScore ?? 'Not taken yet'), value2: String(targetSatScore) }} />
                                   : `IELTS ${currentIeltsScore ?? 'Not taken yet'} → ${targetIeltsScore} · SAT ${currentSatScore ?? 'Not taken yet'} → ${targetSatScore}`}
                             </p>
                           </div>
                           <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Days to exam</p>
-                            <p className="mt-1 text-base font-black text-slate-900">{resolvedDays} days</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400"><UiText text={"Days to exam"} /></p>
+                            <p className="mt-1 text-base font-black text-slate-900">{resolvedDays} <UiText text={"days"} /></p>
                             {selectedExamDate ? <p className="text-[11px] font-semibold text-slate-500">{new Date(`${selectedExamDate}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p> : null}
                             <span className={`mt-1 inline-block rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${planIntensity.color}`}>
-                              {planIntensity.label} pace
+                              <UiText text={planIntensity.label} /> <UiText text={"pace"} />
                             </span>
                           </div>
                           <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Daily study</p>
-                            <p className="mt-1 text-base font-black text-slate-900">{dailyHours} hours/day</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400"><UiText text={"Daily study"} /></p>
+                            <p className="mt-1 text-base font-black text-slate-900">{dailyHours} <UiText text={"hours/day"} /></p>
                           </div>
                         </div>
                       </div>
                       <p className="mt-4 inline-flex items-center gap-1.5 text-sm text-slate-500">
                         <Clock3 className="h-4 w-4 text-blue-400" />
-                        You can update your goals and exam dates from your account.
+                        <UiText text={"You can update your goals and exam dates from your account."} />
                       </p>
                     </div>
                   ) : null}
@@ -1002,7 +1004,7 @@ export default function Onboarding() {
                 className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-50"
               >
                 <ArrowLeft className="h-4 w-4" />
-                {step === 1 ? 'Exit' : 'Back'}
+                {step === 1 ? <UiText text={"Exit"} /> : <UiText text={"Back"} />}
               </button>
 
               <div className="flex flex-wrap items-center justify-end gap-2">
@@ -1034,7 +1036,7 @@ export default function Onboarding() {
                       className="cta-sheen inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#2563EB] via-[#3B82F6] to-[#1D4ED8] px-6 py-2.5 text-sm font-black text-white shadow-[0_12px_24px_rgba(37,99,235,0.36)] transition hover:shadow-[0_16px_34px_rgba(37,99,235,0.46)] disabled:cursor-wait disabled:opacity-75"
                     >
                       <Sparkles className="h-4 w-4" />
-                      {stage === 'idle' ? 'Save my profile' : 'Saving...'}
+                      {stage === 'idle' ? <UiText text={"Save my profile"} /> : <UiText text={"Saving..."} />}
                     </motion.button>
                     {saveError ? (
                       <p className="mt-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-center text-xs font-bold text-blue-700">
@@ -1086,7 +1088,7 @@ export default function Onboarding() {
                     )}
                   </div>
                   <p className="mt-4 text-2xl font-black text-slate-900">
-                    {stage === 'generating' ? 'Saving your profile...' : 'Profile saved'}
+                    {stage === 'generating' ? <UiText text={"Saving your profile..."} /> : <UiText text={"Profile saved"} />}
                   </p>
                   <AnimatePresence mode="wait">
                     <motion.p
@@ -1097,7 +1099,7 @@ export default function Onboarding() {
                       transition={{ duration: 0.22 }}
                       className="mt-2 text-sm leading-6 text-slate-500"
                     >
-                      {stage === 'generating' ? PLAN_GENERATION_STEPS[messageIndex] : 'Taking you to your dashboard now.'}
+                      {stage === 'generating' ? PLAN_GENERATION_STEPS[messageIndex] : <UiText text={"Taking you to your dashboard now."} />}
                     </motion.p>
                   </AnimatePresence>
                 </motion.div>

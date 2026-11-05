@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { motion, useReducedMotion } from 'framer-motion'
 import { BookOpen, Headphones, Mic2, PenSquare } from 'lucide-react'
 
@@ -37,7 +38,7 @@ export default function LiquidGlassHero() {
           transition={{ duration: 0.8, ease: EASE, delay: 0.1 }}
           className="lg-glass lg-glass-sheen absolute inset-0 rounded-[30px] [transform:perspective(1400px)_rotateY(-9deg)_rotateX(3deg)]"
         >
-          <p className="absolute left-6 top-5 text-xl font-black italic tracking-tight text-slate-800">Dashboard</p>
+          <p className="absolute left-6 top-5 text-xl font-black italic tracking-tight text-slate-800"><UiText text={"Dashboard"} /></p>
 
           {/* band ring + score, centred */}
           <div className="absolute inset-0 grid place-items-center">
@@ -67,9 +68,9 @@ export default function LiquidGlassHero() {
             <div className="pointer-events-none absolute flex flex-col items-center">
               <span className="text-[3.4rem] font-black leading-none tracking-tight text-slate-900">{target.toFixed(1)}</span>
               <span className="mt-2 text-center text-sm font-semibold leading-tight text-slate-500">
-                Overall Band
+                <UiText text={"Overall Band"} />
                 <br />
-                Score
+                <UiText text={"Score"} />
               </span>
             </div>
           </div>
@@ -91,7 +92,7 @@ export default function LiquidGlassHero() {
                 className="lg-glass lg-glass-sheen flex h-[104px] w-[104px] flex-col items-center justify-center gap-2 rounded-[24px] [box-shadow:0_18px_38px_rgba(15,23,42,0.18),0_3px_10px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.9)]"
               >
                 <Icon className="h-7 w-7 text-blue-600" strokeWidth={1.8} />
-                <span className="text-[13px] font-bold text-slate-700">{tile.label}</span>
+                <span className="text-[13px] font-bold text-slate-700"><UiText text={tile.label} /></span>
               </div>
             </motion.div>
           )
@@ -115,7 +116,7 @@ export function LiquidGlassHeroMobile() {
   return (
     <div className="mx-auto mt-8 w-full max-w-sm">
       <div className="lg-glass lg-glass-sheen relative flex flex-col items-center overflow-hidden rounded-[28px] p-6">
-        <p className="self-start text-lg font-black italic tracking-tight text-slate-800">Dashboard</p>
+        <p className="self-start text-lg font-black italic tracking-tight text-slate-800"><UiText text={"Dashboard"} /></p>
         <div className="relative my-2 grid place-items-center">
           <svg viewBox="0 0 280 280" className="h-44 w-44 -rotate-90">
             <circle cx="140" cy="140" r={R} fill="none" stroke="rgba(148,163,184,0.14)" strokeWidth="18" />
@@ -143,7 +144,7 @@ export function LiquidGlassHeroMobile() {
           </svg>
           <div className="absolute flex flex-col items-center">
             <span className="text-4xl font-black tracking-tight text-slate-900">{target.toFixed(1)}</span>
-            <span className="text-center text-[11px] font-semibold leading-tight text-slate-500">Overall Band Score</span>
+            <span className="text-center text-[11px] font-semibold leading-tight text-slate-500"><UiText text={"Overall Band Score"} /></span>
           </div>
         </div>
         <div className="mt-3 grid w-full grid-cols-2 gap-3">
@@ -155,7 +156,7 @@ export function LiquidGlassHeroMobile() {
                 className="lg-glass lg-glass-sheen flex items-center gap-2.5 rounded-2xl px-3 py-3"
               >
                 <Icon className="h-5 w-5 shrink-0 text-blue-600" strokeWidth={1.8} />
-                <span className="text-sm font-bold text-slate-700">{tile.label}</span>
+                <span className="text-sm font-bold text-slate-700"><UiText text={tile.label} /></span>
               </div>
             )
           })}

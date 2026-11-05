@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import { useActiveTest } from '@/hooks/useActiveTest'
 import TestLeaderboard from '@/components/results/TestLeaderboard'
 import { useIeltsAttemptResume } from '@/hooks/useIeltsAttemptResume'
@@ -76,6 +78,7 @@ export default function IELTSWritingFullTestInterface({
   inFullMock = false,
   fullMockId,
 }: Props) {
+  const { c: uiCopy } = useCopy()
   const [searchParams] = useSearchParams()
   const tasks = fullTest.tasks
   const defaultDuration = tasks.reduce((total, task) => total + task.durationMinutes, 0)
@@ -406,14 +409,14 @@ export default function IELTSWritingFullTestInterface({
   }, [handleSubmit, phase, timeRemaining, timerEnabled])
 
   if (phase === 'landing') {
-    if (inFullMock) return <div className="flex min-h-dvh items-center justify-center bg-white p-6 text-center" role="status"><h1 className="text-2xl font-black text-slate-900">Preparing your <span className="text-red-600">Writing test</span></h1></div>
+    if (inFullMock) return <div className="flex min-h-dvh items-center justify-center bg-white p-6 text-center" role="status"><h1 className="text-2xl font-black text-slate-900"><UiText text={"Preparing your"} /> <span className="text-red-600"><UiText text={"Writing test"} /></span></h1></div>
     return (
       <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[linear-gradient(160deg,#fff7f7_0%,#fee2e2_52%,#fff_100%)] p-6">
         <AnimatedBackground />
         <AnimatePresence>
           {isLaunching ? (
             <TestLaunchOverlay
-              title="Your full test will begin shortly"
+              title={uiCopy("Your full test will begin shortly")}
               subtitle="Preparing Task 1 and Task 2"
             />
           ) : null}
@@ -424,27 +427,27 @@ export default function IELTSWritingFullTestInterface({
               {fullTest.title}
             </h1>
             <p className="mx-auto max-w-2xl text-lg font-light italic text-slate-600">
-              Experience the authentic IELTS Computer-Delivered environment with Ivygoo precision.
+              <UiText text={"Experience the authentic IELTS Computer-Delivered environment with Ivygoo precision."} />
             </p>
           </motion.div>
 
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
             <ModeCard
               icon={<Lightbulb className="h-8 w-8" />}
-              title="Practice Mode"
+              title={uiCopy("Practice Mode")}
               eyebrow="Casual Learning"
-              description="Write at your own pace without time pressure. Perfect for learning structure and vocabulary."
+              description={uiCopy("Write at your own pace without time pressure. Perfect for learning structure and vocabulary.")}
               features={['Unlimited writing time', 'Task 1: 150+ words · Task 2: 250+ words']}
-              buttonLabel="Start Practice"
+              buttonLabel={uiCopy("Start Practice")}
               onClick={() => handleStart(false)}
             />
             <ModeCard
               icon={<Monitor className="h-8 w-8" />}
-              title="Simulation Mode"
+              title={uiCopy("Simulation Mode")}
               eyebrow="Exam Simulation"
-              description="Authentic IELTS CD environment. Replicates the high-pressure conditions of the real exam with strict timing and official layout standards."
+              description={uiCopy("Authentic IELTS CD environment. Replicates the high-pressure conditions of the real exam with strict timing and official layout standards.")}
               features={[`Strict ${effectiveDuration}-minute limit across both tasks`, 'IELTS Writing band scoring']}
-              buttonLabel="Launch Final Simulation"
+              buttonLabel={uiCopy("Launch Final Simulation")}
               simulation
               onClick={() => handleStart(true)}
             />
@@ -452,7 +455,7 @@ export default function IELTSWritingFullTestInterface({
 
           <motion.div className="mt-16 text-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
             <button type="button" onClick={onExit} className="mx-auto flex items-center gap-2 rounded-full border border-white/5 px-6 py-2 text-sm text-slate-500 transition-colors hover:bg-white/5 hover:text-red-600">
-              <ArrowLeft className="h-4 w-4" /> Return to Writing Tests
+              <ArrowLeft className="h-4 w-4" /> <UiText text={"Return to Writing Tests"} />
             </button>
           </motion.div>
         </div>
@@ -468,9 +471,9 @@ export default function IELTSWritingFullTestInterface({
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 text-white shadow-lg shadow-red-500/25">
               <Loader2 className="h-8 w-8 animate-spin" />
             </div>
-            <h2 className="mt-5 text-2xl font-black text-slate-900">Analyzing both responses</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-500">Task 1 and Task 2 are being scored separately, then combined using IELTS Writing weighting.</p>
-            <p className="mt-3 text-sm font-bold text-red-700">{Object.keys(evaluations).length} of {tasks.length} assessments ready</p>
+            <h2 className="mt-5 text-2xl font-black text-slate-900"><UiText text={"Analyzing both responses"} /></h2>
+            <p className="mt-2 text-sm leading-6 text-slate-500"><UiText text={"Task 1 and Task 2 are being scored separately, then combined using IELTS Writing weighting."} /></p>
+            <p className="mt-3 text-sm font-bold text-red-700">{Object.keys(evaluations).length} <UiText text={"of"} /> {tasks.length} <UiText text={"assessments ready"} /></p>
           </motion.div>
           <SubmittedWritingAnswers tasks={tasks} answers={answers} />
         </div>
@@ -482,11 +485,11 @@ export default function IELTSWritingFullTestInterface({
         <div className="min-h-screen bg-red-50 p-6">
           <div role="alert" className="mx-auto w-full max-w-md rounded-3xl border border-red-200 bg-white p-8 text-center shadow-xl">
             <AlertCircle className="mx-auto h-12 w-12 text-red-500" />
-            <h2 className="mt-4 text-2xl font-black text-slate-900">Evaluation failed</h2>
+            <h2 className="mt-4 text-2xl font-black text-slate-900"><UiText text={"Evaluation failed"} /></h2>
             <p className="mt-2 text-sm text-slate-600">{evalError}</p>
             <div className="mt-6 flex justify-center gap-2">
-              <button type="button" onClick={() => void handleSubmit()} className="rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white">Retry</button>
-              <button type="button" onClick={() => setPhase('writing')} className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700">Back to editing</button>
+              <button type="button" onClick={() => void handleSubmit()} className="rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white"><UiText text={"Retry"} /></button>
+              <button type="button" onClick={() => setPhase('writing')} className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700"><UiText text={"Back to editing"} /></button>
             </div>
           </div>
           <SubmittedWritingAnswers tasks={tasks} answers={answers} />
@@ -500,10 +503,10 @@ export default function IELTSWritingFullTestInterface({
         <div className="mx-auto max-w-5xl">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <button type="button" onClick={onExit} className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-sm">
-              <ArrowLeft className="h-4 w-4" /> Back to Tests
+              <ArrowLeft className="h-4 w-4" /> <UiText text={"Back to Tests"} />
             </button>
             <button type="button" onClick={resetTest} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-red-500/20">
-              <RotateCcw className="h-4 w-4" /> Try Again
+              <RotateCcw className="h-4 w-4" /> <UiText text={"Try Again"} />
             </button>
           </div>
 
@@ -511,20 +514,20 @@ export default function IELTSWritingFullTestInterface({
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-black uppercase tracking-widest text-emerald-700">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Full test completed
+                  <CheckCircle2 className="h-3.5 w-3.5" /> <UiText text={"Full test completed"} />
                 </span>
-                <h1 className="mt-3 text-3xl font-black text-slate-900">Estimated Overall Band {overallBand.toFixed(1)}</h1>
-                <p className="mt-1 text-sm text-slate-500">Task 2 carries twice the weight of Task 1. This AI estimate is not an official IELTS result.</p>
+                <h1 className="mt-3 text-3xl font-black text-slate-900"><UiText text={"Estimated Overall Band"} /> {overallBand.toFixed(1)}</h1>
+                <p className="mt-1 text-sm text-slate-500"><UiText text={"Task 2 carries twice the weight of Task 1. This AI estimate is not an official IELTS result."} /></p>
               </div>
               <div className="rounded-2xl bg-gradient-to-br from-red-600 to-rose-500 px-6 py-4 text-center text-white shadow-lg shadow-red-500/20">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-red-100">Total words</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-red-100"><UiText text={"Total words"} /></p>
                 <p className="text-3xl font-black">{totalWordCount}</p>
               </div>
             </div>
           </div>
 
           <div className="mt-5 space-y-5">
-            <details className="ir-glass p-5 mt-5"><summary className="cursor-pointer font-bold">Test leaderboard</summary><div className="mt-5"><TestLeaderboard testId={fullTest.id} title={fullTest.title} /></div></details>
+            <details className="ir-glass p-5 mt-5"><summary className="cursor-pointer font-bold"><UiText text={"Test leaderboard"} /></summary><div className="mt-5"><TestLeaderboard testId={fullTest.id} title={fullTest.title} /></div></details>
             {tasks.map((task, index) => {
               const evaluation = evaluations[task.id]
               if (!evaluation) return null
@@ -532,49 +535,49 @@ export default function IELTSWritingFullTestInterface({
                 <section key={task.id} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="text-[11px] font-black uppercase tracking-[0.16em] text-red-500">Task {index + 1}</p>
-                      <h2 className="mt-1 text-xl font-black text-slate-900">Band {evaluation.overallBand.toFixed(1)}</h2>
+                      <p className="text-[11px] font-black uppercase tracking-[0.16em] text-red-500"><UiText text={"Task"} /> {index + 1}</p>
+                      <h2 className="mt-1 text-xl font-black text-slate-900"><UiText text={"Band"} /> {evaluation.overallBand.toFixed(1)}</h2>
                       <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">{evaluation.summary}</p>
                     </div>
-                    <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-600">{wordCounts[task.id]} words</span>
+                    <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-600">{wordCounts[task.id]} <UiText text={"words"} /></span>
                   </div>
                   <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
                     <Score label={task.taskType === 'task1' ? 'Task Achievement' : 'Task Response'} value={evaluation.taskAchievement} />
-                    <Score label="Coherence" value={evaluation.coherenceCohesion} />
-                    <Score label="Vocabulary" value={evaluation.lexicalResource} />
-                    <Score label="Grammar" value={evaluation.grammaticalRange} />
+                    <Score label={uiCopy("Coherence")} value={evaluation.coherenceCohesion} />
+                    <Score label={uiCopy("Vocabulary")} value={evaluation.lexicalResource} />
+                    <Score label={uiCopy("Grammar")} value={evaluation.grammaticalRange} />
                   </div>
                   <WritingScoreExplanation feedback={evaluation.criterionFeedback} taskType={task.taskType} />
                   {task.diagram ? (
                     <details className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
-                      <summary className="cursor-pointer text-sm font-bold text-slate-800">Review Task 1 chart</summary>
+                      <summary className="cursor-pointer text-sm font-bold text-slate-800"><UiText text={"Review Task 1 chart"} /></summary>
                       <div className="mx-auto mt-4 max-w-[650px]"><WritingTaskDiagram diagram={task.diagram} /></div>
                     </details>
                   ) : null}
                   {task.visual ? (
                     <details className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
-                      <summary className="cursor-pointer text-sm font-bold text-slate-800">Review Task 1 data</summary>
+                      <summary className="cursor-pointer text-sm font-bold text-slate-800"><UiText text={"Review Task 1 data"} /></summary>
                       <div className="mx-auto mt-4 max-w-[750px]"><WritingDataVisual visual={task.visual} /></div>
                     </details>
                   ) : null}
                   {task.imageUrl ? (
                     <details className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
-                      <summary className="cursor-pointer text-sm font-bold text-slate-800">Review task visual</summary>
+                      <summary className="cursor-pointer text-sm font-bold text-slate-800"><UiText text={"Review task visual"} /></summary>
                       <WritingTaskImage task={task} className="mx-auto mt-4 h-auto max-w-full object-contain" />
                     </details>
                   ) : null}
                   <details className="mt-4 rounded-2xl border border-red-100 bg-red-50/30 p-4">
-                    <summary className="cursor-pointer text-sm font-bold text-slate-800">Task prompt</summary>
+                    <summary className="cursor-pointer text-sm font-bold text-slate-800"><UiText text={"Task prompt"} /></summary>
                     <p className="mt-3 whitespace-pre-line text-sm leading-6 text-slate-700">{task.promptLead ?? task.prompt}</p>
                     {task.promptQuestion ? <p className="mt-3 whitespace-pre-line text-sm font-semibold leading-6 text-slate-800">{task.promptQuestion}</p> : null}
                   </details>
                   <div className="mt-5 grid gap-4 lg:grid-cols-2">
-                    <FeedbackList title="Strengths" items={evaluation.strengths} tone="emerald" />
-                    <FeedbackList title="Improve next" items={evaluation.improvements} tone="amber" />
+                    <FeedbackList title={uiCopy("Strengths")} items={evaluation.strengths} tone="emerald" />
+                    <FeedbackList title={uiCopy("Improve next")} items={evaluation.improvements} tone="amber" />
                   </div>
                   {evaluation.errors.length > 0 ? (
                     <details className="mt-4 rounded-2xl border border-amber-200 bg-amber-50/30 p-4">
-                      <summary className="cursor-pointer text-sm font-bold text-slate-800">Corrections ({evaluation.errors.length})</summary>
+                      <summary className="cursor-pointer text-sm font-bold text-slate-800"><UiText text={"Corrections ("} />{evaluation.errors.length})</summary>
                       <div className="mt-4 space-y-3">
                         {evaluation.errors.map((error, errorIndex) => (
                           <div key={`${task.id}-error-${errorIndex}`} className="rounded-xl border border-amber-100 bg-white p-3 text-sm">
@@ -589,12 +592,12 @@ export default function IELTSWritingFullTestInterface({
                   {answers[task.id]?.trim() ? <ImprovedResponse text={evaluation.improvedVersion} /> : null}
                   {evaluation.correctedVersion ? (
                     <details className="mt-4 rounded-2xl border border-blue-100 bg-blue-50/40 p-4">
-                      <summary className="cursor-pointer text-sm font-bold text-blue-800">View corrected version</summary>
+                      <summary className="cursor-pointer text-sm font-bold text-blue-800"><UiText text={"View corrected version"} /></summary>
                       <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700">{evaluation.correctedVersion}</p>
                     </details>
                   ) : null}
                   <details className="mt-4 rounded-2xl border border-slate-200 bg-slate-50/50 p-4">
-                    <summary className="cursor-pointer text-sm font-bold text-slate-800">Your original response</summary>
+                    <summary className="cursor-pointer text-sm font-bold text-slate-800"><UiText text={"Your original response"} /></summary>
                     <p className="mt-3 max-h-80 overflow-y-auto whitespace-pre-wrap text-sm leading-7 text-slate-700">{answers[task.id] || '(empty)'}</p>
                   </details>
                 </section>
@@ -611,8 +614,8 @@ export default function IELTSWritingFullTestInterface({
       <ConfirmModal
         open={showSubmitConfirm}
         icon={<Send className="h-7 w-7" />}
-        title="Submit both responses?"
-        description={`Task 1: ${wordCounts[tasks[0].id]} words · Task 2: ${wordCounts[tasks[1].id]} words`}
+        title={uiCopy("Submit both responses?")}
+        description={uiCopy("Task 1: {{value1}} words · Task 2: {{value2}} words", { value1: String(wordCounts[tasks[0].id]), value2: String(wordCounts[tasks[1].id]) })}
         cancelLabel="Keep writing"
         confirmLabel="Submit full test"
         onCancel={() => setShowSubmitConfirm(false)}
@@ -625,11 +628,11 @@ export default function IELTSWritingFullTestInterface({
           <div className="fixed inset-0 z-[210] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-md">
             <motion.div initial={{ opacity: 0, y: 16, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0 }} className="w-full max-w-md rounded-3xl border border-amber-200 bg-white p-7 text-center shadow-2xl">
               <Crown className="mx-auto h-12 w-12 text-amber-500" />
-              <h2 className="mt-4 text-2xl font-black text-slate-900">Free AI checks used up</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">Upgrade to Premium to evaluate both full-test responses and receive detailed band feedback.</p>
+              <h2 className="mt-4 text-2xl font-black text-slate-900"><UiText text={"Free AI checks used up"} /></h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600"><UiText text={"Upgrade to Premium to evaluate both full-test responses and receive detailed band feedback."} /></p>
               <div className="mt-5 flex justify-center gap-2">
-                <a href="/premium" className="rounded-xl bg-gradient-to-r from-red-600 to-rose-600 px-5 py-2.5 text-sm font-bold text-white">View Premium</a>
-                <button type="button" onClick={() => setShowWritingGate(false)} className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-bold text-slate-700">Maybe later</button>
+                <a href="/premium" className="rounded-xl bg-gradient-to-r from-red-600 to-rose-600 px-5 py-2.5 text-sm font-bold text-white"><UiText text={"View Premium"} /></a>
+                <button type="button" onClick={() => setShowWritingGate(false)} className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-bold text-slate-700"><UiText text={"Maybe later"} /></button>
               </div>
             </motion.div>
           </div>
@@ -649,16 +652,16 @@ export default function IELTSWritingFullTestInterface({
         onAnswerChange={value => setAnswers(current => ({ ...current, [activeTask.id]: value }))}
         textareaRef={textareaRef}
         action={activeTaskIndex < tasks.length - 1 ? (
-          <button type="button" onClick={() => setActiveTaskIndex(activeTaskIndex + 1)} className="writing-primary">Next: Task 2 <ArrowRight size={15} /></button>
+          <button type="button" onClick={() => setActiveTaskIndex(activeTaskIndex + 1)} className="writing-primary"><UiText text={"Next: Task 2"} /> <ArrowRight size={15} /></button>
         ) : (
-          <button type="button" onClick={() => setShowSubmitConfirm(true)} className="writing-primary"><Send size={15} />Submit Full Test</button>
+          <button type="button" onClick={() => setShowSubmitConfirm(true)} className="writing-primary"><Send size={15} /><UiText text={"Submit Full Test"} /></button>
         )}
         prompt={<>
           <WritingTaskPrompt task={activeTask} />
           {activeTask.imageUrl ? (
             <div className="writing-source-visual">
               <div className="mb-2 flex justify-end">
-                <button type="button" onClick={() => setShowImagePreview(true)} aria-label="Enlarge Task 1 image" className="rounded-lg border border-slate-200 bg-white p-2 text-slate-700 shadow-sm hover:bg-slate-50">
+                <button type="button" onClick={() => setShowImagePreview(true)} aria-label={uiCopy("Enlarge Task 1 image")} className="rounded-lg border border-slate-200 bg-white p-2 text-slate-700 shadow-sm hover:bg-slate-50">
                   <Maximize2 className="h-4 w-4" />
                 </button>
               </div>
@@ -668,7 +671,7 @@ export default function IELTSWritingFullTestInterface({
           {activeTask.diagram ? (
             <div className="writing-source-visual">
               <div className="mb-2 flex justify-end">
-                <button type="button" onClick={() => setShowImagePreview(true)} aria-label="Enlarge Task 1 image" className="rounded-lg border border-slate-200 bg-white p-2 text-slate-700 shadow-sm hover:bg-slate-50">
+                <button type="button" onClick={() => setShowImagePreview(true)} aria-label={uiCopy("Enlarge Task 1 image")} className="rounded-lg border border-slate-200 bg-white p-2 text-slate-700 shadow-sm hover:bg-slate-50">
                   <Maximize2 className="h-4 w-4" />
                 </button>
               </div>
@@ -683,10 +686,10 @@ export default function IELTSWritingFullTestInterface({
         </>}
       />
       {showImagePreview && (activeTask.imageUrl || activeTask.diagram) ? (
-        <div className="fixed inset-0 z-[250] flex items-center justify-center bg-slate-950/80 p-3 sm:p-6" role="dialog" aria-modal="true" aria-label="Enlarged Task 1 image">
-          <button type="button" onClick={() => setShowImagePreview(false)} aria-label="Close enlarged image" className="absolute inset-0" />
+        <div className="fixed inset-0 z-[250] flex items-center justify-center bg-slate-950/80 p-3 sm:p-6" role="dialog" aria-modal="true" aria-label={uiCopy("Enlarged Task 1 image")}>
+          <button type="button" onClick={() => setShowImagePreview(false)} aria-label={uiCopy("Close enlarged image")} className="absolute inset-0" />
           <div className="relative max-h-[90vh] w-full max-w-[1200px] overflow-auto rounded-2xl bg-white p-3 shadow-2xl sm:p-5">
-            <button type="button" onClick={() => setShowImagePreview(false)} className="absolute right-3 top-3 z-10 rounded-lg bg-white px-3 py-2 text-sm font-bold text-slate-800 shadow">Close</button>
+            <button type="button" onClick={() => setShowImagePreview(false)} className="absolute right-3 top-3 z-10 rounded-lg bg-white px-3 py-2 text-sm font-bold text-slate-800 shadow"><UiText text={"Close"} /></button>
             {activeTask.diagram ? <WritingTaskDiagram diagram={activeTask.diagram} /> : <WritingTaskImage task={activeTask} className="h-auto max-w-full object-contain" />}
           </div>
         </div>
@@ -704,38 +707,39 @@ function ModeCard({ icon, title, eyebrow, description, features, buttonLabel, si
         <div className="mb-8 flex items-center gap-4">
           <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br to-rose-500 text-white shadow-lg shadow-red-500/20 transition-transform group-hover:scale-110 ${simulation ? 'from-red-600' : 'from-red-500'}`}>{icon}</span>
           <div>
-            <h2 className="text-2xl font-bold text-slate-900">{title}</h2>
-            <p className={`text-xs font-bold uppercase tracking-widest ${simulation ? 'text-red-600' : 'text-red-500'}`}>{eyebrow}</p>
+            <h2 className="text-2xl font-bold text-slate-900"><UiText text={title} /></h2>
+            <p className={`text-xs font-bold uppercase tracking-widest ${simulation ? 'text-red-600' : 'text-red-500'}`}><UiText text={eyebrow} /></p>
           </div>
         </div>
-        <p className="mb-8 flex-1 text-[15px] italic leading-relaxed text-slate-600 transition-colors group-hover:text-slate-700">{description}</p>
+        <p className="mb-8 flex-1 text-[15px] italic leading-relaxed text-slate-600 transition-colors group-hover:text-slate-700"><UiText text={description} /></p>
         <ul className="mb-10 space-y-4">
           {features.map((feature, index) => (
             <li key={feature} className={`flex items-center gap-3 text-xs ${simulation && index === 0 ? 'font-bold text-rose-400' : 'font-semibold text-slate-500'}`}>
               <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${index === 0 && simulation ? 'animate-pulse bg-rose-500' : index === 1 && !simulation ? 'bg-rose-500' : 'bg-red-500'}`} />
-              {feature}
+              <UiText text={feature} />
             </li>
           ))}
         </ul>
-        <button type="button" onClick={onClick} className={`flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 py-4 text-center text-sm font-bold text-white shadow-lg transition-all ${simulation ? 'shadow-red-500/20 group-hover:scale-[1.02]' : 'border border-red-500 shadow-red-500/25 group-hover:from-red-500 group-hover:to-rose-500'}`}>{buttonLabel}</button>
+        <button type="button" onClick={onClick} className={`flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 py-4 text-center text-sm font-bold text-white shadow-lg transition-all ${simulation ? 'shadow-red-500/20 group-hover:scale-[1.02]' : 'border border-red-500 shadow-red-500/25 group-hover:from-red-500 group-hover:to-rose-500'}`}><UiText text={buttonLabel} /></button>
       </div>
     </motion.div>
   )
 }
 
 function ConfirmModal({ open, icon, title, description, cancelLabel, confirmLabel, onCancel, onConfirm, confirmTone = 'red' }: { open: boolean; icon: React.ReactNode; title: string; description: string; cancelLabel: string; confirmLabel: string; onCancel: () => void; onConfirm: () => void; confirmTone?: 'red' | 'emerald' }) {
+  const { c: uiCopy } = useCopy()
   return (
     <AnimatePresence>
       {open ? (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-          <motion.button type="button" aria-label="Close confirmation" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-slate-950/50 backdrop-blur-md" onClick={onCancel} />
+          <motion.button type="button" aria-label={uiCopy("Close confirmation")} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-slate-950/50 backdrop-blur-md" onClick={onCancel} />
           <motion.div initial={{ opacity: 0, y: 14, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.97 }} className="relative w-full max-w-md rounded-3xl border border-red-100 bg-white p-6 text-center shadow-2xl">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">{icon}</div>
-            <h2 className="mt-4 text-xl font-black text-slate-900">{title}</h2>
-            <p className="mt-2 text-sm text-slate-600">{description}</p>
+            <h2 className="mt-4 text-xl font-black text-slate-900"><UiText text={title} /></h2>
+            <p className="mt-2 text-sm text-slate-600"><UiText text={description} /></p>
             <div className="mt-5 flex justify-center gap-2">
-              <button type="button" onClick={onCancel} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700">{cancelLabel}</button>
-              <button type="button" onClick={onConfirm} className={`rounded-xl px-4 py-2.5 text-sm font-bold text-white ${confirmTone === 'emerald' ? 'bg-emerald-600' : 'bg-red-600'}`}>{confirmLabel}</button>
+              <button type="button" onClick={onCancel} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700"><UiText text={cancelLabel} /></button>
+              <button type="button" onClick={onConfirm} className={`rounded-xl px-4 py-2.5 text-sm font-bold text-white ${confirmTone === 'emerald' ? 'bg-emerald-600' : 'bg-red-600'}`}><UiText text={confirmLabel} /></button>
             </div>
           </motion.div>
         </div>
@@ -745,14 +749,14 @@ function ConfirmModal({ open, icon, title, description, cancelLabel, confirmLabe
 }
 
 function Score({ label, value }: { label: string; value: number }) {
-  return <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-center"><p className="text-2xl font-black text-slate-900">{value.toFixed(1)}</p><p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-500">{label}</p></div>
+  return <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-center"><p className="text-2xl font-black text-slate-900">{value.toFixed(1)}</p><p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-500"><UiText text={label} /></p></div>
 }
 
 function FeedbackList({ title, items, tone }: { title: string; items: string[]; tone: 'emerald' | 'amber' }) {
   return (
     <div className={`rounded-2xl border p-4 ${tone === 'emerald' ? 'border-emerald-100 bg-emerald-50/50' : 'border-amber-100 bg-amber-50/50'}`}>
-      <h3 className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest ${tone === 'emerald' ? 'text-emerald-700' : 'text-amber-700'}`}><Target className="h-4 w-4" /> {title}</h3>
-      <ul className="mt-3 space-y-2 text-sm leading-5 text-slate-700">{items.map((item) => <li key={item}>• {item}</li>)}</ul>
+      <h3 className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest ${tone === 'emerald' ? 'text-emerald-700' : 'text-amber-700'}`}><Target className="h-4 w-4" /> <UiText text={title} /></h3>
+      <ul className="mt-3 space-y-2 text-sm leading-5 text-slate-700">{items.map((item) => <li key={item}>• <UiText text={item} /></li>)}</ul>
     </div>
   )
 }

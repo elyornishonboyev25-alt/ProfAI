@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import { useMemo } from 'react'
 import { getSATReviewTests } from '@/features/sat/catalog'
 import { buildSATExplanation, type ExplanationPart } from '@/features/sat/explanations'
@@ -26,6 +28,7 @@ export default function SATExplanation({ question, response, className = '' }: {
   response?: string
   className?: string
 }) {
+  const { c: uiCopy } = useCopy()
   const reviewed = reviewedQuestion(question)
   const model = useMemo(() => buildSATExplanation(reviewed), [reviewed])
   const choice = question.choices.find((item) => item.key === question.correctAnswer)
@@ -34,26 +37,26 @@ export default function SATExplanation({ question, response, className = '' }: {
   const accepted = [...new Set(question.acceptedAnswers ?? [])].filter((answer) => answer !== question.correctAnswer)
   return <div className={`sat-explanation ${className}`}>
     <div className="sat-explanation-answer">
-      <span className="sat-explanation-label">Correct answer</span>
+      <span className="sat-explanation-label"><UiText text={"Correct answer"} /></span>
       <div className="sat-explanation-answer-value">
         {choice ? <><strong className="sat-explanation-letter">{choice.key}</strong><SATChoiceContent choice={choice} /></>
           : <SATRichText text={`$${question.correctAnswer}$`} inlineMath />}
       </div>
       {question.kind === 'student-response' && accepted.length > 0 &&
-        <p className="sat-explanation-accepted">Also accepted: {accepted.join(', ')}. Equivalent fractions are accepted.</p>}
+        <p className="sat-explanation-accepted"><UiText text={"Also accepted:"} /> {accepted.join(', ')}<UiText text={". Equivalent fractions are accepted."} /></p>}
       {hasResponse && <p className={`sat-explanation-response ${correct ? 'is-correct' : 'is-incorrect'}`}>
-        {correct ? 'You answered correctly.' : `Your answer: ${response}. Follow the steps below to see how to reach the correct answer.`}
+        {correct ? <UiText text={"You answered correctly."} /> : <UiText text={"Your answer: {{value1}}. Follow the steps below to see how to reach the correct answer."} values={{ value1: String(response) }} />}
       </p>}
     </div>
-    <h4 className="sat-explanation-heading">{question.section === 'math' ? 'Solve it step by step' : 'Follow the reasoning'}</h4>
-    <ol className="sat-explanation-steps" aria-label="Solution steps">
+    <h4 className="sat-explanation-heading">{question.section === 'math' ? <UiText text={"Solve it step by step"} /> : <UiText text={"Follow the reasoning"} />}</h4>
+    <ol className="sat-explanation-steps" aria-label={uiCopy("Solution steps")}>
       {model.steps.map((part, index) => <li key={index}>
         <span className="sat-explanation-number" aria-hidden="true">{index + 1}</span>
         <div className="sat-explanation-step"><Content part={part} /></div>
       </li>)}
     </ol>
-    {model.alternatives.length > 0 && <section className="sat-explanation-alternatives" aria-label="Why other answers are incorrect">
-      <h4 className="sat-explanation-heading">Why the other choices don’t work</h4>
+    {model.alternatives.length > 0 && <section className="sat-explanation-alternatives" aria-label={uiCopy("Why other answers are incorrect")}>
+      <h4 className="sat-explanation-heading"><UiText text={"Why the other choices don’t work"} /></h4>
       <ul>{model.alternatives.map((part, index) => <li key={index}><Content part={part} /></li>)}</ul>
     </section>}
   </div>

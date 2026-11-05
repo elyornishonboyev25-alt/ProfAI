@@ -1,3 +1,4 @@
+import { useCopy } from '@/i18n/interface'
 import { accountStorageFor } from '@/utils/accountStorage'
 import UiText from '@/components/common/UiText'
 import LeaderboardEligibilityNotice from '@/components/common/LeaderboardEligibilityNotice'
@@ -94,6 +95,7 @@ export default function Results() {
 }
 
 function ResultsContent() {
+  const { c: uiCopy } = useCopy()
   const location = useLocation()
   const navigate = useNavigate()
   const { testId } = useParams<{ testId: string }>()
@@ -385,21 +387,21 @@ function ResultsContent() {
           <BrandLogo height={34} />
           <button type="button" className="flow-button ir-download" onClick={() => downloadTestResult(reviewedResult ?? result)}><Download size={16} /><UiText text="Download result" /></button>
         </header>
-        <section className="ir-glass ir-hero" aria-label="Test result">
+        <section className="ir-glass ir-hero" aria-label={uiCopy("Test result")}>
           <div className="ir-hero-copy">
-            <span className="ir-exam-label">IELTS {isListeningTest ? 'Listening' : 'Reading'}</span>
+            <span className="ir-exam-label">IELTS {isListeningTest ? <UiText text={"Listening"} /> : <UiText text={"Reading"} />}</span>
             <h1>{test.title.split(/\s+-\s+/, 2)[0]}</h1>
             {test.title.includes(' - ') && <p className="ir-paper-topics">{test.title.split(' - ').slice(1).join(' - ')}</p>}
             <div className="ir-meta"><span>{result.isPartial ? <TriangleAlert size={15} /> : <CheckCircle2 size={15} />}<UiText text={result.isPartial ? 'Partial submit' : 'Completed'} /></span><time dateTime={result.date}>{new Date(result.date).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</time></div>
-            <p className="ir-summary">{analysis.summary.correctAnswers} of {analysis.summary.totalQuestions} correct <span>&middot;</span> {Math.round(analysis.summary.accuracy)}% accuracy</p>
+            <p className="ir-summary">{analysis.summary.correctAnswers} <UiText text={"of"} /> {analysis.summary.totalQuestions} <UiText text={"correct"} /> <span>&middot;</span> {Math.round(analysis.summary.accuracy)}<UiText text={"% accuracy"} /></p>
             <div className="ir-hero-actions"><button type="button" className="flow-button is-primary" onClick={() => activateFullReview()}><BookOpen size={17} /><UiText text="Full Review" /></button><button type="button" className="flow-button" onClick={startRetake}><RotateCcw size={16} /><UiText text="Re-Do Test" /></button></div>
           </div>
-          <div className="ir-band" aria-label={`IELTS band ${effectiveBandScore.toFixed(1)}`}>
+          <div className="ir-band" aria-label={uiCopy("IELTS band {{value1}}", { value1: String(effectiveBandScore.toFixed(1)) })}>
             <svg viewBox="0 0 180 180" aria-hidden="true"><circle className="ir-band-track" cx="90" cy="90" r="75" /><circle className="ir-band-progress" cx="90" cy="90" r="75" pathLength="100" strokeDasharray="100" strokeDashoffset={100 - effectiveBandScore / 9 * 100} transform="rotate(-90 90 90)" /></svg>
-            <div><small>IELTS band</small><strong>{effectiveBandScore.toFixed(1)}</strong><span>out of 9.0</span></div>
+            <div><small><UiText text={"IELTS band"} /></small><strong>{effectiveBandScore.toFixed(1)}</strong><span><UiText text={"out of 9.0"} /></span></div>
           </div>
         </section>
-        <section className="ir-metrics" aria-label="Attempt summary">
+        <section className="ir-metrics" aria-label={uiCopy("Attempt summary")}>
           {[
             { label: 'Correct', value: analysis.summary.correctAnswers, icon: CheckCircle2, tone: 'correct', note: 'Right answers' },
             { label: 'Incorrect', value: analysis.summary.incorrectAnswers, icon: XCircle, tone: 'incorrect', note: 'Answers to review' },
@@ -407,7 +409,7 @@ function ResultsContent() {
             { label: 'Time spent', value: formatSpentTime(result.timeSpent), icon: Clock3, tone: 'time', note: 'Time on this attempt' },
           ].map(({ label, value, icon: Icon, tone, note }) => <article className={`ir-glass ir-metric is-${tone}`} key={label}><span className="ir-metric-icon"><Icon size={20} /></span><div><p><UiText text={label} /></p><strong>{value}</strong><small><UiText text={note} /></small></div></article>)}
         </section>
-        <div className="ir-tabs" role="tablist" aria-label="Result views" onKeyDown={event => {
+        <div className="ir-tabs" role="tablist" aria-label={uiCopy("Result views")} onKeyDown={event => {
           if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
           event.preventDefault()
           const next = event.key === 'Home' ? 'answers' : event.key === 'End' ? 'leaderboard' : resultTab === 'answers' ? 'leaderboard' : 'answers'
@@ -417,33 +419,33 @@ function ResultsContent() {
         </div>
         {resultTab === 'answers' ? <section className="ir-glass ir-answers" role="tabpanel" id="ielts-result-panel-answers" aria-labelledby="ielts-result-tab-answers">
           <header className="ir-section-heading"><div><BookOpen size={22} /><h2><UiText text="Answer Sheet" /></h2></div><button type="button" className="flow-button" aria-pressed={showCorrectAnswers} onClick={() => setShowCorrectAnswers(value => !value)}>{showCorrectAnswers ? <EyeOff size={16} /> : <Eye size={16} />}<UiText text={showCorrectAnswers ? 'Hide Correct Answers' : 'Show Correct Answers'} /></button></header>
-          <div className="ir-outcomes" role="group" aria-label="Filter answers">{(['all', 'correct', 'incorrect', 'skipped'] as const).map(status => <button type="button" key={status} aria-pressed={outcomeFilter === status} onClick={() => setOutcomeFilter(status)}>{status === 'all' ? 'All answers' : status === 'skipped' ? 'Skipped' : status === 'correct' ? 'Correct' : 'Incorrect'} <span>{status === 'all' ? flatQuestionResults.length : flatQuestionResults.filter(question => question.status === status).length}</span></button>)}</div>
+          <div className="ir-outcomes" role="group" aria-label={uiCopy("Filter answers")}>{(['all', 'correct', 'incorrect', 'skipped'] as const).map(status => <button type="button" key={status} aria-pressed={outcomeFilter === status} onClick={() => setOutcomeFilter(status)}>{status === 'all' ? <UiText text={"All answers"} /> : status === 'skipped' ? <UiText text={"Skipped"} /> : status === 'correct' ? <UiText text={"Correct"} /> : <UiText text={"Incorrect"} />} <span>{status === 'all' ? flatQuestionResults.length : flatQuestionResults.filter(question => question.status === status).length}</span></button>)}</div>
           <div className={`ir-answer-groups${activeSections.length === 3 ? ' has-three-parts' : ''}${showCorrectAnswers ? ' shows-correct' : ''}`}>
             {activeSections.map((section, index) => {
               const sectionQuestions = flatQuestionResults.filter(question => questionMetaMap.get(question.questionId)?.section.id === section.id && (outcomeFilter === 'all' || question.status === outcomeFilter))
               if (!sectionQuestions.length) return null
               return <section className="ir-answer-group" key={section.id} aria-labelledby={`ir-part-${section.id}`}>
-                <header className="ir-answer-group-heading"><h3 id={`ir-part-${section.id}`}>Part {sectionQuestions[0].partNumber ?? index + 1}</h3><p>{section.title}</p><span>{sectionQuestions.length}</span></header>
-                <div className="ir-answer-columns" aria-hidden="true"><span>No.</span><span>Your answer</span>{showCorrectAnswers && <span>Correct answer</span>}<span>Status</span><span /></div>
+                <header className="ir-answer-group-heading"><h3 id={`ir-part-${section.id}`}><UiText text={"Part"} /> {sectionQuestions[0].partNumber ?? index + 1}</h3><p>{section.title}</p><span>{sectionQuestions.length}</span></header>
+                <div className="ir-answer-columns" aria-hidden="true"><span><UiText text={"No."} /></span><span><UiText text={"Your answer"} /></span>{showCorrectAnswers && <span><UiText text={"Correct answer"} /></span>}<span><UiText text={"Status"} /></span><span /></div>
                 <div className="ir-answer-grid">{sectionQuestions.map(question => {
                   const meta = questionMetaMap.get(question.questionId)
                   const userAnswer = formatUserAnswer(question.userAnswer, meta?.question.options)
                   const status = questionStatusBadge(question.status)
                   const StatusIcon = question.status === 'correct' ? CheckCircle2 : question.status === 'incorrect' ? XCircle : EyeOff
-                  return <button type="button" className={`ir-answer is-${question.status}`} key={question.questionId} onClick={() => activateFullReview(question.questionId)} aria-label={`Review question ${question.displayNumber} in ${isListeningTest ? 'listening' : 'passage'}`}>
+                  return <button type="button" className={`ir-answer is-${question.status}`} key={question.questionId} onClick={() => activateFullReview(question.questionId)} aria-label={uiCopy("Review question {{value1}} in {{value2}}", { value1: String(question.displayNumber), value2: String(isListeningTest ? 'listening' : 'passage') })}>
                     <b className="ir-answer-number">{question.displayNumber}</b>
-                    <span className="ir-answer-response"><span className="sr-only">Your answer: </span><strong>{question.status === 'skipped' ? <span className="ir-answer-unanswered">Unanswered</span> : userAnswer}</strong></span>
-                    {showCorrectAnswers && <span className="ir-answer-correct"><span className="sr-only">Correct answer: </span><strong>{formatCorrectAnswer(question.correctAnswer)}</strong></span>}
-                    <span className="ir-answer-status"><StatusIcon size={15} /><span>{status.label}</span></span>
+                    <span className="ir-answer-response"><span className="sr-only"><UiText text={"Your answer:"} /> </span><strong>{question.status === 'skipped' ? <span className="ir-answer-unanswered"><UiText text={"Unanswered"} /></span> : userAnswer}</strong></span>
+                    {showCorrectAnswers && <span className="ir-answer-correct"><span className="sr-only"><UiText text={"Correct answer:"} /> </span><strong>{formatCorrectAnswer(question.correctAnswer)}</strong></span>}
+                    <span className="ir-answer-status"><StatusIcon size={15} /><span><UiText text={status.label} /></span></span>
                     <ChevronRight className="ir-answer-link" size={15} aria-hidden="true" />
                   </button>
                 })}</div>
               </section>
             })}
           </div>
-          {!flatQuestionResults.some(question => outcomeFilter === 'all' || question.status === outcomeFilter) && <p className="ir-empty">No answers match this filter.</p>}
+          {!flatQuestionResults.some(question => outcomeFilter === 'all' || question.status === outcomeFilter) && <p className="ir-empty"><UiText text={"No answers match this filter."} /></p>}
         </section> : <section className="ir-glass ir-leaderboard-panel" role="tabpanel" id="ielts-result-panel-leaderboard" aria-labelledby="ielts-result-tab-leaderboard"><TestLeaderboard testId={resolvedTestId} title={test.title} eligible={!result.isPartial} /></section>}
-        <footer className="ir-footer"><button type="button" className="flow-button" onClick={goBack}><ArrowLeft size={16} /><UiText text={backLabel} /></button><button type="button" className="flow-button" disabled={sharingResult} onClick={() => void shareResult()}><Share2 size={16} />{sharingResult ? 'Creating link…' : 'Share result'}</button></footer>
+        <footer className="ir-footer"><button type="button" className="flow-button" onClick={goBack}><ArrowLeft size={16} /><UiText text={backLabel} /></button><button type="button" className="flow-button" disabled={sharingResult} onClick={() => void shareResult()}><Share2 size={16} />{sharingResult ? <UiText text={"Creating link…"} /> : <UiText text={"Share result"} />}</button></footer>
       </div>
     </main>
   )

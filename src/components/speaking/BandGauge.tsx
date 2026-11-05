@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import ProgressRing from '@/components/fx/ProgressRing'
 
 // Radial IELTS band gauge (0–9). Reuses the shared ProgressRing primitive.
@@ -29,7 +30,7 @@ export default function BandGauge({
           <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">/ 9.0</p>
         </div>
       </ProgressRing>
-      {label ? <p className="text-xs font-semibold text-slate-600">{label}</p> : null}
+      {label ? <p className="text-xs font-semibold text-slate-600"><UiText text={label} /></p> : null}
     </div>
   )
 }

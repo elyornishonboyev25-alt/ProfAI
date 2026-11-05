@@ -1,3 +1,4 @@
+import { useCopy } from '@/i18n/interface'
 import CrownBadge from '@/components/fx/CrownBadge'
 import { LevelBadge } from '@/components/profile/LearnerLevel'
 import { Phone } from 'lucide-react'
@@ -77,6 +78,7 @@ function targetLabel(learner: LearnerSearchResult) {
 }
 
 export default function Community() {
+  const { c: uiCopy } = useCopy()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const requestedMode = searchParams.get('mode')
@@ -219,10 +221,10 @@ export default function Community() {
     <main className={cn('workspace-page community-page min-h-screen', hub.room && 'has-live-room')}>
       <div className="community-shell">
         <header className="community-header">
-          <div className="community-brand-row"><span className="speaking-zone-mark"><Mic size={24} aria-hidden="true" /></span><div><h1>Speaking Zone</h1><p>{t('Practise English. Meet people. Speak with confidence.')}</p></div></div>
+          <div className="community-brand-row"><span className="speaking-zone-mark"><Mic size={24} aria-hidden="true" /></span><div><h1><UiText text={"Speaking Zone"} /></h1><p>{t('Practise English. Meet people. Speak with confidence.')}</p></div></div>
           <div className="community-status" role="status"><span className={cn('hub-connection', hub.connected && 'is-live')}>{t(hub.connected ? 'Live' : 'Connecting...')}</span><span>{hub.online} {t('online now')}</span></div>
         </header>
-        <nav className="community-main-nav" aria-label="Speaking Zone">
+        <nav className="community-main-nav" aria-label={uiCopy("Speaking Zone")}>
           {COMMUNITY_SECTIONS.map(item => {
             const Icon = item.icon
             return <button type="button" key={item.id} aria-pressed={mode === item.id} className={cn(mode === item.id && 'is-active')} onClick={() => selectMode(item.id)}><span className="community-nav-icon"><Icon size={19} /></span><span><b>{t(item.name)}</b><small>{t(item.detail)}</small></span>{item.id === 'voice' || item.id === 'partner' ? <span className="community-nav-count">{item.id === 'voice' ? hub.rooms.length : hub.available.filter(name => name !== hub.selfName).length}</span> : null}</button>
@@ -246,7 +248,7 @@ export default function Community() {
           </div>
           <div className="community-feed-meta" role="status"><span><Users size={15} />{visibleResults.length} {t('learners')}{hub.connected ? <small className="community-ready-count"><span className="hub-live-dot" />{hub.available.filter(name => name !== hub.selfName).length} {t('Ready to talk')}</small> : null}</span><span>{t('Scroll to discover more')}</span></div>
           <div className="community-card-viewport" role="region" aria-label={t('Study partner profiles')} aria-busy={loading} tabIndex={0}>
-            {error ? <div className="community-error" role="alert"><p>{error}</p><button type="button" onClick={() => setRefresh(value => value + 1)}><RefreshCw size={16} />{t('Try again')}</button></div> : null}
+            {error ? <div className="community-error" role="alert"><p><UiText text={error} /></p><button type="button" onClick={() => setRefresh(value => value + 1)}><RefreshCw size={16} />{t('Try again')}</button></div> : null}
             {!loading && !error && ranked.length === 0 ? <div className="community-empty"><Users size={36} /><h2>{t('No matching learners yet')}</h2><p>{t('Remove one or two filters to discover more study partners.')}</p><button type="button" onClick={clearFilters}>{t('Show all learners')}</button></div> : null}
             <div className="community-card-grid">{loading && results.length === 0 ? Array.from({ length: 6 }, (_, index) => <LearnerSkeleton key={index} />) : ranked.map((learner, index) => <LearnerCard key={learner.nickname ?? [learner.xp,learner.level,index].join('-')} learner={learner} score={matchScore(learner, account)} featured={learner.nickname === champion?.nickname} index={index} available={!!learner.nickname && learner.nickname !== hub.selfName && hub.available.includes(learner.nickname)} canTalk={hub.connected && hub.publicProfile && hub.activity === 'idle' && !hub.room && !hub.busy && !hub.invitation && !!learner.nickname && learner.nickname !== hub.selfName && hub.available.includes(learner.nickname)} onTalk={() => learner.nickname && void hub.invite(learner.nickname)} onOpen={() => learner.nickname && navigate('/u/' + encodeURIComponent(learner.nickname), { state: { from: '/community' } })} />)}</div>
           </div>
@@ -257,7 +259,7 @@ export default function Community() {
 }
 
 function FilterPill({ active, icon: Icon, label, onClick }: { active: boolean; icon: typeof Target; label: string; onClick: () => void }) {
-  return <button type="button" aria-pressed={active} onClick={onClick} className={cn('community-filter-pill', active && 'is-active')}><Icon className="h-5 w-5" />{label}</button>
+  return <button type="button" aria-pressed={active} onClick={onClick} className={cn('community-filter-pill', active && 'is-active')}><Icon className="h-5 w-5" /><UiText text={label} /></button>
 }
 
 function LearnerCard({ learner, score, featured, index, onOpen, available, canTalk, onTalk }: { learner: LearnerSearchResult; score: number; featured: boolean; index: number; onOpen: () => void; available: boolean; canTalk: boolean; onTalk: () => void }) {
@@ -281,7 +283,7 @@ function LearnerCard({ learner, score, featured, index, onOpen, available, canTa
         <div className="community-avatar"><ProfileAvatar src={learner.avatarUrl} name={learner.nickname} alt="" /></div>
         <span className={cn('community-presence', learner.online && 'is-online')} title={t(learner.online ? 'Online now' : 'Offline')} />
       </div>
-      <h2>@{learner.nickname ?? 'learner'}</h2>
+      <h2>@{learner.nickname ?? <UiText text={"learner"} />}</h2>
       {learner.premium ? <CrownBadge size="sm" /> : null}
       <p className="community-country"><Globe2 className="h-3.5 w-3.5" /> {learner.country || t('Global learner')}</p>
       <div className="community-goal-row"><span><Target size={12} />{learner.targetExam ? targetLabel(learner) : t('Open study goal')}</span><span><Mic size={12} />{t('English speaking')}</span></div>

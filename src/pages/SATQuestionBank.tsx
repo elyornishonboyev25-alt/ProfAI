@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import ConfirmDialog from '@/components/common/ConfirmDialog'
 import { useEffect, useMemo, useState } from 'react'
 import {
@@ -90,6 +92,7 @@ export default function SATQuestionBank() {
   return <QuestionBankWorkspace key={userId} userId={userId} />
 }
 function QuestionBankWorkspace({ userId }: { userId: string }) {
+  const { c: uiCopy } = useCopy()
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const [section, setSection] = useState(
@@ -302,52 +305,52 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
 
   return (
     <main className="workspace-page sat-bank-page">
-      <ConfirmDialog open={replaceSetOpen} title="Replace your unfinished practice set?" description="Starting a new set deletes the answers and notes from your unfinished set. Your completed practice results are kept." confirmLabel="Replace & start again" cancelLabel="Keep saved set" destructive onClose={() => setReplaceSetOpen(false)} onConfirm={() => { setReplaceSetOpen(false); start(true) }} />
+      <ConfirmDialog open={replaceSetOpen} title={uiCopy("Replace your unfinished practice set?")} description={uiCopy("Starting a new set deletes the answers and notes from your unfinished set. Your completed practice results are kept.")} confirmLabel={uiCopy("Replace & start again")} cancelLabel="Keep saved set" destructive onClose={() => setReplaceSetOpen(false)} onConfirm={() => { setReplaceSetOpen(false); start(true) }} />
       <div className="sat-bank-wrap">
         <button type="button" className="sat-bank-back" onClick={() => navigate('/sat')}>
-          <ArrowLeft size={16} /> SAT Arena
+          <ArrowLeft size={16} /> <UiText text={"SAT Arena"} />
         </button>
         <header className="sat-bank-hero">
           <div className="sat-bank-hero-copy">
-            <span className="sat-bank-eyebrow-pill"><Filter size={14} /> TARGETED SAT PRACTICE</span>
-            <h1>Question Bank<span>.</span></h1>
-            <p>Build a set around any skill, solve it in the real SAT interface and get a full analysis the moment you finish.</p>
+            <span className="sat-bank-eyebrow-pill"><Filter size={14} /> <UiText text={"TARGETED SAT PRACTICE"} /></span>
+            <h1><UiText text={"Question Bank"} /><span>.</span></h1>
+            <p><UiText text={"Build a set around any skill, solve it in the real SAT interface and get a full analysis the moment you finish."} /></p>
             <div className="sat-bank-hero-tags">
-              <span><CheckCircle2 size={14} /> Real SAT interface</span>
-              <span><BarChart3 size={14} /> Full result analysis</span>
-              <span><Clock3 size={14} /> Untimed & autosaved</span>
+              <span><CheckCircle2 size={14} /> <UiText text={"Real SAT interface"} /></span>
+              <span><BarChart3 size={14} /> <UiText text={"Full result analysis"} /></span>
+              <span><Clock3 size={14} /> <UiText text={"Untimed & autosaved"} /></span>
             </div>
           </div>
-          <dl className="sat-bank-hero-stats" aria-label="Question Bank summary">
-            <div><dt>Questions</dt><dd><strong>{allQuestions.length}</strong></dd></div>
-            <div><dt>Saved sets</dt><dd><strong>{sets.length}</strong></dd></div>
-            <div><dt>Practised</dt><dd><strong>{practised}</strong></dd></div>
-            <div><dt>Accuracy</dt><dd><strong className={accuracy === null ? '' : tone(accuracy)}>{accuracy === null ? '—' : `${accuracy}%`}</strong></dd></div>
+          <dl className="sat-bank-hero-stats" aria-label={uiCopy("Question Bank summary")}>
+            <div><dt><UiText text={"Questions"} /></dt><dd><strong>{allQuestions.length}</strong></dd></div>
+            <div><dt><UiText text={"Saved sets"} /></dt><dd><strong>{sets.length}</strong></dd></div>
+            <div><dt><UiText text={"Practised"} /></dt><dd><strong>{practised}</strong></dd></div>
+            <div><dt><UiText text={"Accuracy"} /></dt><dd><strong className={accuracy === null ? '' : tone(accuracy)}>{accuracy === null ? '—' : `${accuracy}%`}</strong></dd></div>
           </dl>
         </header>
-        <nav className="sat-bank-tabs" aria-label="Question bank views">
+        <nav className="sat-bank-tabs" aria-label={uiCopy("Question bank views")}>
           <button type="button" aria-current={!historyView ? 'page' : undefined} onClick={() => goTo('practice')}>
-            <BookOpenCheck size={18} /> Practice
+            <BookOpenCheck size={18} /> <UiText text={"Practice"} />
           </button>
           <button type="button" aria-current={historyView ? 'page' : undefined} onClick={() => goTo('history')}>
-            <History size={18} /> History & review <span>{sets.length}</span>
+            <History size={18} /> <UiText text={"History & review"} /> <span>{sets.length}</span>
           </button>
         </nav>
         {historyView ? (
           <section className="sat-bank-panel">
             <div className="sat-bank-panel-title">
               <div>
-                <p className="sat-bank-kicker">Results</p>
-                <h2>Your practice history</h2>
+                <p className="sat-bank-kicker"><UiText text={"Results"} /></p>
+                <h2><UiText text={"Your practice history"} /></h2>
               </div>
               <History size={22} />
             </div>
             <p className="sat-bank-muted">
-              Open any saved set for its full analysis: score, domains, skills and every question with its explanation.
+              <UiText text={"Open any saved set for its full analysis: score, domains, skills and every question with its explanation."} />
             </p>
             {reviewId ? (
               <p role="status" className="sat-bank-alert">
-                This saved set is unavailable. Choose a result below.
+                <UiText text={"This saved set is unavailable. Choose a result below."} />
               </p>
             ) : null}
             <div className="sat-bank-history">
@@ -358,7 +361,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                     key={set.id}
                     className="sat-bank-history-card"
                     onClick={() => goTo('history', set.id)}
-                    aria-label={`Review set saved ${dateLabel(set.at)}`}
+                    aria-label={uiCopy("Review set saved {{value1}}", { value1: String(dateLabel(set.at)) })}
                   >
                     <span className={`sat-bank-history-score ${tone(set.percent)}`}>
                       <strong>{set.percent}%</strong>
@@ -369,7 +372,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                         <span className={`sat-bank-chip ${set.section === 'math' ? 'is-math' : ''}`}>{sectionLabel(set.section)}</span>
                         {set.seconds !== undefined ? <span className="sat-bank-chip is-quiet"><Clock3 size={12} /> {formatSATDuration(set.seconds)}</span> : null}
                       </span>
-                      <strong>{set.results.length}-question practice set</strong>
+                      <strong>{set.results.length}<UiText text={"-question practice set"} /></strong>
                       <small>{dateLabel(set.at)}</small>
                       <span className="sat-bank-history-bar" aria-hidden="true">
                         <i className="is-correct" style={{ width: `${(set.correct / set.results.length) * 100}%` }} />
@@ -377,27 +380,27 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                         <i className="is-skipped" style={{ width: `${(set.skipped / set.results.length) * 100}%` }} />
                       </span>
                       <span className="sat-bank-history-counts">
-                        {set.correct} correct · {set.incorrect} incorrect · {set.skipped} skipped
+                        {set.correct} <UiText text={"correct ·"} /> {set.incorrect} <UiText text={"incorrect ·"} /> {set.skipped} <UiText text={"skipped"} />
                       </span>
                     </span>
                     <span className="sat-bank-history-action">
-                      View analysis <ArrowRight size={16} />
+                      <UiText text={"View analysis"} /> <ArrowRight size={16} />
                     </span>
                   </button>
                 ))
               ) : (
                 <div className="sat-bank-empty">
                   <History size={32} />
-                  <h3>Your next result starts here</h3>
-                  <p>Finish a practice set to unlock its full analysis and review it anytime.</p>
+                  <h3><UiText text={"Your next result starts here"} /></h3>
+                  <p><UiText text={"Finish a practice set to unlock its full analysis and review it anytime."} /></p>
                   <button type="button" className="sat-bank-primary" onClick={() => goTo('practice')}>
-                    Build a question set <ArrowRight size={16} />
+                    <UiText text={"Build a question set"} /> <ArrowRight size={16} />
                   </button>
                 </div>
               )}
             </div>
             <button type="button" className="sat-bank-mock-link" onClick={() => navigate('/profile')}>
-              Looking for full mock or section results? Open My Results <ArrowRight size={16} />
+              <UiText text={"Looking for full mock or section results? Open My Results"} /> <ArrowRight size={16} />
             </button>
           </section>
         ) : (
@@ -405,16 +408,16 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
             <section className="sat-bank-panel sat-bank-builder">
               <div className="sat-bank-panel-title">
                 <div>
-                  <p className="sat-bank-kicker">Step by step</p>
-                  <h2>Build a question set</h2>
+                  <p className="sat-bank-kicker"><UiText text={"Step by step"} /></p>
+                  <h2><UiText text={"Build a question set"} /></h2>
                 </div>
-                <span className="sat-bank-matching" role="status" aria-live="polite">{filtered.length} matching</span>
+                <span className="sat-bank-matching" role="status" aria-live="polite">{filtered.length} <UiText text={"matching"} /></span>
               </div>
-              <p className="sat-bank-builder-intro">Choose your focus. Make this practice your own.</p>
+              <p className="sat-bank-builder-intro"><UiText text={"Choose your focus. Make this practice your own."} /></p>
               {error ? <p role="alert" className="sat-bank-alert">{error}</p> : null}
               <div className="sat-bank-filters">
-                <fieldset className="sat-bank-choice-field sat-bank-section-field" aria-label="Section">
-                  <legend><b>1</b> Section</legend>
+                <fieldset className="sat-bank-choice-field sat-bank-section-field" aria-label={uiCopy("Section")}>
+                  <legend><b>1</b> <UiText text={"Section"} /></legend>
                   <div className="sat-bank-section-options">
                     {[
                       { value: 'math', label: 'Math', detail: 'Equations, data & problem solving', Icon: Calculator },
@@ -424,35 +427,35 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                         <input type="radio" name="bank-section" value={value} checked={section === value}
                           aria-label={label} onChange={() => { setSection(value); setDomain('all'); setSkill('all'); setError('') }} />
                         <span className="sat-bank-option-icon"><Icon size={20} aria-hidden="true" /></span>
-                        <span><strong>{label}</strong><small>{detail} · {sectionTotals[value as 'math' | 'reading-writing']} questions</small></span>
+                        <span><strong><UiText text={label} /></strong><small><UiText text={detail} /> · {sectionTotals[value as 'math' | 'reading-writing']} <UiText text={"questions"} /></small></span>
                         <Check size={16} className="sat-bank-choice-check" aria-hidden="true" />
                       </label>
                     ))}
                   </div>
                 </fieldset>
-                <SATBankSelect label="Domain / topic" value={domain}
+                <SATBankSelect label={uiCopy("Domain / topic")} value={domain}
                   options={[{ value: 'all', label: 'All domains' }, ...domains.map(value => ({ value, label: value }))]}
                   onChange={value => { setDomain(value); setSkill('all') }} />
-                <SATBankSelect label="Skill / question type" value={skill}
+                <SATBankSelect label={uiCopy("Skill / question type")} value={skill}
                   options={[{ value: 'all', label: 'All skills' }, ...skills.map(value => ({ value, label: value }))]}
                   onChange={setSkill} />
-                <fieldset className="sat-bank-choice-field sat-bank-difficulty-field" aria-label="Difficulty">
-                  <legend><b>2</b> Difficulty</legend>
+                <fieldset className="sat-bank-choice-field sat-bank-difficulty-field" aria-label={uiCopy("Difficulty")}>
+                  <legend><b>2</b> <UiText text={"Difficulty"} /></legend>
                   <div className="sat-bank-difficulty-options">
                     {['all', 'Easy', 'Medium', 'Hard'].map((value, index) => (
                       <label key={value} className={`is-${value.toLowerCase()}`}>
                         <input type="radio" name="bank-difficulty" value={value} checked={level === value}
-                          aria-label={value === 'all' ? 'All levels' : value} onChange={() => setLevel(value)} />
+                          aria-label={value === 'all' ? uiCopy("All levels") : value} onChange={() => setLevel(value)} />
                         {index ? <span className="sat-bank-level-bars" aria-hidden="true">
                           {[1, 2, 3].map(bar => <i key={bar} data-filled={bar <= index} />)}
                         </span> : <Grid2X2 size={16} aria-hidden="true" />}
-                        <span>{value === 'all' ? 'All levels' : value}</span>
+                        <span>{value === 'all' ? <UiText text={"All levels"} /> : value}</span>
                       </label>
                     ))}
                   </div>
                 </fieldset>
-                <fieldset className="sat-bank-choice-field sat-bank-progress-field" aria-label="Progress">
-                  <legend><b>3</b> Progress</legend>
+                <fieldset className="sat-bank-choice-field sat-bank-progress-field" aria-label={uiCopy("Progress")}>
+                  <legend><b>3</b> <UiText text={"Progress"} /></legend>
                   <div className="sat-bank-progress-options">
                     {[
                       { value: 'all', label: 'All questions', Icon: Grid2X2 },
@@ -463,13 +466,13 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                       <label key={value}>
                         <input type="radio" name="bank-progress" value={value} checked={status === value}
                           aria-label={label} onChange={() => setStatus(value)} />
-                        <Icon size={16} aria-hidden="true" /><span>{label}</span>
+                        <Icon size={16} aria-hidden="true" /><span><UiText text={label} /></span>
                       </label>
                     ))}
                   </div>
                 </fieldset>
-                <fieldset className="sat-bank-choice-field sat-bank-count-field" aria-label="Questions in set">
-                  <legend><b>4</b> Questions in set</legend>
+                <fieldset className="sat-bank-choice-field sat-bank-count-field" aria-label={uiCopy("Questions in set")}>
+                  <legend><b>4</b> <UiText text={"Questions in set"} /></legend>
                   <div className="sat-bank-count-options">
                     {[4, 6, 10, 15, 20, 30].map(value => (
                       <label key={value}>
@@ -480,66 +483,66 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                     ))}
                   </div>
                   {filtered.length > 0 && filtered.length < count ? (
-                    <p className="sat-bank-count-note" role="status">Only {filtered.length} {filtered.length === 1 ? 'question matches' : 'questions match'} your filters. Your set will include {filtered.length === 1 ? 'it' : 'all of them'}.</p>
+                    <p className="sat-bank-count-note" role="status"><UiText text={"Only"} /> {filtered.length} {filtered.length === 1 ? <UiText text={"question matches"} /> : <UiText text={"questions match"} />} <UiText text={"your filters. Your set will include"} /> {filtered.length === 1 ? <UiText text={"it"} /> : <UiText text={"all of them"} />}.</p>
                   ) : null}
                 </fieldset>
               </div>
               {!filtered.length ? (
                 <p role="status" className="sat-bank-alert">
-                  No questions match these filters.{' '}
-                  <button type="button" onClick={reset}>Reset filters</button>
+                  <UiText text={"No questions match these filters."} />{' '}
+                  <button type="button" onClick={reset}><UiText text={"Reset filters"} /></button>
                 </p>
               ) : null}
               <div className="sat-bank-launch">
                 <div className="sat-bank-set-summary" aria-live="polite">
                   <BookOpenCheck size={18} aria-hidden="true" />
-                  <span><strong>{setSize} {setSize === 1 ? 'question' : 'questions'}</strong> · {sectionLabel(section)} · {level === 'all' ? 'Mixed difficulty' : level}</span>
+                  <span><strong>{setSize} {setSize === 1 ? <UiText text={"question"} /> : <UiText text={"questions"} />}</strong> · {sectionLabel(section)} · {level === 'all' ? <UiText text={"Mixed difficulty"} /> : level}</span>
                 </div>
                 <div className="sat-bank-build-actions">
                   <button type="button" className="sat-bank-primary" onClick={() => start()} disabled={!filtered.length}>
-                    Start {setSize} {setSize === 1 ? 'question' : 'questions'} <ArrowRight size={17} />
+                    <UiText text={"Start"} /> {setSize} {setSize === 1 ? <UiText text={"question"} /> : <UiText text={"questions"} />} <ArrowRight size={17} />
                   </button>
-                  <button type="button" className="sat-bank-reset" onClick={reset}><RotateCcw size={14} aria-hidden="true" /> Reset filters</button>
+                  <button type="button" className="sat-bank-reset" onClick={reset}><RotateCcw size={14} aria-hidden="true" /> <UiText text={"Reset filters"} /></button>
                 </div>
               </div>
-              <p className="sat-bank-muted">Untimed practice · Answers save automatically · Full analysis after finishing</p>
+              <p className="sat-bank-muted"><UiText text={"Untimed practice · Answers save automatically · Full analysis after finishing"} /></p>
             </section>
             <aside className="sat-bank-side">
               {activeSet ? (
                 <section className="sat-bank-panel sat-bank-resume" role="status">
                   <span className="sat-bank-resume-icon"><PlayCircle size={22} /></span>
                   <div>
-                    <p className="sat-bank-kicker">Saved set</p>
-                    <h2>Pick up where you left off</h2>
-                    <p>You have an unfinished {activeSet.keys.length}-question set. Your answers are saved.</p>
+                    <p className="sat-bank-kicker"><UiText text={"Saved set"} /></p>
+                    <h2><UiText text={"Pick up where you left off"} /></h2>
+                    <p><UiText text={"You have an unfinished"} /> {activeSet.keys.length}<UiText text={"-question set. Your answers are saved."} /></p>
                     <span className="sat-bank-resume-meter" aria-hidden="true">
                       <i style={{ width: `${(activeSet.keys.filter((key) => activeSet.answers[key]?.trim()).length / activeSet.keys.length) * 100}%` }} />
                     </span>
-                    <small>{activeSet.keys.filter((key) => activeSet.answers[key]?.trim()).length} of {activeSet.keys.length} answered</small>
+                    <small>{activeSet.keys.filter((key) => activeSet.answers[key]?.trim()).length} <UiText text={"of"} /> {activeSet.keys.length} <UiText text={"answered"} /></small>
                   </div>
-                  <button type="button" className="sat-bank-primary" onClick={resume}>Resume practice <ArrowRight size={17} /></button>
+                  <button type="button" className="sat-bank-primary" onClick={resume}><UiText text={"Resume practice"} /> <ArrowRight size={17} /></button>
                 </section>
               ) : null}
               {sets[0] ? (
                 <section className="sat-bank-panel sat-bank-last">
                   <div className="sat-bank-panel-title">
                     <div>
-                      <p className="sat-bank-kicker">Latest result</p>
-                      <h2>{sets[0].results.length}-question set</h2>
+                      <p className="sat-bank-kicker"><UiText text={"Latest result"} /></p>
+                      <h2>{sets[0].results.length}<UiText text={"-question set"} /></h2>
                     </div>
                     <span className={`sat-bank-last-score ${tone(sets[0].percent)}`}>{sets[0].percent}%</span>
                   </div>
                   <p className="sat-bank-muted">{sectionLabel(sets[0].section)} · {dateLabel(sets[0].at)}</p>
                   <button type="button" className="sat-bank-secondary" onClick={() => goTo('history', sets[0].id)}>
-                    <BarChart3 size={16} /> View full analysis <ArrowRight size={15} />
+                    <BarChart3 size={16} /> <UiText text={"View full analysis"} /> <ArrowRight size={15} />
                   </button>
                 </section>
               ) : null}
               <section className="sat-bank-panel">
                 <div className="sat-bank-panel-title">
                   <div>
-                    <p className="sat-bank-kicker">Personal insight</p>
-                    <h2>Skills to strengthen</h2>
+                    <p className="sat-bank-kicker"><UiText text={"Personal insight"} /></p>
+                    <h2><UiText text={"Skills to strengthen"} /></h2>
                   </div>
                   <Target size={20} />
                 </div>
@@ -565,7 +568,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                             <strong className={tone(percent)}>{percent}%</strong>
                           </span>
                           <span className="sat-bank-skill-meter"><i className={tone(percent)} style={{ width: `${percent}%` }} /></span>
-                          <small>{stat.correct}/{stat.total} correct · Practise this skill <ArrowRight size={12} /></small>
+                          <small>{stat.correct}/{stat.total} <UiText text={"correct · Practise this skill"} /> <ArrowRight size={12} /></small>
                         </button>
                       )
                     })}
@@ -573,12 +576,12 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                 ) : (
                   <div className="sat-bank-skills-empty">
                     <Sparkles size={20} />
-                    <p>Complete at least four questions in a skill to see reliable recommendations.</p>
+                    <p><UiText text={"Complete at least four questions in a skill to see reliable recommendations."} /></p>
                   </div>
                 )}
-                <p className="sat-bank-muted">Completed mocks and question sets contribute to this view.</p>
+                <p className="sat-bank-muted"><UiText text={"Completed mocks and question sets contribute to this view."} /></p>
                 <button type="button" className="sat-bank-mock-link" onClick={() => goTo('history')}>
-                  <Layers3 size={16} /> Review past question sets <ArrowRight size={16} />
+                  <Layers3 size={16} /> <UiText text={"Review past question sets"} /> <ArrowRight size={16} />
                 </button>
               </section>
             </aside>

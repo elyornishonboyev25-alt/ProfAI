@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import TestLeaderboard from '@/components/results/TestLeaderboard'
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -86,11 +88,11 @@ function ErrorRow({ error, index }: { error: WritingError; index: number }) {
       {expanded && (
         <div className="border-t border-slate-100 px-3 py-2.5 space-y-2">
           <div className="rounded-lg bg-red-50/70 px-2.5 py-1.5">
-            <p className="text-[9px] font-bold uppercase tracking-widest text-red-500 mb-0.5">Original</p>
+            <p className="text-[9px] font-bold uppercase tracking-widest text-red-500 mb-0.5"><UiText text={"Original"} /></p>
             <p className="text-xs text-red-800 line-through">{error.original}</p>
           </div>
           <div className="rounded-lg bg-emerald-50/70 px-2.5 py-1.5">
-            <p className="text-[9px] font-bold uppercase tracking-widest text-emerald-500 mb-0.5">Corrected</p>
+            <p className="text-[9px] font-bold uppercase tracking-widest text-emerald-500 mb-0.5"><UiText text={"Corrected"} /></p>
             <p className="text-xs text-emerald-800 font-medium">{error.corrected}</p>
           </div>
           <p className="text-[11px] text-slate-600 leading-relaxed">{error.explanation}</p>
@@ -107,6 +109,7 @@ export default function WritingResultModal({
   entry: WritingAnalysisEntry
   onClose: () => void
 }) {
+  const { c: uiCopy } = useCopy()
   const [showCorrected, setShowCorrected] = useState(false)
   const task = entry.taskSnapshot ?? getWritingTaskById(entry.testId)
   const bandColor = (b: number) =>
@@ -128,13 +131,13 @@ export default function WritingResultModal({
               <div>
                 <div className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-red-700">
                   <Sparkles className="h-3 w-3" />
-                  {entry.taskType === 'task1' ? 'Task 1' : 'Task 2'} · Writing review
+                  {entry.taskType === 'task1' ? 'Task 1' : 'Task 2'} <UiText text={"· Writing review"} />
                 </div>
                 <h3 className="mt-1.5 text-xl font-black text-slate-900">{entry.testTitle}</h3>
-                {entry.fullTest ? <p className="mt-1 text-xs font-semibold text-red-700">Full test estimated band {entry.fullTest.overallBand.toFixed(1)} · Task 2 weighted twice</p> : null}
+                {entry.fullTest ? <p className="mt-1 text-xs font-semibold text-red-700"><UiText text={"Full test estimated band"} /> {entry.fullTest.overallBand.toFixed(1)} <UiText text={"· Task 2 weighted twice"} /></p> : null}
                 <p className="text-xs text-slate-500">
                   {new Date(entry.savedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                  {' · '}{entry.wordCount} words
+                  {' · '}{entry.wordCount} <UiText text={"words"} />
                 </p>
               </div>
               <button
@@ -156,7 +159,7 @@ export default function WritingResultModal({
                     {entry.overallBand.toFixed(1)}
                   </span>
                 </div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Estimated task band</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500"><UiText text={"Estimated task band"} /></span>
               </div>
               <p className="flex-1 min-w-[200px] text-sm leading-relaxed text-slate-600">{entry.summary}</p>
               <div className="flex flex-col items-center rounded-xl border border-amber-200 bg-amber-50 px-4 py-2">
@@ -169,25 +172,25 @@ export default function WritingResultModal({
             {/* Criteria */}
             {task ? (
               <details className="rounded-2xl border border-slate-200 bg-white p-4">
-                <summary className="cursor-pointer text-sm font-bold text-slate-800">Review task prompt</summary>
+                <summary className="cursor-pointer text-sm font-bold text-slate-800"><UiText text={"Review task prompt"} /></summary>
                 <p className="mt-4 whitespace-pre-line text-sm leading-7 text-slate-700">{task.prompt}</p>
               </details>
             ) : null}
             {task?.diagram ? (
               <details className="rounded-2xl border border-slate-200 bg-white p-4">
-                <summary className="cursor-pointer text-sm font-bold text-slate-800">Review Task 1 chart</summary>
+                <summary className="cursor-pointer text-sm font-bold text-slate-800"><UiText text={"Review Task 1 chart"} /></summary>
                 <div className="mx-auto mt-4 max-w-[650px]"><WritingTaskDiagram diagram={task.diagram} /></div>
               </details>
             ) : null}
             {task?.visual ? (
               <details className="rounded-2xl border border-slate-200 bg-white p-4">
-                <summary className="cursor-pointer text-sm font-bold text-slate-800">Review Task 1 data</summary>
+                <summary className="cursor-pointer text-sm font-bold text-slate-800"><UiText text={"Review Task 1 data"} /></summary>
                 <div className="mx-auto mt-4 max-w-[750px]"><WritingDataVisual visual={task.visual} /></div>
               </details>
             ) : null}
             {task?.chart ? (
               <details className="rounded-2xl border border-slate-200 bg-white p-4">
-                <summary className="cursor-pointer text-sm font-bold text-slate-800">Review Task 1 chart</summary>
+                <summary className="cursor-pointer text-sm font-bold text-slate-800"><UiText text={"Review Task 1 chart"} /></summary>
                 <div className="mx-auto mt-4 max-w-[750px]">
                   <WritingDataVisual visual={{
                     kind: 'line',
@@ -202,19 +205,19 @@ export default function WritingResultModal({
             ) : null}
             {task?.imageUrl ? (
               <details className="rounded-2xl border border-slate-200 bg-white p-4">
-                <summary className="cursor-pointer text-sm font-bold text-slate-800">Review Task 1 image</summary>
+                <summary className="cursor-pointer text-sm font-bold text-slate-800"><UiText text={"Review Task 1 image"} /></summary>
                 <WritingTaskImage task={task} className="mx-auto mt-4 max-w-full" />
               </details>
             ) : null}
             <div className="rounded-2xl border border-slate-200 bg-white p-4">
               <h4 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-slate-500 mb-3">
-                <Target className="h-3.5 w-3.5 text-red-500" /> Band Breakdown
+                <Target className="h-3.5 w-3.5 text-red-500" /> <UiText text={"Band Breakdown"} />
               </h4>
               <div className="grid grid-cols-4 gap-3">
                 <MiniRing score={entry.taskAchievement} label={entry.taskType === 'task1' ? 'Task Achievement' : 'Task Response'} />
-                <MiniRing score={entry.coherenceCohesion} label="Coherence" />
-                <MiniRing score={entry.lexicalResource} label="Vocab" />
-                <MiniRing score={entry.grammaticalRange} label="Grammar" />
+                <MiniRing score={entry.coherenceCohesion} label={uiCopy("Coherence")} />
+                <MiniRing score={entry.lexicalResource} label={uiCopy("Vocab")} />
+                <MiniRing score={entry.grammaticalRange} label={uiCopy("Grammar")} />
               </div>
               <WritingScoreExplanation feedback={entry.criterionFeedback} taskType={entry.taskType} />
             </div>
@@ -223,7 +226,7 @@ export default function WritingResultModal({
             <div className="grid gap-3 md:grid-cols-2">
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4">
                 <h4 className="flex items-center gap-1.5 text-sm font-bold text-emerald-800 mb-2">
-                  <CheckCircle2 className="h-4 w-4" /> Strengths
+                  <CheckCircle2 className="h-4 w-4" /> <UiText text={"Strengths"} />
                 </h4>
                 <ul className="space-y-1.5">
                   {entry.strengths.map((s, i) => (
@@ -235,7 +238,7 @@ export default function WritingResultModal({
               </div>
               <div className="rounded-2xl border border-amber-200 bg-amber-50/40 p-4">
                 <h4 className="flex items-center gap-1.5 text-sm font-bold text-amber-800 mb-2">
-                  <TrendingUp className="h-4 w-4" /> Improve
+                  <TrendingUp className="h-4 w-4" /> <UiText text={"Improve"} />
                 </h4>
                 <ul className="space-y-1.5">
                   {entry.improvements.map((s, i) => (
@@ -251,7 +254,7 @@ export default function WritingResultModal({
             {entry.errors.length > 0 && (
               <div className="rounded-2xl border border-slate-200 bg-white p-4">
                 <h4 className="flex items-center gap-1.5 text-sm font-bold text-slate-900 mb-3">
-                  <AlertCircle className="h-4 w-4 text-red-500" /> Mistake Analysis ({entry.errors.length})
+                  <AlertCircle className="h-4 w-4 text-red-500" /> <UiText text={"Mistake Analysis ("} />{entry.errors.length})
                 </h4>
                 <div className="space-y-2">
                   {entry.errors.map((error, i) => (
@@ -267,7 +270,7 @@ export default function WritingResultModal({
               <div className="rounded-2xl border border-slate-200 bg-white p-4">
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="flex items-center gap-1.5 text-sm font-bold text-slate-900">
-                    <BookOpen className="h-4 w-4 text-emerald-500" /> Corrected Version
+                    <BookOpen className="h-4 w-4 text-emerald-500" /> <UiText text={"Corrected Version"} />
                   </h4>
                   <button
                     type="button"
@@ -275,7 +278,7 @@ export default function WritingResultModal({
                     className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition"
                   >
                     {showCorrected ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                    {showCorrected ? 'Hide' : 'Show'}
+                    {showCorrected ? <UiText text={"Hide"} /> : <UiText text={"Show"} />}
                   </button>
                 </div>
                 {showCorrected && (
@@ -286,11 +289,11 @@ export default function WritingResultModal({
               </div>
             )}
 
-            <details className="ir-glass p-5"><summary className="cursor-pointer font-bold">Test leaderboard</summary><div className="mt-5"><TestLeaderboard testId={entry.testId} title={entry.testTitle} /></div></details>
+            <details className="ir-glass p-5"><summary className="cursor-pointer font-bold"><UiText text={"Test leaderboard"} /></summary><div className="mt-5"><TestLeaderboard testId={entry.testId} title={entry.testTitle} /></div></details>
             {/* Original */}
             <div className="rounded-2xl border border-slate-200 bg-white p-4">
               <h4 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">
-                <PenLine className="h-3.5 w-3.5" /> Your Original Response
+                <PenLine className="h-3.5 w-3.5" /> <UiText text={"Your Original Response"} />
               </h4>
               <p className="text-xs text-slate-600 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto rounded-xl border border-slate-100 bg-slate-50/60 p-3">
                 {entry.studentResponse || '(empty)'}

@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 ﻿import { useState, useRef, useEffect } from 'react'
 import { PlayIcon, PauseIcon, SpeakerWaveIcon, SpeakerXMarkIcon } from '@heroicons/react/24/solid'
 
@@ -159,7 +160,7 @@ export default function AudioPlayer({ src, onPlay, onPause, onEnded, disabled = 
                     onClick={changeSpeed}
                     className="text-xs font-medium px-2 py-1 rounded border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
-                    {playbackSpeed}x Speed
+                    {playbackSpeed}<UiText text={"x Speed"} />
                 </button>
             </div>
         </div>

@@ -30,19 +30,19 @@ export default function SATCalculator() {
             <div className="premium-top-controls">
               <button onClick={() => navigate('/sat')} className="premium-back-btn-blue">
                 <ArrowLeft className="h-4 w-4" />
-                Back to SAT Arena
+                <UiText text={"Back to SAT Arena"} />
               </button>
-              <span className="premium-top-chip-blue">SAT Score Tool</span>
+              <span className="premium-top-chip-blue"><UiText text={"SAT Score Tool"} /></span>
             </div>
             <h1 className="mt-4 inline-flex items-center gap-3 text-3xl font-black text-slate-900 sm:text-4xl">
               <Calculator className="h-8 w-8 text-blue-600" />
-              SAT Score Calculator
+              <UiText text={"SAT Score Calculator"} />
             </h1>
           </div>
           <div className="premium-stat-blue rounded-2xl text-right">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-700">Estimated Total</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-700"><UiText text={"Estimated Total"} /></p>
             <p className="mt-1 text-4xl font-black text-slate-900">{calculateTotal()}</p>
-            <p className="mt-1 text-xs font-semibold text-blue-700">Range 400 - 1600</p>
+            <p className="mt-1 text-xs font-semibold text-blue-700"><UiText text={"Range 400 - 1600"} /></p>
           </div>
         </div>
       </motion.section>
@@ -52,7 +52,7 @@ export default function SATCalculator() {
           <div className="space-y-6">
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <label className="text-sm font-semibold text-slate-700">Reading (10-40)</label>
+                <label className="text-sm font-semibold text-slate-700"><UiText text={"Reading (10-40)"} /></label>
                 <span className="text-sm font-bold text-blue-700">{readingScore}</span>
               </div>
               <input
@@ -67,7 +67,7 @@ export default function SATCalculator() {
 
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <label className="text-sm font-semibold text-slate-700">Writing (10-40)</label>
+                <label className="text-sm font-semibold text-slate-700"><UiText text={"Writing (10-40)"} /></label>
                 <span className="text-sm font-bold text-blue-700">{writingScore}</span>
               </div>
               <input
@@ -82,7 +82,7 @@ export default function SATCalculator() {
 
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <label className="text-sm font-semibold text-slate-700">Math (200-800)</label>
+                <label className="text-sm font-semibold text-slate-700"><UiText text={"Math (200-800)"} /></label>
                 <span className="text-sm font-bold text-blue-700">{mathScore}</span>
               </div>
               <input
@@ -99,10 +99,10 @@ export default function SATCalculator() {
         </div>
 
         <div className="rounded-3xl border border-blue-100 bg-gradient-to-br from-white via-blue-50/50 to-indigo-100/60 p-6 shadow-[0_16px_34px_rgba(37,99,235,0.12)]">
-          <h2 className="text-lg font-semibold text-slate-900">Score Breakdown</h2>
+          <h2 className="text-lg font-semibold text-slate-900"><UiText text={"Score Breakdown"} /></h2>
           <div className="mt-4 space-y-3 text-sm">
             <div className="flex items-center justify-between rounded-xl border border-blue-100 bg-blue-50/60 px-3 py-2">
-              <span className="font-medium text-slate-700">Reading + Writing</span>
+              <span className="font-medium text-slate-700"><UiText text={"Reading + Writing"} /></span>
               <span className="font-bold text-blue-700">{(readingScore + writingScore) * 10}</span>
             </div>
             <div className="flex items-center justify-between rounded-xl border border-blue-100 bg-blue-50/60 px-3 py-2">
@@ -124,7 +124,7 @@ export default function SATCalculator() {
             className="interactive-lift mt-5 inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50"
           >
             <RefreshCw className="h-4 w-4" />
-            Reset
+            <UiText text={"Reset"} />
           </button>
         </div>
       </section>

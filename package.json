@@ -45,6 +45,7 @@
     "validate:writing": "node scripts/validate-writing-bank.mjs",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "check:i18n": "node scripts/check-interface-translations.mjs",
+    "test:i18n": "node scripts/test-listening-parts-ui.mjs scripts/tests/interface-localization-ui.tsx",
     "check:branding": "node scripts/check-branding.mjs",
     "preview": "vite preview",
     "dev:all": "concurrently \"npm run dev:web\" \"npm run api:dev\"",

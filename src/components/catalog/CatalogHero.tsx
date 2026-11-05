@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import type { ReactNode } from 'react'
 import { ArrowLeft, CalendarDays, ClipboardCheck, Sparkles } from 'lucide-react'
 import { PageHero } from '@/components/ui/system'
@@ -91,22 +92,22 @@ export default function CatalogHero({
           className={`route-back-button ${theme.focus}`}
         >
           <ArrowLeft className={`h-4 w-4 ${theme.accent}`} />
-          {backLabel}
+          <UiText text={backLabel} />
         </button>
         <span className={`inline-flex min-h-11 min-w-0 max-w-full items-center gap-2 overflow-hidden rounded-xl border border-white/85 bg-white/48 px-4 text-[11px] font-black uppercase tracking-[0.14em] ${theme.accent} backdrop-blur-xl`}>
           <Sparkles className="h-3.5 w-3.5 shrink-0" />
-          <span className="truncate">{eyebrow}</span>
+          <span className="truncate"><UiText text={eyebrow} /></span>
         </span>
-        {badge}
+        <UiText text={badge} />
       </div>
 
       <div className="mt-5 grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
         <div className="min-w-0">
           <h1 className="max-w-4xl break-words text-[2rem] font-black leading-[1.02] tracking-[-0.04em] text-slate-950 sm:text-5xl lg:text-[3.45rem]">
-            {title}
+            <UiText text={title} />
           </h1>
           <p className="mt-3 max-w-3xl break-words text-sm font-medium leading-6 text-slate-600 sm:text-base">
-            {subtitle}
+            <UiText text={subtitle} />
           </p>
           {actions ? <div className="mt-5 grid w-full min-w-0 grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center [&>button]:w-full sm:[&>button]:w-auto">{actions}</div> : null}
         </div>
@@ -114,7 +115,7 @@ export default function CatalogHero({
         <div className={`flex w-fit max-w-full items-center divide-x divide-slate-200/80 rounded-full border border-white/90 bg-white/72 px-2 py-2 backdrop-blur-xl ${theme.summaryGlow}`}>
           {summary.map((item) => (
             <div key={item.label} className="min-w-0 px-3 text-center sm:px-4">
-              <p className="whitespace-nowrap text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">{item.label}</p>
+              <p className="whitespace-nowrap text-[9px] font-black uppercase tracking-[0.16em] text-slate-400"><UiText text={item.label} /></p>
               <p className="mt-0.5 whitespace-nowrap text-sm font-black text-slate-900 sm:text-base">{item.value}</p>
             </div>
           ))}
@@ -156,7 +157,7 @@ export default function CatalogHero({
                   </span>
                   <span className="relative min-w-0 flex-1">
                     <span className="flex items-center justify-between gap-2">
-                      <span className="truncate">{filter.label}</span>
+                      <span className="truncate"><UiText text={filter.label} /></span>
                       {typeof filter.count === 'number' ? (
                         <span className={`rounded-full px-2 py-0.5 text-[11px] font-black ${selected ? 'bg-white/18 text-white' : 'bg-slate-900/5 text-slate-500'}`}>
                           {filter.count}
@@ -164,13 +165,13 @@ export default function CatalogHero({
                       ) : null}
                     </span>
                     <span className={`mt-0.5 block text-[10px] font-semibold uppercase tracking-[0.12em] ${selected ? 'text-white/75' : 'text-slate-400'}`}>
-                      {isFullTests ? 'Complete exam simulation' : 'Focused daily practice'}
+                      {isFullTests ? <UiText text={"Complete exam simulation"} /> : <UiText text={"Focused daily practice"} />}
                     </span>
                   </span>
                 </>
               ) : (
                 <>
-                  <span className="relative">{filter.label}</span>
+                  <span className="relative"><UiText text={filter.label} /></span>
                   {typeof filter.count === 'number' ? (
                     <span className={`relative rounded-full px-2 py-0.5 text-[11px] font-black ${selected ? 'bg-white/18 text-white' : 'bg-slate-900/5 text-slate-500'}`}>
                       {filter.count}

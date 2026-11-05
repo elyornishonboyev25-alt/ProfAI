@@ -7,6 +7,7 @@ import { russianAdditions } from './ru-additions'
 import russianTranslation from './ru.json'
 import uzbekUI from './uz-ui.json'
 import { uzbekCompletion } from './uz-completion'
+import interfaceCompletion from './interface-completion.json'
 
 const translation = {
   nav: {
@@ -108,7 +109,10 @@ const translation = {
   },
 }
 
-const uzbekInterface = { ...uzbekUI, ...uzbekCompletion }
+// Keep exam and product names recognisable in every interface language.
+const examTerms = Object.fromEntries(['IELTS', 'SAT', 'Listening', 'Reading', 'Writing', 'Speaking', 'Math', 'Reading & Writing', 'IELTS Academic', 'IELTS Listening', 'IELTS Reading', 'IELTS Writing', 'IELTS Speaking'].map(term => [term, term]))
+const completedCopy = (language: 'uz' | 'ru') => Object.fromEntries(Object.entries(interfaceCompletion).map(([key, value]) => [key, value[language]]))
+const uzbekInterface = { ...uzbekUI, ...uzbekCompletion, ...completedCopy('uz'), ...examTerms }
 
 function localizeTree(value: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(Object.entries(value).map(([key, item]) => [key,
@@ -116,9 +120,16 @@ function localizeTree(value: Record<string, unknown>): Record<string, unknown> {
       : item && typeof item === 'object' ? localizeTree(item as Record<string, unknown>) : item,
   ]))
 }
+
+function preserveExamTerms(source: Record<string, unknown>, localized: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(source).map(([key, value]) => [key,
+    typeof value === 'string' ? (Object.prototype.hasOwnProperty.call(examTerms, value) ? value : localized[key] ?? value)
+      : value && typeof value === 'object' ? preserveExamTerms(value as Record<string, unknown>, (localized[key] ?? {}) as Record<string, unknown>) : value,
+  ]))
+}
 const resources = {
   en: { translation, interface: {} },
-  ru: { translation: russianTranslation, interface: { ...russianUI, ...russianInterface, ...russianCompletion, ...russianAdditions } },
+  ru: { translation: preserveExamTerms(translation, russianTranslation), interface: { ...russianUI, ...russianInterface, ...russianCompletion, ...russianAdditions, ...completedCopy('ru'), ...examTerms } },
   uz: { translation: localizeTree(translation), interface: uzbekInterface },
 }
 

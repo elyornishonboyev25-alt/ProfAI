@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import { useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { Highlighter, Trash2 } from 'lucide-react'
@@ -23,6 +25,7 @@ export function rangeForHighlight(block: HTMLElement, segment: Segment): Range |
 export default function SATTextHighlights({ children, strokes, onChange, enabled = true }: {
   children: ReactNode; strokes: HighlightStroke[]; onChange?: (strokes: HighlightStroke[]) => void; enabled?: boolean
 }) {
+  const { c: uiCopy } = useCopy()
   const rootRef = useRef<HTMLDivElement>(null)
   const highlightNamespace = `sat-text-${useId().replace(/[^a-zA-Z0-9-]/g, '')}`
   const nativePaint = typeof window !== 'undefined' && typeof window.CSS?.highlights !== 'undefined' && typeof window.Highlight === 'function'
@@ -154,26 +157,26 @@ export default function SATTextHighlights({ children, strokes, onChange, enabled
     if (hit) { event.stopPropagation(); setMenu({ id: hit.id, x: Math.min(window.innerWidth - 90, Math.max(90, event.clientX)), y: Math.max(48, event.clientY - 8) }) }
   }}>
     {children}
-    <div className="pointer-events-none absolute inset-0 z-30" aria-label="Saved text highlights">
+    <div className="pointer-events-none absolute inset-0 z-30" aria-label={uiCopy("Saved text highlights")}>
       {rectangles.map((rect, index) => <span key={`${rect.id}-${index}`} data-sat-highlight-id={rect.id}
         role={enabled && onChange ? 'button' : undefined} tabIndex={enabled && onChange ? 0 : undefined}
-        aria-label="Manage highlight" className={enabled && onChange ? 'cursor-text' : ''}
+        aria-label={uiCopy("Manage highlight")} className={enabled && onChange ? 'cursor-text' : ''}
         style={{ position: 'absolute', left: rect.left, top: rect.top, width: rect.width, height: rect.height, background: nativePaint ? 'transparent' : rect.color, borderRadius: 2 }}
         onClick={event => { event.stopPropagation(); if (enabled && onChange) { const bounds = event.currentTarget.getBoundingClientRect(); setMenu({ id: rect.id, x: Math.min(window.innerWidth - 90, Math.max(90, bounds.left + bounds.width / 2)), y: Math.max(48, bounds.top - 8) }) } }}
         onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} />)}
     </div>
-    {menu && createPortal(<div data-sat-highlight-menu role="toolbar" aria-label="Text highlight tools"
+    {menu && createPortal(<div data-sat-highlight-menu role="toolbar" aria-label={uiCopy("Text highlight tools")}
       onMouseDown={event => event.preventDefault()}
       style={{ position: 'fixed', left: menu.x, top: menu.y, transform: 'translate(-50%, -100%)' }}
       className="z-[110] flex items-center gap-1 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-[0_16px_36px_rgba(15,23,42,0.22)]">
-      {menu.segments ? COLORS.map(color => <button type="button" key={color.name} aria-label={`Highlight ${color.name}`}
+      {menu.segments ? COLORS.map(color => <button type="button" key={color.name} aria-label={uiCopy("Highlight {{value1}}", { value1: String(color.name) })}
         className="grid h-7 w-7 place-items-center rounded-lg transition hover:scale-110" style={{ background: color.color }}
         onClick={() => {
           onChange?.([...strokes.filter(stroke => !menu.segments!.some(segment => stroke.textRange?.block === segment.block && stroke.textRange.start === segment.start && stroke.textRange.end === segment.end)), ...menu.segments!.map(textRange => ({ id: crypto.randomUUID(), color: color.color, width: 0, points: [], textRange }))])
           setMenu(null); window.getSelection()?.removeAllRanges()
         }}><Highlighter className="h-3.5 w-3.5" style={{ color: color.ink }} /></button>) :
         <button type="button" className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-red-50 hover:text-red-700"
-          onClick={() => { onChange?.(strokes.filter(stroke => stroke.id !== menu.id)); setMenu(null) }}><Trash2 className="h-4 w-4" /> Remove highlight</button>}
+          onClick={() => { onChange?.(strokes.filter(stroke => stroke.id !== menu.id)); setMenu(null) }}><Trash2 className="h-4 w-4" /> <UiText text={"Remove highlight"} /></button>}
     </div>, document.body)}
   </div>
 }

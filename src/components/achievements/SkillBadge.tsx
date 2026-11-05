@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 ﻿import { useId } from 'react'
 import { BookOpen, Headphones, Mic, PenLine, Sigma, Trophy, Type } from 'lucide-react'
 import { TRACK_META, TIER_NAME, formatAchievementScore, tierForAchievement, type SkillTrackKey, type TrackMeta } from './badgeMeta'
@@ -39,6 +41,7 @@ function star(cx: number, cy: number, r: number, points = 5, inner = 0.45): stri
 }
 
 export default function SkillBadge({ track, band, size = 120, showBand = true, showLabel = false, className = '' }: SkillBadgeProps) {
+  const { c: uiCopy } = useCopy()
   const uid = useId().replace(/[^a-zA-Z0-9]/g, '')
   const tier = tierForAchievement(track, band) ?? (band < 7 ? 6 : 7)
   const meta = TRACK_META[track]
@@ -52,7 +55,7 @@ export default function SkillBadge({ track, band, size = 120, showBand = true, s
   const url = (name: string) => `url(#${id(name)})`
   return (
     <div className={`achievement-medal ${className}`} data-tier={tier} style={{ width: size, flex: 'none' }}>
-      <svg viewBox="0 0 240 268" width="100%" style={{ display: 'block' }} role="img" aria-label={`${meta.title}, ${TIER_NAME[tier]}, Tier ${tier}, ${isSat ? 'score' : 'band'} ${score}`}>
+      <svg viewBox="0 0 240 268" width="100%" style={{ display: 'block' }} role="img" aria-label={uiCopy("{{value1}}, {{value2}}, Tier {{value3}}, {{value4}} {{value5}}", { value1: String(meta.title), value2: String(TIER_NAME[tier]), value3: String(tier), value4: String(isSat ? 'score' : 'band'), value5: String(score) })}>
         <defs>
           <linearGradient id={id('rim')} x1="0" y1="0" x2="1" y2="1"><stop stopColor={light} /><stop offset="28%" stopColor={mid} /><stop offset="50%" stopColor={light} /><stop offset="74%" stopColor={mid} /><stop offset="100%" stopColor={dark} /></linearGradient>
           <linearGradient id={id('bevel')} x1="1" y1="1" x2="0" y2="0"><stop stopColor={light} /><stop offset="45%" stopColor={mid} /><stop offset="100%" stopColor={dark} /></linearGradient>
@@ -95,10 +98,10 @@ export default function SkillBadge({ track, band, size = 120, showBand = true, s
 
         {/* Legend ring */}
         <text fill={dark} fontSize={longTitle ? 7.6 : 9.4} fontFamily="Inter, system-ui, sans-serif" fontWeight="800" letterSpacing={longTitle ? 0.7 : 2.2} textAnchor="middle">
-          <textPath href={`#${id('top')}`} startOffset="50%">{title}</textPath>
+          <textPath href={`#${id('top')}`} startOffset="50%"><UiText text={title} /></textPath>
         </text>
         <text fill={dark} fontSize="7.4" fontFamily="Inter, system-ui, sans-serif" fontWeight="700" letterSpacing="2.4" textAnchor="middle" opacity=".85">
-          <textPath href={`#${id('bottom')}`} startOffset="50%">{`${meta.group} · ${TIER_NAME[tier].toUpperCase()} · TIER ${tier}`}</textPath>
+          <textPath href={`#${id('bottom')}`} startOffset="50%">{<UiText text={"{{value1}} · {{value2}} · TIER {{value3}}"} values={{ value1: String(meta.group), value2: String(TIER_NAME[tier].toUpperCase()), value3: String(tier) }} />}</textPath>
         </text>
         <path d={star(CX - 58, CY, 4.2)} fill={dark} opacity=".75" />
         <path d={star(CX + 58, CY, 4.2)} fill={dark} opacity=".75" />
@@ -113,7 +116,7 @@ export default function SkillBadge({ track, band, size = 120, showBand = true, s
             <Icon x={CX - 10} y={CY - 39.2} width={20} height={20} color={dark} strokeWidth={2.2} />
             <text x={CX} y={CY + 15.8} textAnchor="middle" fontSize={isSat ? 25 : 31} fontFamily="Inter, system-ui, sans-serif" fontWeight="800" letterSpacing="-1.2" fill="#fff" opacity=".85">{score}</text>
             <text x={CX} y={CY + 15} textAnchor="middle" fontSize={isSat ? 25 : 31} fontFamily="Inter, system-ui, sans-serif" fontWeight="800" letterSpacing="-1.2" fill={dark}>{score}</text>
-            <text x={CX} y={CY + 30} textAnchor="middle" fontSize="6.8" fontFamily="Inter, system-ui, sans-serif" fontWeight="800" letterSpacing="2.6" fill={dark} opacity=".7">{isSat ? 'SCORE' : 'BAND'}</text>
+            <text x={CX} y={CY + 30} textAnchor="middle" fontSize="6.8" fontFamily="Inter, system-ui, sans-serif" fontWeight="800" letterSpacing="2.6" fill={dark} opacity=".7">{isSat ? <UiText text={"SCORE"} /> : <UiText text={"BAND"} />}</text>
           </>
         ) : (
           <Icon x={CX - 26} y={CY - 26} width={52} height={52} color={dark} strokeWidth={2} />
@@ -129,7 +132,7 @@ export default function SkillBadge({ track, band, size = 120, showBand = true, s
           </g>
         )}
       </svg>
-      {showLabel && <span className="mt-1 block text-center text-xs font-bold leading-normal text-slate-800">{meta.title}</span>}
+      {showLabel && <span className="mt-1 block text-center text-xs font-bold leading-normal text-slate-800"><UiText text={meta.title} /></span>}
     </div>
   )
 }

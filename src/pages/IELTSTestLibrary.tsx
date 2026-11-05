@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import { lazy, Suspense, useEffect, useState, type KeyboardEvent } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { BookOpenText, Headphones, Layers3, Mic2, PenLine, FolderClock } from 'lucide-react'
@@ -29,6 +31,7 @@ function skillFromLocation(pathname: string, hash: string, section?: string): Ta
 }
 
 export default function IELTSTestLibrary() {
+  const { c: uiCopy } = useCopy()
   const location = useLocation()
   const navigate = useNavigate()
   const { section } = useParams<{ section?: string }>()
@@ -59,14 +62,14 @@ export default function IELTSTestLibrary() {
   return (
     <main className="workspace-page relative min-h-screen px-4 pb-20 pt-3 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-[1480px]">
-        <div className="mb-3 flex justify-end"><Link to="/profile" className="text-sm font-bold text-red-700">My Results</Link></div>
+        <div className="mb-3 flex justify-end"><Link to="/profile" className="text-sm font-bold text-red-700"><UiText text={"My Results"} /></Link></div>
         <div id="ielts-skill-tabs" className="sticky top-2 z-20 rounded-2xl border border-white bg-white/95 p-2 shadow-[0_12px_35px_rgba(15,23,42,.09)]">
-          <div role="tablist" aria-label="IELTS skills" className="exam-section-tabs">
-            {skills.map(({ id, label, icon: Icon, detail }) => <button key={id} id={`ielts-tab-${id}`} type="button" role="tab" tabIndex={activeSkill === id ? 0 : -1} aria-selected={activeSkill === id} aria-controls="ielts-test-panel" onKeyDown={(event) => handleTabKeyDown(event, id)} onClick={() => selectTab(id)} className={`flex min-w-0 flex-1 items-center gap-3 rounded-xl border px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 ${activeSkill === id ? 'border-red-200 bg-gradient-to-br from-white to-red-50 text-red-700 shadow-[0_6px_18px_rgba(185,28,28,.08)]' : 'border-transparent text-slate-800 hover:bg-red-50/70'}`}><Icon className="h-5 w-5 shrink-0 text-red-600" /><span><strong className="block text-sm">{label}</strong><small className="block text-[11px] font-semibold text-slate-500">{detail}</small></span></button>)}
+          <div role="tablist" aria-label={uiCopy("IELTS skills")} className="exam-section-tabs">
+            {skills.map(({ id, label, icon: Icon, detail }) => <button key={id} id={`ielts-tab-${id}`} type="button" role="tab" tabIndex={activeSkill === id ? 0 : -1} aria-selected={activeSkill === id} aria-controls="ielts-test-panel" onKeyDown={(event) => handleTabKeyDown(event, id)} onClick={() => selectTab(id)} className={`flex min-w-0 flex-1 items-center gap-3 rounded-xl border px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 ${activeSkill === id ? 'border-red-200 bg-gradient-to-br from-white to-red-50 text-red-700 shadow-[0_6px_18px_rgba(185,28,28,.08)]' : 'border-transparent text-slate-800 hover:bg-red-50/70'}`}><Icon className="h-5 w-5 shrink-0 text-red-600" /><span><strong className="block text-sm"><UiText text={label} /></strong><small className="block text-[11px] font-semibold text-slate-500"><UiText text={detail} /></small></span></button>)}
           </div>
         </div>
         <div id="ielts-test-panel" role="tabpanel" tabIndex={0} aria-labelledby={`ielts-tab-${activeSkill}`} className="mt-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300">
-          <Suspense fallback={<BrandPageLoader compact label="Opening page" />}>
+          <Suspense fallback={<BrandPageLoader compact label={uiCopy("Opening page")} />}>
             {activeSkill === 'listening' && <IELTSSectionTests sectionOverride="listening" embedded />}
             {activeSkill === 'reading' && <IELTSSectionTests sectionOverride="reading" embedded />}
             {activeSkill === 'writing' && <IELTSWritingTests embedded />}

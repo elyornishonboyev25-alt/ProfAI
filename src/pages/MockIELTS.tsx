@@ -1,3 +1,4 @@
+import { useCopy } from '@/i18n/interface'
 import { useEffect, useMemo, useState } from 'react'
 import { useAccountDataRevision } from '@/hooks/useAccountDataRevision'
 import { useStudyAccessPrompt } from '@/features/billing/useStudyAccessPrompt'
@@ -54,6 +55,7 @@ const FILTERS = [
 type MockFilter = (typeof FILTERS)[number]['id']
 
 function IELTSMockCatalog() {
+  const { c: uiCopy } = useCopy()
   const studyAccess = useStudyAccessPrompt()
   const navigate = useNavigate()
   const location = useLocation()
@@ -105,7 +107,7 @@ function IELTSMockCatalog() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.18em] text-red-600">IELTS Academic</p>
-          <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">Full mock exams</h1>
+          <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl"><UiText text={"Full mock exams"} /></h1>
           <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-slate-600">Four skills. One uninterrupted exam. Your overall band and review open after Speaking.</p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
@@ -115,15 +117,15 @@ function IELTSMockCatalog() {
               type="search"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search mock..."
-              aria-label="Search full mocks"
+              placeholder={uiCopy("Search mock...")}
+              aria-label={uiCopy("Search full mocks")}
               className="mock-ielts-glass-search h-11 w-full rounded-full pl-10 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:ring-4 focus:ring-red-100"
             />
           </label>
         </div>
       </div>
 
-      <div className="mt-5 grid grid-cols-3 gap-2 sm:max-w-[36rem] sm:gap-3" aria-label="Full mock availability">
+      <div className="mt-5 grid grid-cols-3 gap-2 sm:max-w-[36rem] sm:gap-3" aria-label={uiCopy("Full mock availability")}>
         {[
           { value: fullyReadyCount, label: 'Ready to take' },
           { value: inProgressCount, label: 'In progress' },
@@ -131,13 +133,13 @@ function IELTSMockCatalog() {
         ].map((metric) => (
           <div key={metric.label} className="mock-ielts-glass-metric rounded-2xl px-3 py-2.5 sm:px-4">
             <strong className="block text-xl font-black leading-none tracking-tight text-slate-950">{metric.value}</strong>
-            <span className="mt-1 block text-[10px] font-bold text-slate-500 sm:text-[11px]">{metric.label}</span>
+            <span className="mt-1 block text-[10px] font-bold text-slate-500 sm:text-[11px]"><UiText text={metric.label} /></span>
           </div>
         ))}
       </div>
 
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Filter full mocks">
+        <div className="flex flex-wrap gap-2" role="group" aria-label={uiCopy("Filter full mocks")}>
           {FILTERS.map(({ id, label }) => (
             <button
               key={id}
@@ -146,11 +148,11 @@ function IELTSMockCatalog() {
               onClick={() => setFilter(id)}
               className="mock-ielts-glass-filter rounded-full px-4 py-2.5 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100"
             >
-              {label}
+              <UiText text={label} />
             </button>
           ))}
         </div>
-        <span className="text-xs font-bold text-slate-500">{visibleMocks.length} shown</span>
+        <span className="text-xs font-bold text-slate-500">{visibleMocks.length} <UiText text={"shown"} /></span>
       </div>
 
       {visibleMocks.length ? (
@@ -171,11 +173,11 @@ function IELTSMockCatalog() {
                 <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
                   <p className="text-[11px] font-black uppercase tracking-[0.18em] text-red-600">IELTS FULL MOCK {String(mock.index).padStart(2, '0')}</p>
                   <span className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-black ${mock.fullyReady ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : mock.readyCount > 0 ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-slate-200 bg-white text-slate-500'}`}>
-                    <CheckCircle2 className="h-3.5 w-3.5" /> {mock.readyCount}/{MOCK_SECTION_COUNT} ready
+                    <CheckCircle2 className="h-3.5 w-3.5" /> {mock.readyCount}/{MOCK_SECTION_COUNT} <UiText text={"ready"} />
                   </span>
                 </div>
                 <div className="mt-3"><StudyAccessChip resource={`mock:ielts:${mock.id}`} /></div>
-                <h2 className="mt-3 text-2xl font-black tracking-[-0.04em] text-slate-950">Full Mock {mock.index}</h2>
+                <h2 className="mt-3 text-2xl font-black tracking-[-0.04em] text-slate-950"><UiText text={"Full Mock"} /> {mock.index}</h2>
                 <p className="mt-2 text-sm font-medium leading-6 text-slate-500">Listening → Reading → Writing → Speaking</p>
 
                 <div className="mt-4 flex flex-wrap gap-1.5" aria-label="Section availability">
@@ -197,27 +199,27 @@ function IELTSMockCatalog() {
 
                 {inProgress ? (
                   <div className="mt-3" aria-label={`${doneCount} of ${MOCK_SECTION_COUNT} sections completed`}>
-                    <div className="flex items-center justify-between text-[11px] font-bold text-red-700"><span>{doneCount}/{MOCK_SECTION_COUNT} completed</span><span>{Math.round((doneCount / MOCK_SECTION_COUNT) * 100)}%</span></div>
+                    <div className="flex items-center justify-between text-[11px] font-bold text-red-700"><span>{doneCount}/{MOCK_SECTION_COUNT} <UiText text={"completed"} /></span><span>{Math.round((doneCount / MOCK_SECTION_COUNT) * 100)}%</span></div>
                     <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-red-100"><div className="h-full rounded-full bg-gradient-to-r from-red-700 to-red-400" style={{ width: `${(doneCount / MOCK_SECTION_COUNT) * 100}%` }} /></div>
                   </div>
                 ) : finished ? (
-                  <span className="mt-3 inline-flex flex-wrap items-center gap-1 self-start rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-emerald-700"><CheckCircle2 className="h-3.5 w-3.5" /> {overall !== null && <strong>Overall {overall.toFixed(1)} ·</strong>} 4/4 completed{overall === null && <span>· Assessment pending</span>}</span>
+                  <span className="mt-3 inline-flex flex-wrap items-center gap-1 self-start rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-emerald-700"><CheckCircle2 className="h-3.5 w-3.5" /> {overall !== null && <strong><UiText text={"Overall"} /> {overall.toFixed(1)} ·</strong>} <UiText text={"4/4 completed"} />{overall === null && <span>· Assessment pending</span>}</span>
                 ) : null}
-                {finished && overall !== null ? <CatalogScore score={overall} maximum={9} label="Overall band" detail="4 skills completed" /> : null}
+                {finished && overall !== null ? <CatalogScore score={overall} maximum={9} label={uiCopy("Overall band")} detail="4 skills completed" /> : null}
 
                 <div className="mock-ielts-card-footer mt-auto flex items-end justify-between gap-2 pt-6">
                   <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-500"><Clock3 className="h-4 w-4 shrink-0" /> {formatMockDuration(mock.totalMinutes)}{!finished && ' session'}</span>
                   <div className="mock-ielts-card-actions">
-                  {finished ? <><button type="button" className="mock-ielts-glass-open mock-ielts-card-open" aria-label={`Review Full Mock ${mock.index}`} onClick={() => navigate(`/mock/ielts/${mock.id}`, { state: { from: from ?? 'ielts' } })}><UiText text="View results" /></button><button type="button" className="mock-ielts-glass-open mock-ielts-retake" aria-label={`Retake Full Mock ${mock.index}`} onClick={() => {
+                  {finished ? <><button type="button" className="mock-ielts-glass-open mock-ielts-card-open" aria-label={uiCopy("Review Full Mock {{value1}}", { value1: String(mock.index) })} onClick={() => navigate(`/mock/ielts/${mock.id}`, { state: { from: from ?? 'ielts' } })}><UiText text="View results" /></button><button type="button" className="mock-ielts-glass-open mock-ielts-retake" aria-label={uiCopy("Retake Full Mock {{value1}}", { value1: String(mock.index) })} onClick={() => {
                     if (!studyAccess.open(`mock:ielts:${mock.id}`)) return
                     if (!retakeFullMock(mock.id)) { setRetakeError('Unable to save your previous attempt. Please try again.'); return }
                     setRetakeError('')
                     navigate(`/mock/ielts/${mock.id}`, { state: { from: from ?? 'ielts' } })
-                  }}><RotateCcw size={14} /> Retake</button></> :
-                  <button type="button" className="mock-ielts-glass-open mock-ielts-card-open" aria-label={`${inProgress ? 'Resume' : 'Start'} Full Mock ${mock.index}`} onClick={() => {
+                  }}><RotateCcw size={14} /> <UiText text={"Retake"} /></button></> :
+                  <button type="button" className="mock-ielts-glass-open mock-ielts-card-open" aria-label={uiCopy("{{value1}} Full Mock {{value2}}", { value1: String(inProgress ? 'Resume' : 'Start'), value2: String(mock.index) })} onClick={() => {
                     if (!studyAccess.open(`mock:ielts:${mock.id}`)) return
                     navigate(`/mock/ielts/${mock.id}`, { state: { from: from ?? 'ielts' } })
-                  }}>{inProgress ? 'Resume' : 'Start'} <ArrowRight size={14} /></button>}
+                  }}>{inProgress ? <UiText text={"Resume"} /> : <UiText text={"Start"} />} <ArrowRight size={14} /></button>}
                   </div>
                 </div>
               </article>
@@ -225,7 +227,7 @@ function IELTSMockCatalog() {
           })}
         </div>
       ) : (
-        <div className="mock-ielts-glass-empty mt-5 rounded-[1.75rem] border border-dashed border-red-200 px-4 py-12 text-center text-sm font-semibold text-slate-600" role="status">No mocks found for this filter.</div>
+        <div className="mock-ielts-glass-empty mt-5 rounded-[1.75rem] border border-dashed border-red-200 px-4 py-12 text-center text-sm font-semibold text-slate-600" role="status"><UiText text={"No mocks found for this filter."} /></div>
       )}
       {retakeError && <p role="alert" className="mt-3 text-sm text-red-700">{retakeError}</p>}
     </section>

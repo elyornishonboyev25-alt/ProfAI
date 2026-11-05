@@ -1,3 +1,4 @@
+import { useCopy } from '@/i18n/interface'
 import UiText from '@/components/common/UiText'
 import { memo, useCallback, useDeferredValue, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -74,6 +75,7 @@ const UniversityCard = memo(function UniversityCard({
   onToggleShortlist: (university: University) => void
   returnTo: '/admission/universities' | '/admission/shortlist'
 }) {
+  const { c: uiCopy } = useCopy()
   const fit = scoreUniversity(university, { ...scores, preferredCountry })
   const hasProfileScores = scores.satTotal !== null || scores.ieltsOverall !== null
 
@@ -87,7 +89,7 @@ const UniversityCard = memo(function UniversityCard({
         className="admission-university-card-link"
         to={`/admission/universities/${university.slug}`}
         state={{ admissionReturnTo: returnTo }}
-        aria-label={`Explore ${university.name}`}
+        aria-label={uiCopy("Explore {{value1}}", { value1: String(university.name) })}
         onFocus={() => prefetchUniversityCampusImage(university.name)}
       />
       <div className="admission-card-glow" aria-hidden="true" />
@@ -101,9 +103,9 @@ const UniversityCard = memo(function UniversityCard({
           <button
             type="button"
             className={`admission-card-shortlist${shortlisted ? ' is-shortlisted' : ''}`}
-            aria-label={shortlisted ? `Remove ${university.name} from shortlist` : `Add ${university.name} to shortlist`}
+            aria-label={shortlisted ? uiCopy("Remove {{value1}} from shortlist", { value1: String(university.name) }) : uiCopy("Add {{value1}} to shortlist", { value1: String(university.name) })}
             aria-pressed={shortlisted}
-            title={shortlisted ? 'Remove from shortlist' : 'Add to shortlist'}
+            title={shortlisted ? uiCopy("Remove from shortlist") : uiCopy("Add to shortlist")}
             onClick={() => onToggleShortlist(university)}
           >
             <Heart className="h-4 w-4" fill={shortlisted ? 'currentColor' : 'none'} />
@@ -119,12 +121,12 @@ const UniversityCard = memo(function UniversityCard({
 
       <div className="admission-card-tags">
         <span>IELTS {universityIeltsLabel(university)}</span>
-        {university.groups?.includes('ivy-league') && <span>Ivy League</span>}
+        {university.groups?.includes('ivy-league') && <span><UiText text={"Ivy League"} /></span>}
       </div>
 
       <div className="admission-card-footer">
         <div>
-          <small>Living budget</small>
+          <small><UiText text={"Living budget"} /></small>
           <strong>{yearlyCostLabel(university)}</strong>
         </div>
         <div
@@ -132,11 +134,11 @@ const UniversityCard = memo(function UniversityCard({
           style={{ '--match-value': `${fit.fitPercent * 3.6}deg` } as React.CSSProperties}
           title={hasProfileScores ? 'Planning fit from saved scores; not admission probability' : 'Planning fit only; add your scores and check full admission requirements'}
         >
-          <span><small>Fit</small><strong>{fit.fitPercent}%</strong></span>
+          <span><small><UiText text={"Fit"} /></small><strong>{fit.fitPercent}%</strong></span>
         </div>
       </div>
 
-      <span className="admission-card-open" aria-label={`Explore ${university.name}`}>
+      <span className="admission-card-open" aria-label={uiCopy("Explore {{value1}}", { value1: String(university.name) })}>
          <UiText text={"Explore"} /> <ArrowRight className="h-3.5 w-3.5" />
       </span>
     </article>
@@ -156,6 +158,7 @@ function FilterSelect({
   onChange: (value: string) => void
   options: Array<{ value: string; label: string }>
 }) {
+  const { c: uiCopy } = useCopy()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
@@ -197,15 +200,15 @@ function FilterSelect({
   return (
     <div ref={rootRef} className={`admission-filter-control admission-listbox${open ? ' is-open' : ''}${value !== options[0]?.value ? ' is-filtered' : ''}`} onKeyDown={onKeyDown}>
       <span className="admission-filter-icon" aria-hidden="true"><Icon /></span>
-      <span className="sr-only">{label}</span>
+      <span className="sr-only"><UiText text={label} /></span>
       <button type="button" role="combobox" aria-label={label} aria-controls={listId} aria-expanded={open} onClick={() => { setOpen((current) => !current); setActiveIndex(Math.max(0, options.findIndex((option) => option.value === value))) }}>
         <span>{selected?.label}</span><ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
       </button>
       {open ? <div className="admission-listbox-popover">
-        {options.length > 6 ? <label className="admission-listbox-search"><Search className="h-4 w-4" /><input type="search" autoFocus value={query} onChange={(event) => { setQuery(event.target.value); setActiveIndex(0) }} placeholder={`Search ${label.toLowerCase()}`} /></label> : null}
+        {options.length > 6 ? <label className="admission-listbox-search"><Search className="h-4 w-4" /><input type="search" autoFocus value={query} onChange={(event) => { setQuery(event.target.value); setActiveIndex(0) }} placeholder={uiCopy("Search {{value1}}", { value1: String(label.toLowerCase()) })} /></label> : null}
         <ul id={listId} role="listbox" aria-label={label}>
-          {visible.map((option, index) => <li key={option.value} role="option" aria-selected={option.value === value}><button type="button" onMouseEnter={() => setActiveIndex(index)} onClick={() => choose(option.value)} className={index === activeIndex ? 'is-active' : ''}>{option.label}{option.value === value ? <Check className="h-4 w-4" /> : null}</button></li>)}
-          {!visible.length ? <li className="admission-listbox-empty">No options found</li> : null}
+          {visible.map((option, index) => <li key={option.value} role="option" aria-selected={option.value === value}><button type="button" onMouseEnter={() => setActiveIndex(index)} onClick={() => choose(option.value)} className={index === activeIndex ? 'is-active' : ''}><UiText text={option.label} />{option.value === value ? <Check className="h-4 w-4" /> : null}</button></li>)}
+          {!visible.length ? <li className="admission-listbox-empty"><UiText text={"No options found"} /></li> : null}
         </ul>
       </div> : null}
     </div>
@@ -213,6 +216,7 @@ function FilterSelect({
 }
 
 export default function AdmissionUniversities({ shortlistOnly = false }: { shortlistOnly?: boolean }) {
+  const { c: uiCopy } = useCopy()
   const navigate = useNavigate()
   const pageRef = useRef<HTMLDivElement>(null)
   const resultsSectionRef = useRef<HTMLElement>(null)
@@ -339,68 +343,68 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
 
       <div className="admission-universities-shell relative mx-auto w-full max-w-[104rem]">
         <header className="admission-hub-nav">
-          <button type="button" className="admission-hub-brand" onClick={() => navigate('/admission')} aria-label="Open Admission Hub">
+          <button type="button" className="admission-hub-brand" onClick={() => navigate('/admission')} aria-label={uiCopy("Open Admission Hub")}>
             <BrandLogo height={50} />
             <span className="admission-hub-divider" aria-hidden="true" />
-            <span className="admission-hub-title">Admission Hub</span>
+            <span className="admission-hub-title"><UiText text={"Admission Hub"} /></span>
           </button>
 
-          <nav className="admission-journey" aria-label="Admission journey">
+          <nav className="admission-journey" aria-label={uiCopy("Admission journey")}>
             <button className={shortlistOnly ? '' : 'is-active'} aria-current={shortlistOnly ? undefined : 'step'} onClick={() => navigate('/admission/universities')}><span className="admission-journey-index" aria-hidden="true">1</span> <UiText text={"Choose"} /> </button>
             <ArrowRight aria-hidden="true" />
             <button className={shortlistOnly ? 'is-active' : ''} aria-current={shortlistOnly ? 'step' : undefined} onClick={() => navigate('/admission/shortlist')}>
-              <span className="admission-journey-index" aria-hidden="true">2</span> Shortlist <span className="admission-shortlist-count">{shortlistCount}</span>
+              <span className="admission-journey-index" aria-hidden="true">2</span> <UiText text={"Shortlist"} /> <span className="admission-shortlist-count">{shortlistCount}</span>
             </button>
             <ArrowRight aria-hidden="true" />
             <button type="button" onClick={() => navigate('/admission/lessons')}><span className="admission-journey-index" aria-hidden="true">3</span> <UiText text={"Prepare"} /> </button>
             <ArrowRight aria-hidden="true" />
             <button type="button" onClick={() => navigate('/admission/lessons')}><span className="admission-journey-index" aria-hidden="true">4</span> <UiText text={"Apply"} /> </button>
             <ArrowRight aria-hidden="true" />
-            <button type="button" onClick={() => navigate('/admission')}><span className="admission-journey-index" aria-hidden="true">5</span> Admitted</button>
+            <button type="button" onClick={() => navigate('/admission')}><span className="admission-journey-index" aria-hidden="true">5</span> <UiText text={"Admitted"} /></button>
           </nav>
         </header>
 
         <main className="admission-discovery-layout">
           <aside className="admission-universities-intro-column">
             <Link to={shortlistOnly ? '/admission/universities' : '/admission'} className="admission-dashboard-back route-back-button">
-              <ArrowLeft className="h-4 w-4" /> <span>{shortlistOnly ? 'Back to Universities' : 'Applications'}</span>
+              <ArrowLeft className="h-4 w-4" /> <span>{shortlistOnly ? <UiText text={"Back to Universities"} /> : <UiText text={"Applications"} />}</span>
             </Link>
             <div className="admission-university-intro-sticky">
               {shortlistOnly ? (
                 <div className="admission-shortlist-summary">
                   <span className="admission-shortlist-summary-icon"><BookmarkCheck /></span>
-                  <p className="admission-shortlist-summary-kicker">Your university plan</p>
-                  <h1>{shortlistCount} {shortlistCount === 1 ? 'university' : 'universities'} shortlisted</h1>
-                  <p>Keep your strongest options together, open their profiles and remove choices as your plan becomes clearer.</p>
+                  <p className="admission-shortlist-summary-kicker"><UiText text={"Your university plan"} /></p>
+                  <h1>{shortlistCount} {shortlistCount === 1 ? <UiText text={"university"} /> : <UiText text={"universities"} />} <UiText text={"shortlisted"} /></h1>
+                  <p><UiText text={"Keep your strongest options together, open their profiles and remove choices as your plan becomes clearer."} /></p>
                   <button onClick={() => navigate('/admission/universities')}>
-                    <Compass className="h-4 w-4" /> Browse universities
+                    <Compass className="h-4 w-4" /> <UiText text={"Browse universities"} />
                   </button>
                 </div>
               ) : (
                 <div className="admission-university-intro">
                   <div className="admission-university-intro-main">
-                    <span className="admission-university-intro-kicker"><GraduationCap size={17} /> UNIVERSITY DISCOVERY</span>
-                    <h1>Find your next <em>chapter.</em></h1>
-                    <p>Explore universities, compare real details and save the places that belong on your shortlist.</p>
-                    <div className="admission-university-intro-stats" aria-label="University catalog at a glance">
-                      <div><strong>{UNIVERSITY_COUNT.toLocaleString('en-US')}</strong><span>Universities</span></div>
-                      <div><strong>{QS_2027_RANKED_UNIVERSITY_COUNT.toLocaleString('en-US')}</strong><span>QS ranked</span></div>
-                      <div><strong>{countries.length}</strong><span>Countries</span></div>
+                    <span className="admission-university-intro-kicker"><GraduationCap size={17} /> <UiText text={"UNIVERSITY DISCOVERY"} /></span>
+                    <h1><UiText text={"Find your next"} /> <em><UiText text={"chapter."} /></em></h1>
+                    <p><UiText text={"Explore universities, compare real details and save the places that belong on your shortlist."} /></p>
+                    <div className="admission-university-intro-stats" aria-label={uiCopy("University catalog at a glance")}>
+                      <div><strong>{UNIVERSITY_COUNT.toLocaleString('en-US')}</strong><span><UiText text={"Universities"} /></span></div>
+                      <div><strong>{QS_2027_RANKED_UNIVERSITY_COUNT.toLocaleString('en-US')}</strong><span><UiText text={"QS ranked"} /></span></div>
+                      <div><strong>{countries.length}</strong><span><UiText text={"Countries"} /></span></div>
                     </div>
                   </div>
                   <div className="admission-university-destinations">
-                    <div className="admission-university-destinations-heading"><span>EXPLORE BY DESTINATION</span><MapPin size={17} /></div>
+                    <div className="admission-university-destinations-heading"><span><UiText text={"EXPLORE BY DESTINATION"} /></span><MapPin size={17} /></div>
                     <div className="admission-university-destination-list">
                       {popularCountries.map((destination, index) => (
                         <button key={destination.name} type="button" className={country === destination.name ? 'is-active' : ''} aria-pressed={country === destination.name} onClick={() => selectDestination(destination.name)}>
                           <span className="admission-university-destination-index">0{index + 1}</span>
-                          <span className="admission-university-destination-name">{destination.name}<small>{destination.count.toLocaleString('en-US')} universities</small></span>
+                          <span className="admission-university-destination-name">{destination.name}<small>{destination.count.toLocaleString('en-US')} <UiText text={"universities"} /></small></span>
                           <ArrowUpRight size={17} />
                         </button>
                       ))}
                     </div>
                     <button type="button" className="admission-university-intro-shortlist" onClick={() => navigate('/admission/shortlist')}>
-                      <span><BookmarkCheck size={19} /> My shortlist <small>{shortlistCount} saved</small></span><ArrowRight size={18} />
+                      <span><BookmarkCheck size={19} /> <UiText text={"My shortlist"} /> <small>{shortlistCount} <UiText text={"saved"} /></small></span><ArrowRight size={18} />
                     </button>
                   </div>
                 </div>
@@ -410,7 +414,7 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
 
           <section ref={resultsSectionRef} className="admission-universities-results-column min-w-0">
             <div className="admission-search-panel">
-              <div className="admission-catalog-heading"><div><span><Building2 size={15} /> {shortlistOnly ? 'YOUR SAVED UNIVERSITIES' : 'THE UNIVERSITY CATALOG'}</span><h2>{shortlistOnly ? 'Your shortlist' : 'Explore universities'}</h2></div><p>{shortlistOnly ? 'Keep your chosen options close while you plan your next step.' : 'Discover institutions that match your goals, location and budget.'}</p></div>
+              <div className="admission-catalog-heading"><div><span><Building2 size={15} /> {shortlistOnly ? <UiText text={"YOUR SAVED UNIVERSITIES"} /> : <UiText text={"THE UNIVERSITY CATALOG"} />}</span><h2>{shortlistOnly ? <UiText text={"Your shortlist"} /> : <UiText text={"Explore universities"} />}</h2></div><p>{shortlistOnly ? <UiText text={"Keep your chosen options close while you plan your next step."} /> : <UiText text={"Discover institutions that match your goals, location and budget."} />}</p></div>
               <div className="admission-search-box">
                 <span className="admission-search-icon" aria-hidden="true"><Search /></span>
                 <input
@@ -419,26 +423,26 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   onKeyDown={(event) => { if (event.key === 'Escape' && query) setQuery('') }}
-                  placeholder={shortlistOnly ? 'Search your shortlist' : 'Find your university'}
-                  aria-label={shortlistOnly ? 'Search shortlisted universities' : 'Search universities'}
+                  placeholder={shortlistOnly ? uiCopy("Search your shortlist") : uiCopy("Find your university")}
+                  aria-label={shortlistOnly ? uiCopy("Search shortlisted universities") : uiCopy("Search universities")}
                 />
                 {query ? (
-                  <button type="button" className="admission-search-clear" aria-label="Clear search" onClick={() => { setQuery(''); searchInputRef.current?.focus() }}>
+                  <button type="button" className="admission-search-clear" aria-label={uiCopy("Clear search")} onClick={() => { setQuery(''); searchInputRef.current?.focus() }}>
                     <X aria-hidden="true" />
                   </button>
                 ) : <kbd className="admission-search-kbd" aria-hidden="true">/</kbd>}
               </div>
 
               <div className="admission-filter-row">
-                <FilterSelect label="Country" icon={Globe2} value={country} onChange={setCountry} options={[{ value: 'all', label: 'All countries' }, ...countries.map((item) => ({ value: item, label: item }))]} />
-                <FilterSelect label="Living-cost budget" icon={Wallet} value={budget} onChange={(value) => setBudget(value as BudgetFilter)} options={[{ value: 'all', label: 'Any budget' }, { value: 'published', label: 'Published cost' }, { value: 'under-20k-usd', label: 'Under $20k / year' }]} />
-                <FilterSelect label="IELTS requirement" icon={Languages} value={ielts} onChange={(value) => setIelts(value as IeltsFilter)} options={[{ value: 'all', label: 'Any IELTS' }, { value: 'up-to-6.5', label: 'IELTS up to 6.5' }, { value: 'up-to-7.0', label: 'IELTS up to 7.0' }, { value: '7.5-plus', label: 'IELTS 7.5+' }, { value: 'no-cutoff', label: 'No numeric cutoff' }, { value: 'unverified', label: 'Requirement not verified' }]} />
-                <FilterSelect label="QS rank" icon={Trophy} value={rank} onChange={(value) => setRank(value as RankFilter)} options={[{ value: 'all', label: 'Any QS rank' }, { value: 'top-10', label: 'QS top 10' }, { value: 'top-25', label: 'QS top 25' }, { value: 'top-50', label: 'QS top 50' }, { value: 'unranked', label: 'Not QS ranked' }]} />
+                <FilterSelect label={uiCopy("Country")} icon={Globe2} value={country} onChange={setCountry} options={[{ value: 'all', label: 'All countries' }, ...countries.map((item) => ({ value: item, label: item }))]} />
+                <FilterSelect label={uiCopy("Living-cost budget")} icon={Wallet} value={budget} onChange={(value) => setBudget(value as BudgetFilter)} options={[{ value: 'all', label: 'Any budget' }, { value: 'published', label: 'Published cost' }, { value: 'under-20k-usd', label: 'Under $20k / year' }]} />
+                <FilterSelect label={uiCopy("IELTS requirement")} icon={Languages} value={ielts} onChange={(value) => setIelts(value as IeltsFilter)} options={[{ value: 'all', label: 'Any IELTS' }, { value: 'up-to-6.5', label: 'IELTS up to 6.5' }, { value: 'up-to-7.0', label: 'IELTS up to 7.0' }, { value: '7.5-plus', label: 'IELTS 7.5+' }, { value: 'no-cutoff', label: 'No numeric cutoff' }, { value: 'unverified', label: 'Requirement not verified' }]} />
+                <FilterSelect label={uiCopy("QS rank")} icon={Trophy} value={rank} onChange={(value) => setRank(value as RankFilter)} options={[{ value: 'all', label: 'Any QS rank' }, { value: 'top-10', label: 'QS top 10' }, { value: 'top-25', label: 'QS top 25' }, { value: 'top-50', label: 'QS top 50' }, { value: 'unranked', label: 'Not QS ranked' }]} />
               </div>
 
               <div className="admission-results-meta">
-                <span><Compass className="h-3.5 w-3.5" /> {filtered.length} {shortlistOnly ? 'shortlisted' : 'universities found'}</span>
-                <span className="hidden sm:inline">{shortlistOnly ? 'Saved on this device' : `Complete QS 2027 ranking · ${QS_2027_RANKED_UNIVERSITY_COUNT.toLocaleString('en-US')}`}</span>
+                <span><Compass className="h-3.5 w-3.5" /> {filtered.length} {shortlistOnly ? <UiText text={"shortlisted"} /> : <UiText text={"universities found"} />}</span>
+                <span className="hidden sm:inline">{shortlistOnly ? <UiText text={"Saved on this device"} /> : <UiText text={"Complete QS 2027 ranking · {{value1}}"} values={{ value1: String(QS_2027_RANKED_UNIVERSITY_COUNT.toLocaleString('en-US')) }} />}</span>
                 {hasFilters && (
                   <button type="button" onClick={clearFilters}><RotateCcw className="h-3.5 w-3.5" />  <UiText text={"Reset filters"} /> </button>
                 )}
@@ -448,7 +452,7 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
             <div
               className="admission-university-scroll"
               role="region"
-              aria-label="University results"
+              aria-label={uiCopy("University results")}
               tabIndex={0}
             >
               {shortlistOnly && shortlistCount === 0 ? (
@@ -456,14 +460,14 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
                   <Bookmark className="h-7 w-7" />
                   <h2> <UiText text={"Your shortlist is empty"} /> </h2>
                   <p> <UiText text={"Save universities you want to compare and revisit."} /> </p>
-                  <button onClick={() => navigate('/admission/universities')}>Browse universities</button>
+                  <button onClick={() => navigate('/admission/universities')}><UiText text={"Browse universities"} /></button>
                 </div>
               ) : filtered.length === 0 ? (
                 <div className="admission-empty-state">
                   <Search className="h-7 w-7" />
                   <h2> <UiText text={"No universities found"} /> </h2>
                   <p> <UiText text={"Try a wider country, score, budget or ranking filter."} /> </p>
-                  <button type="button" onClick={clearFilters}>Clear all filters</button>
+                  <button type="button" onClick={clearFilters}><UiText text={"Clear all filters"} /></button>
                 </div>
               ) : (
                 <div className="admission-university-grid">
@@ -495,7 +499,7 @@ export default function AdmissionUniversities({ shortlistOnly = false }: { short
               ) : null}
 
               <p className="admission-catalog-note">
-                <Sparkles className="h-3.5 w-3.5" /> Rankings: {QS_EDITION}, published 18 June 2026. IELTS directory scores are indicative and programme-specific; confirm them with the university. Admission policies and budgets are shown where verified.
+                <Sparkles className="h-3.5 w-3.5" /> <UiText text={"Rankings:"} /> {QS_EDITION}<UiText text={", published 18 June 2026. IELTS directory scores are indicative and programme-specific; confirm them with the university. Admission policies and budgets are shown where verified."} />
               </p>
             </div>
           </section>

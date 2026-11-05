@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { apiClient } from '@/lib/apiClient'
 import { useAuthStore } from '@/store/authStore'
@@ -26,5 +27,5 @@ export default function StandardLiveSession({ children, onEnd }: { children: Rea
     return () => { disposed = true; window.clearTimeout(connectTimer); window.clearTimeout(timer); release() }
   }, [userId, retry])
   if (state === 'ready') return <>{children}</>
-  return <div className="upgrade-backdrop"><div className="upgrade-prompt"><h2>Live AI</h2><p role={state === 'failed' ? 'alert' : 'status'}>{state === 'failed' ? error : text('Preparing your voice session…', 'Ovozli suhbat tayyorlanmoqda…', 'Подготавливаем голосовой чат…')}</p>{state === 'failed' && <button className="upgrade-action" onClick={() => setRetry(value => value + 1)}>{text('Retry', 'Qayta urinish', 'Повторить')}</button>}<button className="upgrade-later" onClick={() => end.current()}>{text('Back to chat', 'Chatga qaytish', 'Вернуться в чат')}</button></div></div>
+  return <div className="upgrade-backdrop"><div className="upgrade-prompt"><h2><UiText text={"Live AI"} /></h2><p role={state === 'failed' ? 'alert' : 'status'}>{state === 'failed' ? error : text('Preparing your voice session…', 'Ovozli suhbat tayyorlanmoqda…', 'Подготавливаем голосовой чат…')}</p>{state === 'failed' && <button className="upgrade-action" onClick={() => setRetry(value => value + 1)}>{text('Retry', 'Qayta urinish', 'Повторить')}</button>}<button className="upgrade-later" onClick={() => end.current()}>{text('Back to chat', 'Chatga qaytish', 'Вернуться в чат')}</button></div></div>
 }

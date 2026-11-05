@@ -4,10 +4,13 @@ import { createRoot } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import FullMockSectionGate from '@/components/ielts/FullMockSectionGate'
 import MockIELTS from '@/pages/MockIELTS'
+import MockIELTSRun from '@/pages/MockIELTSRun'
 import { accountStorageFor } from '@/utils/accountStorage'
 import { fullMockLaunchState, getFullMockById, getFullMockOverallBand, saveFullMockSectionResult } from '@/utils/ieltsMockCatalog'
+import i18n from '@/i18n'
 
 export async function run() {
+  await i18n.changeLanguage('en')
   const element = document.getElementById('root')!
   const mock = getFullMockById('full-mock-1')!
   let root: ReturnType<typeof createRoot> | undefined
@@ -25,7 +28,7 @@ export async function run() {
       <Route path="/test/:type/:id" element={<FullMockSectionGate><Runner /></FullMockSectionGate>} />
       <Route path="/ielts/:section/test/:id" element={<FullMockSectionGate><Runner /></FullMockSectionGate>} />
       <Route path="/mock/ielts" element={<MockIELTS embedded />} />
-      <Route path="/mock/ielts/:mockId" element={<div>Exam overview</div>} />
+      <Route path="/mock/ielts/:mockId" element={<MockIELTSRun />} />
     </Routes></MemoryRouter>
     await act(async () => root!.render(strict ? <StrictMode>{tree}</StrictMode> : tree))
   }
@@ -44,7 +47,7 @@ export async function run() {
       saveFullMockSectionResult(mock.id, section.key, { band: 7, testId: section.key, completedAt: '2026-10-12' })
     }
     await mount(mock.sections[3].launchPath!, fullMockLaunchState(mock.id, 'speaking'))
-    assert.ok(element.textContent?.includes('Exam overview'), 'Completed mocks open results rather than another test')
+    assert.ok(element.querySelector('.full-mock-results'), 'Completed mocks open results rather than another test')
     await mount('/test/listening/listening-full-1')
     assert.ok(element.querySelector('[data-runner]'), 'Standalone practice still opens normally')
     await mount(mock.sections[0].launchPath!, { ...fullMockLaunchState(mock.id, 'listening'), reviewPayload: { result: {} } })
@@ -53,14 +56,21 @@ export async function run() {
     await mount(second.sections[3].launchPath!, fullMockLaunchState(second.id, 'speaking'))
     assert.equal(path, second.sections[0].launchPath, 'Stale later route goes directly to the first unfinished runner')
     await mount('/mock/ielts')
+    const startExam = async () => {
+      await act(async () => element.querySelector<HTMLButtonElement>('.mrp-header .mock-run-start')!.click())
+      await act(async () => [...document.querySelectorAll<HTMLButtonElement>('.mrp-dialog button')].find(button => button.textContent?.includes('Start Listening'))!.click())
+    }
     await act(async () => element.querySelector<HTMLButtonElement>('[aria-label="Retake Full Mock 1"]')!.click())
-    assert.ok(element.querySelector('[data-runner]'), 'Retake opens Listening immediately')
+    assert.equal(element.querySelector('[data-runner]'), null, 'Retake asks for the mode first')
+    await startExam()
+    assert.ok(element.querySelector('[data-runner]'), 'Exam mode opens Listening')
     assert.equal(element.querySelector('video'), null)
     assert.equal(fullscreenCalls, 1)
     localStorage.clear()
     await mount('/mock/ielts')
     await act(async () => element.querySelector<HTMLButtonElement>('button.mock-ielts-card-open')!.click())
-    assert.ok(element.querySelector('[data-runner]'), 'Start opens Listening without an intermediate screen')
+    await startExam()
+    assert.ok(element.querySelector('[data-runner]'), 'Start opens Listening after the mode choice, without an intro video')
     assert.equal(element.querySelector('video'), null)
     assert.equal(fullscreenCalls, 2)
     // https://ielts.org/take-a-test/your-results/ielts-scoring-in-detail

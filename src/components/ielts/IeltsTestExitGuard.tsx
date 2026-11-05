@@ -4,7 +4,7 @@ import { UNSAFE_NavigationContext, parsePath, useLocation, type To } from 'react
 import { hasActiveTest } from '@/hooks/useActiveTest'
 import { useTestExitGuard } from '@/hooks/useTestExitGuard'
 import { useBillingText } from '@/features/billing/copy'
-import { getFullMockCompletedSections, getFullMockPendingSection } from '@/utils/ieltsMockCatalog'
+import { getFullMockCompletedSections, getFullMockPendingSection, getFullMockSectionRedirect, type MockSectionKey } from '@/utils/ieltsMockCatalog'
 
 /** Protect button, link, browser-history and document exits with one confirmation. */
 export default function IeltsTestExitGuard({ children, mockId, active }: {
@@ -38,9 +38,12 @@ export default function IeltsTestExitGuard({ children, mockId, active }: {
       // Canonical URL changes, section transitions and a submitted result keep
       // the same attempt; they must work even when an exam timer submits it.
       if (!target.pathname || target.pathname === route.pathname) return true
-      const payload = state as { mock?: { id?: string }; result?: { testId?: string } } | null
+      const payload = state as { mock?: { id?: string; section?: MockSectionKey }; result?: { testId?: string }; completedSection?: MockSectionKey } | null
       if (payload?.result?.testId && target.pathname === `/results/${payload.result.testId}`) return true
+      if (id && payload?.mock?.id === id && payload.mock.section && getFullMockSectionRedirect(id, payload.mock.section, target.pathname) === null) return true
       if (id && payload?.mock?.id === id && target.pathname === getFullMockPendingSection(id)?.launchPath) return true
+      // A submitted section hands off to the mock page, which asks before the next one.
+      if (id && target.pathname === `/mock/ielts/${id}` && payload?.completedSection) return true
       return !!id && target.pathname === `/mock/ielts/${id}` && getFullMockCompletedSections(id).length === 4
     }
     const block = (leave: () => void) => { pending.current = leave; show() }

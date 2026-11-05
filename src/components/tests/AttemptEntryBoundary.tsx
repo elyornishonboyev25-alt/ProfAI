@@ -18,12 +18,13 @@ function EntryDecision({ exam, owner, children }: { exam: 'IELTS' | 'SAT'; owner
   const location = useLocation()
   const navigate = useNavigate()
   const text = useBillingText()
-  const route = resolveFullMockRouteState(location) as { resumeIntent?: boolean; reviewPayload?: unknown; mock?: { id: string }; returnTo?: string } | null
+  const route = resolveFullMockRouteState(location) as { resumeIntent?: boolean; reviewPayload?: unknown; mock?: { id: string }; returnTo?: string; completedSection?: string } | null
   // Reload keeps this browser entry; a fresh catalog visit has another key.
   const entryKey = `exam:accepted-entry:${owner}:${location.key}`
   const entryValue = `${location.pathname}${location.search}`
   const [existing] = useState(() => {
-    if (route?.reviewPayload || route?.resumeIntent) return null
+    // A section just handed off to its mock page, which asks before the next one.
+    if (route?.reviewPayload || route?.resumeIntent || route?.completedSection) return null
     try { if (window.sessionStorage.getItem(entryKey) === entryValue) return null } catch { /* The saved-choice screen remains available. */ }
     if (exam === 'IELTS') {
       const mockId = location.pathname.match(/^\/mock\/ielts\/([^/]+)$/)?.[1]

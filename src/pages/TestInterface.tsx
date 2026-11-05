@@ -37,7 +37,7 @@ import {
 import { resolveGeneratedTrackTest } from '@/utils/generatedIeltsTests'
 import { resolveIeltsTestById } from '@/utils/ieltsTestCatalog'
 import { saveReviewState } from '@/utils/resultsReviewState'
-import { fullMockLaunchState, getFullMockPendingSection, getFullMockSectionRedirect, saveFullMockSectionResult, type MockSectionKey } from '@/utils/ieltsMockCatalog'
+import { fullMockAfterSection, fullMockLaunchState, getFullMockPendingSection, getFullMockSectionRedirect, saveFullMockSectionResult, type MockSectionKey } from '@/utils/ieltsMockCatalog'
 
 type TestLaunchPreset = {
   mode: 'practice' | 'simulation' | 'full-test'
@@ -239,12 +239,8 @@ function TestInterfaceContent() {
       saveFullMockSectionResult(mockContext.id, trackType, {
         band: result.score, completedAt: result.date, testId: result.testId, result,
       })
-      const next = getFullMockPendingSection(mockContext.id)
-      if (next?.launchPath) {
-        navigate(next.launchPath, { replace: true, state: fullMockLaunchState(mockContext.id, next.key, mockFrom) })
-      } else {
-        navigate(`/mock/ielts/${mockContext.id}`, { replace: true, state: { from: mockFrom } })
-      }
+      const after = fullMockAfterSection(mockContext.id, trackType, mockFrom)
+      navigate(after.path, { replace: true, state: after.state })
       return
     }
     navigate(`/results/${(results as { testId?: string })?.testId || 'unknown'}`, {

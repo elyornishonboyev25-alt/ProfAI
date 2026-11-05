@@ -1,20 +1,24 @@
 import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   ArrowDownWideNarrow,
   ArrowUpRight,
   ArrowUpWideNarrow,
   BookOpen,
   CalendarDays,
+  CheckCircle2,
+  ChevronDown,
   ChevronRight,
   Clock3,
   FileSearch,
   Headphones,
   Layers3,
+  Lock,
   Mic,
   PenLine,
+  PlayCircle,
   Search,
   Sigma,
   Trophy,
@@ -28,10 +32,11 @@ import { Reveal } from '@/components/fx'
 import { useCopy } from '@/i18n/interface'
 import WritingResultModal from '@/components/WritingResultModal'
 import SpeakingResult from '@/components/speaking/SpeakingResult'
-import FullMockAttemptHistory from '@/components/ielts/FullMockAttemptHistory'
+import FullMockResults from '@/components/ielts/FullMockResults'
 import type { WritingAnalysisEntry } from '@/utils/writingAnalysisStorage'
-import type { SpeakingSessionRecord } from '@/store/speakingStore'
-import { getResultsHistory, type ResultRecord, type ResultSkill } from '@/utils/resultsHistory'
+import type { ExaminerTurn, SpeakingEvaluation } from '@/services/speakingAI'
+import { getResultsHistory, type MockResultDetail, type MockSectionAnalyze, type ResultRecord, type ResultSkill } from '@/utils/resultsHistory'
+import { getFullMockById, getFullMockResultGroups, type MockSectionKey } from '@/utils/ieltsMockCatalog'
 import { ACCOUNT_DATA_EVENT } from '@/utils/accountStorage'
 import { getSATReviewTests } from '@/features/sat/catalog'
 import { loadSATAttempt } from '@/features/sat/attemptStorage'
@@ -45,6 +50,7 @@ const SKILL_FILTERS: Array<{ key: FilterKey; exam: string; label: string; icon: 
   { key: 'listening', exam: 'IELTS', label: 'Listening', icon: Headphones },
   { key: 'writing', exam: 'IELTS', label: 'Writing', icon: PenLine },
   { key: 'speaking', exam: 'IELTS', label: 'Speaking', icon: Mic },
+  { key: 'mock', exam: 'IELTS', label: 'Full mocks', icon: Trophy },
   { key: 'sat', exam: 'SAT', label: 'Digital SAT', icon: Sigma },
 ]
 
@@ -53,8 +59,18 @@ const SKILL_ICONS: Record<ResultSkill, typeof BookOpen> = {
   listening: Headphones,
   writing: PenLine,
   speaking: Mic,
+  mock: Trophy,
   sat: Sigma,
 }
+
+const MOCK_SECTION_ICONS: Record<MockSectionKey, typeof BookOpen> = {
+  listening: Headphones,
+  reading: BookOpen,
+  writing: PenLine,
+  speaking: Mic,
+}
+
+type SpeakingView = { evaluation: SpeakingEvaluation; transcript?: ExaminerTurn[]; modeLabel: string }
 
 const UZ_MONTHS = ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr']
 
@@ -75,6 +91,7 @@ function bestScore(records: ResultRecord[]) {
 
 export default function Profile() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { c, language } = useCopy()
   const user = useAuthStore((state: AuthState) => state.user)
   const userId = user?.id
@@ -87,7 +104,10 @@ export default function Profile() {
   const [query, setQuery] = useState('')
   const [newestFirst, setNewestFirst] = useState(true)
   const [writingEntry, setWritingEntry] = useState<WritingAnalysisEntry | null>(null)
-  const [speakingEntry, setSpeakingEntry] = useState<SpeakingSessionRecord | null>(null)
+  const [speakingView, setSpeakingView] = useState<SpeakingView | null>(null)
+  const returnedMock = (location.state as { fullMockReview?: { mockId: string; completedAt: string } } | null)?.fullMockReview
+  const [openMock, setOpenMock] = useState<string | null>(null)
+  const [archivedReport, setArchivedReport] = useState<MockResultDetail | null>(null)
   const [historyVersion, setHistoryVersion] = useState(0)
 
   // Results saved in another tab or synced in the background appear without a reload.
@@ -163,9 +183,33 @@ export default function Profile() {
     const target = record.analyze
     if (!target) return
     if (target.type === 'writing') setWritingEntry(target.entry)
-    else if (target.type === 'speaking') setSpeakingEntry(target.entry)
-    else if (target.type === 'sat') navigate(`/sat/results/${encodeURIComponent(target.attemptId)}`)
+    else if (target.type === 'speaking') {
+      if (target.entry.evaluation) setSpeakingView({ evaluation: target.entry.evaluation, transcript: target.entry.transcript, modeLabel: target.entry.modeLabel })
+    } else if (target.type === 'sat') navigate(`/sat/results/${encodeURIComponent(target.attemptId)}`)
     else navigate(`/results/${target.testId}`, { state: { result: target.result, returnTo: '/profile' } })
+  }
+
+  // Coming back from a section review re-opens that mock's sections.
+  useEffect(() => {
+    if (!returnedMock) return
+    const match = records.find((record) => record.mock?.mockId === returnedMock.mockId && record.mock.completedAt === returnedMock.completedAt)
+    if (match) setOpenMock(match.id)
+  }, [records, returnedMock?.mockId, returnedMock?.completedAt])
+
+  const openMockSection = (detail: MockResultDetail, target: MockSectionAnalyze, entry?: WritingAnalysisEntry) => {
+    if (target.type === 'writing') setWritingEntry(entry ?? target.entries[0])
+    else if (target.type === 'speaking') setSpeakingView({ evaluation: target.evaluation, transcript: target.transcript, modeLabel: target.label })
+    else navigate(target.path, { state: {
+      reviewPayload: { result: target.result, showCorrectAnswers: true },
+      fromResults: false,
+      returnTo: '/profile',
+      fullMockReview: { mockId: detail.mockId, completedAt: detail.completedAt },
+    } })
+  }
+
+  const openMockReport = (detail: MockResultDetail) => {
+    if (detail.archived) setArchivedReport(detail)
+    else navigate(`/mock/ielts/${detail.mockId}`, { state: { from: 'profile' } })
   }
 
   const formatDate = (time: number) => {
@@ -307,6 +351,112 @@ export default function Profile() {
                       {group.items.map((record) => {
                         const Icon = SKILL_ICONS[record.skill]
                         const duration = formatDuration(record.durationSec)
+                        const mock = record.mock
+                        if (mock) {
+                          const open = openMock === record.id
+                          const panelId = `mr-mock-${record.id}`
+                          const toggle = () => setOpenMock(open ? null : record.id)
+                          return (
+                            <li key={record.id} className={`mr-row mr-mock-row tone-${record.tone}${open ? ' is-open' : ''}`}>
+                              <span className="mr-seq" aria-label={`${c('Result')} ${record.sequence}`}>#{record.sequence}</span>
+                              <span className="mr-mark is-mock">
+                                <Icon aria-hidden="true" />
+                                <small>MOCK</small>
+                              </span>
+                              <div className="mr-row-main">
+                                <p className="mr-row-kind">
+                                  IELTS · {c('Full mock')}
+                                  <span className={`mr-tag${mock.mode === 'practice' ? ' is-muted' : ''}`}>{c(mock.mode === 'exam' ? 'Exam mode' : 'Practice mode')}</span>
+                                  {!mock.complete ? <span className="mr-tag is-muted">{c('In progress')}</span> : null}
+                                </p>
+                                <h4 title={record.title}>{record.title}</h4>
+                                <p className="mr-row-meta">
+                                  <span><CalendarDays aria-hidden="true" />{formatDate(record.completedAt)} · {formatTime(record.completedAt)}</span>
+                                  {duration ? <span><Clock3 aria-hidden="true" />{duration}</span> : null}
+                                </p>
+                              </div>
+                              <ul className="mr-stats">
+                                {record.stats.map((stat) => (
+                                  <li key={stat.label}>
+                                    <small>{stat.label}</small>
+                                    <b>{stat.value}</b>
+                                  </li>
+                                ))}
+                              </ul>
+                              <div className="mr-score">
+                                {record.score ? (
+                                  <>
+                                    <b>{record.score.value}</b>
+                                    <small>{c('Overall')}</small>
+                                  </>
+                                ) : (
+                                  <>
+                                    <b className="is-empty">—</b>
+                                    <small>{c(mock.complete ? 'Assessment pending' : 'In progress')}</small>
+                                  </>
+                                )}
+                              </div>
+                              <button type="button" className="mr-analyze mr-mock-toggle" aria-expanded={open} aria-controls={panelId} onClick={toggle}>
+                                <UiText text="Sections" />
+                                <ChevronDown aria-hidden="true" />
+                              </button>
+                              {open ? (
+                                <div className="mr-mock-panel" id={panelId}>
+                                  <ol className="mr-mock-sections">
+                                    {mock.sections.map((section) => {
+                                      const SectionIcon = MOCK_SECTION_ICONS[section.key]
+                                      const analyze = section.analyze
+                                      return (
+                                        <li key={section.key} className={`mr-mock-section is-${section.state}`}>
+                                          <span className="mr-mock-section-icon"><SectionIcon aria-hidden="true" /></span>
+                                          <div className="mr-mock-section-copy">
+                                            <strong>{section.title}</strong>
+                                            <small>
+                                              {section.state === 'scored' ? (section.detail?.includes('/') ? `${section.detail} ${c('correct')}` : section.detail)
+                                                : section.state === 'pending' ? c('Assessment pending')
+                                                  : section.state === 'hidden' ? c('Completed · score after Speaking')
+                                                    : section.state === 'active' ? c('In progress')
+                                                      : c('Not taken yet')}
+                                            </small>
+                                          </div>
+                                          <span className="mr-mock-section-band">
+                                            {section.band ? <><b>{section.band}</b><small>{c('Band')}</small></>
+                                              : section.state === 'hidden' ? <Lock aria-label={c('Locked')} />
+                                                : section.state === 'pending' ? <CheckCircle2 aria-hidden="true" />
+                                                  : <b className="is-empty">—</b>}
+                                          </span>
+                                          <div className="mr-mock-section-actions">
+                                            {analyze?.type === 'writing' && analyze.entries.length > 1
+                                              ? analyze.entries.map((entry) => (
+                                                  <button key={entry.attemptKey} type="button" className="mr-mock-analyze" onClick={() => openMockSection(mock, analyze, entry)}>
+                                                    {entry.taskType === 'task1' ? 'Task 1' : 'Task 2'}<ChevronRight aria-hidden="true" />
+                                                  </button>
+                                                ))
+                                              : analyze
+                                                ? <button type="button" className="mr-mock-analyze" onClick={() => openMockSection(mock, analyze)}><UiText text="Analyze" /><ChevronRight aria-hidden="true" /></button>
+                                                : null}
+                                          </div>
+                                        </li>
+                                      )
+                                    })}
+                                  </ol>
+                                  <div className="mr-mock-footer">
+                                    <small>
+                                      {c(mock.complete
+                                        ? 'Overall band = the average of the four section bands, rounded to the nearest half band.'
+                                        : mock.mode === 'exam'
+                                          ? 'Exam mode: section scores are revealed after Speaking.'
+                                          : 'Practice mode: each section shows its band as soon as you finish it.')}
+                                    </small>
+                                    <button type="button" className="mr-button" onClick={() => openMockReport(mock)}>
+                                      {mock.complete ? <><Trophy aria-hidden="true" /> <UiText text="Full report" /></> : <><PlayCircle aria-hidden="true" /> <UiText text="Continue mock" /></>}
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : null}
+                            </li>
+                          )
+                        }
                         return (
                           <li key={record.id} className={`mr-row tone-${record.tone}`}>
                             <span className="mr-seq" aria-label={`${c('Result')} ${record.sequence}`}>#{record.sequence}</span>
@@ -386,26 +536,43 @@ export default function Profile() {
             )}
           </section>
         </Reveal>
-        <div className="mlab mt-6" style={{ minHeight: 'auto', padding: 0 }}><FullMockAttemptHistory /></div>
       </div>
 
       {writingEntry ? <WritingResultModal entry={writingEntry} onClose={() => setWritingEntry(null)} /> : null}
 
-      {speakingEntry?.evaluation ? createPortal(
+      {speakingView ? createPortal(
         <div className="fixed inset-0 z-[250] overflow-y-auto bg-slate-950/60 p-3 backdrop-blur-sm sm:p-6" role="dialog" aria-modal="true" aria-label={c('Speaking review')}>
           <div className="mx-auto max-w-5xl rounded-3xl bg-gradient-to-br from-white via-red-50 to-white py-6 shadow-2xl">
             <SpeakingResult
-              evaluation={speakingEntry.evaluation}
-              transcript={speakingEntry.transcript}
-              modeLabel={speakingEntry.modeLabel}
+              evaluation={speakingView.evaluation}
+              transcript={speakingView.transcript}
+              modeLabel={speakingView.modeLabel}
               reviewMode
               onRetry={() => {}}
-              onExit={() => setSpeakingEntry(null)}
+              onExit={() => setSpeakingView(null)}
             />
           </div>
         </div>,
         document.body,
       ) : null}
+
+      {archivedReport ? (() => {
+        const mock = getFullMockById(archivedReport.mockId)
+        const saved = getFullMockResultGroups(userId).find((group) => group.archived && group.mockId === archivedReport.mockId && group.completedAt === archivedReport.completedAt)
+        if (!mock || !saved) return null
+        return createPortal(
+          <div role="dialog" aria-modal="true" aria-label={c('Saved full mock result')} className="fixed inset-0 z-[270] overflow-y-auto bg-white">
+            <FullMockResults mock={mock} results={saved.sections} overall={saved.overallBand} readOnly
+              onBack={() => setArchivedReport(null)} onReview={(section) => {
+                const result = saved.sections[section.key]?.result
+                if (!section.launchPath || !result) return
+                setArchivedReport(null)
+                openMockSection(archivedReport, { type: 'review', path: section.launchPath, result, mockId: mock.id, section: section.key })
+              }} />
+          </div>,
+          document.body,
+        )
+      })() : null}
     </div>
   )
 }

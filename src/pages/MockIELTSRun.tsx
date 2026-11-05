@@ -1,31 +1,34 @@
 import FullMockResults from '@/components/ielts/FullMockResults'
+import FullMockDialog from '@/components/ielts/FullMockDialog'
+import UiText from '@/components/common/UiText'
 import AttemptEntryBoundary from '@/components/tests/AttemptEntryBoundary'
 import { getInProcessAttempts } from '@/utils/inProcessAttempts'
 import IeltsTestExitGuard from '@/components/ielts/IeltsTestExitGuard'
 import { useAccountDataRevision } from '@/hooks/useAccountDataRevision'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import ImprovedResponse from '@/components/ielts/ImprovedResponse'
-import UiText from '@/components/common/UiText'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useId, useMemo, useState } from 'react'
 import {
   ArrowLeft,
+  ArrowRight,
   ArrowUpRight,
   BookOpen,
   CheckCircle2,
   ChevronDown,
   Clock3,
+  GraduationCap,
   Headphones,
-  Maximize2,
+  Layers3,
   Lock,
+  Maximize2,
   Mic2,
   PenSquare,
   PlayCircle,
-  Sparkles,
-  Trophy,
+  ShieldCheck,
+  Shuffle,
   type LucideIcon,
 } from 'lucide-react'
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { Reveal } from '@/components/fx'
 import { useBillingText } from '@/features/billing/copy'
 import './mock-ielts-run.css'
 import { regradeFullMockSpeaking } from '@/services/fullMockSpeakingReview'
@@ -38,12 +41,15 @@ import {
   fullMockLaunchState,
   FULL_MOCK_PROGRESS_EVENT,
   getFullMockById,
+  getFullMockChosenMode,
   getFullMockCompletedSections,
   getFullMockOverallBand,
   getFullMockResults,
   saveFullMockSectionResult,
+  setFullMockMode,
   MOCK_SECTION_COUNT,
   type FullMockEntry,
+  type FullMockMode,
   type MockSection,
   type MockSectionKey,
 } from '@/utils/ieltsMockCatalog'
@@ -62,17 +68,19 @@ const SECTION_TRACKS = {
 
 type SectionStatus = 'completed' | 'current' | 'locked' | 'coming-soon'
 
-// Official IELTS exam order is enforced: a section unlocks only after every
-// earlier section that actually has content is finished. Coming-soon sections
-// have no test to run, so they neither unlock nor block the chain.
+// Exam mode enforces the official order: a section unlocks only after every
+// earlier section that has content is finished. Practice mode opens every
+// unfinished section. Coming-soon sections neither unlock nor block the chain.
 function resolveStatus(
   sections: MockSection[],
   index: number,
   completed: Set<MockSectionKey>,
+  mode: FullMockMode,
 ): SectionStatus {
   const section = sections[index]
   if (!section.available) return 'coming-soon'
   if (completed.has(section.key)) return 'completed'
+  if (mode === 'practice') return 'current'
 
   const earlierAvailableDone = sections
     .slice(0, index)
@@ -98,20 +106,28 @@ function MockIELTSRunContent() {
   const navigate = useNavigate()
   const location = useLocation()
   const { mockId } = useParams<{ mockId: string }>()
-  const from = (location.state as { from?: string } | null)?.from
+  const routeState = location.state as { from?: string; completedSection?: MockSectionKey } | null
+  const from = routeState?.from
   const revision = useAccountDataRevision()
+  const dialogId = useId()
 
   const mock = useMemo<FullMockEntry | null>(() => (mockId ? getFullMockById(mockId) : null), [mockId])
 
   const [completedKeys, setCompletedKeys] = useState<MockSectionKey[]>(() =>
     mockId ? getFullMockCompletedSections(mockId) : [],
   )
+  const [chosenMode, setChosenMode] = useState<FullMockMode | null>(() => (mockId ? getFullMockChosenMode(mockId) : null))
+  const [picker, setPicker] = useState(false)
+  const [pickedMode, setPickedMode] = useState<FullMockMode>('exam')
+  const [handoff, setHandoff] = useState<MockSectionKey | null>(routeState?.completedSection ?? null)
+  const [openFeedback, setOpenFeedback] = useState<MockSectionKey | null>(null)
 
   // Completion is written by the section runners themselves (on submit / when
   // the examiner grade saves). Re-read whenever that happens, or when the user
   // returns to this tab after finishing a section elsewhere.
   const refreshProgress = useCallback(() => {
     setCompletedKeys(mockId ? getFullMockCompletedSections(mockId) : [])
+    setChosenMode(mockId ? getFullMockChosenMode(mockId) : null)
   }, [mockId])
 
   useEffect(() => {
@@ -128,12 +144,16 @@ function MockIELTSRunContent() {
     }
   }, [refreshProgress, revision, userId])
 
+  useEffect(() => { setHandoff(routeState?.completedSection ?? null) }, [routeState?.completedSection])
+
   const completedSet = useMemo(() => new Set(completedKeys), [completedKeys])
   const sectionResults = useMemo(() => {
     void completedKeys
     return mockId ? getFullMockResults(mockId) : {}
   }, [completedKeys, mockId])
   const overallBand = mockId ? getFullMockOverallBand(mockId) : null
+  // Attempts started before modes existed followed exam rules.
+  const mode: FullMockMode | null = chosenMode ?? (completedKeys.length ? 'exam' : null)
 
   useEffect(() => {
     if (!mock?.fullyReady || completedKeys.length !== MOCK_SECTION_COUNT || overallBand === null) return
@@ -174,7 +194,6 @@ function MockIELTSRunContent() {
     (section) => section.available && completedSet.has(section.key),
   ).length
   const allSectionsDone = mock.fullyReady && liveDone === MOCK_SECTION_COUNT
-  const progressPercent = mock.readyCount === 0 ? 0 : Math.round((liveDone / mock.readyCount) * 100)
   const reviewSection = (section: MockSection) => {
     const saved = sectionResults[section.key]
     if (!saved?.result || !section.launchPath) return
@@ -217,282 +236,250 @@ function MockIELTSRunContent() {
       } catch { /* The saved exam report remains available if optional history storage is full. */ }
     }} />
 
+  const effectiveMode: FullMockMode = mode ?? 'exam'
+  const statuses = mock.sections.map((_, index) => resolveStatus(mock.sections, index, completedSet, effectiveMode))
+  const nextSection = mock.sections.find((_, index) => statuses[index] === 'current') ?? null
+  const practice = mode === 'practice'
+  const canChangeMode = mode !== null && liveDone === 0
+  const backToCatalog = () => navigate('/ielts/tests#mocks', { state: { from: from ?? 'mock' } })
+  const closeHandoff = () => {
+    setHandoff(null)
+    navigate(location.pathname + location.search, { replace: true, state: { from } })
+  }
+  const minutes = text('min', 'daq', 'мин')
+  const modeLabel = (value: FullMockMode) => value === 'exam'
+    ? text('Exam mode', 'Imtihon rejimi', 'Режим экзамена')
+    : text('Practice mode', 'Mashq rejimi', 'Режим практики')
+  const scoreLabel = (key: MockSectionKey) => {
+    const saved = sectionResults[key]
+    if (!saved) return null
+    if (saved.assessmentStatus === 'pending') return { band: '—', note: text('Assessment pending', 'Baholanmoqda', 'Ожидает оценки') }
+    return {
+      band: saved.band.toFixed(1),
+      note: saved.result
+        ? `${saved.result.correctAnswers}/${saved.result.totalQuestions} ${text('correct', 'to‘g‘ri', 'верно')}`
+        : key === 'writing' ? 'Task 1 + Task 2' : text('Parts 1–3', '1–3 qismlar', 'Части 1–3'),
+    }
+  }
+
+  const primaryAction = mode === null
+    ? { label: text('Start mock', 'Mockni boshlash', 'Начать тест'), run: () => { setPickedMode('exam'); setPicker(true) } }
+    : nextSection
+      ? {
+          label: liveDone === 0 && !practice
+            ? text(`Start ${nextSection.title}`, `${nextSection.title}ni boshlash`, `Начать: ${nextSection.title}`)
+            : text(`Continue: ${nextSection.title}`, `Davom etish: ${nextSection.title}`, `Продолжить: ${nextSection.title}`),
+          run: () => launchSection(nextSection),
+        }
+      : null
+
+  const handoffSection = handoff ? mock.sections.find(section => section.key === handoff) ?? null : null
+  const handoffScore = handoff && practice ? scoreLabel(handoff) : null
+  const handoffNext = handoff ? nextSection : null
+
   return (
     <main className="workspace-page mock-run-page">
       <div className="mock-run-content">
-        <Reveal>
-          <header className="mock-run-glass mock-run-hero">
-            <div className="mock-run-intro">
-              <nav
-                className="mock-run-nav"
-                aria-label={text('Mock navigation', 'Mock navigatsiyasi', 'Навигация по тестам')}
-              >
-                <button
-                  type="button"
-                  className="mock-run-back"
-                  onClick={() => navigate('/ielts/tests#mocks', { state: { from: from ?? 'mock' } })}
-                >
-                  <ArrowLeft size={16} />
-                  {text('All mocks', 'Barcha mocklar', 'Все тесты')}
-                </button>
-                <span className="mock-run-chip">FULL MOCK {mock.index}</span>
-                {supported && !isFullscreen && <button type="button" className="mock-run-back" onClick={() => void enter()}><Maximize2 size={16} /> <UiText text={"Full screen"} /></button>}
-              </nav>
-              <p className="mock-run-eyebrow">IELTS ACADEMIC</p>
-              <h1>
-                {allSectionsDone ? (
-                  text('Your mock results.', 'Mock natijalaringiz.', 'Ваши результаты.')
-                ) : (
-                  <>
-                    IELTS <span><UiText text={"Full Mock"} /> {mock.index}</span>
-                  </>
-                )}
-              </h1>
-              <p className="mock-run-subtitle">
-                {allSectionsDone
-                  ? text(
-                      'A complete view of your performance across all four skills.',
-                      'To‘rtta ko‘nikma bo‘yicha natijalaringiz bir joyda.',
-                      'Результаты по всем четырём навыкам в одном месте.',
-                    )
-                  : text(
-                      'Listening, Reading, Writing, then Speaking. Complete all four sections to see your overall band.',
-                      'Listening, Reading, Writing, keyin Speaking. Umumiy band uchun to‘rtta bo‘limni yakunlang.',
-                      'Аудирование, чтение, письмо и говорение. Завершите все четыре раздела, чтобы увидеть общий балл.',
-                    )}
-              </p>
-              <div className="mock-run-readiness">
-                <strong><UiText text={liveDone ? 'Ready to continue?' : 'Ready for your full mock?'} /></strong>
-                <p><UiText text="Find a quiet place and have your headphones ready. The test and timer start only when you choose to begin." /></p>
-                <button type="button" className="mock-run-start" disabled={!mock.sections.some((_, index) => resolveStatus(mock.sections, index, completedSet) === 'current')} onClick={() => {
-                  const next = mock.sections.find((section, index) => resolveStatus(mock.sections, index, completedSet) === 'current')
-                  if (next) launchSection(next)
-                }}><PlayCircle size={19} /><UiText text={liveDone ? 'Continue my mock' : 'I am ready, start Listening'} /></button>
-              </div>
-              <div className="mock-run-session">
-                <div>
-                  <Clock3 size={18} />
-                  <span>
-                    {text('Total session', 'Umumiy vaqt', 'Длительность')}
-                    <strong>{formatMockDuration(mock.totalMinutes)}</strong>
-                  </span>
-                </div>
-                <div>
-                  <CheckCircle2 size={18} />
-                  <span>
-                    {text('Sections completed', 'Yakunlangan bo‘limlar', 'Завершённые разделы')}
-                    <strong>
-                      {liveDone}
-                      <small> / {MOCK_SECTION_COUNT}</small>
-                    </strong>
-                  </span>
-                </div>
-              </div>
-            </div>
-            <aside
-              className={`mock-run-overall ${allSectionsDone ? 'is-complete' : ''}`}
-              aria-label={text('Overall band', 'Umumiy band', 'Общий балл')}
-            >
-              <div className="mock-run-overall-top">
-                <span>
-                  <Trophy size={17} />
-                  {text('OVERALL BAND', 'UMUMIY BAND', 'ОБЩИЙ БАЛЛ')}
-                </span>
-                <span className="mock-run-status">
-                  {allSectionsDone ? <CheckCircle2 size={14} /> : <Lock size={14} />}
-                  {allSectionsDone
-                    ? text('Complete', 'Yakunlandi', 'Завершено')
-                    : text('In progress', 'Davom etmoqda', 'В процессе')}
-                </span>
-              </div>
-              <div className="mock-run-band">
-                {allSectionsDone && overallBand !== null ? overallBand.toFixed(1) : '—'}
-                <span>/ 9.0</span>
-              </div>
-              <p>
-                {allSectionsDone
-                  ? text('Practice estimate', 'Mashq uchun taxminiy baho', 'Ориентировочный результат')
-                  : text(
-                      'Available after all four sections',
-                      'To‘rtta bo‘limdan keyin ochiladi',
-                      'После завершения четырёх разделов',
-                    )}
-              </p>
-              <div
-                className="mock-run-progress"
-                role="progressbar"
-                aria-label={text('Mock completion', 'Mock jarayoni', 'Прогресс теста')}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={progressPercent}
-              >
-                <span style={{ width: `${progressPercent}%` }} />
-              </div>
-              <div className="mock-run-progress-caption">
-                <span>{text('Exam progress', 'Test jarayoni', 'Прогресс экзамена')}</span>
-                <strong>{progressPercent}%</strong>
-              </div>
-            </aside>
-          </header>
-        </Reveal>
-
-        <div className="mock-run-section-heading">
-          <div>
-            <p className="mock-run-eyebrow">
-              {text('SKILL BREAKDOWN', 'KO‘NIKMALAR KESIMIDA', 'ПО НАВЫКАМ')}
-            </p>
-            <h2>
-              {allSectionsDone
-                ? text(
-                    'Your results, section by section.',
-                    'Har bir bo‘lim bo‘yicha natijalar.',
-                    'Результаты каждого раздела.',
-                  )
-                : text('Your exam journey.', 'Test bosqichlaringiz.', 'Этапы экзамена.')}
-            </h2>
+        <header className="mrp-glass mrp-header">
+          <div className="mrp-header-bar">
+            <button type="button" className="mrp-chip-button" onClick={backToCatalog}>
+              <ArrowLeft size={16} />
+              {text('All mocks', 'Barcha mocklar', 'Все тесты')}
+            </button>
+            {supported && !isFullscreen && <button type="button" className="mrp-chip-button" onClick={() => void enter()}><Maximize2 size={15} /> {text('Full screen', 'To‘liq ekran', 'Полный экран')}</button>}
           </div>
-          <span className="mock-run-chip">
-            <CheckCircle2 size={14} />
-            {liveDone}/{MOCK_SECTION_COUNT} {text('complete', 'yakunlandi', 'завершено')}
-          </span>
-        </div>
-        <div className="mock-run-section-grid">
+          <div className="mrp-header-main">
+            <div className="mrp-title">
+              <p className="mrp-eyebrow">IELTS ACADEMIC · FULL MOCK {String(mock.index).padStart(2, '0')}</p>
+              <h1><UiText text={"Full Mock"} /> {mock.index}</h1>
+              <ul className="mrp-facts">
+                <li><Clock3 size={14} />{formatMockDuration(mock.totalMinutes)}</li>
+                <li><Layers3 size={14} />{MOCK_SECTION_COUNT} {text('sections', 'bo‘lim', 'раздела')}</li>
+                {mode && <li className={`mrp-mode-tag is-${mode}`}>{mode === 'exam' ? <ShieldCheck size={14} /> : <Shuffle size={14} />}{modeLabel(mode)}</li>}
+              </ul>
+            </div>
+            <div className="mrp-header-actions">
+              {primaryAction && <button type="button" className="mrp-primary mock-run-start" onClick={primaryAction.run}><PlayCircle size={18} />{primaryAction.label}</button>}
+              {canChangeMode && <button type="button" className="mrp-link" onClick={() => { setPickedMode(mode ?? 'exam'); setPicker(true) }}>{text('Change mode', 'Rejimni o‘zgartirish', 'Сменить режим')}</button>}
+            </div>
+          </div>
+        </header>
+
+        <ol className="mrp-sections" aria-label={text('Mock sections', 'Mock bo‘limlari', 'Разделы теста')}>
           {mock.sections.map((section, index) => {
             const Icon = SECTION_ICONS[section.key]
-            const status = resolveStatus(mock.sections, index, completedSet)
+            const status = statuses[index]
             const saved = sectionResults[section.key]
-            const isDone = status === 'completed'
-            const isCurrent = status === 'current'
-            const isLocked = status === 'locked'
-            const visibleBand = allSectionsDone && saved ? saved.band : null
+            const score = practice ? scoreLabel(section.key) : null
+            const canStart = mode !== null && status === 'current'
+            const hasFeedback = practice && status === 'completed' && !saved?.result && !!saved?.review?.length
+            const feedbackOpen = openFeedback === section.key
             return (
-              <article key={section.key} className={`mock-run-glass mock-run-section is-${status}`}>
-                <div className="mock-run-section-top">
-                  <span className="mock-run-skill-icon">
-                    <Icon size={23} />
-                  </span>
-                  <span className="mock-run-section-number">0{section.order}</span>
-                  <span className="mock-run-status">
-                    {isDone ? <CheckCircle2 size={13} /> : isLocked ? <Lock size={13} /> : null}
-                    {isDone
+              <li key={section.key} className={`mrp-glass mock-run-section mrp-section is-${status}`}>
+                <div className="mrp-section-row">
+                  <span className="mrp-skill-icon"><Icon size={22} /><small>0{section.order}</small></span>
+                  <div className="mrp-section-copy">
+                    <h2>{section.title}</h2>
+                    <p><Clock3 size={13} />{section.durationMinutes} {minutes}<span aria-hidden="true">·</span><UiText text={section.meta} /></p>
+                  </div>
+                  <span className={`mrp-status is-${status}`}>
+                    {status === 'completed' ? <CheckCircle2 size={13} /> : status === 'locked' ? <Lock size={12} /> : null}
+                    {status === 'completed'
                       ? text('Completed', 'Yakunlandi', 'Завершено')
-                      : isCurrent
-                        ? text('Up next', 'Keyingi', 'Следующий')
-                        : isLocked
+                      : status === 'current'
+                        ? mode === null ? text('Ready', 'Tayyor', 'Готово') : practice ? text('Not started', 'Boshlanmagan', 'Не начат') : text('Up next', 'Keyingi', 'Следующий')
+                        : status === 'locked'
                           ? text('Locked', 'Yopiq', 'Закрыто')
                           : text('Coming soon', 'Tez orada', 'Скоро')}
                   </span>
-                </div>
-                <div className="mock-run-skill-title">
-                  <div>
-                    <h3>{section.title}</h3>
-                    <p>
-                      <Clock3 size={13} />
-                      {section.durationMinutes} <UiText text="min" /> <span>·</span>
-                      <UiText text={section.meta} />
-                    </p>
+                  <div className="mrp-section-score">
+                    {score ? <><strong className="mock-run-skill-band">{score.band}</strong><small>{score.note}</small></>
+                      : status === 'completed' ? <small className="mrp-hidden-score"><Lock size={12} />{text('Score after Speaking', 'Ball Speakingdan keyin', 'Балл после Speaking')}</small>
+                        : null}
                   </div>
-                  <div className="mock-run-skill-band">
-                    {visibleBand !== null ? visibleBand.toFixed(1) : '—'}
-                    <small>{text('band', 'band', 'балл')}</small>
+                  <div className="mrp-section-action">
+                    {practice && status === 'completed' && saved?.result ? (
+                      <button type="button" className="mrp-secondary mock-run-review" onClick={() => reviewSection(section)}>
+                        {text('Review answers', 'Javoblarni ko‘rish', 'Просмотр ответов')}<ArrowUpRight size={15} />
+                      </button>
+                    ) : hasFeedback ? (
+                      <button type="button" className="mrp-secondary" aria-expanded={feedbackOpen} onClick={() => setOpenFeedback(feedbackOpen ? null : section.key)}>
+                        {text('View feedback', 'Tahlilni ko‘rish', 'Посмотреть разбор')}<ChevronDown size={15} className={feedbackOpen ? 'is-open' : undefined} />
+                      </button>
+                    ) : canStart ? (
+                      <button type="button" className="mrp-start mock-run-start" onClick={() => launchSection(section)}>
+                        <PlayCircle size={16} />{text('Start', 'Boshlash', 'Начать')}
+                      </button>
+                    ) : status === 'completed' ? (
+                      <CheckCircle2 size={20} className="mrp-done-icon" aria-hidden="true" />
+                    ) : status === 'locked' ? (
+                      <Lock size={17} className="mrp-lock-icon" aria-label={text('Finish the previous section first', 'Avval oldingi bo‘limni yakunlang', 'Сначала завершите предыдущий раздел')} />
+                    ) : null}
                   </div>
                 </div>
-                <div className="mock-run-skill-meter" aria-hidden="true">
-                  <span
-                    style={{
-                      width: visibleBand !== null ? `${(visibleBand / 9) * 100}%` : isDone ? '100%' : '0%',
-                    }}
-                  />
-                </div>
-                {allSectionsDone && saved?.summary && <p className="mock-run-summary">{saved.summary}</p>}
-                <div className="mock-run-section-footer">
-                  <span>
-                    {allSectionsDone && saved?.result
-                      ? `${saved.result.correctAnswers}/${saved.result.totalQuestions} ${text('correct answers', 'to‘g‘ri javob', 'правильных ответов')}`
-                      : isDone
-                        ? text('Section finished', 'Bo‘lim yakunlandi', 'Раздел завершён')
-                        : isCurrent
-                          ? text('Ready when you are', 'Boshlashingiz mumkin', 'Можно начать')
-                          : isLocked
-                            ? text(
-                                'Finish the previous section first',
-                                'Avval oldingi bo‘limni yakunlang',
-                                'Сначала завершите предыдущий раздел',
-                              )
-                            : text(
-                                'This section is not available yet',
-                                'Bu bo‘lim hali mavjud emas',
-                                'Этот раздел пока недоступен',
-                              )}
-                  </span>
-                  {isDone && allSectionsDone && saved?.result ? (
-                    <button type="button" className="mock-run-review" onClick={() => reviewSection(section)}>
-                      {text('Review answers', 'Javoblarni ko‘rish', 'Просмотр ответов')}
-                      <ArrowUpRight size={16} />
-                    </button>
-                  ) : isCurrent ? (
-                    <button type="button" className="mock-run-start" onClick={() => launchSection(section)}>
-                      <PlayCircle size={16} />
-                      <UiText text="Start" />
-                    </button>
-                  ) : isDone ? (
-                    <CheckCircle2 size={18} className="mock-run-complete-icon" />
-                  ) : (
-                    <Lock size={16} />
-                  )}
-                </div>
-                {allSectionsDone && saved && (
-                  <div className="mock-run-section-review">
-                    {!!saved.review?.length && (
-                      <details open>
-                        <summary>
-                          {text(
-                            `Review ${section.title.toLowerCase()} responses`,
-                            `${section.title} javoblarini ko‘rish`,
-                            `Просмотр ответов: ${section.title}`,
-                          )}
-                          <ChevronDown size={16} />
-                        </summary>
-                        <div className="mock-run-responses">
-                          {saved.review.map((item, responseIndex) => (
-                            <div key={responseIndex}>
-                              <h4><UiText text={item.label} /></h4>
-                              <p>
-                                {item.response ||
-                                  text('No response recorded.', 'Javob yozilmagan.', 'Ответ не записан.')}
-                              </p>
-                              {item.feedback && <p className="mock-run-feedback">{item.feedback}</p>}
-                              {(section.key === 'writing' || (section.key === 'speaking' && item.label === 'Your answer')) && item.response.trim() ? <ImprovedResponse text={item.improvedVersion} /> : null}
-                            </div>
-                          ))}
+                {feedbackOpen && saved && (
+                  <div className="mrp-feedback mock-run-section-review">
+                    {saved.summary && <p className="mock-run-summary">{saved.summary}</p>}
+                    <div className="mock-run-responses">
+                      {saved.review!.map((item, responseIndex) => (
+                        <div key={responseIndex}>
+                          <h4><UiText text={item.label} /></h4>
+                          <p>{item.response || text('No response recorded.', 'Javob yozilmagan.', 'Ответ не записан.')}</p>
+                          {item.feedback && <p className="mock-run-feedback">{item.feedback}</p>}
+                          {(section.key === 'writing' || (section.key === 'speaking' && item.label === 'Your answer')) && item.response.trim() ? <ImprovedResponse text={item.improvedVersion} /> : null}
                         </div>
-                      </details>
-                    )}
+                      ))}
+                    </div>
                   </div>
                 )}
-              </article>
+              </li>
+            )
+          })}
+        </ol>
+
+        <p className="mrp-note">
+          {mode === null
+            ? text(
+                'Choose Exam mode for real test conditions, or Practice mode to take sections one by one. Your overall band appears after all four sections.',
+                'Haqiqiy imtihon sharoiti uchun Imtihon rejimini, bo‘limlarni alohida ishlash uchun Mashq rejimini tanlang. Umumiy band to‘rtta bo‘limdan keyin chiqadi.',
+                'Выберите режим экзамена для реальных условий или режим практики, чтобы проходить разделы по одному. Общий балл появится после всех четырёх разделов.',
+              )
+            : practice
+              ? text(
+                  'Practice mode: take sections in any order. Each band appears as soon as the section is finished; the overall band appears after all four.',
+                  'Mashq rejimi: bo‘limlarni istalgan tartibda ishlang. Har bir bo‘lim bandi darhol chiqadi, umumiy band esa to‘rttasi tugagach.',
+                  'Режим практики: разделы в любом порядке. Балл раздела виден сразу, общий балл — после всех четырёх.',
+                )
+              : text(
+                  'Exam mode: sections run in the official order. Scores and review stay hidden until Speaking is finished.',
+                  'Imtihon rejimi: bo‘limlar rasmiy tartibda. Natijalar va tahlil Speaking tugagach ochiladi.',
+                  'Режим экзамена: разделы идут в официальном порядке. Результаты откроются после Speaking.',
+                )}
+        </p>
+      </div>
+
+      <FullMockDialog open={picker} labelledBy={`${dialogId}-mode`} describedBy={`${dialogId}-mode-copy`} closeLabel={text('Close', 'Yopish', 'Закрыть')} onClose={() => setPicker(false)} wide>
+        <span className="mrp-dialog-icon"><GraduationCap size={24} /></span>
+        <h2 id={`${dialogId}-mode`}>{text(`How do you want to take Full Mock ${mock.index}?`, `Full Mock ${mock.index}ni qanday ishlaysiz?`, `Как вы хотите пройти Full Mock ${mock.index}?`)}</h2>
+        <p id={`${dialogId}-mode-copy`}>{text('You can change the mode until the first section is submitted.', 'Birinchi bo‘lim topshirilguncha rejimni o‘zgartirish mumkin.', 'Режим можно сменить до сдачи первого раздела.')}</p>
+        <div className="mrp-modes" role="radiogroup" aria-label={text('Mock mode', 'Mock rejimi', 'Режим теста')}>
+          {(['exam', 'practice'] as const).map(value => {
+            const exam = value === 'exam'
+            const points = exam
+              ? [
+                  text('Official order: Listening → Reading → Writing → Speaking', 'Rasmiy tartib: Listening → Reading → Writing → Speaking', 'Официальный порядок: Listening → Reading → Writing → Speaking'),
+                  text('You confirm before each new section starts', 'Har bir yangi bo‘lim oldidan tasdiqlaysiz', 'Перед каждым разделом вы подтверждаете старт'),
+                  text('All scores are revealed after Speaking', 'Barcha natijalar Speakingdan keyin ochiladi', 'Все баллы откроются после Speaking'),
+                ]
+              : [
+                  text('Take the four sections in any order', 'To‘rtta bo‘limni istalgan tartibda ishlang', 'Разделы в любом порядке'),
+                  text('See each band and review right after the section', 'Har bir bo‘lim bandi va tahlili darhol chiqadi', 'Балл и разбор сразу после раздела'),
+                  text('Overall band once all four are complete', 'Umumiy band to‘rttasi tugagach', 'Общий балл после всех четырёх'),
+                ]
+            return (
+              <button key={value} type="button" role="radio" aria-checked={pickedMode === value} data-autofocus={pickedMode === value ? '' : undefined}
+                className={`mrp-mode${pickedMode === value ? ' is-selected' : ''}`} onClick={() => setPickedMode(value)}>
+                <span className="mrp-mode-top">
+                  <span className="mrp-mode-icon">{exam ? <ShieldCheck size={20} /> : <Shuffle size={20} />}</span>
+                  <span className="mrp-mode-badge">{exam ? text('Real test', 'Haqiqiy test', 'Как на экзамене') : text('Flexible', 'Erkin', 'Гибко')}</span>
+                  <span className="mrp-mode-radio" aria-hidden="true" />
+                </span>
+                <strong>{modeLabel(value)}</strong>
+                <ul>{points.map(point => <li key={point}><CheckCircle2 size={14} />{point}</li>)}</ul>
+              </button>
             )
           })}
         </div>
-        <footer className="mock-run-glass mock-run-footer">
-          <span className="mock-run-footer-icon">
-            <Sparkles size={20} />
-          </span>
-          <p>
-            {allSectionsDone
-              ? text(
-                  'Listening and Reading are automatically scored. Writing and Speaking use AI evaluation. This is a practice result, not an official IELTS score.',
-                  'Listening va Reading avtomatik, Writing va Speaking AI yordamida baholanadi. Bu mashq natijasi, rasmiy IELTS bahosi emas.',
-                  'Чтение и аудирование оцениваются автоматически, письмо и говорение — с помощью ИИ. Это тренировочный результат, а не официальный балл IELTS.',
-                )
-              : text(
-                  'Scores and review remain hidden until all four sections are complete.',
-                  'Natijalar va tahlil to‘rtta bo‘lim yakunlangach ochiladi.',
-                  'Результаты и разбор доступны после завершения всех четырёх разделов.',
-                )}
+        <div className="mrp-dialog-actions">
+          <button type="button" className="mrp-secondary" onClick={() => setPicker(false)}>{text('Cancel', 'Bekor qilish', 'Отмена')}</button>
+          <button type="button" className="mrp-primary" onClick={() => {
+            setFullMockMode(mock.id, pickedMode)
+            setChosenMode(pickedMode)
+            setPicker(false)
+            if (pickedMode === 'exam') {
+              const first = mock.sections.find(section => section.available && !completedSet.has(section.key))
+              if (first) launchSection(first)
+            }
+          }}>
+            {pickedMode === 'exam'
+              ? <><PlayCircle size={18} />{text('Start Listening', 'Listeningni boshlash', 'Начать Listening')}</>
+              : <>{text('Continue in practice mode', 'Mashq rejimida davom etish', 'Продолжить в режиме практики')}<ArrowRight size={17} /></>}
+          </button>
+        </div>
+      </FullMockDialog>
+
+      <FullMockDialog open={!!handoffSection} labelledBy={`${dialogId}-handoff`} describedBy={`${dialogId}-handoff-copy`} closeLabel={text('Close', 'Yopish', 'Закрыть')} onClose={closeHandoff}>
+        {handoffSection && <>
+          <span className="mrp-dialog-icon is-done"><CheckCircle2 size={24} /></span>
+          <p className="mrp-eyebrow">{text('SECTION SUBMITTED', 'BO‘LIM TOPSHIRILDI', 'РАЗДЕЛ СДАН')}</p>
+          <h2 id={`${dialogId}-handoff`}>{text(`${handoffSection.title} complete`, `${handoffSection.title} yakunlandi`, `${handoffSection.title} завершён`)}</h2>
+          <p id={`${dialogId}-handoff-copy`}>
+            {practice
+              ? text('Your result is saved. You can review it now or continue with another section.', 'Natijangiz saqlandi. Uni hozir ko‘rishingiz yoki boshqa bo‘limga o‘tishingiz mumkin.', 'Результат сохранён. Посмотрите его или перейдите к другому разделу.')
+              : text('Your answers are saved. Scores are revealed after the final section.', 'Javoblaringiz saqlandi. Natijalar oxirgi bo‘limdan keyin ochiladi.', 'Ответы сохранены. Баллы откроются после последнего раздела.')}
           </p>
-        </footer>
-      </div>
+          {handoffScore && <div className="mrp-handoff-score"><strong>{handoffScore.band}</strong><span>{text('band', 'band', 'балл')}<small>{handoffScore.note}</small></span></div>}
+          {handoffNext && <div className="mrp-handoff-next">
+            <span className="mrp-skill-icon">{(() => { const Icon = SECTION_ICONS[handoffNext.key]; return <Icon size={20} /> })()}</span>
+            <div>
+              <small>{text('Up next', 'Keyingi bo‘lim', 'Следующий раздел')}</small>
+              <strong>{handoffNext.title}</strong>
+              <span>{handoffNext.durationMinutes} {minutes} · <UiText text={handoffNext.meta} /></span>
+            </div>
+          </div>}
+          {handoffNext && !practice && <p className="mrp-handoff-hint">{text('The timer starts as soon as you begin. Make sure you are ready.', 'Boshlaganingiz zahoti taymer ishga tushadi. Tayyor ekaningizga ishonch hosil qiling.', 'Таймер запустится сразу после начала. Убедитесь, что вы готовы.')}</p>}
+          <div className="mrp-dialog-actions">
+            {practice && handoffSection.key !== 'writing' && handoffSection.key !== 'speaking' && sectionResults[handoffSection.key]?.result
+              ? <button type="button" className="mrp-secondary" onClick={() => reviewSection(handoffSection)}>{text('Review answers', 'Javoblarni ko‘rish', 'Просмотр ответов')}</button>
+              : <button type="button" className="mrp-secondary" onClick={closeHandoff}>{practice ? text('Back to mock', 'Mockga qaytish', 'К тесту') : text('Take a break', 'Tanaffus', 'Перерыв')}</button>}
+            {handoffNext
+              ? <button type="button" data-autofocus className="mrp-primary" onClick={() => { setHandoff(null); launchSection(handoffNext) }}>
+                  <PlayCircle size={18} />{text(`I'm ready — start ${handoffNext.title}`, `Tayyorman — ${handoffNext.title}ni boshlash`, `Я готов — начать ${handoffNext.title}`)}
+                </button>
+              : <button type="button" data-autofocus className="mrp-primary" onClick={closeHandoff}>{text('Done', 'Tayyor', 'Готово')}</button>}
+          </div>
+        </>}
+      </FullMockDialog>
     </main>
   )
 }

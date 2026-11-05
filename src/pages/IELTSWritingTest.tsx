@@ -12,7 +12,7 @@ import { getWritingFullTestById, getWritingTaskById } from '@/data/writingTestDa
 import type { WritingTask, WritingFullTest } from '@/data/writingTestData'
 import IELTSWritingTestInterface from '@/components/IELTSWritingTestInterface'
 import IELTSWritingFullTestInterface from '@/components/IELTSWritingFullTestInterface'
-import { fullMockLaunchState, getFullMockPendingSection, getFullMockSectionRedirect, saveFullMockSectionResult, type MockSectionKey } from '@/utils/ieltsMockCatalog'
+import { fullMockAfterSection, fullMockLaunchState, getFullMockPendingSection, getFullMockSectionRedirect, saveFullMockSectionResult, type MockSectionKey } from '@/utils/ieltsMockCatalog'
 
 type WritingTestNavState = {
   autoStart?: boolean
@@ -76,9 +76,8 @@ function WritingTestContent() {
           saveFullMockSectionResult(mockId, 'writing', {
             band, summary, review, testId: fullTest.id, completedAt: new Date().toISOString(),
           })
-          const next = getFullMockPendingSection(mockId)
-          if (next?.launchPath) navigate(next.launchPath, { replace: true, state: fullMockLaunchState(mockId, next.key, navState?.from) })
-          else navigate(`/mock/ielts/${mockId}`, { replace: true, state: { from: navState?.from } })
+          const after = fullMockAfterSection(mockId, 'writing', navState?.from)
+          navigate(after.path, { replace: true, state: after.state })
         }}
         autoStart={navState?.mock?.id ? true : navState?.autoStart}
         autoTimerEnabled={navState?.mock?.id ? true : navState?.timerEnabled}

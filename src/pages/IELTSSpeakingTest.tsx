@@ -51,7 +51,7 @@ import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useSpeakingStore } from '@/store/speakingStore'
 import { useBadgeStore } from '@/store/badgeStore'
 import TestLaunchOverlay from '@/components/common/TestLaunchOverlay'
-import { fullMockLaunchState, getFullMockPendingSection, getFullMockSectionRedirect, saveFullMockSectionResult } from '@/utils/ieltsMockCatalog'
+import { fullMockAfterSection, fullMockLaunchState, getFullMockPendingSection, getFullMockSectionRedirect, saveFullMockSectionResult } from '@/utils/ieltsMockCatalog'
 import { saveSpeakingSession } from '@/lib/speakingApi'
 import { learningCenterApi } from '@/features/learningCenter/api'
 
@@ -196,7 +196,8 @@ function SpeakingTestContent() {
             testId: mode.mock.id,
             completedAt: new Date().toISOString(),
           })
-          navigate('/mock/ielts/' + mockContext.id, { replace: true, state: { from: mockFrom } })
+          const after = fullMockAfterSection(mockContext.id, 'speaking', mockFrom)
+          navigate(after.path, { replace: true, state: after.state })
         } : undefined}
         onSaved={(analysis, transcript, launchMode) => {
           markSpeakingTestCompleted(mode.mock.id, user?.id)

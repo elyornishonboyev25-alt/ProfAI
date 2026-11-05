@@ -93,7 +93,7 @@ export async function discardInProcessAttempt(owner: string, attempt: InProcessA
       await discardIeltsAttempt(owner, key)
     }
     const storage = accountStorageFor(owner)
-    for (const key of [FULL_MOCK_PROGRESS_STORAGE_KEY, 'smarttest:full-mock-results:v1']) {
+    for (const key of [FULL_MOCK_PROGRESS_STORAGE_KEY, 'smarttest:full-mock-results:v1', 'smarttest:full-mock-mode:v1']) {
       const data = parsed(owner, key); delete data[attempt.mockId]; storage.setItem(key, JSON.stringify(data))
     }
     for (const section of ['listening', 'reading', 'writing', 'speaking']) storage.removeItem(`profai:full-mock:intro:v1:${attempt.mockId}:${section}`)

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowLeft, ArrowRight, Bookmark, Calculator, CheckCircle2, ChevronDown, Eye, EyeOff, History, Lightbulb, Pause, Play, RotateCcw, Sheet, Shuffle, XCircle } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Bookmark, Calculator, CheckCircle2, ChevronDown, Eye, EyeOff, Lightbulb, Pause, Play, RotateCcw, Sheet, Shuffle, XCircle } from 'lucide-react'
 import { BrandLogo } from '@/components/brand/BrandLogo'
 import SATQuestionCanvas from './SATQuestionCanvas'
 import SATExplanation from './SATExplanation'
@@ -14,17 +14,16 @@ import { usePracticeClock } from '@/hooks/usePracticeClock'
 type Props = {
   row: QuestionRow; index: number; total: number; state?: QuestionProgress
   onUpdate: (patch: Partial<QuestionProgress>) => void
-  onBack: () => void; onPrevious?: () => void; onNext?: () => void; onSimilar?: () => void
+  onBack: () => void; onNext?: () => void; onSimilar?: () => void
 }
 const timeLabel = (seconds: number) => `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${Math.floor(seconds % 60).toString().padStart(2, '0')}`
 
-export default function PracticeQuestion({ row, index, total, state, onUpdate, onBack, onPrevious, onNext, onSimilar }: Props) {
+export default function PracticeQuestion({ row, index, total, state, onUpdate, onBack, onNext, onSimilar }: Props) {
   const { question } = row
   const checked = Boolean(state?.checked)
   const answer = state?.answer ?? ''
   const correct = isSATAnswerCorrect(question, answer)
   const [solutionOpen, setSolutionOpen] = useState(false)
-  const [historyOpen, setHistoryOpen] = useState(false)
   const [timerHidden, setTimerHidden] = useState(false)
   const [calculatorOpen, setCalculatorOpen] = useState(false)
   const [formulasOpen, setFormulasOpen] = useState(false)
@@ -63,7 +62,7 @@ export default function PracticeQuestion({ row, index, total, state, onUpdate, o
 
   return <>
     <header className="hard-test-topbar">
-      <button type="button" onClick={onBack}><ArrowLeft size={16} /> All topics</button>
+      <button type="button" onClick={onBack}><ArrowLeft size={16} /> All questions</button>
       <BrandLogo height={30} />
       <div className="practice-clock" aria-label="Practice timer">
         <button type="button" aria-label={clock.paused ? 'Resume timer' : 'Pause timer'} disabled={checked} onClick={() => clock.setPaused(!clock.paused)}>{clock.paused ? <Play size={16} /> : <Pause size={16} />}</button>
@@ -76,7 +75,7 @@ export default function PracticeQuestion({ row, index, total, state, onUpdate, o
       <button type="button" aria-pressed={Boolean(state?.bookmarked)} aria-label={state?.bookmarked ? 'Remove bookmark' : 'Bookmark question'} onClick={() => onUpdate({ bookmarked: !state?.bookmarked })}><Bookmark size={17} fill={state?.bookmarked ? 'currentColor' : 'none'} /></button>
     </div>
     <article ref={viewport} className="hard-question practice-exam-question">
-      <header><div className="practice-question-meta"><span>{question.domain}</span><span className={`practice-level is-${practiceLevel(question.difficulty)}`}>{practiceLevel(question.difficulty)}</span></div><h3 ref={heading} tabIndex={-1}>{question.skill}</h3><small>Ivygoo SAT test {row.testNumber}</small></header>
+      <header><div className="practice-question-meta"><span>{question.domain}</span><span className={`practice-level is-${practiceLevel(question.difficulty)}`}>{practiceLevel(question.difficulty)}</span></div><h3 ref={heading} tabIndex={-1}>{question.skill}</h3></header>
       {clock.paused && !checked ? <div className="practice-paused"><Pause size={32} /><h3>Practice paused</h3><p>Your answer and elapsed time are saved.</p><button type="button" className="hard-primary" onClick={() => clock.setPaused(false)}><Play size={16} />Continue practicing</button></div> : <>
         <SATQuestionCanvas question={{ ...question, number: index + 1 }} answer={answer} readOnly={checked && correct}
           onAnswer={value => { if (!checked || !correct && value !== answer) { setSolutionOpen(false); onUpdate({ answer: value, checked: false }) } }}
@@ -90,6 +89,7 @@ export default function PracticeQuestion({ row, index, total, state, onUpdate, o
               <div className={`practice-check-status ${correct ? 'is-correct' : 'is-incorrect'}`} role="status">{correct ? <CheckCircle2 size={19} /> : <XCircle size={19} />}{correct ? 'Correct answer' : 'Incorrect answer'}</div>
               <button type="button" className="practice-solution-toggle" aria-expanded={solutionOpen} aria-controls="practice-solution" onClick={() => setSolutionOpen(!solutionOpen)}><Lightbulb size={17} />{solutionOpen ? 'Hide solution' : 'See solution'}<ChevronDown size={15} className={solutionOpen ? 'is-open' : ''} /></button>
               <button type="button" className="hard-retry" onClick={() => { setSolutionOpen(false); onUpdate({ answer: '', checked: false, eliminatedChoices: [] }); viewport.current?.scrollTo({ top: 0, behavior: 'smooth' }) }}><RotateCcw size={15} />Try this question again</button>
+              {onNext && <button type="button" className="hard-primary" onClick={onNext}>Next question <ArrowRight size={17} /></button>}
             </>}
           </div>} />
         <AnimatePresence initial={false}>
@@ -99,14 +99,11 @@ export default function PracticeQuestion({ row, index, total, state, onUpdate, o
             </div>
           </motion.section>}
         </AnimatePresence>
-        <div className="practice-secondary-actions">
-          <button type="button" aria-expanded={historyOpen} onClick={() => setHistoryOpen(!historyOpen)}><History size={16} />{historyOpen ? 'Hide history' : 'Show history'}</button>
-          {onSimilar && <button type="button" onClick={onSimilar}><Shuffle size={16} />Solve a similar problem <ArrowRight size={15} /></button>}
-        </div>
-        {historyOpen && <div className="practice-history" aria-label="Attempt history">{state?.attempts?.length ? <ol>{[...state.attempts].reverse().map((attempt, index) => <li key={`${attempt.at}-${index}`}><span>{attempt.correct ? <CheckCircle2 size={16} /> : <XCircle size={16} />}{attempt.answer}</span><time dateTime={attempt.at}>{new Date(attempt.at).toLocaleString()}</time><span>{timeLabel(attempt.seconds)}</span></li>)}</ol> : <p>No checked attempts yet. Check an answer to record your progress.</p>}</div>}
+        {checked && onSimilar && <div className="practice-secondary-actions">
+          <button type="button" onClick={onSimilar}><Shuffle size={16} />Solve a similar problem <ArrowRight size={15} /></button>
+        </div>}
       </>}
     </article>
-    <nav className="hard-question-footer" aria-label="Hard question navigation"><button type="button" disabled={!onPrevious} onClick={onPrevious}><ArrowLeft size={17} />Previous</button><span>{checked ? 'Answer saved' : 'Progress saves automatically'}</span><button type="button" className="hard-primary" disabled={!onNext} onClick={onNext}>Next question <ArrowRight size={17} /></button></nav>
     <DesmosDrawer open={math && calculatorOpen} preload={math} docked={false} allowDocking={false} onDockedChange={() => {}} onClose={() => setCalculatorOpen(false)} />
     <SATFormulaSheet open={math && formulasOpen} onClose={() => setFormulasOpen(false)} />
   </>

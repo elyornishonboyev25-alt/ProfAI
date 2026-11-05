@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-rou
 import assert from 'node:assert/strict'
 import SATQuestionBankRun from '../../src/pages/SATQuestionBankRun'
 import SATQuestionBank from '../../src/pages/SATQuestionBank'
+import SATReview from '../../src/components/sat/SATReview'
 import { LEGACY_SAT_TEST_CATALOG as SAT_TEST_CATALOG, getSATReviewTests } from '../../src/features/sat/catalog'
 import { createSATAttempt } from '../../src/features/sat/practiceTest4'
 import { saveSATAttempt, saveSATAttemptToHistory } from '../../src/features/sat/attemptStorage'
@@ -224,6 +225,8 @@ export async function run() {
   window.Storage.prototype.setItem = originalSetItem
   // A finished set opens the same analysis screen as SAT tests.
   assert.match(text(), /Question Bank Results/)
+  assert.equal(button('Download Report'), undefined, 'Question Bank results omit the score report download')
+  assert.doesNotMatch(text(), /Math Module 2 is unavailable/, 'Personal practice sets do not show full-mock availability warnings')
   assert.match(text(), /1\/4/)
   assert.equal(container.querySelector('#sat-result-tab-leaderboard'), null, 'Personal sets have no leaderboard')
   assert.equal(container.querySelector('#sat-result-tab-discussion'), null, 'Personal sets have no test discussion')
@@ -504,6 +507,14 @@ export async function run() {
   assert.equal(button('Resume practice'), undefined, 'Another account cannot resume this set')
   await render('/sat/question-bank/run/missing')
   assert.match(text(), /This practice set is unavailable/)
+  const incomplete = getSATReviewTests().find(test => test.id === 'may-2026-us-v1')!
+  const incompleteAttempt = { ...createSATAttempt(incomplete.id, incomplete.modules, 'practice'), status: 'submitted' as const, submittedAt: Date.now() }
+  await act(async () => root.render(<MemoryRouter><SATReview test={incomplete} attempt={incompleteAttempt} /></MemoryRouter>))
+  assert.ok(button('Download Report'), 'Full-test results keep the report download')
+  assert.match(text(), /Math Module 2 is unavailable/, 'Full-test results retain their availability warning')
+  await act(async () => root.render(<MemoryRouter><SATReview test={incomplete} attempt={incompleteAttempt} variant="question-bank" /></MemoryRouter>))
+  assert.equal(button('Download Report'), undefined)
+  assert.doesNotMatch(text(), /Math Module 2 is unavailable/, 'The same modules shown as personal practice omit the mock warning')
   await act(async () => root.unmount())
   console.log(
     'SAT question bank: saved answers, storage-quota recovery, SAT-style result analysis, filters, unfinished and replaced set progress, account updates, browser back, legacy results, account isolation, saved marks, standalone fullscreen practice, refresh/resume, question navigation, Math Desmos and Reading highlights passed.',

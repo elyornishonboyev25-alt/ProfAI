@@ -28,7 +28,7 @@ async function main() {
   `
   const bundle = await build({ stdin: { contents: source, loader: 'tsx', resolveDir: process.cwd() }, bundle: true, write: false, format: 'iife', tsconfig: 'tsconfig.json', define: { 'import.meta.env': '{}', 'process.env.NODE_ENV': '"production"' }, loader: { '.css': 'empty' } })
   const base = await readFile('src/index.css', 'utf8')
-  const extras = await Promise.all(['src/pages/SATHardQuestions.css', 'src/pages/SATHardQuestionsSilver.css', 'src/components/sat/SATQuestionCanvas.css', 'src/components/sat/PracticeQuestion.css', 'src/components/sat/SATFormulaSheet.css', 'src/styles/exam-flow.css', 'src/components/sat/DesmosDrawer.css', 'src/components/sat/SATSourceContent.css'].map(file=>readFile(file,'utf8')))
+  const extras = await Promise.all(['src/components/brand/brand.css', 'src/pages/SATHardQuestions.css', 'src/pages/SATHardQuestionsSilver.css', 'src/components/sat/SATQuestionCanvas.css', 'src/components/sat/PracticeQuestion.css', 'src/components/sat/SATFormulaSheet.css', 'src/styles/exam-flow.css', 'src/components/sat/DesmosDrawer.css', 'src/components/sat/SATSourceContent.css'].map(file=>readFile(file,'utf8')))
   const css = (await postcss([tailwindcss()]).process(base, {from:'src/index.css'})).css + '\n' + extras.join('\n')
   const server = createServer(async (req,res)=>{
     if(req.url==='/'){res.setHeader('Content-Type','text/html; charset=utf-8');res.end(`<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}</style><div id="root"></div><script src="/fixture.js"></script>`)}
@@ -85,7 +85,7 @@ async function main() {
     const clickLabel = label => evaluate(`document.querySelector('[aria-label="${label}"]').click()`)
     const clickText = text => evaluate(`[...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='${text}').click()`)
     const checkNavigation = async () => {
-      assert.equal(await evaluate(`([...document.querySelectorAll('.hard-question-toolbar button,.hard-question-footer button')].every(b=>{const r=b.getBoundingClientRect();return r.top>=0 && r.bottom<=innerHeight+1 && r.left>=0 && r.right<=innerWidth+1 && b.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))}))`), true, 'Hard question controls stay visible and clickable')
+      assert.equal(await evaluate(`([...document.querySelectorAll('.hard-question-toolbar button,.hard-test-topbar > button')].every(b=>{const r=b.getBoundingClientRect();return r.top>=0 && r.bottom<=innerHeight+1 && r.left>=0 && r.right<=innerWidth+1 && b.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))}))`), true, 'Hard question controls stay visible and clickable')
     }
     await send('Runtime.enable')
     await send('Page.enable')
@@ -110,10 +110,13 @@ async function main() {
       assert.equal(await evaluate('window.hardExamMode() && !document.querySelector(".hard-hero") && document.body.style.overflow==="hidden"'), true)
       await checkNavigation()
       if (await evaluate('!!document.querySelector(".hard-retry")')) await clickText('Try this question again')
+      assert.equal(await evaluate(`!!document.querySelector('.hard-question-footer,.practice-history')`),false,'The old footer and history are removed')
+      assert.equal(await evaluate(`!![...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='Next question'||b.textContent.trim()==='Solve a similar problem')`),false,'Unchecked questions hide follow-up actions')
       await evaluate(`document.querySelector('button[role=radio]').click()`)
       assert.equal(await evaluate(`!!document.querySelector('.practice-check-status')`),false,'Choosing does not grade')
       await clickText('Check answer')
       await until(`!!document.querySelector('.practice-check-status')`)
+      assert.equal(await evaluate(`!![...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='Next question')`),true,'A checked answer enables next')
       assert.equal(await evaluate(`!!document.querySelector('#practice-solution')`),false,'Checking never reveals the solution')
       await clickText('See solution')
       await until(`!!document.querySelector('.practice-solution-content')`)
@@ -126,10 +129,12 @@ async function main() {
       await clickText('Next question')
       await until(`document.querySelector('.hard-question-toolbar').innerText.includes('Question 2 / 100')`)
       assert.equal(await evaluate('document.querySelector(".hard-question").scrollTop'), 0, 'Next question starts at the top')
-      await clickText('Previous')
+      await clickText('All questions')
+      await until(`document.querySelectorAll('.hard-tile').length===100`)
+      await evaluate(`document.querySelector('.hard-tile').click()`)
       await until(`document.querySelector('.hard-question-toolbar').innerText.includes('Question 1 / 100')`)
       assert.equal(await evaluate('document.querySelector(".hard-question").scrollTop'), 0, 'Returning to a checked question starts at the question, not its explanation')
-      await clickText('All topics')
+      await clickText('All questions')
       await until('!window.hardExamMode()')
       assert.equal(await evaluate('document.body.style.overflow'), '', 'Leaving practice restores page scrolling')
       console.log(`PASS ${width}x${height}: topic map, question, feedback and responsive layout`)

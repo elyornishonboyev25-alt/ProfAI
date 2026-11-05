@@ -8,6 +8,8 @@ import { isSATAnswerCorrect } from '@/features/sat/practiceTest4'
 import { useAuthStore } from '@/store/authStore'
 
 export async function run() {
+  const scrollTo = HTMLElement.prototype.scrollTo
+  HTMLElement.prototype.scrollTo = () => {}
   localStorage.clear(); window.sessionStorage.clear()
   useAuthStore.setState({ user: { id: 'practice-workspace-owner' } as never })
   const owner = 'practice-workspace-owner'
@@ -52,6 +54,11 @@ export async function run() {
     const row = HARD_QUESTIONS['reading-writing'][0]
     const wrong = row.question.choices.find(choice => choice.key !== row.question.correctAnswer)!
     await mount(pathFor('reading-writing', row.key))
+    assert.equal(button('Show history'), undefined)
+    assert.equal(element.querySelector('.practice-history, .hard-question-footer'), null)
+    assert.equal(element.querySelector('.hard-question > header > small'), null, 'Practice omits the source test badge')
+    assert.equal(button('Next question'), undefined, 'Next is unavailable before checking')
+    assert.equal(button('Solve a similar problem'), undefined, 'Similar questions are unavailable before checking')
     const choose = (letter: string) => element.querySelector<HTMLButtonElement>(`[role=radio] [data-sat-highlight-block="choice-${letter}"]`)?.closest('button')
     await click(choose(wrong.key))
     assert.equal(loadHardProgress(owner)[row.key].checked, false)
@@ -59,6 +66,8 @@ export async function run() {
     assert.equal(element.querySelector('#practice-solution'), null)
     await click(button('Check answer'))
     assert.ok(element.textContent?.includes('Incorrect answer'))
+    assert.ok(button('Next question'), 'A wrong checked answer enables the next question')
+    assert.ok(button('Solve a similar problem'), 'A wrong checked answer enables similar questions')
     assert.equal(element.querySelector('#practice-solution'), null, 'A wrong answer never reveals its solution')
     assert.equal(element.querySelector('[class*="border-emerald"]'), null, 'The correct choice is not revealed')
     assert.equal(loadHardProgress(owner)[row.key].attempts?.length, 1)
@@ -69,15 +78,25 @@ export async function run() {
     assert.equal(element.querySelector('#practice-solution'), null, 'Reload keeps the solution private until requested')
     await click(choose(row.question.correctAnswer))
     assert.equal(loadHardProgress(owner)[row.key].checked, false, 'A different choice starts a deliberate retry without opening the solution')
+    assert.equal(button('Next question'), undefined)
+    assert.equal(button('Solve a similar problem'), undefined)
     await act(async () => window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true })))
     assert.ok(element.textContent?.includes('Correct answer'), 'Enter checks the selected choice once')
     assert.equal(loadHardProgress(owner)[row.key].attempts?.length, 2)
     assert.equal(element.querySelector('#practice-solution'), null)
-    await click(button('Show history'))
-    assert.equal(element.querySelectorAll('.practice-history li').length, 2)
+    assert.ok(button('Solve a similar problem'), 'A correct checked answer enables similar questions')
+    await click(button('Next question'))
+    assert.ok(element.textContent?.includes('Question 2 / 100'))
+    assert.equal(button('Next question'), undefined, 'Moving on resets the grading gate')
+    await click(button('All questions'))
+    assert.equal(element.querySelectorAll('.hard-tile').length, 100, 'The collection remains available for free selection')
+    await click(element.querySelector('.hard-tile'))
+    assert.ok(element.textContent?.includes('Correct answer'), 'The checked answer survives returning from the collection')
     await click(document.querySelector('[aria-label="Bookmark question"]'))
     assert.equal(loadHardProgress(owner)[row.key].bookmarked, true)
     await click(button('Try this question again'))
+    assert.equal(button('Next question'), undefined)
+    assert.equal(button('Solve a similar problem'), undefined)
     await click(element.querySelector('[aria-label="Answer eliminator"]'))
     await click(element.querySelector(`[aria-label="Eliminate choice ${wrong.key}"]`))
     assert.ok(loadHardProgress(owner)[row.key].eliminatedChoices?.includes(wrong.key))
@@ -98,9 +117,21 @@ export async function run() {
     assert.equal(element.querySelector<HTMLInputElement>('#student-response')?.value, numeric.question.correctAnswer)
     assert.ok(element.textContent?.includes('Correct answer'))
     assert.deepEqual(loadHardProgress('another-account'), {})
+    await mount(pathFor('reading-writing', row.key))
+    await click(choose(row.question.correctAnswer))
+    await click(button('Check answer'))
+    await click(button('Solve a similar problem'))
+    assert.equal(element.querySelector('.hard-question > header h3')?.textContent, row.question.skill)
+    assert.equal(element.querySelector('[role=status]'), null, 'The similar question starts ungraded')
+    const last = HARD_QUESTIONS['reading-writing'].at(-1)!
+    await mount(pathFor('reading-writing', last.key))
+    await click(choose(last.question.correctAnswer))
+    await click(button('Check answer'))
+    assert.equal(button('Next question'), undefined, 'The final question never offers a dead next button')
+    assert.ok(button('All questions'))
     await mount('/sat/hard-questions?section=math&q=missing')
     assert.equal(element.querySelectorAll('.hard-tile').length, 100)
 
-  } finally { await act(async () => root.unmount()) }
-  console.log('PASS: SAT levels, deliberate grading, Enter, private solutions, history, elimination and reload')
+  } finally { await act(async () => root.unmount()); HTMLElement.prototype.scrollTo = scrollTo }
+  console.log('PASS: SAT levels, grading-gated next/similar actions, collection navigation, private solutions, elimination and reload')
 }

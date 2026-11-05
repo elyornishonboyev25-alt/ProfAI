@@ -122,7 +122,7 @@ function HardWorkspace({ userId }: { userId: string }) {
           <div className="hard-stats"><span><strong>{checkedCount}</strong> completed</span><span><strong>{correctCount}</strong> correct</span><span><strong>{checkedCount ? Math.round(correctCount / checkedCount * 100) : 0}%</strong> accuracy</span></div>
         </div>}
         {active ? <PracticeQuestion key={active.key} row={active} index={index} total={rows.length} state={progress[active.key]} onUpdate={patch => update(active.key, patch)}
-          onBack={() => openQuestion()} onPrevious={index > 0 ? () => openQuestion(rows[index - 1].key) : undefined}
+          onBack={() => openQuestion()}
           onNext={index < rows.length - 1 ? () => openQuestion(rows[index + 1].key) : undefined}
           onSimilar={similar ? () => openQuestion(similar.key) : undefined} /> : <>
 

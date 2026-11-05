@@ -312,7 +312,7 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
               <h1>
                 {bank ? 'Question Bank' : 'Your SAT'} <span>Results</span>
               </h1>
-              <button
+              {!bank && <button
                 type="button"
                 className="srx-download"
                 disabled={!submitted}
@@ -321,7 +321,7 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
               >
                 <ArrowDownToLine size={17} />
                 Download Report
-              </button>
+              </button>}
             </div>
             <p className="srx-subtitle">
               An in-depth analysis of your performance. See your strengths and where you can improve.
@@ -346,8 +346,8 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
             completion.
           </p>
         )}
-        {satAvailabilityNote(test) && <p className="sr-notice">{satAvailabilityNote(test)}</p>}
-        {reportError && (
+        {!bank && satAvailabilityNote(test) && <p className="sr-notice">{satAvailabilityNote(test)}</p>}
+        {!bank && reportError && (
           <p className="sr-notice" role="alert">
             Your browser blocked the report tab. Allow pop-ups for Ivygoo, then select Download Report again.
           </p>

@@ -8,7 +8,6 @@ let pending: InstallPrompt | null = null
 
 export function isInstalledApp() {
   return Boolean(window.matchMedia?.('(display-mode: standalone)').matches
-    || window.matchMedia?.('(display-mode: fullscreen)').matches
     || (navigator as Navigator & { standalone?: boolean }).standalone)
 }
 export function hasInstallPrompt() { return Boolean(pending) }
@@ -20,6 +19,9 @@ if (typeof window !== 'undefined') {
   window.addEventListener('beforeinstallprompt', event => {
     event.preventDefault()
     pending = event as InstallPrompt
+    // The browser only offers installation when it is available again, for
+    // example after uninstalling. Do not retain an obsolete installed flag.
+    updateCompanionState({ installed: false })
     window.dispatchEvent(new Event('ivygoo:install-state'))
   })
   window.addEventListener('appinstalled', () => {

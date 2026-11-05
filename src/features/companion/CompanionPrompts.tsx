@@ -8,7 +8,7 @@ import { telegramLaunch } from '@/lib/telegramWebApp'
 import { useAuthStore } from '@/store/authStore'
 import { companionCopy } from './copy'
 import { hasInstallPrompt, installationPlatform, isInstalledApp, takeInstallPrompt } from './installRuntime'
-import { nextCompanionOffer, readCompanionState, updateCompanionState } from './promotionState'
+import { beginCompanionVisit, markCompanionOfferShown, nextCompanionOffer, readCompanionState } from './promotionState'
 import './companion.css'
 
 type Offer = 'install' | 'telegram'
@@ -32,6 +32,7 @@ export default function CompanionPrompts({ enabled }: { enabled: boolean }) {
   const [failed, setFailed] = useState(false)
   const [, redraw] = useState(0)
   const open = useRef<Offer | null>(null)
+  const openOwner = useRef<string | undefined>(undefined)
   const dialog = useRef<HTMLElement>(null)
   const primary = useRef<HTMLButtonElement>(null)
   const close = () => { open.current = null; setOffer(null) }
@@ -44,23 +45,21 @@ export default function CompanionPrompts({ enabled }: { enabled: boolean }) {
     let alreadyLinked = false
     let lastCheck = 0
     const eligibleAt = Date.now() + 5000
-    if (!readCompanionState().firstSeenAt) updateCompanionState({ firstSeenAt: Date.now() })
+    beginCompanionVisit(owner, Date.now())
     const check = () => {
       if (cancelled || open.current || Date.now() < eligibleAt || document.hidden || anotherDialogIsOpen() || editing()) return
       const state = readCompanionState()
       const next = nextCompanionOffer(state, Date.now(), owner, isInstalledApp())
       if (next === 'install') {
-        // Persist the actual display time, so reload never restarts the 48 hours.
-        updateCompanionState({ installShownAt: Date.now() })
-        open.current = 'install'; setStage('intro'); setOffer('install')
+        openOwner.current = owner
+        open.current = 'install'; setBusy(false); setFailed(false); setStage('intro'); setOffer('install')
       } else if (next === 'telegram' && owner && !alreadyLinked && !checking && (!lastCheck || Date.now() - lastCheck >= 60_000)) {
         checking = true; lastCheck = Date.now()
         void apiClient.get<TelegramStatus>('/telegram/status').then(status => {
           if (status.linked) alreadyLinked = true
           if (cancelled || useAuthStore.getState().user?.id !== owner || !status.enabled || status.linked
             || document.hidden || anotherDialogIsOpen() || editing()) return
-          const latest = readCompanionState()
-          updateCompanionState({ telegramShown: { ...latest.telegramShown, [owner]: Date.now() } })
+          openOwner.current = owner
           open.current = 'telegram'; setBusy(false); setFailed(false); setOffer('telegram')
         }).catch(() => { /* Retry later; never advertise a bot we could not check. */ }).finally(() => { checking = false })
       }
@@ -77,6 +76,19 @@ export default function CompanionPrompts({ enabled }: { enabled: boolean }) {
       document.removeEventListener('visibilitychange', check)
     }
   }, [enabled, hydrated, owner])
+
+  useEffect(() => {
+    // Record a committed, visible dialog, rather than a queued state update
+    // that sign-in, navigation or a background tab could interrupt.
+    const record = () => {
+      if (!offer || open.current !== offer || openOwner.current !== owner || !enabled || !hydrated
+        || document.hidden || !dialog.current?.isConnected) return
+      markCompanionOfferShown(offer, owner, Date.now())
+    }
+    record()
+    document.addEventListener('visibilitychange', record)
+    return () => document.removeEventListener('visibilitychange', record)
+  }, [offer, owner, enabled, hydrated])
 
   useEffect(() => {
     const changed = () => {

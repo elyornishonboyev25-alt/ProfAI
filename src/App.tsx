@@ -426,7 +426,7 @@ function App() {
       <XpNotification deferActivityRewards={isTestMode || isExamModeActive} />
       <BillingNotice />
       <LaunchGift enabled={!telegramLaunch && !isTestMode && !isExamModeActive && !isAuthPage && !isLearningCenterMode && pathname !== '/onboarding' && pathname !== '/focus'} />
-      <CompanionPrompts enabled={!isTestMode && !isExamModeActive && !isGuestDiagnostic && !isLearningCenterMode && pathname !== '/onboarding' && pathname !== '/focus' && pathname !== '/spin' && !pathname.startsWith('/shared/')} />
+      <CompanionPrompts enabled={!isAuthPage && !isTestMode && !isExamModeActive && !isGuestDiagnostic && !isLearningCenterMode && pathname !== '/onboarding' && pathname !== '/focus' && pathname !== '/spin' && !pathname.startsWith('/shared/')} />
       <ClassAssignmentContext />
       {isAuthPage && <div className="liquid-auth-language glass-control"><LanguageSelector /></div>}
       <DeferredRegisterModal />

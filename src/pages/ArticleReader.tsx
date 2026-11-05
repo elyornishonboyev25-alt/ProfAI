@@ -1,5 +1,4 @@
-import { translateInterface } from '@/i18n/interface'
-import { useCopy } from '@/i18n/interface'
+import { translateInterface, useCopy } from '@/i18n/interface'
 import { textOffsets, clipTextRange } from '@/utils/textRanges'
 import { BrandLogo } from '@/components/brand/BrandLogo'
 import UiText from '@/components/common/UiText'

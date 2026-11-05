@@ -4175,11 +4175,11 @@ export default function IELTSReadingInterface({
     >
       <div className="sticky top-0 z-10 -mx-4 mb-5 flex items-center justify-between border-b border-red-100 bg-white/95 px-4 py-2.5 backdrop-blur-sm sm:-mx-5 sm:px-5 lg:-mx-6 lg:px-6">
         <div>
-          <h3 className="text-lg font-bold tracking-tight text-slate-900">{isReviewMode ? 'Questions' : 'Questions Workspace'}</h3>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">{isReviewMode ? 'Your answers · Review' : 'Answer panel'}</p>
+          <h3 className="text-lg font-bold tracking-tight text-slate-900"><UiText text={isReviewMode ? 'Questions' : 'Questions Workspace'} /></h3>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500"><UiText text={isReviewMode ? 'Your answers · Review' : 'Answer panel'} /></p>
         </div>
         <span className="text-xs font-semibold text-red-700 bg-red-50 px-3 py-1.5 rounded-xl border border-red-200">
-          {sectionMeta[currentSectionIndex]?.questionNumbers[0]}-{sectionMeta[currentSectionIndex]?.questionNumbers[sectionMeta[currentSectionIndex]?.questionNumbers.length - 1]} of {testQuestionNumberCeiling}
+          {sectionMeta[currentSectionIndex]?.questionNumbers[0]}-{sectionMeta[currentSectionIndex]?.questionNumbers[sectionMeta[currentSectionIndex]?.questionNumbers.length - 1]} <UiText text={"of"} /> {testQuestionNumberCeiling}
         </span>
       </div>
       <div className="space-y-8 pb-20">

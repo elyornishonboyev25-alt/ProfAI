@@ -9850,5 +9850,13 @@
   "Comprehension": {
     "uz": "Tushunish",
     "ru": "Понимание"
+  },
+  "Change date": {
+    "uz": "Sanani o‘zgartirish",
+    "ru": "Изменить дату"
+  },
+  "Set exam date": {
+    "uz": "Imtihon sanasini belgilash",
+    "ru": "Указать дату экзамена"
   }
 }

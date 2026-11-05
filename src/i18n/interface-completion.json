@@ -9858,5 +9858,13 @@
   "Set exam date": {
     "uz": "Imtihon sanasini belgilash",
     "ru": "Указать дату экзамена"
+  },
+  "Your answers are still here": {
+    "uz": "Javoblaringiz saqlanib turibdi",
+    "ru": "Ваши ответы сохранены"
+  },
+  "Your results could not be saved. Free up browser storage, then try again.": {
+    "uz": "Natijalaringizni saqlab bo‘lmadi. Brauzer xotirasidan joy bo‘shatib, qayta urinib ko‘ring.",
+    "ru": "Не удалось сохранить результаты. Освободите место в хранилище браузера и попробуйте снова."
   }
 }

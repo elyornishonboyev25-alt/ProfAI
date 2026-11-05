@@ -108,6 +108,17 @@ export async function run() {
       assert.ok(element.querySelector('[role="alert"]')?.textContent?.includes('Your answers are still here'))
       assert.equal(loadSATAttempt(paper.id)?.status, 'active', 'A failed final save keeps the attempt resumable')
       assert.deepEqual(loadSATAttempt(paper.id)?.answers, attempt.answers)
+      for (const [language, heading, description] of [
+        ['uz', 'Javoblaringiz saqlanib turibdi', 'Natijalaringizni saqlab bo‘lmadi. Brauzer xotirasidan joy bo‘shatib, qayta urinib ko‘ring.'],
+        ['ru', 'Ваши ответы сохранены', 'Не удалось сохранить результаты. Освободите место в хранилище браузера и попробуйте снова.'],
+      ]) {
+        await act(async () => { await i18n.changeLanguage(language) })
+        const alert = element.querySelector('[role="alert"]')!
+        assert.equal(alert.querySelector('h1')?.textContent, heading, 'The SAT recovery heading follows the selected language')
+        assert.equal(alert.querySelector('p')?.textContent, description, 'The recovery instructions are translated without losing the saved attempt')
+        assert.deepEqual(loadSATAttempt(paper.id)?.answers, attempt.answers)
+      }
+      await act(async () => { await i18n.changeLanguage('en') })
     } finally { accountStorage.setItem = setItem }
     await act(async () => { action('Try again').click(); await new Promise(resolve => setTimeout(resolve, 50)) })
     assert.equal(loadSATAttempt(paper.id)?.status, 'submitted')

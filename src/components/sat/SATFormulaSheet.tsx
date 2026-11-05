@@ -13,7 +13,7 @@ type Diagram = 'circle' | 'rectangle' | 'triangle' | 'right-triangle' | 'thirty-
 // College Board SAT Practice Test 10, Math reference (page 30):
 // https://satsuite.collegeboard.org/media/pdf/sat-practice-test-10-digital.pdf
 const formulas: Array<{ diagram: Diagram; label: string; formula: string; note?: string }> = [
-  { diagram: 'circle', label: 'Circle', formula: '$A = \\pi r^2$\n$C = 2\\pi r$' },
+  { diagram: 'circle', label: 'Circle', formula: '$A = \\pi r^2$\n\n$C = 2\\pi r$' },
   { diagram: 'rectangle', label: 'Rectangle', formula: '$A = \\ell w$' },
   { diagram: 'triangle', label: 'Triangle', formula: '$A = \\frac{1}{2}bh$' },
   { diagram: 'right-triangle', label: 'Right triangle', formula: '$c^2 = a^2 + b^2$' },

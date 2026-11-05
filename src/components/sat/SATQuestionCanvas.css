@@ -1,3 +1,18 @@
+/* Match the full-test reading scale without turning the whole task into a heading. */
+:is(.hard-page .practice-exam-question, .sat-bank-run) :is([data-sat-highlight-block='context'], [data-sat-highlight-block='task']) > div {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.65;
+  letter-spacing: normal;
+}
+:is(.hard-page .practice-exam-question, .sat-bank-run) button[role='radio'] [data-sat-highlight-block] {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
 /* A continuous reading surface for bank practice and saved review. */
 .sat-exam-canvas.sat-bank-canvas {
   display: flex;

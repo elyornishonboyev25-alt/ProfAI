@@ -12,6 +12,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import DesmosDrawer from '@/components/sat/DesmosDrawer'
 import SATFormulaSheet from '@/components/sat/SATFormulaSheet'
 import SATQuestionCanvas from '@/components/sat/SATQuestionCanvas'
+import SATSubmissionScreen, { useSATSubmission } from '@/components/sat/SATSubmissionScreen'
 import { clearBankSession, difficulty, historyKey, loadBankSession, readHistory, reviewQuestions, saveBankSession, type BankSession, type Result } from '@/features/sat/bankPractice'
 import { isSATAnswerCorrect } from '@/features/sat/practiceTest4'
 import { useFullscreen } from '@/hooks/useFullscreen'
@@ -41,6 +42,7 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
   })
   useActiveTest(Boolean(session))
   const [error, setError] = useState('')
+  const submission = useSATSubmission()
   const [exitDialog, setExitDialog] = useState(false)
   const [navigatorOpen, setNavigatorOpen] = useState(false)
   const [directionsOpen, setDirectionsOpen] = useState(false)
@@ -160,7 +162,7 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
     void exit()
     navigate('/sat/question-bank')
   }
-  const finish = () => {
+  const finish = () => submission.run(() => {
     if (!session) return
     const at = new Date().toISOString()
     const seconds = Math.round(activeSeconds())
@@ -186,7 +188,7 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
     try { clearBankSession(userId, session.id) } catch { /* Saved history remains authoritative. */ }
     void exit()
     navigate(`/sat/question-bank?view=history&review=${encodeURIComponent(session.id)}`, { replace: true })
-  }
+  })
   if (!session || !current) return (
     <main className="sat-bank-run sat-bank-run-missing">
       <h1><UiText text={"This practice set is unavailable"} /></h1>
@@ -196,6 +198,7 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
   )
   return (
     <main className="sat-bank-run" aria-label={uiCopy("SAT Question Bank practice")}>
+      {submission.pending ? <SATSubmissionScreen /> : null}
       <ConfirmDialog open={exitDialog} title={uiCopy("Save and exit?")} description={uiCopy("Your answers, notes and highlights will be saved. Continue this set from SAT / In process.")} confirmLabel={uiCopy("Save & exit")} cancelLabel={uiCopy("Continue test")} onClose={() => setExitDialog(false)} onConfirm={leave} />
       <header ref={header} className="sat-bank-run-header">
         <div className="sat-bank-run-header-content">
@@ -238,7 +241,7 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
             eliminatedChoices: { ...session.eliminatedChoices, [current.key]: choices },
             answers: { ...session.answers, [current.key]: choices.includes(session.answers[current.key]) ? '' : session.answers[current.key] ?? '' },
           })}
-          highlightAvailable={!math}
+          highlightAvailable
           onChange={(strokes) => update({ ...session, highlights: { ...session.highlights, [current.key]: strokes } })}
           flagged={session.flagged.includes(current.key)}
           onToggleFlag={() => update({ ...session, flagged: session.flagged.includes(current.key)

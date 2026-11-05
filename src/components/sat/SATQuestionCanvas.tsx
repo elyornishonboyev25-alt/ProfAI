@@ -1,7 +1,7 @@
 import { useCopy } from '@/i18n/interface'
 import UiText from '@/components/common/UiText'
 import { useMemo, useState, type ReactNode } from 'react'
-import { Bookmark, FileImage, Undo2 } from 'lucide-react'
+import { Bookmark, Undo2 } from 'lucide-react'
 import type { HighlightStroke, SATQuestion } from '@/features/sat/practiceTest4'
 import { splitSATPrompt } from '@/features/sat/promptLayout'
 import SATRichText from './SATRichText'
@@ -9,6 +9,8 @@ import SATSourceContent from './SATSourceContent'
 import SATVisual from './SATVisual'
 import SATChoiceContent from './SATChoiceContent'
 import SATTextHighlights from './SATTextHighlights'
+import SATAnnotationTools from './SATAnnotationTools'
+import SATResponseDirections from './SATResponseDirections'
 import './SATQuestionCanvas.css'
 
 type Props = {
@@ -55,17 +57,21 @@ export default function SATQuestionCanvas({
   const { c: uiCopy } = useCopy()
   const [eliminatorOpen, setEliminatorOpen] = useState(false)
   const { context, task } = useMemo(() => splitSATPrompt(question.prompt), [question.prompt])
-  const hasSeparateSource = question.section !== 'math' && Boolean(question.visual || question.sourceContent?.context?.trim() || context.trim())
+  const hasReadingSource = question.section !== 'math' && Boolean(question.visual || question.sourceContent?.context?.trim() || context.trim())
+
+  const hasResponseDirections = question.section === 'math' && question.kind !== 'multiple-choice'
+  const hasSeparateSource = hasReadingSource || hasResponseDirections
 
   return (
     <SATTextHighlights key={question.id} strokes={strokes} onChange={onChange} enabled={highlightAvailable}>
-    <div data-sat-section={question.section} className={`sat-exam-canvas ${practiceLayout ? 'sat-bank-canvas' : ''} grid min-h-full min-w-0 bg-[#f7f8fa] ${hasSeparateSource && !practiceLayout ? 'md:grid-cols-2' : 'grid-cols-1'}`}>
+    <div data-sat-section={question.section} data-sat-layout={hasSeparateSource ? 'split' : question.section === 'math' ? 'math' : 'single'} className={`sat-question-paper sat-exam-canvas ${practiceLayout ? 'sat-bank-canvas' : ''} grid min-h-full min-w-0 bg-[#f7f8fa] ${hasSeparateSource ? 'md:grid-cols-2' : 'grid-cols-1'}`}>
       {hasSeparateSource ? <section className="sat-question-source relative min-w-0 border-b border-slate-300 px-5 py-5 md:border-b-0 md:border-r md:px-8 xl:px-10">
         <HighlightLayer
           surface="passage"
           strokes={strokes}
         />
         <div className="mx-auto max-w-[42rem]">
+          {hasResponseDirections ? <SATResponseDirections /> : <>
           {question.visual ? (
             <figure className="mx-auto mb-5 w-fit max-w-full overflow-hidden rounded-xl border border-slate-300 bg-white p-2.5">
               <SATVisual
@@ -74,9 +80,6 @@ export default function SATQuestionCanvas({
                 className="mx-auto"
                 imageClassName="sat-exam-visual mx-auto w-auto max-w-full object-contain"
               />
-              <figcaption className="mt-3 flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-500">
-                <FileImage className="h-4 w-4" /> <UiText text={"Reference visual · not drawn to scale unless stated"} />
-              </figcaption>
             </figure>
           ) : null}
 
@@ -87,7 +90,7 @@ export default function SATQuestionCanvas({
             <SATRichText text={context} className="break-words font-serif text-[17px] font-medium leading-[1.5] text-[#171717] sm:text-[18px]" />
           ) : null}
           </div>
-
+          </>}
         </div>
       </section> : null}
 
@@ -110,6 +113,7 @@ export default function SATQuestionCanvas({
             <Bookmark className={`h-5 w-5 ${flagged ? 'fill-[#3d4fd2]' : 'fill-slate-500'}`} />
             {readOnly ? <UiText text={"Answer review"} /> : flagged ? <UiText text={"Marked for Review"} /> : <UiText text={"Mark for Review"} />}
           </button>
+          {highlightAvailable ? <SATAnnotationTools strokes={strokes} onChange={onChange} /> : null}
           {!readOnly && question.kind === 'multiple-choice' && onEliminatedChoicesChange ? <button
             type="button"
             aria-label={uiCopy("Answer eliminator")}
@@ -123,11 +127,11 @@ export default function SATQuestionCanvas({
             </svg>
           </button> : null}
         </div>
-        {!practiceLayout ? <div className="h-[3px] bg-[repeating-linear-gradient(90deg,#ad3e5d_0_34px,transparent_34px_41px,#ead5c8_41px_75px,transparent_75px_82px,#21176b_82px_116px,transparent_116px_123px,#5e8c68_123px_157px,transparent_157px_164px)]" /> : null}
+        {!practiceLayout ? <div aria-hidden="true" className="sat-question-rule h-[3px] bg-[repeating-linear-gradient(90deg,#ad3e5d_0_34px,transparent_34px_41px,#ead5c8_41px_75px,transparent_75px_82px,#21176b_82px_116px,transparent_116px_123px,#5e8c68_123px_157px,transparent_157px_164px)]" /> : null}
 
         <div className={`sat-question-body mx-auto px-5 py-4 sm:px-8 ${hasSeparateSource ? 'max-w-[42rem]' : 'max-w-[44rem]'}`}>
-          {!hasSeparateSource && question.visual ? <figure className="mx-auto mb-4 w-fit max-w-full rounded-xl border border-slate-300 bg-white p-2.5"><SATVisual asset={question.visual.asset} alt={question.visual.alt} className="mx-auto" imageClassName="sat-exam-visual mx-auto w-auto max-w-full object-contain" /></figure> : null}
-          <div data-sat-highlight-block={hasSeparateSource ? undefined : "context"}>{!hasSeparateSource && (question.sourceContent?.context ? <SATSourceContent html={question.sourceContent.context} className="mb-4 font-serif text-[17px] leading-[1.5] text-[#171717] sm:text-[18px]" /> : !question.sourceContent && context ? <SATRichText text={context} className="mb-4 font-serif text-[17px] leading-[1.5] text-[#171717] sm:text-[18px]" /> : null)}</div>
+          {!hasReadingSource && question.visual ? <figure className="mx-auto mb-4 w-fit max-w-full rounded-xl border border-slate-300 bg-white p-2.5"><SATVisual asset={question.visual.asset} alt={question.visual.alt} className="mx-auto" imageClassName="sat-exam-visual mx-auto w-auto max-w-full object-contain" /></figure> : null}
+          <div data-sat-highlight-block={hasReadingSource ? undefined : "context"}>{!hasReadingSource && (question.sourceContent?.context ? <SATSourceContent html={question.sourceContent.context} className="mb-4 font-serif text-[17px] leading-[1.5] text-[#171717] sm:text-[18px]" /> : !question.sourceContent && context ? <SATRichText text={context} className="mb-4 font-serif text-[17px] leading-[1.5] text-[#171717] sm:text-[18px]" /> : null)}</div>
           <div data-sat-highlight-block="task">{question.sourceContent ? (
             <SATSourceContent html={question.sourceContent.task} className="font-serif text-[17px] font-bold leading-[1.45] text-[#151515] sm:text-[18px]" />
           ) : <SATRichText text={task} className="break-words font-serif text-[17px] font-bold leading-[1.45] text-[#151515] sm:text-[18px]" />}</div>
@@ -135,7 +139,7 @@ export default function SATQuestionCanvas({
           {question.kind === 'multiple-choice' ? (
             <>
             {eliminatorOpen && !readOnly ? <p className="mt-3 text-xs font-semibold text-slate-600"><UiText text={"Cross out choices you want to rule out. Use Undo to restore a choice."} /></p> : null}
-            <div className="mt-4 space-y-2" role="radiogroup" aria-label={uiCopy("Question {{value1}} answer choices", { value1: String(question.number) })}>
+            <div className="sat-paper-choices mt-4 space-y-2" role="radiogroup" aria-label={uiCopy("Question {{value1}} answer choices", { value1: String(question.number) })}>
               {question.choices.map((choice) => {
                 const selected = answer === choice.key
                 const eliminated = eliminatedChoices.includes(choice.key)
@@ -148,7 +152,9 @@ export default function SATQuestionCanvas({
                     key={choice.key}
                     disabled={readOnly || eliminated}
                     onClick={() => { if (!readOnly && !window.getSelection()?.toString()) onAnswer(choice.key) }}
-                    className={`group relative flex w-full min-w-0 items-start gap-3 rounded-[0.9rem] bg-transparent px-3 py-2.5 text-left font-serif transition sm:px-4 ${eliminated ? 'opacity-50 after:pointer-events-none after:absolute after:inset-x-3 after:top-1/2 after:h-[2px] after:bg-slate-600' : ''} ${
+                    data-answer-state={selected ? answerState : undefined}
+                    data-eliminated={eliminated || undefined}
+                    className={`sat-paper-choice group relative flex w-full min-w-0 items-start gap-3 rounded-[0.9rem] bg-transparent px-3 py-2.5 text-left font-serif transition sm:px-4 ${eliminated ? 'opacity-50 after:pointer-events-none after:absolute after:inset-x-3 after:top-1/2 after:h-[2px] after:bg-slate-600' : ''} ${
                       selected
                         ? answerState === 'correct'
                           ? 'border-[3px] border-emerald-600 bg-emerald-50 text-emerald-900'
@@ -158,7 +164,7 @@ export default function SATQuestionCanvas({
                         : 'border-2 border-black text-[#171717] hover:bg-white'
                     }`}
                   >
-                    <span className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold ${
+                    <span className={`sat-paper-choice-letter mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold ${
                       selected
                         ? answerState === 'correct'
                           ? 'border-emerald-600 bg-emerald-600 text-white'
@@ -193,11 +199,15 @@ export default function SATQuestionCanvas({
               <label htmlFor="student-response" className="font-serif text-base font-bold text-slate-800"><UiText text={"Enter your answer"} /></label>
               <input
                 id="student-response"
+                data-answer-state={answerState}
+                aria-describedby="sat-response-help"
                 readOnly={readOnly}
                 value={answer}
                 onChange={(event) => onAnswer(event.target.value)}
-                inputMode="decimal"
-                placeholder={uiCopy("e.g. 3/10 or 0.3")}
+                inputMode="text"
+                autoComplete="off"
+                spellCheck={false}
+                placeholder="Enter your answer (e.g., 5.566, -5.566, 2/3, -2/3)"
                 className={`mt-2 h-12 w-full rounded-xl border-2 px-4 font-serif text-lg font-bold text-black outline-none ${
                   answerState === 'correct'
                     ? 'border-emerald-600 bg-emerald-50 focus:ring-2 focus:ring-emerald-600/20'
@@ -206,7 +216,7 @@ export default function SATQuestionCanvas({
                       : 'border-black bg-white focus:border-[#4053d7] focus:ring-2 focus:ring-[#4053d7]/20'
                 }`}
               />
-              <p className="mt-2 text-xs font-semibold leading-5 text-slate-500"><UiText text={"Fractions and equivalent decimals are accepted."} /></p>
+              <p id="sat-response-help" className="mt-2 text-xs font-semibold leading-5 text-slate-500"><UiText text={"Fractions and equivalent decimals are accepted."} /></p>
             </div>
           )}
 

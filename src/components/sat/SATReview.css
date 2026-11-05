@@ -9,7 +9,10 @@
   color: var(--sr-ink);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
+  animation: sat-result-reveal .36s ease-out both;
 }
+@keyframes sat-result-reveal { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .sat-results { animation: none; } }
 .sat-results * {
   box-sizing: border-box;
 }

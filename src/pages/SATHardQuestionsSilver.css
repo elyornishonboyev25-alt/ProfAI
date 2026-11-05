@@ -218,49 +218,7 @@
 .hard-page .practice-level { min-height: 24px; padding: 3px 10px; border-radius: 999px; font-size: 10.5px; font-weight: 800; letter-spacing: .02em; }
 .hard-page .practice-level.is-hard { color: var(--hq-red); border-color: var(--hq-red-line); background: var(--hq-red-soft); }
 
-/* The shared SAT canvas, dressed in the same silver glass. */
-.hard-page .practice-exam-question { background: rgba(255,255,255,.86); }
-.hard-page .practice-exam-question .sat-exam-canvas { background: transparent; }
-.hard-page .practice-exam-question .sat-question-source { padding: 34px 40px; border-color: var(--hq-line-soft); background: var(--hq-paper); }
-.hard-page .practice-exam-question .sat-question-source [data-sat-highlight-block] :is(p, div, span) { color: #1b2130; }
-.hard-page .practice-exam-question .sat-question-panel { background: #f7f8fa; }
-.hard-page .practice-exam-question .sat-question-toolbar { min-height: 62px; border-bottom: 1px solid var(--hq-line-soft); background: linear-gradient(135deg, #f4f6f9, #e6eaf0); }
-.hard-page .practice-exam-question .sat-question-number { width: 62px; border-bottom: 3px solid var(--hq-red); background: linear-gradient(160deg, #2a3446, #121927); font-size: 22px; }
-.hard-page .practice-exam-question .sat-question-bookmark { gap: 10px; padding: 0 18px; color: var(--hq-text) !important; font-size: 16px; }
-.hard-page .practice-exam-question .sat-question-bookmark svg { fill: #7d889b; }
-.hard-page .practice-exam-question .sat-question-bookmark:hover { color: var(--hq-red) !important; }
-.hard-page .practice-exam-question .sat-question-bookmark[aria-pressed=true] { color: var(--hq-red) !important; }
-.hard-page .practice-exam-question .sat-question-bookmark[aria-pressed=true] svg { fill: var(--hq-red); }
-.hard-page .practice-exam-question .sat-question-toolbar > button[aria-label='Answer eliminator'] { margin: 10px 12px; height: 42px; width: 46px; border: var(--hq-edge); border-radius: 12px; background: rgba(255,255,255,.85); box-shadow: var(--hq-shadow-sm); color: var(--hq-text); }
-.hard-page .practice-exam-question .sat-question-toolbar > button[aria-label='Answer eliminator'][aria-pressed=true] { border-color: var(--hq-red-line); background: var(--hq-red-soft); color: var(--hq-red); }
-.hard-page .practice-exam-question .sat-question-toolbar + div { height: 2px; background: linear-gradient(90deg, var(--hq-red), #e9a2af 26%, #dfe4ec 60%, transparent); }
-.hard-page .practice-exam-question .sat-question-body { padding: 30px 36px 30px; }
-.hard-page .practice-exam-question [role=radiogroup] { display: grid; gap: 12px; }
-.hard-page .practice-exam-question [role=radiogroup] > div + div { margin-top: 0; }
-.hard-page .practice-exam-question button[role=radio] {
-  align-items: center;
-  gap: 14px;
-  min-height: 62px;
-  padding: 14px 18px;
-  border: 1px solid var(--hq-line);
-  border-radius: 10px;
-  background: #fff;
-  box-shadow: none;
-  color: var(--hq-ink);
-}
-.hard-page .practice-exam-question button[role=radio]:not(:disabled):hover { border-color: var(--hq-red-line); background: #fff; }
-.hard-page .practice-exam-question button[role=radio] > span:first-child { width: 30px; height: 30px; margin-top: 0; border: 1px solid #94a0b2; border-radius: 50%; background: #fff; color: var(--hq-text); font: 700 13px/1 system-ui, sans-serif; }
-.hard-page .practice-exam-question button[role=radio] [data-sat-highlight-block] { padding-top: 0; font-weight: 400; }
-.hard-page .practice-exam-question button[role=radio][aria-checked=true] { padding: 13px 17px; border: 2px solid var(--hq-red); background: #fff5f6; color: #7e1426; box-shadow: none; }
-.hard-page .practice-exam-question button[role=radio][aria-checked=true] > span:first-child { border-color: var(--hq-red); background: var(--hq-red); color: #fff; }
-.hard-page .practice-exam-question button[role=radio][aria-checked=true][class*='border-emerald'] { border-color: var(--hq-green); background: linear-gradient(160deg, #f6fdf9, #e8f6ef); color: #145e3f; box-shadow: 0 0 0 4px rgba(29,132,89,.1); }
-.hard-page .practice-exam-question button[role=radio][aria-checked=true][class*='border-emerald'] > span:first-child { background: linear-gradient(135deg, #25a06d, #187049); }
-.hard-page .practice-exam-question button[role=radio][aria-checked=true][class*='border-red'] { border-color: var(--hq-red); background: linear-gradient(160deg, #fff4f6, #fbe3e8); }
-.hard-page .practice-exam-question button[role=radio]:disabled { opacity: 1; cursor: default; }
-.hard-page .practice-exam-question button[role=radio]:disabled[class*='opacity-50'] { opacity: .45; }
-.hard-page .practice-exam-question #student-response { height: 52px; border: 1px solid var(--hq-line); border-radius: 13px; background: #fff; box-shadow: inset 0 1px 3px rgba(27,38,58,.06); }
-.hard-page .practice-exam-question #student-response:focus { border-color: var(--hq-red); box-shadow: 0 0 0 4px rgba(196,30,58,.1); }
-
+/* Question typography and controls are owned by SATQuestionCanvas.css. */
 .hard-page .practice-answer-actions { gap: 10px; margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--hq-line-soft); }
 .hard-page .practice-answer-actions > span { color: var(--hq-muted); font-size: 12px; }
 .hard-page .practice-answer-actions kbd, .hard-page .practice-jump kbd { border-color: var(--hq-line); background: #fff; color: var(--hq-text); box-shadow: 0 1px 0 var(--hq-line); }
@@ -308,8 +266,6 @@
   .hard-page .hard-hero { grid-template-columns: 1fr 1fr; gap: 24px; padding: 28px; }
   .hard-page .hard-subject { padding: 18px; }
   .hard-page .hard-subject strong { font-size: 23px; }
-  .hard-page .practice-exam-question .sat-question-source { padding: 26px; }
-  .hard-page .practice-exam-question .sat-question-body { padding: 26px; }
 }
 @media (max-width: 700px) {
   .hard-page { padding: 14px 12px 40px; }
@@ -343,12 +299,6 @@
   .hard-page-active .hard-question > header { grid-template-columns: 1fr; padding: 16px 18px; }
   .hard-page-active .hard-question > header > small { grid-column: 1; grid-row: auto; justify-self: start; margin-top: 6px; padding: 5px 9px; font-size: 10px; }
   .hard-page-active .hard-question h3 { font-size: 17px; }
-  .hard-page .practice-exam-question .sat-question-source { padding: 22px 18px; }
-  .hard-page .practice-exam-question .sat-question-body { padding: 22px 16px; }
-  .hard-page .practice-exam-question .sat-question-number { width: 52px; font-size: 19px; }
-  .hard-page .practice-exam-question .sat-question-bookmark { padding: 0 12px; font-size: 14px; }
-  .hard-page .practice-exam-question button[role=radio] { min-height: 56px; padding: 12px 13px; gap: 11px; }
-  .hard-page .practice-exam-question button[role=radio][aria-checked=true] { padding: 11px 12px; }
   .hard-page-active .hard-question-footer { min-height: 68px; margin: 10px -12px 0; padding: 11px 12px max(11px, env(safe-area-inset-bottom)); }
   .hard-page-active .hard-question-footer > span { display: none; }
   .hard-page-active .hard-question-footer button { padding: 10px 16px; font-size: 12px; }

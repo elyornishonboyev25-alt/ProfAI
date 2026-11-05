@@ -117,7 +117,7 @@ export default function SATTextHighlights({ children, strokes, onChange, enabled
       }
       if (!segments.length) { setMenu(null); return }
       const rect = range.getBoundingClientRect()
-      setMenu({ segments, x: Math.min(window.innerWidth - 80, Math.max(80, rect.left + rect.width / 2)), y: Math.max(48, rect.top - 8) })
+      setMenu({ segments, x: Math.min(window.innerWidth - 110, Math.max(110, rect.left + rect.width / 2)), y: Math.max(48, rect.top - 8) })
     }
     const onUp = (event: Event) => {
       if ((event.target instanceof Element ? event.target : null)?.closest('[data-sat-highlight-menu], [data-sat-highlight-id]')) return
@@ -146,7 +146,7 @@ export default function SATTextHighlights({ children, strokes, onChange, enabled
   }, [enabled, onChange])
 
   return <div ref={rootRef} className="sat-text-highlight-surface relative min-h-full min-w-0" onClickCapture={event => {
-    if ((event.target as Element).closest('[data-sat-highlight-id]')) return
+    if ((event.target as Element).closest('[data-sat-highlight-id], [data-sat-highlight-tools]')) return
     if (!enabled || !onChange || window.getSelection()?.toString()) return
     const bounds = event.currentTarget.getBoundingClientRect()
     const scaleX = bounds.width / event.currentTarget.offsetWidth || 1
@@ -154,7 +154,7 @@ export default function SATTextHighlights({ children, strokes, onChange, enabled
     const x = (event.clientX - bounds.left) / scaleX
     const y = (event.clientY - bounds.top) / scaleY
     const hit = [...rectangles].reverse().find(rect => x >= rect.left && x <= rect.left + rect.width && y >= rect.top && y <= rect.top + rect.height)
-    if (hit) { event.stopPropagation(); setMenu({ id: hit.id, x: Math.min(window.innerWidth - 90, Math.max(90, event.clientX)), y: Math.max(48, event.clientY - 8) }) }
+    if (hit) { event.stopPropagation(); setMenu({ id: hit.id, x: Math.min(window.innerWidth - 110, Math.max(110, event.clientX)), y: Math.max(48, event.clientY - 8) }) }
   }}>
     {children}
     <div className="pointer-events-none absolute inset-0 z-30" aria-label={uiCopy("Saved text highlights")}>
@@ -162,7 +162,7 @@ export default function SATTextHighlights({ children, strokes, onChange, enabled
         role={enabled && onChange ? 'button' : undefined} tabIndex={enabled && onChange ? 0 : undefined}
         aria-label={uiCopy("Manage highlight")} className={enabled && onChange ? 'cursor-text' : ''}
         style={{ position: 'absolute', left: rect.left, top: rect.top, width: rect.width, height: rect.height, background: nativePaint ? 'transparent' : rect.color, borderRadius: 2 }}
-        onClick={event => { event.stopPropagation(); if (enabled && onChange) { const bounds = event.currentTarget.getBoundingClientRect(); setMenu({ id: rect.id, x: Math.min(window.innerWidth - 90, Math.max(90, bounds.left + bounds.width / 2)), y: Math.max(48, bounds.top - 8) }) } }}
+        onClick={event => { event.stopPropagation(); if (enabled && onChange) { const bounds = event.currentTarget.getBoundingClientRect(); setMenu({ id: rect.id, x: Math.min(window.innerWidth - 110, Math.max(110, bounds.left + bounds.width / 2)), y: Math.max(48, bounds.top - 8) }) } }}
         onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} />)}
     </div>
     {menu && createPortal(<div data-sat-highlight-menu role="toolbar" aria-label={uiCopy("Text highlight tools")}
@@ -170,7 +170,7 @@ export default function SATTextHighlights({ children, strokes, onChange, enabled
       style={{ position: 'fixed', left: menu.x, top: menu.y, transform: 'translate(-50%, -100%)' }}
       className="z-[110] flex items-center gap-1 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-[0_16px_36px_rgba(15,23,42,0.22)]">
       {menu.segments ? COLORS.map(color => <button type="button" key={color.name} aria-label={uiCopy("Highlight {{value1}}", { value1: String(color.name) })}
-        className="grid h-7 w-7 place-items-center rounded-lg transition hover:scale-110" style={{ background: color.color }}
+        className="grid h-10 w-10 place-items-center rounded-lg transition hover:scale-110" style={{ background: color.color }}
         onClick={() => {
           onChange?.([...strokes.filter(stroke => !menu.segments!.some(segment => stroke.textRange?.block === segment.block && stroke.textRange.start === segment.start && stroke.textRange.end === segment.end)), ...menu.segments!.map(textRange => ({ id: crypto.randomUUID(), color: color.color, width: 0, points: [], textRange }))])
           setMenu(null); window.getSelection()?.removeAllRanges()

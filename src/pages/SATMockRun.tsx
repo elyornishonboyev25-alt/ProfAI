@@ -42,6 +42,7 @@ import { useLocation, useNavigate, useParams, useSearchParams } from 'react-rout
 import DesmosDrawer from '@/components/sat/DesmosDrawer'
 import SATFormulaSheet from '@/components/sat/SATFormulaSheet'
 import SATQuestionCanvas from '@/components/sat/SATQuestionCanvas'
+import SATSubmissionScreen, { useSATSubmission } from '@/components/sat/SATSubmissionScreen'
 import SATReview from '@/components/sat/SATReview'
 import SATSectionBreak from '@/components/sat/SATSectionBreak'
 import SATNotes, { SATNoteList } from '@/components/sat/SATNotes'
@@ -130,6 +131,7 @@ function SATMockRunContent() {
   const [zoom, setZoom] = useState(sameAttempt ? savedUi.zoom ?? 1 : 1)
   const [moduleComplete, setModuleComplete] = useState(false)
   const [confirmSubmit, setConfirmSubmit] = useState(false)
+  const submission = useSATSubmission()
   const [baselineStatus, setBaselineStatus] = useState<'saving' | 'saved' | 'error'>('saving')
   const [baselineRetry, setBaselineRetry] = useState(0)
   const [checkedQuestions, setCheckedQuestions] = useState<string[]>(sameAttempt ? savedUi.checkedQuestions ?? [] : [])
@@ -238,8 +240,10 @@ function SATMockRunContent() {
     setToolsOpen(false)
   }, [])
 
-  const submitAttempt = useCallback(() => {
-    persistUpdate((current) => ({
+  const submitAttempt = useCallback(() => submission.run(() => {
+    const current = attemptRef.current
+    if (!current || current.status !== 'active') return
+    const completed: SATAttempt = {
       ...finishModule(current, modules),
       status: 'submitted',
       leaderboardEligible: isSATLeaderboardEligible(current, modules),
@@ -247,7 +251,9 @@ function SATMockRunContent() {
       submittedAt: Date.now(),
       pausedModuleSeconds: undefined,
       timerPausedAt: undefined,
-    }))
+    }
+    saveSATAttempt(completed)
+    persistUpdate(() => completed)
     setModuleComplete(false)
     setConfirmSubmit(false)
     setNavigatorOpen(false)
@@ -255,7 +261,7 @@ function SATMockRunContent() {
     setCalculatorOpen(false)
     setFormulaSheetOpen(false)
     if (fullscreenElement()) void exit()
-  }, [exit, modules, persistUpdate])
+  }), [exit, modules, persistUpdate, submission.run])
 
   const closeCalculator = useCallback(() => {
     setCalculatorOpen(false)
@@ -417,6 +423,19 @@ function SATMockRunContent() {
       </main>
     )
   }
+
+  if (submission.pending) return <SATSubmissionScreen />
+  if (submission.error) return (
+    <main className="exam-flow attempt-entry">
+      <section role="alert" className="mx-auto max-w-lg p-8">
+        <h1 className="text-2xl font-bold"><UiText text="Your answers are still here" /></h1>
+        <p className="my-4"><UiText text="Your results could not be saved. Free up browser storage, then try again." /></p>
+        <button type="button" className="rounded-xl bg-red-700 px-5 py-3 font-bold text-white" onClick={submitAttempt}>
+          <UiText text="Try again" />
+        </button>
+      </section>
+    </main>
+  )
 
   if (attempt.status === 'submitted') {
     if (!isSATLeaderboardEligible(attempt, modules) && !attempt.eligibilityNoticeAcknowledged) return <main className="exam-flow attempt-entry"><LeaderboardEligibilityNotice seconds={Math.round(totalTime(attempt, modules))} minimumSeconds={minimumSATLeaderboardSeconds(modules)} onContinue={() => persistUpdate(current => ({ ...current, eligibilityNoticeAcknowledged: true, leaderboardEligible: false }))} /></main>
@@ -718,6 +737,7 @@ function SATMockRunContent() {
       <AnimatePresence>
         {directionsOpen ? (
           <motion.div
+            key="directions"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -753,6 +773,7 @@ function SATMockRunContent() {
 
         {navigatorOpen ? (
           <motion.div
+            key="question-navigator"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -824,6 +845,7 @@ function SATMockRunContent() {
 
         {notesOpen ? (
           <motion.div
+            key="question-notes"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -859,6 +881,7 @@ function SATMockRunContent() {
 
         {moduleComplete || confirmSubmit ? (
           <motion.div
+            key="module-submission"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

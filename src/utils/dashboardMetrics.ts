@@ -1,6 +1,6 @@
 import { accountStorage } from '@/utils/accountStorage'
-import { getSATSectionTest, SAT_TEST_CATALOG } from '@/features/sat/catalog'
-import { loadSATAttempt } from '@/features/sat/attemptStorage'
+import { getSATReviewTests, SAT_TEST_CATALOG } from '@/features/sat/catalog'
+import { loadSATAttempt, loadSATAttemptHistory } from '@/features/sat/attemptStorage'
 import { selectUserSessions, useSpeakingStore } from '@/store/speakingStore'
 import type { DashboardOverview } from '@/types/platform'
 import { getCompletedLessons } from '@/utils/admissionProgressStore'
@@ -87,17 +87,20 @@ function getIeltsMockMetric(): DashboardLearningMetric & { completedMocks: numbe
 
 function getSatMetric(): DashboardLearningMetric & { completedMocks: number } {
   const tests = Object.values(SAT_TEST_CATALOG)
+  const history = new Set(loadSATAttemptHistory().filter(entry => entry.attempt.status === 'submitted').map(entry => entry.attempt.testId))
+  const completed = getSATReviewTests().filter(test => submitted(test.id) || history.has(test.id))
   let completedSections = 0
   let completedMocks = 0
 
   tests.forEach((test) => {
-    if (submitted(test.id)) {
+    const versions = completed.filter(saved => saved.mockId === test.mockId)
+    if (versions.some(saved => saved.modules.length === 4)) {
       completedSections += 2
       completedMocks += 1
       return
     }
-    if (submitted(getSATSectionTest(test.mockId, 'math').id)) completedSections += 1
-    if (submitted(getSATSectionTest(test.mockId, 'reading-writing').id)) completedSections += 1
+    if (versions.some(saved => saved.modules.length === 2 && saved.modules[0].section === 'math')) completedSections += 1
+    if (versions.some(saved => saved.modules.length === 2 && saved.modules[0].section === 'reading-writing')) completedSections += 1
   })
 
   const total = tests.length * 2

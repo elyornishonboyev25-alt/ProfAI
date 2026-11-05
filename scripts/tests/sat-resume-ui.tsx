@@ -6,6 +6,7 @@ import SATSectionTabs from '../../src/components/sat/SATSectionTabs'
 import InProcessPanel from '../../src/components/tests/InProcessPanel'
 import i18n from '../../src/i18n'
 import { getSATSectionTest, SAT_TEST_CATALOG } from '../../src/features/sat/catalog'
+import { satRunSearch } from '../../src/features/sat/sessionTest'
 import { createSATAttempt } from '../../src/features/sat/practiceTest4'
 import { loadSATAttempt, saveSATAttempt } from '../../src/features/sat/attemptStorage'
 import { useAuthStore } from '../../src/store/authStore'
@@ -42,11 +43,11 @@ export async function run() {
     await refresh()
     assert.equal(links().length, 3, 'Only active attempts appear, including all section types')
     assert.deepEqual(new Set(links().map(link => link.getAttribute('href'))), new Set([
-      '/sat/mock/1/run', '/sat/mock/2/run?section=math', '/sat/mock/3/run?section=reading-writing',
+      `/sat/mock/1/run${satRunSearch(full)}`, `/sat/mock/2/run${satRunSearch(math, 'math')}`, `/sat/mock/3/run${satRunSearch(reading, 'reading-writing')}`,
     ]))
     assert.ok(container.querySelector('#sat-tab-in-process[aria-selected="true"]'), 'Saved tests have one dedicated In process section')
-    await act(async () => links().find(link => link.getAttribute('href') === '/sat/mock/2/run?section=math')!.click())
-    assert.equal(container.querySelector('[data-location]')!.textContent, '/sat/mock/2/run?section=math')
+    await act(async () => links().find(link => link.getAttribute('href') === `/sat/mock/2/run${satRunSearch(math, 'math')}`)!.click())
+    assert.equal(container.querySelector('[data-location]')!.textContent, `/sat/mock/2/run${satRunSearch(math, 'math')}`)
     assert.equal(loadSATAttempt(math.id)!.answers[math.modules[0].questions[0].id], '42')
     assert.equal(loadSATAttempt(math.id)!.currentQuestionIndex, 3, 'Resume preserves the saved question')
 

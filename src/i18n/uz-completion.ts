@@ -1,5 +1,9 @@
 /** Interface strings that are not in the original Uzbek catalog. */
 export const uzbekCompletion: Record<string, string> = {
+  'Adaptive practice mock': 'Adaptiv mock test',
+  'Saved practice mock': 'Saqlangan mock test',
+  'Previous version score': 'Oldingi versiyadagi ball',
+  'Each section starts with a balanced mix of questions. Your first-module answers determine the second module. Scores are practice estimates.': 'Har bir bo‘lim oson, o‘rta va qiyin savollar aralashmasidan boshlanadi. Birinchi moduldagi javoblaringizga qarab ikkinchi modul tanlanadi. Ballar taxminiy hisoblanadi.',
   'View level progress': 'Daraja rivojini ko‘rish',
   'View results': 'Natijalarni ko‘rish',
   'Back to leaderboard': 'Reytingga qaytish',

@@ -5,7 +5,7 @@ import { learningCenterApi } from '@/features/learningCenter/api'
 import { useAuthStore } from '@/store/authStore'
 import { useBadgeStore } from '@/store/badgeStore'
 import { loadSATAttempt, loadSATAttemptHistory } from './attemptStorage'
-import { getSATReviewTests, isSATTestComplete, type SATTestDefinition } from './catalog'
+import { getSATReviewTests, isSATTestComplete, resolveSATTest, type SATTestDefinition } from './catalog'
 import { isSATAnswerCorrect, scoreSATModules, type SATAttempt } from './practiceTest4'
 
 const pending = new Map<string, Promise<void>>()
@@ -18,6 +18,7 @@ export async function syncSATAttemptResult(
   silent = false,
 ): Promise<void> {
   if (attempt.status !== 'submitted' || useAuthStore.getState().user?.id !== userId) return
+  test = resolveSATTest(test, attempt)
   const endedAt = attempt.submittedAt ?? attempt.updatedAt
   if (!Number.isFinite(endedAt)) return
   // Match the existing submission key so backfills update, never duplicate, results.
@@ -71,6 +72,7 @@ export async function syncSATAttemptResult(
     assignmentId,
     breakdown: {
       mode: attempt.mode,
+      ...(attempt.adaptiveRoutes ? { adaptiveRoutes: attempt.adaptiveRoutes, formVersion: test.id } : {}),
       leaderboardEligible: isSATLeaderboardEligible(attempt, test.modules),
       moduleElapsedSeconds: moduleTimes(attempt, test.modules),
       readingWritingRange: report.readingWritingRange,

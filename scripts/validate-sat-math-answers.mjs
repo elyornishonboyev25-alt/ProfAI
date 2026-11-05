@@ -54,7 +54,7 @@ for (const test of catalog.getSATReviewTests()) {
     assert.equal(scoreSATModules([module], answers).correct, module.questions.length, test.id)
   }
 }
-const question = catalog.getSATTest(2).modules.find(module => module.id === 'math1').questions.find(question => question.id === 'math1-22')
+const question = catalog.LEGACY_SAT_TEST_CATALOG[2].modules.find(module => module.id === 'math1').questions.find(question => question.id === 'math1-22')
 assert.equal(question.correctAnswer, '18/17')
 for (const response of ['18/17', '36/34', ' 18 / 17 ', '+18/17', '-18/-17', '1.058', '1.059', '1.058823529412']) {
   assert.ok(isSATAnswerCorrect(question, response), `Screenshot regression: ${response}`)
@@ -78,7 +78,7 @@ for (const response of ['14,10', '14,1000', '14.100']) assert.equal(isSATAnswerC
 const zero = { ...fractionQuestion, correctAnswer: '0' }
 assert.equal(isSATAnswerCorrect(zero, `1/${'9'.repeat(400)}`), false)
 assert.equal(isSATAnswerCorrect(zero, `${'9'.repeat(400)}/1`), false)
-const corrected = catalog.getSATTest(11).modules.flatMap(module => module.questions).find(question => question.sourceQuestionId === 'c6e85cd7')
+const corrected = catalog.LEGACY_SAT_TEST_CATALOG[11].modules.flatMap(module => module.questions).find(question => question.sourceQuestionId === 'c6e85cd7')
 assert.doesNotMatch(corrected.explanation + corrected.sourceContent.explanation, /0\.219/)
 assert.equal(isSATAnswerCorrect(corrected, '0.219'), false)
 console.log(`SAT math answers valid: ${mathCount} current/section/historical question checks, ${responseCount} student-response checks, ${exampleCount} explanation examples; equivalent fractions, decimal precision, scoring and screenshot regression.`)

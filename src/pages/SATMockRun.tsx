@@ -5,7 +5,7 @@ import ConfirmDialog from '@/components/common/ConfirmDialog'
 import { testReturnPath } from '@/utils/testNavigation'
 import { accountStorageFor } from '@/utils/accountStorage'
 import { useActiveTest } from '@/hooks/useActiveTest'
-import { readActiveTestPaper, saveActiveTestPaper } from '@/utils/activeTestPaper'
+import { saveActiveTestPaper } from '@/utils/activeTestPaper'
 import UiText from '@/components/common/UiText'
 import {
   useCallback,
@@ -59,7 +59,8 @@ import {
   saveSATAttempt,
   saveSATAttemptToHistory,
 } from '@/features/sat/attemptStorage'
-import { getSATSectionTest, isSATSection, isSATTestComplete } from '@/features/sat/catalog'
+import { isSATSection, isSATTestComplete, resolveSATTest } from '@/features/sat/catalog'
+import { getSATSessionTest } from '@/features/sat/sessionTest'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { markXpActivitySynced, recordXpActivity } from '@/lib/xpApi'
@@ -91,21 +92,23 @@ function SATMockRunContent() {
   const { mockId = '1' } = useParams<{ mockId: string }>()
   const [searchParams] = useSearchParams()
   const section = isSATSection(searchParams.get('section')) ? searchParams.get('section')! : null
-  const test = useMemo(() => {
-    const candidate = getSATSectionTest(mockId, section)
-    return readActiveTestPaper<typeof candidate>(`profai:sat:${candidate.id}:attempt:v1`) ?? candidate
-  }, [mockId, section])
+  const requestedTestId = searchParams.get('testId')
+  const baseTest = useMemo(() => getSATSessionTest(mockId, section, requestedTestId), [mockId, section, requestedTestId])
   const diagnostic = !section && searchParams.get('diagnostic') === '1'
   const sectionQuery = section ? `?section=${section}` : diagnostic ? '?diagnostic=1' : ''
   const backPath = testReturnPath(location.state, section ? `/sat/${section}` : '/sat')
-  const modules = test.modules
   const user = useAuthStore((state: AuthState) => state.user)
   const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
   const { isFullscreen, supported, toggle, exit } = useFullscreen()
   const [attempt, setAttempt] = useState<SATAttempt | null>(() => {
-    const saved = loadSATAttempt(test.id)
-    return saved ? migrateModuleTiming(saved, modules) : null
+    const saved = loadSATAttempt(baseTest.id)
+    return saved ? migrateModuleTiming(saved, baseTest.modules) : null
   })
+  const test = useMemo(() => attempt ? resolveSATTest(baseTest, attempt) : baseTest,
+    [baseTest, attempt?.answers, attempt?.adaptiveRoutes])
+  const modules = test.modules
+  const modulesRef = useRef(modules)
+  modulesRef.current = modules
   useActiveTest(attempt?.status === 'active')
   const [now, setNow] = useState(Date.now())
   const uiKey = `profai:sat:${test.id}:workspace`
@@ -202,11 +205,11 @@ function SATMockRunContent() {
   const pauseAndSaveAttempt = useCallback(() => {
     const current = attemptRef.current
     if (!current || current.status !== 'active') return
-    const paused = pauseModule(current, modules)
+    const paused = pauseModule(current, modulesRef.current)
     attemptRef.current = paused
     saveSATAttempt(paused)
     saveSATAttemptToHistory(paused, 'exit')
-  }, [modules])
+  }, [])
 
   const saveAndExit = useCallback(() => {
     pauseAndSaveAttempt()
@@ -291,9 +294,9 @@ function SATMockRunContent() {
   useEffect(() => {
     if (attempt) {
       saveSATAttempt(attempt)
-      saveActiveTestPaper(`profai:sat:${test.id}:attempt:v1`, test)
+      saveActiveTestPaper(`profai:sat:${test.id}:attempt:v1`, baseTest)
     }
-  }, [attempt, test])
+  }, [attempt, test, baseTest])
 
   useEffect(() => {
     const current = attemptRef.current

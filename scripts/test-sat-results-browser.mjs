@@ -314,7 +314,23 @@ try {
   const reportClient = await connect(reportTarget.webSocketDebuggerUrl)
   const reportEval = async (expression) =>
     (await reportClient.send('Runtime.evaluate', { expression, returnByValue: true })).result.value
+  const checkReportLayout = async () => {
+    const overflow = await reportEval(`Array.from(document.querySelectorAll('.sheet,.score-box,.ks-columns,.domain,.summary,.module-table,.answers,.answer-module,.answer-grid')).filter(node => node.scrollWidth > node.clientWidth + 2 || node.matches('.sheet') && node.scrollHeight > node.clientHeight + 2).map(node => node.className)`)
+    assert.deepEqual(overflow, [], 'Report content stays inside its page and column borders')
+  }
+  const checkFittedPage = async () => {
+    let fits = false
+    for (let i = 0; i < 50; i++) {
+      fits = await reportEval(`(() => { const page = document.querySelector('.sheet').getBoundingClientRect(); const toolbar = document.querySelector('.toolbar').getBoundingClientRect(); return page.left >= 15 && page.right <= innerWidth - 15 && page.top >= toolbar.bottom && page.bottom <= innerHeight - 15; })()`)
+      if (fits) break
+      await new Promise(resolve => setTimeout(resolve, 50))
+    }
+    assert.equal(fits, true, 'One complete report page fits below the toolbar')
+    assert.equal(await reportEval('document.documentElement.scrollWidth <= innerWidth + 1'), true)
+    await checkReportLayout()
+  }
   assert.equal(await reportEval('window.opener===null'), true)
+  await checkFittedPage()
   assert.equal(
     await reportEval('document.querySelector(".score-line.is-total strong").textContent'),
     String(await evaluate('window.expected.score')),
@@ -342,7 +358,7 @@ try {
   const pdfBytes = Buffer.from(pdf.data, 'base64')
   await writeFile(join(artifacts, 'ivygoo-sat-report.pdf'), pdfBytes)
   const pageCount = (bytes) => (bytes.toString('latin1').match(/\/Type\s*\/Page\b/g) || []).length
-  if (pageCount(pdfBytes) < 2 || pageCount(pdfBytes) > 3) {
+  if (pageCount(pdfBytes) !== 2) {
     await reportClient.send('Emulation.setEmulatedMedia', { media: 'print' })
     console.log(
       'Report print layout:',
@@ -354,10 +370,16 @@ try {
     const shot = await reportClient.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true })
     await writeFile(join(artifacts, 'report-overflow.png'), Buffer.from(shot.data, 'base64'))
   }
-  assert.ok(
-    pageCount(pdfBytes) >= 2 && pageCount(pdfBytes) <= 3,
-    'The A4 report keeps scores on page one and the answer sheet on the following pages',
-  )
+  assert.equal(pageCount(pdfBytes), 2, 'The A4 report has exactly one score page and one answer page')
+  const mediaBox = pdfBytes.toString('latin1').match(/\/MediaBox\s*\[\s*0\s+0\s+([\d.]+)\s+([\d.]+)\s*\]/)
+  assert.ok(mediaBox && Number(mediaBox[1]) < Number(mediaBox[2]), 'PDF pages use A4 portrait orientation')
+  await reportClient.send('Emulation.setDeviceMetricsOverride', {
+    width: Math.floor(190 * 96 / 25.4), height: 1047, deviceScaleFactor: 1, mobile: false,
+  })
+  await reportClient.send('Emulation.setEmulatedMedia', { media: 'print' })
+  await checkReportLayout()
+  assert.equal(await reportEval('getComputedStyle(document.querySelector(".sheet")).transform'), 'none', 'Preview scaling never affects printing')
+  await reportClient.send('Emulation.setEmulatedMedia', { media: 'screen' })
   await reportClient.send('Emulation.setDeviceMetricsOverride', {
     width: 1000,
     height: 1250,
@@ -366,15 +388,21 @@ try {
   })
   const reportShot = await reportClient.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true })
   await writeFile(join(artifacts, 'report.png'), Buffer.from(reportShot.data, 'base64'))
-  for (const width of [390, 320]) {
+  for (const [width, height] of [[1440, 900], [1366, 768], [1024, 640], [768, 1024], [390, 844], [320, 568]]) {
     await reportClient.send('Emulation.setDeviceMetricsOverride', {
       width,
-      height: 844,
+      height,
       deviceScaleFactor: 1,
-      mobile: true,
+      mobile: width < 640,
     })
-    assert.equal(await reportEval('document.documentElement.scrollWidth<=innerWidth+1'), true)
+    await checkFittedPage()
   }
+  await reportEval('window.scrollTo(0, document.querySelector(".page-preview").offsetHeight)')
+  await reportClient.send('Emulation.setDeviceMetricsOverride', {
+    width: 1024, height: 640, deviceScaleFactor: 1, mobile: false,
+  })
+  await reportEval('window.scrollTo(0, 0)')
+  await checkFittedPage()
   const mathHtml = await evaluate('window.mathReportHtml')
   await reportClient.send('Page.setDocumentContent', { frameId: frame.frameTree.frame.id, html: mathHtml })
   await reportClient.send('Runtime.evaluate', {
@@ -388,6 +416,7 @@ try {
   })
   const mathBytes = Buffer.from(mathPdf.data, 'base64')
   assert.equal(pageCount(mathBytes), 2, 'The section report fits a score page and a details page')
+  await checkFittedPage()
   await writeFile(join(artifacts, 'ivygoo-math-report.pdf'), mathBytes)
   await reportClient.send('Emulation.setDeviceMetricsOverride', {
     width: 1000,

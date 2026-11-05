@@ -4,7 +4,7 @@ import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-rou
 import assert from 'node:assert/strict'
 import SATQuestionBankRun from '../../src/pages/SATQuestionBankRun'
 import SATQuestionBank from '../../src/pages/SATQuestionBank'
-import { SAT_TEST_CATALOG, getSATReviewTests, getSATSectionTest } from '../../src/features/sat/catalog'
+import { LEGACY_SAT_TEST_CATALOG as SAT_TEST_CATALOG, getSATReviewTests } from '../../src/features/sat/catalog'
 import { createSATAttempt } from '../../src/features/sat/practiceTest4'
 import { saveSATAttempt, saveSATAttemptToHistory } from '../../src/features/sat/attemptStorage'
 import { useAuthStore } from '../../src/store/authStore'
@@ -13,6 +13,8 @@ import { bankDomain, bankSkill } from '../../src/features/sat/bankTopics'
 import { accountStorageFor } from '../../src/utils/accountStorage'
 
 const storage = accountStorageFor('guest')
+// These fixtures exercise existing positional/source keys and saved results.
+const getSATSectionTest = (id: number, section: string) => getSATReviewTests().find(test => test.id === `${SAT_TEST_CATALOG[id].id}-${section}`)!
 const container = document.getElementById('root')!
 let root: ReturnType<typeof createRoot>
 const text = () => container.textContent!

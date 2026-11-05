@@ -31,8 +31,11 @@ function EntryDecision({ exam, owner, children }: { exam: 'IELTS' | 'SAT'; owner
       return getIeltsAttemptResumes(owner).find(attempt => attempt.pathname === location.pathname &&
         ((attempt.state as { mock?: { id?: string } } | null)?.mock?.id ?? new URLSearchParams(attempt.search).get('mock') ?? undefined) === route?.mock?.id) ?? null
     }
-    const section = new URLSearchParams(location.search).get('section')
-    return getInProcessAttempts(exam, owner).find(attempt => attempt.pathname === location.pathname && new URLSearchParams(attempt.search).get('section') === section) ?? null
+    const search = new URLSearchParams(location.search)
+    const section = search.get('section')
+    const testId = search.get('testId')
+    return getInProcessAttempts(exam, owner).find(attempt => attempt.pathname === location.pathname && new URLSearchParams(attempt.search).get('section') === section
+      && (!testId || attempt.satId === testId)) ?? null
   })
   const [accepted, setAccepted] = useState(!existing)
   const [confirm, setConfirm] = useState(false)

@@ -1,4 +1,4 @@
-import type { SATAttempt, SATModule } from './practiceTest4'
+import { satModuleRoute, type SATAttempt, type SATModule } from './practiceTest4'
 import { finishModule } from './timing'
 
 export const SAT_SECTION_BREAK_SECONDS = 10 * 60
@@ -26,6 +26,9 @@ export function advanceSATModule(attempt: SATAttempt, modules: SATModule[], now 
   const startedAt = attempt.sectionBreak ? Math.min(now, attempt.sectionBreak.endsAt) : now
   return {
     ...finished,
+    ...(nextModule.adaptive ? { adaptiveRoutes: { ...finished.adaptiveRoutes,
+      [nextModule.id]: finished.adaptiveRoutes?.[nextModule.id] ?? satModuleRoute(nextModule, modules, finished.answers),
+    } } : {}),
     sectionBreak: undefined,
     currentModuleIndex: nextModuleIndex,
     currentQuestionIndex: 0,

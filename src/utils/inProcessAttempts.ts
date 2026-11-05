@@ -4,6 +4,7 @@ import type { Question } from '@/types/ieltsTypes'
 import { discardIeltsAttempt, getIeltsAttemptResumes, type IeltsAttemptResume } from './ieltsAttemptResume'
 import { clearSATAttempt, loadSATAttempt, loadSATAttemptHistory, deleteSATAttemptHistoryEntry } from '@/features/sat/attemptStorage'
 import { getSATReviewTests } from '@/features/sat/catalog'
+import { satRunSearch } from '@/features/sat/sessionTest'
 import { clearBankSession, loadBankSession } from '@/features/sat/bankPractice'
 import { fullMockLaunchState, getFullMockById, getFullMockCatalog, getFullMockCompletedSections, getFullMockPendingSection, FULL_MOCK_PROGRESS_STORAGE_KEY, FULL_MOCK_PROGRESS_EVENT } from './ieltsMockCatalog'
 
@@ -36,7 +37,7 @@ export function getInProcessAttempts(exam: 'IELTS' | 'SAT', owner: string): InPr
       if (attempt?.status !== 'active') return []
       const section = test.modules.every(module => module.section === test.modules[0]?.section) ? test.modules[0]?.section : null
       return [{ id: `sat:${test.id}`, exam, title: test.title, detail: attempt.mode === 'exam' ? 'Exam mode · timer paused on exit' : 'Practice mode',
-        pathname: `/sat/mock/${test.mockId}/run`, search: section ? `?section=${section}` : '',
+        pathname: `/sat/mock/${test.mockId}/run`, search: satRunSearch(test, section),
         answered: Object.values(attempt.answers).filter(meaningful).length, total: test.questionCount,
         savedAt: attempt.updatedAt ?? attempt.startedAt, satId: test.id }]
     })

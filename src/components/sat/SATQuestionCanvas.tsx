@@ -56,7 +56,7 @@ export default function SATQuestionCanvas({
 
   return (
     <SATTextHighlights key={question.id} strokes={strokes} onChange={onChange} enabled={highlightAvailable}>
-    <div className={`sat-exam-canvas ${practiceLayout ? 'sat-bank-canvas' : ''} grid min-h-full min-w-0 bg-[#f7f8fa] ${hasSeparateSource && !practiceLayout ? 'md:grid-cols-2' : 'grid-cols-1'}`}>
+    <div data-sat-section={question.section} className={`sat-exam-canvas ${practiceLayout ? 'sat-bank-canvas' : ''} grid min-h-full min-w-0 bg-[#f7f8fa] ${hasSeparateSource && !practiceLayout ? 'md:grid-cols-2' : 'grid-cols-1'}`}>
       {hasSeparateSource ? <section className="sat-question-source relative min-w-0 border-b border-slate-300 px-5 py-5 md:border-b-0 md:border-r md:px-8 xl:px-10">
         <HighlightLayer
           surface="passage"

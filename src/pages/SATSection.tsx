@@ -7,7 +7,8 @@ import { loadSATAttempt, loadSATAttemptHistory } from '@/features/sat/attemptSto
 import UiText from '@/components/common/UiText'
 import { useAuthStore } from '@/store/authStore'
 import { useAccountDataRevision } from '@/hooks/useAccountDataRevision'
-import { getSATSectionTest, isSATSection, SAT_TEST_CATALOG, satAvailabilityNote } from '@/features/sat/catalog'
+import { getSATReviewTests, isSATSection, SAT_TEST_CATALOG, satAvailabilityNote } from '@/features/sat/catalog'
+import { getSATSessionTest } from '@/features/sat/sessionTest'
 import './mock-ielts.css'
 import './SATSection.css'
 import SATSectionTabs, { SAT_SECTION_TABS } from '@/components/sat/SATSectionTabs'
@@ -34,7 +35,7 @@ export default function SATSection() {
   const isFullMock = section === 'mocks'
   const tests = Object.values(SAT_TEST_CATALOG)
     .sort((a, b) => a.mockId - b.mockId)
-    .map((test) => isFullMock ? test : getSATSectionTest(test.mockId, section))
+    .map((test) => getSATSessionTest(test.mockId, isFullMock ? null : section))
   const query = search.trim().toLowerCase()
   const visibleTests = tests.filter((test) =>
     `${test.mockId} ${isFullMock ? 'Full Mock' : 'Practice Test'} ${test.title} ${test.badge} ${test.subtitle}`.toLowerCase().includes(query),
@@ -45,6 +46,7 @@ export default function SATSection() {
     .filter(({ attempt }) => attempt.status === 'submitted')
     .sort((a, b) => (b.attempt.submittedAt ?? b.attempt.updatedAt ?? 0) - (a.attempt.submittedAt ?? a.attempt.updatedAt ?? 0))
   const completedTestIds = new Set(submittedHistory.map(({ attempt }) => attempt.testId))
+  const versionsById = new Map(getSATReviewTests().map(test => [test.id, test]))
 
 
   return (
@@ -79,8 +81,12 @@ export default function SATSection() {
                 {visibleTests.map((test) => {
                   const attempt = attemptsByTestId.get(test.id)
                   const completed = attempt?.status === 'submitted' || completedTestIds.has(test.id)
-                  const scoredAttempt = attempt?.status === 'submitted' ? attempt : submittedHistory.find(item => item.attempt.testId === test.id)?.attempt
-                  const report = scoredAttempt ? scoreSATModules(test.modules, scoredAttempt.answers) : null
+                  const scoredAttempt = attempt?.status === 'submitted' ? attempt : submittedHistory.find(item => {
+                    const saved = versionsById.get(item.attempt.testId)
+                    return saved?.mockId === test.mockId && (isFullMock ? saved.modules.length === 4 : saved.modules.length === 2 && saved.modules[0].section === section)
+                  })?.attempt
+                  const scoredTest = scoredAttempt ? versionsById.get(scoredAttempt.testId) : null
+                  const report = scoredAttempt && scoredTest ? scoreSATModules(scoredTest.modules, scoredAttempt.answers) : null
                   const scoreRange = report ? section === 'math' ? report.mathRange : report.readingWritingRange : null
                   const score = report ? isFullMock ? report.midpoint : Math.round((scoreRange![0] + scoreRange![1]) / 20) * 10 : null
                   const answered = Object.values(attempt?.answers ?? {}).filter((answer) => answer.trim()).length
@@ -112,7 +118,7 @@ export default function SATSection() {
                       <h2 className="mt-3 text-2xl font-black tracking-[-0.04em] text-slate-950">{isFullMock ? 'Full Mock' : 'Practice Test'} {test.mockId}</h2>
                       <p className="mt-2 line-clamp-2 text-sm font-medium leading-6 text-slate-500">{test.badge}</p>
                       <div className="mt-3"><StudyAccessChip resource={`mock:sat:${test.mockId}`} /></div>
-                      {report && score !== null ? <CatalogScore score={score} maximum={isFullMock ? 1600 : 800} label="Estimated score" detail={`${report.correct}/${test.questionCount} correct`} /> : null}
+                      {report && score !== null ? <CatalogScore score={score} maximum={isFullMock ? 1600 : 800} label={scoredTest?.id === test.id ? 'Estimated score' : 'Previous version score'} detail={`${report.correct}/${scoredTest?.questionCount ?? test.questionCount} correct`} /> : null}
                       <div className="mt-4 flex flex-wrap gap-1.5" aria-label="SAT sections">
                         {cardSections.map(({ id, label, icon: Icon }) => (
                           <span key={id} title={label} className="inline-flex items-center gap-1 rounded-lg border border-red-100 bg-white/90 px-2 py-1 text-[11px] font-bold text-red-700">

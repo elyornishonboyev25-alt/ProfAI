@@ -1,5 +1,5 @@
 import { bankDomain } from './bankTopics'
-import { isSATTestComplete, type SATTestDefinition } from './catalog'
+import { isSATTestComplete, resolveSATTest, type SATTestDefinition } from './catalog'
 import {
   isSATAnswerCorrect,
   scoreSATModules,
@@ -55,6 +55,7 @@ function counts(questions: SATQuestion[], attempt: SATAttempt) {
 }
 
 export function analyzeSATResult(test: SATTestDefinition, attempt: SATAttempt) {
+  test = resolveSATTest(test, attempt)
   const questions = test.modules.flatMap((module) => module.questions)
   const report = scoreSATModules(test.modules, attempt.answers)
   const times = moduleTimes(attempt, test.modules, attempt.updatedAt)

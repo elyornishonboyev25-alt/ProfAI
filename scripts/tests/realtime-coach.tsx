@@ -200,6 +200,14 @@ export async function run() {
       assert.equal(issues.length, 2)
       assert.match(issues[1], /reply timed out/, 'A silent initial response cannot leave the voice screen stuck thinking')
     } finally { window.setTimeout = nativeWindowTimeout; globalThis.fetch = workingFetch }
+    const beforeLeaving = micStops
+    const leaving = new RealtimeCoach({ ...options, message: () => { throw new Error('Chat callback failed') } })
+    await leaving.start()
+    channel.onmessage({ data: JSON.stringify({ type: 'response.output_audio_transcript.delta', item_id: 'last', response_id: 'last-response', delta: 'Unfinished speech' }) })
+    window.dispatchEvent(new Event('pagehide'))
+    assert.equal(micStops, beforeLeaving + 1, 'Leaving the page releases microphone hardware even when transcript cleanup throws')
+    leaving.stop()
+    assert.equal(micStops, beforeLeaving + 1, 'Repeated cleanup releases the same track only once')
     const sample = 'I enjoy reading books because they help me learn about different cultures and understand people. For example, I recently read an interesting novel about friendship.'
     const stats = analyseTranscript(sample, 15)
     assert.equal(estimateBandsFromStats(stats).pronunciationBand, 0)

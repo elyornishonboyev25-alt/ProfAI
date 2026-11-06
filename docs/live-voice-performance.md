@@ -13,6 +13,16 @@ with SDP once, coalesces rapid page changes and skips identical updates. Context
 requests are serialized; server version checks discard older pending updates.
 The original chat stays attached to the call, including a newly saved draft.
 
+## Microphone lifetime
+
+Closing voice or floating chat, leaving the page, entering an exam, changing the
+account or unmounting the owner ends its microphone capture. Minimizing voice
+keeps the visible docked conversation active. Standard voice aborts recognition
+immediately on exit; normal answer completion still waits for final words.
+Late permission grants and superseded starts release their tracks without
+restarting recognition. WebRTC releases microphone tracks before chat callbacks
+or other teardown, and also closes on `pagehide`.
+
 ## Inspect a real call
 
 Use a deployed backend with a configured OpenAI key and a supported browser.

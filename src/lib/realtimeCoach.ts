@@ -60,6 +60,7 @@ export class RealtimeCoach {
   private interruptedResponses = new Set<string>()
   private inputCaptions = new Map<string, string>()
   private options: VoiceOptions
+  private onPageHide = () => this.stop()
   private pending = new Map<string, { id: string; responseId: string; text: string; interrupted: boolean }>()
   private completedResponses = new Set<string>()
   private seen = new Set<string>()
@@ -82,6 +83,8 @@ export class RealtimeCoach {
   }
 
   async start() {
+    if (this.closed) return
+    window.addEventListener('pagehide', this.onPageHide)
     const started = performance.now()
     this.options.state('thinking')
     try {
@@ -353,17 +356,21 @@ export class RealtimeCoach {
   stop() {
     if (this.closed) return
     this.closed = true
-    this.flush('', true)
+    window.removeEventListener('pagehide', this.onPageHide)
+    const release = (cleanup: () => unknown) => { try { cleanup() } catch { /* A failed cleanup must not keep the microphone running. */ } }
+    // Release hardware before chat callbacks, transport or playback cleanup.
+    this.stream?.getTracks().forEach((track) => { track.onended = null; release(() => track.stop()) })
+    this.stream = null
     this.controller.abort()
     window.clearTimeout(this.timer); cancelAnimationFrame(this.raf)
     window.clearTimeout(this.connectionTimer); window.clearTimeout(this.responseTimer)
-    this.channel?.close(); this.peer?.close()
-    this.stream?.getTracks().forEach((track) => { track.onended = null; track.stop() })
-    this.audio?.pause(); if (this.audio) this.audio.srcObject = null
-    this.meterSources.forEach((source) => source.disconnect()); this.meterSources = []
-    this.inputAnalyser?.disconnect(); this.outputAnalyser?.disconnect()
-    void this.audioContext?.close().catch(() => {})
+    release(() => this.channel?.close()); release(() => this.peer?.close())
+    release(() => this.audio?.pause()); if (this.audio) this.audio.srcObject = null
+    this.meterSources.forEach((source) => release(() => source.disconnect())); this.meterSources = []
+    release(() => this.inputAnalyser?.disconnect()); release(() => this.outputAnalyser?.disconnect())
+    release(() => this.audioContext?.close().catch(() => {}))
     if (this.sessionId) void apiClient.post('/ai/voice/end', { id: this.sessionId }, { keepalive: true }).catch(() => {})
-    this.options.state('idle'); this.options.level(0)
+    release(() => this.flush('', true))
+    release(() => this.options.state('idle')); release(() => this.options.level(0))
   }
 }

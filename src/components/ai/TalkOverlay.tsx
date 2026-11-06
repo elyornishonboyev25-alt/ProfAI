@@ -17,8 +17,7 @@ import UsageBalance from '@/features/billing/UsageBalance'
 const EASE = [0.22, 1, 0.36, 1] as const
 
 // Immersive, full-screen "talk to Ivygoo" experience. Mounted once at the app root so
-// it keeps running while the learner navigates. Can be docked to the corner (animated
-// via a shared layoutId) and re-expanded — it never stops listening or speaking.
+// it can be docked and re-expanded. Closing or leaving the page ends capture.
 function StandardTalkOverlay({ tutor }: { tutor: AiTutorController }) {
   const { c } = useCopy()
   const talkOpen = useAiAssistantStore((s) => s.talkOpen)
@@ -38,6 +37,9 @@ function StandardTalkOverlay({ tutor }: { tutor: AiTutorController }) {
   }
   const endTalkRef = useRef(endTalk)
   endTalkRef.current = endTalk
+  const cancelVoiceRef = useRef(cancelVoice)
+  cancelVoiceRef.current = cancelVoice
+  useEffect(() => () => cancelVoiceRef.current(), [])
 
   useEffect(() => {
     if (!talkOpen || docked) return
@@ -258,7 +260,7 @@ export function TalkOverlay() {
   const { language: uiLanguage } = useCopy()
   const access = useAccountAccess()
   const canLive = Boolean(access?.active)
-  const tutor = useAiTutor()
+  const tutor = useAiTutor('talk')
   const talkOpen = useAiAssistantStore((s) => s.talkOpen)
   const closeTalk = useAiAssistantStore((s) => s.closeTalk)
   const [standard, setStandard] = useState(false)

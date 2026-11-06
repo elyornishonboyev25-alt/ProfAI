@@ -86,7 +86,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
   const messagesViewportRef = useRef<HTMLDivElement | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
-  const tutor = useAiTutor()
+  const tutor = useAiTutor(variant === 'floating' ? 'floating' : 'workspace')
   const {
     user, hasPremium, messages, isSending, error,
     draft, setDraft, images, addImages, removeImage,

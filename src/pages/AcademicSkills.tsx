@@ -31,8 +31,8 @@ export default function AcademicSkills() {
       </header>
       <div className="liquid-resource-grid academic-skills-grid">
         {resources.map((item, index) => (
-          <Link key={item.path} to={item.path} className={`glass-surface academic-glass-card academic-glass-card--${item.tone}`}>
-            <div className="academic-glass-art" aria-hidden="true">
+          <Link key={item.path} to={item.path} className={`academic-study-card academic-study-card--${item.tone}`}>
+            <div className="academic-study-art" aria-hidden="true">
               <div className="academic-glass-art-heading">
                 <span className="academic-glass-tag"><span />{c('Academic Skills')}</span>
                 <span className="academic-glass-index">{String(index + 1).padStart(2, '0')}</span>

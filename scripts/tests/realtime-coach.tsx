@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/authStore'
 export async function run() {
   const originalFetch = globalThis.fetch
   const states: string[] = [], messages: any[] = [], captions: string[] = [], results: any[] = [], sent: any[] = []
+  const previews: any[] = []
   let micStops = 0, peerCloses = 0, ends = 0
   let currentPeer: FakePeer
   const levels: number[] = []
@@ -56,7 +57,7 @@ export async function run() {
   }
   const options: any = { context: { pathname: '/ai-tutor', workspace: 'ielts', language: 'uz', mode: 'coach', studyContext: '', screenContext: '', siteKnowledge: '' }, history: [...Array.from({ length: 24 }, () => ({ role: 'assistant', content: 'Long previous explanation. '.repeat(300) })), { role: 'user', content: 'Earlier question.' }],
     state: (value: string) => states.push(value), level: (value: number) => levels.push(value), caption: (value: string) => captions.push(value),
-    message: (...args: any[]) => messages.push(args), coachResult: (...args: any[]) => results.push(args), error: (issue: Error) => assert.fail(issue.message) }
+    message: (...args: any[]) => messages.push(args), preview: (...args: any[]) => previews.push(args), coachResult: (...args: any[]) => results.push(args), error: (issue: Error) => assert.fail(issue.message) }
   try {
     const voice = new RealtimeCoach(options)
     await voice.start()
@@ -70,6 +71,8 @@ export async function run() {
     emit({ type: 'conversation.item.input_audio_transcription.completed', item_id: 'u1', transcript: 'Salom.' })
     emit({ type: 'conversation.item.input_audio_transcription.completed', item_id: 'u1', transcript: 'Salom.' })
     assert.equal(messages.length, 1, 'Duplicate transcript events are saved only once')
+    emit({ type: 'conversation.item.input_audio_transcription.delta', item_id: 'u1', delta: 'late duplicate' })
+    assert.equal(previews.length, 0, 'A late input delta cannot turn a finalized user message back into a draft')
     emit({ type: 'response.created', response: { id: 'r1' } })
     emit({ type: 'output_audio_buffer.started', response_id: 'r1' })
     currentPeer!.ontrack?.({ streams: [{ getTracks: () => [] }] })
@@ -80,18 +83,33 @@ export async function run() {
     assert.ok(levels.at(-1)! > .1, 'Muting the microphone never freezes the tutor speaking mouth')
     voice.mute(false)
     emit({ type: 'response.output_audio_transcript.delta', item_id: 'a1', response_id: 'r1', delta: 'Salom, ' })
+    assert.deepEqual(previews.at(-1), ['assistant', 'Salom, ', 'a1'], 'Live text is visible before speech completes')
+    voice.setSpeechSpeed(1.25)
+    assert.equal(sent.filter(event => event.type === 'session.update').length, 0, 'Speed changes wait while audio is playing')
     emit({ type: 'response.output_audio_transcript.done', item_id: 'a1', response_id: 'r1', transcript: 'Salom, boshlaymiz.' })
+    emit({ type: 'response.done', response: { id: 'r1', status: 'completed' } })
+    assert.equal(sent.filter(event => event.type === 'session.update').length, 0, 'Generation completion alone cannot change buffered playback speed')
     assert.equal(messages.length, 1, 'Generated speech is not marked heard before playback finishes')
     emit({ type: 'output_audio_buffer.stopped', response_id: 'r1' })
+    assert.equal(sent.at(-1).session.audio.output.speed, 1.25, 'The selected speed applies between turns without reconnecting')
     assert.equal(messages[1][1], 'Salom, boshlaymiz.')
     emit({ type: 'response.created', response: { id: 'r2' } })
     emit({ type: 'output_audio_buffer.started', response_id: 'r2' })
+    emit({ type: 'output_audio_buffer.stopped', response_id: 'r1' })
+    assert.equal(states.at(-1), 'speaking', 'A late stop from a previous turn cannot stop the new speaking state')
     emit({ type: 'response.output_audio_transcript.delta', item_id: 'a2', response_id: 'r2', delta: 'A partial answer' })
     emit({ type: 'input_audio_buffer.speech_started' })
+    const previewCount = previews.length
     emit({ type: 'response.output_audio_transcript.done', item_id: 'a2', response_id: 'r2', transcript: 'A partial answer with unheard additional text.' })
     assert.equal(messages.length, 3)
     assert.equal(messages[2][3], true)
     assert.ok(!messages.some((item) => item[1].includes('unheard additional')))
+    assert.equal(previews.length, previewCount, 'Interrupted speech cannot reappear as a live draft')
+    emit({ type: 'response.created', response: { id: 'r3' } })
+    emit({ type: 'output_audio_buffer.started', response_id: 'r3' })
+    voice.interrupt()
+    assert.deepEqual(sent.slice(-2).map(event => event.type), ['response.cancel', 'output_audio_buffer.clear'], 'Stop cancels generation and clears queued WebRTC audio immediately')
+    assert.equal(captions.at(-1), '')
     const result = { profai_coach_result: true, reply: 'Written feedback.', actions: [], memoryUpdates: [] }
     for (const type of ['conversation.item.added', 'conversation.item.created']) emit({ type, item: { type: 'function_call_output', id: 'tool-item', call_id: 'tool-1', output: JSON.stringify(result) } })
     assert.equal(results.length, 1, 'Mirrored tool results cannot duplicate a saved report')

@@ -20,10 +20,22 @@ const { readEventStream } = await import('../dist/utils/eventStream.js')
 
 // These integration tests exercise AI routes with a full-access test account.
 // Billing itself is covered by coin-billing.test.mjs; never use a live database.
+const voiceReservations = new Map()
+prisma.voiceAllowanceSession.findMany = async () => []
+prisma.voiceAllowanceSession.findFirst = async ({ where }) => [...voiceReservations.values()].find(row =>
+  (!where.id || row.id === where.id) && (!where.userId || row.userId === where.userId) && row.endedAt === null &&
+  (!where.expiresAt?.gt || row.expiresAt > where.expiresAt.gt)) ?? null
+prisma.voiceAllowanceSession.create = async ({ data }) => {
+  const row = { ...data, endedAt: null }; voiceReservations.set(row.id, row); return { ...row }
+}
+prisma.voiceAllowanceSession.update = async ({ where, data }) => Object.assign(voiceReservations.get(where.id), data)
 prisma.$transaction = async (operation) => operation({
   $queryRaw: async () => [], coinWallet: { findUnique: async () => ({ balance: 1000 }) },
   user: { findUniqueOrThrow: async () => ({ role: 'ADMIN', email: 'test@example.invalid', nickname: null }) },
   premiumGrant: { findUnique: async () => null },
+  billingSubscription: { findMany: async () => [] },
+  voiceAllowanceSession: prisma.voiceAllowanceSession,
+  featureUsage: { findUnique: async () => null },
 })
 installSessionFixtures(prisma)
 prisma.user.findUnique = async ({ where }) => ({ id: where.id, role: 'USER' })
@@ -209,11 +221,13 @@ test('voice uses protected SDP negotiation, executes shared coaching and hangs u
   const post = (path, body, user = 'voice-user') => nativeFetch(`${base}/api/v1/ai/voice${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${signAccessToken({ sub: user, role: 'USER' })}` }, body: JSON.stringify(body) })
   t.after(() => { globalThis.fetch = nativeFetch; env.OPENAI_API_KEY = ''; env.OPENAI_API_BASE = 'https://api.openai.com/v1'; prisma.user.findUnique = originals.user; prisma.aiMemory.findMany = originals.memory; prisma.aiUsageEvent.create = originals.usage; ws.clients.forEach((client) => client.terminate()); ws.close(); fakeServer.closeAllConnections(); fakeServer.close(); server.closeAllConnections(); server.close() })
   const response = await post('/connect', { sdp: 'v=0\r\ns=local-offer\r\n', context: { language: 'uz' } })
-  assert.equal(response.status, 201)
+  assert.equal(response.status, 201, response.ok ? undefined : await response.text())
   const call = await response.json()
   assert.equal(call.session, undefined); assert.equal(call.client_secret, undefined)
   assert.equal(sessionConfig.audio.input.turn_detection.type, 'semantic_vad')
-  assert.equal(sessionConfig.audio.input.turn_detection.eagerness, 'medium', 'Ordinary coaching avoids the examiner long-pause setting')
+  assert.equal(sessionConfig.audio.input.turn_detection.eagerness, 'high', 'Live coaching responds promptly without using the examiner long-pause setting')
+  assert.equal(sessionConfig.audio.output.speed, 1.1)
+  assert.match(sessionConfig.instructions, /brisk, natural conversational pace/)
   assert.equal(sessionConfig.audio.input.turn_detection.interrupt_response, true)
   assert.equal(sessionConfig.tools[0].name, 'ask_coach')
   assert.equal((await post('/context', { id: call.id, context: { pathname: '/vocabulary', language: 'uz' } }, 'other-user')).status, 404)
@@ -231,4 +245,9 @@ test('voice uses protected SDP negotiation, executes shared coaching and hangs u
   assert.equal(received.filter((event) => event.type === 'response.create').length, 1, 'Fast tool output must resume speaking after response.done')
   await post('/end', { id: call.id }, 'other-user'); assert.equal(ended, 0)
   await post('/end', { id: call.id }); assert.equal(ended, 1)
+  const exam = await post('/connect', { sdp: 'v=0\r\ns=local-offer\r\n', context: { language: 'en', mode: 'examiner' } })
+  assert.equal(exam.status, 201)
+  assert.equal(sessionConfig.audio.input.turn_detection.eagerness, 'low', 'Examiner practice still allows thinking pauses')
+  assert.equal(sessionConfig.audio.output.speed, 1)
+  await post('/end', { id: (await exam.json()).id })
 })

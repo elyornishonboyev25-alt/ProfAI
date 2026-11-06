@@ -8,12 +8,15 @@ export type VoiceContext = {
   coachPreferences?: import('@/services/ai/coachPreferences').CoachPreferences
 }
 type VoiceOptions = {
+  speechSpeed?: number
   context: VoiceContext
   history: Array<{ role: 'user' | 'assistant'; content: string }>
   state: (state: AiVoiceState) => void
   level: (level: number) => void
   caption: (text: string) => void
   message: (role: 'user' | 'assistant', text: string, id: string, interrupted?: boolean) => void
+  /** Live display only; finalized messages are emitted separately after playback. */
+  preview?: (role: 'user' | 'assistant', text: string, id: string) => void
   coachResult: (result: GeminiChatResponse, id: string) => void
   error: (error: Error) => void
 }
@@ -39,6 +42,7 @@ export class RealtimeCoach {
   private muted = false
   private speaking = false
   private responding = false
+  private pendingSpeechSpeed: number | null = null
   private activeResponseId = ''
   private interruptedResponses = new Set<string>()
   private inputCaptions = new Map<string, string>()
@@ -121,6 +125,8 @@ export class RealtimeCoach {
       if (this.closed) return
       for (const turn of history) this.send({ type: 'conversation.item.create', item: { type: 'message', role: turn.role,
         content: [{ type: turn.role === 'user' ? 'input_text' : 'output_text', text: turn.content }] } })
+      // Apply preferences before asking for the first response.
+      if (this.options.speechSpeed !== undefined) this.setSpeechSpeed(this.options.speechSpeed)
       this.send({ type: 'response.create', response: { instructions: this.options.context.mode === 'examiner'
         ? 'Begin the IELTS speaking mock: greet the candidate briefly and ask their full name. Ask one question only.'
         : 'Briefly greet the learner in their selected language and invite their next question. Use existing context naturally, without listing private memories.' } })
@@ -205,15 +211,22 @@ export class RealtimeCoach {
     if (type === 'response.created') { this.responding = true; this.activeResponseId = event.response?.id ?? '' }
     if (type === 'output_audio_buffer.started') { window.clearTimeout(this.responseTimer); this.speaking = true; this.activeResponseId = event.response_id ?? this.activeResponseId; this.options.state('speaking') }
     if (type === 'output_audio_buffer.stopped' || type === 'output_audio_buffer.cleared') {
-      window.clearTimeout(this.responseTimer)
-      this.speaking = false
       this.completedResponses.add(event.response_id)
       this.flush(event.response_id ?? '', type === 'output_audio_buffer.cleared')
-      this.options.state('listening')
+      // Audio/control events use different channels. An old stopped event must
+      // not silence the state of a newer response that has already started.
+      if (!event.response_id || event.response_id === this.activeResponseId) {
+        window.clearTimeout(this.responseTimer)
+        this.speaking = false
+        this.options.state('listening')
+        this.applySpeechSpeed()
+      }
     }
     if (type === 'conversation.item.input_audio_transcription.delta') {
+      if (this.seen.has(`user:${event.item_id}`)) return
       const caption = (this.inputCaptions.get(event.item_id) ?? '') + (event.delta ?? '')
       this.inputCaptions.set(event.item_id, caption); this.options.caption(caption)
+      this.options.preview?.('user', caption, event.item_id)
     }
     if (type === 'conversation.item.input_audio_transcription.completed') {
       const key = `user:${event.item_id}`
@@ -230,6 +243,7 @@ export class RealtimeCoach {
       const previous = this.pending.get(key)
       const value = { id: event.item_id, responseId: event.response_id ?? previous?.responseId ?? '', text: type.endsWith('.done') ? event.transcript ?? previous?.text ?? '' : (previous?.text ?? '') + (event.delta ?? ''), interrupted: false }
       this.pending.set(key, value); this.options.caption(value.text)
+      this.options.preview?.('assistant', value.text, value.id)
       if (type.endsWith('.done') && this.completedResponses.has(value.responseId)) this.flush(value.responseId)
     }
     if ((type === 'conversation.item.added' || type === 'conversation.item.created') && event.item?.type === 'function_call_output') {
@@ -242,11 +256,24 @@ export class RealtimeCoach {
     }
     if (type === 'response.done' && event.response?.status === 'failed') this.fail(new Error('The voice service could not answer. Retry to continue.'))
     if (type === 'response.done') {
-      this.responding = false
+      if (!event.response?.id || event.response.id === this.activeResponseId) this.responding = false
       if (event.response?.status === 'cancelled') { this.interruptedResponses.add(event.response.id); this.flush(event.response.id, true) }
+      this.applySpeechSpeed()
     }
   }
 
+  setSpeechSpeed(speed: number) {
+    if (this.closed || !Number.isFinite(speed)) return
+    this.pendingSpeechSpeed = Math.max(0.75, Math.min(1.35, speed))
+    this.applySpeechSpeed()
+  }
+  private applySpeechSpeed() {
+    // The API permits speed changes between turns, not during generation or
+    // buffered playback. Keep only the latest choice while the tutor speaks.
+    if (this.closed || this.responding || this.speaking || this.pendingSpeechSpeed === null || this.channel?.readyState !== 'open') return
+    this.send({ type: 'session.update', session: { type: 'realtime', audio: { output: { speed: this.pendingSpeechSpeed } } } })
+    this.pendingSpeechSpeed = null
+  }
   mute(muted: boolean) { this.muted = muted; this.stream?.getAudioTracks().forEach((track) => { track.enabled = !muted }) }
   async updateContext(context: VoiceContext) {
     this.options.context = context
@@ -257,7 +284,7 @@ export class RealtimeCoach {
     if (this.activeResponseId) this.interruptedResponses.add(this.activeResponseId)
     if (this.responding) this.send({ type: 'response.cancel' })
     if (this.speaking) this.send({ type: 'output_audio_buffer.clear' })
-    this.flush('', true); this.speaking = false; this.options.state('listening')
+    this.flush('', true); this.speaking = false; this.options.caption(''); this.options.state('listening')
   }
   requestFeedback() {
     this.interrupt()

@@ -100,11 +100,11 @@ export default function Vocabulary() {
 
   if (!routeTrack) {
     return (
-      <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
+      <div className="vocabulary-hub workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
 
         <div className="relative mx-auto w-full max-w-6xl space-y-6">
           <Reveal>
-            <section className="rounded-[2rem] border border-blue-100 bg-white/90 p-6 shadow-[0_30px_70px_rgba(15,23,42,0.14)] backdrop-blur-xl sm:p-9">
+            <section className="vocabulary-hero rounded-[2rem] border border-blue-100 bg-white/90 p-6 shadow-[0_30px_70px_rgba(15,23,42,0.14)] backdrop-blur-xl sm:p-9">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <div className="premium-top-controls">
@@ -128,7 +128,7 @@ export default function Vocabulary() {
                   <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
                      <UiText text={"Four focused tracks. Choose one and start practising."} /> </p>
                 </div>
-                <div className="relative overflow-hidden rounded-3xl border border-blue-200 bg-gradient-to-br from-white via-indigo-50/70 to-blue-100/65 px-5 py-4 text-right shadow-[0_18px_38px_rgba(37,99,235,0.18)]">
+                <div className="vocabulary-metric relative overflow-hidden rounded-3xl border border-blue-200 bg-gradient-to-br from-white via-indigo-50/70 to-blue-100/65 px-5 py-4 text-right shadow-[0_18px_38px_rgba(37,99,235,0.18)]">
                   <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-blue-200/55 blur-2xl" />
                   <div className="pointer-events-none absolute -left-8 bottom-0 h-20 w-20 rounded-full bg-red-200/45 blur-2xl" />
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600"> <UiText text={"Total Terms"} /> </p>
@@ -149,7 +149,7 @@ export default function Vocabulary() {
               <Tilt3D className="h-full rounded-[1.8rem]" max={6}>
                 <button
                   onClick={() => navigate('/vocabulary/ielts')}
-                  className="interactive-lift group h-full w-full rounded-[1.8rem] border border-blue-200 bg-gradient-to-br from-white via-indigo-50 to-blue-100/70 p-6 text-left shadow-[0_18px_36px_rgba(99,102,241,0.16)]"
+                  className="vocabulary-track-card interactive-lift group h-full w-full rounded-[1.8rem] border border-blue-200 bg-gradient-to-br from-white via-indigo-50 to-blue-100/70 p-6 text-left shadow-[0_18px_36px_rgba(99,102,241,0.16)]"
                 >
                   <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-semibold text-blue-700">
                     <BookOpen className="h-3.5 w-3.5" />
@@ -171,7 +171,7 @@ export default function Vocabulary() {
               <Tilt3D className="h-full rounded-[1.8rem]" max={6}>
                 <button
                   onClick={() => navigate('/vocabulary/sat')}
-                  className="interactive-lift group h-full w-full rounded-[1.8rem] border border-blue-200 bg-gradient-to-br from-white via-blue-50 to-indigo-100/75 p-6 text-left shadow-[0_18px_36px_rgba(59,130,246,0.16)]"
+                  className="vocabulary-track-card interactive-lift group h-full w-full rounded-[1.8rem] border border-blue-200 bg-gradient-to-br from-white via-blue-50 to-indigo-100/75 p-6 text-left shadow-[0_18px_36px_rgba(59,130,246,0.16)]"
                 >
                   <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-semibold text-blue-700">
                     <Star className="h-3.5 w-3.5" />
@@ -194,7 +194,7 @@ export default function Vocabulary() {
               <Tilt3D className="h-full rounded-[1.8rem]" max={6}>
                 <button
                   onClick={() => navigate('/vocabulary/articles')}
-                  className="interactive-lift group h-full w-full rounded-[1.8rem] border border-red-200 bg-gradient-to-br from-white via-red-50/60 to-blue-100/55 p-6 text-left shadow-[0_18px_36px_rgba(220,38,38,0.12)]"
+                  className="vocabulary-track-card interactive-lift group h-full w-full rounded-[1.8rem] border border-red-200 bg-gradient-to-br from-white via-red-50/60 to-blue-100/55 p-6 text-left shadow-[0_18px_36px_rgba(220,38,38,0.12)]"
                 >
                   <div className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-white px-3 py-1 text-xs font-semibold text-red-700">
                     <BookOpenCheck className="h-3.5 w-3.5" />
@@ -215,7 +215,7 @@ export default function Vocabulary() {
               <Tilt3D className="h-full rounded-[1.8rem]" max={6}>
                 <button
                   onClick={() => navigate('/vocabulary/my-words')}
-                  className="interactive-lift group h-full w-full rounded-[1.8rem] border border-blue-200 bg-gradient-to-br from-white via-blue-50 to-red-100/45 p-6 text-left shadow-[0_18px_36px_rgba(37,99,235,0.13)]"
+                  className="vocabulary-track-card interactive-lift group h-full w-full rounded-[1.8rem] border border-blue-200 bg-gradient-to-br from-white via-blue-50 to-red-100/45 p-6 text-left shadow-[0_18px_36px_rgba(37,99,235,0.13)]"
                 >
                   <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-semibold text-blue-700">
                     <Bookmark className="h-3.5 w-3.5" />
@@ -244,7 +244,7 @@ export default function Vocabulary() {
   return (
     <div className={`sat-vocab-studio workspace-page min-h-screen px-4 py-8 sm:px-6 lg:px-10 ${reducedMotion ? 'ielts-vocab-reduced-motion' : ''}`}>
       <div className="mx-auto max-w-[1440px] space-y-6">
-        <header className="flex flex-wrap items-center justify-between gap-5 rounded-[2rem] border border-white/90 bg-white/80 p-6 shadow-[0_20px_60px_rgba(30,64,175,0.08)] backdrop-blur-xl sm:p-8">
+        <header className="vocabulary-hero flex flex-wrap items-center justify-between gap-5 rounded-[2rem] border border-white/90 bg-white/80 p-6 shadow-[0_20px_60px_rgba(30,64,175,0.08)] backdrop-blur-xl sm:p-8">
           <div>
             <div className="flex flex-wrap items-center gap-3">
               <button type="button" onClick={() => navigate(fromSatArena ? '/sat' : '/vocabulary')} className="premium-back-btn">

@@ -7,12 +7,12 @@
   --catalog-muted: #626e80;
   --catalog-red: #ac2440;
   --catalog-edge: rgba(255, 255, 255, .94);
-  --catalog-panel: linear-gradient(125deg, #ffffff94, #ecf0f66b 58%, #d8e0ec61);
+  --catalog-panel: var(--workspace-panel, linear-gradient(125deg, #ffffff94, #ecf0f66b 58%, #d8e0ec61));
   --catalog-glass:
     linear-gradient(118deg, #ffffff6b, #ffffff0a 45%, #ffffff42 46%, transparent 72%),
     linear-gradient(145deg, #ffffffa8, #edf0f66b 60%, #dce3ee80);
   --catalog-shadow: 0 12px 28px -12px #28394e26, inset 0 1px 0 #fff, inset 0 -1px 0 #ffffff80;
-  --catalog-crimson: linear-gradient(135deg, #ce3c53, #a81e39);
+  --catalog-crimson: var(--workspace-crimson, linear-gradient(135deg, #ce3c53, #a81e39));
 }
 
 .exam-library-nav.exam-library-nav {

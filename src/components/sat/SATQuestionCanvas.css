@@ -48,6 +48,8 @@
 .sat-question-paper button.sat-paper-choice .sat-paper-choice-letter { flex: none; width: 33px; height: 33px; margin: 0; border: 2px solid currentColor; border-radius: 50%; background: transparent; color: #111; font: 400 22px/1 var(--sat-serif); transition: background-color var(--sat-motion), border-color var(--sat-motion), color var(--sat-motion); }
 .sat-question-paper button.sat-paper-choice[aria-checked='true'] .sat-paper-choice-letter { border-color: var(--sat-accent); background: var(--sat-accent); color: #fff; }
 .sat-question-paper button.sat-paper-choice [data-sat-highlight-block] { padding: 0; color: inherit; font: 400 var(--sat-text-size)/1.45 var(--sat-serif); letter-spacing: normal; }
+/* Long equations keep their readable type size and scroll inside the answer. */
+.sat-question-paper .sat-choice-content > div { max-width: 100%; overflow-x: auto; scrollbar-width: thin; scrollbar-color: #aab4c4 transparent; }
 .sat-question-paper button.sat-paper-choice[data-answer-state='correct'] { border-color: #157347; background: #effaf3; box-shadow: inset 0 0 0 1px #157347; }
 .sat-question-paper button.sat-paper-choice[data-answer-state='incorrect'] { border-color: #b91c3c; background: #fff1f3; box-shadow: inset 0 0 0 1px #b91c3c; }
 .sat-question-paper button.sat-paper-choice[data-answer-state='correct'] .sat-paper-choice-letter { border-color: #157347; background: #157347; }

@@ -146,12 +146,11 @@ export default function CompactIeltsCatalog({
       </section> : null}
 
       <section className={`exam-catalog ielts-catalog-panel relative overflow-hidden rounded-[2.25rem] border border-white/90 bg-white/86 p-4 shadow-[0_24px_64px_rgba(30,64,175,.09),inset_0_1px_0_white] sm:p-5 lg:p-6 ${embedded ? '' : 'mt-5'}`}>
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_92%_0%,rgba(59,130,246,.1),transparent_28%),radial-gradient(circle_at_6%_100%,rgba(239,68,68,.06),transparent_30%)]" />
-
         <div className="ielts-catalog-header relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-red-600">IELTS Academic</p>
-            <h2 className="mt-0.5 text-xl font-black tracking-tight text-slate-950"><UiText text={meta.label} />  <UiText text={"tests"} /> </h2>
+          <div className="exam-catalog-heading-copy">
+            <span className="exam-catalog-heading-icon" aria-hidden="true"><HeroIcon size={24} strokeWidth={1.6} /></span>
+            <div><h2 className="mt-0.5 text-xl font-black tracking-tight text-slate-950"><UiText text={meta.label} />  <UiText text={"tests"} /> </h2>
+              <p className="exam-catalog-description"><UiText text={meta.summary} /></p></div>
           </div>
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
             {headerExtra}
@@ -169,8 +168,9 @@ export default function CompactIeltsCatalog({
           </div>
         </div>
 
-        {filters && activeFilter && onFilterChange ? (
-          <div className="ielts-catalog-filters relative mt-5 flex flex-wrap gap-2" role="group" aria-label={uiCopy("{{value1}} test type", { value1: String(meta.label) })}>
+        <div className="exam-catalog-toolbar">
+          {filters && activeFilter && onFilterChange ? (
+          <div className="ielts-catalog-filters relative flex flex-wrap gap-2" role="group" aria-label={uiCopy("{{value1}} test type", { value1: String(meta.label) })}>
             {filters.map((filter) => (
               <button
                 key={filter.value}
@@ -183,7 +183,9 @@ export default function CompactIeltsCatalog({
               </button>
             ))}
           </div>
-        ) : null}
+          ) : <span />}
+          <div className="exam-catalog-overview" aria-live="polite"><span><strong>{availableCount}</strong> <UiText text="available now" /></span>{completedCount > 0 && <span><CheckCircle2 size={13} /><strong>{completedCount}</strong> <UiText text="completed" /></span>}</div>
+        </div>
 
         {rows.length === 0 ? (
           <div className="relative mt-5 rounded-[1.75rem] border border-dashed border-blue-200 bg-white/64 px-4 py-12 text-center text-sm font-semibold text-slate-500">
@@ -197,11 +199,7 @@ export default function CompactIeltsCatalog({
                 type="button"
                 disabled={!row.available}
                 onClick={() => { if (studyAccess.open(`test:${section}:${row.id}`)) onLaunch(row) }}
-                className={`exam-catalog-card ielts-catalog-card group relative flex min-h-[14.5rem] w-full flex-col overflow-hidden rounded-[1.75rem] border p-6 text-left shadow-[0_12px_34px_rgba(30,64,175,.07),inset_0_1px_0_white] transition-[border-color,box-shadow] duration-150 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100 ${
-                  row.available
-                    ? 'border-red-100/90 bg-[linear-gradient(145deg,rgba(255,255,255,.96),rgba(254,242,242,.62)_58%,rgba(239,246,255,.58))] hover:border-red-200 hover:shadow-[0_18px_42px_rgba(185,28,28,.1),inset_0_1px_0_white]'
-                    : 'cursor-not-allowed border-slate-200/80 bg-white/48 opacity-75'
-                }`}
+                className={`exam-catalog-card ielts-catalog-card group ${row.completed ? 'is-completed' : ''}`}
               >
                 <div className="exam-catalog-card-top">
                   <span className="exam-catalog-icon" aria-hidden="true"><HeroIcon size={21} strokeWidth={1.7} /></span>
@@ -210,12 +208,12 @@ export default function CompactIeltsCatalog({
                 </div>
                 <div className="exam-catalog-card-state">
                   {row.completed ? (
-                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-black text-emerald-700">
+                    <span className="exam-catalog-status is-completed">
                       <CheckCircle2 className="h-3.5 w-3.5" />
                       {row.band !== undefined && <strong><UiText text={"Band"} /> {row.band.toFixed(1)} ·</strong>}
                       <UiText text={"Completed"} /> </span>
                   ) : row.progressLabel ? (
-                    <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-black text-amber-700"><UiText text={row.progressLabel} /></span>
+                    <span className="exam-catalog-status is-progress"><UiText text={row.progressLabel} /></span>
                   ) : !row.available ? (
                     <Lock className="h-5 w-5 shrink-0 text-slate-400" />
                   ) : null}

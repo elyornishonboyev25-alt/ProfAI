@@ -9,7 +9,6 @@ import SATSourceContent from './SATSourceContent'
 import SATVisual from './SATVisual'
 import SATChoiceContent from './SATChoiceContent'
 import SATTextHighlights from './SATTextHighlights'
-import SATAnnotationTools from './SATAnnotationTools'
 import SATResponseDirections from './SATResponseDirections'
 import './SATQuestionCanvas.css'
 
@@ -113,14 +112,13 @@ export default function SATQuestionCanvas({
             <Bookmark className={`h-5 w-5 ${flagged ? 'fill-[#3d4fd2]' : 'fill-slate-500'}`} />
             {readOnly ? <UiText text={"Answer review"} /> : flagged ? <UiText text={"Marked for Review"} /> : <UiText text={"Mark for Review"} />}
           </button>
-          {highlightAvailable ? <SATAnnotationTools strokes={strokes} onChange={onChange} /> : null}
           {!readOnly && question.kind === 'multiple-choice' && onEliminatedChoicesChange ? <button
             type="button"
             aria-label={uiCopy("Answer eliminator")}
             title={uiCopy("Cross out answer choices")}
             aria-pressed={eliminatorOpen}
             onClick={() => setEliminatorOpen((open) => !open)}
-            className={`m-1.5 flex h-10 w-12 shrink-0 items-center justify-center rounded-xl border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 ${eliminatorOpen ? 'border-[#4053d7] bg-[#e8ecff] text-[#4053d7]' : 'border-slate-300 bg-[#f4f4f4] text-slate-600 hover:bg-white'}`}
+            className="sat-answer-eliminator"
           >
             <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="m6 16 6-13 6 13M8 12h8M4 19h16M4 22h16" />
@@ -138,13 +136,16 @@ export default function SATQuestionCanvas({
 
           {question.kind === 'multiple-choice' ? (
             <>
-            {eliminatorOpen && !readOnly ? <p className="mt-3 text-xs font-semibold text-slate-600"><UiText text={"Cross out choices you want to rule out. Use Undo to restore a choice."} /></p> : null}
-            <div className="sat-paper-choices mt-4 space-y-2" role="radiogroup" aria-label={uiCopy("Question {{value1}} answer choices", { value1: String(question.number) })}>
+            {!readOnly && onEliminatedChoicesChange ? <div className="sat-eliminator-help" data-open={eliminatorOpen} aria-hidden={!eliminatorOpen}>
+              <p><UiText text={"Cross out choices you want to rule out. Use Undo to restore a choice."} /></p>
+            </div> : null}
+            <div className="sat-paper-choices" role="radiogroup" aria-label={uiCopy("Question {{value1}} answer choices", { value1: String(question.number) })}>
               {question.choices.map((choice) => {
                 const selected = answer === choice.key
                 const eliminated = eliminatedChoices.includes(choice.key)
+                const showEliminator = eliminatorOpen || eliminated
                 return (
-                  <div key={choice.key} className="flex items-center gap-2">
+                  <div key={choice.key} className="sat-paper-choice-row">
                   <button
                     type="button"
                     role="radio"
@@ -154,7 +155,7 @@ export default function SATQuestionCanvas({
                     onClick={() => { if (!readOnly && !window.getSelection()?.toString()) onAnswer(choice.key) }}
                     data-answer-state={selected ? answerState : undefined}
                     data-eliminated={eliminated || undefined}
-                    className={`sat-paper-choice group relative flex w-full min-w-0 items-start gap-3 rounded-[0.9rem] bg-transparent px-3 py-2.5 text-left font-serif transition sm:px-4 ${eliminated ? 'opacity-50 after:pointer-events-none after:absolute after:inset-x-3 after:top-1/2 after:h-[2px] after:bg-slate-600' : ''} ${
+                    className={`sat-paper-choice group relative flex w-full min-w-0 items-start gap-3 rounded-[0.9rem] bg-transparent px-3 py-2.5 text-left font-serif transition sm:px-4 ${
                       selected
                         ? answerState === 'correct'
                           ? 'border-[3px] border-emerald-600 bg-emerald-50 text-emerald-900'
@@ -179,16 +180,21 @@ export default function SATQuestionCanvas({
                       <SATChoiceContent choice={choice} />
                     </div>
                   </button>
-                  {!readOnly && onEliminatedChoicesChange && (eliminatorOpen || eliminated) ? <button
+                  {!readOnly && onEliminatedChoicesChange ? <span className="sat-choice-eliminator-slot" data-open={showEliminator} aria-hidden={!showEliminator}>
+                  <button
                     type="button"
                     aria-label={uiCopy("{{value1}} choice {{value2}}", { value1: String(eliminated ? 'Restore' : 'Eliminate'), value2: String(choice.key) })}
                     title={eliminated ? uiCopy("Restore choice {{value1}}", { value1: String(choice.key) }) : uiCopy("Eliminate choice {{value1}}", { value1: String(choice.key) })}
                     aria-pressed={eliminated}
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-400 text-slate-700 hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600"
+                    disabled={!showEliminator}
+                    tabIndex={showEliminator ? 0 : -1}
+                    className="sat-choice-eliminator"
                     onClick={() => onEliminatedChoicesChange(eliminated ? eliminatedChoices.filter((key) => key !== choice.key) : [...eliminatedChoices, choice.key])}
                   >
-                    {eliminated ? <Undo2 className="h-5 w-5" /> : <span className="relative font-serif text-base font-bold after:absolute after:-inset-x-1 after:top-1/2 after:h-[2px] after:bg-current">{choice.key}</span>}
-                  </button> : null}
+                    <span className="sat-choice-eliminate-icon" aria-hidden="true">{choice.key}</span>
+                    <Undo2 className="sat-choice-restore-icon" aria-hidden="true" />
+                  </button>
+                  </span> : null}
                   </div>
                 )
               })}

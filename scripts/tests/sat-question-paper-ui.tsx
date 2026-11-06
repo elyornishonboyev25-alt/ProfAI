@@ -25,7 +25,6 @@ export async function run() {
   window.Range.prototype.getBoundingClientRect = () => ({ x: 0, y: 0, left: 0, top: 0, right: 0, bottom: 0, width: 0, height: 0, toJSON: () => ({}) })
   const reading = allQuestions.find(row => row.question.section === 'reading-writing' && row.question.kind === 'multiple-choice')!.question
   const numeric = allQuestions.find(row => row.question.section === 'math' && row.question.kind !== 'multiple-choice')!.question
-  let saved: HighlightStroke[] = []
   function Question({ math = false }: { math?: boolean }) {
     const [strokes, setStrokes] = useState<HighlightStroke[]>([
       { id: 'first', color: 'rgba(251,191,36,.45)', width: 0, points: [], textRange: { block: 'task', start: 0, end: 5, text: 'Which' } },
@@ -33,29 +32,20 @@ export async function run() {
     ])
     const [answer, setAnswer] = useState('')
     return <SATQuestionCanvas question={math ? numeric : reading} answer={answer} onAnswer={setAnswer}
-      strokes={strokes} onChange={next => { saved = next; setStrokes(next) }} flagged={false} onToggleFlag={() => {}} />
+      strokes={strokes} onChange={setStrokes} flagged={false} onToggleFlag={() => {}} />
   }
   try {
     await act(async () => root.render(<Question />))
-    const summary = element.querySelector<HTMLElement>('summary[aria-label="Highlights"]')!
-    assert.ok(summary, 'The highlight control is discoverable without making a selection')
-    await act(async () => summary.click())
-    assert.ok(element.querySelector('details')?.open)
-    await act(async () => element.querySelector<HTMLButtonElement>('[aria-label="Remove highlight: Which"]')!.click())
-    assert.deepEqual(saved.map(stroke => stroke.id), ['second'], 'Removing one saved highlight preserves the other')
-    const undo = [...element.querySelectorAll('button')].find(button => button.textContent === 'Undo')!
-    await act(async () => undo.click())
-    assert.deepEqual(saved, [])
-    await act(async () => document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape' })))
-    assert.equal(element.querySelector('details')?.open, false)
-    assert.equal(document.activeElement, summary, 'Escape returns focus to the highlight control')
+    assert.equal(element.querySelector('[aria-label="Highlights"]'), null, 'Reading has no Highlights toolbar control')
+    assert.ok(element.querySelector('[data-sat-highlight-block="context"]')?.textContent?.trim(), 'The passage remains readable')
+    assert.equal(element.querySelectorAll('[role="radio"]').length, reading.choices.length)
     await act(async () => root.render(<Question key="numeric" math />))
     assert.ok(element.querySelector('[aria-label="Student-produced response directions"] table'))
     assert.ok(element.querySelector('[data-sat-highlight-block="task"]')?.textContent?.trim(), 'Numeric directions do not replace the question')
     const input = element.querySelector<HTMLInputElement>('#student-response')!
     assert.ok(input.labels?.length)
     assert.equal(input.getAttribute('aria-describedby'), 'sat-response-help')
-    assert.ok(element.querySelector('summary[aria-label="Highlights"]'), 'Math supports the same highlight controls')
+    assert.equal(element.querySelector('[aria-label="Highlights"]'), null, 'Math has no Highlights toolbar control')
 
     let calls = 0
     let fail = false
@@ -124,7 +114,7 @@ export async function run() {
     assert.equal(loadSATAttempt(paper.id)?.status, 'submitted')
     assert.deepEqual(loadSATAttempt(paper.id)?.answers, attempt.answers, 'Real scoring preserves the submitted answers')
     assert.equal(document.querySelector('.sat-submission-screen'), null)
-    console.log('PASS SAT paper: visible highlight management, independent removal, keyboard focus, numeric directions, submission status, duplicate protection and save recovery')
+    console.log('PASS SAT paper: clean reading and math toolbars, readable content, numeric directions, submission status, duplicate protection and save recovery')
   } finally {
     await act(async () => root.unmount())
     window.Range.prototype.getClientRects = originalRects

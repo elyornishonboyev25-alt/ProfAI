@@ -69,6 +69,8 @@ export async function run() {
       await render(path)
       await click('Review module')
       await click('Continue to next module')
+      assert.ok(container.querySelector('.sat-module-transition'), 'Module 2 opens after the untimed transition screen')
+      await act(async () => { await new Promise(resolve => setTimeout(resolve, 1800)) })
       attempt = loadSATAttempt(test.id)!
       assert.equal(attempt.currentModuleIndex, 1)
       assert.equal(attempt.adaptiveRoutes!.rw2, correct === 18 ? 'higher' : 'lower')
@@ -111,6 +113,8 @@ export async function run() {
       saveSATAttempt(attempt)
       const path = `/sat/mock/31/run${satRunSearch(test)}`
       await render(path)
+      assert.ok(container.querySelector('.sat-module-transition'), 'Expired Math 1 opens Math 2 through the transition screen')
+      await act(async () => { await new Promise(resolve => setTimeout(resolve, 1800)) })
       const saved = loadSATAttempt(test.id)!
       assert.equal(saved.currentModuleIndex, 3)
       assert.equal(saved.adaptiveRoutes!.math2, correct === 14 ? 'higher' : 'lower')

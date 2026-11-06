@@ -13,7 +13,7 @@ import { generateAiCoachReport, isAiCoachProviderError } from '../services/aiCoa
 import { generateAiChatResponse } from '../services/aiChat.service.js'
 import { assessSpeakingText } from '../services/speakingAssessment.service.js'
 import { env } from '../config/env.js'
-import { getLearningStreakSnapshot, normalizeTimeZone } from '../services/activityStreak.service.js'
+import { getLearningStreakSnapshot, resolveLearnerTimeZone } from '../services/activityStreak.service.js'
 import {
   awardActivityXp,
   localDateKey,
@@ -278,7 +278,7 @@ const fallbackSpeakingQuestionBank: Array<{
 ]
 
 function getPastSevenLocalDays(now: Date, timeZone?: string | null) {
-  const zone = normalizeTimeZone(timeZone)
+  const zone = resolveLearnerTimeZone(timeZone)
   const [year, month, day] = localDateKey(now, zone).split('-').map(Number)
   const today = new Date(Date.UTC(year, month - 1, day, 12))
   return Array.from({ length: 7 }, (_, index) => localDateKey(addUtcDays(today, index - 6), 'UTC'))
@@ -470,7 +470,7 @@ router.get(
       getLearningStreakSnapshot(prisma, userId, user.profile?.timezone, now),
     ])
 
-    const timeZone = normalizeTimeZone(user.profile?.timezone)
+    const timeZone = resolveLearnerTimeZone(user.profile?.timezone)
     const days = getPastSevenLocalDays(now, timeZone)
     const broadWindowStart = addUtcDays(now, -8)
     const broadWindowEnd = addUtcDays(now, 1)
@@ -1419,11 +1419,14 @@ router.post(
         select: { currentStreak: true, longestStreak: true, profile: { select: { timezone: true } } },
       })
       if (!user) throw new Error('User not found while recording daily login.')
-      const timeZone = normalizeTimeZone(input.timezone ?? user.profile?.timezone)
-      if (input.timezone && timeZone === input.timezone) {
-        await tx.userProfile.updateMany({
+      const timeZone = resolveLearnerTimeZone(input.timezone ?? user.profile?.timezone)
+      // Persist the device time zone even when the learner has never saved a
+      // profile, so every later streak calculation uses the same calendar days.
+      if (input.timezone && timeZone === input.timezone && user.profile?.timezone !== timeZone) {
+        await tx.userProfile.upsert({
           where: { userId: req.user!.id },
-          data: { timezone: timeZone },
+          create: { userId: req.user!.id, timezone: timeZone },
+          update: { timezone: timeZone },
         })
       }
       const result = await awardActivityXp(tx, {
@@ -1469,7 +1472,7 @@ router.post(
         select: { currentStreak: true, longestStreak: true, profile: { select: { timezone: true } } },
       })
       if (!user) throw new Error('User not found while recording learning activity.')
-      const timeZone = normalizeTimeZone(user.profile?.timezone)
+      const timeZone = resolveLearnerTimeZone(user.profile?.timezone)
       const result = await awardActivityXp(tx, {
         userId: req.user!.id,
         source: input.source as XpRewardSource,
@@ -1544,7 +1547,7 @@ router.post(
         band: data.overallBand,
         durationSec: data.durationSec,
         earnedAt: now,
-        timeZone: user.profile?.timezone,
+        timeZone: resolveLearnerTimeZone(user.profile?.timezone),
         metadata: { mode: data.mode, modeLabel: data.modeLabel, band: data.overallBand },
       })
       const streak = await getLearningStreakSnapshot(tx, req.user!.id, user.profile?.timezone, now)

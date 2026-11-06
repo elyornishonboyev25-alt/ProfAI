@@ -25,7 +25,8 @@
     "test:auth": "npm run build && node --test scripts/auth-email.test.mjs scripts/auth-activity.test.mjs scripts/device-limit.test.mjs",
     "test:billing": "npm run build && node --test scripts/billing.test.mjs scripts/campaign-promo.test.mjs scripts/launch-gift.test.mjs scripts/voice-allowance.test.mjs",
     "test:telegram": "npm run build && node --test scripts/telegram-i18n.test.mjs",
-    "test:guest-diagnostic": "npm run build && node --test scripts/guest-diagnostic.test.mjs"
+    "test:guest-diagnostic": "npm run build && node --test scripts/guest-diagnostic.test.mjs",
+    "test:streak": "npm run build && node --test scripts/learning-streak.test.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.4.1",

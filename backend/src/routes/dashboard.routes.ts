@@ -5,7 +5,7 @@ import { requireAuth } from '../middleware/auth.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { addUtcDays } from '../utils/date.js'
 import { generateLeaderboard } from '../services/leaderboard.service.js'
-import { getLearningStreakSnapshot, normalizeTimeZone } from '../services/activityStreak.service.js'
+import { getLearningStreakSnapshot, resolveLearnerTimeZone } from '../services/activityStreak.service.js'
 import { localDateKey } from '../services/xpRewards.service.js'
 
 const router = Router()
@@ -140,7 +140,7 @@ router.get(
       },
     })
 
-    const timeZone = normalizeTimeZone(user.profile?.timezone)
+    const timeZone = resolveLearnerTimeZone(user.profile?.timezone)
     const sevenDays = buildSevenDayKeys(now, timeZone)
     const broadWindowStart = addUtcDays(now, -8)
     const broadWindowEnd = addUtcDays(now, 1)

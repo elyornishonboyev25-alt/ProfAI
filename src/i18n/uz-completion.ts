@@ -1,5 +1,10 @@
 /** Interface strings that are not in the original Uzbek catalog. */
 export const uzbekCompletion: Record<string, string> = {
+  'Moving to Module 2': '2-modulga o‘tilmoqda',
+  'Module 1': '1-modul',
+  'Module 2': '2-modul',
+  'Your answers are saved. The next module will open automatically.': 'Javoblaringiz saqlandi. Keyingi modul avtomatik ochiladi.',
+  'Your next module starts with its full time.': 'Keyingi modul uchun to‘liq vaqt beriladi.',
   'Question status filters': 'Savollar holati bo‘yicha filtrlar',
   "Back to questions": "Savollarga qaytish",
   "Select a question to review or change your answer.": "Javobni tekshirish yoki o‘zgartirish uchun savolni tanlang.",

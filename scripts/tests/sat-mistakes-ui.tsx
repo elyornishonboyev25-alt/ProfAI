@@ -221,6 +221,8 @@ export async function run({ reviewOnly = false } = {}) {
   exam.moduleDeadlines.rw1 = Date.now() - 1
   saveSATAttempt(exam)
   await render('/mock/sat/1/run', <SATMockRun />)
+  assert.ok(container.querySelector('.sat-module-transition'))
+  await act(async () => { await new Promise(resolve => setTimeout(resolve, 1800)) })
   assert.match(text(), /Section 1, Module 2/)
   assert.match(container.querySelector('button[title="Hide timer"]')!.textContent!, /32:00/)
   let stored = JSON.parse(accountStorage.getItem(`profai:sat:${runTest.id}:attempt:v1`)!)
@@ -248,6 +250,8 @@ export async function run({ reviewOnly = false } = {}) {
   await click([...container.querySelectorAll('button')].find((node) => node.textContent?.includes('Question 1 of')))
   await click(button('Finish module'))
   await click(button('Continue to next module'))
+  assert.ok(container.querySelector('.sat-module-transition'))
+  await act(async () => { await new Promise(resolve => setTimeout(resolve, 1800)) })
   assert.match(container.querySelector('button[title="Hide timer"]')!.textContent!, /00:00/)
   stored = JSON.parse(accountStorage.getItem(`profai:sat:${runTest.id}:attempt:v1`)!)
   assert.equal(stored.currentModuleIndex, 1)

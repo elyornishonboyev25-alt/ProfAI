@@ -206,6 +206,8 @@ export async function run() {
     assert.deepEqual(saved().answers, answers)
     await reviewModule()
     await click('Continue to next module')
+    assert.ok(container.querySelector('.sat-module-transition'))
+    await tick(1500)
     assert.equal(saved().currentModuleIndex, 3, 'There is no break between Math modules')
     assert.equal(saved().sectionBreak, undefined)
 

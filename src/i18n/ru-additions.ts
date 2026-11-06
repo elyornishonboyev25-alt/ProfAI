@@ -1,5 +1,10 @@
 /** Interface strings missing from the original Russian catalogs. */
 export const russianAdditions: Record<string, string> = {
+  'Moving to Module 2': 'Переход к модулю 2',
+  'Module 1': 'Модуль 1',
+  'Module 2': 'Модуль 2',
+  'Your answers are saved. The next module will open automatically.': 'Ваши ответы сохранены. Следующий модуль откроется автоматически.',
+  'Your next module starts with its full time.': 'Следующий модуль начнётся с полным запасом времени.',
   'Question status filters': 'Фильтры статуса вопросов',
   "Back to questions": "Вернуться к вопросам",
   "Select a question to review or change your answer.": "Выберите вопрос, чтобы проверить или изменить ответ.",

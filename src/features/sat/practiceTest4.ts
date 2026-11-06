@@ -97,6 +97,8 @@ export type SATAttempt = {
   timerPausedAt?: number
   /** A wall-clock break after Reading & Writing; the next module has not started. */
   sectionBreak?: { endsAt: number }
+  /** Orientation between modules; both module timers are stopped until it finishes. */
+  moduleTransition?: { endsAt: number }
 }
 
 export const SAT_TEST_TIMER_KEY = '__test__'

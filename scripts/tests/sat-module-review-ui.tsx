@@ -43,6 +43,8 @@ export async function run() {
     await act(async () => { await new Promise(resolve => setTimeout(resolve, 400)) })
     await click('Open question navigator'); await click('Finish module')
     await click('Continue to next module')
+    assert.ok(container.querySelector('.sat-module-transition'))
+    await act(async () => { await new Promise(resolve => setTimeout(resolve, 1800)) })
     assert.equal(loadSATAttempt(test.id)?.currentModuleIndex, 1)
     assert.equal(loadSATAttempt(test.id)?.currentQuestionIndex, 0)
     await act(async () => root.render(<MemoryRouter key="results"><SATReview test={test} attempt={{...attempt,status:'submitted',submittedAt:Date.now()}} /></MemoryRouter>))

@@ -42,6 +42,7 @@ import SATFormulaSheet from '@/components/sat/SATFormulaSheet'
 import SATQuestionCanvas from '@/components/sat/SATQuestionCanvas'
 import SATSubmissionScreen, { useSATSubmission } from '@/components/sat/SATSubmissionScreen'
 import SATModuleReview from '@/components/sat/SATModuleReview'
+import SATModuleTransition from '@/components/sat/SATModuleTransition'
 import SATSectionBreak from '@/components/sat/SATSectionBreak'
 import SATNotes, { SATNoteList } from '@/components/sat/SATNotes'
 import { readSATNotes } from '@/features/sat/notes'
@@ -65,6 +66,7 @@ import { useAuthStore, type AuthState } from '@/store/authStore'
 import { markXpActivitySynced, recordXpActivity } from '@/lib/xpApi'
 import { syncSATAttemptResult } from '@/features/sat/resultSync'
 import { advanceSATModule, needsSATSectionBreak } from '@/features/sat/sectionBreak'
+import { beginSATModuleTransition, completeSATModuleTransition, needsSATModuleTransition } from '@/features/sat/moduleTransition'
 
 import { finishModule, migrateModuleTiming, moduleSeconds, pauseModule, resumeModule, totalTime } from '@/features/sat/timing'
 
@@ -258,7 +260,12 @@ function SATMockRunContent() {
     }
     const startedAt = Date.now()
     persistUpdate(value => value.currentModuleIndex === current.currentModuleIndex
-      ? advanceSATModule(value, modules, startedAt, endBreakEarly) : value)
+      ? current.moduleTransition
+        ? completeSATModuleTransition(value, modules, startedAt)
+        : needsSATModuleTransition(value, modules)
+          ? beginSATModuleTransition(value, modules, startedAt)
+          : advanceSATModule(value, modules, startedAt, endBreakEarly)
+      : value)
     setNow(startedAt)
     setModuleComplete(false)
     setConfirmSubmit(false)
@@ -317,7 +324,13 @@ function SATMockRunContent() {
   useEffect(() => {
     if (
       !attempt ||
-      attempt.status !== 'active' ||
+      attempt.status !== 'active'
+    ) return
+    if (attempt.moduleTransition) {
+      if (now >= attempt.moduleTransition.endsAt) advanceModule()
+      return
+    }
+    if (
       attempt.mode !== 'exam' ||
       attempt.pausedModuleSeconds !== undefined
     ) return
@@ -334,7 +347,7 @@ function SATMockRunContent() {
   ])
 
   useEffect(() => {
-    if (!attempt || attempt.status !== 'active' || attempt.sectionBreak) return
+    if (!attempt || attempt.status !== 'active' || attempt.sectionBreak || attempt.moduleTransition) return
     const handleKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null
       if (
@@ -450,6 +463,10 @@ function SATMockRunContent() {
         </motion.section>
       </main>
     )
+  }
+
+  if (attempt.moduleTransition && modules[moduleIndex + 1]) {
+    return <SATModuleTransition previous={currentModule} next={modules[moduleIndex + 1]} />
   }
 
   if (attempt.sectionBreak) {

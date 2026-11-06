@@ -81,6 +81,7 @@ export const PRODUCT_NAVIGATION: ProductNavigationItem[] = [
     icon: ClipboardCheck,
     matches: (pathname) =>
       pathname === '/admission' ||
+      matchesPrefix(pathname, '/admission/matches') ||
       matchesPrefix(pathname, '/admission/lessons') ||
       matchesPrefix(pathname, '/admission/shortlist'),
   },

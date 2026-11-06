@@ -91,6 +91,7 @@ const SharedShadowing = lazy(() => import('@/pages/SharedShadowing'))
 const ShadowingLab = lazy(() => import('@/pages/ShadowingLab'))
 const Podcast = lazy(() => import('@/pages/Podcast'))
 const Admission = lazy(() => import('@/pages/Admission'))
+const AdmissionMatches = lazy(() => import('@/components/admission/UniversityMatcher'))
 const AdmissionLessons = lazy(() => import('@/pages/AdmissionLessons'))
 const AdmissionLesson = lazy(() => import('@/pages/AdmissionLesson'))
 const AdmissionUniversities = lazy(() => import('@/pages/AdmissionUniversities'))
@@ -797,6 +798,7 @@ function App() {
                       />
                       <Route path="/admission/lessons" element={<AnimatedRoute><AdmissionLessons /></AnimatedRoute>} />
                       <Route path="/admission/lessons/:slug" element={<AnimatedRoute><AdmissionLesson /></AnimatedRoute>} />
+                      <Route path="/admission/matches" element={<AnimatedRoute><AdmissionMatches /></AnimatedRoute>} />
                       <Route path="/admission/universities" element={<AnimatedRoute><AdmissionUniversities /></AnimatedRoute>} />
                       <Route path="/admission/shortlist" element={<AnimatedRoute><AdmissionUniversities shortlistOnly /></AnimatedRoute>} />
                       <Route path="/admission/universities/:slug" element={<AnimatedRoute><AdmissionUniversity /></AnimatedRoute>} />

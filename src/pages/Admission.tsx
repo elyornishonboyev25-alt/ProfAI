@@ -1,14 +1,12 @@
 import { useCopy } from '@/i18n/interface'
 import UiText from '@/components/common/UiText'
 import { useEffect, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { ArrowRight, BookOpen, Compass, GraduationCap, Globe2, Sparkles, Target, Trophy } from 'lucide-react'
 import { CountUp, Reveal, Stagger, StaggerItem } from '@/components/fx'
 import { getCompletedLessons, subscribeLessonProgress } from '@/utils/admissionProgressStore'
 import './admission-home.css'
 import UniversityLogo from '@/components/admission/UniversityLogo'
-import UniversityMatcher from '@/components/admission/UniversityMatcher'
-import type { MatchInput } from '@/data/admission/match'
 import LucideIcon from '@/components/admission/LucideIcon'
 import {
   getUniversities,
@@ -25,12 +23,6 @@ import {
 export default function Admission() {
   const { c: uiCopy } = useCopy()
   const navigate = useNavigate()
-  const location = useLocation()
-  const [resumeMatcherInput, setResumeMatcherInput] = useState<MatchInput | null>(
-    () => (location.state as { matcherInput?: MatchInput } | null)?.matcherInput ?? null,
-  )
-  const [resumeMatcherPosition, setResumeMatcherPosition] = useState(() => location.state as { matcherVisibleCount?: number; matcherScrollTop?: number } | null)
-  const [matcherOpen, setMatcherOpen] = useState(Boolean(resumeMatcherInput))
   const [completed, setCompleted] = useState(() => getCompletedLessons())
   const universities = getUniversities()
   const topFour = universities.slice(0, 4)
@@ -43,20 +35,8 @@ export default function Admission() {
 
   useEffect(() => subscribeLessonProgress(() => setCompleted(getCompletedLessons())), [])
 
-  const closeMatcher = () => {
-    setMatcherOpen(false)
-    setResumeMatcherInput(null)
-    setResumeMatcherPosition(null)
-    if ((location.state as { matcherInput?: MatchInput } | null)?.matcherInput) {
-      navigate(location.pathname, { replace: true, state: null })
-    }
-  }
-
   return (
     <main className="workspace-page admission-home relative min-h-screen overflow-x-clip px-4 pb-16 pt-6 sm:px-6 lg:px-8">
-      <UniversityMatcher open={matcherOpen} onClose={closeMatcher} resumeInput={resumeMatcherInput}
-        resumeVisibleCount={resumeMatcherPosition?.matcherVisibleCount} resumeScrollTop={resumeMatcherPosition?.matcherScrollTop} />
-
       <div className="relative z-10 mx-auto w-full max-w-[78rem] space-y-6">
         <header className="admission-home-heading">
           <span className="admission-home-kicker"><Sparkles className="h-3.5 w-3.5" /> <UiText text={"University journey"} /></span>
@@ -184,21 +164,22 @@ export default function Admission() {
         {/* ----------------------- Find-my-university banner ----------------------- */}
         <Reveal delay={0.03}>
           <button
-            onClick={() => { setResumeMatcherInput(null); setResumeMatcherPosition(null); setMatcherOpen(true) }}
-            className="admission-home-match group relative flex w-full items-center gap-4 overflow-hidden rounded-[1.6rem] p-6 text-left"
+            onClick={() => navigate('/admission/matches')}
+            className="admission-home-match group"
             type="button"
           >
-            <span className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-white backdrop-blur-sm">
+            <span className="admission-match-icon">
               <Target className="h-7 w-7" />
             </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-lg font-black text-white"><UiText text={"Explore university matches"} /></p>
-              <p className="mt-0.5 text-sm font-medium text-blue-50/90">
-                <UiText text={"Compare the current catalog using your SAT, IELTS, GPA and study preferences as planning signals."} />
+            <div className="admission-match-copy">
+              <p><UiText text={"Explore university matches"} /></p>
+              <p>
+                <UiText text="Find your direction with your scores, goals and study preferences." />
               </p>
+              <span className="admission-match-signals">SAT <span>/</span> IELTS <span>/</span> GPA <span>/</span> <UiText text="Study goals" /></span>
             </div>
-            <span className="hidden shrink-0 items-center gap-1 rounded-xl bg-white px-4 py-2.5 text-sm font-black text-blue-700 transition group-hover:gap-2 sm:inline-flex">
-               <UiText text={"Start"} /> <ArrowRight className="h-4 w-4" />
+            <span className="admission-match-start">
+               <UiText text="Find my matches" /> <ArrowRight className="h-4 w-4" />
             </span>
           </button>
         </Reveal>

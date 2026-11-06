@@ -31,6 +31,7 @@ import { useAdmissionScores } from '@/hooks/useAdmissionScores'
 import { useUniversityCampusImage } from '@/hooks/useUniversityCampusImage'
 import { useUniversityShortlist } from '@/hooks/useUniversityShortlist'
 import { useToastStore, type ToastState } from '@/store/toastStore'
+import './admission-university.css'
 
 function money(value: number, currency = 'USD') {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(value)
@@ -93,6 +94,7 @@ export default function AdmissionUniversity() {
   } | null
   const admissionReturnTo = returnState?.admissionReturnTo === '/admission/shortlist'
     ? '/admission/shortlist'
+    : returnState?.admissionReturnTo === '/admission/matches' ? '/admission/matches?view=results'
     : returnState?.admissionReturnTo === '/admission' ? '/admission' : '/admission/universities'
 
   if (!university) {
@@ -140,14 +142,14 @@ export default function AdmissionUniversity() {
   ]
 
   return (
-    <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
+    <div className="workspace-page admission-university-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
       <AmbientBackdrop variant="red" />
 
       <div className="relative mx-auto w-full max-w-5xl space-y-6">
         {/* ----------------------------- Hero ----------------------------- */}
         <Reveal>
           <section
-            className="relative overflow-hidden rounded-[2rem] border border-white/10 p-6 text-white shadow-[0_30px_70px_rgba(15,23,42,0.28)] sm:p-9"
+            className="admission-university-hero relative overflow-hidden rounded-[2rem] border border-white/10 p-6 text-white shadow-[0_30px_70px_rgba(15,23,42,0.28)] sm:p-9"
             style={{ background: u.brand.gradient }}
           >
             <CampusHeroMedia name={u.name} image={campusImage} />
@@ -172,7 +174,7 @@ export default function AdmissionUniversity() {
                   className="route-back-button"
                 >
                   <ArrowLeft className="h-3.5 w-3.5" />
-                  {admissionReturnTo === '/admission/shortlist' ? <UiText text={"Back to Shortlist"} /> : admissionReturnTo === '/admission' ? <UiText text={"Back to Matches"} /> : <UiText text={"Back to Universities"} />}
+                  {admissionReturnTo === '/admission/shortlist' ? <UiText text={"Back to Shortlist"} /> : admissionReturnTo.startsWith('/admission/matches') || admissionReturnTo === '/admission' ? <UiText text={"Back to Matches"} /> : <UiText text={"Back to Universities"} />}
                 </button>
                 <button
                   type="button"

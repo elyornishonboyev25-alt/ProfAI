@@ -1,0 +1,26 @@
+.admission-university-page {
+  --profile-glass: linear-gradient(132deg,rgba(255,255,255,.82),rgba(238,240,244,.66) 48%,rgba(204,210,220,.48));
+}
+.admission-university-page section:not(.admission-university-hero) {
+  border-color: rgba(255,255,255,.92);
+  background: var(--profile-glass);
+  box-shadow: 0 14px 36px rgba(39,46,60,.08),inset 0 1px 0 #fff,inset 0 -1px 0 rgba(110,121,139,.12);
+  backdrop-filter: blur(18px) saturate(120%);
+  -webkit-backdrop-filter: blur(18px) saturate(120%);
+}
+.admission-university-page .admission-university-hero {
+  border-color: rgba(255,255,255,.9);
+  box-shadow: 0 20px 50px rgba(39,46,60,.17),inset 0 1px 0 rgba(255,255,255,.6);
+}
+.admission-university-page section:not(.admission-university-hero) :is(.bg-slate-50\/70,.bg-slate-50) {
+  border-color: rgba(255,255,255,.8);
+  background: linear-gradient(135deg,rgba(255,255,255,.7),rgba(225,230,237,.54));
+  box-shadow: inset 0 1px 0 #fff;
+}
+.admission-university-page :is(button,a):focus-visible { outline: 3px solid #c9243b; outline-offset: 4px; }
+.admission-university-page .admission-university-hero h1 { letter-spacing: -.045em; }
+.admission-university-page section h2 { letter-spacing: -.035em; }
+@media (max-width: 520px) {
+  .admission-university-page .admission-university-hero { border-radius: 24px; }
+  .admission-university-page .admission-university-hero h1 { font-size: 27px; overflow-wrap: anywhere; }
+}

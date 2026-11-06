@@ -1,4 +1,98 @@
 {
+  "All matches": { "uz": "Barcha natijalar", "ru": "Все результаты" },
+  "Check the university’s SAT policy for your entry route.": { "uz": "O‘zingiz tanlagan qabul yo‘li uchun SAT talabini tekshiring.", "ru": "Проверьте требования SAT для вашего способа поступления." },
+  "Check the IELTS requirement for your exact programme.": { "uz": "Tanlagan dasturingizning IELTS talabini tekshiring.", "ru": "Проверьте требования IELTS для конкретной программы." },
+  "Check programme requirements to compare your scores.": { "uz": "Ballaringizni solishtirish uchun dastur talablarini tekshiring.", "ru": "Проверьте требования программы, чтобы сравнить свои баллы." },
+  "Graduate requirements vary by programme.": { "uz": "Magistratura va PhD talablari dasturga qarab farqlanadi.", "ru": "Требования магистратуры и аспирантуры зависят от программы." },
+  "{{test}} {{score}} meets the published {{benchmark}} benchmark.": { "uz": "{{test}} {{score}} natijangiz e’lon qilingan {{benchmark}} mezoniga mos keladi.", "ru": "Ваш балл {{test}} {{score}} соответствует опубликованному ориентиру {{benchmark}}." },
+  "{{test}} {{score}} is near the published {{benchmark}} benchmark.": { "uz": "{{test}} {{score}} natijangiz e’lon qilingan {{benchmark}} mezoniga yaqin.", "ru": "Ваш балл {{test}} {{score}} близок к опубликованному ориентиру {{benchmark}}." },
+  "{{test}} {{score}} is below the published {{benchmark}} benchmark.": { "uz": "{{test}} {{score}} natijangiz e’lon qilingan {{benchmark}} mezonidan past.", "ru": "Ваш балл {{test}} {{score}} ниже опубликованного ориентира {{benchmark}}." },
+  "{{subject}} is listed for undergraduate study. Check the entry route.": { "uz": "{{subject}} bakalavriat ro‘yxatida bor. Qabul tartibini tekshiring.", "ru": "{{subject}} есть в списке программ бакалавриата. Проверьте порядок поступления." },
+  "{{subject}} appears in the university overview. Confirm the exact degree.": { "uz": "{{subject}} universitet tavsifida keltirilgan. Aniq dasturni tekshiring.", "ru": "{{subject}} упоминается в описании университета. Уточните конкретную программу." },
+  "Confirm that {{subject}} is offered for your degree.": { "uz": "{{subject}} siz tanlagan ta’lim bosqichida borligini tekshiring.", "ru": "Уточните, доступна ли специальность {{subject}} на вашем уровне обучения." },
+  "In your preferred country: {{country}}.": { "uz": "Siz tanlagan mamlakatda: {{country}}.", "ru": "В выбранной вами стране: {{country}}." },
+  "Published living cost: about ${{amount}} per year, within your budget.": { "uz": "E’lon qilingan yashash xarajati yiliga taxminan ${{amount}}, budjetingizga mos.", "ru": "Опубликованные расходы на проживание: около ${{amount}} в год, в пределах бюджета." },
+  "Published living cost: about ${{amount}} per year, above your budget.": { "uz": "E’lon qilingan yashash xarajati yiliga taxminan ${{amount}}, budjetingizdan yuqori.", "ru": "Опубликованные расходы на проживание: около ${{amount}} в год, выше вашего бюджета." },
+  "University navigation": {
+    "uz": "Universitet bo‘limlari",
+    "ru": "Навигация по университетам"
+  },
+  "Your university matches": {
+    "uz": "Sizga mos universitetlar",
+    "ru": "Подходящие вам университеты"
+  },
+  "Find your university.": {
+    "uz": "O‘zingizga mos universitetni toping.",
+    "ru": "Найдите свой университет."
+  },
+  "A starting point for your next chapter. Explore, compare and save your favourites.": {
+    "uz": "Kelajak rejangiz uchun boshlang‘ich nuqta. O‘rganing, solishtiring va yoqqanlarini saqlang.",
+    "ru": "Начало вашего следующего этапа. Изучайте, сравнивайте и сохраняйте избранное."
+  },
+  "Your goals, your scores, your next chapter. Let’s find a place for you.": {
+    "uz": "Maqsadlaringiz va natijalaringiz asosida sizga mos universitetlarni topamiz.",
+    "ru": "Ваши цели, ваши баллы, ваше будущее. Найдём подходящие вам университеты."
+  },
+  "A plan that fits you": {
+    "uz": "Sizga mos reja",
+    "ru": "План под ваши цели"
+  },
+  "Three simple steps. A world of possibilities.": {
+    "uz": "Uchta oddiy qadam. Keng imkoniyatlar.",
+    "ru": "Три простых шага. Мир возможностей."
+  },
+  "Explore at your pace. You can leave any score blank and update it later.": {
+    "uz": "O‘zingizga qulay tarzda izlang. Ballarni bo‘sh qoldirib, keyinroq kiritishingiz mumkin.",
+    "ru": "Изучайте в своём темпе. Баллы можно оставить пустыми и добавить позже."
+  },
+  "Step {{value1}} of {{value2}}": {
+    "uz": "{{value2}} qadamdan {{value1}}-qadam",
+    "ru": "Шаг {{value1}} из {{value2}}"
+  },
+  "Where do you want to go?": {
+    "uz": "Qaysi yo‘nalishda o‘qimoqchisiz?",
+    "ru": "Где вы хотите учиться?"
+  },
+  "Any subject": {
+    "uz": "Barcha yo‘nalishlar",
+    "ru": "Любая специальность"
+  },
+  "Living budget excludes tuition. Costs are compared only where a yearly USD figure is available.": {
+    "uz": "Yashash budjetiga kontrakt to‘lovi kirmaydi. Xarajatlar faqat yillik USD miqdori mavjud bo‘lganda solishtiriladi.",
+    "ru": "Бюджет на проживание не включает обучение. Сравниваются только опубликованные годовые расходы в USD."
+  },
+  "Your preferences help order the catalog. Check each university’s exact programme before applying.": {
+    "uz": "Istaklaringiz asosida katalog tartiblanadi. Ariza topshirishdan oldin universitetning aniq dasturini tekshiring.",
+    "ru": "Ваши предпочтения определяют порядок каталога. Перед подачей проверьте конкретную программу университета."
+  },
+  "Your preferences": {
+    "uz": "Sizning tanlovlaringiz",
+    "ru": "Ваши предпочтения"
+  },
+  "living budget per year": {
+    "uz": "yillik yashash budjeti",
+    "ru": "на проживание в год"
+  },
+  "Filter matches": {
+    "uz": "Natijalarni saralash",
+    "ru": "Фильтры результатов"
+  },
+  "Try a different search or reset your filters.": {
+    "uz": "Boshqa so‘z bilan qidiring yoki filtrlarni tozalang.",
+    "ru": "Измените запрос или сбросьте фильтры."
+  },
+  "Your next chapter starts with a little exploration.": {
+    "uz": "Kelajak sari ilk qadam — imkoniyatlarni o‘rganish.",
+    "ru": "Новый этап начинается с небольшого поиска."
+  },
+  "Find your direction with your scores, goals and study preferences.": {
+    "uz": "Ballaringiz, maqsadlaringiz va istaklaringizga mos universitetlarni toping.",
+    "ru": "Подберите университеты по вашим баллам, целям и предпочтениям."
+  },
+  "Find my matches": {
+    "uz": "Mos universitetlarni topish",
+    "ru": "Найти университеты"
+  },
   "Medal": {
     "uz": "Medal",
     "ru": "Медаль"

@@ -16,7 +16,7 @@ import { SATDiscussion, SATLeaderboard, type StandingState } from './SATResultSo
 import SATQuestionModal from './SATQuestionModal'
 import './SATReview.css'
 import './SATResultsPro.css'
-import { useCallback, useEffect, useId, useMemo, useState } from 'react'
+import { useCallback, useEffect, useId, useMemo, useState, type CSSProperties, type KeyboardEvent } from 'react'
 import {
   ArrowDownToLine,
   ArrowLeft,
@@ -30,7 +30,6 @@ import {
   Clock3,
   Flag,
   GraduationCap,
-  ChevronDown,
   Layers3,
   MessageSquareText,
   RotateCcw,
@@ -91,7 +90,7 @@ function ScoreRing({ score, percent, label }: { score: number | null; percent: n
         <circle className="sr-ring-track" cx="100" cy="100" r="84" />
         <circle
           className="sr-ring-value"
-          style={{ stroke: `url(#${gradientId})` }}
+          style={{ stroke: `url(#${gradientId})`, '--sr-ring-offset': 100 - progress } as CSSProperties}
           cx="100"
           cy="100"
           r="84"
@@ -248,6 +247,19 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
     const index = filteredQuestions.findIndex((q) => q.id === id)
     if (index >= 0) setModal({ questions: filteredQuestions, index })
   }
+  const handleTabKeys = (event: KeyboardEvent<HTMLDivElement>) => {
+    const index = tabs.findIndex(item => item.id === tab)
+    const next = event.key === 'ArrowRight' ? (index + 1) % tabs.length
+      : event.key === 'ArrowLeft' ? (index + tabs.length - 1) % tabs.length
+        : event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : null
+    if (next === null) return
+    event.preventDefault()
+    activateTab(tabs[next].id)
+    const button = document.getElementById(`sat-result-tab-${tabs[next].id}`)
+    button?.focus({ preventScroll: true })
+    button?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+  }
+
   useEffect(() => {
     if (bank || historyReview || !submitted || !complete || score === null) return
     if (onlySection) {
@@ -337,9 +349,19 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
             <UiText text={"Your browser blocked the report tab. Allow pop-ups for Ivygoo, then select Download Report again."} />
           </p>
         )}
-        {(
+        <div className="srx-tabs-wrap">
+          <div className="srx-tabs" role="tablist" aria-label={uiCopy("SAT result analysis")} onKeyDown={handleTabKeys}>
+            {tabs.map(({ id, label, icon: Icon }) => <button key={id} id={`sat-result-tab-${id}`} type="button" role="tab"
+              aria-selected={tab === id} aria-controls={`sat-result-panel-${id}`} tabIndex={tab === id ? 0 : -1} onClick={() => activateTab(id)}>
+              <Icon size={16} /><span><UiText text={label} /></span>
+            </button>)}
+          </div>
+        </div>
+
+        {tab === 'scores' && (
           <section
-            aria-label={uiCopy("Scores")}
+            role="tabpanel"
+            aria-labelledby="sat-result-tab-scores"
             id="sat-result-panel-scores"
             tabIndex={0}
             className="sr-panel"
@@ -423,12 +445,9 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
           </section>
         )}
 
-        {tabs.some(item => item.id === 'performance') && <button type="button" className="srx-disclosure" id="sat-result-tab-performance" aria-expanded={tab === 'performance'} aria-controls="sat-result-panel-performance" onClick={() => activateTab(tab === 'performance' ? 'scores' : 'performance')}>
-          <BarChart3 size={18} /><span><UiText text="Performance" /></span><ChevronDown size={18} />
-        </button>}
         {tab === 'performance' && (
           <section
-            role="region"
+            role="tabpanel"
             id="sat-result-panel-performance"
             aria-labelledby="sat-result-tab-performance"
             tabIndex={0}
@@ -600,12 +619,9 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
           </section>
         )}
 
-        {tabs.some(item => item.id === 'domains') && <button type="button" className="srx-disclosure" id="sat-result-tab-domains" aria-expanded={tab === 'domains'} aria-controls="sat-result-panel-domains" onClick={() => activateTab(tab === 'domains' ? 'scores' : 'domains')}>
-          <Layers3 size={18} /><span><UiText text="Domains" /></span><ChevronDown size={18} />
-        </button>}
         {tab === 'domains' && (
           <section
-            role="region"
+            role="tabpanel"
             id="sat-result-panel-domains"
             aria-labelledby="sat-result-tab-domains"
             tabIndex={0}
@@ -678,12 +694,9 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
           </section>
         )}
 
-        {tabs.some(item => item.id === 'questions') && <button type="button" className="srx-disclosure" id="sat-result-tab-questions" aria-expanded={tab === 'questions'} aria-controls="sat-result-panel-questions" onClick={() => activateTab(tab === 'questions' ? 'scores' : 'questions')}>
-          <BookOpenCheck size={18} /><span><UiText text="Question Review" /></span><ChevronDown size={18} />
-        </button>}
         {tab === 'questions' && (
           <section
-            role="region"
+            role="tabpanel"
             id="sat-result-panel-questions"
             aria-labelledby="sat-result-tab-questions"
             tabIndex={0}
@@ -802,12 +815,9 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
             )}
           </section>
         )}
-        {tabs.some(item => item.id === 'leaderboard') && <button type="button" className="srx-disclosure" id="sat-result-tab-leaderboard" aria-expanded={tab === 'leaderboard'} aria-controls="sat-result-panel-leaderboard" onClick={() => activateTab(tab === 'leaderboard' ? 'scores' : 'leaderboard')}>
-          <Trophy size={18} /><span><UiText text="Leaderboard" /></span><ChevronDown size={18} />
-        </button>}
         {tab === 'leaderboard' && (
           <section
-            role="region"
+            role="tabpanel"
             id="sat-result-panel-leaderboard"
             aria-labelledby="sat-result-tab-leaderboard"
             tabIndex={0}
@@ -828,12 +838,9 @@ export default function SATReview({ attempt, test: paper, onStartAgain, onBack, 
           </section>
         )}
 
-        {tabs.some(item => item.id === 'discussion') && <button type="button" className="srx-disclosure" id="sat-result-tab-discussion" aria-expanded={tab === 'discussion'} aria-controls="sat-result-panel-discussion" onClick={() => activateTab(tab === 'discussion' ? 'scores' : 'discussion')}>
-          <MessageSquareText size={18} /><span><UiText text="Discussion" /></span><ChevronDown size={18} />
-        </button>}
         {tab === 'discussion' && (
           <section
-            role="region"
+            role="tabpanel"
             id="sat-result-panel-discussion"
             aria-labelledby="sat-result-tab-discussion"
             tabIndex={0}

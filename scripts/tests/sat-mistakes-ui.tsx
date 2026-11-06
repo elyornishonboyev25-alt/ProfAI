@@ -171,6 +171,7 @@ export async function run({ reviewOnly = false } = {}) {
   await click(container.querySelector('#sat-result-tab-questions'))
   const range = scoreSATModules(section.modules, sectionAttempt.answers).mathRange.join('–')
   assert.equal(container.querySelectorAll('.srx-row-correct').length, 20)
+  await click(container.querySelector('#sat-result-tab-scores'))
   assert.equal(container.querySelector('.srx-total-range b')!.textContent, range)
 
   const oldMath = getSATSectionTest(1, 'math')

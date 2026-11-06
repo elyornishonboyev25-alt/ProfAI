@@ -10,6 +10,7 @@ import { isSATLeaderboardEligible, minimumSATLeaderboardSeconds } from '@/featur
 import { useAuthStore } from '@/store/authStore'
 import { apiClient } from '@/lib/apiClient'
 import i18n from '@/i18n'
+import SATResultReview from '@/pages/SATResultReview'
 
 export async function run() {
   localStorage.clear(); window.sessionStorage.clear(); await i18n.changeLanguage('en')
@@ -29,21 +30,17 @@ export async function run() {
   apiClient.post = (async (path:string, body:unknown) => { requests.push({ path, body }); return {} }) as typeof post
   const element = document.getElementById('root')!
   let root = createRoot(element)
-  const render = async () => act(async () => root.render(<MemoryRouter initialEntries={[{ pathname:'/sat/mock/3/run', state:{ resumeIntent:true } }]}><Routes><Route path="/sat/mock/:mockId/run" element={<SATMockRun />} /></Routes></MemoryRouter>))
+  const render = async () => act(async () => root.render(<MemoryRouter initialEntries={[{ pathname:'/sat/mock/3/run', state:{ resumeIntent:true } }]}><Routes><Route path="/sat/mock/:mockId/run" element={<SATMockRun />} /><Route path="/sat/results/:attemptId" element={<SATResultReview />} /></Routes></MemoryRouter>))
   try {
     await render()
-    assert.ok(document.querySelector('[role=alertdialog]')?.textContent?.includes('will not count toward the leaderboard'))
-    const confirm = [...document.querySelectorAll<HTMLButtonElement>('button')].find(button => button.textContent?.includes('OK, view results'))!
-    assert.ok(confirm)
-    await act(async () => confirm.click())
-    assert.equal(document.querySelector('[role=alertdialog]'), null)
-    assert.equal(loadSATAttempt(paper.id)?.eligibilityNoticeAcknowledged, true)
+    assert.equal(document.querySelector('[role=alertdialog]'), null, 'Fast attempts go straight to results')
+    assert.ok(document.querySelector('.srx-score-stage'), 'Scores open on the dedicated result route')
     assert.equal(loadSATAttempt(paper.id)?.leaderboardEligible, false)
     assert.ok(requests.some(request => (request.body as { breakdown?: { leaderboardEligible?: boolean } })?.breakdown?.leaderboardEligible === false), 'The score still syncs with its ranking exclusion')
     assert.equal(requests.some(request => request.path.includes('/xp/')), false, 'Fast submissions cannot add leaderboard XP')
     await act(async () => root.unmount()); root = createRoot(element)
     await render()
-    assert.equal(document.querySelector('[role=alertdialog]'), null, 'Acknowledgement survives refresh')
-    console.log('PASS: SAT fast-submit notice precedes the result, keeps the score, excludes ranking/XP and survives reload')
+    assert.equal(document.querySelector('[role=alertdialog]'), null, 'Reload goes straight to results again')
+    console.log('PASS: SAT submission opens results directly, keeps the score, excludes fast attempts from ranking/XP and survives reload')
   } finally { await act(async () => root.unmount()); apiClient.get = get; apiClient.post = post }
 }

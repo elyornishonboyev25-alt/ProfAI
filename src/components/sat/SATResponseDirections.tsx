@@ -21,9 +21,9 @@ export default function SATResponseDirections() {
         <caption className="sr-only">Examples of acceptable and unacceptable answer formats</caption>
         <thead><tr><th scope="col">Answer</th><th scope="col">Acceptable ways to enter answer</th><th scope="col">Unacceptable</th></tr></thead>
         <tbody>
-          <tr><th scope="row">3.5</th><td>3.5<br />3.50<br />7/2</td><td>3½<br />3 1/2</td></tr>
-          <tr><th scope="row">2/3</th><td>2/3<br />.6666<br />.6667<br />0.6666<br />0.6667</td><td>0.66<br />.66<br />0.67<br />.67</td></tr>
-          <tr><th scope="row">−1/3</th><td>-1/3<br />-.3333<br />-0.3333</td><td>-.33<br />-0.33</td></tr>
+          <tr><th scope="row">3.5</th><td>3.5, 3.50, 7/2</td><td>3½<br />3 1/2</td></tr>
+          <tr><th scope="row">2/3</th><td>2/3, .6666, .6667, 0.6666, 0.6667</td><td>0.66, .66, 0.67, .67</td></tr>
+          <tr><th scope="row">−1/3</th><td>-1/3, -.3333, -0.3333</td><td>-.33, -0.33</td></tr>
         </tbody>
       </table>
     </div>

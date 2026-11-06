@@ -1,6 +1,5 @@
 import { useCopy } from '@/i18n/interface'
-import LeaderboardEligibilityNotice from '@/components/common/LeaderboardEligibilityNotice'
-import { isSATLeaderboardEligible, minimumSATLeaderboardSeconds } from '@/features/sat/leaderboardEligibility'
+import { isSATLeaderboardEligible } from '@/features/sat/leaderboardEligibility'
 import AttemptEntryBoundary from '@/components/tests/AttemptEntryBoundary'
 import ConfirmDialog from '@/components/common/ConfirmDialog'
 import { testReturnPath } from '@/utils/testNavigation'
@@ -25,7 +24,6 @@ import {
   Flag,
   FileText,
   Lightbulb,
-  ListChecks,
   NotebookPen,
   Save,
   ShieldAlert,
@@ -38,12 +36,12 @@ import {
   ZoomIn,
   ZoomOut,
 } from 'lucide-react'
-import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import DesmosDrawer from '@/components/sat/DesmosDrawer'
 import SATFormulaSheet from '@/components/sat/SATFormulaSheet'
 import SATQuestionCanvas from '@/components/sat/SATQuestionCanvas'
 import SATSubmissionScreen, { useSATSubmission } from '@/components/sat/SATSubmissionScreen'
-import SATReview from '@/components/sat/SATReview'
+import SATModuleReview from '@/components/sat/SATModuleReview'
 import SATSectionBreak from '@/components/sat/SATSectionBreak'
 import SATNotes, { SATNoteList } from '@/components/sat/SATNotes'
 import { readSATNotes } from '@/features/sat/notes'
@@ -56,7 +54,6 @@ import {
   type SATAttempt,
 } from '@/features/sat/practiceTest4'
 import {
-  clearSATAttempt,
   loadSATAttempt,
   saveSATAttempt,
   saveSATAttemptToHistory,
@@ -67,7 +64,6 @@ import { useFullscreen } from '@/hooks/useFullscreen'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { markXpActivitySynced, recordXpActivity } from '@/lib/xpApi'
 import { syncSATAttemptResult } from '@/features/sat/resultSync'
-import { saveSATBaseline } from '@/features/sat/baseline'
 import { advanceSATModule, needsSATSectionBreak } from '@/features/sat/sectionBreak'
 
 import { finishModule, migrateModuleTiming, moduleSeconds, pauseModule, resumeModule, totalTime } from '@/features/sat/timing'
@@ -132,8 +128,6 @@ function SATMockRunContent() {
   const [moduleComplete, setModuleComplete] = useState(false)
   const [confirmSubmit, setConfirmSubmit] = useState(false)
   const submission = useSATSubmission()
-  const [baselineStatus, setBaselineStatus] = useState<'saving' | 'saved' | 'error'>('saving')
-  const [baselineRetry, setBaselineRetry] = useState(0)
   const [checkedQuestions, setCheckedQuestions] = useState<string[]>(sameAttempt ? savedUi.checkedQuestions ?? [] : [])
   const [exitConfirmOpen, setExitConfirmOpen] = useState(false)
   const attemptRef = useRef<SATAttempt | null>(attempt)
@@ -174,18 +168,6 @@ function SATMockRunContent() {
   }, [])
 
   attemptRef.current = attempt
-
-  useEffect(() => {
-    if (!diagnostic || !user || attempt?.status !== 'submitted') return
-    let cancelled = false
-    setBaselineStatus('saving')
-    void saveSATBaseline(user.id, test, attempt).then(() => {
-      if (!cancelled) setBaselineStatus('saved')
-    }).catch(() => {
-      if (!cancelled) setBaselineStatus('error')
-    })
-    return () => { cancelled = true }
-  }, [diagnostic, user?.id, test, attempt, baselineRetry])
 
   useEffect(() => {
     if (!user || !attempt || attempt.status !== 'submitted' || !attempt.submittedAt) return
@@ -362,7 +344,7 @@ function SATMockRunContent() {
         calculatorOpen ||
         notesOpen ||
         navigatorOpen ||
-        exitConfirmOpen
+        exitConfirmOpen || moduleComplete || confirmSubmit || directionsOpen
       ) {
         return
       }
@@ -406,7 +388,7 @@ function SATMockRunContent() {
     openNotes,
     persistUpdate,
     questionIndex,
-    exitConfirmOpen,
+    exitConfirmOpen, moduleComplete, confirmSubmit, directionsOpen,
   ])
 
   if (!attempt) {
@@ -438,26 +420,7 @@ function SATMockRunContent() {
   )
 
   if (attempt.status === 'submitted') {
-    if (!isSATLeaderboardEligible(attempt, modules) && !attempt.eligibilityNoticeAcknowledged) return <main className="exam-flow attempt-entry"><LeaderboardEligibilityNotice seconds={Math.round(totalTime(attempt, modules))} minimumSeconds={minimumSATLeaderboardSeconds(modules)} onContinue={() => persistUpdate(current => ({ ...current, eligibilityNoticeAcknowledged: true, leaderboardEligible: false }))} /></main>
-    return (
-      <>
-      {diagnostic && user && <div role={baselineStatus === 'error' ? 'alert' : 'status'} className="mx-auto mt-4 max-w-6xl rounded-2xl border border-blue-100 bg-blue-50 px-5 py-4 text-sm text-slate-700">
-        <UiText text={baselineStatus === 'saving' ? 'Saving your starting SAT score...' : baselineStatus === 'saved' ? 'Your starting SAT score is saved. Review your mistakes below, then practise the skills you missed.' : 'Your mock is saved, but your profile score could not sync. Please retry.'} />
-        {baselineStatus === 'error' && <button type="button" onClick={() => setBaselineRetry(value => value + 1)} className="ml-3 font-bold text-blue-700"><UiText text="Try again" /></button>}
-        <button type="button" onClick={() => navigate('/sat/question-bank?status=incorrect')} className="ml-3 font-bold text-blue-700"><UiText text="Practise my mistakes" /></button>
-      </div>}
-      <SATReview
-        attempt={attempt}
-        test={test}
-        onBack={() => navigate(backPath)}
-        backLabel={backPath === '/sat/mocks' ? 'Full mocks' : backPath.includes('in-process') ? 'In process' : section ? 'Section tests' : 'SAT Prep'}
-        onStartAgain={() => {
-          clearSATAttempt(test.id)
-          navigate(`/mock/sat/${test.mockId}${sectionQuery}`)
-        }}
-      />
-      </>
-    )
+    return <Navigate replace to={`/sat/results/${encodeURIComponent(attempt.attemptId)}`} state={{ returnTo: backPath, justCompleted: true, diagnostic }} />
   }
 
   if (attempt.status === 'terminated') {
@@ -525,8 +488,16 @@ function SATMockRunContent() {
   const sectionTitle = currentModule.section === 'reading-writing' ? 'Reading and Writing' : 'Math'
   const learnerName = user?.fullName || 'Ivygoo Student'
 
+  if (moduleComplete || confirmSubmit) return <SATModuleReview
+    module={currentModule} attempt={attempt} time={formatTime(testSeconds)} final={confirmSubmit}
+    continueLabel={confirmSubmit ? 'Submit & score' : needsSATSectionBreak(attempt, modules) ? 'Start 10-minute break' : 'Continue to next module'}
+    onBack={() => { setModuleComplete(false); setConfirmSubmit(false) }}
+    onQuestion={index => { setModuleComplete(false); setConfirmSubmit(false); goToQuestion(index) }}
+    onContinue={confirmSubmit ? submitAttempt : () => advanceModule()}
+  />
+
   return (
-    <main className="flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-[#f7f8fa] text-[#151515]">
+    <main className="sat-exam-run flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-[#f7f8fa] text-[#151515]">
       <header className="relative z-[80] shrink-0 border-b border-slate-200 bg-white">
         <div className="relative mx-auto grid max-w-[112rem] grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 px-4 py-3 sm:px-6 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:px-8">
           <div className="min-w-0 font-serif">
@@ -648,7 +619,7 @@ function SATMockRunContent() {
       <div className="sat-exam-workspace">
       <div ref={questionViewportRef} className={`sat-exam-viewport min-h-0 flex-1 overflow-y-auto overflow-x-hidden transition-[padding] duration-300 ${calculatorOpen && calculatorDocked ? 'lg:pr-[50vw]' : ''}`}>
         <div
-          className="origin-top-left"
+          className="sat-exam-paper-wrap origin-top-left"
           style={{ zoom } as CSSProperties}
         >
         <SATQuestionCanvas
@@ -875,64 +846,6 @@ function SATMockRunContent() {
               <SATNotes key={currentQuestion.id} value={attempt.notes[currentQuestion.id]} onChange={notes => {
                 persistUpdate(current => ({ ...current, notes: { ...current.notes, [currentQuestion.id]: notes } }))
               }} />
-            </motion.section>
-          </motion.div>
-        ) : null}
-
-        {moduleComplete || confirmSubmit ? (
-          <motion.div
-            key="module-submission"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-950/45 p-3 backdrop-blur-md"
-          >
-            <motion.section
-              initial={{ scale: 0.95, y: 16 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 16 }}
-              className="w-full max-w-xl rounded-2xl border border-slate-300 bg-white p-6 shadow-2xl sm:p-8"
-            >
-              <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-50 text-[#4053d7]">
-                <ListChecks className="h-7 w-7" />
-              </span>
-              <p className="mt-5 text-[10px] font-black uppercase tracking-[0.14em] text-[#4053d7]">
-                {confirmSubmit ? <UiText text={"Final submission"} /> : <UiText text={"Module ready"} />}
-              </p>
-              <h2 className="mt-1 font-serif text-2xl font-bold tracking-tight">
-                {confirmSubmit ? <UiText text={"Submit your SAT attempt?"} /> : <UiText text={"{{value1}} complete"} values={{ value1: String(currentModule.shortTitle) }} />}
-              </h2>
-              <p className="mt-2 text-sm font-medium leading-6 text-slate-500">
-                <UiText text={"You answered"} /> {answeredInModule} <UiText text={"of"} /> {currentModule.questions.length} <UiText text={"questions."} />
-                {currentModule.questions.length - answeredInModule > 0
-                  ? <UiText text={" {{value1}} unanswered question(s) will remain blank."} values={{ value1: String(currentModule.questions.length - answeredInModule) }} />
-                  : ' Every question has a response.'}
-              </p>
-              <div className="mt-5 grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setModuleComplete(false)
-                    setConfirmSubmit(false)
-                    setNavigatorOpen(true)
-                  }}
-                  className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-[11px] font-black text-slate-600"
-                >
-                  <UiText text={"Review answers"} />
-                </button>
-                <button
-                  type="button"
-                  onClick={confirmSubmit ? submitAttempt : () => advanceModule()}
-                  className="rounded-xl bg-[#4053d7] px-4 py-3 text-[11px] font-black text-white"
-                >
-                  {confirmSubmit ? <UiText text={"Submit & score"} /> : needsSATSectionBreak(attempt, modules) ? <UiText text="Start 10-minute break" /> : <UiText text={"Continue to next module"} />}
-                </button>
-              </div>
-              {!confirmSubmit && attempt.mode === 'practice' && currentModule.section === 'reading-writing' && modules[moduleIndex + 1]?.section === 'math' ? (
-                <p className="mt-4 rounded-xl bg-blue-50 px-3 py-2 text-center text-[10px] font-bold text-blue-700">
-                  <UiText text={"Recommended: take a 10-minute break before beginning Math."} />
-                </p>
-              ) : null}
             </motion.section>
           </motion.div>
         ) : null}

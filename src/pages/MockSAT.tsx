@@ -19,12 +19,16 @@ import {
   GraduationCap,
   Highlighter,
   LockKeyhole,
+  MessageSquareText,
   RotateCcw,
   ShieldCheck,
   Sparkles,
   Target,
 } from 'lucide-react'
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { SATDiscussion } from '@/components/sat/SATResultSocial'
+import '@/components/sat/SATReview.css'
+import '@/components/sat/SATResultsPro.css'
 import { BrandLockup } from '@/components/brand/BrandLogo'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import {
@@ -65,6 +69,8 @@ const modeCards = [
 export default function MockSAT() {
   const { c: uiCopy } = useCopy()
   const navigate = useNavigate()
+  const user = useAuthStore(state => state.user)
+  const [discussionRef, setDiscussionRef] = useState('')
   const owner = useAuthStore(state => state.user?.id ?? 'guest')
   const location = useLocation()
   const { mockId = '1' } = useParams<{ mockId: string }>()
@@ -115,6 +121,20 @@ export default function MockSAT() {
   const activeAttempt = existingAttempt?.status === 'active'
   const finishedAttempt = existingAttempt?.status === 'submitted'
 
+  const entryParams = new URLSearchParams(searchParams)
+  entryParams.delete('view')
+  const entryPath = `${location.pathname}${entryParams.size ? `?${entryParams}` : ''}`
+  const discussionParams = new URLSearchParams(entryParams)
+  discussionParams.set('view', 'discussion')
+  if (searchParams.get('view') === 'discussion') return <main className="sat-results workspace-page"><div className="sr-container">
+    <section className="sr-card srx-hero">
+      <button type="button" className="sr-back" onClick={() => navigate(entryPath, { state: location.state })}><ArrowLeft size={16} /><UiText text="Back to test" /></button>
+      <h1 className="mt-4 text-3xl font-bold tracking-tight"><UiText text="Discussion" /></h1>
+      <p className="mt-2 text-sm text-slate-600">{test.title}</p>
+    </section>
+    <section className="sr-panel mt-5" aria-label="Test discussion"><SATDiscussion testId={test.id} modules={test.modules} signedIn={Boolean(user)} userName={user?.fullName?.trim() || 'Ivygoo learner'} questionRef={discussionRef} onQuestionRefChange={setDiscussionRef} /></section>
+  </div></main>
+
   return (
     <main className="workspace-page exam-flow sat-start-page relative min-h-screen overflow-hidden px-4 py-5 text-slate-950 sm:px-6 lg:px-8">
       <ConfirmDialog open={replaceMode !== null} title={uiCopy("Replace your unfinished test?")} description={uiCopy("Starting again deletes the answers, notes and progress from this unfinished attempt. Your completed results stay in My Results.")}
@@ -128,6 +148,8 @@ export default function MockSAT() {
             iconSize={46}
             subtitle="Digital SAT testing studio"
           />
+          <div className="flex flex-wrap items-center justify-end gap-3">
+          <button type="button" className="route-back-button" onClick={() => navigate(`${location.pathname}?${discussionParams}`, { state: location.state })}><MessageSquareText size={16} /><UiText text="Discussion" /></button>
           <button
             type="button"
             onClick={() => navigate(backPath)}
@@ -135,6 +157,7 @@ export default function MockSAT() {
           >
             <ArrowLeft className="h-3.5 w-3.5" /> {isSectionPractice ? <UiText text={"Section tests"} /> : fromMockCatalog ? <UiText text={"Full mocks"} /> : <UiText text={"SAT Prep"} />}
           </button>
+          </div>
         </header>
 
         <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.08fr)_minmax(30rem,.92fr)]">

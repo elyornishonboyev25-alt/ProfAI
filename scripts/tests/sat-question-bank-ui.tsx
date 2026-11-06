@@ -1,4 +1,5 @@
 import React, { act, StrictMode } from 'react'
+import i18n from '../../src/i18n'
 import { createRoot } from 'react-dom/client'
 import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import assert from 'node:assert/strict'
@@ -97,6 +98,7 @@ async function saveAndExit() {
 const path = () => container.querySelector('[data-location]')!.textContent!
 const matching = () => Number(container.querySelector('.sat-bank-panel-title span')!.textContent!.split(' ')[0])
 export async function run() {
+  await i18n.changeLanguage('en')
   const rect = { left: 100, top: 100, width: 80, height: 20, right: 180, bottom: 120, x: 100, y: 100, toJSON() {} }
   window.Range.prototype.getBoundingClientRect = () => rect
   window.Range.prototype.getClientRects = () => [rect] as unknown as DOMRectList

@@ -1,5 +1,12 @@
 /** Interface strings that are not in the original Uzbek catalog. */
 export const uzbekCompletion: Record<string, string> = {
+  'Question status filters': 'Savollar holati bo‘yicha filtrlar',
+  "Back to questions": "Savollarga qaytish",
+  "Select a question to review or change your answer.": "Javobni tekshirish yoki o‘zgartirish uchun savolni tanlang.",
+  "All questions": "Barcha savollar",
+  "No questions match this filter.": "Bu filtr bo‘yicha savollar yo‘q.",
+  "Submit when you are ready. You cannot change answers after submission.": "Tayyor bo‘lgach, testni yakunlang. Shundan keyin javoblarni o‘zgartirib bo‘lmaydi.",
+  "You cannot return to this module after continuing.": "Davom etgach, bu modulga qaytib bo‘lmaydi.",
   'Soft ambient': 'Mayin ohanglar',
   'Music could not start. Try again.': 'Musiqani yoqib bo‘lmadi. Qayta urinib ko‘ring.',
   'Adaptive practice mock': 'Adaptiv mock test',

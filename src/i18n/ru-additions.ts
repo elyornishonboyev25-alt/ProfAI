@@ -1,5 +1,12 @@
 /** Interface strings missing from the original Russian catalogs. */
 export const russianAdditions: Record<string, string> = {
+  'Question status filters': 'Фильтры статуса вопросов',
+  "Back to questions": "Вернуться к вопросам",
+  "Select a question to review or change your answer.": "Выберите вопрос, чтобы проверить или изменить ответ.",
+  "All questions": "Все вопросы",
+  "No questions match this filter.": "Нет вопросов по этому фильтру.",
+  "Submit when you are ready. You cannot change answers after submission.": "Завершите тест, когда будете готовы. После отправки ответы нельзя изменить.",
+  "You cannot return to this module after continuing.": "После продолжения вернуться к этому модулю нельзя.",
   'Soft ambient': 'Мягкий эмбиент',
   'Music could not start. Try again.': 'Не удалось включить музыку. Попробуйте ещё раз.',
   'Adaptive practice mock': 'Адаптивный пробный тест',

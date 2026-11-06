@@ -68,8 +68,7 @@
 .sat-section-break__settings[open] > summary { color: #e7f0fb; background: #b5cde50d; }
 .sat-section-break__settings-panel { position: absolute; top: calc(100% + 12px); left: 50%; z-index: 5; width: 280px; max-width: calc(100vw - 40px); padding: 18px; border: 1px solid #a4bdd638; border-radius: 16px; background: #101e2f; box-shadow: 0 16px 40px #00000059; text-align: left; transform: translateX(-50%); }
 .sat-section-break__settings-panel label { display: block; margin-bottom: 9px; color: #c6d4e5; font-size: 12px; line-height: 1.5; }
-.sat-section-break .sat-section-break__settings-panel select { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #a4bdd640; border-radius: 9px; color: #e1ebf7; background: #0b1624; font-family: inherit; font-size: 13px; }
-.sat-section-break__settings-panel .sat-section-break__volume-label { display: flex; align-items: center; gap: 7px; margin: 18px 0 8px; }
+.sat-section-break__settings-panel .sat-section-break__volume-label { display: flex; align-items: center; gap: 7px; margin: 0 0 8px; }
 .sat-section-break__volume-label span { margin-left: auto; color: #9eafc3; font-variant-numeric: tabular-nums; }
 .sat-section-break__settings-panel input[type='range'] { display: block; width: 100%; height: 24px; accent-color: #b8cfe8; cursor: pointer; }
 .sat-section-break__rest-note { max-width: 37ch; margin: 26px 0 0; color: var(--break-muted); font-size: 13px; line-height: 1.8; text-wrap: pretty; }

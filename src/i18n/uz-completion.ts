@@ -1,5 +1,7 @@
 /** Interface strings that are not in the original Uzbek catalog. */
 export const uzbekCompletion: Record<string, string> = {
+  'Nature sounds': 'Tabiat sadolari',
+  'Quiet stream at night': 'Tungi sokin suv shildirashi',
   'Moving to Module 2': '2-modulga o‘tilmoqda',
   'Module 1': '1-modul',
   'Module 2': '2-modul',

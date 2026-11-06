@@ -1,5 +1,7 @@
 /** Interface strings missing from the original Russian catalogs. */
 export const russianAdditions: Record<string, string> = {
+  'Nature sounds': 'Звуки природы',
+  'Quiet stream at night': 'Тихий ночной ручей',
   'Moving to Module 2': 'Переход к модулю 2',
   'Module 1': 'Модуль 1',
   'Module 2': 'Модуль 2',

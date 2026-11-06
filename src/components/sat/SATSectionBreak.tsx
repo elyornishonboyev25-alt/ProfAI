@@ -2,20 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import { ArrowRight, Coffee, LogOut, MoonStar, Pause, Play, SlidersHorizontal, Volume2 } from 'lucide-react'
 import { useCopy } from '@/i18n/interface'
 import { SAT_SECTION_BREAK_SECONDS } from '@/features/sat/sectionBreak'
-import { createSATBreakMusic, type SATBreakMusicPreset } from '@/features/sat/breakMusic'
+import { createSATBreakMusic } from '@/features/sat/breakMusic'
 import './SATSectionBreak.css'
-
-const tracks: { id: SATBreakMusicPreset; label: string }[] = [
-  { id: 'ambient', label: 'Soft ambient' },
-  { id: 'piano', label: 'Peaceful piano' },
-]
 
 export default function SATSectionBreak({ endsAt, now, onExit, onContinue }: { endsAt: number; now: number; onExit: () => void; onContinue: () => void }) {
   const { c } = useCopy()
   const [musicEnabled, setMusicEnabled] = useState(false)
   const [musicPending, setMusicPending] = useState(false)
   const [musicError, setMusicError] = useState(false)
-  const [trackIndex, setTrackIndex] = useState(0)
   const [volume, setVolume] = useState(.45)
   const audioRef = useRef<ReturnType<typeof createSATBreakMusic> | null>(null)
   const playRequest = useRef(0)
@@ -38,14 +32,21 @@ export default function SATSectionBreak({ endsAt, now, onExit, onContinue }: { e
     setMusicPending(false)
   }
 
-  const playMusic = async (index = trackIndex) => {
+  const playMusic = async () => {
     const request = ++playRequest.current
     audioRef.current?.stop()
     setMusicPending(true)
     setMusicEnabled(false)
     setMusicError(false)
     try {
-      const audio = createSATBreakMusic(tracks[index].id, volume)
+      const audio = createSATBreakMusic(volume, () => {
+        if (playRequest.current !== request) return
+        audioRef.current?.stop()
+        audioRef.current = null
+        setMusicEnabled(false)
+        setMusicPending(false)
+        setMusicError(true)
+      })
       audioRef.current = audio
       await audio.play()
       if (playRequest.current === request) setMusicEnabled(true)
@@ -90,7 +91,7 @@ export default function SATSectionBreak({ endsAt, now, onExit, onContinue }: { e
             aria-pressed={musicEnabled} aria-busy={musicPending} disabled={musicPending}
             onClick={() => musicEnabled ? stopMusic() : void playMusic()}>
             <span className="sat-section-break__play-icon">{musicEnabled ? <Pause size={18} aria-hidden="true" /> : <Play size={18} aria-hidden="true" />}</span>
-            <span className="sat-section-break__track"><span>{c('Relaxing music')}</span><small>{c(tracks[trackIndex].label)}</small></span>
+            <span className="sat-section-break__track"><span>{c('Nature sounds')}</span><small>{c('Quiet stream at night')}</small></span>
           </button>
           <details ref={settingsRef} className="sat-section-break__settings" onKeyDown={event => {
             if (event.key === 'Escape' && settingsRef.current?.open) {
@@ -99,16 +100,8 @@ export default function SATSectionBreak({ endsAt, now, onExit, onContinue }: { e
               event.stopPropagation()
             }
           }}>
-            <summary aria-label={c('Choose music')} title={c('Choose music')}><SlidersHorizontal size={17} aria-hidden="true" /></summary>
+            <summary aria-label={c('Volume')} title={c('Volume')}><SlidersHorizontal size={17} aria-hidden="true" /></summary>
             <div className="sat-section-break__settings-panel">
-              <label htmlFor="sat-break-track">{c('Choose music')}</label>
-              <select id="sat-break-track" value={trackIndex} onChange={event => {
-                const index = Number(event.target.value)
-                setTrackIndex(index)
-                if (musicEnabled || musicPending) void playMusic(index)
-              }}>
-                {tracks.map((track, index) => <option key={track.id} value={index}>{c(track.label)}</option>)}
-              </select>
               <label htmlFor="sat-break-volume" className="sat-section-break__volume-label"><Volume2 size={15} aria-hidden="true" />{c('Volume')}<span>{Math.round(volume * 100)}%</span></label>
               <input id="sat-break-volume" type="range" min="0" max="100" value={Math.round(volume * 100)} onChange={event => {
                 const value = Number(event.target.value) / 100

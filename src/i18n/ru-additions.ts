@@ -1,5 +1,7 @@
 /** Interface strings missing from the original Russian catalogs. */
 export const russianAdditions: Record<string, string> = {
+  'Soft ambient': 'Мягкий эмбиент',
+  'Music could not start. Try again.': 'Не удалось включить музыку. Попробуйте ещё раз.',
   'Adaptive practice mock': 'Адаптивный пробный тест',
   'Saved practice mock': 'Сохранённый пробный тест',
   'Previous version score': 'Балл за предыдущую версию',

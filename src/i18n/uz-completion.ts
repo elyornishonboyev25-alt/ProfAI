@@ -1,5 +1,7 @@
 /** Interface strings that are not in the original Uzbek catalog. */
 export const uzbekCompletion: Record<string, string> = {
+  'Soft ambient': 'Mayin ohanglar',
+  'Music could not start. Try again.': 'Musiqani yoqib bo‘lmadi. Qayta urinib ko‘ring.',
   'Adaptive practice mock': 'Adaptiv mock test',
   'Saved practice mock': 'Saqlangan mock test',
   'Previous version score': 'Oldingi versiyadagi ball',

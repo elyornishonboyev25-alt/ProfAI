@@ -15,6 +15,7 @@ router.post('/connect', asyncHandler(async (req, res) => {
   try {
     const call = await startVoiceCall(req.user!.id, payload.sdp, payload.context, payload.history, controller.signal)
     if (controller.signal.aborted) { await endVoiceCall(req.user!.id, call.id); return }
+    res.setHeader('Server-Timing', `voice_preparation;dur=${call.timings.preparationMs}, voice_provider;dur=${call.timings.providerMs}, voice_control;dur=${call.timings.controlMs}, voice_total;dur=${call.timings.totalMs}`)
     return res.status(201).json(call)
   }
   catch (error) {
@@ -38,7 +39,12 @@ router.post('/standard/connect', asyncHandler(async (req, res) => {
 }))
 router.post('/context', asyncHandler(async (req, res) => {
   const { id, context } = z.object({ id: z.string().uuid(), context: assistantContextSchema }).strict().parse(req.body)
-  if (!await updateVoiceContext(req.user!.id, id, context)) return res.status(404).json({ message: 'Voice session not found.' })
-  res.status(204).send()
+  try {
+    if (!await updateVoiceContext(req.user!.id, id, context)) return res.status(404).json({ message: 'Voice session not found.' })
+    res.status(204).send()
+  } catch (error) {
+    if (error instanceof AiGenerationError) return res.status(error.statusCode).json({ message: error.message, code: error.code })
+    throw error
+  }
 }))
 export default router

@@ -105,9 +105,6 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
       })
       connection.current = voice
       await voice.start()
-      if (!disposed) await voice.updateContext({ pathname: currentPath.current, workspace: latest.current.activeWorkspace, language: locale, mode,
-        coachPreferences: latest.current.coachPreferences,
-        studyContext: describeStudySnapshot(buildStudySnapshot(userId)).slice(0, 16000), screenContext: composeScreenContext('Explain this page', currentPath.current).slice(0, 12000), siteKnowledge: describeRelevantSiteKnowledge('IELTS SAT English admissions tests').slice(0, 16000) })
     }
     void connect().catch((issue) => { if (!disposed) setError(issue instanceof Error ? issue.message : 'Voice could not connect.') })
     return () => {

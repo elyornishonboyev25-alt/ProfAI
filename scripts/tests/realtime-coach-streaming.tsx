@@ -23,6 +23,7 @@ export async function run() {
   let peers = 0
   let micStops = 0
   let ended = 0
+  const contexts: any[] = []
   const sent: any[] = []
   const saved: any[] = []
   class Peer {
@@ -52,7 +53,7 @@ export async function run() {
   apiClient.post = (async (path: string, body: any) => {
     if (path === '/ai/voice/connect') return { id: 'stream-session', sdp: 'v=0\r\ns=answer\r\n', maxMinutes: 20 }
     if (path === '/ai/voice/end') { ended++; return {} }
-    if (path === '/ai/voice/context') return {}
+    if (path === '/ai/voice/context') { contexts.push(body.context); return {} }
     if (path.endsWith('/messages')) { saved.push(body); return {} }
     throw new Error(`Unexpected request: ${path}`)
   }) as typeof apiClient.post
@@ -69,6 +70,8 @@ export async function run() {
   try {
     await act(async () => root.render(<MemoryRouter><Harness /></MemoryRouter>))
     await wait()
+    await wait(650)
+    assert.equal(contexts.length, 0, 'Startup and the initial context effect do not resend the SDP context')
     await emit({ type: 'conversation.item.input_audio_transcription.delta', item_id: 'u1', delta: 'Salom' })
     assert.match(host.textContent!, /SizSalom/)
     assert.equal(saved.length, 0, 'Partial input is visible but not sent to durable history')
@@ -94,6 +97,8 @@ export async function run() {
     await act(async () => root.render(<MemoryRouter><Harness workspace="ielts" /></MemoryRouter>))
     await wait(650)
     assert.equal(peers, 1, 'Changing the study workspace updates context without ending a live call')
+    assert.equal(contexts.length, 1, 'A workspace change sends exactly one changed context')
+    assert.equal(contexts[0].threadId, initial.id, 'Page updates retain the chat bound at connection time')
     await emit({ type: 'conversation.item.input_audio_transcription.delta', item_id: 'unfinished', delta: 'Partial input' })
     await act(async () => root.unmount())
     assert.equal(messages().some(message => message.id === 'voice-unfinished'), false, 'Closing the call removes unfinished input previews')

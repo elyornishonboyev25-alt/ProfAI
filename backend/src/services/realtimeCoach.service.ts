@@ -9,8 +9,12 @@ import { answerAssistant, assistantData, loadAssistantRecords } from './assistan
 import { reserveVoiceTime, settleVoiceTime } from './voiceAllowance.service.js'
 import { BillingError } from './billing.service.js'
 
-type VoiceCall = { id: string; userId: string; callId: string; socket: WebSocket; timer: NodeJS.Timeout; abort: AbortController; context: AssistantContext; history: Array<{ role: 'user' | 'assistant'; content: string }> }
+type VoiceCall = { id: string; userId: string; callId: string; socket: WebSocket; timer: NodeJS.Timeout; abort: AbortController; context: AssistantContext; contextVersion: number; history: Array<{ role: 'user' | 'assistant'; content: string }> }
 const calls = new Map<string, VoiceCall>()
+function contextSignature(context: AssistantContext) {
+  return JSON.stringify(context, (_key, value) => value && typeof value === 'object' && !Array.isArray(value)
+    ? Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b))) : value)
+}
 onAccountDeleted(async (userId) => {
   await Promise.all([...calls.values()].filter(call => call.userId === userId).map(call => endVoiceCall(userId, call.id)))
 })
@@ -59,9 +63,12 @@ export async function updateVoiceContext(userId: string, id: string, context: As
   const call = calls.get(id)
   if (!call || call.userId !== userId) return false
   // The call remains attached to its original chat even when the learner navigates.
-  const next = { ...context, threadId: call.context.threadId }
+  const next = { ...context, threadId: call.context.threadId ?? context.threadId }
+  const version = ++call.contextVersion
+  if (contextSignature(next) === contextSignature(call.context)) return true
   const records = await loadAssistantRecords(userId, next.threadId)
   if (call.abort.signal.aborted) return false
+  if (version !== call.contextVersion) return true
   call.context = next
   if (call.socket.readyState === WebSocket.OPEN) call.socket.send(JSON.stringify({ type: 'session.update', session: { type: 'realtime', instructions: voiceInstructions(next, assistantData(next, records)) } }))
   return true
@@ -69,9 +76,19 @@ export async function updateVoiceContext(userId: string, id: string, context: As
 
 export async function startVoiceCall(userId: string, sdp: string, context: AssistantContext, history: VoiceCall['history'], signal?: AbortSignal) {
   if (!env.OPENAI_API_KEY) throw new AiGenerationError(503, 'VOICE_NOT_CONFIGURED', 'Natural voice is not connected yet. You can use standard voice or type in chat.')
-  const reservation = await reserveVoiceTime(userId, env.AI_VOICE_MAX_MINUTES * 60)
+  const started = performance.now()
+  // Read only this authenticated learner's records while reserving allowance.
+  // No provider connection starts until both checks have succeeded.
+  const [reserved, loaded] = await Promise.allSettled([
+    reserveVoiceTime(userId, env.AI_VOICE_MAX_MINUTES * 60),
+    loadAssistantRecords(userId, context.threadId),
+  ])
+  if (reserved.status === 'rejected') throw reserved.reason
+  const reservation = reserved.value
   try {
-    return await startReservedVoiceCall(userId, sdp, context, history, reservation.id, reservation.expiresAt, signal)
+    if (loaded.status === 'rejected') throw loaded.reason
+    signal?.throwIfAborted()
+    return await startReservedVoiceCall(userId, sdp, context, history, reservation.id, reservation.expiresAt, loaded.value, started, signal)
   } catch (error) {
     const saved = await prisma.voiceAllowanceSession.findFirst({ where: { id: reservation.id, userId } })
     if (saved?.providerCallId) await hangup(saved.providerCallId)
@@ -80,8 +97,8 @@ export async function startVoiceCall(userId: string, sdp: string, context: Assis
   }
 }
 
-async function startReservedVoiceCall(userId: string, sdp: string, context: AssistantContext, history: VoiceCall['history'], id: string, expiresAt: Date, signal?: AbortSignal) {
-  const records = await loadAssistantRecords(userId, context.threadId)
+async function startReservedVoiceCall(userId: string, sdp: string, context: AssistantContext, history: VoiceCall['history'], id: string, expiresAt: Date, records: Awaited<ReturnType<typeof loadAssistantRecords>>, started: number, signal?: AbortSignal) {
+  const prepared = performance.now()
   const session = {
     type: 'realtime', model: env.AI_VOICE_MODEL, instructions: voiceInstructions(context, assistantData(context, records)),
     output_modalities: ['audio'], max_output_tokens: 900,
@@ -99,6 +116,7 @@ async function startReservedVoiceCall(userId: string, sdp: string, context: Assi
   })
   if (!response.ok) throw new AiGenerationError(502, 'VOICE_CONNECTION_FAILED', 'Natural voice could not connect. Retry or use standard voice.')
   const answer = await response.text()
+  const negotiated = performance.now()
   const location = response.headers.get('location')
   const callId = location?.split('/').pop()?.split('?')[0]
   if (!answer.startsWith('v=') || !callId || !/^[A-Za-z0-9_-]+$/.test(callId)) throw new AiGenerationError(502, 'VOICE_INVALID_SESSION', 'Voice returned an invalid session. Please retry.')
@@ -108,7 +126,7 @@ async function startReservedVoiceCall(userId: string, sdp: string, context: Assi
   socketUrl.searchParams.set('call_id', callId)
   const socket = new WebSocket(socketUrl, { headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}` } })
   const abort = new AbortController()
-  const call: VoiceCall = { id, userId, callId, socket, abort, context, history: boundedHistory(history), timer: setTimeout(() => { void endVoiceCall(userId, id).catch(() => {}) }, Math.max(0, expiresAt.getTime() - Date.now())) }
+  const call: VoiceCall = { id, userId, callId, socket, abort, context, contextVersion: 0, history: boundedHistory(history), timer: setTimeout(() => { void endVoiceCall(userId, id).catch(() => {}) }, Math.max(0, expiresAt.getTime() - Date.now())) }
   call.timer.unref()
   const handledTools = new Set<string>()
   let speechVersion = 0
@@ -175,7 +193,9 @@ async function startReservedVoiceCall(userId: string, sdp: string, context: Assi
     if (expiresAt.getTime() <= Date.now()) throw new BillingError('PREMIUM_REQUIRED', 'The Live AI time window ended. Your unused reservation will be returned; try again after your allowance renews.')
     for (const previous of calls.values()) if (previous.userId === userId) await endVoiceCall(userId, previous.id)
     calls.set(id, call)
-    return { id, sdp: answer, expiresAt: expiresAt.toISOString(), maxMinutes: Math.max(0, (expiresAt.getTime() - Date.now()) / 60000) }
+    const timings = { preparationMs: Math.round(prepared - started), providerMs: Math.round(negotiated - prepared), controlMs: Math.round(performance.now() - negotiated), totalMs: Math.round(performance.now() - started) }
+    console.info('voice.performance', { stage: 'setup', ...timings, model: env.AI_VOICE_MODEL })
+    return { id, sdp: answer, expiresAt: expiresAt.toISOString(), maxMinutes: Math.max(0, (expiresAt.getTime() - Date.now()) / 60000), timings }
   } catch (error) {
     clearTimeout(call.timer); socket.close(); await hangup(callId)
     throw error

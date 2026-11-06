@@ -1,5 +1,6 @@
-/* IELTS full mock catalog: brushed-silver glass with one crimson accent.
-   Each mock is a slim, wide row so the whole collection scans quickly. */
+@import '../styles/exam-catalog.css';
+
+/* The mock catalog shares the original reflective material with skill tests. */
 .mock-ielts-glass {
   --mi-red: #c41e3a;
   --mi-red-deep: #9d1730;
@@ -11,20 +12,20 @@
   --mi-green: #1d8459;
   --mi-green-soft: #edf8f2;
   --mi-green-line: #a6d7bf;
-  --mi-silver: linear-gradient(145deg, #fff, #eef1f5 50%, #e0e5ec);
+  --mi-silver: linear-gradient(145deg, #ffffffba, #dbe2ed99);
   --mi-edge: 1px solid rgba(255, 255, 255, .95);
   --mi-shadow-sm: inset 0 1px 0 rgba(255, 255, 255, .95), 0 8px 18px -10px rgba(27, 38, 58, .26);
   --mi-red-grad: linear-gradient(135deg, #d5263f, #b51b34 58%, #96162c);
   border: var(--mi-edge);
   border-radius: 28px;
-  background:
-    radial-gradient(900px 420px at 100% -10%, rgba(196, 30, 58, .07), transparent 62%),
-    linear-gradient(150deg, rgba(255, 255, 255, .92), rgba(242, 245, 249, .78) 55%, rgba(228, 233, 240, .74));
+  background: var(--catalog-panel);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), 0 22px 46px -24px rgba(27, 38, 58, .3), 0 2px 8px rgba(27, 38, 58, .04);
   -webkit-backdrop-filter: blur(20px) saturate(150%);
   backdrop-filter: blur(20px) saturate(150%);
 }
-.mock-ielts-glass::before { content: ''; position: absolute; inset: 0 40px auto; height: 3px; border-radius: 0 0 4px 4px; background: linear-gradient(90deg, var(--mi-red), #e8677b 45%, transparent); pointer-events: none; }
+.mock-ielts-glass::before { content: ''; position: absolute; inset: 0 28px auto; height: 1px; background: linear-gradient(90deg, transparent, #fff, transparent); pointer-events: none; }
+.mock-ielts-glass > div:first-child h1 { font-size: clamp(24px, 2.2vw, 30px); font-weight: 750; letter-spacing: -.045em; }
+.mock-ielts-glass > div:first-child p { max-width: 38rem; }
 
 .mock-ielts-glass-search,
 .mock-ielts-glass-metric,
@@ -36,7 +37,7 @@
 .mock-ielts-glass-search:focus { border-color: var(--mi-red-line); background: #fff; }
 .mock-ielts-glass-filter { color: var(--mi-text); }
 .mock-ielts-glass-filter:hover { border-color: var(--mi-red-line); color: var(--mi-red); }
-.mock-ielts-glass-filter[aria-pressed='true'] {
+.mock-ielts-glass button.mock-ielts-glass-filter[aria-pressed='true'] {
   border-color: #a01a31;
   background: var(--mi-red-grad);
   color: #fff;
@@ -44,25 +45,27 @@
 }
 .mock-ielts-glass-empty { background: linear-gradient(145deg, rgba(255, 255, 255, .86), rgba(236, 240, 245, .6)); }
 
-/* ---------- Rows ---------- */
-.mock-ielts-rows { display: grid; gap: 10px; }
-@media (min-width: 1720px) { .mock-ielts-rows { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; } }
+/* Cards keep progress and separate review/retake actions together. */
+.mock-ielts-rows { display: grid; gap: 18px; align-items: start; }
+@media (min-width: 768px) { .mock-ielts-rows { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1280px) { .mock-ielts-rows { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
-.mock-ielts-glass .mock-ielts-row.ielts-catalog-card {
-  contain-intrinsic-size: auto 78px;
+.mock-ielts-glass .mock-ielts-rows .mock-ielts-row.ielts-catalog-card {
+  contain-intrinsic-size: auto 220px;
   position: relative;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 16px;
-  min-height: 0;
-  padding: 12px 14px 12px 12px;
+  gap: 20px 14px;
+  min-height: 220px;
+  padding: 22px;
   overflow: hidden;
-  cursor: pointer;
   border: var(--mi-edge);
-  border-radius: 18px;
-  background: linear-gradient(150deg, rgba(255, 255, 255, .95), rgba(240, 243, 247, .82) 60%, rgba(229, 234, 240, .78)) !important;
-  box-shadow: var(--mi-shadow-sm);
+  border-radius: 22px;
+  background: var(--catalog-glass);
+  box-shadow: var(--catalog-shadow);
+  -webkit-backdrop-filter: blur(12px) saturate(135%);
+  backdrop-filter: blur(12px) saturate(135%);
   text-align: left;
   transition: border-color .18s, box-shadow .18s, transform .18s;
 }
@@ -76,54 +79,43 @@
 .is-finished .mock-ielts-row-index small { color: var(--mi-green); }
 .mock-ielts-row-copy { min-width: 0; }
 .mock-ielts-row-title { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; }
-.mock-ielts-row-title h2 { margin: 0; color: var(--mi-ink); font-size: 16.5px; font-weight: 850; letter-spacing: -.025em; white-space: nowrap; }
-.mock-ielts-row-copy p { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 4px 0 0; white-space: nowrap; color: var(--mi-muted); font-size: 12px; font-weight: 650; }
+.mock-ielts-row-title h2 { margin: 0; color: var(--mi-ink); font-size: 19px; font-weight: 750; letter-spacing: -.035em; }
+.mock-ielts-row-copy p { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; color: var(--mi-muted); font-size: 12px; font-weight: 600; }
 .mock-ielts-row-mode { padding: 2px 8px; border: 1px solid var(--mi-line); border-radius: 99px; background: rgba(255, 255, 255, .85); color: var(--mi-text); font-size: 10.5px; font-weight: 750; }
 .mock-ielts-row-mode.is-exam { border-color: var(--mi-red-line); background: #fdf1f3; color: var(--mi-red-deep); }
 
-.mock-ielts-row-skills { display: flex; gap: 5px; }
-.mock-ielts-skill { display: inline-flex; align-items: center; gap: 3px; min-width: 38px; justify-content: center; padding: 5px 7px; border: 1px solid; border-radius: 10px; font-size: 11px; font-weight: 800; }
+.mock-ielts-row-skills { display: flex; grid-column: 1 / -1; gap: 6px; padding-bottom: 16px; border-bottom: 1px solid #bdc7d547; }
+.mock-ielts-skill { display: inline-flex; flex: 1; align-items: center; gap: 5px; min-width: 0; justify-content: center; padding: 8px 5px; border: 1px solid; border-radius: 10px; font-size: 11px; font-weight: 700; }
 .mock-ielts-skill.is-done { border-color: var(--mi-green-line); background: var(--mi-green-soft); color: var(--mi-green); }
-.mock-ielts-skill.is-todo { border-color: #f1c7cf; background: #fff6f7; color: var(--mi-red); }
+.mock-ielts-skill.is-todo { border-color: #ffffffc7; background: #ffffff4d; color: #626e80; }
 .mock-ielts-skill.is-soon { border-color: var(--mi-line); background: rgba(255, 255, 255, .6); color: #97a1b2; }
 
-.mock-ielts-row-result { display: flex; flex-direction: column; align-items: flex-end; min-width: 0; text-align: right; }
-.mock-ielts-row-result { min-width: 62px; }
+.mock-ielts-row-result { display: flex; grid-column: 1; grid-row: 3; flex-direction: column; align-items: flex-start; min-width: 0; text-align: left; }
+.mock-ielts-row-result:empty { display: none; }
 .mock-ielts-row-result strong { color: var(--mi-green); font-size: 24px; font-weight: 850; letter-spacing: -.04em; line-height: 1; font-variant-numeric: tabular-nums; }
 .mock-ielts-row-result small { margin-top: 3px; color: var(--mi-muted); font-size: 10px; font-weight: 700; white-space: nowrap; }
 .mock-ielts-row-result small.is-pending { margin: 0; color: #9a6a12; }
 
-.mock-ielts-card-actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+.mock-ielts-card-actions { display: flex; grid-column: 2; grid-row: 3; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px; }
+.mock-ielts-row-result:empty + .mock-ielts-card-actions { grid-column: 1 / -1; }
 .mock-ielts-card-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 8px 14px; border-radius: 12px; font-size: 12.5px; font-weight: 800; white-space: nowrap; }
 .mock-ielts-glass-open { border: 1px solid var(--mi-line); background: linear-gradient(145deg, #fff, #f1f4f8); color: var(--mi-red-deep); box-shadow: var(--mi-shadow-sm); }
 .mock-ielts-glass-open:hover { border-color: var(--mi-red-line); }
-.mock-ielts-glass-open.is-primary { border-color: #a01a31; background: var(--mi-red-grad); color: #fff; box-shadow: 0 8px 18px -10px rgba(157, 23, 48, .6), inset 0 1px 0 rgba(255, 255, 255, .35); }
+.mock-ielts-glass-open.is-primary { border-color: #b82c4680; background: var(--catalog-crimson); color: #fff; box-shadow: 0 5px 13px #a81e3924, inset 0 1px 0 #ffffff5c; }
 .mock-ielts-card-actions .mock-ielts-retake { color: var(--mi-text); }
 .mock-ielts-card-actions button:focus-visible { outline: 3px solid rgba(196, 30, 58, .32); outline-offset: 2px; }
 
 @media (hover: hover) and (pointer: fine) {
-  .mock-ielts-glass .mock-ielts-row:hover { transform: translateY(-2px); border-color: var(--mi-red-line); box-shadow: inset 0 1px 0 #fff, 0 18px 34px -20px rgba(157, 23, 48, .35); }
+  .mock-ielts-glass .mock-ielts-rows .mock-ielts-row:hover { border-color: #c47c8f99; box-shadow: 0 16px 30px -16px #5e304333, inset 0 1px 0 #fff; }
 }
 
-@media (max-width: 760px) {
-  .mock-ielts-glass .mock-ielts-row.ielts-catalog-card { grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px 12px; min-height: 0; padding: 12px; border-radius: 18px; }
-  .mock-ielts-row-skills { grid-column: 2; grid-row: 2; }
-  .mock-ielts-row-result { min-width: 0; }
-  .mock-ielts-row-result:empty { display: none; }
-  .mock-ielts-row-result { grid-column: 3; grid-row: 1; }
-  .mock-ielts-card-actions { grid-column: 3; grid-row: 2; }
-  .mock-ielts-row-result:empty + .mock-ielts-card-actions { grid-row: 1 / span 2; }
-}
 @media (max-width: 480px) {
   .mock-ielts-glass { border-radius: 22px; }
-  .mock-ielts-glass .mock-ielts-row.ielts-catalog-card { grid-template-columns: auto minmax(0, 1fr) auto; padding: 12px; }
+  .mock-ielts-glass .mock-ielts-rows .mock-ielts-row.ielts-catalog-card { padding: 18px; border-radius: 19px; gap: 16px 12px; }
 
   .mock-ielts-row-index { width: 46px; height: 46px; font-size: 17px; border-radius: 13px; }
-  .mock-ielts-row-skills { grid-column: 1 / -1; }
-  .mock-ielts-card-actions { grid-column: 1 / -1; grid-row: 3; }
-  .mock-ielts-row-result:empty + .mock-ielts-card-actions { grid-row: 3; }
-  .mock-ielts-card-actions button { flex: 1; }
-  .mock-ielts-skill { flex: 1; }
+  .mock-ielts-row-title h2 { font-size: 17px; }
+  .mock-ielts-card-actions button { padding: 8px 10px; font-size: 11px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -132,7 +124,7 @@
 }
 @media (prefers-reduced-transparency: reduce) {
   .mock-ielts-glass,
-  .mock-ielts-glass .mock-ielts-row,
+  .mock-ielts-glass .mock-ielts-rows .mock-ielts-row,
   .mock-ielts-glass-search,
   .mock-ielts-glass-metric,
   .mock-ielts-glass-filter:not([aria-pressed='true']),

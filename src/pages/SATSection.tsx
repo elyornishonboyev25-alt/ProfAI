@@ -57,7 +57,7 @@ export default function SATSection() {
         <SATSectionTabs section={section} />
 
         <div id="sat-test-panel" role="tabpanel" tabIndex={0} aria-labelledby={`sat-tab-${section}`} className="mt-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300">
-          <section className="mock-ielts-glass relative isolate overflow-hidden p-4 sm:p-5 lg:p-6">
+          <section className="exam-catalog mock-ielts-glass relative isolate overflow-hidden p-4 sm:p-5 lg:p-6">
             <div className="sat-catalog-header relative">
               <div className="sat-catalog-header-layout">
                 <div>
@@ -79,7 +79,7 @@ export default function SATSection() {
             {visibleTests.length === 0 ? (
               <div className="relative mt-5 rounded-[1.75rem] border border-dashed border-blue-200 bg-white/64 px-4 py-12 text-center text-sm font-semibold text-slate-500"><UiText text={"No tests found."} /></div>
             ) : (
-              <div className="relative mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              <div className="exam-catalog-grid relative mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
                 {visibleTests.map((test) => {
                   const attempt = attemptsByTestId.get(test.id)
                   const completed = attempt?.status === 'submitted' || completedTestIds.has(test.id)
@@ -105,9 +105,13 @@ export default function SATSection() {
 
                   return (
                     <button key={test.id} type="button" onClick={() => { if (attempt?.status === 'submitted' || studyAccess.open(`mock:sat:${test.mockId}`)) navigate(destination, { state: { from: `/sat/${section}` } }) }}
-                      className="ielts-catalog-card mock-ielts-glass-card group relative flex min-h-[14.5rem] w-full flex-col overflow-hidden p-5 text-left transition-[border-color,box-shadow,transform] duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100 sm:p-6">
-                      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-                        <span className="text-[11px] font-black uppercase tracking-[0.18em] text-red-600">SAT {isFullMock ? <UiText text={"Full Mock"} /> : activeTab.label} {String(test.mockId).padStart(2, '0')}</span>
+                      className="exam-catalog-card ielts-catalog-card mock-ielts-glass-card group relative flex min-h-[14.5rem] w-full flex-col overflow-hidden p-5 text-left transition-[border-color,box-shadow,transform] duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100 sm:p-6">
+                      <div className="exam-catalog-card-top">
+                        <span className="exam-catalog-icon" aria-hidden="true"><activeTab.icon size={21} strokeWidth={1.7} /></span>
+                        <span className="exam-catalog-number">{String(test.mockId).padStart(2, '0')}</span>
+                        <StudyAccessChip resource={`mock:sat:${test.mockId}`} />
+                      </div>
+                      <div className="exam-catalog-card-state">
                         <div className="flex flex-wrap items-center gap-2">
                           {completed ? <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-300 bg-emerald-100 px-2.5 py-1 text-[10px] font-black text-emerald-800" data-sat-completed>
                             <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" /><UiText text="Completed" />
@@ -117,9 +121,8 @@ export default function SATSection() {
                           </span>
                         </div>
                       </div>
-                      <h2 className="mt-3 text-2xl font-black tracking-[-0.04em] text-slate-950">{isFullMock ? <UiText text={"Full Mock"} /> : <UiText text={"Practice Test"} />} {test.mockId}</h2>
+                      <h2 className="exam-catalog-title mt-3 text-2xl font-black tracking-[-0.04em] text-slate-950">{isFullMock ? <UiText text={"Full Mock"} /> : <UiText text={"Practice Test"} />} {test.mockId}</h2>
                       <p className="mt-2 line-clamp-2 text-sm font-medium leading-6 text-slate-500">{test.badge}</p>
-                      <div className="mt-3"><StudyAccessChip resource={`mock:sat:${test.mockId}`} /></div>
                       {report && score !== null ? <CatalogScore score={score} maximum={isFullMock ? 1600 : 800} label={scoredTest?.id === test.id ? uiCopy("Estimated score") : uiCopy("Previous version score")} detail={`${report.correct}/${scoredTest?.questionCount ?? test.questionCount} correct`} /> : null}
                       <div className="mt-4 flex flex-wrap gap-1.5" aria-label={uiCopy("SAT sections")}>
                         {cardSections.map(({ id, label, icon: Icon }) => (
@@ -134,9 +137,9 @@ export default function SATSection() {
                         <div className="flex justify-between text-[11px] font-bold text-slate-500"><span>{attempt.status === 'submitted' ? <UiText text={"Completed"} /> : <UiText text={"Saved progress"} />}</span><span>{answered}/{test.questionCount}</span></div>
                         <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-200"><div className="h-full rounded-full bg-gradient-to-r from-red-700 to-red-400" style={{ width: `${Math.min(100, (answered / Math.max(1, test.questionCount)) * 100)}%` }} /></div>
                       </div> : null}
-                      <div className="mt-auto flex flex-wrap items-end justify-between gap-3 pt-6">
+                      <div className="exam-catalog-card-footer mt-auto flex flex-wrap items-end justify-between gap-3 pt-6">
                         <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500"><Clock3 className="h-4 w-4" /> {duration} <UiText text={"session"} /></span>
-                        <span className="mock-ielts-glass-open inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-black"><UiText text={action} /><ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1 motion-reduce:transform-none" /></span>
+                        <span className="exam-catalog-action inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-black"><UiText text={action} /><ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1 motion-reduce:transform-none" /></span>
                       </div>
                     </button>
                   )

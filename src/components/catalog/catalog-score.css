@@ -6,7 +6,3 @@
 .catalog-score__summary { display:flex; align-items:center; flex-wrap:wrap; gap:4px 8px; font-size:11px; line-height:1.5; font-weight:600; color:#697386; }
 .catalog-score__saved { color:#9a641c; }
 .ielts-catalog-card:has(.catalog-score) > div:last-child { padding-top:16px; }
-.ielts-catalog-panel .ielts-catalog-card { background:linear-gradient(145deg,#ffffffeb,#f0f2f6d9)!important; border-color:#dce0e7; backdrop-filter:blur(18px); box-shadow:inset 0 1px 0 #fff,0 14px 35px #303b5310; }
-.ielts-catalog-panel .ielts-catalog-card:hover { border-color:#ce8796; }
-.ielts-catalog-panel { background:linear-gradient(135deg,#fafbfded,#e5e9f1d9)!important; }
-.ielts-catalog-panel > .pointer-events-none { opacity:.18; }

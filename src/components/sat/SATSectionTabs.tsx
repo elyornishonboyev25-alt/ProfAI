@@ -3,6 +3,7 @@ import UiText from '@/components/common/UiText'
 import { useEffect, useRef, type KeyboardEvent } from 'react'
 import { BookOpenText, Calculator, Layers3, Flame, FolderClock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import '@/styles/exam-catalog.css'
 
 export const SAT_SECTION_TABS = [
   { id: 'mocks', label: 'Full Mocks', detail: 'Both sections together', icon: Layers3 },
@@ -42,7 +43,7 @@ export default function SATSectionTabs({ section }: { section: TabId }) {
 
   return (
     <>
-        <div className="sticky top-2 z-20 rounded-2xl border border-white bg-white/95 p-2 shadow-[0_12px_35px_rgba(15,23,42,.09)]">
+        <div className="exam-library-nav sticky top-2 z-20 rounded-2xl border border-white bg-white/95 p-2 shadow-[0_12px_35px_rgba(15,23,42,.09)]">
           <div ref={list} role="tablist" aria-label={uiCopy("SAT test sections")} className="exam-section-tabs">
             {SAT_SECTION_TABS.map(({ id, label, detail, icon: Icon }) => (
               <button key={id} id={`sat-tab-${id}`} type="button" role="tab" tabIndex={section === id ? 0 : -1}

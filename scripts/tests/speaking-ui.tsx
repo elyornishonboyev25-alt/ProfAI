@@ -3,7 +3,7 @@ import React, { act, StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import assert from 'node:assert/strict'
 import SpeakingExaminerSession from '../../src/components/speaking/ExaminerSession'
-import '@/i18n'
+import i18n from '@/i18n'
 import IELTSSpeakingTest from '../../src/pages/IELTSSpeakingTest'
 import IeltsSpeaking from '../../src/components/speaking/sections/IeltsSpeaking'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -103,13 +103,14 @@ class FakeRecognition {
 const wait = async (ms = 20) => act(async () => { await new Promise((resolve) => setTimeout(resolve, ms)) })
 const until = async (ready: () => unknown, label: string) => {
   for (let attempt = 0; attempt < 75; attempt++) { if (ready()) return; await wait() }
-  assert.fail(`Timed out: ${label}`)
+  assert.fail(`Timed out: ${label}\n${container.textContent}`)
 }
 const button = (label: string) => [...container.querySelectorAll('button')].find((item) => item.textContent?.includes(label))!
 const click = async (label: string) => { assert.ok(button(label), label); await act(async () => button(label).click()); await wait() }
 const endAudio = async () => { const player = players.at(-1)!; assert.ok(player.onended); await act(async () => player.onended?.()); await wait() }
 
 export async function run() {
+  await i18n.changeLanguage('en')
   Object.defineProperty(globalThis, 'Audio', { value: FakeAudio, configurable: true })
   Object.defineProperty(globalThis, 'MediaRecorder', { value: FakeRecorder, configurable: true })
   Object.defineProperty(globalThis, 'Blob', { value: window.Blob, configurable: true })
@@ -319,13 +320,24 @@ export async function run() {
       assert.match(container.textContent!, /English device voice/)
       assert.equal(utterances.at(-1)!.voice?.name, voiceName)
       assert.equal(recorderStarts, before, 'Fallback cannot record before the question ends')
-      for (let i = 0; i < 3; i++) { await act(async () => utterances.at(-1)!.onend?.()); await wait(40) }
+      await act(async () => utterances.at(-1)!.onend?.()) // greeting -> Part 1 instructions
+      await wait(40)
+      assert.equal(requestedVoices.length, 2, 'A temporary device fallback avoids repeated failed provider requests')
+      const now = Date.now
+      voiceFails = false
+      try {
+        Date.now = () => now() + 61_000
+        await act(async () => utterances.at(-1)!.onend?.())
+        await wait(40)
+      } finally { Date.now = now }
+      assert.equal(requestedVoices.length, 3, 'A later question retries the recovered provider after the fallback cooldown')
+      assert.match(container.textContent!, /Natural AI voice/)
+      await endAudio()
       assert.ok(button('Finish answer'), 'Provider failure automatically recovers to the matching device voice')
-      assert.equal(requestedVoices.length, 2, 'One transient retry precedes the device fallback, which stays selected for the session')
-    } finally { await act(async () => fallbackRoot.unmount()) }
+    } finally { voiceFails = true; await act(async () => fallbackRoot.unmount()) }
   }
   voiceFails = false
-  console.log('PASS: unavailable natural voice automatically recovers with matching male/female voice')
+  console.log('PASS: unavailable natural voice uses a matching device voice, then retries the recovered provider')
 
   const normalEvaluation = evaluationPayload
   const history = [{ role: 'candidate' as const, text: 'I like music. I actually enjoy playing piano every day with my friends.' }]

@@ -321,7 +321,7 @@ export default function ExaminerSession({
   const voiceSourceRef = useRef<MediaStreamAudioSourceNode | null>(null)
   const stopForSilenceRef = useRef<() => void>(() => {})
   const promptReplayRef = useRef<((device?: boolean) => void) | null>(null)
-  const deviceVoiceRef = useRef(false)
+  const deviceVoiceUntilRef = useRef(0)
   const stopPendingRef = useRef(false)
   const microphoneInterruptedRef = useRef(false)
   const beginPendingRef = useRef(false)
@@ -406,12 +406,19 @@ export default function ExaminerSession({
         shown = true
         pushTurn('examiner', text)
       }
-      const play = (device = deviceVoiceRef.current) => {
-        deviceVoiceRef.current = device
+      const play = (device = deviceVoiceUntilRef.current > Date.now()) => {
+        // A transient provider outage should not select device speech for the
+        // whole mock. Keep it briefly, then try natural audio on a later turn.
+        if (!device) deviceVoiceUntilRef.current = 0
+        else if (deviceVoiceUntilRef.current <= Date.now()) deviceVoiceUntilRef.current = Date.now() + 60_000
         setVoiceError(null)
         playback.ask(text, examiner.voice, examiner.gender, {
           loading: setVoiceLoading,
-          started: (source) => { deviceVoiceRef.current = source === 'device'; setVoiceError(null); setVoiceSource(source); reveal() },
+          started: (source) => {
+            if (source === 'neural') deviceVoiceUntilRef.current = 0
+            else deviceVoiceUntilRef.current ||= Date.now() + 60_000
+            setVoiceError(null); setVoiceSource(source); reveal()
+          },
           ended: () => { promptReplayRef.current = null; next() },
           failed: setVoiceError,
         }, device)
@@ -554,7 +561,7 @@ export default function ExaminerSession({
     setStarting(true)
     setAnswerError(null)
     savedEvaluationRef.current = false
-    deviceVoiceRef.current = false
+    deviceVoiceUntilRef.current = 0
     setVoiceSource('connecting')
     // Unlock on launch; blocked autoplay retains the Play examiner recovery.
     playbackRef.current ??= new ExaminerPlayback()

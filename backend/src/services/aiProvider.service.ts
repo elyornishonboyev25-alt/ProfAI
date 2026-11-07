@@ -84,8 +84,10 @@ function getGeminiKeys() {
   ])
 }
 
-function getGeminiModels() {
-  return splitConfiguredValues([env.GEMINI_MODELS])
+function getGeminiModels(purpose: AiGenerationPurpose) {
+  const models = [env.GEMINI_MODELS]
+  if (purpose === 'writing_evaluation') models.push('gemini-3.5-flash-lite')
+  return splitConfiguredValues(models)
 }
 
 export function buildAiProviderOrder(availability: ProviderAvailability): AiProviderName[] {
@@ -123,7 +125,7 @@ async function fetchWithTimeout(url: string, init: RequestInit) {
 async function requestGemini(input: GenerateAiTextInput): Promise<ProviderResult> {
   const keys = getGeminiKeys()
   const models = input.purpose === 'assistant_chat' && env.AI_CHAT_MODEL && (env.AI_CHAT_PROVIDER === 'gemini' || env.AI_CHAT_PROVIDER === 'auto')
-    ? [env.AI_CHAT_MODEL] : getGeminiModels()
+    ? [env.AI_CHAT_MODEL] : getGeminiModels(input.purpose)
   let lastError = new ProviderRequestError('GEMINI_UNAVAILABLE', 'Gemini is unavailable.')
 
   for (const model of models) {
@@ -345,7 +347,7 @@ export async function generateAiText(input: GenerateAiTextInput): Promise<AiGene
   const startedAt = Date.now()
   const requestChars = input.systemPrompt.length + input.userMessage.length
   let order = buildAiProviderOrder({
-    gemini: getGeminiKeys().length > 0 && getGeminiModels().length > 0,
+    gemini: getGeminiKeys().length > 0 && getGeminiModels(input.purpose).length > 0,
     openai: env.OPENAI_API_KEY.trim().length > 0,
     hf: env.HF_ACCESS_TOKEN.trim().length > 0,
     hasImages: Boolean(input.images?.length),

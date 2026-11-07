@@ -102,3 +102,29 @@ test('Writing retries invalid feedback and falls back to JSON mode when Gemini r
   assert.equal(checked.overallBand, 6)
   assert.equal(checked.improvedVersion, result.improvedVersion)
 })
+
+test('Writing tries a model with separate limits when the configured Gemini models are rate-limited', async (t) => {
+  const originalKey = env.GEMINI_API_KEY
+  const originalModels = env.GEMINI_MODELS
+  const originalUsage = prisma.aiUsageEvent.create
+  env.GEMINI_API_KEY = 'fake-writing-test-key'
+  env.GEMINI_MODELS = 'gemini-2.5-flash,gemini-2.5-flash-lite'
+  prisma.aiUsageEvent.create = async ({ data }) => data
+  t.after(() => {
+    env.GEMINI_API_KEY = originalKey
+    env.GEMINI_MODELS = originalModels
+    prisma.aiUsageEvent.create = originalUsage
+  })
+
+  const models = []
+  t.mock.method(globalThis, 'fetch', async (url) => {
+    const model = new URL(url).pathname.split('/').at(-1).split(':')[0]
+    models.push(model)
+    if (model !== 'gemini-3.5-flash-lite') return new Response(null, { status: 429 })
+    return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify(result) }] } }] })
+  })
+
+  const checked = await assessWriting('writing-test-user', { taskType: 'task2', prompt: 'Discuss regular practice.', response })
+  assert.deepEqual(models, ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-3.5-flash-lite'])
+  assert.equal(checked.overallBand, 6)
+})

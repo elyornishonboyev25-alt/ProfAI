@@ -96,7 +96,7 @@ export default function Profile() {
   const user = useAuthStore((state: AuthState) => state.user)
   const userId = user?.id
   const speakingSessions = useSpeakingStore((state) => state.sessions)
-  const { data: overview } = useAsyncData<ProfileOverview | null>(
+  const { data: overview, refetch } = useAsyncData<ProfileOverview | null>(
     () => (userId ? apiClient.get('/profile/overview') : Promise.resolve(null)),
     [userId],
   )
@@ -112,16 +112,18 @@ export default function Profile() {
 
   // Results saved in another tab or synced in the background appear without a reload.
   useEffect(() => {
-    const refresh = () => setHistoryVersion((version) => version + 1)
+    const refresh = () => { setHistoryVersion((version) => version + 1); void refetch() }
     window.addEventListener('storage', refresh)
     window.addEventListener(ACCOUNT_DATA_EVENT, refresh)
     window.addEventListener('smarttest:attempt-submitted', refresh)
+    window.addEventListener('focus', refresh)
     return () => {
       window.removeEventListener('storage', refresh)
       window.removeEventListener(ACCOUNT_DATA_EVENT, refresh)
       window.removeEventListener('smarttest:attempt-submitted', refresh)
+      window.removeEventListener('focus', refresh)
     }
-  }, [])
+  }, [refetch])
 
   // Keep older submitted SAT slots visible now that results no longer pass through the lab.
   useEffect(() => {

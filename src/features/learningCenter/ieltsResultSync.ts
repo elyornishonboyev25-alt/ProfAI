@@ -30,6 +30,7 @@ export function syncIeltsClassResult(type: 'reading' | 'listening', test: IELTST
       assignmentId,
     }, { expectedUserId: userId }).then((response) => {
       try { accountStorageFor(userId ?? 'guest').setItem(`smarttest-${type}-sync:${userId ?? 'guest'}:${result.testId}-${result.date}`, 'ok') } catch { /* Server sync succeeded even if storage is unavailable. */ }
+      window.dispatchEvent(new Event('smarttest:attempt-submitted'))
       return response
     }).finally(() => pending.delete(key))
     pending.set(key, request)

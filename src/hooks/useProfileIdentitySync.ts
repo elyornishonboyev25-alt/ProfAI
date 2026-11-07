@@ -36,6 +36,8 @@ export function useProfileIdentitySync() {
             ...(state.user.fullName === before.fullName ? { fullName: user.fullName } : {}),
             ...(state.user.nickname === before.nickname ? { nickname: user.nickname ?? null } : {}),
             premium: user.premium,
+            ...(state.user.xp === before.xp ? { xp: user.xp, level: user.level } : {}),
+            ...(state.user.currentStreak === before.currentStreak ? { currentStreak: user.currentStreak } : {}),
           } }
         })
       } catch {
@@ -47,6 +49,8 @@ export function useProfileIdentitySync() {
     void sync()
     window.addEventListener('online', sync)
     window.addEventListener('focus', sync)
-    return () => { active = false; window.removeEventListener('online', sync); window.removeEventListener('focus', sync) }
+    window.addEventListener('smarttest:attempt-submitted', sync)
+    window.addEventListener('smarttest:profile-updated', sync)
+    return () => { active = false; window.removeEventListener('online', sync); window.removeEventListener('focus', sync); window.removeEventListener('smarttest:attempt-submitted', sync); window.removeEventListener('smarttest:profile-updated', sync) }
   }, [userId])
 }

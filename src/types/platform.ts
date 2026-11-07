@@ -217,6 +217,7 @@ export type ProfileOverview = {
     percentage: number
     xpEarned: number
     completedAt: string
+    assessment?: { sourceKey: string; skill: string; score: number; maxScore: number }
     test: {
       id: string
       title: string

@@ -32,7 +32,10 @@ export async function recordXpActivity(input: {
   durationSec?: number
   metadata?: Record<string, string | number | boolean | null>
 }) {
-  return apiClient.post<XpAwardResponse>('/profile/xp/activity', input, { auth: true })
+  return apiClient.post<XpAwardResponse>('/profile/xp/activity', input, { auth: true }).then((reward) => {
+    if (!reward.duplicate && typeof window !== 'undefined') window.dispatchEvent(new Event('smarttest:profile-updated'))
+    return reward
+  })
 }
 
 function syncKey(userId: string, sourceKey: string) {

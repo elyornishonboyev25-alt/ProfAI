@@ -32,6 +32,9 @@ jobs:
       - name: Check result recovery and account sync
         run: npm run test:result-resilience
 
+      - name: Check public profile and account statistics consistency
+        run: npm run test:profile-consistency
+
       - name: Check adaptive SAT routing and historical attempts
         run: npm run test:sat-adaptive
 

@@ -76,6 +76,7 @@ export const learningCenterApi = {
   },
   syncResult: (input: {
     sourceKey: string
+    preserveExisting?: boolean
     sourceType: string
     examType: 'IELTS' | 'SAT'
     skill: string
@@ -87,7 +88,7 @@ export const learningCenterApi = {
     completedAt?: string
     breakdown?: Record<string, unknown>
     assignmentId?: string
-  }) => apiClient.post('/learning-centers/results/sync', input).then(result => {
+  }) => apiClient.post(input.preserveExisting ? '/learning-centers/results/recover' : '/learning-centers/results/sync', input).then(result => {
     if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('smarttest:attempt-submitted'))
     return result
   }),

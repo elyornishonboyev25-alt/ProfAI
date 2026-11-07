@@ -136,6 +136,18 @@ export default function Leaderboard() {
     }
   }, [userId, period, reloadKey])
 
+  useEffect(() => {
+    const refresh = () => setReloadKey((value) => value + 1)
+    window.addEventListener('focus', refresh)
+    window.addEventListener('online', refresh)
+    window.addEventListener('smarttest:profile-updated', refresh)
+    return () => {
+      window.removeEventListener('focus', refresh)
+      window.removeEventListener('online', refresh)
+      window.removeEventListener('smarttest:profile-updated', refresh)
+    }
+  }, [])
+
   // Never display the previous window under the newly selected label.
   const board = data?.period === period ? data : null
   const rows = useMemo(() => board?.rows ?? [], [board])

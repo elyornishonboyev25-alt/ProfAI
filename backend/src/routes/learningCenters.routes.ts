@@ -18,6 +18,7 @@ import { validateBody, validateQuery } from '../middleware/validate.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { generateAiText } from '../services/aiProvider.service.js'
 import { invalidateLeaderboardCache } from '../services/leaderboard.service.js'
+import { invalidateSkillAnalyticsCache } from '../services/analytics.service.js'
 import {
   average,
   buildDataDrivenInsight,
@@ -66,6 +67,7 @@ function validCover(value: string | null | undefined) {
 
 const resultSyncSchema = z.object({
   sourceKey: z.string().trim().min(6).max(180),
+  preserveExisting: z.boolean().optional(),
   sourceType: z.string().trim().min(2).max(60),
   examType: z.nativeEnum(TestCategory),
   skill: z.string().trim().min(3).max(80),
@@ -364,7 +366,7 @@ function assignmentStatus(submission: { status: LearningSubmissionStatus; assign
 }
 
 router.post(
-  '/results/sync',
+  ['/results/sync', '/results/recover'],
   requireAuth,
   validateBody(resultSyncSchema),
   asyncHandler(async (req, res) => {
@@ -375,7 +377,9 @@ router.post(
     const completedAt = payload.completedAt ? new Date(payload.completedAt) : new Date()
     const result = await prisma.assessmentResult.upsert({
       where: { userId_sourceKey: { userId: req.user!.id, sourceKey: payload.sourceKey } },
-      update: {
+      // Historical recovery must never replace a newer assessment or discard
+      // its detailed criteria/answers. PostgreSQL's upsert keeps this atomic.
+      update: payload.preserveExisting || req.path === '/results/recover' ? {} : {
         examType: payload.examType,
         skill: payload.skill,
         sourceType: payload.sourceType,
@@ -410,6 +414,7 @@ router.post(
       })
     }
     invalidateLeaderboardCache()
+    invalidateSkillAnalyticsCache()
     return res.status(201).json({ result: { ...result, completedAt: result.completedAt.toISOString() } })
   }),
 )

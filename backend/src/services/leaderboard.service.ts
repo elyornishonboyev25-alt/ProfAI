@@ -1,5 +1,5 @@
 import { hasPremiumIdentity, premiumIdentitySelect } from '../utils/premiumIdentity.js'
-import { assessmentCountsForLeaderboard } from './examLeaderboardEligibility.js'
+import { loadAssessmentPerformanceAttempts } from './performanceHistory.service.js'
 import { onAccountDeleted } from './accountLifecycle.js'
 import { Difficulty, LeaderboardPeriod, type Prisma, type TestCategory } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
@@ -375,7 +375,10 @@ function writeCache(period: PeriodInput, category: TestCategory | undefined, pay
   })
 }
 
+let leaderboardCacheRevision = 0
+
 export function invalidateLeaderboardCache() {
+  leaderboardCacheRevision += 1
   leaderboardCache.clear()
 }
 
@@ -543,6 +546,7 @@ export async function generateLeaderboard(params: {
   category?: TestCategory
   currentUserId?: string
 }) {
+  const cacheRevision = leaderboardCacheRevision
   const startDate = getPeriodStart(params.period)
   const cached = readCache(params.period, params.category, startDate)
   if (cached) {
@@ -608,33 +612,7 @@ export async function generateLeaderboard(params: {
   // across every unfiltered period, so SAT/IELTS learners are not missing from
   // weekly and monthly test counts or tie-breaks.
   if (!categoryFilter) {
-    const assessments = await prisma.assessmentResult.findMany({
-      where: {
-        sourceType: { in: ['SAT_BLUEBOOK_MOCK', 'IELTS_WRITING_AI_EVALUATION', 'IELTS_WRITING_FULL_TEST', 'IELTS_SPEAKING_MOCK'] },
-        ...(startDate ? { completedAt: { gte: startDate } } : {}),
-      },
-      select: { id: true, userId: true, examType: true, accuracy: true, score: true, maxScore: true, durationSec: true, completedAt: true, breakdown: true },
-    })
-    for (const result of assessments) {
-      if (!assessmentCountsForLeaderboard(result)) continue
-      // A scaled SAT score is not question accuracy. IELTS band-based
-      // assessments use the same percentage normalization as the profile.
-      const percentage = result.accuracy ?? (result.examType === 'IELTS' && result.maxScore > 0
-        ? result.score / result.maxScore * 100 : null)
-      if (percentage === null || !Number.isFinite(percentage)) continue
-      attempts.push({
-        userId: result.userId,
-        testId: `assessment:${result.id}`,
-        percentage,
-        finalScore: percentage,
-        totalQuestions: 0,
-        correctAnswers: 0,
-        timeSpentSec: result.durationSec,
-        xpEarned: 0,
-        completedAt: result.completedAt,
-        test: { difficulty: Difficulty.HARD, durationSec: Math.max(1, result.durationSec) },
-      })
-    }
+    attempts.push(...await loadAssessmentPerformanceAttempts(startDate ? { completedAt: { gte: startDate } } : {}))
   }
 
   if (!useCanonicalXp && attempts.length === 0 && periodXpByUser.size === 0) {
@@ -801,7 +779,7 @@ export async function generateLeaderboard(params: {
     rows: stableRows,
   }
 
-  writeCache(params.period, params.category, cachePayload, startDate)
+  if (cacheRevision === leaderboardCacheRevision) writeCache(params.period, params.category, cachePayload, startDate)
 
   const rows = withCurrentUserContext(stableRows, params.currentUserId)
   const currentUserEntry = rows.find((entry) => entry.userId === params.currentUserId) ?? null

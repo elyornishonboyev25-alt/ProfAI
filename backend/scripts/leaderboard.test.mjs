@@ -213,3 +213,24 @@ test('too-fast and explicitly excluded SAT results stay out of global ranking st
   assert.equal(board.rows[0].testsCompleted, 0)
   assert.equal(board.rows[0].totalXp, 20)
 })
+
+
+test('an in-flight calculation cannot restore a cache invalidated by a new reward', async () => {
+  const users = [learner('a', 100)]
+  mockDatabase(users)
+  let release
+  let started
+  const pending = new Promise((resolve) => { started = resolve })
+  mock.method(prisma.user, 'findMany', async () => {
+    const snapshot = users.map((user) => ({ ...user }))
+    if (!release) await new Promise((resolve) => { release = resolve; started() })
+    return snapshot
+  })
+  const before = generateLeaderboard({ period: 'all' })
+  await pending
+  users[0].xp = 200
+  invalidateLeaderboardCache()
+  release()
+  await before
+  assert.equal((await generateLeaderboard({ period: 'all' })).rows[0].totalXp, 200)
+})

@@ -26,10 +26,7 @@ import { formatUniversityRank, getUniversityBySlug } from '@/data/admission'
 import { CountUp, ProgressRing, Reveal } from '@/components/fx'
 import AchievementCard from '@/components/achievements/AchievementCard'
 import { TRACK_ORDER } from '@/components/achievements/badgeMeta'
-import { useBadgeStore } from '@/store/badgeStore'
-import { mergeProfileBadges } from '@/utils/profileBadges'
 import { useAuthStore } from '@/store/authStore'
-import { mergeLocalPublicProfilePerformance } from '@/utils/localProfilePerformance'
 
 function Shell({ children, onBack, backLabel }: { children: React.ReactNode; onBack?: () => void; backLabel?: string }) {
   return (
@@ -63,9 +60,9 @@ export default function PublicProfile() {
   const backPath = ['/community', '/community?mode=partner', '/account', '/leaderboard'].includes(returnTo ?? '') ? returnTo! : null
   const shellBack = { onBack: backPath ? () => navigate(backPath) : undefined, backLabel: backPath?.startsWith('/community') ? 'Back to Community' : backPath === '/leaderboard' ? 'Back to leaderboard' : 'Back to Account' }
   const user = useAuthStore((state) => state.user)
-  const localBadges = useBadgeStore((state) => state.records)
   const [serverData, setServerData] = useState<PublicProfilePayload | null>(null)
   const [loading, setLoading] = useState(true)
+  const [reloadKey, setReloadKey] = useState(0)
   const [error, setError] = useState<{ status: number; message: string } | null>(null)
 
   useEffect(() => {
@@ -94,21 +91,20 @@ export default function PublicProfile() {
     window.addEventListener('focus', onRefresh)
     window.addEventListener('smarttest:profile-updated', onRefresh)
     window.addEventListener('smarttest:badges-synced', onRefresh)
+    window.addEventListener('smarttest:attempt-submitted', onRefresh)
+    window.addEventListener('online', onRefresh)
     return () => {
       active = false
       window.removeEventListener('focus', onRefresh)
       window.removeEventListener('smarttest:profile-updated', onRefresh)
       window.removeEventListener('smarttest:badges-synced', onRefresh)
+      window.removeEventListener('smarttest:attempt-submitted', onRefresh)
+      window.removeEventListener('online', onRefresh)
     }
-  }, [nickname, user?.id])
+  }, [nickname, user?.id, reloadKey])
 
-  const data = useMemo(() => {
-    if (!serverData || !user) return serverData
-    const merged = mergeLocalPublicProfilePerformance(serverData, user.id)
-    return merged.profile.isSelf && merged.visibility.showBadges
-      ? { ...merged, badges: mergeProfileBadges(merged.badges, localBadges, user.id) }
-      : merged
-  }, [serverData, user, localBadges])
+  // The public preview uses exactly the same server snapshot as every visitor.
+  const data = serverData
 
   const targetUniversity = useMemo(
     () => (data?.university?.slug ? getUniversityBySlug(data.university.slug) : undefined),
@@ -160,7 +156,10 @@ export default function PublicProfile() {
         {error.status === 403 ? (
           <Info icon={<Lock className="h-6 w-6" />} title={uiCopy("This profile is private")} text="This learner has chosen to keep their profile hidden." />
         ) : (
-          <Info icon={<AtSign className="h-6 w-6" />} title={uiCopy("Profile not found")} text={error.message} />
+          <div className="space-y-4">
+            <Info icon={<AtSign className="h-6 w-6" />} title={error.status === 404 ? uiCopy('Profile not found') : uiCopy('Could not load this profile.')} text={error.message} />
+            {error.status !== 404 ? <button type="button" className="premium-back-btn" onClick={() => setReloadKey((value) => value + 1)}><UiText text="Try again" /></button> : null}
+          </div>
         )}
       </Shell>
     )

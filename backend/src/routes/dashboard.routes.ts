@@ -7,8 +7,10 @@ import { addUtcDays } from '../utils/date.js'
 import { generateLeaderboard } from '../services/leaderboard.service.js'
 import { getLearningStreakSnapshot, resolveLearnerTimeZone } from '../services/activityStreak.service.js'
 import { localDateKey } from '../services/xpRewards.service.js'
+import { loadPerformanceAttempts, summarizePerformance } from '../services/performanceHistory.service.js'
 
 const router = Router()
+router.use((_req, res, next) => { res.set('Cache-Control', 'no-store'); next() })
 
 function buildSevenDayKeys(now: Date, timeZone: string) {
   const [year, month, day] = localDateKey(now, timeZone).split('-').map(Number)
@@ -27,7 +29,7 @@ router.get(
     const userId = req.user!.id
     const now = new Date()
 
-    const [user, attemptAggregate, attemptsCount, recentAttempts, notifications] = await Promise.all([
+    const [user, attempts, notifications] = await Promise.all([
       prisma.user.findUnique({
         where: { id: userId },
         select: {
@@ -48,28 +50,7 @@ router.get(
           },
         },
       }),
-      prisma.testAttempt.aggregate({
-        where: { userId },
-        _avg: { finalScore: true },
-      }),
-      prisma.testAttempt.count({ where: { userId } }),
-      prisma.testAttempt.findMany({
-        where: { userId },
-        orderBy: { completedAt: 'desc' },
-        take: 6,
-        select: {
-          id: true,
-          finalScore: true,
-          xpEarned: true,
-          completedAt: true,
-          test: {
-            select: {
-              title: true,
-              category: true,
-            },
-          },
-        },
-      }),
+      loadPerformanceAttempts(userId),
       prisma.notification.findMany({
         where: { userId },
         orderBy: { createdAt: 'desc' },
@@ -98,16 +79,8 @@ router.get(
 
     const miniLeaderboard = leaderboard.rows.slice(0, 5)
 
-    const attemptsByCategory = await prisma.testAttempt.findMany({
-      where: { userId },
-      select: {
-        percentage: true,
-        test: { select: { category: true } },
-      },
-    })
-
     const categoryStats = new Map<TestCategory, { sum: number; count: number }>()
-    for (const entry of attemptsByCategory) {
+    for (const entry of attempts) {
       const previous = categoryStats.get(entry.test.category) ?? { sum: 0, count: 0 }
       categoryStats.set(entry.test.category, {
         sum: previous.sum + entry.percentage,
@@ -144,21 +117,8 @@ router.get(
     const sevenDays = buildSevenDayKeys(now, timeZone)
     const broadWindowStart = addUtcDays(now, -8)
     const broadWindowEnd = addUtcDays(now, 1)
-    const [weeklyAttempts, weeklyXpEvents] = await Promise.all([
-      prisma.testAttempt.findMany({
-        where: {
-          userId,
-          completedAt: {
-            gte: broadWindowStart,
-            lt: broadWindowEnd,
-          },
-        },
-        select: {
-          completedAt: true,
-          timeSpentSec: true,
-          totalQuestions: true,
-        },
-      }),
+    const weeklyAttempts = attempts.filter((attempt) => attempt.completedAt >= broadWindowStart && attempt.completedAt < broadWindowEnd)
+    const [weeklyXpEvents] = await Promise.all([
       prisma.xpEvent.findMany({
         where: { userId, earnedAt: { gte: broadWindowStart, lt: broadWindowEnd }, amount: { gt: 0 } },
         select: { earnedAt: true, source: true, metadata: true },
@@ -206,7 +166,7 @@ router.get(
 
     const weeklyStudySeconds = weeklyProgress.reduce((total, day) => total + day.studyTimeSec, 0)
     const activityTimeline = [
-      ...recentAttempts.map((attempt) => ({
+      ...attempts.slice(-6).reverse().map((attempt) => ({
         id: `attempt_${attempt.id}`,
         type: 'attempt',
         title: `Completed ${attempt.test.title}`,
@@ -226,8 +186,8 @@ router.get(
 
     return res.json({
       metrics: {
-        totalTests: attemptsCount,
-        averageScore: Number((attemptAggregate._avg.finalScore ?? 0).toFixed(2)),
+        totalTests: attempts.length,
+        averageScore: summarizePerformance(attempts).averageScore,
         weeklyStudySeconds,
         currentRank: leaderboard.currentUserRank,
         currentStreak: learningStreak.currentStreak,

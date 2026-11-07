@@ -35,7 +35,6 @@ import {
   getNextDashboardAchievement,
   type DashboardLearningKey,
 } from '@/utils/dashboardMetrics'
-import { mergeLocalDashboardPerformance } from '@/utils/localProfilePerformance'
 import { loadOnboardingProfile } from '@/utils/weeklyPlanner'
 import { loadSiteTime, recentSiteTimeSeconds, SITE_TIME_UPDATED_EVENT, siteTimeStorageKey } from '@/utils/siteTime'
 
@@ -156,10 +155,20 @@ export default function Dashboard() {
 
   const baseOverview = data ?? cachedOverview ?? EMPTY_OVERVIEW
   const isInitialLoading = loading && !cachedOverview
-  const overview = useMemo(
-    () => (user ? mergeLocalDashboardPerformance(baseOverview, user.id) : baseOverview),
-    [baseOverview, user],
-  )
+  const overview = baseOverview
+  useEffect(() => {
+    const refresh = () => { void refetch() }
+    window.addEventListener('focus', refresh)
+    window.addEventListener('online', refresh)
+    window.addEventListener('smarttest:attempt-submitted', refresh)
+    window.addEventListener('smarttest:profile-updated', refresh)
+    return () => {
+      window.removeEventListener('focus', refresh)
+      window.removeEventListener('online', refresh)
+      window.removeEventListener('smarttest:attempt-submitted', refresh)
+      window.removeEventListener('smarttest:profile-updated', refresh)
+    }
+  }, [refetch])
   const localMetrics = useMemo(
     () => user ? getDashboardLearningMetrics(user.id) : null,
     [overview, user],

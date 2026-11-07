@@ -121,11 +121,13 @@ export async function run() {
         <Routes><Route path="/profile" element={<Profile />} /></Routes>
       </MemoryRouter>,
     ))
-    const fullMockHistory = container.querySelector('[aria-label="Full mock attempt history"]')!
+    const fullMockHistory = container.querySelector('.mr-mock-row')!
     assert.ok(fullMockHistory, 'Archived full mocks remain accessible in My Results')
-    await act(async () => fullMockHistory.querySelector<HTMLButtonElement>('button')!.click())
+    await act(async () => fullMockHistory.querySelector<HTMLButtonElement>('.mr-mock-toggle')!.click())
+    const fullReport = [...fullMockHistory.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent?.includes('Full report'))!
+    await act(async () => fullReport.click())
     assert.ok(document.querySelector('[aria-label="Saved full mock result"]')?.textContent?.includes('Your overall result.'))
-    await act(async () => [...document.querySelectorAll<HTMLButtonElement>('button')].find(button => button.textContent === 'Close review')!.click())
+    await act(async () => document.querySelector<HTMLButtonElement>('[aria-label="Saved full mock result"] nav button')!.click())
     assert.equal(document.querySelector('[aria-label="Saved full mock result"]'), null)
     assert.equal(getFullMockAttempts('different-account').length, 0, 'Full mock results stay account scoped')
     console.log('PASS: archived full mock review is accessible from My Results and stays account scoped')

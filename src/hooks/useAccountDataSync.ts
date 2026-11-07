@@ -37,6 +37,9 @@ export function useAccountDataSync(owner: string | undefined) {
         changed = await syncAccountData(owner, { signal: controller.signal, isCurrent, failures })
         if (!isCurrent()) return
         restoreSpeakingAccount(owner)
+        void import('@/utils/savedPerformanceSync').then(({ syncSavedPerformance }) => {
+          if (isCurrent()) return syncSavedPerformance(owner)
+        }).catch(() => {})
         if (changed) setRevision((value) => value + 1)
       } catch { /* Keep account-scoped offline data and retry on focus/online. */ }
       finally {

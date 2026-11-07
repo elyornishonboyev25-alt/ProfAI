@@ -50,6 +50,7 @@ export type ResultRecord = {
   id: string
   /** 1 = the learner's first saved result; assigned in chronological order. */
   sequence: number
+  sourceKey?: string
   exam: ResultExam
   skill: ResultSkill
   skillLabel: string
@@ -135,6 +136,7 @@ function writingRecords(userId: string): UnsequencedRecord[] {
     const ratio = entry.overallBand / 9
     return {
       id: `writing-${entry.attemptKey}`,
+      sourceKey: entry.fullTest ? `writing-full-${entry.fullTest.id}-${entry.attemptKey}` : entry.attemptKey,
       exam: 'IELTS',
       skill: 'writing',
       skillLabel: entry.taskType === 'task1' ? 'Writing · Task 1' : 'Writing · Task 2',
@@ -164,6 +166,7 @@ function speakingRecords(userId: string, sessions: SpeakingSessionRecord[]): Uns
       const ratio = session.overallBand / 9
       return {
         id: `speaking-${session.id}`,
+        sourceKey: `speaking-${session.id}`,
         exam: 'IELTS',
         skill: 'speaking',
         skillLabel: 'Speaking',
@@ -209,6 +212,7 @@ function satRecords(): UnsequencedRecord[] {
       const isQuestionBank = test.id.startsWith('question-bank')
       return [{
         id: `sat-${entry.id}`,
+        sourceKey: `sat-${test.id}-${endedAt}`,
         exam: 'SAT' as const,
         skill: 'sat' as const,
         skillLabel: isQuestionBank
@@ -248,19 +252,28 @@ function serverRecords(
     .filter((attempt) => {
       const exam: ResultExam = attempt.test.category === 'SAT' ? 'SAT' : 'IELTS'
       const time = timeOf(attempt.completedAt)
-      return !local.some((record) => record.exam === exam && Math.abs(record.completedAt - time) <= 180_000)
+      const sourceKey = attempt.assessment?.sourceKey
+      return !local.some((record) => record.exam === exam && (
+        sourceKey && record.sourceKey === sourceKey
+        || record.title.trim().toLowerCase() === attempt.test.title.trim().toLowerCase() && Math.abs(record.completedAt - time) <= 1000
+      ))
     })
     .map((attempt) => {
       const exam: ResultExam = attempt.test.category === 'SAT' ? 'SAT' : 'IELTS'
       const title = attempt.test.title
-      const lower = title.toLowerCase()
+      const lower = `${attempt.assessment?.skill ?? ''} ${title}`.toLowerCase()
       const skill: ResultSkill = exam === 'SAT'
         ? 'sat'
         : lower.includes('listening') ? 'listening'
           : lower.includes('writing') ? 'writing'
             : lower.includes('speaking') ? 'speaking'
               : 'reading'
-      const ratio = Math.min(1, Math.max(0, attempt.percentage / 100))
+      const assessment = attempt.assessment
+      const ratio = Math.min(1, Math.max(0, assessment ? assessment.score / assessment.maxScore : attempt.percentage / 100))
+      const score = assessment ? {
+        value: exam === 'IELTS' ? band(assessment.score) : String(assessment.score),
+        label: exam === 'IELTS' ? 'Band' : assessment.maxScore === 1600 ? 'SAT score' : assessment.skill === 'SAT_MATH' ? 'Math' : 'R&W',
+      } : null
       return {
         id: `server-${attempt.id}`,
         exam,
@@ -269,10 +282,10 @@ function serverRecords(
         title,
         completedAt: timeOf(attempt.completedAt),
         durationSec: null,
-        score: null,
+        score,
         scoreRatio: ratio,
         tone: toneFor(ratio),
-        stats: [{ label: 'Correct', value: `${Math.round(attempt.percentage)}%`, emphasis: 'good' as const }],
+        stats: [{ label: assessment && exam === 'IELTS' ? 'Band' : 'Correct', value: assessment && exam === 'IELTS' ? band(assessment.score) : `${Math.round(attempt.percentage)}%`, emphasis: 'good' as const }],
         partial: false,
         analyze: null,
       }

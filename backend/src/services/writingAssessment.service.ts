@@ -7,15 +7,40 @@ export const writingRequestSchema = z.object({
   response: z.string().trim().min(1).max(20000), visualContext: z.string().max(12000).optional(),
 }).strict()
 const band = z.number().finite().min(0).max(9)
+const errorCategories = ['grammar', 'vocabulary', 'spelling', 'punctuation', 'coherence', 'task'] as const
 const writingResultSchema = z.object({
   taskAchievement: band, coherenceCohesion: band, lexicalResource: band, grammaticalRange: band,
   criterionFeedback: z.object({ taskAchievement: z.string().trim().min(1).max(1500), coherenceCohesion: z.string().trim().min(1).max(1500), lexicalResource: z.string().trim().min(1).max(1500), grammaticalRange: z.string().trim().min(1).max(1500) }),
   summary: z.string().trim().min(1).max(2500),
   strengths: z.array(z.string().trim().min(1).max(1000)).max(5), improvements: z.array(z.string().trim().min(1).max(1000)).max(5),
   errors: z.array(z.object({ original: z.string().max(1200), corrected: z.string().max(1500), explanation: z.string().max(1500),
-    category: z.enum(['grammar', 'vocabulary', 'spelling', 'punctuation', 'coherence', 'task']) })).max(40),
+    category: z.enum(errorCategories) })).max(40),
   correctedVersion: z.string().max(25000),
   improvedVersion: z.string().trim().min(1).max(25000),
+})
+
+const jsonText = { type: 'string' }
+const jsonBand = { type: 'number', minimum: 0, maximum: 9 }
+const jsonFeedbackList = { type: 'array', items: jsonText, maxItems: 5 }
+const criterionKeys = Object.keys(writingResultSchema.shape.criterionFeedback.shape)
+const jsonObject = (properties: Record<string, unknown>) => ({
+  type: 'object', properties, required: Object.keys(properties),
+})
+const writingResponseSchema = jsonObject({
+  ...Object.fromEntries(criterionKeys.map(key => [key, jsonBand])),
+  criterionFeedback: jsonObject(Object.fromEntries(criterionKeys.map(key => [key, jsonText]))),
+  summary: jsonText,
+  strengths: jsonFeedbackList,
+  improvements: jsonFeedbackList,
+  errors: {
+    type: 'array', maxItems: 40,
+    items: jsonObject({
+      original: jsonText, corrected: jsonText, explanation: jsonText,
+      category: { type: 'string', enum: errorCategories },
+    }),
+  },
+  correctedVersion: jsonText,
+  improvedVersion: jsonText,
 })
 const half = roundIeltsBand
 
@@ -53,8 +78,23 @@ export function validateWritingAssessment(raw: string, response: string) {
 }
 
 export async function assessWriting(userId: string, input: z.infer<typeof writingRequestSchema>, signal?: AbortSignal) {
-  const result = await generateAiText({ userId, purpose: 'writing_evaluation', systemPrompt: WRITING_ASSESSMENT_PROMPT,
-    userMessage: JSON.stringify({ ...input, wordCount: input.response.trim().split(/\s+/).filter((word) => /[\p{L}\p{N}]/u.test(word)).length }), maxOutputTokens: 16384, signal })
-  try { return validateWritingAssessment(result.text, input.response) }
-  catch { throw new AiGenerationError(502, 'WRITING_RESULT_INCOMPLETE', 'Writing feedback was incomplete. Your answer is safe; retry the evaluation.') }
+  const userMessage = JSON.stringify({ ...input, wordCount: input.response.trim().split(/\s+/).filter((word) => /[\p{L}\p{N}]/u.test(word)).length })
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    signal?.throwIfAborted()
+    const result = await generateAiText({
+      userId, purpose: 'writing_evaluation', systemPrompt: WRITING_ASSESSMENT_PROMPT, userMessage,
+      geminiResponseSchema: writingResponseSchema, maxOutputTokens: 16384, signal,
+    })
+    try {
+      return validateWritingAssessment(result.text, input.response)
+    } catch (error) {
+      console.warn('Writing assessment rejected', {
+        provider: result.provider, model: result.model, attempt: attempt + 1,
+        reasons: error instanceof z.ZodError ? [...new Set(error.issues.map(issue => issue.code))] : ['invalid_json'],
+      })
+    }
+  }
+
+  throw new AiGenerationError(502, 'WRITING_RESULT_INCOMPLETE', 'Writing feedback was incomplete. Your answer is safe; retry the evaluation.')
 }

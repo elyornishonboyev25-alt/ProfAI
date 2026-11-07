@@ -35,6 +35,7 @@ export type GenerateAiTextInput = {
   maxOutputTokens: number
   images?: string[]
   jsonMode?: boolean
+  geminiResponseSchema?: Record<string, unknown>
   signal?: AbortSignal
   onText?: (text: string) => void
   audio?: Array<{ mimeType: string; data: string }>
@@ -153,6 +154,7 @@ async function requestGemini(input: GenerateAiTextInput): Promise<ProviderResult
               temperature: 0.45,
               maxOutputTokens: input.maxOutputTokens,
               ...(input.jsonMode === false ? {} : { responseMimeType: 'application/json' }),
+              ...(input.geminiResponseSchema ? { responseJsonSchema: input.geminiResponseSchema } : {}),
             },
           }),
         })

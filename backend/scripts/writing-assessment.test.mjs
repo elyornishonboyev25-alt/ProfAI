@@ -70,3 +70,31 @@ test('Writing generation uses the trusted rubric and server word count, preservi
   const checked = await assessWriting('writing-test-user', { taskType: 'task1', prompt: 'Describe the chart.', response, visualContext: '2000: 10; 2010: 20' })
   assert.equal(checked.overallBand, 6)
 })
+
+test('Writing requests structured Gemini feedback and retries an invalid result', async (t) => {
+  const originalKey = env.GEMINI_API_KEY
+  const originalUsage = prisma.aiUsageEvent.create
+  env.GEMINI_API_KEY = 'fake-writing-test-key'
+  prisma.aiUsageEvent.create = async ({ data }) => data
+  t.after(() => { env.GEMINI_API_KEY = originalKey; prisma.aiUsageEvent.create = originalUsage })
+  t.mock.method(console, 'warn', () => {})
+
+  const fetchMock = t.mock.method(globalThis, 'fetch', async (_url, options) => {
+    const { generationConfig } = JSON.parse(options.body)
+    assert.equal(generationConfig.responseMimeType, 'application/json')
+    const schema = generationConfig.responseJsonSchema
+    assert.ok(schema.required.includes('improvedVersion'))
+    assert.ok(schema.properties.criterionFeedback.required.includes('grammaticalRange'))
+    assert.deepEqual(schema.properties.errors.items.properties.category.enum, [
+      'grammar', 'vocabulary', 'spelling', 'punctuation', 'coherence', 'task',
+    ])
+
+    const feedback = fetchMock.mock.callCount() === 0 ? { ...result, improvedVersion: undefined } : result
+    return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify(feedback) }] } }] })
+  })
+
+  const checked = await assessWriting('writing-test-user', { taskType: 'task2', prompt: 'Discuss regular practice.', response })
+  assert.equal(fetchMock.mock.callCount(), 2)
+  assert.equal(checked.overallBand, 6)
+  assert.equal(checked.improvedVersion, result.improvedVersion)
+})

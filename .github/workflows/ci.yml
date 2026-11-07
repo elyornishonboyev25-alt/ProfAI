@@ -26,6 +26,12 @@ jobs:
       - name: Install backend dependencies for result recovery regressions
         run: npm ci --prefix backend
 
+      - name: Generate Prisma client for frontend regression tests
+        run: npm run prisma:generate
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/smart_test_pro
+
       - name: Check retired page responses and route access
         run: npm run test:retired-pages
 

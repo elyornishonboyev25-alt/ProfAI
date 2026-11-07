@@ -20,6 +20,7 @@ const result = { taskAchievement: 6, coherenceCohesion: 7, lexicalResource: 6, g
     { original: 'These student learns', corrected: 'These students learn', explanation: 'Plural agreement.', category: 'grammar' },
     { original: 'They study every day.', corrected: 'They study every day.', explanation: 'Already correct.', category: 'grammar' },
     { original: 'I has a problem', corrected: 'I have a problem', explanation: 'Invented evidence.', category: 'grammar' },
+    { original: 'Regular practice', corrected: 'Consistent practice', explanation: 'Unknown category.', category: 'style' },
   ] }
 
 test('Writing scores are computed by the server; corrections must quote the submitted essay', () => {
@@ -71,7 +72,7 @@ test('Writing generation uses the trusted rubric and server word count, preservi
   assert.equal(checked.overallBand, 6)
 })
 
-test('Writing requests structured Gemini feedback and retries an invalid result', async (t) => {
+test('Writing retries invalid feedback and falls back to JSON mode when Gemini rejects the schema', async (t) => {
   const originalKey = env.GEMINI_API_KEY
   const originalUsage = prisma.aiUsageEvent.create
   env.GEMINI_API_KEY = 'fake-writing-test-key'
@@ -82,19 +83,22 @@ test('Writing requests structured Gemini feedback and retries an invalid result'
   const fetchMock = t.mock.method(globalThis, 'fetch', async (_url, options) => {
     const { generationConfig } = JSON.parse(options.body)
     assert.equal(generationConfig.responseMimeType, 'application/json')
-    const schema = generationConfig.responseJsonSchema
-    assert.ok(schema.required.includes('improvedVersion'))
-    assert.ok(schema.properties.criterionFeedback.required.includes('grammaticalRange'))
-    assert.deepEqual(schema.properties.errors.items.properties.category.enum, [
-      'grammar', 'vocabulary', 'spelling', 'punctuation', 'coherence', 'task',
-    ])
-
-    const feedback = fetchMock.mock.callCount() === 0 ? { ...result, improvedVersion: undefined } : result
+    const call = fetchMock.mock.callCount()
+    const schema = generationConfig.responseSchema
+    if (call === 1) {
+      assert.equal(schema, undefined)
+    } else {
+      assert.equal(schema.type, 'OBJECT')
+      assert.ok(schema.required.includes('improvedVersion'))
+      assert.ok(schema.properties.criterionFeedback.required.includes('grammaticalRange'))
+    }
+    if (call === 0) return Response.json({ error: { status: 'INVALID_ARGUMENT' } }, { status: 400 })
+    const feedback = call === 1 ? { ...result, improvedVersion: undefined } : result
     return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify(feedback) }] } }] })
   })
 
   const checked = await assessWriting('writing-test-user', { taskType: 'task2', prompt: 'Discuss regular practice.', response })
-  assert.equal(fetchMock.mock.callCount(), 2)
+  assert.equal(fetchMock.mock.callCount(), 3)
   assert.equal(checked.overallBand, 6)
   assert.equal(checked.improvedVersion, result.improvedVersion)
 })

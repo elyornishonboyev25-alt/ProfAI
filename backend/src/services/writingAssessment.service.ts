@@ -8,23 +8,26 @@ export const writingRequestSchema = z.object({
 }).strict()
 const band = z.number().finite().min(0).max(9)
 const errorCategories = ['grammar', 'vocabulary', 'spelling', 'punctuation', 'coherence', 'task'] as const
+const writingCorrectionSchema = z.object({
+  original: z.string().max(1200), corrected: z.string().max(1500), explanation: z.string().max(1500),
+  category: z.enum(errorCategories),
+})
 const writingResultSchema = z.object({
   taskAchievement: band, coherenceCohesion: band, lexicalResource: band, grammaticalRange: band,
   criterionFeedback: z.object({ taskAchievement: z.string().trim().min(1).max(1500), coherenceCohesion: z.string().trim().min(1).max(1500), lexicalResource: z.string().trim().min(1).max(1500), grammaticalRange: z.string().trim().min(1).max(1500) }),
   summary: z.string().trim().min(1).max(2500),
   strengths: z.array(z.string().trim().min(1).max(1000)).max(5), improvements: z.array(z.string().trim().min(1).max(1000)).max(5),
-  errors: z.array(z.object({ original: z.string().max(1200), corrected: z.string().max(1500), explanation: z.string().max(1500),
-    category: z.enum(errorCategories) })).max(40),
+  errors: z.array(z.unknown()).max(40),
   correctedVersion: z.string().max(25000),
   improvedVersion: z.string().trim().min(1).max(25000),
 })
 
-const jsonText = { type: 'string' }
-const jsonBand = { type: 'number', minimum: 0, maximum: 9 }
-const jsonFeedbackList = { type: 'array', items: jsonText, maxItems: 5 }
+const jsonText = { type: 'STRING' }
+const jsonBand = { type: 'NUMBER' }
+const jsonFeedbackList = { type: 'ARRAY', items: jsonText }
 const criterionKeys = Object.keys(writingResultSchema.shape.criterionFeedback.shape)
 const jsonObject = (properties: Record<string, unknown>) => ({
-  type: 'object', properties, required: Object.keys(properties),
+  type: 'OBJECT', properties, required: Object.keys(properties),
 })
 const writingResponseSchema = jsonObject({
   ...Object.fromEntries(criterionKeys.map(key => [key, jsonBand])),
@@ -33,10 +36,10 @@ const writingResponseSchema = jsonObject({
   strengths: jsonFeedbackList,
   improvements: jsonFeedbackList,
   errors: {
-    type: 'array', maxItems: 40,
+    type: 'ARRAY',
     items: jsonObject({
       original: jsonText, corrected: jsonText, explanation: jsonText,
-      category: { type: 'string', enum: errorCategories },
+      category: jsonText,
     }),
   },
   correctedVersion: jsonText,
@@ -72,8 +75,13 @@ export function validateWritingAssessment(raw: string, response: string) {
       if (parsed[key] > criteria[key]) criterionFeedback[key] = shortAnswerRule
     }
   }
-  const errors = parsed.errors.filter((error) => error.original.trim() && response.includes(error.original) && error.explanation.trim()
-    && error.corrected.trim() && error.original.trim() !== error.corrected.trim())
+  const errors = parsed.errors.flatMap((entry) => {
+    const correction = writingCorrectionSchema.safeParse(entry)
+    if (!correction.success) return []
+    const error = correction.data
+    return error.original.trim() && response.includes(error.original) && error.explanation.trim()
+      && error.corrected.trim() && error.original.trim() !== error.corrected.trim() ? [error] : []
+  })
   return { ...parsed, ...criteria, criterionFeedback, summary: wordCount > 0 && wordCount <= 20 && overallBand === 1 ? shortAnswerRule : parsed.summary, errors, overallBand, xpAwarded: 20 + Math.round(overallBand / 9 * 60) }
 }
 
@@ -91,7 +99,9 @@ export async function assessWriting(userId: string, input: z.infer<typeof writin
     } catch (error) {
       console.warn('Writing assessment rejected', {
         provider: result.provider, model: result.model, attempt: attempt + 1,
-        reasons: error instanceof z.ZodError ? [...new Set(error.issues.map(issue => issue.code))] : ['invalid_json'],
+        reasons: error instanceof z.ZodError
+          ? [...new Set(error.issues.map(issue => `${issue.path[0] ?? 'root'}:${issue.code}`))]
+          : ['invalid_json'],
       })
     }
   }

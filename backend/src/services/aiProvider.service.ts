@@ -140,7 +140,7 @@ async function requestGemini(input: GenerateAiTextInput): Promise<ProviderResult
 
       let response: Response
       try {
-        response = await fetchWithTimeout(url, {
+        const request = (responseSchema?: Record<string, unknown>) => fetchWithTimeout(url, {
           signal: input.signal,
           method: 'POST',
           headers: {
@@ -154,10 +154,16 @@ async function requestGemini(input: GenerateAiTextInput): Promise<ProviderResult
               temperature: 0.45,
               maxOutputTokens: input.maxOutputTokens,
               ...(input.jsonMode === false ? {} : { responseMimeType: 'application/json' }),
-              ...(input.geminiResponseSchema ? { responseJsonSchema: input.geminiResponseSchema } : {}),
+              ...(responseSchema ? { responseSchema } : {}),
             },
           }),
         })
+        response = await request(input.geminiResponseSchema)
+        if (response.status === 400 && input.geminiResponseSchema) {
+          console.warn('Gemini rejected the structured response request', { model })
+          await response.body?.cancel().catch(() => {})
+          response = await request()
+        }
       } catch (error) {
         if (input.signal?.aborted) throw error
         lastError = error instanceof ProviderRequestError
@@ -403,6 +409,9 @@ export async function generateAiText(input: GenerateAiTextInput): Promise<AiGene
       lastError = error instanceof ProviderRequestError
         ? error
         : new ProviderRequestError('AI_PROVIDER_FAILED', 'AI provider request failed.')
+      if (input.purpose === 'writing_evaluation') {
+        console.warn('Writing provider failed', { provider, code: lastError.code })
+      }
       // Never splice a second model's answer into a partially delivered reply.
       if (emitted) break
     }

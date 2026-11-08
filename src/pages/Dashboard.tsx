@@ -368,12 +368,11 @@ export default function Dashboard() {
                       <CartesianGrid vertical={false} stroke="#e8dfe1" strokeDasharray="4 4" />
                       <XAxis dataKey="label" tickFormatter={(label: string) => uiCopy(label)} axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} />
                       <YAxis
+                        width={72}
                         axisLine={false}
                         tickLine={false}
                         tick={{ fill: '#94a3b8', fontSize: 10 }}
-                        tickFormatter={(value: number) => value < 3600
-                          ? `${Number((value / 60).toFixed(2))}m`
-                          : `${Number((value / 3600).toFixed(2))}h`}
+                        tickFormatter={formatStudyTime}
                       />
                       <Tooltip
                         formatter={(value) => [formatStudyTime(Number(value)), 'Study time']}

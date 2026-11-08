@@ -17,6 +17,7 @@ import { accountStorageFor } from '@/utils/accountStorage'
 import i18n from '@/i18n'
 import { saveTestAudio } from '@/utils/testAudioStorage'
 import { regradeFullMockSpeaking } from '@/services/fullMockSpeakingReview'
+import { waitForSpeakingRateLimit } from '@/lib/speakingRateLimit'
 import type { FullMockSectionResult } from '@/utils/ieltsMockCatalog'
 
 export async function run() {
@@ -51,6 +52,28 @@ export async function run() {
     assert.equal(attempts.length, 2)
     assert.equal(attempts[0].body, attempts[1].body, 'Retry reuses the same prepared recordings')
     assert.equal(attempts[0].signal, attempts[1].signal, 'Retries share the original assessment deadline')
+    attempts.length = 0
+    const limited = new ApiError('Wait for the assessment window.', 429, 'SPEAKING_ASSESSMENT_RATE_LIMIT', { retryAfterMs: 15 })
+    apiClient.post = (async (_path: string, body: unknown, options?: { signal?: AbortSignal | null }) => {
+      attempts.push({ body, signal: options?.signal })
+      if (attempts.length === 1) throw limited
+      return evaluation
+    }) as typeof apiClient.post
+    assert.equal((await evaluateSpeaking({ modeLabel: 'Speaking Mock 11', history, stats, audio })).source, 'ai')
+    assert.equal(attempts.length, 2, 'A known short assessment throttle retries once')
+    assert.equal(attempts[0].body, attempts[1].body, 'Throttled assessment keeps every original recording')
+    assert.equal(attempts[0].signal, attempts[1].signal, 'Waiting does not extend the assessment deadline')
+    let limitedCalls = 0
+    apiClient.post = (async () => { limitedCalls++; throw limited }) as typeof apiClient.post
+    assert.equal((await evaluateSpeaking({ modeLabel: 'Speaking Mock 11', history, stats, audio })).source, 'offline')
+    assert.equal(limitedCalls, 2, 'Repeated throttles cannot create an automatic retry loop')
+    const cancelled = new AbortController()
+    const waiting = waitForSpeakingRateLimit(new ApiError('Wait', 429, 'SPEAKING_ASSESSMENT_RATE_LIMIT', { retryAfterMs: 60_000 }), 'SPEAKING_ASSESSMENT_RATE_LIMIT', cancelled.signal)
+    cancelled.abort()
+    await assert.rejects(waiting, error => (error as Error).name === 'AbortError')
+    for (const retryAfterMs of [undefined, 0, -1, 60_001, NaN, Infinity, '15']) {
+      assert.equal(await waitForSpeakingRateLimit(new ApiError('Wait', 429, 'SPEAKING_ASSESSMENT_RATE_LIMIT', { retryAfterMs }), 'SPEAKING_ASSESSMENT_RATE_LIMIT', new AbortController().signal), false)
+    }
     for (const failure of [new ApiError('Login required.', 401), new ApiError('Study limit reached.', 403), new ApiError('Too many requests.', 429), new ApiError('Audio is too large.', 413), new ApiError('AI is not configured on the server yet.', 503, 'AI_NOT_CONFIGURED')]) {
       let calls = 0
       apiClient.post = (async () => { calls++; throw failure }) as typeof apiClient.post

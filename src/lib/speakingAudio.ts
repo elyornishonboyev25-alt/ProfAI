@@ -1,4 +1,5 @@
 import { apiClient, ApiError } from '@/lib/apiClient'
+import { waitForSpeakingRateLimit } from './speakingRateLimit'
 
 export type ExaminerVoice = 'marin' | 'cedar'
 
@@ -43,10 +44,12 @@ export async function transcribeAnswer(blob: Blob, signal?: AbortSignal): Promis
       bounded.throwIfAborted()
       return apiClient.post<{ text: string }>('/ai/speaking-audio/transcribe', { audioBase64, mimeType }, { signal: bounded })
     }
-    const response = await transcribe().catch((error: unknown) => {
+    const response = await transcribe().catch(async (error: unknown) => {
       // Recover once from a dropped connection or unavailable provider using
       // the saved file. Both attempts share cancellation and the same deadline.
-      if (bounded.aborted || (error instanceof ApiError && ![502, 503, 504].includes(error.status))) throw error
+      if (bounded.aborted) throw error
+      const rateLimitReset = await waitForSpeakingRateLimit(error, 'SPEAKING_MEDIA_RATE_LIMIT', bounded)
+      if (!rateLimitReset && error instanceof ApiError && ![502, 503, 504].includes(error.status)) throw error
       return transcribe()
     })
     return response.text.trim()

@@ -128,7 +128,7 @@ export async function run() {
     assert.equal(ended, 4)
     playback.cancel()
 
-    for (const status of [401, 403, 409, 429]) {
+    for (const status of [401, 402, 403, 409, 429]) {
       failure = new ApiError(`Specific failure ${status}`, status)
       const sourceCount = sources.length
       playback.ask('Rejected question?', 'cedar', 'male', callbacks)
@@ -138,7 +138,24 @@ export async function run() {
       assert.equal(ended, 4)
       playback.cancel()
     }
-    console.log('PASS: device failures can retry natural voice; account and rate-limit errors remain visible')
+    failure = new ApiError('Too many audio requests.', 429, 'SPEAKING_MEDIA_RATE_LIMIT')
+    const limitedRequests = requests
+    const errorsBeforeLimit = errors.length
+    playback.ask('Throttled question?', 'cedar', 'male', callbacks)
+    await tick()
+    assert.equal(sources.at(-1), 'device', 'A known media throttle continues with an installed matching voice')
+    assert.equal(requests, limitedRequests + 1, 'Voice throttles do not immediately repeat the provider request')
+    assert.equal(errors.length, errorsBeforeLimit)
+    assert.equal(ended, 4, 'The candidate must hear the device prompt before recording starts')
+    utterance!.onend?.()
+    assert.equal(ended, 5)
+    playback.cancel()
+    playback.ask('Natural voice required?', 'cedar', 'male', callbacks, false, { deviceFallback: false })
+    await tick()
+    assert.match(errors.at(-1)!, /Natural voice could not play/)
+    assert.equal(ended, 5, 'Callers requiring natural audio remain paused')
+    playback.cancel()
+    console.log('PASS: media throttles use a matching device voice; account and unknown rate-limit errors remain visible')
   } finally {
     playback.cancel()
     apiClient.post = originalPost

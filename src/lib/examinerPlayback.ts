@@ -154,7 +154,10 @@ export class ExaminerPlayback {
       play()
     }).catch((error: unknown) => {
       if (!current() || controller.signal.aborted) return
-      if (error instanceof ApiError && [401, 403, 409, 429].includes(error.status)) {
+      // Our media throttle limits provider calls, not installed device speech.
+      // Keep account errors and unknown throttles visible.
+      const mediaLimited = error instanceof ApiError && error.status === 429 && error.code === 'SPEAKING_MEDIA_RATE_LIMIT'
+      if (!mediaLimited && error instanceof ApiError && [401, 402, 403, 409, 429].includes(error.status)) {
         this.retry = () => this.ask(text, voice, gender, callbacks, false, { ...options, audio: undefined })
         fail(error.message)
         return

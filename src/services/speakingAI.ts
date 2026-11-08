@@ -1,5 +1,5 @@
-// AI examiner brain. Reuses the Gemini key-rotation layer from geminiAI.ts so it
-// inherits the same multi-key / multi-model fallback (never blocked by quota).
+// AI examiner brain. Uses the backend provider fallback and scripted questions
+// when generation is unavailable; provider quotas still apply.
 //   - getExaminerReply(): the adaptive follow-up engine (Features 3 & 4).
 //   - evaluateSpeaking(): IELTS band scoring across the 4 official criteria (Feature 6).
 
@@ -9,6 +9,7 @@ import { estimateBandsFromStats } from '@/lib/speakingScoring'
 import { apiClient, ApiError } from '@/lib/apiClient'
 import { withAssessmentDeadline } from '@/utils/assessmentDeadline'
 import { prepareSpeakingAssessmentAudio } from '@/lib/speakingAssessmentAudio'
+import { waitForSpeakingRateLimit } from '@/lib/speakingRateLimit'
 import { collectSpeakingRewrites, validateSpeakingRewrites } from '../../backend/src/services/speakingRewrites'
 import { FAIR_ASSESSMENT_POLICY, SPEAKING_CALIBRATION } from '../../backend/src/services/ieltsAssessmentPolicy'
 import { useAuthStore } from '@/store/authStore'
@@ -201,9 +202,11 @@ async function requestSpeakingAssessment(path: string, body: unknown, signal: Ab
   const request = () => apiClient.post<Omit<SpeakingEvaluation, 'stats'>>(path, body, { signal })
   try { return await request() }
   catch (error) {
-    // Retry a temporary gateway/provider failure once, using the same recordings
-    // and deadline. Authentication, billing and invalid uploads need user action.
-    if (signal.aborted || !(error instanceof ApiError) || ![502, 503, 504].includes(error.status) || error.code === 'AI_NOT_CONFIGURED') throw error
+    // A short application throttle can expire without losing the completed test.
+    // Only our explicit throttle code is eligible for a timed retry.
+    if (signal.aborted) throw error
+    const rateLimitReset = await waitForSpeakingRateLimit(error, 'SPEAKING_ASSESSMENT_RATE_LIMIT', signal)
+    if (!rateLimitReset && (!(error instanceof ApiError) || ![502, 503, 504].includes(error.status) || error.code === 'AI_NOT_CONFIGURED')) throw error
     signal.throwIfAborted()
     return request()
   }

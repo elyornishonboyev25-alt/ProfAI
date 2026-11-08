@@ -175,6 +175,16 @@ export async function run() {
   assert.equal(transcribedFiles.length, beforeRetry + 2, 'A temporary transcription failure recovers automatically')
   assert.deepEqual(transcribedFiles.at(-1), transcribedFiles.at(-2), 'Automatic recovery sends the same saved recording')
   const sessionPost = apiClient.post
+  const rateLimitedCalls: Array<{ body: unknown; signal?: AbortSignal | null }> = []
+  apiClient.post = (async (_path: string, body: unknown, options?: { signal?: AbortSignal | null }) => {
+    rateLimitedCalls.push({ body, signal: options?.signal })
+    if (rateLimitedCalls.length === 1) throw new ApiError('Wait for audio processing.', 429, 'SPEAKING_MEDIA_RATE_LIMIT', { retryAfterMs: 15 })
+    return { text: 'My saved answer.' }
+  }) as typeof apiClient.post
+  assert.equal(await transcribeAnswer(first), 'My saved answer.')
+  assert.equal(rateLimitedCalls.length, 2, 'A short media throttle retries the saved recording once')
+  assert.deepEqual(rateLimitedCalls[0].body, rateLimitedCalls[1].body)
+  assert.equal(rateLimitedCalls[0].signal, rateLimitedCalls[1].signal, 'Waiting keeps the original transcription deadline')
   for (const status of [400, 401, 403, 409, 413, 415, 422, 429]) {
     let calls = 0
     const failure = new ApiError('Processing rejected', status)

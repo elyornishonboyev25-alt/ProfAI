@@ -1,5 +1,12 @@
-import rateLimit from 'express-rate-limit'
+import rateLimit, { type AugmentedRequest, type RateLimitExceededEventHandler } from 'express-rate-limit'
 import { env } from '../config/env.js'
+
+function speakingLimitHandler(code: string, message: string): RateLimitExceededEventHandler {
+  return (req, res) => {
+    const reset = (req as AugmentedRequest).rateLimit.resetTime?.getTime() ?? Date.now() + 60_000
+    res.status(429).json({ message, code, details: { retryAfterMs: Math.max(1000, reset - Date.now()) } })
+  }
+}
 
 export const authRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -34,7 +41,7 @@ export const speakingMediaRateLimit = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => req.user!.id,
-  message: { message: 'Too many audio requests. Please wait a moment and retry.', code: 'SPEAKING_MEDIA_RATE_LIMIT' },
+  handler: speakingLimitHandler('SPEAKING_MEDIA_RATE_LIMIT', 'Too many audio requests. Please wait a moment and retry.'),
 })
 
 export const speakingAssessmentRateLimit = rateLimit({
@@ -43,7 +50,7 @@ export const speakingAssessmentRateLimit = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => req.user!.id,
-  message: { message: 'Too many assessment requests. Please wait a moment and retry.', code: 'SPEAKING_ASSESSMENT_RATE_LIMIT' },
+  handler: speakingLimitHandler('SPEAKING_ASSESSMENT_RATE_LIMIT', 'Too many assessment requests. Please wait a moment and retry.'),
 })
 
 export const guestDiagnosticRateLimit = rateLimit({

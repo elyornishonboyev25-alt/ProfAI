@@ -10,6 +10,8 @@ If server audio is unavailable, playback automatically tries a matching installe
 
 Provider access, quotas and the quality of installed browser voices remain deployment/device dependencies. No credentials are included in client code or test fixtures.
 
+Speaking media and final assessment use separate per-user request windows from chat and Live AI. A `SPEAKING_MEDIA_RATE_LIMIT` response can fall back to a matching installed English voice; account restrictions and unknown throttles still pause playback. Transcription and final assessment can wait for their own server-provided reset and retry once with the same recordings and original deadline. Cancellation stops that wait. This does not extend provider quotas or change subscription allowances.
+
 ## Recording and assessment
 
 Capture requests mono 48 kHz where available, with echo cancellation, noise suppression and automatic gain. The recorder requests 96 kbps audio and preserves the final asynchronous chunk and actual recording format. Safari avoids simultaneous browser recognition and recording.

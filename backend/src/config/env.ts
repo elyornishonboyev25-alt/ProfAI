@@ -29,6 +29,7 @@ const envSchema = z.object({
   APPLICATION_WORKSPACE_ENABLED: z.enum(['true', 'false']).default('false').transform((value) => value === 'true'),
   AUTOMATED_BILLING_ENABLED: z.enum(['true', 'false']).default('false').transform((value) => value === 'true'),
   BILLING_SITE_URL: z.string().url().default('https://ivygoo.com'),
+  BILLING_PROMO_CODES: z.string().default('{}'),
   PAYME_MERCHANT_ID: z.string().default(''),
   PAYME_SECRET_KEY: z.string().default(''),
   PAYME_CHECKOUT_URL: z.enum(['https://checkout.paycom.uz', 'https://test.paycom.uz']).default('https://checkout.paycom.uz'),

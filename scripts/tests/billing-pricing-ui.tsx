@@ -26,8 +26,9 @@ export async function run() {
     if (path.startsWith('/billing/quote')) {
       requests++
       if (failQuote) throw new Error('No rate')
-      const product = BILLING_PRODUCTS.find(p => p.code === new URL(path, 'http://localhost').searchParams.get('product'))!
-      return { product: product.code, amountUsd: product.amountUsd, amountUzs: Math.round(product.amountUsd * 13100 / 100), rate: 13100, date: '2026-10-06', expiresAt: Date.now() + 900000, token: 'signed-' + product.code } as T
+      const query = new URL(path, 'http://localhost').searchParams
+      const product = BILLING_PRODUCTS.find(p => p.code === query.get('product'))!
+      return { product: product.code, currency: query.get('currency') ?? 'UZS', promoCode: query.get('promoCode') ?? '', amountUsd: product.amountUsd, amountUzs: Math.round(product.amountUsd * 13100 / 100), rate: 13100, date: '2026-10-06', expiresAt: Date.now() + 900000, token: 'signed-' + product.code } as T
     }
     if (path === '/billing/discount') return { spun: false, discount: null } as T
     if (path === '/promo/status') return { telegramEnabled: true, botUsername: 'IvyGoo_bot', channelUrl: 'https://t.me/IvyGoo' } as T

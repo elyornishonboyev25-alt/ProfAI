@@ -46,26 +46,37 @@ export async function dollarRate(): Promise<DollarRate> {
   return pending
 }
 
-const quoteSchema = z.object({ product: z.string(), amountUsd: z.number().int().positive(), amountUzs: z.number().int().positive(),
-  rate: z.number().positive(), date: z.string(), expiresAt: z.number().int().positive() })
+const quoteSchema = z.object({ product: z.string(), amountUsd: z.number().int().nonnegative(), amountUzs: z.number().int().nonnegative(),
+  rate: z.number().nonnegative(), date: z.string(), expiresAt: z.number().int().positive(),
+  currency: z.enum(['UZS', 'USD']).optional(), userId: z.string().optional(), promoCode: z.string().optional() })
 const sign = (payload: string) => createHmac('sha256', env.ACCESS_TOKEN_SECRET).update(`billing-quote:${payload}`).digest()
+type QuoteContext = { currency: 'UZS' | 'USD'; userId: string; promoCode: string }
 
-export function createPaymentQuote(product: BillingProduct, rate: DollarRate, now = Date.now()) {
+export function createPaymentQuote(product: BillingProduct, rate: DollarRate, now = Date.now(), options?: QuoteContext & { amountUzs: number }) {
   // Round the complete invoice once to whole soum; Payme/Click receive its exact tiyin value.
   const quote = { product: product.code, amountUsd: product.amountUsd, amountUzs: Math.round(product.amountUsd * rate.rate / 100),
-    ...rate, expiresAt: now + QUOTE_TTL }
+    ...rate, expiresAt: now + QUOTE_TTL, ...options }
   const payload = Buffer.from(JSON.stringify(quote)).toString('base64url')
   return { ...quote, token: `${payload}.${sign(payload).toString('base64url')}` }
 }
 
-export function verifyPaymentQuote(token: string | undefined, product: BillingProduct, now = Date.now()) {
+export function readPaymentQuote(token: string | undefined, now = Date.now()) {
   try {
     const [payload, signature, extra] = (token ?? '').split('.')
     const actual = Buffer.from(signature ?? '', 'base64url')
     const expected = sign(payload ?? '')
     if (extra || actual.length !== expected.length || !timingSafeEqual(actual, expected)) throw new Error('Invalid signature')
     const quote = quoteSchema.parse(JSON.parse(Buffer.from(payload, 'base64url').toString()))
-    if (quote.product !== product.code || quote.amountUsd !== product.amountUsd || quote.expiresAt <= now || quote.expiresAt > now + QUOTE_TTL) throw new Error('Expired quote')
+    if (quote.expiresAt <= now || quote.expiresAt > now + QUOTE_TTL) throw new Error('Expired quote')
     return quote
   } catch { throw new BillingError('QUOTE_EXPIRED', 'Please refresh the payment amount before continuing.', 409) }
+}
+
+export function verifyPaymentQuote(token: string | undefined, product: BillingProduct, now = Date.now(), context?: QuoteContext & { amountUzs: number }) {
+  const quote = readPaymentQuote(token, now)
+  if (quote.product !== product.code || quote.amountUsd !== product.amountUsd ||
+      (context && (quote.currency !== context.currency || quote.userId !== context.userId || quote.promoCode !== context.promoCode || quote.amountUzs !== context.amountUzs))) {
+    throw new BillingError('QUOTE_EXPIRED', 'Please refresh the payment amount before continuing.', 409)
+  }
+  return quote
 }

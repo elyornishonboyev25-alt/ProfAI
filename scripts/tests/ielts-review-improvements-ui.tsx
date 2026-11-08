@@ -63,6 +63,33 @@ export async function run() {
     assert.equal(container.textContent!.includes('I enjoy reading books.'), false, 'Saved mismatched data is never displayed as the learner\'s rewrite')
     assert.ok(container.textContent!.includes('An improved version is unavailable'))
 
+    let repairCalls = 0
+    apiClient.post = (async (path: string, body: { history: ExaminerTurn[] }) => {
+      repairCalls++
+      assert.equal(path, '/ai/speaking-audio/rewrites', 'Coaching recovery never repeats audio grading')
+      assert.deepEqual(body.history, [history[4]], 'Only the missing non-empty answer is regenerated')
+      return { improvedAnswers: [{ answerIndex: 0, original: history[4].text, improved: 'I read at home with my sister.' }] }
+    }) as typeof apiClient.post
+    const partial = { ...evaluation, improvedAnswers: [evaluation.improvedAnswers![0]] }
+    await render(<React.StrictMode><SpeakingResult evaluation={partial} transcript={history} modeLabel="Speaking Mock 1" autoImprove onRetry={() => {}} onExit={() => {}} /></React.StrictMode>)
+    assert.equal(repairCalls, 1, 'StrictMode and overlapping recovery share one request')
+    assert.ok(container.textContent!.includes('I read at home with my sister.'))
+    assert.ok(container.textContent!.includes('I enjoy reading books.'))
+    assert.ok(container.textContent!.includes('6.0'), 'The valid band stays visible during coaching recovery')
+    await render(<SpeakingResult evaluation={partial} transcript={history} modeLabel="Speaking Mock 1" reviewMode onRetry={() => {}} onExit={() => {}} />)
+    assert.ok(container.textContent!.includes('I read at home with my sister.'), 'Reloaded reviews reuse recovered coaching')
+    assert.equal(repairCalls, 1)
+
+    let rejectCoaching: (reason: Error) => void = () => {}
+    apiClient.post = (() => new Promise((_resolve, reject) => { rejectCoaching = reject })) as typeof apiClient.post
+    const failedHistory: ExaminerTurn[] = [{ role: 'candidate', text: 'I likes swim.' }]
+    await render(<SpeakingResult evaluation={{ ...evaluation, improvedAnswers: [] }} transcript={failedHistory} modeLabel="Speaking Mock 2" autoImprove onRetry={() => {}} onExit={() => {}} />)
+    assert.ok(container.textContent!.includes('6.0'), 'The band is usable before optional coaching finishes')
+    assert.ok(container.querySelector('[role="status"]')?.textContent?.includes('Preparing your improved answer'))
+    await act(async () => rejectCoaching(new Error('Provider unavailable')))
+    assert.ok(container.textContent!.includes('6.0'), 'A second provider failure cannot erase the validated score')
+    assert.ok([...container.querySelectorAll('button')].some(button => button.textContent?.includes('Generate improved answer')), 'A failed recovery remains retriable without retaking the test')
+
     const fullTest = getWritingFullTestById('writing-full-1')!
     const responses = ['The diagram shows the stages of smoking fish.', 'I believe learning languages is useful because it helps people communicate.']
     const draftKey = `profai:writing:draft:guest:${fullTest.id}:mock:review-test`

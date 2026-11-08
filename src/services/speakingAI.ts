@@ -10,6 +10,7 @@ import { apiClient, ApiError } from '@/lib/apiClient'
 import { withAssessmentDeadline } from '@/utils/assessmentDeadline'
 import { collectSpeakingRewrites, validateSpeakingRewrites } from '../../backend/src/services/speakingRewrites'
 import { FAIR_ASSESSMENT_POLICY, SPEAKING_CALIBRATION } from '../../backend/src/services/ieltsAssessmentPolicy'
+import { useAuthStore } from '@/store/authStore'
 
 async function speakingGeneration(system: string, message: string, tokens: number, purpose: 'speaking_examiner' | 'speaking_evaluation'): Promise<string> {
   const controller = new AbortController()
@@ -227,7 +228,7 @@ export async function evaluateSpeaking(params: EvaluateParams): Promise<Speaking
       }
       const response = await requestSpeakingAssessment('/ai/speaking-audio/assess-transcript', { modeLabel: params.modeLabel, history: params.history, durationSec: params.stats.durationSec }, signal)
       return { response, assessmentMode: 'transcript' as const }
-    })
+    }, 120_000)
     if (response.assessmentMode !== assessmentMode || response.source !== 'ai' ||
       ![response.fluencyBand, response.lexicalBand, response.grammarBand, response.pronunciationBand].every(band => typeof band === 'number' && Number.isFinite(band) && band >= 0 && band <= 9) ||
       !response.summary?.trim() || !Array.isArray(response.strengths) || !response.strengths.every(item => typeof item === 'string' && item.trim()) ||
@@ -244,8 +245,21 @@ export async function evaluateSpeaking(params: EvaluateParams): Promise<Speaking
 }
 
 export async function improveSpeakingAnswer(text: string): Promise<string> {
-  const response = await withAssessmentDeadline(signal => apiClient.post<{ improvedAnswers: SpeakingEvaluation['improvedAnswers'] }>('/ai/speaking-audio/rewrites', { history: [{ role: 'candidate', text }] }, { signal }))
-  return validateSpeakingRewrites(response.improvedAnswers, [{ text }])[0].improved
+  return (await improveSpeakingAnswers([{ role: 'candidate', text }]))[0].improved
+}
+
+const pendingSpeakingRewrites = new Map<string, Promise<ReturnType<typeof validateSpeakingRewrites>>>()
+
+export function improveSpeakingAnswers(history: ExaminerTurn[]) {
+  const key = JSON.stringify([useAuthStore.getState().user?.id ?? 'guest', history])
+  let pending = pendingSpeakingRewrites.get(key)
+  if (!pending) {
+    pending = withAssessmentDeadline(signal => apiClient.post<{ improvedAnswers: SpeakingEvaluation['improvedAnswers'] }>('/ai/speaking-audio/rewrites', { history }, { signal }))
+      .then(response => validateSpeakingRewrites(response.improvedAnswers, history.filter(turn => turn.role === 'candidate')))
+      .finally(() => { pendingSpeakingRewrites.delete(key) })
+    pendingSpeakingRewrites.set(key, pending)
+  }
+  return pending
 }
 
 // Per-answer coaching; whole-test scoring uses the trusted server assessment.

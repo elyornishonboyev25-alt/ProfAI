@@ -47,6 +47,7 @@ export class ExaminerPlayback {
     this.controller = controller
     let completed = false
     let failed = false
+    let usingDevice = false
     const finish = () => {
       if (!current() || completed || failed) return
       completed = true
@@ -66,6 +67,9 @@ export class ExaminerPlayback {
     callbacks.loading(true)
     const playDevice = async () => {
       if (!current() || completed || controller.signal.aborted) return
+      if (usingDevice) return
+      usingDevice = true
+      clearTimeout(this.timer)
       failed = false
       if (options.deviceFallback === false) { fail('Natural voice could not play. Please retry audio.'); return }
       const installedVoice = getExaminerVoice(gender) ?? await waitForExaminerVoice(gender, controller.signal)
@@ -79,8 +83,14 @@ export class ExaminerPlayback {
       })
     }
     if (device) { void playDevice(); return }
+    // A slow provider must not freeze the examiner midway through a mock.
+    // Late neural responses are discarded after switching to the device voice.
+    if (options.deviceFallback !== false) {
+      this.timer = setTimeout(() => { if (getExaminerVoice(gender)) void playDevice() }, 12_000)
+    }
     void (options.audio ?? examinerAudio(text, voice, controller.signal, options.language, true)).then((url) => {
-      if (!current()) { URL.revokeObjectURL(url); return }
+      if (!current() || usingDevice || completed) { URL.revokeObjectURL(url); return }
+      clearTimeout(this.timer)
       this.url = url
       this.player.src = url
       let switchingToDevice = false
@@ -102,7 +112,7 @@ export class ExaminerPlayback {
         this.timer = setTimeout(() => {
           if (!current() || completed) return
           this.player.pause()
-          fail('Examiner audio was interrupted. Tap Play examiner to resume.')
+          fallback()
         }, 10_000)
         void this.player.play().catch((error: unknown) => {
           if (switchingToDevice) return
@@ -115,7 +125,7 @@ export class ExaminerPlayback {
       const watchProgress = () => {
         if (!current() || completed || failed) return
         clearTimeout(this.timer)
-        this.timer = setTimeout(() => fail('Examiner audio was interrupted. Tap Play examiner to resume.'), 15_000)
+        this.timer = setTimeout(fallback, 15_000)
       }
       this.player.onplaying = () => { if (current() && !completed && !failed) { heardAudio = true; watchProgress(); callbacks.loading(false); callbacks.started('neural') } }
       this.player.ontimeupdate = watchProgress

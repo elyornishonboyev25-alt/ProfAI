@@ -180,6 +180,34 @@ export async function run() {
   assert.equal(ended, 0, 'Cancelled callbacks cannot advance a session')
   console.log('PASS: blocked playback and cancelled callbacks never start recording')
 
+  // Drive the production watchdog directly: a hung voice request must switch
+  // once, and a late neural result cannot play over the device voice.
+  const nativeSetTimeout = globalThis.setTimeout
+  let voiceWatchdog: (() => void) | undefined
+  globalThis.setTimeout = ((handler: () => void, delay?: number, ...args: unknown[]) => {
+    if (delay === 12_000) voiceWatchdog = handler
+    return nativeSetTimeout(handler, delay, ...args)
+  }) as typeof setTimeout
+  let releaseNeural: (url: string) => void = () => {}
+  const sources: string[] = []
+  try {
+    const slowAudio = new Promise<string>(resolve => { releaseNeural = resolve })
+    playback.ask('Final question?', 'cedar', 'male', { loading() {}, started(source) { sources.push(source) }, ended() { ended++ }, failed() { failed++ } }, false, { audio: slowAudio })
+    assert.ok(voiceWatchdog)
+    voiceWatchdog()
+    await wait()
+    assert.deepEqual(sources, ['device'])
+    assert.equal(ended, 0, 'Switching voices does not submit an answer or finish the test')
+    const deviceEnding = utterances.at(-1)!.onend!
+    releaseNeural('blob:late-neural')
+    await wait()
+    assert.deepEqual(sources, ['device'], 'A late provider response cannot replace active device speech')
+    deviceEnding()
+    assert.equal(ended, 1)
+    playback.cancel()
+  } finally { globalThis.setTimeout = nativeSetTimeout }
+  console.log('PASS: stalled voice switches once to the matching device voice and discards late audio')
+
   let saved: any = null
   const root = createRoot(container)
   blockPlayback = true

@@ -13,6 +13,23 @@ for (const name of ['GEMINI_API_KEY', 'GEMINI_API_KEY_2', 'GEMINI_API_KEY_3', 'G
 const { default: routes } = await import('../dist/routes/speakingAudio.routes.js')
 const { env } = await import('../dist/config/env.js')
 const { errorHandler } = await import('../dist/middleware/error.js')
+const { aiRateLimit, speakingMediaRateLimit, speakingAssessmentRateLimit } = await import('../dist/middleware/rateLimit.js')
+
+test('Speaking media, chat and final assessment have independent per-user rate limits', async (t) => {
+  const app = express()
+  app.use((req, _res, next) => { req.user = { id: 'speaking-rate-isolation-user' }; next() })
+  app.post('/media', speakingMediaRateLimit, (_req, res) => res.json({ ok: true }))
+  app.post('/chat', aiRateLimit, (_req, res) => res.json({ ok: true }))
+  app.post('/assessment', speakingAssessmentRateLimit, (_req, res) => res.json({ ok: true }))
+  const server = app.listen(0)
+  t.after(() => { server.closeAllConnections(); server.close() })
+  const request = path => fetch(`http://127.0.0.1:${server.address().port}${path}`, { method: 'POST' })
+  for (let index = 0; index < 60; index++) assert.equal((await request('/media')).status, 200)
+  assert.equal((await request('/media')).status, 429, 'Media retains abuse protection')
+  for (let index = 0; index < env.AI_RATE_LIMIT_MAX; index++) assert.equal((await request('/chat')).status, 200)
+  assert.equal((await request('/chat')).status, 429)
+  assert.equal((await request('/assessment')).status, 200, 'Finishing a mock remains available after voice/chat limits')
+})
 
 test('speaking audio preserves voice profiles, retries and MP4 transcription', async (t) => {
   const app = express()
@@ -124,6 +141,15 @@ test('speaking audio preserves voice profiles, retries and MP4 transcription', a
     assert.equal(wave.readUInt32LE(24), 24000)
     assert.deepEqual([...wave.subarray(44)], [0, 1, 2, 3])
   }
+  provider = async (url, { body }) => {
+    if (String(url).includes('/audio/speech') || String(url).includes(env.GEMINI_TTS_MODEL)) return new Response('{}', { status: 429 })
+    assert.ok(String(url).includes('gemini-2.5-flash-preview-tts'), 'Unavailable speech models fall back to another audio model')
+    const payload = JSON.parse(body)
+    assert.deepEqual(payload.generationConfig.speechConfig.voiceConfig, { prebuiltVoiceConfig: { voiceName: 'Charon' } })
+    return Response.json({ candidates: [{ content: { parts: [{ inlineData: { data: Buffer.from('fallback-wave').toString('base64'), mimeType: 'audio/wav' } }] } }] })
+  }
+  assert.equal((await request('/voice', { text: 'Quota fallback?', voice: 'cedar' })).status, 200)
+
   // A deployment with only Gemini still records/transcribes every browser format.
   env.OPENAI_API_KEY = ''
   const modernModel = env.GEMINI_TTS_MODEL

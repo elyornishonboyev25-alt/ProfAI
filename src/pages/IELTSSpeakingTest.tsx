@@ -527,7 +527,7 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
   }
 
   if (evaluating) return <div className="surface-card mx-auto mt-8 max-w-2xl p-8 text-center"><Loader2 className="mx-auto h-8 w-8 animate-spin text-red-500" /><p className="mt-3 text-sm font-semibold text-slate-700">Assessing all your answers using the IELTS criteria…</p></div>
-  if (finished && evaluation) return <SpeakingResult evaluation={evaluation} transcript={history} modeLabel={day.title} onRetry={() => setFinished(false)} onRegrade={() => void finishPractice()} onExit={onExit} />
+  if (finished && evaluation) return <SpeakingResult evaluation={evaluation} transcript={history} modeLabel={day.title} autoImprove={!saved?.finished} onImprovedAnswers={improvedAnswers => setEvaluation(current => current ? { ...current, improvedAnswers } : current)} onRetry={() => setFinished(false)} onRegrade={() => void finishPractice()} onExit={onExit} />
   if (finished) return <div className="surface-card mx-auto mt-8 max-w-2xl p-6 text-center"><p className="text-sm text-slate-600">Your saved answers are ready for assessment using the IELTS criteria.</p><button onClick={() => void finishPractice()} className="arena-primary-btn mt-4">Assess saved answers</button></div>
 
   return (

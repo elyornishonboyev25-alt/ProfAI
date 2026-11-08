@@ -49,29 +49,34 @@ export async function generateExaminerAudio(text: string, voice: 'marin' | 'ceda
   // Gemini deployments can provide natural examiner audio without a second
   // provider subscription. Keep male/female voices consistent across providers.
   for (const key of geminiKeys()) {
-    const modernTts = /^gemini-3\.8-/.test(env.GEMINI_TTS_MODEL)
-    const audio = await request(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(env.GEMINI_TTS_MODEL)}:generateContent`, {
-      method: 'POST', headers: { 'x-goog-api-key': key, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [modernTts ? { text, speech_metadata: { style } } : { text: `${style}\nRead this text aloud:\n${text}` }] }],
-        generationConfig: {
-          responseModalities: ['AUDIO'],
-          speechConfig: { voiceConfig: modernTts ? { voice: voice === 'cedar' ? 'Charon' : 'Kore' } : { prebuiltVoiceConfig: { voiceName: voice === 'cedar' ? 'Charon' : 'Kore' } } },
-        },
-      }),
-    }, budget, async (response) => {
-      const payload = await response.json() as GeminiPayload
-      const part = payload.candidates?.[0]?.content?.parts?.find((item) => item.inlineData?.data)?.inlineData
-      if (!part?.data || !part.mimeType) return null
-      const bytes = Buffer.from(part.data, 'base64')
-      if (!bytes.length) return null
-      if (part.mimeType.startsWith('audio/wav')) return { audioBase64: part.data, mimeType: 'audio/wav' as const }
-      if (!/^audio\/(?:L16|pcm)/i.test(part.mimeType)) return null
-      const rate = Number(part.mimeType.match(/rate=(\d+)/)?.[1] ?? 24000)
-      if (rate < 8000 || rate > 48000 || bytes.length % 2) return null
-      return { audioBase64: pcmWave(bytes, rate).toString('base64'), mimeType: 'audio/wav' as const }
-    })
-    if (audio) return audio
+    // Model access/quota can differ. Try a second speech model before moving
+    // to the next key; keep the same male/female voice throughout the session.
+    for (const model of new Set([env.GEMINI_TTS_MODEL, 'gemini-2.5-flash-preview-tts'])) {
+      const modernTts = /^gemini-3\.8-/.test(model)
+      const audio = await request(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+        method: 'POST', headers: { 'x-goog-api-key': key, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [modernTts ? { text, speech_metadata: { style } } : { text: `${style}\nRead this text aloud:\n${text}` }] }],
+          generationConfig: {
+            responseModalities: ['AUDIO'],
+            speechConfig: { voiceConfig: modernTts ? { voice: voice === 'cedar' ? 'Charon' : 'Kore' } : { prebuiltVoiceConfig: { voiceName: voice === 'cedar' ? 'Charon' : 'Kore' } } },
+          },
+        }),
+      }, budget, async (response) => {
+        const payload = await response.json() as GeminiPayload
+        const part = payload.candidates?.[0]?.content?.parts?.find((item) => item.inlineData?.data)?.inlineData
+        if (!part?.data || !part.mimeType) return null
+        const bytes = Buffer.from(part.data, 'base64')
+        if (!bytes.length) return null
+        if (part.mimeType.startsWith('audio/wav')) return { audioBase64: part.data, mimeType: 'audio/wav' as const }
+        if (!/^audio\/(?:L16|pcm)/i.test(part.mimeType)) return null
+        const rate = Number(part.mimeType.match(/rate=(\d+)/)?.[1] ?? 24000)
+        if (rate < 8000 || rate > 48000 || bytes.length % 2) return null
+        return { audioBase64: pcmWave(bytes, rate).toString('base64'), mimeType: 'audio/wav' as const }
+      })
+      if (audio) return audio
+      if (budget.aborted) break
+    }
     if (budget.aborted) break
   }
   return null

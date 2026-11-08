@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   ArrowLeft,
@@ -10,6 +11,9 @@ import {
   TriangleAlert,
 } from 'lucide-react'
 import type { ExaminerTurn, SpeakingEvaluation } from '@/services/speakingAI'
+import { improveSpeakingAnswers } from '@/services/speakingAI'
+import { useAuthStore } from '@/store/authStore'
+import { readSpeakingRewrite, saveSpeakingRewrite } from '@/utils/speakingRewriteCache'
 import { Burst } from '@/components/fx'
 import BandGauge from './BandGauge'
 import ImprovedResponse from '@/components/ielts/ImprovedResponse'
@@ -51,6 +55,7 @@ export default function SpeakingResult({
   onExit,
   embedded = false,
   onImprovedAnswers,
+  autoImprove = false,
 }: {
   evaluation: SpeakingEvaluation
   modeLabel: string
@@ -62,9 +67,41 @@ export default function SpeakingResult({
   hideVocabularyReview?: boolean
   embedded?: boolean
   onImprovedAnswers?: (answers: NonNullable<SpeakingEvaluation['improvedAnswers']>) => void
+  autoImprove?: boolean
 }) {
   const stats = evaluation.stats
   const unavailable = evaluation.source === 'offline'
+  const owner = useAuthStore(state => state.user?.id ?? 'guest')
+  const [coaching, setCoaching] = useState<NonNullable<SpeakingEvaluation['improvedAnswers']>>([])
+  const [coachingPending, setCoachingPending] = useState(false)
+  const onImprovedRef = useRef(onImprovedAnswers)
+  onImprovedRef.current = onImprovedAnswers
+  const answerKey = JSON.stringify(transcript?.filter(turn => turn.role === 'candidate') ?? [])
+  useEffect(() => {
+    let disposed = false
+    const candidates = JSON.parse(answerKey) as ExaminerTurn[]
+    setCoaching([])
+    setCoachingPending(false)
+    if (!autoImprove || unavailable) return
+    const missing = candidates.flatMap((turn, answerIndex) => turn.text.trim() &&
+      !evaluation.improvedAnswers?.some(item => item.answerIndex === answerIndex && item.original === turn.text) &&
+      !readSpeakingRewrite(owner, turn.text) ? [{ ...turn, answerIndex }] : [])
+    if (!missing.length) return
+    setCoachingPending(true)
+    // Coaching recovery never blocks or repeats the paid audio assessment.
+    void improveSpeakingAnswers(missing.map(({ role, text }) => ({ role, text }))).then(answers => {
+      if (disposed) return
+      const repaired = answers.map(item => ({ ...item, answerIndex: missing[item.answerIndex].answerIndex }))
+      for (const item of repaired) saveSpeakingRewrite(owner, item.original, item.improved)
+      setCoaching(repaired)
+      onImprovedRef.current?.([...(evaluation.improvedAnswers ?? []), ...repaired].sort((a, b) => a.answerIndex - b.answerIndex))
+    }).catch(() => { /* The score stays visible; each original answer retains its retry action. */ })
+      .finally(() => { if (!disposed) setCoachingPending(false) })
+    return () => { disposed = true }
+    // One automatic recovery per set of answers; callback/result updates must
+    // not start duplicate requests or create an automatic retry loop.
+  }, [answerKey, autoImprove, unavailable, owner])
+  const improvedAnswers = [...(evaluation.improvedAnswers ?? []).filter(item => !coaching.some(answer => answer.answerIndex === item.answerIndex)), ...coaching]
 
   return (
     <div className={embedded ? 'speaking-result-embedded' : 'speaking-result-page mx-auto max-w-5xl px-4 pb-10 sm:px-6'}>
@@ -182,7 +219,7 @@ export default function SpeakingResult({
                 <p className="text-xs font-black uppercase tracking-wide text-red-600">Question {index + 1}</p>
                 <p className="mt-1 font-semibold leading-6 text-slate-800">{question?.text || 'Examiner question'}</p>
                 <p className="mt-2 border-l-2 border-red-300 pl-3 leading-6 text-slate-600">{turn.text || 'No clear speech captured for this question.'}</p>
-                {turn.text.trim() ? <ImprovedResponse text={evaluation.improvedAnswers?.find((item) => item.answerIndex === index && item.original === turn.text)?.improved} speakingAnswer={turn.text} onImproved={improved => onImprovedAnswers?.([...(evaluation.improvedAnswers ?? []).filter(item => item.answerIndex !== index), { answerIndex: index, original: turn.text, improved }].sort((a, b) => a.answerIndex - b.answerIndex))} /> : null}
+                {turn.text.trim() ? <ImprovedResponse pending={coachingPending} text={improvedAnswers.find((item) => item.answerIndex === index && item.original === turn.text)?.improved} speakingAnswer={turn.text} onImproved={improved => onImprovedAnswers?.([...improvedAnswers.filter(item => item.answerIndex !== index), { answerIndex: index, original: turn.text, improved }].sort((a, b) => a.answerIndex - b.answerIndex))} /> : null}
               </div>
             })}
           </div>

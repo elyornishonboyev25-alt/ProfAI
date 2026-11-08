@@ -152,6 +152,9 @@ async function requestGemini(input: GenerateAiTextInput): Promise<ProviderResult
             generationConfig: {
               temperature: 0.45,
               maxOutputTokens: input.maxOutputTokens,
+              // Reserve output capacity for complete Speaking JSON instead of
+              // allowing dynamic reasoning to consume the response budget.
+              ...(input.purpose === 'speaking_evaluation' && /^gemini-2\.5-(?:flash|pro)(?:-|$)/.test(model) ? { thinkingConfig: { thinkingBudget: 1024 } } : {}),
               ...(input.jsonMode === false ? {} : { responseMimeType: 'application/json' }),
             },
           }),

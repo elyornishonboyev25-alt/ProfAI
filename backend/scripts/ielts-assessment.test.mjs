@@ -113,6 +113,39 @@ test('all six recordings reach the provider; transcript scores exclude missing p
   assert.equal(text.assessmentMode, 'transcript')
 })
 
+test('coaching failure keeps the audio band and every previously completed rewrite batch', async (t) => {
+  const nativeFetch = globalThis.fetch, originalUsage = prisma.aiUsageEvent.create
+  env.GEMINI_API_KEY = 'fake-partial-coaching-key'; env.GEMINI_MODELS = 'gemini-2.5-flash'
+  prisma.aiUsageEvent.create = async ({ data }) => data
+  let active = 0, peak = 0, coachingCalls = 0
+  globalThis.fetch = async (_url, options) => {
+    const body = JSON.parse(options.body)
+    const submitted = JSON.parse(body.contents[0].parts[0].text)
+    if (submitted.recordingOrder) {
+      assert.ok(body.generationConfig.maxOutputTokens <= 6144, 'Scoring is bounded independently of transcript length')
+      assert.deepEqual(body.generationConfig.thinkingConfig, { thinkingBudget: 1024 }, 'Internal reasoning cannot consume the entire scoring response budget')
+      assert.match(body.systemInstruction.parts[0].text, /Do not generate improvedAnswers/)
+      assert.equal(body.contents[0].parts[1].inlineData.mimeType, 'audio/mp4', 'Safari recordings retain the accepted MP4 MIME type')
+      return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({ ...speaking, improvedAnswers: [] }) }] } }] })
+    }
+    coachingCalls++; active++; peak = Math.max(peak, active)
+    await new Promise(resolve => setTimeout(resolve, 5))
+    active--
+    const output = submitted.history.length === 4
+      ? { improvedAnswers: submitted.history.map((turn, answerIndex) => ({ answerIndex, original: turn.text, improved: `Clearer: ${turn.text}` })) }
+      : {}
+    return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify(output) }] } }] })
+  }
+  t.after(() => { globalThis.fetch = nativeFetch; prisma.aiUsageEvent.create = originalUsage; env.GEMINI_API_KEY = '' })
+  const result = await assessSpeakingAudio('partial-coaching-user', { modeLabel: 'Full Mock', history, durationSec: 200, audio: audio.map(clip => ({ ...clip, mimeType: 'audio/mp4' })) })
+  assert.equal(result.overallBand, 8.5)
+  assert.equal(result.source, 'ai')
+  assert.deepEqual(result.improvedAnswers.map(item => item.answerIndex), [0, 1, 2, 3])
+  assert.equal(coachingCalls, 3, 'Only the invalid batch is regenerated once')
+  assert.equal(peak, 2, 'Coaching concurrency is limited')
+  assert.equal(active, 0, 'No unfinished request can mutate the returned assessment')
+})
+
 test('malformed or ungrounded audio feedback is regenerated once using every original recording', async (t) => {
   const nativeFetch = globalThis.fetch, originalUsage = prisma.aiUsageEvent.create
   env.GEMINI_API_KEY = 'fake-validation-key'; env.GEMINI_MODELS = 'gemini-2.5-flash'
@@ -151,4 +184,18 @@ test('repeated invalid feedback remains unassessed and regeneration respects can
   assert.equal(calls, 2, 'Invalid evidence cannot cause an unbounded regeneration loop')
   await assert.rejects(assessSpeakingAudio('cancel-user', request, controller.signal))
   assert.equal(calls, 3, 'Cancelled evaluation does not regenerate')
+})
+
+test('an exhausted provider deadline returns a retriable timeout instead of an internal error', async (t) => {
+  const nativeFetch = globalThis.fetch, nativeTimeout = AbortSignal.timeout, originalUsage = prisma.aiUsageEvent.create
+  env.GEMINI_API_KEY = 'fake-timeout-key'; env.GEMINI_MODELS = 'gemini-2.5-flash'
+  prisma.aiUsageEvent.create = async ({ data }) => data
+  AbortSignal.timeout = milliseconds => nativeTimeout(milliseconds === 60_000 ? 5 : milliseconds)
+  globalThis.fetch = async (_url, { signal }) => new Promise((_resolve, reject) => {
+    signal.addEventListener('abort', () => reject(signal.reason), { once: true })
+  })
+  // Keep the test alive while Node's unreferenced AbortSignal timer expires.
+  const keepAlive = setTimeout(() => {}, 1000)
+  t.after(() => { clearTimeout(keepAlive); globalThis.fetch = nativeFetch; AbortSignal.timeout = nativeTimeout; prisma.aiUsageEvent.create = originalUsage; env.GEMINI_API_KEY = '' })
+  await assert.rejects(assessSpeakingAudio('timeout-user', { modeLabel: 'Full Mock', history, durationSec: 200, audio }), { statusCode: 504, code: 'SPEAKING_ASSESSMENT_TIMEOUT' })
 })

@@ -71,7 +71,7 @@ export default function FullMockResults({ mock, results, onBack, onReview, onReg
         {saved.result && <div className="full-mock-result-stats"><div><strong>{saved.result.correctAnswers}<small> / {saved.result.totalQuestions}</small></strong><span>Correct answers</span></div><div><strong>{Math.round(saved.result.correctAnswers / Math.max(1, saved.result.totalQuestions) * 100)}<small>%</small></strong><span>Accuracy</span></div><div><strong>{Math.round(saved.result.timeSpent / 60)}<small> min</small></strong><span>Time used</span></div></div>}
         {saved.summary && <p className="mock-run-summary">{saved.summary}</p>}
         <div className="mock-run-section-review">
-          {selected === 'speaking' && saved.speaking ? <SpeakingResult evaluation={saved.speaking.evaluation} transcript={saved.speaking.transcript} modeLabel={section.title} reviewMode embedded hideVocabularyReview onRetry={() => {}} onExit={onBack} onImprovedAnswers={improvedAnswers => {
+          {selected === 'speaking' && saved.speaking ? <SpeakingResult evaluation={saved.speaking.evaluation} transcript={saved.speaking.transcript} modeLabel={section.title} reviewMode embedded hideVocabularyReview autoImprove={!readOnly} onRetry={() => {}} onExit={onBack} onImprovedAnswers={improvedAnswers => {
             if (readOnly) return
             const current = getFullMockResults(mock.id).speaking
             if (!current?.speaking || current.completedAt !== saved.completedAt) return

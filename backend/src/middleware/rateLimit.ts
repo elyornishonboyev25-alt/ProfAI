@@ -26,6 +26,26 @@ export const aiRateLimit = rateLimit({
   message: { message: 'AI request limit reached. Please wait a moment and try again.' },
 })
 
+// Voice playback and transcription are part of each Speaking turn. They must
+// not spend the same request allowance as the final assessment or AI chat.
+export const speakingMediaRateLimit = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.user!.id,
+  message: { message: 'Too many audio requests. Please wait a moment and retry.', code: 'SPEAKING_MEDIA_RATE_LIMIT' },
+})
+
+export const speakingAssessmentRateLimit = rateLimit({
+  windowMs: 60 * 1000,
+  max: env.AI_RATE_LIMIT_MAX,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.user!.id,
+  message: { message: 'Too many assessment requests. Please wait a moment and retry.', code: 'SPEAKING_ASSESSMENT_RATE_LIMIT' },
+})
+
 export const guestDiagnosticRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 45,

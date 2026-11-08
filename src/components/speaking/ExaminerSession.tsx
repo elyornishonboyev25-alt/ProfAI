@@ -959,6 +959,8 @@ export default function ExaminerSession({
         onRegrade={() => void runEvaluation()}
         onExit={onExit}
         hideVocabularyReview={hideVocabularyReview}
+        autoImprove={!completedEvaluation}
+        onImprovedAnswers={improvedAnswers => setEvaluation(current => current ? { ...current, improvedAnswers } : current)}
       />
     )
   }

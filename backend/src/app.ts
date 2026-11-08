@@ -7,7 +7,7 @@ import helmet from 'helmet'
 import morgan from 'morgan'
 import cookieParser from 'cookie-parser'
 import { env, isProduction } from './config/env.js'
-import { aiRateLimit, apiRateLimit } from './middleware/rateLimit.js'
+import { aiRateLimit, apiRateLimit, speakingAssessmentRateLimit, speakingMediaRateLimit } from './middleware/rateLimit.js'
 import { requireAuth } from './middleware/auth.js'
 import { enforceStudyAccess } from './middleware/studyAccess.js'
 import { errorHandler, notFoundHandler } from './middleware/error.js'
@@ -75,7 +75,9 @@ app.use(
   express.json({ limit: '6mb' }),
   aiGenerationRoutes,
 )
-app.use('/api/v1/ai/speaking-audio', requireAuth, enforceStudyAccess, aiRateLimit, express.json({ limit: '12mb' }), speakingAudioRoutes)
+app.use('/api/v1/ai/speaking-audio', requireAuth, enforceStudyAccess,
+  (req, res, next) => (['/voice', '/transcribe'].includes(req.path) ? speakingMediaRateLimit : speakingAssessmentRateLimit)(req, res, next),
+  express.json({ limit: '12mb' }), speakingAudioRoutes)
 app.use('/api/v1/ai/assistant', requireAuth, enforceStudyAccess, aiRateLimit, express.json({ limit: '6mb' }), assistantRoutes)
 app.use('/api/v1/ai/voice', requireAuth, enforceStudyAccess, aiRateLimit, express.json({ limit: '384kb' }), realtimeCoachRoutes)
 

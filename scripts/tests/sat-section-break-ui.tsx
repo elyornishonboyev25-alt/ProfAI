@@ -10,8 +10,61 @@ import { advanceSATModule, needsSATSectionBreak, SAT_SECTION_BREAK_SECONDS } fro
 import { moduleSeconds, pauseModule, resumeModule, totalTime } from '../../src/features/sat/timing'
 import { useAuthStore } from '../../src/store/authStore'
 import i18n from '../../src/i18n'
+import { createSATBreakMusic, SAT_BREAK_NATURE_AUDIO } from '../../src/features/sat/breakMusic'
 
 export async function run() {
+  const originalAudioContext = window.AudioContext
+  const originalAudio = window.Audio
+  let failPlayback = false
+  let holdPlayback = false
+  let releasePlayback: (() => void) | undefined
+  const contexts: TestAudioContext[] = []
+  const recordings: TestAudio[] = []
+  class TestAudio extends window.EventTarget {
+    src = ''
+    preload = ''
+    loop = false
+    paused = true
+    constructor() { super(); recordings.push(this) }
+    async play() {
+      if (failPlayback) throw Error('Audio blocked')
+      if (holdPlayback) await new Promise<void>(resolve => { releasePlayback = resolve })
+      this.paused = false
+    }
+    pause() { this.paused = true }
+    removeAttribute(name: string) { if (name === 'src') this.src = '' }
+    load() {}
+  }
+  class TestAudioParam {
+    value = 0
+    targets: number[] = []
+    setValueAtTime() {}
+    exponentialRampToValueAtTime() {}
+    cancelScheduledValues() {}
+    setTargetAtTime(value: number) { this.targets.push(value) }
+  }
+  class TestAudioNode {
+    gain = new TestAudioParam()
+    frequency = new TestAudioParam()
+    connect() {}
+    disconnect() {}
+    start() {}
+    stop() {}
+  }
+  class TestAudioContext {
+    state = 'suspended'
+    currentTime = 0
+    destination = {}
+    master = new TestAudioNode()
+    sources = 0
+    constructor() { contexts.push(this) }
+    createGain() { return this.master }
+    createMediaElementSource() { this.sources++; return new TestAudioNode() }
+    async resume() { if (failPlayback) throw Error('Audio blocked'); this.state = 'running' }
+    async close() { this.state = 'closed' }
+  }
+  window.AudioContext = TestAudioContext as unknown as typeof AudioContext
+  window.Audio = TestAudio as unknown as typeof Audio
   localStorage.clear()
   useAuthStore.setState({ user: null })
   await i18n.changeLanguage('en')
@@ -27,7 +80,7 @@ export async function run() {
   }
   const saved = () => loadSATAttempt(test.id)!
   const render = async () => act(async () => root.render(
-    <MemoryRouter initialEntries={['/sat/mock/1/run']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <MemoryRouter initialEntries={[{ pathname: '/sat/mock/1/run', state: { resumeIntent: true } }]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
         <Route path="/sat/mock/:mockId/run" element={<SATMockRun />} />
         <Route path="/sat" element={<p>SAT Arena</p>} />
@@ -41,7 +94,7 @@ export async function run() {
     await render()
   }
   const click = async (text: string) => {
-    const button = [...container.querySelectorAll('button')].find(node => node.textContent?.trim() === text)
+    const button = [...container.querySelectorAll('button')].find(node => node.textContent?.trim() === text || node.getAttribute('aria-label') === text)
     assert.ok(button, `Missing button: ${text}`)
     await act(async () => button.click())
   }
@@ -87,6 +140,7 @@ export async function run() {
     assert.equal(document.activeElement?.id, 'sat-break-title', 'Break heading receives focus')
     assert.equal(container.querySelector('[role="timer"]')?.textContent, '10:00')
     assert.equal(container.querySelector('iframe'), null, 'Music has no network request or autoplay before opt-in')
+    assert.equal(contexts.length, 0, 'The break never creates audio before the user presses Play')
     assert.equal(container.querySelector('.sat-exam-viewport'), null, 'Questions are inaccessible during the break')
     const endsAt = saved().sectionBreak!.endsAt
     assert.equal(endsAt, clock + SAT_SECTION_BREAK_SECONDS * 1000)
@@ -99,16 +153,41 @@ export async function run() {
     assert.deepEqual(saved().answers, answers, 'Exam keyboard shortcuts are inactive during the break')
 
     await click('Play relaxing music')
-    assert.match(container.querySelector('iframe')!.src, /youtube-nocookie\.com\/embed\/77ZozI0rw7w/)
-    assert.equal(container.querySelector('[aria-pressed="true"]')?.textContent, 'Turn music off')
-    const select = container.querySelector('select')!
-    await act(async () => { select.value = '1'; select.dispatchEvent(new Event('change', { bubbles: true })) })
-    assert.match(container.querySelector('iframe')!.src, /QQ-WACJqc4Y/)
-    // Failed external playback cannot advance, pause or reset the exam break.
-    await act(async () => container.querySelector('iframe')!.dispatchEvent(new Event('error')))
+    assert.equal(container.querySelector('iframe, video'), null, 'Music never adds an external video player')
+    assert.equal(contexts.at(-1)?.state, 'running')
+    assert.equal(contexts.at(-1)!.sources, 1, 'The player streams one real nature recording')
+    assert.equal(recordings.at(-1)?.src, SAT_BREAK_NATURE_AUDIO)
+    assert.equal(recordings.at(-1)?.preload, 'none')
+    assert.equal(recordings.at(-1)?.loop, true)
+    assert.ok(container.querySelector('[aria-label="Turn music off"][aria-pressed="true"]'))
+    assert.equal(container.querySelector('select'), null, 'There is one curated track, with no track selector')
+    assert.ok(container.querySelector('.sat-section-break__track')?.textContent?.includes('Quiet stream at night'))
+    const range = container.querySelector<HTMLInputElement>('#sat-break-volume')!
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!.call(range, '70')
+      range.dispatchEvent(new Event('input', { bubbles: true }))
+    })
+    assert.equal(contexts.at(-1)?.master.gain.targets.at(-1), .42, 'Volume changes reach the playing audio')
     assert.equal(saved().sectionBreak!.endsAt, endsAt)
     await click('Turn music off')
-    assert.equal(container.querySelector('iframe'), null, 'Off immediately removes the audio source')
+    await act(async () => new Promise(resolve => setTimeout(resolve, 180)))
+    assert.ok(contexts.every(context => context.state === 'closed'), 'Off releases every audio source')
+    const stoppedCount = contexts.length
+    assert.ok(recordings.every(recording => recording.paused && recording.src === ''), 'Off stops streaming and releases every media source')
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!.call(range, '35')
+      range.dispatchEvent(new Event('input', { bubbles: true }))
+    })
+    assert.equal(contexts.length, stoppedCount, 'Changing volume while paused never starts audio')
+    failPlayback = true
+    await click('Play relaxing music')
+    assert.match(container.querySelector('[role="status"]')?.textContent ?? '', /Music could not start/)
+    assert.equal(saved().sectionBreak!.endsAt, endsAt, 'An audio failure does not reset or pause the break')
+    failPlayback = false
+    await click('Play relaxing music')
+    await act(async () => recordings.at(-1)!.dispatchEvent(new Event('error')))
+    assert.match(container.querySelector('[role="status"]')?.textContent ?? '', /Music could not start/)
+    assert.ok(container.querySelector('[aria-label="Play relaxing music"]'))
     await click('Play relaxing music')
 
     await tick(120_000)
@@ -123,9 +202,11 @@ export async function run() {
     assert.equal(pauseModule(saved(), test.modules).sectionBreak!.endsAt, endsAt)
     assert.equal(resumeModule(saved(), test.modules).moduleTimerStartedAt, undefined)
     await remount()
+    await act(async () => new Promise(resolve => setTimeout(resolve, 180)))
     assert.equal(saved().sectionBreak!.endsAt, endsAt, 'Reload preserves the original break deadline')
     assert.equal(container.querySelector('[role="timer"]')?.textContent, '08:00')
     assert.equal(container.querySelector('iframe'), null, 'Reload requires a fresh music opt-in')
+    assert.ok(contexts.every(context => context.state === 'closed'), 'Reload releases the previous playback')
     await act(async () => i18n.changeLanguage('uz'))
     assert.equal(container.querySelector('h1')?.textContent, 'Tanaffus vaqti')
     await act(async () => i18n.changeLanguage('ru'))
@@ -148,11 +229,33 @@ export async function run() {
     assert.equal(moduleSeconds(saved(), test.modules), test.modules[2].durationSeconds)
     assert.equal(totalTime(saved(), test.modules), elapsed)
     assert.equal(container.querySelector('iframe'), null, 'Music stops when Math begins')
+    await act(async () => new Promise(resolve => setTimeout(resolve, 180)))
+    assert.ok(contexts.every(context => context.state === 'closed'), 'Automatic continuation closes the audio context')
     assert.deepEqual(saved().answers, answers)
     await reviewModule()
     await click('Continue to next module')
+    assert.ok(container.querySelector('.sat-module-transition'))
+    await tick(1500)
     assert.equal(saved().currentModuleIndex, 3, 'There is no break between Math modules')
     assert.equal(saved().sectionBreak, undefined)
+
+    // Ending the rest early gives Math a fresh full module duration, with no
+    // time charged for the unused part of the break or music left playing.
+    await remount(secondEnglish())
+    await reviewModule()
+    await click('Start 10-minute break')
+    const earlyDeadline = saved().sectionBreak!.endsAt
+    await tick(120_000)
+    await click('Play relaxing music')
+    await click('Start Math now')
+    assert.ok(clock < earlyDeadline)
+    assert.equal(saved().sectionBreak, undefined)
+    assert.equal(saved().currentModuleIndex, 2)
+    assert.equal(saved().moduleStartedAt[test.modules[2].id], clock)
+    assert.equal(moduleSeconds(saved(), test.modules), test.modules[2].durationSeconds)
+    assert.equal(container.querySelector('iframe'), null, 'Early continuation stops music')
+    await act(async () => new Promise(resolve => setTimeout(resolve, 180)))
+    assert.ok(contexts.every(context => context.state === 'closed'))
 
     // Practice retains its original untimed transition.
     await remount(secondEnglish('practice'))
@@ -179,9 +282,31 @@ export async function run() {
     assert.equal(totalTime(saved(), test.modules), activeTime + 30)
     assert.equal(container.querySelector('#sat-break-title'), null)
     assert.doesNotMatch(container.textContent!, /Module ready/)
-    console.log('SAT section break: manual/expired English completion, 10-minute deadline, reload/save/history, inactive shortcuts, optional YouTube tracks/off/cleanup, translations, Math timing and practice/section exclusions passed.')
+    holdPlayback = true
+    const player = createSATBreakMusic(.45)
+    const startup = player.play()
+    player.setVolume(.8)
+    releasePlayback!()
+    await startup
+    assert.equal(contexts.at(-1)?.master.gain.targets.at(-1), .48, 'The latest volume is kept when slow audio finishes loading')
+    player.stop()
+    await new Promise(resolve => setTimeout(resolve, 180))
+    let lateErrors = 0
+    const cancelled = createSATBreakMusic(.45, () => { lateErrors++ })
+    const cancelledStartup = cancelled.play()
+    cancelled.stop()
+    releasePlayback!()
+    await cancelledStartup
+    await new Promise(resolve => setTimeout(resolve, 180))
+    recordings.at(-1)!.dispatchEvent(new Event('error'))
+    assert.equal(recordings.at(-1)?.paused, true, 'Leaving during loading never starts late playback')
+    assert.equal(recordings.at(-1)?.src, '')
+    assert.equal(lateErrors, 0, 'Disposed players remove error listeners')
+    console.log('SAT section break: timing, reload/save/history, one real nature recording, opt-in playback, volume, initial and streaming-error recovery, audio cleanup, translations and Math transitions passed.')
   } finally {
     await act(async () => root.unmount())
     Date.now = originalNow
+    window.AudioContext = originalAudioContext
+    window.Audio = originalAudio
   }
 }

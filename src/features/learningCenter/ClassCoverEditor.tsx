@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import { useEffect, useRef, useState } from 'react'
 import { Camera, Check, Move, ZoomIn } from 'lucide-react'
 import { COVER_RATIO, coverCrop, drawCoverCrop, exportCoverCrop } from '@/utils/imageCompress'
@@ -11,6 +13,7 @@ type Props = {
 }
 
 export default function ClassCoverEditor({ value, onChange, onPendingChange, onError }: Props) {
+  const { c: uiCopy } = useCopy()
   const inputRef = useRef<HTMLInputElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const dragRef = useRef<{ x: number; y: number; centerX: number; centerY: number } | null>(null)
@@ -71,16 +74,16 @@ export default function ClassCoverEditor({ value, onChange, onPendingChange, onE
   }
 
   return <div className="lc-cover-editor">
-    <input ref={inputRef} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" aria-label="Choose class cover photo" onChange={(event) => choose(event.target.files?.[0])} />
+    <input ref={inputRef} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" aria-label={uiCopy("Choose class cover photo")} onChange={(event) => choose(event.target.files?.[0])} />
     {image ? <>
-      <canvas ref={canvasRef} width={1440} height={560} className="lc-cover-canvas" style={{ aspectRatio: String(COVER_RATIO) }} aria-label="Class cover crop preview. Drag to reposition." onPointerDown={(event) => { dragRef.current = { x: event.clientX, y: event.clientY, centerX, centerY }; event.currentTarget.setPointerCapture(event.pointerId) }} onPointerMove={move} onPointerUp={() => { dragRef.current = null }} onPointerCancel={() => { dragRef.current = null }} />
-      <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-500"><Move className="h-3.5 w-3.5" /> Drag the photo to choose what appears in the banner.</p>
-      <label className="mt-3 flex items-center gap-3 text-xs font-semibold text-slate-600"><ZoomIn className="h-4 w-4" /> Zoom <input type="range" min="1" max="3" step="0.05" value={zoom} onChange={(event) => { setZoom(Number(event.target.value)); setPending(true) }} className="min-w-0 flex-1 accent-red-700" aria-label="Cover photo zoom" /><span>{Math.round(zoom * 100)}%</span></label>
-      <div className="mt-2 grid gap-2 sm:grid-cols-2"><label className="flex items-center gap-2 text-xs font-semibold text-slate-600">Horizontal <input type="range" min="0" max="1" step="0.01" value={centerX} onChange={(event) => { setCenterX(Number(event.target.value)); setPending(true) }} className="min-w-0 flex-1 accent-red-700" /></label><label className="flex items-center gap-2 text-xs font-semibold text-slate-600">Vertical <input type="range" min="0" max="1" step="0.01" value={centerY} onChange={(event) => { setCenterY(Number(event.target.value)); setPending(true) }} className="min-w-0 flex-1 accent-red-700" /></label></div>
-      <div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={apply} disabled={!pending} className={secondaryButton}><Check className="h-4 w-4" />{pending ? 'Apply crop' : 'Crop applied'}</button><button type="button" onClick={() => inputRef.current?.click()} className={secondaryButton}>Choose another photo</button><button type="button" onClick={() => { setSourceUrl(null); setImage(null); setPending(false); onChange(null) }} className="px-3 text-sm font-semibold text-red-700">Remove photo</button></div>
+      <canvas ref={canvasRef} width={1440} height={560} className="lc-cover-canvas" style={{ aspectRatio: String(COVER_RATIO) }} aria-label={uiCopy("Class cover crop preview. Drag to reposition.")} onPointerDown={(event) => { dragRef.current = { x: event.clientX, y: event.clientY, centerX, centerY }; event.currentTarget.setPointerCapture(event.pointerId) }} onPointerMove={move} onPointerUp={() => { dragRef.current = null }} onPointerCancel={() => { dragRef.current = null }} />
+      <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-500"><Move className="h-3.5 w-3.5" /> <UiText text={"Drag the photo to choose what appears in the banner."} /></p>
+      <label className="mt-3 flex items-center gap-3 text-xs font-semibold text-slate-600"><ZoomIn className="h-4 w-4" /> <UiText text={"Zoom"} /> <input type="range" min="1" max="3" step="0.05" value={zoom} onChange={(event) => { setZoom(Number(event.target.value)); setPending(true) }} className="min-w-0 flex-1 accent-red-700" aria-label={uiCopy("Cover photo zoom")} /><span>{Math.round(zoom * 100)}%</span></label>
+      <div className="mt-2 grid gap-2 sm:grid-cols-2"><label className="flex items-center gap-2 text-xs font-semibold text-slate-600"><UiText text={"Horizontal"} /> <input type="range" min="0" max="1" step="0.01" value={centerX} onChange={(event) => { setCenterX(Number(event.target.value)); setPending(true) }} className="min-w-0 flex-1 accent-red-700" /></label><label className="flex items-center gap-2 text-xs font-semibold text-slate-600"><UiText text={"Vertical"} /> <input type="range" min="0" max="1" step="0.01" value={centerY} onChange={(event) => { setCenterY(Number(event.target.value)); setPending(true) }} className="min-w-0 flex-1 accent-red-700" /></label></div>
+      <div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={apply} disabled={!pending} className={secondaryButton}><Check className="h-4 w-4" />{pending ? <UiText text={"Apply crop"} /> : <UiText text={"Crop applied"} />}</button><button type="button" onClick={() => inputRef.current?.click()} className={secondaryButton}><UiText text={"Choose another photo"} /></button><button type="button" onClick={() => { setSourceUrl(null); setImage(null); setPending(false); onChange(null) }} className="px-3 text-sm font-semibold text-red-700"><UiText text={"Remove photo"} /></button></div>
     </> : <>
-      <button type="button" onClick={() => inputRef.current?.click()} className="lc-cover-picker">{value ? <img src={value} alt="Class cover preview" /> : <><Camera className="h-6 w-6" /> Choose a photo</>}</button>
-      {value && <div className="mt-2 flex gap-3"><button type="button" onClick={() => inputRef.current?.click()} className="text-sm font-semibold text-red-700">Change and adjust crop</button><button type="button" onClick={() => onChange(null)} className="text-sm font-semibold text-slate-500">Remove photo</button></div>}
+      <button type="button" onClick={() => inputRef.current?.click()} className="lc-cover-picker">{value ? <img src={value} alt={uiCopy("Class cover preview")} /> : <><Camera className="h-6 w-6" /> <UiText text={"Choose a photo"} /></>}</button>
+      {value && <div className="mt-2 flex gap-3"><button type="button" onClick={() => inputRef.current?.click()} className="text-sm font-semibold text-red-700"><UiText text={"Change and adjust crop"} /></button><button type="button" onClick={() => onChange(null)} className="text-sm font-semibold text-slate-500"><UiText text={"Remove photo"} /></button></div>}
     </>}
   </div>
 }

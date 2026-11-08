@@ -26,8 +26,9 @@ export async function run() {
     if (path.startsWith('/billing/quote')) {
       requests++
       if (failQuote) throw new Error('No rate')
-      const product = BILLING_PRODUCTS.find(p => p.code === new URL(path, 'http://localhost').searchParams.get('product'))!
-      return { product: product.code, amountUsd: product.amountUsd, amountUzs: Math.round(product.amountUsd * 13100 / 100), rate: 13100, date: '2026-10-06', expiresAt: Date.now() + 900000, token: 'signed-' + product.code } as T
+      const query = new URL(path, 'http://localhost').searchParams
+      const product = BILLING_PRODUCTS.find(p => p.code === query.get('product'))!
+      return { product: product.code, currency: query.get('currency') ?? 'UZS', promoCode: query.get('promoCode') ?? '', amountUsd: product.amountUsd, amountUzs: Math.round(product.amountUsd * 13100 / 100), rate: 13100, date: '2026-10-06', expiresAt: Date.now() + 900000, token: 'signed-' + product.code } as T
     }
     if (path === '/billing/discount') return { spun: false, discount: null } as T
     if (path === '/promo/status') return { telegramEnabled: true, botUsername: 'IvyGoo_bot', channelUrl: 'https://t.me/IvyGoo' } as T
@@ -42,11 +43,19 @@ export async function run() {
     assert.equal(element.querySelectorAll('.billing-plan').length, 3)
     assert.ok(element.querySelector('.plans-table'), 'the comparison table sits below the plans')
     assert.equal(/7 days|free trial/i.test(element.textContent ?? ''), false, 'no trial copy remains')
-    assert.deepEqual([...element.querySelectorAll('.billing-plan h3')].map(node => node.textContent), ['Free', 'Pro', 'Max'])
+    assert.deepEqual([...element.querySelectorAll('.billing-plan h3')].map(node => node.textContent), ['Free', 'IvyGoo Pro', 'IvyGoo Elite'])
     assert.deepEqual([...element.querySelectorAll('.billing-plan-price strong')].map(node => node.textContent), ['$0', '$5.99', '$11.99'])
-    assert.deepEqual([...element.querySelectorAll('.plans-table thead small')].map(node => node.textContent), ['$0', '$5.99 / month', '$11.99 / month'])
-    assert.ok(element.querySelector('.plans-table')?.textContent?.includes('$4.99 / month'))
-    assert.ok(element.querySelector('.plans-table')?.textContent?.includes('$9.99 / month'))
+    assert.equal(element.querySelectorAll('.plans-table tbody tr').length, 5, 'comparison contains only the five essential differences')
+    assert.equal(element.querySelector('.membership-intro'), null, 'no oversized promotional hero')
+    assert.equal(element.querySelector('.usage-balance'), null, 'personal AI usage belongs inside the AI tutor')
+    assert.equal(/band score & feedback|AI checks|monthly time|30h\/month|120h\/month/.test(element.textContent ?? ''), false, 'removed assessment quotas and monthly voice details stay off pricing')
+    assert.ok(element.textContent?.includes('AI scoring is included in your available tests'))
+    const offers = element.querySelector<HTMLDetailsElement>('.membership-offers')!
+    assert.equal(offers.open, false, 'optional promotions start collapsed')
+    assert.ok(offers.textContent?.includes('$4.99') && offers.textContent?.includes('$9.99'), 'group prices remain available with discounts')
+    await act(async () => { offers.querySelector('summary')!.click() })
+    assert.equal(offers.open, true)
+    assert.ok(offers.querySelector('#promo-code-input'), 'promo redemption stays available')
     assert.deepEqual([...element.querySelectorAll('.billing-segment button span')].map(node => node.textContent), ['Up to 17%', 'Up to 24%'])
     assert.equal(element.querySelector('.billing-topup'), null)
     assert.equal(/coins|Individual/.test(element.textContent ?? ''), false)

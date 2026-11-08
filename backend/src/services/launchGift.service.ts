@@ -8,6 +8,8 @@ import { ensureReferralCode } from './referral.service.js'
 export const LAUNCH_GIFT_CAPACITY = 200
 export const LAUNCH_GIFT_MONTHS = 1
 export const LAUNCH_GIFT_VALUE_USD = 6
+// Resume the campaign at 180; the next new reservations use places 181..200.
+const LAUNCH_GIFT_ISSUED_BASELINE = 180
 
 export async function launchGiftStats() {
   const [reserved, top] = await Promise.all([
@@ -16,7 +18,7 @@ export async function launchGiftStats() {
   ])
   // Accounts that existed before the launch are all included, even beyond the cap.
   const capacity = Math.max(LAUNCH_GIFT_CAPACITY, top._max.rank ?? 0)
-  const issued = Math.max(reserved, top._max.rank ?? 0)
+  const issued = Math.max(LAUNCH_GIFT_ISSUED_BASELINE, reserved, top._max.rank ?? 0)
   return { capacity, issued, remaining: Math.max(0, LAUNCH_GIFT_CAPACITY - issued), valueUsd: LAUNCH_GIFT_VALUE_USD, months: LAUNCH_GIFT_MONTHS }
 }
 
@@ -27,7 +29,7 @@ async function reserve(userId: string) {
     const existing = await tx.launchGift.findUnique({ where: { userId } })
     if (existing) return existing
     const top = await tx.launchGift.aggregate({ _max: { rank: true } })
-    const rank = (top._max.rank ?? 0) + 1
+    const rank = Math.max(LAUNCH_GIFT_ISSUED_BASELINE, top._max.rank ?? 0) + 1
     if (rank > LAUNCH_GIFT_CAPACITY) return null
     return tx.launchGift.create({ data: { userId, rank } })
   })

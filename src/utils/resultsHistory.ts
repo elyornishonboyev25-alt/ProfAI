@@ -7,9 +7,12 @@ import type { ProfileOverview } from '@/types/platform'
 import { resolveIeltsTestById } from '@/utils/ieltsTestCatalog'
 import { getReadingAnalysisHistory } from '@/utils/readingAnalysisStorage'
 import { getWritingAnalysisHistory, type WritingAnalysisEntry } from '@/utils/writingAnalysisStorage'
+import { getIeltsAttemptResumes } from '@/utils/ieltsAttemptResume'
+import { getFullMockById, getFullMockResultGroups, type FullMockMode, type FullMockResultGroup, type MockSectionKey } from '@/utils/ieltsMockCatalog'
+import type { ExaminerTurn, SpeakingEvaluation } from '@/services/speakingAI'
 
 export type ResultExam = 'IELTS' | 'SAT'
-export type ResultSkill = 'reading' | 'listening' | 'writing' | 'speaking' | 'sat'
+export type ResultSkill = 'reading' | 'listening' | 'writing' | 'speaking' | 'mock' | 'sat'
 export type ResultTone = 'high' | 'mid' | 'low'
 
 export type ResultAnalyzeTarget =
@@ -18,10 +21,36 @@ export type ResultAnalyzeTarget =
   | { type: 'speaking'; entry: SpeakingSessionRecord }
   | { type: 'sat'; attemptId: string }
 
+export type MockSectionAnalyze =
+  | { type: 'review'; path: string; result: TestResult; mockId: string; section: MockSectionKey }
+  | { type: 'writing'; entries: WritingAnalysisEntry[] }
+  | { type: 'speaking'; evaluation: SpeakingEvaluation; transcript: ExaminerTurn[]; label: string }
+
+/** One section inside a full mock record. `hidden` = finished in exam mode before the mock ends. */
+export type MockSectionRow = {
+  key: MockSectionKey
+  title: string
+  state: 'scored' | 'pending' | 'hidden' | 'active' | 'todo'
+  band: string | null
+  detail: string | null
+  analyze: MockSectionAnalyze | null
+}
+
+export type MockResultDetail = {
+  mockId: string
+  index: number
+  mode: FullMockMode
+  complete: boolean
+  archived: boolean
+  completedAt: string
+  sections: MockSectionRow[]
+}
+
 export type ResultRecord = {
   id: string
   /** 1 = the learner's first saved result; assigned in chronological order. */
   sequence: number
+  sourceKey?: string
   exam: ResultExam
   skill: ResultSkill
   skillLabel: string
@@ -36,6 +65,8 @@ export type ResultRecord = {
   stats: Array<{ label: string; value: string; emphasis?: 'good' | 'bad' }>
   partial: boolean
   analyze: ResultAnalyzeTarget | null
+  /** Present on a full mock record: its four sections open beneath it. */
+  mock?: MockResultDetail
 }
 
 type UnsequencedRecord = Omit<ResultRecord, 'sequence'>
@@ -105,6 +136,7 @@ function writingRecords(userId: string): UnsequencedRecord[] {
     const ratio = entry.overallBand / 9
     return {
       id: `writing-${entry.attemptKey}`,
+      sourceKey: entry.fullTest ? `writing-full-${entry.fullTest.id}-${entry.attemptKey}` : entry.attemptKey,
       exam: 'IELTS',
       skill: 'writing',
       skillLabel: entry.taskType === 'task1' ? 'Writing · Task 1' : 'Writing · Task 2',
@@ -134,6 +166,7 @@ function speakingRecords(userId: string, sessions: SpeakingSessionRecord[]): Uns
       const ratio = session.overallBand / 9
       return {
         id: `speaking-${session.id}`,
+        sourceKey: `speaking-${session.id}`,
         exam: 'IELTS',
         skill: 'speaking',
         skillLabel: 'Speaking',
@@ -179,6 +212,7 @@ function satRecords(): UnsequencedRecord[] {
       const isQuestionBank = test.id.startsWith('question-bank')
       return [{
         id: `sat-${entry.id}`,
+        sourceKey: `sat-${test.id}-${endedAt}`,
         exam: 'SAT' as const,
         skill: 'sat' as const,
         skillLabel: isQuestionBank
@@ -218,19 +252,28 @@ function serverRecords(
     .filter((attempt) => {
       const exam: ResultExam = attempt.test.category === 'SAT' ? 'SAT' : 'IELTS'
       const time = timeOf(attempt.completedAt)
-      return !local.some((record) => record.exam === exam && Math.abs(record.completedAt - time) <= 180_000)
+      const sourceKey = attempt.assessment?.sourceKey
+      return !local.some((record) => record.exam === exam && (
+        sourceKey && record.sourceKey === sourceKey
+        || record.title.trim().toLowerCase() === attempt.test.title.trim().toLowerCase() && Math.abs(record.completedAt - time) <= 1000
+      ))
     })
     .map((attempt) => {
       const exam: ResultExam = attempt.test.category === 'SAT' ? 'SAT' : 'IELTS'
       const title = attempt.test.title
-      const lower = title.toLowerCase()
+      const lower = `${attempt.assessment?.skill ?? ''} ${title}`.toLowerCase()
       const skill: ResultSkill = exam === 'SAT'
         ? 'sat'
         : lower.includes('listening') ? 'listening'
           : lower.includes('writing') ? 'writing'
             : lower.includes('speaking') ? 'speaking'
               : 'reading'
-      const ratio = Math.min(1, Math.max(0, attempt.percentage / 100))
+      const assessment = attempt.assessment
+      const ratio = Math.min(1, Math.max(0, assessment ? assessment.score / assessment.maxScore : attempt.percentage / 100))
+      const score = assessment ? {
+        value: exam === 'IELTS' ? band(assessment.score) : String(assessment.score),
+        label: exam === 'IELTS' ? 'Band' : assessment.maxScore === 1600 ? 'SAT score' : assessment.skill === 'SAT_MATH' ? 'Math' : 'R&W',
+      } : null
       return {
         id: `server-${attempt.id}`,
         exam,
@@ -239,14 +282,99 @@ function serverRecords(
         title,
         completedAt: timeOf(attempt.completedAt),
         durationSec: null,
-        score: null,
+        score,
         scoreRatio: ratio,
         tone: toneFor(ratio),
-        stats: [{ label: 'Correct', value: `${Math.round(attempt.percentage)}%`, emphasis: 'good' as const }],
+        stats: [{ label: assessment && exam === 'IELTS' ? 'Band' : 'Correct', value: assessment && exam === 'IELTS' ? band(assessment.score) : `${Math.round(attempt.percentage)}%`, emphasis: 'good' as const }],
         partial: false,
         analyze: null,
       }
     })
+}
+
+// Mock sections are saved to the same per-skill histories as standalone tests.
+// Writing and Speaking save a moment apart from the mock result, so they are
+// matched within this window; Listening and Reading share the exact attempt key.
+const MOCK_MATCH_WINDOW_MS = 15 * 60_000
+
+function nearTime(a: string | number, b: string | number) {
+  return Math.abs(timeOf(a) - timeOf(b)) <= MOCK_MATCH_WINDOW_MS
+}
+
+function mockRecords(userId: string, sessions: SpeakingSessionRecord[]) {
+  const groups = safeRead(() => getFullMockResultGroups(userId))
+  const writing = safeRead(() => getWritingAnalysisHistory(userId))
+  const ownSessions = sessions.filter((session) => session.userId === userId && session.kind === 'examiner')
+  const resumes = safeRead(() => getIeltsAttemptResumes(userId))
+  const owned = new Set<string>()
+
+  const records = groups.flatMap((group: FullMockResultGroup): UnsequencedRecord[] => {
+    const mock = getFullMockById(group.mockId)
+    if (!mock) return []
+    const reveal = group.mode === 'practice' || group.complete
+    const sections: MockSectionRow[] = mock.sections.map((section) => {
+      const saved = group.sections[section.key]
+      if (!saved) {
+        const active = !group.archived && resumes.some((resume) => {
+          const state = resume.state as { mock?: { id?: string } } | null
+          const mockId = state?.mock?.id ?? new URLSearchParams(resume.search).get('mock')
+          return mockId === group.mockId && resume.pathname === section.launchPath
+        })
+        return { key: section.key, title: section.title, state: active ? 'active' : 'todo', band: null, detail: null, analyze: null }
+      }
+      let analyze: MockSectionAnalyze | null = null
+      if ((section.key === 'listening' || section.key === 'reading') && saved.result) {
+        owned.add(`reading-${saved.result.testId}-${saved.result.date}`)
+        owned.add(`reading-${saved.testId}-${saved.completedAt}`)
+        if (section.launchPath) analyze = { type: 'review', path: section.launchPath, result: saved.result, mockId: group.mockId, section: section.key }
+      } else if (section.key === 'writing') {
+        const entries = writing.filter((entry) => entry.fullTest?.id === saved.testId && nearTime(entry.savedAt, saved.completedAt))
+        entries.forEach((entry) => owned.add(`writing-${entry.attemptKey}`))
+        if (entries.length) analyze = { type: 'writing', entries: entries.sort((a, b) => a.taskType.localeCompare(b.taskType)) }
+      } else if (section.key === 'speaking') {
+        ownSessions
+          .filter((session) => (!session.testId || session.testId === saved.testId) && nearTime(session.date, saved.completedAt))
+          .forEach((session) => owned.add(`speaking-${session.id}`))
+        if (saved.speaking?.evaluation && saved.assessmentStatus !== 'pending') {
+          analyze = { type: 'speaking', evaluation: saved.speaking.evaluation, transcript: saved.speaking.transcript, label: `Full Mock ${mock.index} · Speaking` }
+        }
+      }
+      if (!reveal) return { key: section.key, title: section.title, state: 'hidden', band: null, detail: null, analyze: null }
+      const pending = saved.assessmentStatus === 'pending'
+      return {
+        key: section.key,
+        title: section.title,
+        state: pending ? 'pending' : 'scored',
+        band: pending ? null : band(saved.band),
+        detail: saved.result
+          ? `${saved.result.correctAnswers}/${saved.result.totalQuestions}`
+          : section.key === 'writing' ? 'Task 1 + Task 2' : 'Parts 1–3',
+        analyze,
+      }
+    })
+    const ratio = group.overallBand === null ? null : group.overallBand / 9
+    const timeSpent = Object.values(group.sections).reduce((total, saved) => total + (saved?.result?.timeSpent ?? 0), 0)
+    return [{
+      id: `mock-${group.mockId}-${group.completedAt}${group.archived ? '-archived' : ''}`,
+      exam: 'IELTS',
+      skill: 'mock',
+      skillLabel: 'Full mock',
+      title: `IELTS Full Mock ${mock.index}`,
+      completedAt: timeOf(group.completedAt),
+      durationSec: timeSpent > 0 ? Math.round(timeSpent) : null,
+      score: group.overallBand === null ? null : { value: band(group.overallBand), label: 'Overall' },
+      scoreRatio: ratio,
+      tone: toneFor(ratio),
+      stats: sections.map((section) => ({
+        label: section.title[0],
+        value: section.band ?? (section.state === 'hidden' || section.state === 'pending' ? '✓' : '—'),
+      })),
+      partial: !group.complete,
+      analyze: null,
+      mock: { mockId: group.mockId, index: mock.index, mode: group.mode, complete: group.complete, archived: group.archived, completedAt: group.completedAt, sections },
+    }]
+  })
+  return { records, owned }
 }
 
 export function getResultsHistory(
@@ -261,7 +389,10 @@ export function getResultsHistory(
     ...speakingRecords(userId, speakingSessions),
     ...satRecords(),
   ]
-  const unique = [...new Map([...local, ...serverRecords(serverAttempts, local)].map((record) => [record.id, record])).values()]
+  // A full mock is one result: its sections are listed beneath it, not on their own.
+  const mocks = mockRecords(userId, speakingSessions)
+  const standalone = local.filter((record) => !mocks.owned.has(record.id))
+  const unique = [...new Map([...standalone, ...mocks.records, ...serverRecords(serverAttempts, local)].map((record) => [record.id, record])).values()]
   return unique
     .sort((left, right) => left.completedAt - right.completedAt)
     .map((record, index) => ({ ...record, sequence: index + 1 }))

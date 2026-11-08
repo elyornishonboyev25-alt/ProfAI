@@ -1,6 +1,8 @@
+import { useCopy } from '@/i18n/interface'
 import { isPremiumUser } from '@/utils/premiumAccess'
 import { useAccountAccess } from '@/features/billing/useAccountAccess'
 import CrownBadge from '@/components/fx/CrownBadge'
+import LearnerLevel from '@/components/profile/LearnerLevel'
 import { normalizeSATScore as normalizeSatScore, SAT_TARGET_SCORE_MIN } from '@/features/sat/scoreGoals'
 import UiText from '@/components/common/UiText'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
@@ -124,8 +126,8 @@ function PrivacyToggle({
       aria-pressed={enabled}
     >
       <div>
-        <p className="text-sm font-semibold text-slate-900">{label}</p>
-        <p className="mt-0.5 text-xs leading-5 text-slate-600">{detail}</p>
+        <p className="text-sm font-semibold text-slate-900"><UiText text={label} /></p>
+        <p className="mt-0.5 text-xs leading-5 text-slate-600"><UiText text={detail} /></p>
       </div>
       <span
         className={`mt-0.5 inline-flex h-6 min-w-[2.7rem] items-center rounded-full border px-1 transition ${
@@ -139,6 +141,7 @@ function PrivacyToggle({
 }
 
 function CountryPicker({ value, onChange }: { value: string; onChange: (country: string) => void }) {
+  const { c: uiCopy } = useCopy()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState(value)
   const [activeIndex, setActiveIndex] = useState(0)
@@ -206,10 +209,10 @@ function CountryPicker({ value, onChange }: { value: string; onChange: (country:
         }}
         onKeyDown={onKeyDown}
         className="input w-full !pl-10 !pr-11"
-        placeholder="Start typing a country..."
+        placeholder={uiCopy("Start typing a country...")}
         autoComplete="off"
         role="combobox"
-        aria-label="Country"
+        aria-label={uiCopy("Country")}
         aria-autocomplete="list"
         aria-expanded={open}
         aria-controls={listId}
@@ -258,6 +261,7 @@ function CountryPicker({ value, onChange }: { value: string; onChange: (country:
 }
 
 export default function AccountProfile() {
+  const { c: uiCopy } = useCopy()
   const location = useLocation()
   const navigate = useNavigate()
   const user = useAuthStore((state: AuthState) => state.user)
@@ -588,14 +592,14 @@ export default function AccountProfile() {
             <div className="flex flex-col items-center gap-2">
               <div className="relative">
                 <div className={`${premiumMember ? 'premium-member-avatar' : ''} account-profile-avatar-frame relative isolate flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-full border-[6px] border-white bg-gradient-to-br from-blue-600 to-indigo-600 text-3xl font-black text-white shadow-[0_0_0_4px_rgba(59,130,246,0.82),0_20px_44px_rgba(37,99,235,0.34)]`}>
-                  <ProfileAvatar src={avatarUrl} name={user?.fullName} alt="Profile" className="profile-avatar-media--hero" />
+                  <ProfileAvatar src={avatarUrl} name={user?.fullName} alt={uiCopy("Profile")} className="profile-avatar-media--hero" />
                 </div>
                 <button
                   type="button"
                   onClick={() => fileRef.current?.click()}
                   disabled={uploadingAvatar}
                   className="absolute -bottom-1 -right-1 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-blue-100 bg-white text-blue-600 shadow-md transition hover:bg-blue-50 disabled:opacity-60"
-                  title="Change photo"
+                  title={uiCopy("Change photo")}
                 >
                   {uploadingAvatar ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
                 </button>
@@ -616,7 +620,7 @@ export default function AccountProfile() {
                     closeNameEditor()
                   }
                 }}>
-                  <label htmlFor="profile-full-name" className="sr-only">Full name</label>
+                  <label htmlFor="profile-full-name" className="sr-only"><UiText text={"Full name"} /></label>
                   <div className="flex items-center gap-2">
                     <input
                       id="profile-full-name"
@@ -630,25 +634,25 @@ export default function AccountProfile() {
                       aria-describedby={nameError ? 'profile-name-error' : undefined}
                       className="input min-w-0 flex-1 !text-xl font-bold"
                     />
-                    <button type="submit" disabled={savingName} aria-label="Save name" title="Save name" className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-blue-200 bg-blue-50 text-blue-600 transition hover:bg-blue-100 disabled:opacity-60">
+                    <button type="submit" disabled={savingName} aria-label={uiCopy("Save name")} title={uiCopy("Save name")} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-blue-200 bg-blue-50 text-blue-600 transition hover:bg-blue-100 disabled:opacity-60">
                       {savingName ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                     </button>
-                    <button type="button" disabled={savingName} onClick={closeNameEditor} aria-label="Cancel name editing" title="Cancel" className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50 disabled:opacity-60">
+                    <button type="button" disabled={savingName} onClick={closeNameEditor} aria-label={uiCopy("Cancel name editing")} title={uiCopy("Cancel")} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50 disabled:opacity-60">
                       <X className="h-4 w-4" />
                     </button>
                   </div>
-                  {nameError ? <p id="profile-name-error" role="alert" className="mt-2 text-sm text-red-600">{nameError}</p> : null}
+                  {nameError ? <p id="profile-name-error" role="alert" className="mt-2 text-sm text-red-600"><UiText text={nameError} /></p> : null}
                 </form>
               ) : (
                 <div className="flex items-center justify-center gap-2 lg:justify-start">
-                  <h1 className="min-w-0 break-words text-3xl font-black tracking-tight text-slate-900">{user?.fullName ?? 'Learner'}</h1>
+                  <h1 className="min-w-0 break-words text-3xl font-black tracking-tight text-slate-900">{user?.fullName ?? <UiText text={"Learner"} />}</h1>
                   <button
                     ref={nameEditRef}
                     type="button"
                     disabled={loading || loadError}
                     onClick={() => { setNameDraft(user?.fullName ?? ''); setNameError(''); setEditingName(true) }}
-                    aria-label="Edit full name"
-                    title="Edit name"
+                    aria-label={uiCopy("Edit full name")}
+                    title={uiCopy("Edit name")}
                     className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-slate-400 transition hover:bg-blue-50 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 disabled:opacity-50"
                   >
                     <Pencil className="h-4 w-4" />
@@ -667,8 +671,8 @@ export default function AccountProfile() {
                 <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-0.5 text-xs font-semibold text-slate-600">
                   <Lock className="h-3 w-3" /> {user?.email}  <UiText text={"· only you"} /> </span>
               </div>
-              <p className="mt-2 text-sm text-slate-500">
-                 <UiText text={"Level"} /> {user?.level ?? 1} · {user?.xp ?? 0}  <UiText text={"XP · Profile"} /> {completion} <UiText text={"% complete"} /> </p>
+              <div className="mt-2 text-sm text-slate-500">
+                 <LearnerLevel xp={user?.xp ?? 0} /> · {user?.xp ?? 0}  <UiText text={"XP · Profile"} /> {completion} <UiText text={"% complete"} /> </div>
             </div>
 
             {/* Quick actions */}
@@ -704,7 +708,7 @@ export default function AccountProfile() {
         </section>
       ) : (
         <>
-          <nav aria-label="Profile sections" className="account-profile-tabs sticky top-3 z-20 mt-6 flex gap-1 overflow-x-auto rounded-2xl border border-white/90 bg-white/80 p-1.5 shadow-[0_14px_40px_rgba(15,23,42,0.1)] backdrop-blur-2xl">
+          <nav aria-label={uiCopy("Profile sections")} className="account-profile-tabs sticky top-3 z-20 mt-6 flex gap-1 overflow-x-auto rounded-2xl border border-white/90 bg-white/80 p-1.5 shadow-[0_14px_40px_rgba(15,23,42,0.1)] backdrop-blur-2xl">
             {PROFILE_SECTIONS.map(({ id, label }) => (
               <a
                 key={id}
@@ -729,7 +733,7 @@ export default function AccountProfile() {
                 <span className="text-lg font-bold text-blue-500">@</span>
                 <input
                   value={nicknameDraft}
-                  aria-label="Public nickname"
+                  aria-label={uiCopy("Public nickname")}
                   onChange={(e) => setNicknameDraft(e.target.value.replace(/\s/g, ''))}
                   placeholder="your_handle"
                   maxLength={20}
@@ -749,7 +753,7 @@ export default function AccountProfile() {
             </div>
             {nickStatus === 'taken' ? <p className="mt-1.5 text-xs font-medium text-error-600"> <UiText text={"Already taken — try another."} /> </p> : null}
             {nickStatus === 'invalid' ? <p className="mt-1.5 text-xs font-medium text-error-600"> <UiText text={"3–20 chars: letters, numbers or underscore, starting with a letter."} /> </p> : null}
-            {nickStatus === 'error' ? <p className="mt-1.5 text-xs font-medium text-error-600">Could not check this nickname. <button type="button" onClick={() => setNicknameCheckAttempt((attempt) => attempt + 1)} className="font-bold underline">Try again</button></p> : null}
+            {nickStatus === 'error' ? <p className="mt-1.5 text-xs font-medium text-error-600"><UiText text={"Could not check this nickname."} /> <button type="button" onClick={() => setNicknameCheckAttempt((attempt) => attempt + 1)} className="font-bold underline"><UiText text={"Try again"} /></button></p> : null}
           </section>
 
           {/* Personal + targets */}
@@ -767,7 +771,7 @@ export default function AccountProfile() {
                   <CountryPicker value={form.country ?? ''} onChange={(country) => updateField('country', country)} />
                 </div>
                 <label className="text-sm font-medium text-slate-700">
-                   <UiText text={"Grade level"} /> <input value={form.gradeLevel ?? ''} onChange={(e) => updateField('gradeLevel', e.target.value)} className="input mt-1" placeholder="11th grade / Gap year" />
+                   <UiText text={"Grade level"} /> <input value={form.gradeLevel ?? ''} onChange={(e) => updateField('gradeLevel', e.target.value)} className="input mt-1" placeholder={uiCopy("11th grade / Gap year")} />
                 </label>
                 <label className="text-sm font-medium text-slate-700">
                    <UiText text={"Profile style"} /> <select value={form.gender ?? 'PREFER_NOT_TO_SAY'} onChange={(e) => updateField('gender', e.target.value)} className="input mt-1">
@@ -793,13 +797,13 @@ export default function AccountProfile() {
                    <UiText text={"Daily study hours"} /> <input type="number" min={1} max={12} value={form.dailyStudyHours ?? ''} onChange={(e) => updateField('dailyStudyHours', e.target.value ? Number(e.target.value) : null)} className="input mt-1" />
                 </label>
                 <label className="text-sm font-medium text-slate-700">
-                   <UiText text={"Current IELTS"} /> <input type="number" min={0} max={9} step={0.5} value={form.currentIeltsScore ?? ''} onChange={(e) => updateField('currentIeltsScore', e.target.value ? Number(e.target.value) : null)} className="input mt-1" placeholder="N/A — not taken yet" />
+                   <UiText text={"Current IELTS"} /> <input type="number" min={0} max={9} step={0.5} value={form.currentIeltsScore ?? ''} onChange={(e) => updateField('currentIeltsScore', e.target.value ? Number(e.target.value) : null)} className="input mt-1" placeholder={uiCopy("N/A — not taken yet")} />
                 </label>
                 <label className="text-sm font-medium text-slate-700">
                    <UiText text={"Target IELTS"} /> <input type="number" min={0} max={9} step={0.5} value={form.targetIeltsScore ?? ''} onChange={(e) => updateField('targetIeltsScore', e.target.value ? Number(e.target.value) : null)} className="input mt-1" placeholder="7.5" />
                 </label>
                 <label className="text-sm font-medium text-slate-700">
-                   <UiText text={"Current SAT"} /> <input type="number" min={400} max={1600} step={10} value={form.currentSatScore ?? ''} onChange={(e) => updateField('currentSatScore', e.target.value ? Number(e.target.value) : null)} onBlur={() => form.currentSatScore !== null && updateField('currentSatScore', normalizeSatScore(form.currentSatScore))} className="input mt-1" placeholder="N/A — not taken yet" />
+                   <UiText text={"Current SAT"} /> <input type="number" min={400} max={1600} step={10} value={form.currentSatScore ?? ''} onChange={(e) => updateField('currentSatScore', e.target.value ? Number(e.target.value) : null)} onBlur={() => form.currentSatScore !== null && updateField('currentSatScore', normalizeSatScore(form.currentSatScore))} className="input mt-1" placeholder={uiCopy("N/A — not taken yet")} />
                 </label>
                 <label className="text-sm font-medium text-slate-700">
                    <UiText text={"Target SAT"} /> <input type="number" min={SAT_TARGET_SCORE_MIN} max={1600} step={10} value={form.targetSatScore ?? ''} onChange={(e) => updateField('targetSatScore', e.target.value ? Number(e.target.value) : null)} onBlur={() => form.targetSatScore !== null && updateField('targetSatScore', normalizeSatScore(form.targetSatScore, true))} className="input mt-1" placeholder="1450" />
@@ -813,11 +817,11 @@ export default function AccountProfile() {
                     }}
                     onBlur={() => setTargetCountriesDraft(parseTargetCountries(targetCountriesDraft).join(', '))}
                     className="input mt-1"
-                    placeholder="United States, United Kingdom, Canada"
+                    placeholder={uiCopy("United States, United Kingdom, Canada")}
                   />
                 </label>
                 <label className="text-sm font-medium text-slate-700">
-                   <UiText text={"Field of study"} /> <input list="account-study-field-options" value={form.fieldOfStudy ?? ''} onChange={(e) => updateField('fieldOfStudy', e.target.value)} className="input mt-1" placeholder="Type or choose a field..." autoComplete="off" />
+                   <UiText text={"Field of study"} /> <input list="account-study-field-options" value={form.fieldOfStudy ?? ''} onChange={(e) => updateField('fieldOfStudy', e.target.value)} className="input mt-1" placeholder={uiCopy("Type or choose a field...")} autoComplete="off" />
                   <datalist id="account-study-field-options">
                     {POPULAR_STUDY_FIELDS.map((field) => <option key={field} value={field} />)}
                   </datalist>
@@ -835,7 +839,7 @@ export default function AccountProfile() {
                 </label>
               </div>
               <label className="mt-3 block text-sm font-medium text-slate-700">
-                 <UiText text={"Bio"} /> <textarea value={form.bio ?? ''} onChange={(e) => updateField('bio', e.target.value)} className="input mt-1 min-h-[92px] resize-y" placeholder="Short introduction, study goals, preferred pace..." />
+                 <UiText text={"Bio"} /> <textarea value={form.bio ?? ''} onChange={(e) => updateField('bio', e.target.value)} className="input mt-1 min-h-[92px] resize-y" placeholder={uiCopy("Short introduction, study goals, preferred pace...")} />
               </label>
               <div className="mt-4">
                 <button type="button" onClick={() => void saveProfile()} disabled={saving} className="arena-primary-btn disabled:opacity-60">
@@ -937,11 +941,11 @@ export default function AccountProfile() {
             </div>
             <div className="surface-card p-4 text-center">
               <p className="text-[11px] font-bold uppercase tracking-wide text-blue-700"> <UiText text={"Account level"} /> </p>
-              <p className="mt-1 text-2xl font-black text-slate-900">{user?.level ?? 1}</p>
+              <LearnerLevel xp={user?.xp ?? 0} />
             </div>
             <div className="surface-card p-4 text-center">
               <p className="text-[11px] font-bold uppercase tracking-wide text-blue-700"> <UiText text={"Visibility"} /> </p>
-              <p className="mt-1 text-2xl font-black text-slate-900">{form.isPublic ? 'Public' : 'Private'}</p>
+              <p className="mt-1 text-2xl font-black text-slate-900">{form.isPublic ? <UiText text={"Public"} /> : <UiText text={"Private"} />}</p>
             </div>
           </div>
         </>

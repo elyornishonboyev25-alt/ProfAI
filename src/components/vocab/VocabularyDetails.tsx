@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { ArrowLeft, ArrowRight, BookOpen, Volume2, X } from 'lucide-react'
 import type { VocabularyEntry } from '@/data/vocabularyCollections'
@@ -9,6 +11,7 @@ import { getVocabularyTranslation } from '@/utils/vocabularyTranslation'
 
 /** Measure text against the available space, keeping every character accessible. */
 function PagedText({ text, label }: { text: string; label: string }) {
+  const { c: uiCopy } = useCopy()
   const body = useRef<HTMLDivElement>(null)
   const measurement = useRef<HTMLParagraphElement>(null)
   const [pages, setPages] = useState([text])
@@ -57,20 +60,22 @@ function PagedText({ text, label }: { text: string; label: string }) {
       <p ref={measurement} aria-hidden="true" className="vocab-page-copy vocab-text-measure" />
     </div>
     <div className="vocab-text-pagination">
-      <button type="button" aria-label={`Previous ${label} page`} disabled={page === 0} onClick={() => setPage((value) => value - 1)}><ArrowLeft size={14} /></button>
+      <button type="button" aria-label={uiCopy("Previous {{value1}} page", { value1: String(label) })} disabled={page === 0} onClick={() => setPage((value) => value - 1)}><ArrowLeft size={14} /></button>
       <span>{page + 1} / {pages.length}</span>
-      <button type="button" aria-label={`Next ${label} page`} disabled={page >= pages.length - 1} onClick={() => setPage((value) => value + 1)}><ArrowRight size={14} /></button>
+      <button type="button" aria-label={uiCopy("Next {{value1}} page", { value1: String(label) })} disabled={page >= pages.length - 1} onClick={() => setPage((value) => value + 1)}><ArrowRight size={14} /></button>
     </div>
   </div>
 }
 
 export function TextDetailsButton({ text, label = 'Read full meaning' }: { text: string; label?: string }) {
+  const { c: uiCopy } = useCopy()
   const dialog = useRef<HTMLDialogElement>(null)
   const headingId = useId()
-  return <><button type="button" aria-label={label} className="vocab-text-details" onClick={() => dialog.current?.showModal()}><BookOpen size={13} /></button><dialog ref={dialog} aria-labelledby={headingId} className="vocab-detail-dialog"><div className="vocab-dialog-shell"><header><h2 id={headingId}>{label}</h2><button type="button" aria-label="Close meaning" onClick={() => dialog.current?.close()}><X size={18} /></button></header><section className="vocab-detail-content"><PagedText text={text} label="meaning" /></section></div></dialog></>
+  return <><button type="button" aria-label={label} className="vocab-text-details" onClick={() => dialog.current?.showModal()}><BookOpen size={13} /></button><dialog ref={dialog} aria-labelledby={headingId} className="vocab-detail-dialog"><div className="vocab-dialog-shell"><header><h2 id={headingId}><UiText text={label} /></h2><button type="button" aria-label={uiCopy("Close meaning")} onClick={() => dialog.current?.close()}><X size={18} /></button></header><section className="vocab-detail-content"><PagedText text={text} label={uiCopy("meaning")} /></section></div></dialog></>
 }
 
 export function WordDetailsButton({ entry, label = 'Details' }: { entry: VocabularyEntry; label?: string }) {
+  const { c: uiCopy } = useCopy()
   const language = useVocabularyLanguage()
   const translation = getVocabularyTranslation(entry, language)
   const dialog = useRef<HTMLDialogElement>(null)
@@ -85,18 +90,19 @@ export function WordDetailsButton({ entry, label = 'Details' }: { entry: Vocabul
     ...(entry.sourceExcerpt ? [{ label: 'Source context', text: [entry.sourceTitle, entry.sourceExcerpt].filter(Boolean).join('\n\n') }] : []),
   ]
   return <>
-    <button type="button" className="vocab-details-button" onClick={() => { setSection(0); dialog.current?.showModal() }}><BookOpen size={14} />{label}</button>
+    <button type="button" className="vocab-details-button" onClick={() => { setSection(0); dialog.current?.showModal() }}><BookOpen size={14} /><UiText text={label} /></button>
     <dialog ref={dialog} aria-labelledby={headingId} className="vocab-detail-dialog" onClick={(event) => { if (event.target === event.currentTarget) dialog.current?.close() }}>
       <div className="vocab-dialog-shell">
-        <header><div><p className="vocab-content-label">WORD DETAILS</p><h2 id={headingId} title={entry.term}>{entry.term}</h2></div><button type="button" aria-label="Close word details" onClick={() => dialog.current?.close()}><X size={18} /></button></header>
-        <div role="group" aria-label="Word information" className="vocab-detail-tabs">{sections.map((item, index) => <button key={item.label} type="button" aria-pressed={section === index} onClick={() => setSection(index)}>{item.label}</button>)}</div>
-        <section className="vocab-detail-content"><p className="vocab-content-label">{sections[section]?.label}</p><PagedText key={`${entry.id}:${section}`} text={sections[section]?.text ?? ''} label="word details" /></section>
+        <header><div><p className="vocab-content-label"><UiText text={"WORD DETAILS"} /></p><h2 id={headingId} title={entry.term}>{entry.term}</h2></div><button type="button" aria-label={uiCopy("Close word details")} onClick={() => dialog.current?.close()}><X size={18} /></button></header>
+        <div role="group" aria-label={uiCopy("Word information")} className="vocab-detail-tabs">{sections.map((item, index) => <button key={item.label} type="button" aria-pressed={section === index} onClick={() => setSection(index)}><UiText text={item.label} /></button>)}</div>
+        <section className="vocab-detail-content"><p className="vocab-content-label">{sections[section]?.label}</p><PagedText key={`${entry.id}:${section}`} text={sections[section]?.text ?? ''} label={uiCopy("word details")} /></section>
       </div>
     </dialog>
   </>
 }
 
 export function VocabularyLibrary({ entries, label = 'Vocabulary' }: { entries: VocabularyEntry[]; label?: string }) {
+  const { c: uiCopy } = useCopy()
   const { speak } = usePronunciation()
   const dialog = useRef<HTMLDialogElement>(null)
   const headingId = useId()
@@ -109,12 +115,12 @@ export function VocabularyLibrary({ entries, label = 'Vocabulary' }: { entries: 
   }, [])
   const pages = Math.ceil(entries.length / size)
   return <>
-    <button type="button" className="vocab-word-list" onClick={() => dialog.current?.showModal()}><span><BookOpen size={17} />{label}<span className="vocab-word-count">{entries.length}</span></span><ArrowRight size={16} /></button>
+    <button type="button" className="vocab-word-list" onClick={() => dialog.current?.showModal()}><span><BookOpen size={17} /><UiText text={label} /><span className="vocab-word-count">{entries.length}</span></span><ArrowRight size={16} /></button>
     <dialog ref={dialog} aria-labelledby={headingId} className="vocab-library-dialog">
       <div className="vocab-dialog-shell">
-        <header><div><p className="vocab-content-label">YOUR STUDY SET</p><h2 id={headingId}>Vocabulary · {entries.length} terms</h2></div><VocabularyLanguageToggle /><button type="button" aria-label="Close vocabulary" onClick={() => dialog.current?.close()}><X size={18} /></button></header>
-        <div className="vocab-library-grid" data-size={size}>{entries.slice(page * size, (page + 1) * size).map((entry) => <article key={entry.id}><div className="vocab-library-term"><h3 title={entry.term}>{entry.term}</h3><button type="button" className="vocab-details-button" aria-label={`Pronounce ${entry.term}`} onClick={() => speak(entry.term)}><Volume2 size={14} /></button><SaveWordButton entry={entry} iconOnly /></div><VocabularyTranslation entry={entry} className="vocab-library-translation" /><div className="vocab-library-definition"><PagedText text={entry.definition} label={entry.term} /></div><WordDetailsButton entry={entry} label="Meaning, examples & source" /></article>)}</div>
-        <footer><button type="button" aria-label="Previous vocabulary page" disabled={page === 0} onClick={() => setPage((value) => value - 1)}><ArrowLeft size={16} />Previous</button><span>{page + 1} / {pages}</span><button type="button" aria-label="Next vocabulary page" disabled={page >= pages - 1} onClick={() => setPage((value) => value + 1)}>Next<ArrowRight size={16} /></button></footer>
+        <header><div><p className="vocab-content-label"><UiText text={"YOUR STUDY SET"} /></p><h2 id={headingId}><UiText text={"Vocabulary ·"} /> {entries.length} <UiText text={"terms"} /></h2></div><VocabularyLanguageToggle /><button type="button" aria-label={uiCopy("Close vocabulary")} onClick={() => dialog.current?.close()}><X size={18} /></button></header>
+        <div className="vocab-library-grid" data-size={size}>{entries.slice(page * size, (page + 1) * size).map((entry) => <article key={entry.id}><div className="vocab-library-term"><h3 title={entry.term}>{entry.term}</h3><button type="button" className="vocab-details-button" aria-label={uiCopy("Pronounce {{value1}}", { value1: String(entry.term) })} onClick={() => speak(entry.term)}><Volume2 size={14} /></button><SaveWordButton entry={entry} iconOnly /></div><VocabularyTranslation entry={entry} className="vocab-library-translation" /><div className="vocab-library-definition"><PagedText text={entry.definition} label={entry.term} /></div><WordDetailsButton entry={entry} label={uiCopy("Meaning, examples & source")} /></article>)}</div>
+        <footer><button type="button" aria-label={uiCopy("Previous vocabulary page")} disabled={page === 0} onClick={() => setPage((value) => value - 1)}><ArrowLeft size={16} /><UiText text={"Previous"} /></button><span>{page + 1} / {pages}</span><button type="button" aria-label={uiCopy("Next vocabulary page")} disabled={page >= pages - 1} onClick={() => setPage((value) => value + 1)}><UiText text={"Next"} /><ArrowRight size={16} /></button></footer>
       </div>
     </dialog>
   </>

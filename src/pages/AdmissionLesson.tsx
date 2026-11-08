@@ -1,3 +1,4 @@
+import { useCopy } from '@/i18n/interface'
 import UiText from '@/components/common/UiText'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
@@ -28,6 +29,7 @@ function Block({ block }: { block: LessonBlock }) {
 }
 
 export default function AdmissionLesson() {
+  const { c: uiCopy } = useCopy()
   const { slug } = useParams<{ slug: string }>()
   const lesson = slug ? getLessonBySlug(slug) : undefined
   const phase = lesson ? getPhaseById(lesson.phaseId) : undefined
@@ -103,15 +105,15 @@ export default function AdmissionLesson() {
             <section className={`lesson-completion lessons-glass${completed ? ' is-done' : ''}`} aria-labelledby="lesson-completion-title">
               <span className="lessons-card-icon" aria-hidden="true"><CheckCircle2 size={23} /></span>
               <div className="lesson-completion-copy" aria-live="polite">
-                <h2 id="lesson-completion-title">{completed ? 'Lesson completed' : 'Finished this lesson?'}</h2>
-                <p>{completed ? 'It now counts toward your roadmap progress.' : 'Mark it to track your roadmap progress.'}</p>
+                <h2 id="lesson-completion-title">{completed ? <UiText text={"Lesson completed"} /> : <UiText text={"Finished this lesson?"} />}</h2>
+                <p>{completed ? <UiText text={"It now counts toward your roadmap progress."} /> : <UiText text={"Mark it to track your roadmap progress."} />}</p>
               </div>
               <button type="button" onClick={handleToggleComplete} aria-pressed={completed} className="lesson-completion-button">
-                {completed ? <CheckCircle2 size={16} aria-hidden="true" /> : null}{completed ? 'Completed ✓' : 'Mark as complete'}
+                {completed ? <CheckCircle2 size={16} aria-hidden="true" /> : null}{completed ? <UiText text={"Completed ✓"} /> : <UiText text={"Mark as complete"} />}
               </button>
             </section>
 
-            <nav className="lesson-adjacent-navigation" aria-label="Lesson navigation">
+            <nav className="lesson-adjacent-navigation" aria-label={uiCopy("Lesson navigation")}>
               {prev ? <Link to={`/admission/lessons/${prev.slug}`} className="lesson-adjacent-link lessons-glass"><ArrowLeft size={19} aria-hidden="true" /><span><small><UiText text="Previous" /></small><strong>{prev.title}</strong></span></Link> : <span className="lesson-nav-spacer" />}
               {next ? <Link to={`/admission/lessons/${next.slug}`} className="lesson-adjacent-link lessons-glass is-next"><span><small><UiText text="Next" /></small><strong>{next.title}</strong></span><ArrowRight size={19} aria-hidden="true" /></Link> : <Link to="/admission/universities" className="lesson-adjacent-link lessons-glass is-next"><span><small><UiText text="Finished!" /></small><strong><UiText text="Explore universities →" /></strong></span><ArrowRight size={19} aria-hidden="true" /></Link>}
             </nav>

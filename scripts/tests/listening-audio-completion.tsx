@@ -32,7 +32,7 @@ export async function run() {
   }
   const ended = () => act(async () => { container.querySelector('audio')!.dispatchEvent(new window.Event('ended')) })
   const click = async (label: string) => {
-    const button = [...container.querySelectorAll('button')].find(el => el.textContent?.trim() === label)
+    const button = [...document.querySelectorAll('button')].find(el => el.textContent?.trim() === label)
     assert.ok(button, label)
     await act(async () => button.click())
   }
@@ -131,7 +131,7 @@ export async function run() {
     assert.equal(practiceControls.querySelector<HTMLButtonElement>('[aria-label="Forward 10 seconds"]')!.disabled, true, 'Controls stop after the final audio')
     await click('Submit')
     await click('Submit test')
-    await click('Check score')
+    await click('OK, view results')
     assert.equal(deadlines.size, 0, 'Manual submit cancels automatic submission')
     await delay(3200)
     assert.equal(manualResults.length, 1)

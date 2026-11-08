@@ -145,6 +145,8 @@ export interface TestResult {
     detailedBreakdown?: TestResultBreakdown
     isPartial?: boolean
     leaderboardEligible?: boolean
+    eligibilityNoticeAcknowledged?: boolean
+    leaderboardMinimumSeconds?: number
 }
 
 export type QuestionReviewStatus = 'correct' | 'incorrect' | 'skipped'

@@ -1,3 +1,4 @@
+import { useCopy } from '@/i18n/interface'
 import type { LeaderboardRow } from '@/types/platform'
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 
@@ -8,12 +9,13 @@ type LeaderboardAvatarProps = {
 }
 
 export default function LeaderboardAvatar({ row, size = 'sm', showRank = false }: LeaderboardAvatarProps) {
+  const { c: uiCopy } = useCopy()
   return (
     <span
       className={`${row.premium ? 'premium-member-avatar' : ''} relative inline-flex shrink-0 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-red-50 to-zinc-200 font-black text-red-800 shadow-[0_5px_16px_rgba(73,43,52,.14)] ${size === 'lg' ? 'h-20 w-20 text-xl' : 'h-10 w-10 text-xs'}`}
       title={row.fullName}
       role="img"
-      aria-label={`${row.fullName}, rank ${row.rank}`}
+      aria-label={uiCopy("{{value1}}, rank {{value2}}", { value1: String(row.fullName), value2: String(row.rank) })}
     >
       <ProfileAvatar src={row.avatarUrl} name={row.fullName} className="rounded-full" />
       {showRank ? (

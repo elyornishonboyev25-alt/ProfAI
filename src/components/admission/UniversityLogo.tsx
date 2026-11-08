@@ -1,3 +1,4 @@
+import { useCopy } from '@/i18n/interface'
 import { useEffect, useMemo, useState } from 'react'
 import { Landmark } from 'lucide-react'
 import type { UniversityBrand } from '@/data/admission'
@@ -77,6 +78,7 @@ export default function UniversityLogo({
   website?: string
   priority?: boolean
 }) {
+  const { c: uiCopy } = useCopy()
   const curatedLogo = id ? CURATED_LOGOS[id] : undefined
   const sources = useMemo(() => {
     const favicon = officialLogoUrl(website)
@@ -99,7 +101,7 @@ export default function UniversityLogo({
         '--university-accent': brand.accent,
         ...(curatedLogo?.darkBackground ? { background: brand.gradient } : {}),
       } as React.CSSProperties}
-      aria-label={`${name} identity`}
+      aria-label={uiCopy("{{value1}} identity", { value1: String(name) })}
     >
       <span className="absolute inset-2.5 flex items-center justify-center" aria-hidden="true">
         <Landmark className="h-[64%] w-[64%]" style={{ color: curatedLogo?.darkBackground ? '#fff' : brand.accent }} />

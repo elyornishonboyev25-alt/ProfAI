@@ -1,43 +1,42 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
+import ConfirmDialog from '@/components/common/ConfirmDialog'
+import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowLeft,
   ArrowRight,
+  BarChart3,
   BookOpenCheck,
   Bookmark,
   Calculator,
   Check,
   CheckCircle2,
+  Clock3,
   Filter,
   Grid2X2,
   History,
+  Layers3,
+  PlayCircle,
   RotateCcw,
+  Sparkles,
   Target,
 } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import DesmosDrawer from '@/components/sat/DesmosDrawer'
 import { useAccountDataRevision } from '@/hooks/useAccountDataRevision'
 import { useFullscreen } from '@/hooks/useFullscreen'
-import { allQuestions, reviewQuestions, questionKey, readHistory, readAttemptedKeys, difficulty, loadBankSession, saveBankSession, type Result } from '@/features/sat/bankPractice'
-import SATQuestionCanvas from '@/components/sat/SATQuestionCanvas'
+import { allQuestions, bankSetReview, questionKey, readHistory, readAttemptedKeys, difficulty, loadBankSession, saveBankSession, type Result } from '@/features/sat/bankPractice'
 import SATBankSelect from '@/components/sat/SATBankSelect'
+import SATReview from '@/components/sat/SATReview'
 import { bankDomain, bankSkill } from '@/features/sat/bankTopics'
-import SATRichText from '@/components/sat/SATRichText'
-import SATSourceContent from '@/components/sat/SATSourceContent'
-import { getSATReviewTests } from '@/features/sat/catalog'
+import { getSATReviewTests, resolveSATTest } from '@/features/sat/catalog'
 import { loadSATAttempt, loadSATAttemptHistory } from '@/features/sat/attemptStorage'
+import { formatSATDuration } from '@/features/sat/resultAnalysis'
 import { isSATAnswerCorrect } from '@/features/sat/practiceTest4'
 import { useAuthStore } from '@/store/authStore'
 import './SATQuestionBank.css'
 
-type ReviewFilter = 'all' | 'incorrect' | 'correct' | 'skipped' | 'marked'
-const outcome = (result: Result): Exclude<ReviewFilter, 'all' | 'marked'> =>
+const outcome = (result: Result) =>
   result.correct ? 'correct' : result.answer === '' ? 'skipped' : 'incorrect'
-const outcomeLabel = {
-  correct: 'Correct',
-  incorrect: 'Incorrect',
-  skipped: 'Skipped',
-  marked: 'Marked for Review',
-}
 const dateLabel = (at: string) =>
   new Date(at).toLocaleString('en-GB', {
     day: 'numeric',
@@ -46,6 +45,8 @@ const dateLabel = (at: string) =>
     hour: '2-digit',
     minute: '2-digit',
   })
+const sectionLabel = (section: string) => (section === 'math' ? 'Math' : 'Reading & Writing')
+const tone = (percent: number) => (percent >= 80 ? 'is-strong' : percent >= 50 ? 'is-mid' : 'is-focus')
 
 function mockResults(): Result[] {
   const definitions = getSATReviewTests()
@@ -61,8 +62,9 @@ function mockResults(): Result[] {
       .map((attempt) => [attempt.attemptId, attempt] as const),
   )
   return [...attempts.values()].flatMap((attempt) => {
-    const test = tests.get(attempt.testId)
-    if (!test) return []
+    const paper = tests.get(attempt.testId)
+    if (!paper) return []
+    const test = resolveSATTest(paper, attempt)
     const timestamp = attempt.submittedAt ?? attempt.updatedAt
     if (!Number.isFinite(timestamp)) return []
     const at = new Date(timestamp).toISOString()
@@ -90,6 +92,7 @@ export default function SATQuestionBank() {
   return <QuestionBankWorkspace key={userId} userId={userId} />
 }
 function QuestionBankWorkspace({ userId }: { userId: string }) {
+  const { c: uiCopy } = useCopy()
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const [section, setSection] = useState(
@@ -118,11 +121,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
   const [attemptedKeys, setAttemptedKeys] = useState(() => readAttemptedKeys(userId))
   const accountRevision = useAccountDataRevision()
   const { enter } = useFullscreen()
-  const [calculatorOpen, setCalculatorOpen] = useState(false)
-  const [calculatorDocked, setCalculatorDocked] = useState(true)
   const [error, setError] = useState('')
-  const [reviewFilter, setReviewFilter] = useState<ReviewFilter>('all')
-  const [reviewIndex, setReviewIndex] = useState(0)
   const reviewId = params.get('review')
   const historyView = params.get('view') === 'history' || Boolean(reviewId)
   const [mockHistory, setMockHistory] = useState(mockResults)
@@ -165,37 +164,20 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
         id,
         results,
         at: results[0].at,
+        section: results[0].section,
+        seconds: results[0].seconds,
         correct: results.filter((row) => row.correct).length,
+        incorrect: results.filter((row) => outcome(row) === 'incorrect').length,
+        skipped: results.filter((row) => outcome(row) === 'skipped').length,
+        percent: Math.round((results.filter((row) => row.correct).length / results.length) * 100),
       }))
       .sort((a, b) => b.at.localeCompare(a.at))
   }, [history])
   const reviewSet = sets.find((set) => set.id === reviewId)
-  const reviewHeading = useRef<HTMLHeadingElement>(null)
-  const reviewRows =
-    reviewSet?.results
-      .map((result, number) => ({
-        result,
-        number: number + 1,
-        row: reviewQuestions.get(result.key),
-      }))
-      .filter(
-        (item) =>
-          reviewFilter === 'all' ||
-          (reviewFilter === 'marked'
-            ? item.result.flagged
-            : outcome(item.result) === reviewFilter),
-      ) ?? []
-  const review =
-    reviewRows[Math.min(reviewIndex, Math.max(0, reviewRows.length - 1))]
+  const analysis = useMemo(() => (reviewSet ? bankSetReview(reviewSet.id, reviewSet.results) : null), [reviewSet])
   useEffect(() => {
-    setReviewIndex(0)
-    setReviewFilter('all')
-    if (!reviewId) window.scrollTo({ top: 0, behavior: 'instant' })
+    window.scrollTo({ top: 0, behavior: 'instant' })
   }, [reviewId])
-  useLayoutEffect(() => {
-    reviewHeading.current?.focus({ preventScroll: true })
-    reviewHeading.current?.scrollIntoView?.({ block: 'start', behavior: 'instant' })
-  }, [reviewId, reviewIndex, reviewFilter, review?.result.key])
   const goTo = (view: 'practice' | 'history', id?: string) => {
     setParams((current) => {
       current.delete('review')
@@ -210,9 +192,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
       [
         ...new Set(
           allQuestions
-            .filter(
-              (row) => row.question.section === section,
-            )
+            .filter((row) => row.question.section === section)
             .map((row) => bankDomain(row.question.domain)),
         ),
       ].sort(),
@@ -225,7 +205,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
           allQuestions
             .filter(
               (row) =>
-                (row.question.section === section) &&
+                row.question.section === section &&
                 (domain === 'all' || bankDomain(row.question.domain) === domain),
             )
             .map((row) => bankSkill(row.question)),
@@ -265,9 +245,21 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
       .sort((a, b) => a[1].correct / a[1].total - b[1].correct / b[1].total)
       .slice(0, 5)
   }, [history, mockHistory])
-  const start = () => {
+  const practised = history.length
+  const accuracy = practised ? Math.round((history.filter((row) => row.correct).length / practised) * 100) : null
+  const sectionTotals = useMemo(() => ({
+    math: allQuestions.filter((row) => row.question.section === 'math').length,
+    'reading-writing': allQuestions.filter((row) => row.question.section === 'reading-writing').length,
+  }), [])
+  const [replaceSetOpen, setReplaceSetOpen] = useState(false)
+  const resume = () => {
+    if (!activeSet) return
+    void enter()
+    navigate(`/sat/question-bank/run/${activeSet.id}`, { state: { resumeIntent: true, returnTo: '/sat/question-bank' } })
+  }
+  const start = (replacementConfirmed = false) => {
     if (!filtered.length) return
-    if (activeSet && !window.confirm('Start a new set and replace your unfinished practice?')) return
+    if (activeSet && !replacementConfirmed) { setReplaceSetOpen(true); return }
     const priority = (row: (typeof allQuestions)[number]) =>
       latest.get(row.key)?.correct === false ? 0 : latest.has(row.key) ? 2 : 1
     const rows = [...filtered].sort((a, b) => priority(a) - priority(b)).slice(0, count)
@@ -283,26 +275,11 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
     try {
       saveBankSession(userId, session)
       void enter()
-      navigate(`/sat/question-bank/run/${session.id}`)
+      navigate(`/sat/question-bank/run/${session.id}`, { state: { resumeIntent: true, returnTo: '/sat/question-bank' } })
     } catch {
       setError('Your practice could not be started. Free up browser storage and try again.')
     }
   }
-  const mathVisible = historyView && review?.row?.question.section === 'math'
-  useEffect(() => {
-    setCalculatorOpen(false)
-  }, [mathVisible, historyView, reviewId])
-  const calculatorButton = mathVisible ? (
-    <button
-      type="button"
-      className="sat-bank-calculator"
-      aria-expanded={calculatorOpen}
-      aria-label={calculatorOpen ? 'Close Desmos calculator' : 'Open Desmos calculator'}
-      onClick={() => setCalculatorOpen((value) => !value)}
-    >
-      <Calculator size={18} /> Desmos
-    </button>
-  ) : null
   const reset = () => {
     setDomain('all')
     setSkill('all')
@@ -310,332 +287,137 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
     setStatus('all')
     setError('')
   }
+  const setSize = Math.min(count, filtered.length)
+
+  if (reviewSet && analysis) {
+    return (
+      <SATReview
+        key={reviewSet.id}
+        variant="question-bank"
+        attempt={analysis.attempt}
+        test={analysis.test}
+        onBack={() => goTo('history')}
+        backLabel="Question Bank history"
+        onStartAgain={() => goTo('practice')}
+      />
+    )
+  }
+
   return (
     <main className="workspace-page sat-bank-page">
-      <div className={`sat-bank-wrap ${mathVisible && calculatorOpen && calculatorDocked ? 'sat-bank-calculator-docked' : ''}`}>
-        <button
-          type="button"
-          className="sat-bank-back"
-          onClick={() => navigate('/sat')}
-        >
-          <ArrowLeft size={16} /> SAT Arena
+      <ConfirmDialog open={replaceSetOpen} title={uiCopy("Replace your unfinished practice set?")} description={uiCopy("Starting a new set deletes the answers and notes from your unfinished set. Your completed practice results are kept.")} confirmLabel={uiCopy("Replace & start again")} cancelLabel="Keep saved set" destructive onClose={() => setReplaceSetOpen(false)} onConfirm={() => { setReplaceSetOpen(false); start(true) }} />
+      <div className="sat-bank-wrap">
+        <button type="button" className="sat-bank-back" onClick={() => navigate('/sat')}>
+          <ArrowLeft size={16} /> <UiText text={"SAT Arena"} />
         </button>
         <header className="sat-bank-hero">
-          <span>
-            <Filter size={15} /> TARGETED SAT PRACTICE
-          </span>
-          <h1>
-            Question Bank<span>.</span>
-          </h1>
-          <p>
-            Practice at your pace. Keep your results, revisit every question and
-            turn mistakes into progress.
-          </p>
-          <div>
-            <strong>{allQuestions.length}</strong> questions{' '}
-            <strong>{sets.length}</strong> saved sets
+          <div className="sat-bank-hero-copy">
+            <span className="sat-bank-eyebrow-pill"><Filter size={14} /> <UiText text={"TARGETED SAT PRACTICE"} /></span>
+            <h1><UiText text={"Question Bank"} /><span>.</span></h1>
+            <p><UiText text={"Build a set around any skill, solve it in the real SAT interface and get a full analysis the moment you finish."} /></p>
+            <div className="sat-bank-hero-tags">
+              <span><CheckCircle2 size={14} /> <UiText text={"Real SAT interface"} /></span>
+              <span><BarChart3 size={14} /> <UiText text={"Full result analysis"} /></span>
+              <span><Clock3 size={14} /> <UiText text={"Untimed & autosaved"} /></span>
+            </div>
           </div>
+          <dl className="sat-bank-hero-stats" aria-label={uiCopy("Question Bank summary")}>
+            <div><dt><UiText text={"Questions"} /></dt><dd><strong>{allQuestions.length}</strong></dd></div>
+            <div><dt><UiText text={"Saved sets"} /></dt><dd><strong>{sets.length}</strong></dd></div>
+            <div><dt><UiText text={"Practised"} /></dt><dd><strong>{practised}</strong></dd></div>
+            <div><dt><UiText text={"Accuracy"} /></dt><dd><strong className={accuracy === null ? '' : tone(accuracy)}>{accuracy === null ? '—' : `${accuracy}%`}</strong></dd></div>
+          </dl>
         </header>
-        <nav className="sat-bank-tabs" aria-label="Question bank views">
-          <button
-            type="button"
-            aria-current={!historyView ? 'page' : undefined}
-            onClick={() => goTo('practice')}
-          >
-            <BookOpenCheck size={18} /> Practice
+        <nav className="sat-bank-tabs" aria-label={uiCopy("Question bank views")}>
+          <button type="button" aria-current={!historyView ? 'page' : undefined} onClick={() => goTo('practice')}>
+            <BookOpenCheck size={18} /> <UiText text={"Practice"} />
           </button>
-          <button
-            type="button"
-            aria-current={historyView ? 'page' : undefined}
-            onClick={() => goTo('history')}
-          >
-            <History size={18} /> History & review <span>{sets.length}</span>
+          <button type="button" aria-current={historyView ? 'page' : undefined} onClick={() => goTo('history')}>
+            <History size={18} /> <UiText text={"History & review"} /> <span>{sets.length}</span>
           </button>
         </nav>
         {historyView ? (
-          reviewSet ? (
-            <section className="sat-bank-panel">
-              <button
-                type="button"
-                className="sat-bank-back"
-                onClick={() => goTo('history')}
-              >
-                <ArrowLeft size={16} /> All saved sets
-              </button>
-              <div className="sat-bank-review-heading">
-                <div>
-                  <p className="sat-bank-eyebrow">
-                    SET REVIEW · {dateLabel(reviewSet.at)}
-                  </p>
-                  <h2>
-                    {reviewSet.correct} of {reviewSet.results.length} correct
-                  </h2>
-                  <p className="sat-bank-muted">
-                    Read the original question, compare answers and understand
-                    the explanation.
-                  </p>
-                </div>
-                <strong className="sat-bank-score">
-                  {Math.round(
-                    (reviewSet.correct / reviewSet.results.length) * 100,
-                  )}
-                  %
-                </strong>
+          <section className="sat-bank-panel">
+            <div className="sat-bank-panel-title">
+              <div>
+                <p className="sat-bank-kicker"><UiText text={"Results"} /></p>
+                <h2><UiText text={"Your practice history"} /></h2>
               </div>
-              <div
-                className="sat-bank-review-filters"
-                aria-label="Filter reviewed questions"
-              >
-                {(['all', 'incorrect', 'correct', 'skipped', 'marked'] as const).map(
-                  (value) => (
-                    <button
-                      type="button"
-                      key={value}
-                      aria-pressed={reviewFilter === value}
-                      onClick={() => {
-                        setReviewFilter(value)
-                        setReviewIndex(0)
-                      }}
-                    >
-                      {value === 'all' ? 'All questions' : outcomeLabel[value]}{' '}
-                      <span>
-                        {
-                          reviewSet.results.filter(
-                            (row) => value === 'all' ||
-                              (value === 'marked' ? row.flagged : outcome(row) === value),
-                          ).length
-                        }
-                      </span>
-                    </button>
-                  ),
-                )}
-              </div>
-              {review ? (
-                <div className="sat-bank-review-layout">
-                  <aside
-                    className="sat-bank-navigator"
-                    aria-label="Saved question navigator"
+              <History size={22} />
+            </div>
+            <p className="sat-bank-muted">
+              <UiText text={"Open any saved set for its full analysis: score, domains, skills and every question with its explanation."} />
+            </p>
+            {reviewId ? (
+              <p role="status" className="sat-bank-alert">
+                <UiText text={"This saved set is unavailable. Choose a result below."} />
+              </p>
+            ) : null}
+            <div className="sat-bank-history">
+              {sets.length ? (
+                sets.map((set) => (
+                  <button
+                    type="button"
+                    key={set.id}
+                    className="sat-bank-history-card"
+                    onClick={() => goTo('history', set.id)}
+                    aria-label={uiCopy("Review set saved {{value1}}", { value1: String(dateLabel(set.at)) })}
                   >
-                    <p>Questions</p>
-                    <div>
-                      {reviewRows.map((item, position) => (
-                        <button
-                          type="button"
-                          key={`${item.result.key}-${item.number}`}
-                          className={`sat-bank-number ${outcome(item.result)}`}
-                          aria-label={`Review question ${item.number}: ${outcomeLabel[outcome(item.result)]}${item.result.flagged ? ', Marked for Review' : ''}`}
-                          aria-current={review === item ? 'step' : undefined}
-                          onClick={() => setReviewIndex(position)}
-                        >
-                          {item.number}
-                          {item.result.flagged ? <Bookmark size={12} className="sat-bank-mark-icon" aria-hidden="true" /> : null}
-                        </button>
-                      ))}
-                    </div>
-                  </aside>
-                  <article className="sat-bank-review-detail">
-                    <nav className="sat-bank-review-pagination" aria-label="Review question navigation">
-                      <button
-                        type="button"
-                        disabled={reviewIndex === 0}
-                        onClick={() => setReviewIndex((value) => value - 1)}
-                      >
-                        <ArrowLeft size={16} /> Previous
-                      </button>
-                      <span aria-live="polite">
-                        {Math.min(reviewIndex + 1, reviewRows.length)} /{' '}
-                        {reviewRows.length}
+                    <span className={`sat-bank-history-score ${tone(set.percent)}`}>
+                      <strong>{set.percent}%</strong>
+                      <small>{set.correct}/{set.results.length}</small>
+                    </span>
+                    <span className="sat-bank-history-info">
+                      <span className="sat-bank-history-chips">
+                        <span className={`sat-bank-chip ${set.section === 'math' ? 'is-math' : ''}`}>{sectionLabel(set.section)}</span>
+                        {set.seconds !== undefined ? <span className="sat-bank-chip is-quiet"><Clock3 size={12} /> {formatSATDuration(set.seconds)}</span> : null}
                       </span>
-                      <button
-                        type="button"
-                        disabled={reviewIndex >= reviewRows.length - 1}
-                        onClick={() => setReviewIndex((value) => value + 1)}
-                      >
-                        Next <ArrowRight size={16} />
-                      </button>
-                    </nav>
-                    <div className="sat-bank-detail-title">
-                      <h3 ref={reviewHeading} tabIndex={-1}>Question {review.number}</h3>
-                      {calculatorButton}
-                      <span
-                        className={`sat-bank-outcome ${outcome(review.result)}`}
-                      >
-                        {outcomeLabel[outcome(review.result)]}
+                      <strong>{set.results.length}<UiText text={"-question practice set"} /></strong>
+                      <small>{dateLabel(set.at)}</small>
+                      <span className="sat-bank-history-bar" aria-hidden="true">
+                        <i className="is-correct" style={{ width: `${(set.correct / set.results.length) * 100}%` }} />
+                        <i className="is-incorrect" style={{ width: `${(set.incorrect / set.results.length) * 100}%` }} />
+                        <i className="is-skipped" style={{ width: `${(set.skipped / set.results.length) * 100}%` }} />
                       </span>
-                    </div>
-                    {review.row ? (
-                      <>
-                        <p className="sat-bank-question-meta">
-                          {review.row.question.domain} ·{' '}
-                          {review.row.question.skill}
-                        </p>
-                        <div className="sat-bank-question">
-                          <SATQuestionCanvas
-                            practiceLayout
-                            key={`${reviewId}-${review.number}`}
-                            question={{ ...review.row.question, number: review.number }}
-                            answer={review.result.answer ?? ''}
-                            onAnswer={() => {}}
-                            strokes={review.result.highlights ?? []}
-                            eliminatedChoices={review.result.eliminatedChoices ?? []}
-                            highlightAvailable={false}
-                            onChange={() => {}}
-                            flagged={review.result.flagged ?? false}
-                            onToggleFlag={() => {}}
-                            readOnly
-                            answerState={
-                              review.result.correct ? 'correct' : 'incorrect'
-                            }
-                          />
-                        </div>
-                        <div className="sat-bank-answer-summary">
-                          <div>
-                            <span>Your answer</span>
-                            <strong>
-                              {review.result.answer === undefined
-                                ? 'Not recorded in older results'
-                                : review.result.answer || 'Skipped'}
-                            </strong>
-                          </div>
-                          <div>
-                            <span>Correct answer</span>
-                            <strong>{review.row.question.correctAnswer}</strong>
-                          </div>
-                        </div>
-                        <section className="sat-bank-explanation">
-                          <h4>Explanation</h4>
-                          {review.row.question.sourceContent?.explanation ? (
-                            <SATSourceContent html={review.row.question.sourceContent.explanation} />
-                          ) : (
-                            <SATRichText text={review.row.question.explanation} />
-                          )}
-                        </section>
-                      </>
-                    ) : (
-                      <p role="status" className="sat-bank-muted">
-                        This question is no longer in the catalog. Its saved
-                        result is still available.
-                      </p>
-                    )}
-                  </article>
-                </div>
+                      <span className="sat-bank-history-counts">
+                        {set.correct} <UiText text={"correct ·"} /> {set.incorrect} <UiText text={"incorrect ·"} /> {set.skipped} <UiText text={"skipped"} />
+                      </span>
+                    </span>
+                    <span className="sat-bank-history-action">
+                      <UiText text={"View analysis"} /> <ArrowRight size={16} />
+                    </span>
+                  </button>
+                ))
               ) : (
                 <div className="sat-bank-empty">
-                  <CheckCircle2 size={30} />
-                  <h3>No {reviewFilter} questions in this set</h3>
-                  <p>Choose another filter to continue reviewing.</p>
+                  <History size={32} />
+                  <h3><UiText text={"Your next result starts here"} /></h3>
+                  <p><UiText text={"Finish a practice set to unlock its full analysis and review it anytime."} /></p>
+                  <button type="button" className="sat-bank-primary" onClick={() => goTo('practice')}>
+                    <UiText text={"Build a question set"} /> <ArrowRight size={16} />
+                  </button>
                 </div>
               )}
-            </section>
-          ) : (
-            <section className="sat-bank-panel">
-              <div className="sat-bank-panel-title">
-                <h2>Your practice history</h2>
-                <History size={22} />
-              </div>
-              <p className="sat-bank-muted">
-                Open any saved set to review its questions and explanations.
-                Results are saved in this browser.
-              </p>
-              {reviewId ? (
-                <p role="status" className="sat-bank-alert">
-                  This saved set is unavailable. Choose a result below.
-                </p>
-              ) : null}
-              <div className="sat-bank-history">
-                {sets.length ? (
-                  sets.map((set) => (
-                    <button
-                      type="button"
-                      key={set.id}
-                      className="sat-bank-history-card"
-                      onClick={() => goTo('history', set.id)}
-                      aria-label={`Review set saved ${dateLabel(set.at)}`}
-                    >
-                      <span className="sat-bank-history-icon">
-                        <BookOpenCheck size={22} />
-                      </span>
-                      <span className="sat-bank-history-info">
-                        <strong>
-                          {set.results.length}-question practice set
-                        </strong>
-                        <small>{dateLabel(set.at)}</small>
-                        <span>
-                          {set.correct} correct ·{' '}
-                          {
-                            set.results.filter(
-                              (row) => outcome(row) === 'incorrect',
-                            ).length
-                          }{' '}
-                          incorrect ·{' '}
-                          {
-                            set.results.filter(
-                              (row) => outcome(row) === 'skipped',
-                            ).length
-                          }{' '}
-                          skipped
-                        </span>
-                      </span>
-                      <span className="sat-bank-history-action">
-                        <strong>
-                          {Math.round((set.correct / set.results.length) * 100)}
-                          %
-                        </strong>
-                        <span>
-                          Review answers <ArrowRight size={16} />
-                        </span>
-                      </span>
-                    </button>
-                  ))
-                ) : (
-                  <div className="sat-bank-empty">
-                    <History size={32} />
-                    <h3>Your next result starts here</h3>
-                    <p>
-                      Finish a practice set to save your answers and review them
-                      anytime.
-                    </p>
-                    <button
-                      type="button"
-                      className="sat-bank-primary"
-                      onClick={() => goTo('practice')}
-                    >
-                      Build a question set <ArrowRight size={16} />
-                    </button>
-                  </div>
-                )}
-              </div>
-              <button
-                type="button"
-                className="sat-bank-mock-link"
-                onClick={() => navigate('/sat/mistakes')}
-              >
-                Looking for full mock or section results? Open SAT Mistake Lab{' '}
-                <ArrowRight size={16} />
-              </button>
-            </section>
-          )
+            </div>
+            <button type="button" className="sat-bank-mock-link" onClick={() => navigate('/profile')}>
+              <UiText text={"Looking for full mock or section results? Open My Results"} /> <ArrowRight size={16} />
+            </button>
+          </section>
         ) : (
           <div className="sat-bank-grid">
-            <section className="sat-bank-panel">
+            <section className="sat-bank-panel sat-bank-builder">
               <div className="sat-bank-panel-title">
-                <h2>Build a question set</h2>
-                <span className="sat-bank-matching" role="status" aria-live="polite">{filtered.length} matching</span>
-              </div>
-              <p className="sat-bank-builder-intro">Choose your focus. Make this practice your own.</p>
-              {activeSet ? (
-                <div className="sat-bank-resume" role="status">
-                  <p>You have an unfinished {activeSet.keys.length}-question set. Your answers are saved.</p>
-                  <button type="button" className="sat-bank-primary" onClick={() => {
-                    void enter()
-                    navigate(`/sat/question-bank/run/${activeSet.id}`)
-                  }}>Resume practice <ArrowRight size={17} /></button>
+                <div>
+                  <p className="sat-bank-kicker"><UiText text={"Step by step"} /></p>
+                  <h2><UiText text={"Build a question set"} /></h2>
                 </div>
-              ) : null}
+                <span className="sat-bank-matching" role="status" aria-live="polite">{filtered.length} <UiText text={"matching"} /></span>
+              </div>
+              <p className="sat-bank-builder-intro"><UiText text={"Choose your focus. Make this practice your own."} /></p>
               {error ? <p role="alert" className="sat-bank-alert">{error}</p> : null}
               <div className="sat-bank-filters">
-                <fieldset className="sat-bank-choice-field sat-bank-section-field" aria-label="Section">
-                  <legend>Section</legend>
+                <fieldset className="sat-bank-choice-field sat-bank-section-field" aria-label={uiCopy("Section")}>
+                  <legend><b>1</b> <UiText text={"Section"} /></legend>
                   <div className="sat-bank-section-options">
                     {[
                       { value: 'math', label: 'Math', detail: 'Equations, data & problem solving', Icon: Calculator },
@@ -644,36 +426,36 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                       <label key={value} className="sat-bank-section-option">
                         <input type="radio" name="bank-section" value={value} checked={section === value}
                           aria-label={label} onChange={() => { setSection(value); setDomain('all'); setSkill('all'); setError('') }} />
-                        <Icon size={21} aria-hidden="true" />
-                        <span><strong>{label}</strong><small>{detail}</small></span>
+                        <span className="sat-bank-option-icon"><Icon size={20} aria-hidden="true" /></span>
+                        <span><strong><UiText text={label} /></strong><small><UiText text={detail} /> · {sectionTotals[value as 'math' | 'reading-writing']} <UiText text={"questions"} /></small></span>
                         <Check size={16} className="sat-bank-choice-check" aria-hidden="true" />
                       </label>
                     ))}
                   </div>
                 </fieldset>
-                <SATBankSelect label="Domain / topic" value={domain}
+                <SATBankSelect label={uiCopy("Domain / topic")} value={domain}
                   options={[{ value: 'all', label: 'All domains' }, ...domains.map(value => ({ value, label: value }))]}
                   onChange={value => { setDomain(value); setSkill('all') }} />
-                <SATBankSelect label="Skill / question type" value={skill}
+                <SATBankSelect label={uiCopy("Skill / question type")} value={skill}
                   options={[{ value: 'all', label: 'All skills' }, ...skills.map(value => ({ value, label: value }))]}
                   onChange={setSkill} />
-                <fieldset className="sat-bank-choice-field sat-bank-difficulty-field" aria-label="Difficulty">
-                  <legend>Difficulty</legend>
+                <fieldset className="sat-bank-choice-field sat-bank-difficulty-field" aria-label={uiCopy("Difficulty")}>
+                  <legend><b>2</b> <UiText text={"Difficulty"} /></legend>
                   <div className="sat-bank-difficulty-options">
                     {['all', 'Easy', 'Medium', 'Hard'].map((value, index) => (
-                      <label key={value}>
+                      <label key={value} className={`is-${value.toLowerCase()}`}>
                         <input type="radio" name="bank-difficulty" value={value} checked={level === value}
-                          aria-label={value === 'all' ? 'All levels' : value} onChange={() => setLevel(value)} />
+                          aria-label={value === 'all' ? uiCopy("All levels") : value} onChange={() => setLevel(value)} />
                         {index ? <span className="sat-bank-level-bars" aria-hidden="true">
                           {[1, 2, 3].map(bar => <i key={bar} data-filled={bar <= index} />)}
                         </span> : <Grid2X2 size={16} aria-hidden="true" />}
-                        <span>{value === 'all' ? 'All levels' : value}</span>
+                        <span>{value === 'all' ? <UiText text={"All levels"} /> : value}</span>
                       </label>
                     ))}
                   </div>
                 </fieldset>
-                <fieldset className="sat-bank-choice-field sat-bank-progress-field" aria-label="Progress">
-                  <legend>Progress</legend>
+                <fieldset className="sat-bank-choice-field sat-bank-progress-field" aria-label={uiCopy("Progress")}>
+                  <legend><b>3</b> <UiText text={"Progress"} /></legend>
                   <div className="sat-bank-progress-options">
                     {[
                       { value: 'all', label: 'All questions', Icon: Grid2X2 },
@@ -684,13 +466,13 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                       <label key={value}>
                         <input type="radio" name="bank-progress" value={value} checked={status === value}
                           aria-label={label} onChange={() => setStatus(value)} />
-                        <Icon size={16} aria-hidden="true" /><span>{label}</span>
+                        <Icon size={16} aria-hidden="true" /><span><UiText text={label} /></span>
                       </label>
                     ))}
                   </div>
                 </fieldset>
-                <fieldset className="sat-bank-choice-field sat-bank-count-field" aria-label="Questions in set">
-                  <legend>Questions in set</legend>
+                <fieldset className="sat-bank-choice-field sat-bank-count-field" aria-label={uiCopy("Questions in set")}>
+                  <legend><b>4</b> <UiText text={"Questions in set"} /></legend>
                   <div className="sat-bank-count-options">
                     {[4, 6, 10, 15, 20, 30].map(value => (
                       <label key={value}>
@@ -701,90 +483,111 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
                     ))}
                   </div>
                   {filtered.length > 0 && filtered.length < count ? (
-                    <p className="sat-bank-count-note" role="status">Only {filtered.length} {filtered.length === 1 ? 'question matches' : 'questions match'} your filters. Your set will include {filtered.length === 1 ? 'it' : 'all of them'}.</p>
+                    <p className="sat-bank-count-note" role="status"><UiText text={"Only"} /> {filtered.length} {filtered.length === 1 ? <UiText text={"question matches"} /> : <UiText text={"questions match"} />} <UiText text={"your filters. Your set will include"} /> {filtered.length === 1 ? <UiText text={"it"} /> : <UiText text={"all of them"} />}.</p>
                   ) : null}
                 </fieldset>
               </div>
               {!filtered.length ? (
                 <p role="status" className="sat-bank-alert">
-                  No questions match these filters.{' '}
-                  <button type="button" onClick={reset}>
-                    Reset filters
-                  </button>
+                  <UiText text={"No questions match these filters."} />{' '}
+                  <button type="button" onClick={reset}><UiText text={"Reset filters"} /></button>
                 </p>
               ) : null}
-              <div className="sat-bank-set-summary" aria-live="polite">
-                <BookOpenCheck size={18} aria-hidden="true" />
-                <span><strong>{Math.min(count, filtered.length)} {Math.min(count, filtered.length) === 1 ? 'question' : 'questions'}</strong> · {section === 'math' ? 'Math' : 'Reading & Writing'} · {level === 'all' ? 'Mixed difficulty' : level}</span>
-              </div>
-              <div className="sat-bank-build-actions">
-              <button
-                type="button"
-                className="sat-bank-primary"
-                onClick={start}
-                disabled={!filtered.length}
-              >
-                Start {Math.min(count, filtered.length)} {Math.min(count, filtered.length) === 1 ? 'question' : 'questions'}{' '}
-                <ArrowRight size={17} />
-              </button>
-              <button type="button" className="sat-bank-reset" onClick={reset}><RotateCcw size={14} aria-hidden="true" /> Reset filters</button>
-              </div>
-              <p className="sat-bank-muted">Untimed practice · Answers save automatically · Review explanations after finishing</p>
-            </section>
-            <aside className="sat-bank-panel">
-              <div className="sat-bank-panel-title">
-                <h2>Skills to strengthen</h2>
-                <Target size={20} />
-              </div>
-              {skillStats.length ? (
-                <div className="sat-bank-skills">
-                  {skillStats.map(([key, stat]) => (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => {
-                        const [area, ...rest] = key.split(':')
-                        setSection(area)
-                        setDomain('all')
-                        setSkill(rest.join(':'))
-                        setLevel('all')
-                        setStatus('all')
-                      }}
-                    >
-                      <span>{key.split(':').slice(1).join(':')}</span>
-                      <strong>
-                        {stat.correct}/{stat.total} correct
-                      </strong>
-                    </button>
-                  ))}
+              <div className="sat-bank-launch">
+                <div className="sat-bank-set-summary" aria-live="polite">
+                  <BookOpenCheck size={18} aria-hidden="true" />
+                  <span><strong>{setSize} {setSize === 1 ? <UiText text={"question"} /> : <UiText text={"questions"} />}</strong> · {sectionLabel(section)} · {level === 'all' ? <UiText text={"Mixed difficulty"} /> : level}</span>
                 </div>
-              ) : (
-                <p className="sat-bank-muted">
-                  Complete at least four questions in a skill to see reliable
-                  recommendations.
-                </p>
-              )}
-              <p className="sat-bank-muted">
-                Completed mocks and question sets contribute to this view.
-              </p>
-              <button
-                type="button"
-                className="sat-bank-mock-link"
-                onClick={() => goTo('history')}
-              >
-                Review past question sets <ArrowRight size={16} />
-              </button>
+                <div className="sat-bank-build-actions">
+                  <button type="button" className="sat-bank-primary" onClick={() => start()} disabled={!filtered.length}>
+                    <UiText text={"Start"} /> {setSize} {setSize === 1 ? <UiText text={"question"} /> : <UiText text={"questions"} />} <ArrowRight size={17} />
+                  </button>
+                  <button type="button" className="sat-bank-reset" onClick={reset}><RotateCcw size={14} aria-hidden="true" /> <UiText text={"Reset filters"} /></button>
+                </div>
+              </div>
+              <p className="sat-bank-muted"><UiText text={"Untimed practice · Answers save automatically · Full analysis after finishing"} /></p>
+            </section>
+            <aside className="sat-bank-side">
+              {activeSet ? (
+                <section className="sat-bank-panel sat-bank-resume" role="status">
+                  <span className="sat-bank-resume-icon"><PlayCircle size={22} /></span>
+                  <div>
+                    <p className="sat-bank-kicker"><UiText text={"Saved set"} /></p>
+                    <h2><UiText text={"Pick up where you left off"} /></h2>
+                    <p><UiText text={"You have an unfinished"} /> {activeSet.keys.length}<UiText text={"-question set. Your answers are saved."} /></p>
+                    <span className="sat-bank-resume-meter" aria-hidden="true">
+                      <i style={{ width: `${(activeSet.keys.filter((key) => activeSet.answers[key]?.trim()).length / activeSet.keys.length) * 100}%` }} />
+                    </span>
+                    <small>{activeSet.keys.filter((key) => activeSet.answers[key]?.trim()).length} <UiText text={"of"} /> {activeSet.keys.length} <UiText text={"answered"} /></small>
+                  </div>
+                  <button type="button" className="sat-bank-primary" onClick={resume}><UiText text={"Resume practice"} /> <ArrowRight size={17} /></button>
+                </section>
+              ) : null}
+              {sets[0] ? (
+                <section className="sat-bank-panel sat-bank-last">
+                  <div className="sat-bank-panel-title">
+                    <div>
+                      <p className="sat-bank-kicker"><UiText text={"Latest result"} /></p>
+                      <h2>{sets[0].results.length}<UiText text={"-question set"} /></h2>
+                    </div>
+                    <span className={`sat-bank-last-score ${tone(sets[0].percent)}`}>{sets[0].percent}%</span>
+                  </div>
+                  <p className="sat-bank-muted">{sectionLabel(sets[0].section)} · {dateLabel(sets[0].at)}</p>
+                  <button type="button" className="sat-bank-secondary" onClick={() => goTo('history', sets[0].id)}>
+                    <BarChart3 size={16} /> <UiText text={"View full analysis"} /> <ArrowRight size={15} />
+                  </button>
+                </section>
+              ) : null}
+              <section className="sat-bank-panel">
+                <div className="sat-bank-panel-title">
+                  <div>
+                    <p className="sat-bank-kicker"><UiText text={"Personal insight"} /></p>
+                    <h2><UiText text={"Skills to strengthen"} /></h2>
+                  </div>
+                  <Target size={20} />
+                </div>
+                {skillStats.length ? (
+                  <div className="sat-bank-skills">
+                    {skillStats.map(([key, stat]) => {
+                      const percent = Math.round((stat.correct / stat.total) * 100)
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => {
+                            const [area, ...rest] = key.split(':')
+                            setSection(area)
+                            setDomain('all')
+                            setSkill(rest.join(':'))
+                            setLevel('all')
+                            setStatus('all')
+                          }}
+                        >
+                          <span className="sat-bank-skill-top">
+                            <span>{key.split(':').slice(1).join(':')}</span>
+                            <strong className={tone(percent)}>{percent}%</strong>
+                          </span>
+                          <span className="sat-bank-skill-meter"><i className={tone(percent)} style={{ width: `${percent}%` }} /></span>
+                          <small>{stat.correct}/{stat.total} <UiText text={"correct · Practise this skill"} /> <ArrowRight size={12} /></small>
+                        </button>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <div className="sat-bank-skills-empty">
+                    <Sparkles size={20} />
+                    <p><UiText text={"Complete at least four questions in a skill to see reliable recommendations."} /></p>
+                  </div>
+                )}
+                <p className="sat-bank-muted"><UiText text={"Completed mocks and question sets contribute to this view."} /></p>
+                <button type="button" className="sat-bank-mock-link" onClick={() => goTo('history')}>
+                  <Layers3 size={16} /> <UiText text={"Review past question sets"} /> <ArrowRight size={16} />
+                </button>
+              </section>
             </aside>
           </div>
         )}
       </div>
-      <DesmosDrawer
-        open={mathVisible && calculatorOpen}
-        preload={mathVisible}
-        docked={calculatorDocked}
-        onDockedChange={setCalculatorDocked}
-        onClose={() => setCalculatorOpen(false)}
-      />
     </main>
   )
 }

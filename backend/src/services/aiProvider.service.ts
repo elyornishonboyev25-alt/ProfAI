@@ -35,6 +35,7 @@ export type GenerateAiTextInput = {
   maxOutputTokens: number
   images?: string[]
   jsonMode?: boolean
+  geminiResponseSchema?: Record<string, unknown>
   signal?: AbortSignal
   onText?: (text: string) => void
   audio?: Array<{ mimeType: string; data: string }>
@@ -83,8 +84,10 @@ function getGeminiKeys() {
   ])
 }
 
-function getGeminiModels() {
-  return splitConfiguredValues([env.GEMINI_MODELS])
+function getGeminiModels(purpose: AiGenerationPurpose) {
+  const models = [env.GEMINI_MODELS]
+  if (purpose === 'writing_evaluation') models.push('gemini-3.5-flash-lite')
+  return splitConfiguredValues(models)
 }
 
 export function buildAiProviderOrder(availability: ProviderAvailability): AiProviderName[] {
@@ -122,7 +125,7 @@ async function fetchWithTimeout(url: string, init: RequestInit) {
 async function requestGemini(input: GenerateAiTextInput): Promise<ProviderResult> {
   const keys = getGeminiKeys()
   const models = input.purpose === 'assistant_chat' && env.AI_CHAT_MODEL && (env.AI_CHAT_PROVIDER === 'gemini' || env.AI_CHAT_PROVIDER === 'auto')
-    ? [env.AI_CHAT_MODEL] : getGeminiModels()
+    ? [env.AI_CHAT_MODEL] : getGeminiModels(input.purpose)
   let lastError = new ProviderRequestError('GEMINI_UNAVAILABLE', 'Gemini is unavailable.')
 
   for (const model of models) {
@@ -139,7 +142,7 @@ async function requestGemini(input: GenerateAiTextInput): Promise<ProviderResult
 
       let response: Response
       try {
-        response = await fetchWithTimeout(url, {
+        const request = (responseSchema?: Record<string, unknown>) => fetchWithTimeout(url, {
           signal: input.signal,
           method: 'POST',
           headers: {
@@ -156,9 +159,16 @@ async function requestGemini(input: GenerateAiTextInput): Promise<ProviderResult
               // allowing dynamic reasoning to consume the response budget.
               ...(input.purpose === 'speaking_evaluation' && /^gemini-2\.5-(?:flash|pro)(?:-|$)/.test(model) ? { thinkingConfig: { thinkingBudget: 1024 } } : {}),
               ...(input.jsonMode === false ? {} : { responseMimeType: 'application/json' }),
+              ...(responseSchema ? { responseSchema } : {}),
             },
           }),
         })
+        response = await request(input.geminiResponseSchema)
+        if (response.status === 400 && input.geminiResponseSchema) {
+          console.warn('Gemini rejected the structured response request', { model })
+          await response.body?.cancel().catch(() => {})
+          response = await request()
+        }
       } catch (error) {
         if (input.signal?.aborted) throw error
         lastError = error instanceof ProviderRequestError
@@ -340,7 +350,7 @@ export async function generateAiText(input: GenerateAiTextInput): Promise<AiGene
   const startedAt = Date.now()
   const requestChars = input.systemPrompt.length + input.userMessage.length
   let order = buildAiProviderOrder({
-    gemini: getGeminiKeys().length > 0 && getGeminiModels().length > 0,
+    gemini: getGeminiKeys().length > 0 && getGeminiModels(input.purpose).length > 0,
     openai: env.OPENAI_API_KEY.trim().length > 0,
     hf: env.HF_ACCESS_TOKEN.trim().length > 0,
     hasImages: Boolean(input.images?.length),
@@ -404,6 +414,9 @@ export async function generateAiText(input: GenerateAiTextInput): Promise<AiGene
       lastError = error instanceof ProviderRequestError
         ? error
         : new ProviderRequestError('AI_PROVIDER_FAILED', 'AI provider request failed.')
+      if (input.purpose === 'writing_evaluation') {
+        console.warn('Writing provider failed', { provider, code: lastError.code })
+      }
       // Never splice a second model's answer into a partially delivered reply.
       if (emitted) break
     }

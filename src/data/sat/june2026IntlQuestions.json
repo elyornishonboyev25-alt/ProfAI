@@ -24,7 +24,7 @@
         "text": "an omen"
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice C as correct.",
+    "rationale": "The blank describes Britain as a model of good financial management: the phrase is “a nation considered ___ of fiscal virtue.”\n“An exemplar” means an ideal example or model. It explains why Philip II’s even larger surplus seems surprising.\n\nChoice A is incorrect: a sanction is a penalty or authorization. Choice B is incorrect: a paradox is a contradiction, not a model of virtue. Choice D is incorrect: an omen predicts something to come.",
     "asset": "/sat/june-2026-intl/questions/rw1-01.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -54,7 +54,7 @@
         "text": "beneficial"
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice C as correct.",
+    "rationale": "Use the example after the blank: the effect on Germany’s gross domestic product was only slightly greater than zero.\nThat describes a small or weak effect. “Subdued” means restrained or limited, so it matches.\n\nChoice A is incorrect: the example does not establish variation. Choice B is incorrect: persistence concerns duration, not size. Choice D is incorrect: a small effect is not necessarily beneficial.",
     "asset": "/sat/june-2026-intl/questions/rw1-02.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -84,7 +84,7 @@
         "text": "impugn"
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice A as correct.",
+    "rationale": "The sentence contrasts an apparent limitation with the finding that democratic states can control inflation effectively.\nHaving little direct economic control may seem to hinder that ability. “Hamper” means hinder, which creates the intended contrast with the effective policies.\n\nChoice B is incorrect: extort means obtain by threats. Choice C is incorrect: underscore means emphasize. Choice D is incorrect: impugn means challenge someone’s honesty or validity, rather than limit an ability.",
     "asset": "/sat/june-2026-intl/questions/rw1-03.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -114,7 +114,7 @@
         "text": "Inspiration you received while reading independently"
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice C as correct.",
+    "rationale": "Read “pine from your own yard” together with the description of Poe as a “growth of his locality.” Both point to creating something from one’s local surroundings.\nThe pine is a metaphor for elements of the culture in which a writer lives. It does not mean literal wood or ideas borrowed from books.",
     "asset": "/sat/june-2026-intl/questions/rw1-04.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -144,7 +144,7 @@
         "text": "It anticipates readers’ objections to the narrator’ criticism of Charles James’s faults."
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice A as correct.",
+    "rationale": "The narrator introduces “his fault” but immediately qualifies it with “if he had one.”\nThat qualification expresses doubt that the traits being described really are faults. Choice A captures this hesitation.\n\nChoice C is incorrect: the phrase softens the criticism rather than simply announcing a shift to criticism.",
     "asset": "/sat/june-2026-intl/questions/rw1-05.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -174,7 +174,7 @@
         "text": "Emily is relieved to learn that Aunt Elizabeth enjoys reading Emily’s stories."
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice C as correct.",
+    "rationale": "Aunt Elizabeth notices Emily’s spending on paper and discovers what it was for: Emily has been writing stories all winter.\nThe last two sentences emphasize that the aunt had never suspected this and had assumed the writing was schoolwork. The main idea is her surprise at the discovery.\n\nChoice D is incorrect: the passage does not say the aunt enjoyed the stories.",
     "asset": "/sat/june-2026-intl/questions/rw1-06.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -204,7 +204,7 @@
         "text": "It establishes the growing intensity of a public concern, details the most common method of mitigating that concern, and then refers to evidence that the method is broadly ineffective."
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice B as correct.",
+    "rationale": "Track the passage in order: it introduces green spaces as a promising pollution strategy, then presents evidence that results differ by spatial scale.\nThe ending warns that citywide findings may not apply at street level. Choice B follows all three moves: appealing approach, uneven success, and a need to recognize research nuances.\n\nChoice D is incorrect: the passage does not conclude that the approach is broadly ineffective.",
     "asset": "/sat/june-2026-intl/questions/rw1-07.webp",
     "assetWidth": 1920,
     "assetHeight": 2160
@@ -234,7 +234,7 @@
         "text": "When Martinez and colleagues played T. caesius alarm calls, P. flavigula and W. poecilinotus displayed no reaction, whereas T. caesius displayed predator-avoidance behavior."
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice A as correct.",
+    "rationale": "An inverse relationship means that as the field of vision gets smaller, sensitivity to alarm calls should increase.\nDense vegetation limits the woodpecker’s view; the antbird forages in more open areas. The prediction is therefore a stronger alarm response from the woodpecker.\nChoice A gives exactly that comparison: the antbird does not react, while the woodpecker avoids predators.",
     "asset": "/sat/june-2026-intl/questions/rw1-08.webp",
     "assetWidth": 1920,
     "assetHeight": 2160
@@ -264,7 +264,7 @@
         "text": "Whereas Faulkner used on average 92 -ly adverbs per 10,000 words in the 19 novels of Faulkner's that Blatt investigated, Toni Morrison winner of the 1993 Nobel Prize in Literature, used on average 76 -ly adverbs per 10,000 words in her novels."
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice B as correct.",
+    "rationale": "A negative correlation means higher perceived quality should go with fewer -ly adverbs, within Faulkner’s own works.\nChoice B compares a highly acclaimed novel with 42 such adverbs per 10,000 words to a less-acclaimed novel with 148. Lower adverb use accompanies higher acclaim.\n\nChoices A and D are incorrect: comparisons with other authors do not directly show the claimed pattern within Faulkner’s work.",
     "asset": "/sat/june-2026-intl/questions/rw1-09.webp",
     "assetWidth": 1920,
     "assetHeight": 2160
@@ -294,14 +294,14 @@
         "text": "though the decline in number of hours worked in Finland was greater than that in Denmark and Peru, it was less than that in Canada."
       }
     ],
-    "rationale": "Finland’s decline of 394 hours is smaller than Denmark’s 649 and Canada’s 513, but greater than Peru’s 225.",
+    "rationale": "Calculate each decline by subtracting the 2017 hours from the 1950 hours.\nThe declines are Finland: 394, Denmark: 649, Canada: 513, and Peru: 225 hours.\nSince 225 < 394 < 513 < 649, Finland’s decline is smaller than Denmark’s and Canada’s but greater than Peru’s.",
     "asset": "/sat/june-2026-intl/questions/rw1-10.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
     "sourceContent": {
       "context": "<div class=\"sat-source-table\"><table><thead><tr><th scope=\"col\">Country</th><th scope=\"col\">1950</th><th scope=\"col\">2017</th><th scope=\"col\">Change in hours</th><th scope=\"col\">Percent change in hours</th></tr></thead><tbody><tr><td>Peru</td><td>2,157</td><td>1,932</td><td>−225</td><td>−10%</td></tr><tr><td>Canada</td><td>2,209</td><td>1,696</td><td>−513</td><td>−23%</td></tr><tr><td>Denmark</td><td>2,049</td><td>1,400</td><td>−649</td><td>−32%</td></tr><tr><td>Finland</td><td>2,053</td><td>1,659</td><td>−394</td><td>−19%</td></tr></tbody></table></div><p>The table below shows data on the average hours worked per person in four countries in 1950 and 2017. A student is examining the decline in average hours worked. The student wants to compare the decline in Finland to other countries and finds that _______.</p>",
       "task": "<p>Which choice most effectively uses data from the table to complete the student's conclusion?</p>",
-      "explanation": "<p>The decline in Finland was 394 hours, less than Denmark’s 649 and Canada’s 513, but greater than Peru’s 225. Choice B is correct.</p>"
+      "explanation": "<p>Calculate each decline by subtracting the 2017 hours from the 1950 hours.</p><p>The declines are Finland: 394, Denmark: 649, Canada: 513, and Peru: 225 hours.</p><p>Since 225 &lt; 394 &lt; 513 &lt; 649, Finland’s decline is smaller than Denmark’s and Canada’s but greater than Peru’s.</p>"
     }
   },
   {
@@ -329,7 +329,7 @@
         "text": "culture likely plays more of a role in a person’s perception of how pleasant an odor is than does human anatomy."
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice B as correct.",
+    "rationale": "The groups had different cultures and ways of living, yet they generally ranked the odors similarly.\nIf lifestyle strongly determined pleasantness, the rankings would be expected to differ more between groups. The results therefore support the limited conclusion that mode of living likely has little influence on these judgments.\n\nChoice D is incorrect: it claims a strong cultural effect, which runs against the similar rankings.",
     "asset": "/sat/june-2026-intl/questions/rw1-11.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -359,14 +359,14 @@
         "text": "If issuing a given coin results in positive seigniorage per dollar but not as much as a different coin, does it make financial sense to continue issuing the first coin?"
       }
     ],
-    "rationale": "The one-cent coin has the larger loss per dollar issued, while the five-cent coin has the larger total loss.",
+    "rationale": "Separate the two measures: loss per dollar issued and total loss across all coins issued.\nThe one-cent coin has the larger loss per dollar; the five-cent coin has the larger total loss.\nEach student can favor a different answer by prioritizing a different measure. Choice A asks which of those measures should matter more.",
     "asset": "/sat/june-2026-intl/questions/rw1-12.webp",
     "assetWidth": 1920,
     "assetHeight": 2160,
     "sourceContent": {
       "context": "<div class=\"sat-source-table\"><table><thead><tr><th scope=\"col\">Denomination</th><th scope=\"col\">Total value of units (millions of dollars)</th><th scope=\"col\">Gross cost (millions of dollars)</th><th scope=\"col\">Seigniorage (millions of dollars)</th><th scope=\"col\">Seigniorage per $1 issued</th></tr></thead><tbody><tr><td>One-cent</td><td>41.4</td><td>127.4</td><td>−86.0</td><td>−2.08</td></tr><tr><td>Five-cent</td><td>70.8</td><td>163.4</td><td>−92.6</td><td>−1.31</td></tr><tr><td>Ten-cent</td><td>266.6</td><td>141.1</td><td>125.5</td><td>0.47</td></tr><tr><td>Quarter-dollar</td><td>568.4</td><td>264.4</td><td>304.0</td><td>0.53</td></tr></tbody></table></div><p>A student in an economics class is discussing the financial implications of issuing US coins based on the provided table. One student argues that in 2023, the one-cent coin was the least financially sensible for the US to produce, while another student argues that the five-cent coin was.</p>",
       "task": "<p>Based on the information in the text and the table, the two students most likely disagree about the answer to which question?</p>",
-      "explanation": "<p>The one-cent coin has the larger loss per dollar issued (2.08), while the five-cent coin has the larger total loss (92.6 million dollars). The students disagree about which measure matters more. Choice A is correct.</p>"
+      "explanation": "<p>Separate the two measures: loss per dollar issued and total loss across all coins issued.</p><p>The one-cent coin has the larger loss per dollar; the five-cent coin has the larger total loss.</p><p>Each student can favor a different answer by prioritizing a different measure. Choice A asks which of those measures should matter more.</p>"
     }
   },
   {
@@ -394,7 +394,7 @@
         "text": "At a depth of 90 meters in the nautilids' habitat, the water is 22.5°C and the concentration of oxygen-18 is equal to that in sample F04."
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice C as correct.",
+    "rationale": "The passage links deeper, colder water with a higher concentration of oxygen-18.\nThe proposed temperatures make M20 colder than F04, so the researchers would expect M20 to contain more oxygen-18 than F04.\nChoice C reverses that expected ordering: F04 has more than M20. This directly weakens the temperature conclusion.\n\nChoice B is incorrect: lower oxygen-18 in F04 agrees with its proposed warmer formation temperature.",
     "asset": "/sat/june-2026-intl/questions/rw1-13.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -424,7 +424,7 @@
         "text": "The mice with Asb5 deactivated were identical t the wild-type mice except with regard to circulating sodium level."
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice A as correct.",
+    "rationale": "Focus on the word “solely”: the students claim that differences in Asb5 expression completely explain natural differences in sodium levels.\nChoice A reports similar sodium levels despite widely varying Asb5 expression. That breaks the simple link needed for the claim that this gene alone explains the variation.\n\nChoice B is incorrect: variation in gene expression alone does not show that other causes are involved.",
     "asset": "/sat/june-2026-intl/questions/rw1-14.webp",
     "assetWidth": 1920,
     "assetHeight": 2160
@@ -454,7 +454,7 @@
         "text": "space shuttle Atlantis took flight on August 2, 1991, with five crew members aboard."
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice C as correct.",
+    "rationale": "The opening modifier “Having trained as astronauts for years” must describe the subject that immediately follows it.\nThe five crew members trained as astronauts. Choice C places them immediately after the comma and gives them the main action.\n\nChoices A, B, and D are incorrect: the date, “it,” and the shuttle cannot be the people who trained.",
     "asset": "/sat/june-2026-intl/questions/rw1-15.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -484,7 +484,7 @@
         "text": "lawmaker's designated the state's"
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice A as correct.",
+    "rationale": "“Lawmakers” is a plural noun acting as the subject. It needs no apostrophe because it does not possess anything.\nThe fossil belongs to the state, so use the singular possessive “state’s.” Choice A combines “lawmakers” with “the state’s official fossil.”",
     "asset": "/sat/june-2026-intl/questions/rw1-16.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -514,7 +514,7 @@
         "text": "was"
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice B as correct.",
+    "rationale": "Find the subject of the verb: “books” is plural. The phrase “about Millard Fillmore” only describes those books.\nUse the plural present-tense verb “are”: the historian’s books are what she is best known for.",
     "asset": "/sat/june-2026-intl/questions/rw1-17.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -544,7 +544,7 @@
         "text": "2004,"
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice C as correct.",
+    "rationale": "The dash after “NATO” opens an inserted list of examples. The main sentence is “All member nations ... are committed.”\nA second dash after 2004 closes that insertion so the subject can connect to “are committed.” Choice C supplies the closing dash.",
     "asset": "/sat/june-2026-intl/questions/rw1-18.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -574,7 +574,7 @@
         "text": "itis"
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice D as correct.",
+    "rationale": "The pronoun refers to “a folktale,” a singular thing.\nUse singular “it” with “is”: “the language in which it is being told.” The plural pronouns in the other choices do not agree with “a folktale.”",
     "asset": "/sat/june-2026-intl/questions/rw1-19.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -604,7 +604,7 @@
         "text": "have ranked"
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice C as correct.",
+    "rationale": "The main subject is Luxembourg’s “constitution,” which is singular. The long comparison with Canada’s constitution does not change the subject.\nUse the singular verb “ranks”: Luxembourg’s constitution ranks as the ninth shortest.",
     "asset": "/sat/june-2026-intl/questions/rw1-20.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -634,7 +634,7 @@
         "text": "by contrast,"
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice D as correct.",
+    "rationale": "Most paintings described first make objects appear to sit on top of a canvas.\nVan Houbraken’s painting instead makes a person appear to come out from within the frame. “By contrast” signals this difference in the visual effect.\n\nChoice B is incorrect: this painting contrasts with the preceding technique rather than simply illustrating it.",
     "asset": "/sat/june-2026-intl/questions/rw1-21.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -664,7 +664,7 @@
         "text": "Next,"
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice B as correct.",
+    "rationale": "The first sentence gives the reason for the label: Dia moves in the same direction as Jupiter’s rotation.\n“Thus” means “as a result.” Its orbit is called prograde because it has that direction.",
     "asset": "/sat/june-2026-intl/questions/rw1-22.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -694,7 +694,7 @@
         "text": "Published in 2015, The Incarnations is an epistolary novel by English author Susan Barker"
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice C as correct.",
+    "rationale": "The task asks for a definition of the general term, not a description of one particular novel.\nChoice C states what epistolary novels are—novels primarily composed of fictional documents—and gives examples of those documents.\n\nChoices A, B, and D are incorrect: they focus on The Incarnations rather than directly defining the term.",
     "asset": "/sat/june-2026-intl/questions/rw1-23.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -724,7 +724,7 @@
         "text": "The Burpee Museum of Natural History, where Jane is housed, is in Rockford, Illinois."
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice B as correct.",
+    "rationale": "The task is to emphasize a shared feature of the two fossil specimens.\nBoth Jane and Big Mike belong to the genus Tyrannosaurus. Choice B names both specimens and explicitly states this scientific similarity.\n\nChoice A is incorrect: it emphasizes their different museum locations. Choice C is incorrect: it says the names are nicknames rather than identifying a shared classification of the specimens.",
     "asset": "/sat/june-2026-intl/questions/rw1-24.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -754,7 +754,7 @@
         "text": "In a chapter on skeptics’ takes on nostalgia, Svetlana Boym discusses \"The poethics of nostalgia.\""
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice B as correct.",
+    "rationale": "The goal requires a quotation from chapter 17, so identify both the chapter’s topic and its quoted wording.\nChoice B introduces the exploration of skeptics’ views—the topic assigned to chapter 17—and then reproduces the supplied quotation.\n\nChoice A is incorrect: it gives the quotation without locating it in the chapter’s topic. Choice C is incorrect: it includes no quotation.",
     "asset": "/sat/june-2026-intl/questions/rw1-25.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -784,7 +784,7 @@
         "text": "By enhancing air quality, facade-bound green walls benefit cities."
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice C as correct.",
+    "rationale": "Find a category that includes both green walls and urban grasslands.\nThe notes identify both as urban natural areas. Choice C states that common classification directly.\n\nChoice B is incorrect: it contrasts their different benefits instead of emphasizing a similarity.",
     "asset": "/sat/june-2026-intl/questions/rw1-26.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -814,7 +814,7 @@
         "text": "Since the 517.2 nm wavelength of light is within the )   500-570 nm range, it is part of the green portion of the visible spectrum."
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice A as correct.",
+    "rationale": "Green light has wavelengths from 500 to 570 nm. Magnesium’s 517.2 nm wavelength lies inside that range; helium’s 587.5 nm wavelength lies outside it.\nChoice A both names the correct element and identifies its green wavelength.\n\nChoice D is incorrect: it identifies the wavelength as green but does not name the emission spectrum, which the goal asks for.",
     "asset": "/sat/june-2026-intl/questions/rw1-27.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -844,7 +844,7 @@
         "text": "anomalous"
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice D as correct.",
+    "rationale": "The general finding is that stronger democratic institutions tend to restrain inflation. The Belgium example goes against that pattern.\n“Anomalous” means unusual or inconsistent with the expected pattern. It describes an exception without claiming that the result is impossible to explain.\n\nChoice A is incorrect: a surprising result is not necessarily inexplicable. Choice B is incorrect: the passage does not say the reported result lacks evidence.",
     "asset": "/sat/june-2026-intl/questions/rw2-01.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -874,7 +874,7 @@
         "text": "discerning"
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice D as correct.",
+    "rationale": "The contrast is between broad coverage and careful selection. The longer anthology is more comprehensive, but Mirrorshades is praised for choosing its stories carefully.\n“Discerning” means showing good judgment in making selections. It matches that praise.\n\nChoice A is incorrect: capacious means spacious or extensive, the quality already attributed to the longer anthology. Choice C is incorrect: cursory means superficial or hasty.",
     "asset": "/sat/june-2026-intl/questions/rw2-02.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -904,7 +904,7 @@
         "text": "decisive"
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice C as correct.",
+    "rationale": "The evidence says that access to suppliers can drive clustering in some industries, while petroleum manufacturers cluster for different reasons.\nTherefore the mix of causes differs across industries. “Heterogeneous” means varied or made up of different kinds.",
     "asset": "/sat/june-2026-intl/questions/rw2-03.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -934,7 +934,7 @@
         "text": "substantiate"
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice A as correct.",
+    "rationale": "Humanlike movement is introduced as a way to make interaction easier despite a robot’s unnatural appearance.\nThe missing verb must mean reduce or improve the troubling effect. “Ameliorate” means make something better or less severe.\n\nChoice C is incorrect: augment means increase, the opposite of the intended effect.",
     "asset": "/sat/june-2026-intl/questions/rw2-04.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -964,7 +964,7 @@
         "text": "Some residents of Milby are determined to disapprove of the Countess Czerlaski, even though the reasons for their dislike are largely groundless."
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice D as correct.",
+    "rationale": "The narrator notes that the town’s respectable women share the Countess’s ordinary flaws.\nRather than accepting this similarity, they assume she must have other, worse vices. This shows a determination to disapprove without a sound basis.\nChoice D captures that criticism of the residents. The passage does not describe the Countess gradually winning them over.",
     "asset": "/sat/june-2026-intl/questions/rw2-05.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -994,7 +994,7 @@
         "text": "Each text critiques the methodology of a study about nutrient transfer via a CMN."
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice D as correct.",
+    "rationale": "Text 1 criticizes He’s study for failing to separate the plants’ roots.\nText 2 criticizes Fernandez’s study because its permeable barriers also allow liquids through, leaving another possible path for nutrients.\nBoth texts therefore critique study methods, even though they criticize different studies and limitations.",
     "asset": "/sat/june-2026-intl/questions/rw2-06.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1024,7 +1024,7 @@
         "text": "The ancestors of most species found on Grande Terre arrived on the island earlier than did the most recent common ancestor of the island’s southern beeches."
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice C as correct.",
+    "rationale": "Grande Terre fully emerged 37 million years ago. The southern-beech clade’s common ancestor dates to only 16.4 million years ago.\nBecause 16.4 million years ago is more recent than 37 million years ago, this clade did not already exist before the island fully emerged. Choice C follows the chronology.\n\nChoice B is incorrect: it places the common ancestor at least 37 million years ago, contrary to the reported age.",
     "asset": "/sat/june-2026-intl/questions/rw2-07.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1054,7 +1054,7 @@
         "text": "Seasonal snow cover tends to persist longer in areas of relatively low vegetation growth and high heterotrophic respiration than in areas of relatively high vegetation  growth and low heterotrophic respiration."
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice B as correct.",
+    "rationale": "Net carbon dioxide rises when releases increase relative to absorption by plants.\nChoice B explains how early snow can insulate soil and keep microorganisms releasing carbon dioxide while plants are not growing and absorbing it.\nThat imbalance directly supports the researchers’ prediction of increased net carbon dioxide.",
     "asset": "/sat/june-2026-intl/questions/rw2-08.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1084,7 +1084,7 @@
         "text": "as the number of hosts that complex life cycle parasite: require increases, the parasites’ tolerance for rising sez surface temperatures decreases proportionally."
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice A as correct.",
+    "rationale": "Parasites needing at least three host species became less abundant as temperatures rose, while the one-host parasites remained about as abundant.\nThis supports the cautious inference that relying on one host may provide resilience to warming. Choice A expresses that comparison without claiming a universal law.\n\nChoice C is incorrect: 38% is the decline per 1°C rise, not necessarily the total decline during the study. Choice D is incorrect: no proportional rule for every additional host was established.",
     "asset": "/sat/june-2026-intl/questions/rw2-09.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1114,7 +1114,7 @@
         "text": "\"The importance of the development of irrigation  infrastructure in the American Southwest today cannot be overstated, since it is the most common means of conveying water for food production.\""
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice C as correct.",
+    "rationale": "The claim needs both an irrigation method older than 1908 and a link between that method and present practice.\nChoice C supplies both: Hohokam engineering from the seventh century and principles still used by engineers today.\n\nChoice A is incorrect: late-twentieth-century systems postdate Lake Sabrina. Choice D is incorrect: present importance alone does not establish an earlier lineage.",
     "asset": "/sat/june-2026-intl/questions/rw2-10.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1144,7 +1144,7 @@
         "text": "Sijie should not have claimed that Balzac and the Little Chinese Seamstress is based on real events."
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice B as correct.",
+    "rationale": "The passage says readers value imagination but may see an autobiographical novel as merely a retelling of actual events.\nThose readers might therefore give the novel less credit for creativity and consider it less praiseworthy. Choice B describes that possible drawback.\n\nChoice D is incorrect: the passage does not say Sijie himself claimed that the novel was based on real events.",
     "asset": "/sat/june-2026-intl/questions/rw2-11.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1174,7 +1174,7 @@
         "text": "The text discusses a common criticism of franchise movies, then argues that the criticism is mostly undeserved."
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice D as correct.",
+    "rationale": "The opening presents the criticism that franchise movies are predictable.\nThe rest acknowledges familiar elements but argues that these movies can still be worthwhile, ending with Logan as an example of originality.\nChoice D matches that structure: introduce a criticism, then argue that it is mostly undeserved.",
     "asset": "/sat/june-2026-intl/questions/rw2-12.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1204,7 +1204,7 @@
         "text": "It describes a characteristic of the Aubrey/Maturin novels and summarizes a negative assessment of it."
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice D as correct.",
+    "rationale": "The relevant portion identifies abrupt, inconclusive endings and reports critics’ objection to them.\nThat describes a feature of the novels and summarizes a negative assessment, as choice D states.\nThe later defense—that the series can be read as one long work—is a separate point and should not be attributed to the critical portion.",
     "asset": "/sat/june-2026-intl/questions/rw2-13.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1234,7 +1234,7 @@
         "text": "When Martinez and colleagues played T. caesius alarm  )  calls, P. flavigula and W. poecilinotus displayed no reaction, whereas T. caesius displayed predator- avoidance behavior."
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice A as correct.",
+    "rationale": "The hypothesis predicts stronger sensitivity to alarm calls when a bird has a more limited view of its surroundings.\nThe woodpecker feeds in dense vegetation, while the antbird has a clearer view. Choice A reports a predator-avoidance response from the woodpecker and no response from the antbird.\nThat is the predicted inverse relationship between visibility and sensitivity.",
     "asset": "/sat/june-2026-intl/questions/rw2-14.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1264,7 +1264,7 @@
         "text": "classified"
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice D as correct.",
+    "rationale": "The main sentence already has a subject and verb: “Disyllabic words ... consist of one stressed syllable followed by one unstressed syllable.”\nThe words in the blank should describe which disyllabic words, without adding a second main verb. “Classified as trochees” is the required participial modifier.\n\nChoices A, B, and C are incorrect: they introduce another finite verb without joining it to “consist.”",
     "asset": "/sat/june-2026-intl/questions/rw2-15.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1294,7 +1294,7 @@
         "text": "photographer Maria Svarbova"
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice B as correct.",
+    "rationale": "“Photographer Maria Svarbova” is one identifying noun phrase. The name specifies which photographer, so no comma should separate the occupation from the name.\nThe following “who” clause adds supplementary information about the identified photographer, so a comma belongs after her name. Choice B places it there.",
     "asset": "/sat/june-2026-intl/questions/rw2-16.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1324,7 +1324,7 @@
         "text": "city Cologne"
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice D as correct.",
+    "rationale": "The identifying phrase “Hanseatic League member city Cologne” is the subject of “was.”\nKeep the name with the noun it identifies and do not insert a comma between the subject and its verb. Choice D does both.",
     "asset": "/sat/june-2026-intl/questions/rw2-17.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1354,7 +1354,7 @@
         "text": "For example,"
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice B as correct.",
+    "rationale": "The first sentence says kyudo was not a medal sport. The next explains what it was instead: a demonstration sport.\n“Rather” marks that correction or alternative role. The later explanation of demonstration sports reinforces the distinction.",
     "asset": "/sat/june-2026-intl/questions/rw2-18.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1384,7 +1384,7 @@
         "text": "was"
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice B as correct.",
+    "rationale": "The subject is plural “books,” even though “historian” and “Millard Fillmore” are singular nouns nearby.\nUse the plural verb “are”: the historian’s books are what she is best known for.",
     "asset": "/sat/june-2026-intl/questions/rw2-19.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1414,7 +1414,7 @@
         "text": "Award,"
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice B as correct.",
+    "rationale": "There are two independent clauses: the works “have won” the award, and “the works received” it in particular categories.\nA semicolon can join these complete, closely related clauses. Choice B supplies that boundary.\n\nChoice D is incorrect: a comma alone would create a comma splice. Choice A is incorrect: it provides no boundary between the clauses.",
     "asset": "/sat/june-2026-intl/questions/rw2-20.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1444,7 +1444,7 @@
         "text": "sponges"
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice B as correct.",
+    "rationale": "The comparison is “placozoa are a better model ... than sponges are.” Inverted order, “than are sponges,” expresses the same comparison.\nThe verb “are” makes the parallel relationship explicit: placozoa are a model, and sponges are the comparison group. Choice B supplies it.\n\nChoice A is incorrect: “do” cannot replace the linking verb “are” in this comparison.",
     "asset": "/sat/june-2026-intl/questions/rw2-21.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1474,7 +1474,7 @@
         "text": "An object's intended purpose and its shape are two elements of the design principle \"form follows function.\""
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice A as correct.",
+    "rationale": "The goal is to explain the design principle, not to give a biography of a Bauhaus student.\nChoice A states the relationship directly: the intended purpose, or function, should determine an object’s shape, or form.\n\nChoice D is incorrect: it names the two elements but does not explain how they should relate.",
     "asset": "/sat/june-2026-intl/questions/rw2-22.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1504,7 +1504,7 @@
         "text": "Decades after artist Jean-Michel Basquiat completed hi 1982 work *Mater’*, a private collection purchased it fo $5.8 million."
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice A as correct.",
+    "rationale": "“Scope” here concerns the extent of Basquiat’s output, rather than one painting’s materials or sale price.\nChoice A presents Mater as just one of more than two thousand works. That comparison makes the size of his overall output clear.",
     "asset": "/sat/june-2026-intl/questions/rw2-23.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1534,7 +1534,7 @@
         "text": "moreover,"
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice B as correct.",
+    "rationale": "The probe successfully changed a secondary object’s orbit. The following sentence limits the finding: a similar result has not yet been demonstrated for primary objects.\n“Though” signals this contrast between an achieved result and an unresolved question.\n\nChoice C is incorrect: “likewise” would imply a similar demonstrated result, which the sentence explicitly says is lacking.",
     "asset": "/sat/june-2026-intl/questions/rw2-24.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1564,7 +1564,7 @@
         "text": "in other words,"
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice B as correct.",
+    "rationale": "The final statement strengthens the claim that the revisions were extreme: some critics go so far as to treat the editions as different novels.\n“In fact” introduces that stronger supporting detail.\n\nChoices A and C are incorrect: the critics’ view supports the preceding statement rather than contrasting with it.",
     "asset": "/sat/june-2026-intl/questions/rw2-25.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1594,7 +1594,7 @@
         "text": "DLS is a form of additive manufacturing that creates a \"dead zone\" in which UV light solidifies layer by layer before being baked in an oven, creating a high-quality, 3D object."
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice C as correct.",
+    "rationale": "Follow the actual production order in the notes: UV light partially cures liquid resin layer by layer; afterward the completed object is baked to finish curing.\nChoice C preserves both the material being cured and that sequence.\n\nChoice D is incorrect: light does not solidify or get baked. Choice B is incorrect: curing is completed in the oven, not in the dead zone.",
     "asset": "/sat/june-2026-intl/questions/rw2-26.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1624,7 +1624,7 @@
         "text": "In 2003, Carruthers proposed the massive modularity hypothesis, disagreeing with Fodor's earlier hypothesis that the mind is composed of innate neural structures."
       }
     ],
-    "rationale": "The supplied June 2026 answer key identifies choice A as correct.",
+    "rationale": "Fodor treats some low-level systems as modular but excludes high-level reasoning. Massive modularity extends the idea to all cognitive systems.\nChoice A compares the breadth of the two views directly: Fodorian modularity is less expansive.\n\nChoice C is incorrect: both views include low-level systems; they differ over the additional systems. Choice D is incorrect: Carruthers expands modularity rather than rejecting innate modules.",
     "asset": "/sat/june-2026-intl/questions/rw2-27.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1654,7 +1654,7 @@
         "text": "$-5$"
       }
     ],
-    "rationale": "The supplied June 2026 answer key gives choice D.",
+    "rationale": "At an intersection, set the two heights equal: $-8x+26=2x^2+16$.\nRearrange and divide by 2: $x^2+4x-5=0$. Factor to get $(x+5)(x-1)=0$.\nThe possible $x$-coordinates are $-5$ and 1. Of those, only $-5$ is listed, so $a$ can be $-5$.",
     "asset": "/sat/june-2026-intl/questions/math1-01.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1684,7 +1684,7 @@
         "text": "$(3,8+m)$"
       }
     ],
-    "rationale": "The supplied June 2026 answer key gives choice A.",
+    "rationale": "Perpendicular lines have slopes whose product is $-1$. Since line $k$ has slope $m$, line $\\ell$ has slope $-1/m$.\nStart at their intersection $(2,8)$. Moving to $x=3$ increases $x$ by 1, so $y$ changes by $-1/m$.\nThe resulting point is $(3,8-1/m)$, choice A.",
     "asset": "/sat/june-2026-intl/questions/math1-02.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1714,7 +1714,7 @@
         "text": "$106$"
       }
     ],
-    "rationale": "The supplied June 2026 answer key gives choice D.",
+    "rationale": "Similarity gives angle $D$ the same tangent as angle $A$: $\\tan(D)=\\sqrt{3}$.\nIn right triangle $DEF$, $DF=53$ is adjacent to $D$. Thus $EF/DF=\\sqrt{3}$ and $EF=53\\sqrt{3}$.\nUse the Pythagorean theorem for the hypotenuse: $DE=\\sqrt{53^2+(53\\sqrt{3})^2}=\\sqrt{4(53)^2}=106$.",
     "asset": "/sat/june-2026-intl/questions/math1-03.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1744,7 +1744,7 @@
         "text": "$83.6$"
       }
     ],
-    "rationale": "The supplied June 2026 answer key gives choice B.",
+    "rationale": "The given acceleration is 1,530 meters per hour, per second. Convert the speed’s hour to seconds by dividing by 3,600.\nThen convert meters to feet: $\\frac{1530}{3600}\\times3.28=1.394$ feet per second squared.\nThe closest choice is 1.39. Only one hour-to-second conversion is needed because the other time unit is already seconds.",
     "asset": "/sat/june-2026-intl/questions/math1-04.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1774,7 +1774,7 @@
         "text": "$f(x)=-3(x^2-10x+16)$"
       }
     ],
-    "rationale": "The supplied June 2026 answer key gives choice C.",
+    "rationale": "Complete the square: $f(x)=-3(x^2-10x)-48=-3((x-5)^2-25)-48$.\nSimplify to $f(x)=-3(x-5)^2+27$.\nThe squared term is nonnegative, so its product with $-3$ is at most zero. This displays the maximum value, 27, directly.",
     "asset": "/sat/june-2026-intl/questions/math1-05.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1787,7 +1787,7 @@
     "kind": "student-response",
     "correctAnswer": "768",
     "choices": [],
-    "rationale": "The supplied June 2026 answer key gives 768.",
+    "rationale": "The point $(-8,0)$ means $0=4(-8-3)((-8)^2-k)=-44(64-k)$.\nSince $-44$ is nonzero, $64-k=0$, so $k=64$.\nNow evaluate at zero: $f(0)=4(0-3)(0^2-64)=4(-3)(-64)=768$.",
     "asset": "/sat/june-2026-intl/questions/math1-06.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
@@ -1820,7 +1820,7 @@
         "text": "$3x-5y=27$"
       }
     ],
-    "rationale": "The supplied June 2026 answer key gives choice A.",
+    "rationale": "Divide the first equation by 3: $x=15y-9$, or $y=x/15+9/15$.\nFor no solution, the second line must have the same slope and a different intercept. Choice A gives $y=x/15+8/15$.\nThese lines are parallel and distinct, so they never meet.\n\nChoices B and C are incorrect: they describe the original line, producing infinitely many solutions.",
     "asset": "/sat/june-2026-intl/questions/math1-07.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1833,7 +1833,7 @@
     "kind": "student-response",
     "correctAnswer": "60",
     "choices": [],
-    "rationale": "The supplied June 2026 answer key gives 60.",
+    "rationale": "Find the other leg using the hypotenuse 125 and leg 75: $QR=\\sqrt{125^2-75^2}=100$.\nCalculate the area using the two legs: $A=\\frac12(75)(100)=3750$.\nUse the hypotenuse as the base with altitude $QS$: $3750=\\frac12(125)(QS)$. Thus $QS=7500/125=60$ centimeters.",
     "asset": "/sat/june-2026-intl/questions/math1-08.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
@@ -1866,7 +1866,7 @@
         "text": "$f(t)=-16(t-2)^2+185$"
       }
     ],
-    "rationale": "The supplied June 2026 answer key gives choice D.",
+    "rationale": "The maximum occurs at $(2,185)$, so use vertex form $f(t)=a(t-2)^2+185$ with $a<0$.\nThe starting height gives $f(0)=121$: $121=4a+185$, so $a=-16$.\nTherefore $f(t)=-16(t-2)^2+185$. It has the required starting height and maximum.",
     "asset": "/sat/june-2026-intl/questions/math1-09.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1896,7 +1896,7 @@
         "text": "$5$"
       }
     ],
-    "rationale": "The supplied June 2026 answer key gives choice A.",
+    "rationale": "Complete the square in the equation: $(3x+5)^2+q-25=43$, so $(3x+5)^2=68-q$.\nFor the supplied root $x=(-5+\\sqrt{14})/3$, $3x+5=\\sqrt{14}$, whose square is 14.\nTherefore $14=68-q$, giving $q=54$.",
     "asset": "/sat/june-2026-intl/questions/math1-10.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1909,7 +1909,7 @@
     "kind": "student-response",
     "correctAnswer": "9216",
     "choices": [],
-    "rationale": "The supplied June 2026 answer key gives 9216.",
+    "rationale": "All six edges are equal, so the pyramid has four equilateral triangular faces, each of side 96.\nAn equilateral triangle has area $\\frac{\\sqrt{3}}4s^2$. Each face therefore has area $2304\\sqrt{3}$.\nThe total is $4(2304\\sqrt{3})=9216\\sqrt{3}$ square centimeters, so $k=9216$.",
     "asset": "/sat/june-2026-intl/questions/math1-11.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
@@ -1925,7 +1925,7 @@
     "kind": "student-response",
     "correctAnswer": "8",
     "choices": [],
-    "rationale": "The supplied June 2026 answer key gives 8.",
+    "rationale": "Set the two expressions for $y$ equal: $x-c=-4(x-8)^2$. Rearrange to $4x^2-63x+256-c=0$.\nTwo distinct real roots require a positive discriminant: $(-63)^2-4(4)(256-c)=16c-127>0$.\nThus $c>127/16=7.9375$. The smallest integer that works is 8.",
     "asset": "/sat/june-2026-intl/questions/math1-12.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
@@ -1958,7 +1958,7 @@
         "text": "$\\frac{5}{9}$"
       }
     ],
-    "rationale": "The supplied June 2026 answer key gives choice D.",
+    "rationale": "Expand both sides: $\\frac59x-\\frac59k=kx-\\frac95k$.\nA linear equation has no solution when the coefficients of $x$ are equal but the constant terms are different. Equal coefficients require $k=5/9$.\nAt this value the constants are $-25/81$ and $-1$, which differ. Thus the equation cannot hold for any $x$.",
     "asset": "/sat/june-2026-intl/questions/math1-13.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -1971,7 +1971,7 @@
     "kind": "student-response",
     "correctAnswer": "3",
     "choices": [],
-    "rationale": "The supplied June 2026 answer key gives 3.",
+    "rationale": "For a monic cubic, the coefficient of $x^2$ is the negative of the sum of the roots.\nThe roots sum to $-2-7+6=-3$, so $a=-(-3)=3$.\nEquivalently, expanding $(x+2)(x+7)(x-6)$ gives an $x^2$ coefficient of 3.",
     "asset": "/sat/june-2026-intl/questions/math1-14.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
@@ -1987,7 +1987,7 @@
     "kind": "student-response",
     "correctAnswer": "4.444",
     "choices": [],
-    "rationale": "The supplied June 2026 answer key gives 4.444.",
+    "rationale": "The small right triangle $ADC$ is similar to the original triangle $ABC$, so angle $CAD$ equals angle $ABC=w$.\nFrom $\\cos w=9/41$, take adjacent leg 9 and hypotenuse 41. The opposite leg is $\\sqrt{41^2-9^2}=40$.\nTherefore $\\tan x=\\tan w=40/9\\approx4.4444$. The given altitude length does not affect this ratio.",
     "asset": "/sat/june-2026-intl/questions/math1-15.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
@@ -2023,7 +2023,7 @@
         "text": "$40$"
       }
     ],
-    "rationale": "The supplied June 2026 answer key gives choice C.",
+    "rationale": "Write $f(x)=a(x-1)^2+6$ using the vertex. The point $(2,40)$ gives $40=a+6$, so $a=34>0$.\nThe parabola opens upward and has minimum 6. Replacing $x$ with $x+7$ shifts it horizontally, leaving the minimum height unchanged.\nThus the minimum of $g$ is 6, reached when $x+7=1$, or $x=-6$.",
     "asset": "/sat/june-2026-intl/questions/math1-16.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -2053,7 +2053,7 @@
         "text": "The lines do not intersect."
       }
     ],
-    "rationale": "The supplied June 2026 answer key gives choice A.",
+    "rationale": "The second equation is 6 times the first, so both equations describe the same line.\nSolve $2x+5y=9$ for $y$: $y=-\\frac25x+\\frac95$.\nLet $x$ be any real number $r$. The corresponding point is $(r,-\\frac25r+\\frac95)$, choice A.",
     "asset": "/sat/june-2026-intl/questions/math1-17.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -2083,7 +2083,7 @@
         "text": "$V=80(0.50)^{\\frac{t}{2}}$"
       }
     ],
-    "rationale": "The supplied June 2026 answer key gives choice C.",
+    "rationale": "An increase of 50% leaves $100\\%+50\\%=150\\%$ of the previous count, so the growth factor is 1.50.\nThere are two 30-minute intervals in each hour, so $t$ hours contains $2t$ growth intervals.\nStarting from 80 visitors, the model is $V=80(1.50)^{2t}$.",
     "asset": "/sat/june-2026-intl/questions/math1-18.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -2096,7 +2096,7 @@
     "kind": "student-response",
     "correctAnswer": "9",
     "choices": [],
-    "rationale": "The supplied June 2026 answer key gives 9.",
+    "rationale": "Factor out $2x$: $2x^3+44x^2+234x=2x(x^2+22x+117)$.\nThe numbers 9 and 13 multiply to 117 and add to 22, so this is $2x(x+9)(x+13)$.\nThe positive possibilities for $b$ are 9 and 13. The smaller is 9.",
     "asset": "/sat/june-2026-intl/questions/math1-19.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
@@ -2129,7 +2129,7 @@
         "text": "$56$"
       }
     ],
-    "rationale": "The supplied June 2026 answer key gives choice D.",
+    "rationale": "Subtract the lateral area from the total to get the square base area: $70560-38160=32400$. Its side length is $\\sqrt{32400}=180$.\nThe four triangular faces have combined area $4(\\frac12\\times180\\times l)=360l$, where $l$ is the slant height. Thus $l=38160/360=106$.\nThe vertical height $h$, half the base side (90), and the slant height (106) form a right triangle. Therefore $h=\\sqrt{106^2-90^2}=56$ inches.",
     "asset": "/sat/june-2026-intl/questions/math1-20.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -2159,7 +2159,7 @@
         "text": "$43.33$"
       }
     ],
-    "rationale": "The supplied June 2026 answer key gives choice D.",
+    "rationale": "A side that is 70% shorter is 30% as long, so the smaller map’s side is $0.30(45)=13.5$ inches.\nBoth maps cover the same real distance, $45(13)=585$ miles along a side.\nOn the smaller map, each inch represents $585/13.5=43.333\\ldots$ miles. Choose 43.33.",
     "asset": "/sat/june-2026-intl/questions/math1-21.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -2172,7 +2172,7 @@
     "kind": "student-response",
     "correctAnswer": "0",
     "choices": [],
-    "rationale": "The supplied June 2026 answer key gives 0.",
+    "rationale": "Complete the square: $2x^2-12x+22=2(x-3)^2+4$.\nThis parabola has minimum height 4. The horizontal line $y=-3$ lies below that minimum.\nThey never intersect, so the system has zero distinct real solutions.",
     "asset": "/sat/june-2026-intl/questions/math1-22.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
@@ -2205,7 +2205,7 @@
         "text": "$q=\\frac{prs}{46(rs+ps+pr)}$"
       }
     ],
-    "rationale": "The supplied June 2026 answer key gives choice A.",
+    "rationale": "Divide every term by 46: $1/p=1/q-1/r-1/s$.\nIsolate $1/q$ and combine the fractions: $\\frac1q=\\frac1p+\\frac1r+\\frac1s=\\frac{rs+ps+pr}{prs}$.\nTake the reciprocal: $q=\\frac{prs}{rs+ps+pr}$.",
     "asset": "/sat/june-2026-intl/questions/math2-01.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -2235,7 +2235,7 @@
         "text": "$16$"
       }
     ],
-    "rationale": "The supplied June 2026 answer key gives choice C.",
+    "rationale": "No real solutions requires a negative discriminant: $b^2-4(-1)(-64)=b^2-256<0$.\nThus $-16<b<16$. The greatest integer in that interval is 15.\nAt $b=16$, the discriminant is zero and there is a real repeated root, so 16 is excluded.",
     "asset": "/sat/june-2026-intl/questions/math2-02.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -2248,7 +2248,7 @@
     "kind": "student-response",
     "correctAnswer": "1701",
     "choices": [],
-    "rationale": "The supplied June 2026 answer key gives 1701.",
+    "rationale": "Divide the two known values: $f(8)/f(5)=b^3=189/7=27$.\nTherefore $b=3$. From input 8 to input 10 there are two more growth intervals.\nCompute $f(10)=f(8)\\times3^2=189(9)=1701$.",
     "asset": "/sat/june-2026-intl/questions/math2-03.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
@@ -2281,7 +2281,7 @@
         "text": "$125$"
       }
     ],
-    "rationale": "The supplied June 2026 answer key gives choice A.",
+    "rationale": "The surface-area ratio from X to Y is $1475/59=25$. Surface area scales as the square of the length factor, so Y’s lengths are 5 times X’s.\nVolume scales as the cube of that factor: $5^3=125$.\nTherefore X’s volume is $1500/125=12$ cubic centimeters.",
     "asset": "/sat/june-2026-intl/questions/math2-04.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -2294,7 +2294,7 @@
     "kind": "student-response",
     "correctAnswer": "900",
     "choices": [],
-    "rationale": "The supplied June 2026 answer key gives 900.",
+    "rationale": "Let each initial population be $N$. A 2,700% increase makes the prey count $28N$; a 180% increase makes the predator count $2.8N$.\nThe prey count is $28N/2.8N=10$ times the predator count.\nTen times as many is 1,000% of the comparison count, or 900% greater. Thus $p=900$.",
     "asset": "/sat/june-2026-intl/questions/math2-05.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
@@ -2327,7 +2327,7 @@
         "text": "$-5$"
       }
     ],
-    "rationale": "The supplied June 2026 answer key gives choice B.",
+    "rationale": "Write the four consecutive odd integers as $x,x+2,x+4,x+6$.\nTranslate “at most 50 less than the sum” into $28(x+4)\\leq x+(x+6)-50$.\nSimplify: $28x+112\\leq2x-44$, so $26x\\leq-156$ and $x\\leq-6$.\nBecause $x$ must be odd, its greatest possible value is $-7$, not $-6$.",
     "asset": "/sat/june-2026-intl/questions/math2-06.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -2340,7 +2340,7 @@
     "kind": "student-response",
     "correctAnswer": "287",
     "choices": [],
-    "rationale": "The supplied June 2026 answer key gives 287.",
+    "rationale": "Rearrange to $kx^2-96x+8=0$.\nFor two distinct real roots, require $(-96)^2-4(k)(8)=9216-32k>0$.\nThus $k<288$. The greatest integer allowed is 287; 288 would give only one repeated root.",
     "asset": "/sat/june-2026-intl/questions/math2-07.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
@@ -2356,7 +2356,7 @@
     "kind": "student-response",
     "correctAnswer": "97.33",
     "choices": [],
-    "rationale": "The supplied June 2026 answer key gives 97.33.",
+    "rationale": "Divide the perimeter by 3 to get the side length: $876/3=292$ centimeters.\nFor an equilateral triangle of side $s$, the circumradius is $s/\\sqrt{3}=s\\sqrt{3}/3$.\nHere the radius is $(292/3)\\sqrt{3}$, so $k=292/3\\approx97.3333$.",
     "asset": "/sat/june-2026-intl/questions/math2-08.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
@@ -2393,7 +2393,7 @@
         "text": "$81$"
       }
     ],
-    "rationale": "The supplied June 2026 answer key gives choice C.",
+    "rationale": "Use vertex form $f(x)=a(x-4)^2-6$. Substitute $(3,-8)$: $-8=a-6$, so $a=-2$.\nAt the $y$-intercept, $x=0$. Compute $f(0)=-2(16)-6=-38$.\nThen $g(0)=5-f(0)=5-(-38)=43$.",
     "asset": "/sat/june-2026-intl/questions/math2-09.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -2423,7 +2423,7 @@
         "text": "$85$"
       }
     ],
-    "rationale": "The supplied June 2026 answer key gives choice D.",
+    "rationale": "For each increase of 1 in $x$, the value is multiplied by 0.15.\nThat means 15% remains, so the percentage lost is $100\\%-15\\%=85\\%$.\nTherefore $p=85$.",
     "asset": "/sat/june-2026-intl/questions/math2-10.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -2453,7 +2453,7 @@
         "text": "$7$"
       }
     ],
-    "rationale": "The supplied June 2026 answer key gives choice D.",
+    "rationale": "Compare the center and tangent line at the same height, $y=1$.\nOn $y=3x-14$, setting $y=1$ gives $x=5$. A center to the right must have $h>5$.\nOnly 7 satisfies this among the choices. The value 5 would put the center on the tangent, which is impossible for a positive-radius circle.",
     "asset": "/sat/june-2026-intl/questions/math2-11.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -2466,7 +2466,7 @@
     "kind": "student-response",
     "correctAnswer": "272",
     "choices": [],
-    "rationale": "The supplied June 2026 answer key gives 272.",
+    "rationale": "Write $f(x)=a(x-1)^2+6$. The point $(2,40)$ gives $a=34$.\nCompute $f(-2)=34(-3)^2+6=312$ and $f(0)=34(-1)^2+6=40$.\nSubtract in the requested order: $f(-2)-f(0)=312-40=272$.",
     "asset": "/sat/june-2026-intl/questions/math2-12.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
@@ -2499,7 +2499,7 @@
         "text": "$5$"
       }
     ],
-    "rationale": "The supplied June 2026 answer key gives choice B.",
+    "rationale": "For a quadratic $Ax^2+Bx+C=0$, the sum of the roots is $-B/A$.\nHere the sum is $\\frac{25a+5b}{125}=\\frac{5(5a+b)}{125}=\\frac1{25}(5a+b)$.\nComparing with $k(5a+b)$ gives $k=1/25$.",
     "asset": "/sat/june-2026-intl/questions/math2-13.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -2529,7 +2529,7 @@
         "text": "$P=310w$"
       }
     ],
-    "rationale": "The supplied June 2026 answer key gives choice A.",
+    "rationale": "Two coats cover the same walls twice, so the total area to paint is $2w$ square feet.\nEach gallon covers 310 square feet. Divide area by coverage: $P=2w/310=w/155$ gallons.",
     "asset": "/sat/june-2026-intl/questions/math2-14.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -2542,7 +2542,7 @@
     "kind": "student-response",
     "correctAnswer": "-54",
     "choices": [],
-    "rationale": "The supplied June 2026 answer key gives -54.",
+    "rationale": "Use two rows to find the slope: $\\frac{-16-(-14)}{-3-(-6)}=-2/3$.\nRearrange $2x+By=C$ into $y=(-2/B)x+C/B$. Matching slopes gives $-2/B=-2/3$, so $B=3$.\nSubstitute the row $(-6,-14)$: $C=2(-6)+3(-14)=-12-42=-54$.",
     "asset": "/sat/june-2026-intl/questions/math2-15.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
@@ -2552,7 +2552,7 @@
     "sourceContent": {
       "context": "<div class=\"sat-source-table\"><table><thead><tr><th scope=\"col\"><i>x</i></th><th scope=\"col\"><i>y</i></th></tr></thead><tbody><tr><td>-6</td><td>-14</td></tr><tr><td>-3</td><td>-16</td></tr><tr><td>3</td><td>-20</td></tr><tr><td>6</td><td>-22</td></tr></tbody></table></div>",
       "task": "<p>The table shows four values of <i>x</i> and their corresponding values of <i>y</i>. A linear relationship between <i>x</i> and <i>y</i> is represented by the equation <math><mn>2</mn><mi>x</mi><mo>+</mo><mi>B</mi><mi>y</mi><mo>=</mo><mi>C</mi></math>, where <i>B</i> and <i>C</i> are constants. What is the value of <i>C</i>?</p>",
-      "explanation": "<p>The slope is −2/3, so B = 3. Substituting (−6, −14) into 2x + 3y = C gives C = −54.</p>"
+      "explanation": "<p>Use two rows to find the slope: <math aria-label=\"slope equals negative 2 over 3\"><mfrac><mrow><mo>-</mo><mn>16</mn><mo>-</mo><mo>(</mo><mo>-</mo><mn>14</mn><mo>)</mo></mrow><mrow><mo>-</mo><mn>3</mn><mo>-</mo><mo>(</mo><mo>-</mo><mn>6</mn><mo>)</mo></mrow></mfrac><mo>=</mo><mfrac><mrow><mo>-</mo><mn>2</mn></mrow><mn>3</mn></mfrac></math>.</p><p>Rearrange 2x + By = C into <math aria-label=\"y equals negative 2 over B times x plus C over B\"><mi>y</mi><mo>=</mo><mfrac><mrow><mo>-</mo><mn>2</mn></mrow><mi>B</mi></mfrac><mi>x</mi><mo>+</mo><mfrac><mi>C</mi><mi>B</mi></mfrac></math>. Matching the slope gives B = 3.</p><p>Substitute the row (−6, −14): C = 2(−6) + 3(−14) = −12 − 42 = −54.</p>"
     }
   },
   {
@@ -2580,7 +2580,7 @@
         "text": "$21$"
       }
     ],
-    "rationale": "The supplied June 2026 answer key gives choice A.",
+    "rationale": "Square the original equation: $x+18=(x-2)^2=x^2-4x+4$.\nRearrange to $x^2-5x=14$. Therefore the requested expression is $x^2-5x-28=14-28=-14$.\nThere is a valid original solution: factoring gives $(x-7)(x+2)=0$, and $x=7$ passes the square-root equation. The root $-2$ is extraneous.",
     "asset": "/sat/june-2026-intl/questions/math2-16.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -2593,7 +2593,7 @@
     "kind": "student-response",
     "correctAnswer": "391",
     "choices": [],
-    "rationale": "The supplied June 2026 answer key gives 391.",
+    "rationale": "Two distinct real roots require a positive discriminant: $(-112)^2-4(k)(8)=12544-32k>0$.\nDivide by 32 to get $k<392$.\nThe greatest integer satisfying this is 391. At 392, the roots would coincide.",
     "asset": "/sat/june-2026-intl/questions/math2-17.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
@@ -2609,7 +2609,7 @@
     "kind": "student-response",
     "correctAnswer": "27",
     "choices": [],
-    "rationale": "The supplied June 2026 answer key gives 27.",
+    "rationale": "Move everything to the left: $r^2+(q-8)r+97=0$.\nNo real roots requires $(q-8)^2-388<0$, or $8-\\sqrt{388}<q<8+\\sqrt{388}$.\nThe upper endpoint is about 27.70, so the largest integer is 27. Check: at 27 the discriminant is $19^2-388=-27$, which is negative.",
     "asset": "/sat/june-2026-intl/questions/math2-18.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
@@ -2642,7 +2642,7 @@
         "text": "$1,100=1,000(1+\\frac{R}{2})$"
       }
     ],
-    "rationale": "The supplied June 2026 answer key gives choice A.",
+    "rationale": "For the different account, use initial amount $P=1000$, final amount $A=1100$, and time $t=1$ year.\nSemiannual compounding means two periods per year, so $n=2$. The annual rate is $R$, making the rate per period $R/2$.\nInsert these values into the given formula: $1100=1000(1+R/2)^2$.",
     "asset": "/sat/june-2026-intl/questions/math2-19.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -2655,7 +2655,7 @@
     "kind": "student-response",
     "correctAnswer": "179",
     "choices": [],
-    "rationale": "The supplied June 2026 answer key gives 179.",
+    "rationale": "The point $(0,-\\sqrt{358})$ gives $c=358$.\nAt $(2,0)$, the radicand is zero: $2^2+2b+358=0$, so $b=-181$.\nThus $h(m)=0$ when $m^2-181m+358=(m-2)(m-179)=0$.\nBoth zeros make the square root defined. The larger is $m=179$.",
     "asset": "/sat/june-2026-intl/questions/math2-20.webp",
     "assetWidth": 1920,
     "assetHeight": 1080,
@@ -2688,7 +2688,7 @@
         "text": "$2100$"
       }
     ],
-    "rationale": "The supplied June 2026 answer key gives choice B.",
+    "rationale": "For an angle in radians, arc length equals radius times angle: $s=r\\theta$.\nUse $r=10$ and $\\theta=7\\pi/6$: $s=10(7\\pi/6)=70\\pi/6=35\\pi/3$.\n\nChoice C is incorrect: $7\\pi/6$ is the angle measure; it still needs to be multiplied by the radius.",
     "asset": "/sat/june-2026-intl/questions/math2-21.webp",
     "assetWidth": 1920,
     "assetHeight": 1080
@@ -2718,7 +2718,7 @@
         "text": "$12$"
       }
     ],
-    "rationale": "The supplied June 2026 answer key gives choice B.",
+    "rationale": "A horizontal line meets an upward-opening parabola exactly once when it passes through the vertex.\nComplete the square: $x^2-7x+12=(x-7/2)^2-1/4$.\nThe minimum height is $-1/4=-0.25$, so $c=-0.25$. The contact point has $x=3.5$, but the question asks for the height $c$.",
     "asset": "/sat/june-2026-intl/questions/math2-22.webp",
     "assetWidth": 1920,
     "assetHeight": 1080

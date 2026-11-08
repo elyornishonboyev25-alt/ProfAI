@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -19,6 +21,7 @@ export default function DeleteAccountDialog({
   onClose,
   onConfirm,
 }: DeleteAccountDialogProps) {
+  const { c: uiCopy } = useCopy()
   const { minimalMotion } = useMotionPreferences()
   const [emailDraft, setEmailDraft] = useState('')
   const [phrase, setPhrase] = useState('')
@@ -77,9 +80,9 @@ export default function DeleteAccountDialog({
                     <ShieldAlert className="h-5 w-5" />
                   </span>
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-error-600">Permanent action</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-error-600"><UiText text={"Permanent action"} /></p>
                     <h2 id="delete-account-title" className="mt-1 text-2xl font-black tracking-tight text-slate-950">
-                      Delete your Ivygoo account?
+                      <UiText text={"Delete your Ivygoo account?"} />
                     </h2>
                   </div>
                 </div>
@@ -88,7 +91,7 @@ export default function DeleteAccountDialog({
                   onClick={onClose}
                   disabled={deleting}
                   className="rounded-xl border border-slate-200 bg-white p-2 text-slate-500 transition hover:bg-slate-50 hover:text-slate-900 disabled:opacity-50"
-                  aria-label="Close account deletion dialog"
+                  aria-label={uiCopy("Close account deletion dialog")}
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -96,16 +99,16 @@ export default function DeleteAccountDialog({
 
               <div className="mt-5 rounded-2xl border border-error-200 bg-gradient-to-r from-error-50 to-orange-50/70 p-4">
                 <p className="flex items-center gap-2 text-sm font-black text-error-800">
-                  <AlertTriangle className="h-4 w-4" /> This cannot be undone
+                  <AlertTriangle className="h-4 w-4" /> <UiText text={"This cannot be undone"} />
                 </p>
                 <p className="mt-1.5 text-xs leading-5 text-error-900/70">
-                  Your test answers and results, shared recordings, XP, streaks, AI conversations, vocabulary, profile and owned classes will be permanently removed. Creating an account again starts with a new profile and empty history.
+                  <UiText text={"Your test answers and results, shared recordings, XP, streaks, AI conversations, vocabulary, profile and owned classes will be permanently removed. Creating an account again starts with a new profile and empty history."} />
                 </p>
               </div>
 
               <div className="mt-5 space-y-4">
                 <label className="block">
-                  <span className="mb-1.5 block text-xs font-black text-slate-700">Confirm your account email</span>
+                  <span className="mb-1.5 block text-xs font-black text-slate-700"><UiText text={"Confirm your account email"} /></span>
                   <div className="relative">
                     <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <input
@@ -120,7 +123,7 @@ export default function DeleteAccountDialog({
                 </label>
                 <label className="block">
                   <span className="mb-1.5 block text-xs font-black text-slate-700">
-                      Type <span className="rounded bg-error-100 px-1.5 py-0.5 font-mono text-error-700">DELETE</span> to continue
+                      <UiText text={"Type"} /> <span className="rounded bg-error-100 px-1.5 py-0.5 font-mono text-error-700">DELETE</span> <UiText text={"to continue"} />
                   </span>
                   <input
                     value={phrase}
@@ -141,7 +144,7 @@ export default function DeleteAccountDialog({
                   disabled={deleting}
                   className="min-h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-black text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
                 >
-                  Keep my account
+                  <UiText text={"Keep my account"} />
                 </button>
                 <button
                   type="button"
@@ -150,7 +153,7 @@ export default function DeleteAccountDialog({
                   className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-error-800 via-error-700 to-error-600 px-4 text-sm font-black text-white shadow-[0_14px_30px_rgba(185,28,28,.24)] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                  {deleting ? 'Deleting securely...' : 'Permanently delete'}
+                  {deleting ? <UiText text={"Deleting securely..."} /> : <UiText text={"Permanently delete"} />}
                 </button>
               </div>
             </div>

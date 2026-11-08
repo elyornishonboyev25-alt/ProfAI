@@ -1,3 +1,4 @@
+import { useCopy } from '@/i18n/interface'
 import UiText from '@/components/common/UiText'
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { ArrowLeft, BookOpenCheck, RotateCcw, Sparkles, X } from 'lucide-react'
@@ -152,6 +153,7 @@ function findSelection(params: Record<string, string | undefined>): Selection | 
 }
 
 export default function VocabularyActivity() {
+  const { c: uiCopy } = useCopy()
   const params = useParams()
   const location = useLocation()
   const [searchParams] = useSearchParams()
@@ -249,7 +251,7 @@ export default function VocabularyActivity() {
         <div className="relative mx-auto w-full max-w-2xl rounded-[1.8rem] border border-blue-100 bg-white p-8 text-center shadow-[0_24px_54px_rgba(15,23,42,0.1)]">
           <BookOpenCheck className="mx-auto h-10 w-10 text-blue-500" />
           <h3 className="mt-3 text-2xl font-black text-slate-900">{title}</h3>
-          <p className="mt-2 text-sm text-slate-600">No words here yet. Select a word while studying and tap “Ask AI”, or add one manually.</p>
+          <p className="mt-2 text-sm text-slate-600"><UiText text={"No words here yet. Select a word while studying and tap “Ask AI”, or add one manually."} /></p>
           <Link to={trackPath} state={navigationState} className="mt-5 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm font-semibold text-white">
             <ArrowLeft className="h-4 w-4" />  <UiText text={"Back"} /> </Link>
         </div>
@@ -272,11 +274,11 @@ export default function VocabularyActivity() {
             <div className="premium-top-controls">
               <Link to={withVocabularyReturnTo(activity ? basePath : trackPath, returnTo)} state={navigationState} className={`${backClass} group`}>
                 <ArrowLeft className="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-0.5" />
-                {activity ? 'Activities' : 'Back'}
+                {activity ? <UiText text={"Activities"} /> : <UiText text={"Back"} />}
               </Link>
               <span className={`${chipClass} gap-1`}>
                 <Sparkles className="h-3.5 w-3.5" />
-                {trackLabel}
+                <UiText text={trackLabel} />
               </span>
               {activity ? (
                 <Link to={withVocabularyReturnTo(trackPath, returnTo)} state={navigationState} className={backClass}>
@@ -287,28 +289,28 @@ export default function VocabularyActivity() {
               <VocabularyLanguageToggle accent={accent} />
             </div>
             <div className="vocab-practice-heading">
-              <p className="vocab-header-eyebrow">YOUR VOCABULARY WORKSPACE</p>
+              <p className="vocab-header-eyebrow"><UiText text={"YOUR VOCABULARY WORKSPACE"} /></p>
               <h1>{title}</h1>
               <p>{subtitle}</p>
             </div>
-            <div className="vocab-header-stamp" aria-hidden="true"><BookOpenCheck size={26} strokeWidth={1.4} /><span>SMALL STEPS<br /><strong>LASTING KNOWLEDGE</strong></span></div>
+            <div className="vocab-header-stamp" aria-hidden="true"><BookOpenCheck size={26} strokeWidth={1.4} /><span><UiText text={"SMALL STEPS"} /><br /><strong><UiText text={"LASTING KNOWLEDGE"} /></strong></span></div>
           </header>
 
           {xpStatus?.key === rewardKey ? (
             <div role="status" className="vocab-xp-status flex flex-wrap items-center gap-3 rounded-xl border border-blue-100 bg-blue-50 p-2 text-xs font-semibold text-blue-800">
               {xpStatus.message}
-              {xpStatus.retry ? <button onClick={xpStatus.retry} className="rounded-lg bg-blue-600 px-3 py-1.5 text-white">Retry XP</button> : null}
-              <button type="button" onClick={() => setXpStatus(null)} aria-label="Close XP notification" className="ml-auto rounded-lg p-1.5"><X className="h-4 w-4" /></button>
+              {xpStatus.retry ? <button onClick={xpStatus.retry} className="rounded-lg bg-blue-600 px-3 py-1.5 text-white"><UiText text={"Retry XP"} /></button> : null}
+              <button type="button" onClick={() => setXpStatus(null)} aria-label={uiCopy("Close XP notification")} className="ml-auto rounded-lg p-1.5"><X className="h-4 w-4" /></button>
             </div>
           ) : null}
           {!activity ? (
             <>
               <section className="vocab-practice-intro">
                 <div>
-                  <h2>Choose how to study</h2>
-                  <p>Flip, match, quiz, and type — build confidence one word at a time.</p>
+                  <h2><UiText text={"Choose how to study"} /></h2>
+                  <p><UiText text={"Flip, match, quiz, and type — build confidence one word at a time."} /></p>
                 </div>
-                <p className="vocab-reward-note">80% to earn XP · Once per activity · 120 XP daily limit</p>
+                <p className="vocab-reward-note"><UiText text={"80% to earn XP · Once per activity · 120 XP daily limit"} /></p>
               </section>
               <ActivityPicker basePath={basePath} entriesCount={entries.length} navigationState={navigationState} previewEntry={entries[0]} returnTo={returnTo} />
               <VocabularyInlineLibrary key={basePath} entries={entries} accent={accent} open={libraryOpen} onToggle={() => setExpandedLibrary(libraryOpen ? null : basePath)} />

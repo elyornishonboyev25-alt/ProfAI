@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import { emphasizeAnswerLimits } from '@/utils/examInstructions'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { BookmarkIcon } from '@heroicons/react/24/outline'
@@ -32,6 +34,11 @@ function prepareSourcePaper(html: string, questions: Question[]) {
   const template = document.createElement('template')
   template.innerHTML = sanitizeSourcePaper(html)
   const fragment = template.content
+  emphasizeAnswerLimits(fragment)
+  for (const row of fragment.querySelectorAll('.mc-question,.tfng-row,.help-select-row,.source-line')) {
+    const number = row.querySelector('b,strong')
+    if (number && /^\s*\d+(?:\s*[-\u2013]\s*\d+)?[.)]?\s*$/.test(number.textContent ?? '')) number.classList.add('exam-question-number')
+  }
   const maps: { key: string; map: SourceMap; alt: string }[] = []
   for (const image of fragment.querySelectorAll<HTMLImageElement>('img')) {
     const map = sourceListeningMapFor(image.getAttribute('src') ?? '')
@@ -88,6 +95,7 @@ function prepareSourcePaper(html: string, questions: Question[]) {
 
 /** Keeps source tables, wording and original images while using ProfAI's answer state. */
 export default function SourceQuestionLayout({ html, questions, answers, onAnswer, onQuestionFocus, flaggedQuestionIds, onFlagQuestion, review = false, showCorrectAnswers = false, reviewQuestions }: Props) {
+  const { c: uiCopy } = useCopy()
   const root = useRef<HTMLDivElement>(null)
   const layout = useMemo(() => prepareSourcePaper(html, questions), [html, questions])
   const safeHtml = layout.html
@@ -176,7 +184,7 @@ export default function SourceQuestionLayout({ html, questions, answers, onAnswe
   }, [safeHtml, byId, onAnswer, onQuestionFocus, review])
 
   const flag = (question: Question) => !review && onFlagQuestion ? <button type="button" className="source-question-flag"
-    aria-label={`Flag question ${question.number}`} aria-pressed={flaggedQuestionIds?.has(question.id) ?? false}
+    aria-label={uiCopy("Flag question {{value1}}", { value1: String(question.number) })} aria-pressed={flaggedQuestionIds?.has(question.id) ?? false}
     onClick={event => { event.stopPropagation(); onFlagQuestion(question.id) }}>
     <BookmarkIcon className="h-4 w-4" />
   </button> : null

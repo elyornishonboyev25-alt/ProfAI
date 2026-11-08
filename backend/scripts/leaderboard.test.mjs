@@ -15,7 +15,7 @@ const prisma = {
 globalThis.prisma = prisma
 const { generateLeaderboard, invalidateLeaderboardCache } = await import('../dist/services/leaderboard.service.js')
 
-const learner = (id, xp) => ({ id, xp, fullName: id, nickname: null, avatarUrl: null, currentStreak: 0 })
+const learner = (id, xp) => ({ id, xp, role:'USER', premiumGrant:null, billingSubscriptions:[], email: `${id}@example.test`, fullName: id, nickname: null, avatarUrl: null, currentStreak: 0 })
 const attempt = (userId, testId, xpEarned, percentage = 80) => ({
   userId, testId, xpEarned, percentage, finalScore: percentage,
   totalQuestions: 10, correctAnswers: percentage / 10, timeSpentSec: 600,
@@ -70,7 +70,7 @@ test('all-time ranking uses profile totals including activity and repeat-test re
 
 test('SAT and IELTS assessments contribute test statistics without changing profile XP', async () => {
   const assessment = (id, userId, examType, accuracy, score = 0, maxScore = 1600) => ({
-    id, userId, examType, accuracy, score, maxScore, durationSec: 1200, completedAt: new Date(),
+    id, userId, examType, accuracy, score, maxScore, durationSec: examType === 'SAT' ? 1800 : 1200, completedAt: new Date(),
   })
   mockDatabase([learner('sat', 324), learner('ielts', 398)], [attempt('sat', 'native', 20, 50)], [
     assessment('old-sat', 'sat', 'SAT', 80),
@@ -93,7 +93,7 @@ test('assessment sync cache invalidation refreshes statistics even when XP is un
   const assessments = []
   mockDatabase([learner('sat', 324)], [], assessments)
   assert.equal((await generateLeaderboard({ period: 'all' })).rows[0].testsCompleted, 0)
-  assessments.push({ id: 'saved', userId: 'sat', examType: 'SAT', accuracy: 45, score: 900, maxScore: 1600, durationSec: 100, completedAt: new Date() })
+  assessments.push({ id: 'saved', userId: 'sat', examType: 'SAT', accuracy: 45, score: 900, maxScore: 1600, durationSec: 1800, completedAt: new Date() })
   invalidateLeaderboardCache()
   const board = await generateLeaderboard({ period: 'all' })
   assert.equal(board.rows[0].testsCompleted, 1)
@@ -156,7 +156,7 @@ test('weekly leaderboard includes learners who earned XP outside tests', async (
 
 test('SAT and IELTS results count in rolling windows without double-counting awarded activity XP', async () => {
   const { assessmentQuery } = mockDatabase([learner('sat', 900), learner('ielts', 800)], [], [
-    { id: 'sat-result', userId: 'sat', examType: 'SAT', accuracy: 90, score: 1400, maxScore: 1600, durationSec: 1200, completedAt: new Date() },
+    { id: 'sat-result', userId: 'sat', examType: 'SAT', accuracy: 90, score: 1400, maxScore: 1600, durationSec: 1800, completedAt: new Date() },
     { id: 'ielts-result', userId: 'ielts', examType: 'IELTS', accuracy: null, score: 7.5, maxScore: 9, durationSec: 1200, completedAt: new Date() },
   ], [{ userId: 'sat', amount: 81 }, { userId: 'ielts', amount: 81 }])
   for (const period of ['week', 'month']) {
@@ -202,4 +202,35 @@ test('a calculation spanning UTC midnight is not cached under the next rolling w
   await generateLeaderboard({ period: 'week' })
   await generateLeaderboard({ period: 'week' })
   assert.equal(userQueries, 2)
+})
+
+test('too-fast and explicitly excluded SAT results stay out of global ranking statistics', async () => {
+  mockDatabase([learner('sat', 20)], [], [
+    { id:'fast', userId:'sat', examType:'SAT', accuracy:100, score:1600, maxScore:1600, durationSec:120, completedAt:new Date() },
+    { id:'excluded', userId:'sat', examType:'SAT', accuracy:100, score:1600, maxScore:1600, durationSec:2000, breakdown:{ leaderboardEligible:false }, completedAt:new Date() },
+  ])
+  const board = await generateLeaderboard({ period:'all' })
+  assert.equal(board.rows[0].testsCompleted, 0)
+  assert.equal(board.rows[0].totalXp, 20)
+})
+
+
+test('an in-flight calculation cannot restore a cache invalidated by a new reward', async () => {
+  const users = [learner('a', 100)]
+  mockDatabase(users)
+  let release
+  let started
+  const pending = new Promise((resolve) => { started = resolve })
+  mock.method(prisma.user, 'findMany', async () => {
+    const snapshot = users.map((user) => ({ ...user }))
+    if (!release) await new Promise((resolve) => { release = resolve; started() })
+    return snapshot
+  })
+  const before = generateLeaderboard({ period: 'all' })
+  await pending
+  users[0].xp = 200
+  invalidateLeaderboardCache()
+  release()
+  await before
+  assert.equal((await generateLeaderboard({ period: 'all' })).rows[0].totalXp, 200)
 })

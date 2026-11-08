@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import {
@@ -19,6 +21,7 @@ import { splitSATPrompt } from '@/features/sat/promptLayout'
 import { SATNoteList } from './SATNotes'
 import SATRichText from './SATRichText'
 import SATSourceContent from './SATSourceContent'
+import SATExplanation from './SATExplanation'
 import SATChoiceContent from './SATChoiceContent'
 import SATVisual from './SATVisual'
 import SATTextHighlights from './SATTextHighlights'
@@ -41,11 +44,11 @@ function ReviewQuestion({ question, attempt }: { question: SATQuestion; attempt:
   )
   return (
     <SATTextHighlights key={question.id} strokes={attempt.highlights[question.id] ?? []} enabled={false}>
-      <div className="sqm-question">
+      <div className="sqm-question" data-sat-section={question.section}>
         <div className="sqm-tags">
-          <span className="sqm-tag is-domain">{question.domain}</span>
-          <span className="sqm-tag">{question.skill}</span>
-          <span className="sqm-tag is-level">{question.difficulty}</span>
+          <span className="sqm-tag is-domain"><UiText text={question.domain} /></span>
+          <span className="sqm-tag"><UiText text={question.skill} /></span>
+          <span className="sqm-tag is-level"><UiText text={question.difficulty} /></span>
         </div>
         {question.visual ? (
           <SATVisual
@@ -88,11 +91,11 @@ function ReviewQuestion({ question, attempt }: { question: SATQuestion; attempt:
                   <span className="sqm-choice-key">{choice.key}</span>
                   <div data-sat-highlight-block={`choice-${choice.key}`} className="sqm-choice-text">
                     <SATChoiceContent choice={choice} />
-                    {eliminated.includes(choice.key) ? <small>Crossed out during the test</small> : null}
+                    {eliminated.includes(choice.key) ? <small><UiText text={"Crossed out during the test"} /></small> : null}
                   </div>
                   {(isMine || isKey) && (
                     <span className="sqm-choice-label">
-                      {isKey ? (isMine ? 'Your answer · Correct' : 'Correct answer') : 'Your answer'}
+                      {isKey ? (isMine ? 'Your answer · Correct' : 'Correct answer') : <UiText text={"Your answer"} />}
                     </span>
                   )}
                 </div>
@@ -102,13 +105,13 @@ function ReviewQuestion({ question, attempt }: { question: SATQuestion; attempt:
         ) : (
           <div className="sqm-free">
             <div className={`sqm-free-card ${correct ? 'is-key' : response ? 'is-wrong' : ''}`}>
-              <span>Your response</span>
-              <strong>{response || 'No response'}</strong>
+              <span><UiText text={"Your response"} /></span>
+              <strong>{response || <UiText text={"No response"} />}</strong>
             </div>
             <div className="sqm-free-card is-key">
-              <span>Correct answer</span>
+              <span><UiText text={"Correct answer"} /></span>
               <strong>{question.correctAnswer}</strong>
-              {alternatives.length > 0 && <small>Also accepted: {alternatives.join(', ')}</small>}
+              {alternatives.length > 0 && <small><UiText text={"Also accepted:"} /> {alternatives.join(', ')}</small>}
             </div>
           </div>
         )}
@@ -119,24 +122,20 @@ function ReviewQuestion({ question, attempt }: { question: SATQuestion; attempt:
               <BookOpenCheck size={19} />
             </span>
             <div>
-              <p>Answer explanation</p>
-              <h3>Why this answer works</h3>
+              <p><UiText text={"Answer explanation"} /></p>
+              <h3><UiText text={"Why this answer works"} /></h3>
             </div>
           </div>
-          {question.sourceContent ? (
-            <SATSourceContent html={question.sourceContent.explanation} className="sqm-explanation-body" />
-          ) : (
-            <SATRichText text={question.explanation || 'Explanation unavailable.'} className="sqm-explanation-body" />
-          )}
+          <SATExplanation question={question} response={response} className="sqm-explanation-body" />
           <p className="sqm-tip">
             <Lightbulb size={16} />
-            Say the rule in your own words before you move on — that is what makes it stick.
+            <UiText text={"Say the rule in your own words before you move on — that is what makes it stick."} />
           </p>
         </section>
 
         {readSATNotes(note).length ? (
           <section className="sqm-notes">
-            <p>Your test-day notes</p>
+            <p><UiText text={"Your test-day notes"} /></p>
             <SATNoteList value={note} />
           </section>
         ) : null}
@@ -160,8 +159,9 @@ export default function SATQuestionModal({
   modules: SATModule[]
   onIndexChange: (next: number) => void
   onClose: () => void
-  onDiscuss: (question: SATQuestion) => void
+  onDiscuss?: (question: SATQuestion) => void
 }) {
+  const { c: uiCopy } = useCopy()
   const dialogRef = useRef<HTMLDivElement>(null)
   const bodyRef = useRef<HTMLDivElement>(null)
   const question = questions[index]
@@ -233,8 +233,8 @@ export default function SATQuestionModal({
           <div className="sqm-heading">
             <span className={`sqm-module ${question.section === 'math' ? 'is-math' : ''}`}>{module?.title}</span>
             <h2>
-              Question {question.number}
-              {attempt.flagged.includes(question.id) && <Flag size={16} aria-label="Flagged" />}
+              <UiText text={"Question"} /> {question.number}
+              {attempt.flagged.includes(question.id) && <Flag size={16} aria-label={uiCopy("Flagged")} />}
             </h2>
           </div>
           <div className="sqm-header-actions">
@@ -242,7 +242,7 @@ export default function SATQuestionModal({
               <StatusIcon size={15} />
               {STATUS[status].label}
             </span>
-            <button type="button" className="sqm-icon-button" aria-label="Close question" onClick={onClose}>
+            <button type="button" className="sqm-icon-button" aria-label={uiCopy("Close question")} onClick={onClose}>
               <X size={20} />
             </button>
           </div>
@@ -255,29 +255,29 @@ export default function SATQuestionModal({
             type="button"
             className="sqm-nav"
             disabled={!hasPrevious}
-            aria-label="Previous question"
+            aria-label={uiCopy("Previous question")}
             onClick={() => onIndexChange(index - 1)}
           >
             <ChevronLeft size={20} />
-            <span>Previous</span>
+            <span><UiText text={"Previous"} /></span>
           </button>
           <div className="sqm-progress">
             <strong>
               {index + 1} <span>/ {questions.length}</span>
             </strong>
-            <button type="button" className="sqm-discuss" onClick={() => onDiscuss(question)}>
+            {onDiscuss && <button type="button" className="sqm-discuss" onClick={() => onDiscuss(question)}>
               <MessageSquareText size={15} />
-              Discuss
-            </button>
+              <UiText text={"Discuss"} />
+            </button>}
           </div>
           <button
             type="button"
             className="sqm-nav is-next"
             disabled={!hasNext}
-            aria-label="Next question"
+            aria-label={uiCopy("Next question")}
             onClick={() => onIndexChange(index + 1)}
           >
-            <span>Next</span>
+            <span><UiText text={"Next"} /></span>
             <ChevronRight size={20} />
           </button>
         </footer>

@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { CalendarDays, Clock3, Target } from 'lucide-react'
@@ -46,12 +47,12 @@ export default function ExamCountdown({ exam, date, currentScore, targetScore, t
             <CalendarDays className="h-4 w-4" />
           </span>
           <div className="min-w-0">
-            <p className="text-sm font-black text-slate-900">Set your {exam} exam date</p>
-            <p className="mt-0.5 text-xs text-slate-500">Activate a live countdown and personal score target.</p>
+            <p className="text-sm font-black text-slate-900"><UiText text={"Set your"} /> {exam} <UiText text={"exam date"} /></p>
+            <p className="mt-0.5 text-xs text-slate-500"><UiText text={"Activate a live countdown and personal score target."} /></p>
           </div>
         </div>
         <button onClick={() => navigate('/onboarding')} className={`min-h-10 shrink-0 rounded-xl px-4 text-xs font-black text-white shadow-sm ${blue ? 'bg-blue-600' : 'bg-blue-600'}`}>
-          Set exam profile
+          <UiText text={"Set exam profile"} />
         </button>
       </section>
     )
@@ -77,13 +78,13 @@ export default function ExamCountdown({ exam, date, currentScore, targetScore, t
             <Clock3 className="h-4 w-4" />
           </span>
           <div className="min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">{exam} exam countdown</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">{exam} <UiText text={"exam countdown"} /></p>
             <p className="mt-0.5 truncate text-sm font-black text-slate-900">
               {new Date(`${date}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
           </div>
           <button onClick={() => navigate('/onboarding')} className={`ml-auto shrink-0 rounded-lg px-2 py-1 text-[9px] font-black uppercase tracking-wider transition hover:bg-white ${accent}`}>
-            Change
+            <UiText text={"Change"} />
           </button>
         </div>
 
@@ -99,7 +100,7 @@ export default function ExamCountdown({ exam, date, currentScore, targetScore, t
               >
                 {String(value).padStart(2, '0')}
               </motion.p>
-              <p className="text-[7px] font-black uppercase tracking-[0.14em] text-slate-400 sm:text-[8px]">{label}</p>
+              <p className="text-[7px] font-black uppercase tracking-[0.14em] text-slate-400 sm:text-[8px]"><UiText text={label} /></p>
             </div>
           ))}
         </div>
@@ -109,7 +110,7 @@ export default function ExamCountdown({ exam, date, currentScore, targetScore, t
             <Target className="h-4 w-4" />
           </span>
           <div className="min-w-0">
-            <p className="text-[8px] font-black uppercase tracking-[0.16em] text-slate-400">Score journey</p>
+            <p className="text-[8px] font-black uppercase tracking-[0.16em] text-slate-400"><UiText text={"Score journey"} /></p>
             <p className="mt-0.5 whitespace-nowrap text-lg font-black tracking-tight text-slate-950">
               {currentScore ?? '—'} <span className={accent}>→</span> {targetScore ?? '—'}
             </p>

@@ -1,361 +1,263 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { createPortal } from 'react-dom'
-import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowLeft, ArrowRight, BookOpen, Check, ChevronDown, CircleDollarSign, GraduationCap, Loader2, MapPin, ShieldCheck, Sparkles, Target, X } from 'lucide-react'
-import UniversityLogo from '@/components/admission/UniversityLogo'
-import { formatUniversityRank } from '@/data/admission'
+import { Link, useSearchParams } from 'react-router-dom'
+import { ArrowLeft, ArrowRight, BookOpen, Check, ChevronDown, CircleDollarSign, GraduationCap, Heart, MapPin, Search, ShieldCheck, SlidersHorizontal, Sparkles, Target, Trophy } from 'lucide-react'
+import { useCopy, translateInterface as c } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
+import UniversityLogo from './UniversityLogo'
+import { formatUniversityRank, QS_EDITION } from '@/data/admission'
 import { universities } from '@/data/admission/universities'
-import { matchUniversities, type DegreeLevel, type MatchInput, type UniversityMatch } from '@/data/admission/match'
+import { matchUniversities, type DegreeLevel, type MatchInput } from '@/data/admission/match'
 import { fetchAccount, updateAccount } from '@/lib/profileApi'
-import { useToastStore, type ToastState } from '@/store/toastStore'
+import { useAuthStore } from '@/store/authStore'
+import { useUniversityShortlist } from '@/hooks/useUniversityShortlist'
+import { useToastStore } from '@/store/toastStore'
 import './university-matcher.css'
 
-type Props = {
-  open: boolean
-  onClose: () => void
-  resumeInput?: MatchInput | null
-  resumeVisibleCount?: number
-  resumeScrollTop?: number
-}
-
-const CLASS_STYLE: Record<UniversityMatch['classification'], { label: string; chip: string }> = {
-  match: { label: 'Explore', chip: 'um-match-chip-explore' },
-  reach: { label: 'Dream', chip: 'um-match-chip-dream' },
-}
-
+const COUNTRIES = Array.from(new Set(universities.map((u) => u.country))).sort()
+const MAJORS = ['Computer Science', 'Business Management', 'Economics', 'Engineering', 'Medicine', 'Law', 'Psychology', 'Data Science', 'Artificial Intelligence', 'Finance', 'Accounting', 'Marketing', 'Architecture', 'International Relations', 'Political Science', 'Biology / Life Sciences', 'Chemistry', 'Physics', 'Mathematics', 'Education', 'Public Health', 'Nursing', 'Media & Communications', 'Art & Design']
 const STEPS = [
   { label: 'Study goals', hint: 'Your direction' },
   { label: 'Test scores', hint: 'Your results' },
   { label: 'Budget & GPA', hint: 'Your priorities' },
 ]
+const DEGREES = [
+  { value: 'bachelor', label: 'Bachelor', description: 'Undergraduate', icon: GraduationCap },
+  { value: 'master', label: 'Master', description: 'Graduate study', icon: BookOpen },
+  { value: 'phd', label: 'PhD', description: 'Research degree', icon: Sparkles },
+] as const
+const PAGE_SIZE = 12
+const EMPTY_FORM = { degree: 'bachelor' as DegreeLevel, major: '', country: '', sat: '', ielts: '', gpa: '', budget: '' }
+type Form = typeof EMPTY_FORM
+type Draft = { form: Form; step: number; count: number; query: string; country: string; category: string; scroll: number }
 
-const COUNTRIES = Array.from(new Set(universities.map((u) => u.country))).sort()
-const MAJORS = [
-  'Computer Science', 'Business Management', 'Economics', 'Engineering', 'Medicine', 'Law',
-  'Psychology', 'Data Science', 'Artificial Intelligence', 'Finance', 'Accounting',
-  'Marketing', 'Architecture', 'International Relations', 'Political Science',
-  'Biology / Life Sciences', 'Chemistry', 'Physics', 'Mathematics', 'Education',
-  'Public Health', 'Nursing', 'Media & Communications', 'Art & Design',
-]
-const DEFAULT_GPA = ''
-const DEFAULT_YEARLY_BUDGET = ''
-const RESULTS_PAGE_SIZE = 12
+function readDraft(key: string): Draft | null {
+  try {
+    const d = JSON.parse(sessionStorage.getItem(key) ?? 'null')
+    if (!d || !d.form || !Object.keys(EMPTY_FORM).every((k) => typeof d.form[k] === 'string')) return null
+    if (!DEGREES.some((degree) => degree.value === d.form.degree)) return null
+    return { form: d.form, step: [1, 2, 3].includes(d.step) ? d.step : 1,
+      count: Number.isInteger(d.count) ? Math.max(PAGE_SIZE, Math.min(d.count, universities.length)) : PAGE_SIZE,
+      query: typeof d.query === 'string' ? d.query : '', country: typeof d.country === 'string' ? d.country : '',
+      category: ['all', 'match', 'reach', 'saved'].includes(d.category) ? d.category : 'all',
+      scroll: Number.isFinite(d.scroll) ? Math.max(0, d.scroll) : 0 }
+  } catch { return null }
+}
 
-export default function UniversityMatcher({ open, onClose, resumeInput, resumeVisibleCount, resumeScrollTop }: Props) {
-  const navigate = useNavigate()
-  const dialogRef = useRef<HTMLDivElement>(null)
-  const resultScrollRef = useRef<HTMLDivElement>(null)
-  const pushToast = useToastStore((s: ToastState) => s.pushToast)
+function toInput(form: Form): MatchInput {
+  return { degreeLevel: form.degree, fieldOfStudy: form.major || null, preferredCountry: form.country || null,
+    satTotal: form.sat ? Number(form.sat) : null, ieltsOverall: form.ielts ? Number(form.ielts) : null,
+    gpa: form.gpa ? Number(form.gpa) : null, budgetUsdPerYear: form.budget ? Number(form.budget) : null }
+}
 
-  const [step, setStep] = useState(1)
-  const [degreeLevel, setDegreeLevel] = useState<DegreeLevel>('bachelor')
-  const [fieldOfStudy, setFieldOfStudy] = useState('')
-  const [sat, setSat] = useState('')
-  const [ielts, setIelts] = useState('')
-  const [gpa, setGpa] = useState(DEFAULT_GPA)
-  const [budget, setBudget] = useState(DEFAULT_YEARLY_BUDGET)
-  const [preferredCountry, setPreferredCountry] = useState('')
-  const [results, setResults] = useState<UniversityMatch[]>([])
-  const [visibleResultCount, setVisibleResultCount] = useState(RESULTS_PAGE_SIZE)
-  const [inputError, setInputError] = useState('')
-  const [savingSlug, setSavingSlug] = useState<string | null>(null)
-  const [savedSlug, setSavedSlug] = useState<string | null>(null)
+function validate(form: Form, all = false) {
+  if (form.sat && (!Number.isInteger(Number(form.sat)) || Number(form.sat) < 400 || Number(form.sat) > 1600)) return 'SAT score must be a whole number from 400 to 1600.'
+  if (form.ielts && (!Number.isFinite(Number(form.ielts)) || Number(form.ielts) < 0 || Number(form.ielts) > 9 || !Number.isInteger(Number(form.ielts) * 2))) return 'IELTS band must be from 0 to 9 in half-band steps.'
+  if (all && form.gpa && (!Number.isFinite(Number(form.gpa)) || Number(form.gpa) < 0 || Number(form.gpa) > 4)) return 'GPA must be between 0 and 4.'
+  if (all && form.budget && (!Number.isFinite(Number(form.budget)) || Number(form.budget) < 0)) return 'Yearly budget must be zero or greater.'
+  return ''
+}
 
-  // Prefill from the saved account profile each time the matcher opens.
-  useEffect(() => {
-    if (!open) return
-    if (resumeInput) {
-      setDegreeLevel(resumeInput.degreeLevel ?? 'bachelor')
-      setFieldOfStudy(resumeInput.fieldOfStudy ?? '')
-      setSat(resumeInput.satTotal == null ? '' : String(resumeInput.satTotal))
-      setIelts(resumeInput.ieltsOverall == null ? '' : String(resumeInput.ieltsOverall))
-      setGpa(resumeInput.gpa == null ? '' : String(resumeInput.gpa))
-      setBudget(resumeInput.budgetUsdPerYear == null ? '' : String(resumeInput.budgetUsdPerYear))
-      setPreferredCountry(resumeInput.preferredCountry ?? '')
-      setResults(matchUniversities(resumeInput))
-      setVisibleResultCount(Math.max(RESULTS_PAGE_SIZE, resumeVisibleCount ?? RESULTS_PAGE_SIZE))
-      setStep(4)
-      return
-    }
-    setStep(1)
-    setSavedSlug(null)
-    setResults([])
-    setVisibleResultCount(RESULTS_PAGE_SIZE)
-    setInputError('')
-    setGpa(DEFAULT_GPA)
-    setBudget(DEFAULT_YEARLY_BUDGET)
-    fetchAccount()
-      .then((data) => {
-        const p = data.profile
-        if (p.gpa) setGpa(p.gpa)
-        if (p.currentSatScore) setSat(String(p.currentSatScore))
-        if (p.currentIeltsScore) setIelts(String(p.currentIeltsScore))
-        if (p.fieldOfStudy) setFieldOfStudy(p.fieldOfStudy)
-        if (p.budgetUsd) setBudget(String(p.budgetUsd))
-        if (p.country) setPreferredCountry((prev) => prev || (COUNTRIES.includes(p.country as string) ? (p.country as string) : prev))
-        if (p.degreeLevel === 'bachelor' || p.degreeLevel === 'master' || p.degreeLevel === 'phd') setDegreeLevel(p.degreeLevel)
-      })
-      .catch(() => {})
-  }, [open, resumeInput, resumeVisibleCount])
+// Keep matching evidence intact while presenting it in the learner's language.
+function reasonCopy(reason: string) {
+  if (reason === 'No numeric SAT cutoff is published, so no SAT gap was invented') return c('Check the university’s SAT policy for your entry route.')
+  if (reason === 'No numeric IELTS cutoff is published, so no IELTS gap was invented') return c('Check the IELTS requirement for your exact programme.')
+  if (reason === 'This university publishes no comparable numeric cutoff for the scores you entered') return c('Check programme requirements to compare your scores.')
+  if (reason === 'Graduate admission is programme-specific; undergraduate test policies were not used') return c('Graduate requirements vary by programme.')
+  const test = reason.match(/^(SAT|IELTS) ([\d.]+) (meets|is near|is below) the (?:official )?(?:published )?([\d.]+) (?:published )?benchmark/)
+  if (test) return c(test[3] === 'meets' ? '{{test}} {{score}} meets the published {{benchmark}} benchmark.' : test[3] === 'is near' ? '{{test}} {{score}} is near the published {{benchmark}} benchmark.' : '{{test}} {{score}} is below the published {{benchmark}} benchmark.', { test: test[1], score: test[2], benchmark: test[4] })
+  const subject = reason.match(/^(.+) (appears in the official undergraduate subject list|is mentioned in this university’s overview);/)
+  if (subject) return c(subject[2].startsWith('appears') ? '{{subject}} is listed for undergraduate study. Check the entry route.' : '{{subject}} appears in the university overview. Confirm the exact degree.', { subject: c(subject[1]) })
+  const checkSubject = reason.match(/^Check whether (.+) is offered for your degree level$/)
+  if (checkSubject) return c('Confirm that {{subject}} is offered for your degree.', { subject: c(checkSubject[1]) })
+  const country = reason.match(/^In your preferred country \((.+)\)$/)
+  if (country) return c('In your preferred country: {{country}}.', { country: country[1] })
+  const cost = reason.match(/^Living cost ~\$(.+)\/yr (is above|fits) your budget$/)
+  if (cost) return c(cost[2] === 'fits' ? 'Published living cost: about ${{amount}} per year, within your budget.' : 'Published living cost: about ${{amount}} per year, above your budget.', { amount: cost[1] })
+  return c(reason)
+}
 
-  useEffect(() => {
-    if (!open) return
-    const previousBodyOverflow = document.body.style.overflow
-    const previousHtmlOverflow = document.documentElement.style.overflow
-    document.body.style.overflow = 'hidden'
-    document.documentElement.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = previousBodyOverflow
-      document.documentElement.style.overflow = previousHtmlOverflow
-    }
-  }, [open])
+export default function UniversityMatcher() {
+  const userId = useAuthStore((state) => state.user?.id)
+  return <MatcherWorkspace key={userId ?? 'guest'} userId={userId} />
+}
 
-  useEffect(() => {
-    if (!open) return
-    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null
-    const frame = requestAnimationFrame(() => dialogRef.current?.focus())
-    return () => {
-      cancelAnimationFrame(frame)
-      previouslyFocused?.focus()
-    }
-  }, [open])
+function MatcherWorkspace({ userId }: { userId?: string }) {
+  const { c } = useCopy()
+  const [params, setParams] = useSearchParams()
+  const showingResults = params.get('view') === 'results'
+  const storageKey = `ivygoo-university-matches-v2:${userId ?? 'guest'}`
+  const [initial] = useState(() => readDraft(storageKey))
+  const [form, setForm] = useState<Form>(initial?.form ?? EMPTY_FORM)
+  const [step, setStep] = useState(initial?.step ?? 1)
+  const [count, setCount] = useState(initial?.count ?? PAGE_SIZE)
+  const [query, setQuery] = useState(initial?.query ?? '')
+  const [country, setCountry] = useState(initial?.country ?? '')
+  const [category, setCategory] = useState(initial?.category ?? 'all')
+  const [error, setError] = useState('')
+  const [saving, setSaving] = useState<string | null>(null)
+  const [target, setTarget] = useState<string | null>(null)
+  const edited = useRef(false)
+  const heading = useRef<HTMLHeadingElement>(null)
+  const scroll = useRef(initial?.scroll ?? 0)
+  const restoreScroll = useRef(showingResults ? initial?.scroll ?? 0 : 0)
+  const { isShortlisted, toggleShortlist, shortlistCount } = useUniversityShortlist()
+  const pushToast = useToastStore((state) => state.pushToast)
 
   useEffect(() => {
-    if (!open) return
-    const handleKeydown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') { onClose(); return }
-      if (event.key !== 'Tab' || !dialogRef.current) return
-      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('button:not(:disabled), select:not(:disabled), input:not(:disabled), a[href]'))
-      if (!focusable.length) return
-      const first = focusable[0]
-      const last = focusable[focusable.length - 1]
-      if (event.shiftKey && (document.activeElement === first || document.activeElement === dialogRef.current)) {
-        event.preventDefault()
-        last.focus()
-      } else if (!event.shiftKey && (document.activeElement === last || document.activeElement === dialogRef.current)) {
-        event.preventDefault()
-        first.focus()
-      }
-    }
-    window.addEventListener('keydown', handleKeydown)
-    return () => window.removeEventListener('keydown', handleKeydown)
-  }, [open, onClose])
+    if (!userId) return
+    let active = true
+    fetchAccount().then(({ profile: p }) => {
+      if (!active) return
+      setTarget(p.targetUniversitySlug)
+      if (initial || edited.current || showingResults) return
+      setForm({ degree: p.degreeLevel === 'master' || p.degreeLevel === 'phd' ? p.degreeLevel : 'bachelor',
+        major: p.fieldOfStudy ?? '', country: COUNTRIES.includes(p.country ?? '') ? p.country! : '',
+        sat: p.currentSatScore == null ? '' : String(p.currentSatScore), ielts: p.currentIeltsScore == null ? '' : String(p.currentIeltsScore),
+        gpa: p.gpa ?? '', budget: p.budgetUsd == null ? '' : String(p.budgetUsd) })
+    }).catch(() => {})
+    return () => { active = false }
+  }, [userId, initial, showingResults])
 
-  useEffect(() => setInputError(''), [sat, ielts, gpa, budget])
-
-  const input: MatchInput = useMemo(
-    () => ({
-      satTotal: sat ? Number(sat) : null,
-      ieltsOverall: ielts ? Number(ielts) : null,
-      gpa: gpa ? Number(gpa) : null,
-      fieldOfStudy: fieldOfStudy || null,
-      degreeLevel,
-      budgetUsdPerYear: budget ? Number(budget) : null,
-      preferredCountry: preferredCountry || null,
-    }),
-    [sat, ielts, gpa, fieldOfStudy, degreeLevel, budget, preferredCountry],
-  )
-
-  const scoreError = () => {
-    if (sat && (!Number.isInteger(Number(sat)) || Number(sat) < 400 || Number(sat) > 1600)) {
-      return 'SAT score must be a whole number from 400 to 1600.'
+  useEffect(() => {
+    const save = () => {
+      try { sessionStorage.setItem(storageKey, JSON.stringify({ form, step, count, query, country, category, scroll: scroll.current })) } catch { /* Keep working when storage is unavailable. */ }
     }
-    if (ielts && (Number(ielts) < 0 || Number(ielts) > 9 || !Number.isInteger(Number(ielts) * 2))) {
-      return 'IELTS band must be from 0 to 9 in half-band steps.'
-    }
-    return ''
+    save()
+    const trackScroll = () => { scroll.current = window.scrollY }
+    window.addEventListener('scroll', trackScroll, { passive: true })
+    window.addEventListener('pagehide', save)
+    return () => { save(); window.removeEventListener('scroll', trackScroll); window.removeEventListener('pagehide', save) }
+  }, [storageKey, form, step, count, query, country, category])
+
+  useEffect(() => {
+    if (!showingResults || !restoreScroll.current) return
+    const top = restoreScroll.current
+    const frame = requestAnimationFrame(() => { restoreScroll.current = 0; window.scrollTo({ top, behavior: 'instant' }) })
+    return () => cancelAnimationFrame(frame)
+  }, [showingResults, initial])
+
+  const input = useMemo(() => toInput(form), [form])
+  const matches = useMemo(() => showingResults && !validate(form, true) ? matchUniversities(input) : [], [input, showingResults, form])
+  const filtered = useMemo(() => matches.filter((m) => {
+    const u = m.university
+    const search = query.trim().toLowerCase()
+    return (!search || `${u.name} ${u.shortName} ${u.city} ${u.country}`.toLowerCase().includes(search))
+      && (!country || u.country === country)
+      && (category === 'all' || (category === 'saved' ? isShortlisted(u.slug) : m.classification === category))
+  }), [matches, query, country, category, isShortlisted])
+
+  const change = <K extends keyof Form>(key: K, value: Form[K]) => { edited.current = true; setForm((prev) => ({ ...prev, [key]: value })); setError('') }
+  const moveTo = (next: number) => { setStep(next); setError(''); heading.current?.focus({ preventScroll: true }) }
+  const submit = () => {
+    const message = validate(form, true)
+    if (message) { setError(message); return }
+    setError(''); setCount(PAGE_SIZE); setQuery(''); setCountry(''); setCategory('all'); scroll.current = 0; restoreScroll.current = 0
+    setParams({ view: 'results' }); window.scrollTo({ top: 0 })
   }
-
-  const continueStep = () => {
-    const error = step === 2 ? scoreError() : ''
-    if (error) { setInputError(error); return }
-    setInputError('')
-    setStep((current) => current + 1)
-  }
-
-  const computeAndShow = () => {
-    const error = scoreError() || (gpa && (!Number.isFinite(Number(gpa)) || Number(gpa) < 0 || Number(gpa) > 4)
-      ? 'GPA must be between 0 and 4.'
-      : '') || (budget && (!Number.isFinite(Number(budget)) || Number(budget) < 0)
-      ? 'Yearly budget must be zero or greater.'
-      : '')
-    if (error) { setInputError(error); return }
-    setInputError('')
-    setResults(matchUniversities(input))
-    setVisibleResultCount(RESULTS_PAGE_SIZE)
-    setStep(4)
-  }
-
-  const setAsTarget = async (slug: string) => {
-    setSavingSlug(slug)
+  const adjust = () => { scroll.current = 0; restoreScroll.current = 0; setParams({}); moveTo(1); window.scrollTo({ top: 0 }) }
+  const saveTarget = async (slug: string) => {
+    setSaving(slug)
     try {
-      await updateAccount({ targetUniversitySlug: slug, showUniversity: true })
-      setSavedSlug(slug)
+      await updateAccount({ targetUniversitySlug: slug, showUniversity: true }); setTarget(slug)
       pushToast({ type: 'success', title: 'Target saved', message: 'This university is now your target and shows on your profile.' })
-    } catch (e) {
-      pushToast({ type: 'error', title: 'Could not save', message: e instanceof Error ? e.message : 'Try again.' })
-    } finally {
-      setSavingSlug(null)
-    }
+    } catch (e) { pushToast({ type: 'error', title: 'Could not save', message: e instanceof Error ? e.message : 'Try again.' }) }
+    finally { setSaving(null) }
   }
+  const summary = [DEGREES.find((d) => d.value === form.degree)!.label, form.major || 'Any subject', form.country || 'Any country']
+  const scores = [['SAT', form.sat || '—'], ['IELTS', form.ielts || '—'], ['GPA', form.gpa || '—']]
 
-  if (!open) return null
-
-  return createPortal(
-    <div className="um-overlay" onClick={onClose}>
-      <motion.div
-        ref={dialogRef}
-        tabIndex={-1}
-        initial={{ opacity: 0, scale: 0.96, y: 16 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="university-matcher-title"
-        className="um-dialog"
-      >
-        <header className="um-header">
-          <div className="um-heading-group"><span className="um-heading-icon"><Target size={24} /></span><div><span className="um-eyebrow">UNIVERSITY MATCHER</span><h2 id="university-matcher-title">Find your place to thrive.</h2><p>{step < 4 ? 'A guided way to explore universities that fit your plans.' : `${results.length} universities to explore`}</p></div></div>
-          <button type="button" onClick={onClose} className="um-close" aria-label="Close university matcher"><X size={21} /></button>
-        </header>
-        <nav className="um-progress" aria-label="Matcher progress">
-          {STEPS.map((item, index) => <div key={item.label} className={`um-progress-step ${step > index + 1 ? 'is-complete' : ''} ${step === index + 1 ? 'is-current' : ''}`} aria-current={step === index + 1 ? 'step' : undefined}><span className="um-progress-number">{step > index + 1 ? <Check size={15} /> : `0${index + 1}`}</span><span><strong>{item.label}</strong><small>{item.hint}</small></span></div>)}
-        </nav>
-
-        <div ref={resultScrollRef} className="um-content">
-          <AnimatePresence mode="wait">
-            {step === 1 ? (
-              <motion.div key="s1" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} className="um-step-panel">
-                <div className="um-step-intro"><span>01 / STUDY DIRECTION</span><h3>What does your next chapter look like?</h3><p>Choose your degree and the subject you want to explore. You can refine the details later.</p></div>
-                <div className="um-field-group"><p className="um-field-heading">Degree level</p><div className="um-degree-grid">
-                  {([
-                    { value: 'bachelor', label: 'Bachelor', description: 'Undergraduate', icon: GraduationCap },
-                    { value: 'master', label: 'Master', description: 'Graduate study', icon: BookOpen },
-                    { value: 'phd', label: 'PhD', description: 'Research degree', icon: Sparkles },
-                  ] as const).map((degree) => <button key={degree.value} type="button" aria-pressed={degreeLevel === degree.value} onClick={() => setDegreeLevel(degree.value as DegreeLevel)} className={`um-degree-card ${degreeLevel === degree.value ? 'is-selected' : ''}`}><span className="um-degree-icon"><degree.icon size={22} /></span><strong>{degree.label}</strong><small>{degree.description}</small><span className="um-degree-check"><Check size={13} /></span></button>)}
-                </div></div>
-                <div className="um-field-grid">
-                  <label className="um-field"><span className="um-field-heading">Field of study / major</span><span className="um-select-wrap"><select value={fieldOfStudy} onChange={(e) => setFieldOfStudy(e.target.value)}><option value="">Choose a major</option>{fieldOfStudy && !MAJORS.includes(fieldOfStudy) ? <option value={fieldOfStudy}>{fieldOfStudy}</option> : null}{MAJORS.map((major) => <option key={major} value={major}>{major}</option>)}</select><ChevronDown size={17} /></span></label>
-                  <label className="um-field"><span className="um-field-heading">Preferred country <small>Optional</small></span><span className="um-select-wrap"><select value={preferredCountry} onChange={(e) => setPreferredCountry(e.target.value)}><option value="">Any country</option>{COUNTRIES.map((country) => <option key={country} value={country}>{country}</option>)}</select><ChevronDown size={17} /></span></label>
-                </div>
-              </motion.div>
-            ) : null}
-
-            {step === 2 ? (
-              <motion.div key="s2" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} className="um-step-panel">
-                <div className="um-step-intro"><span>02 / YOUR RESULTS</span><h3>Add the scores you've earned.</h3><p>Your results help shape the list. Leave a test blank if you haven't taken it yet.</p></div>
-                <div className="um-score-grid">
-                  <label className="um-score-card"><span className="um-score-icon"><Sparkles size={22} /></span><strong>SAT total</strong><span className="um-score-caption">Score from 400 to 1600</span><input type="number" min={400} max={1600} step={10} value={sat} onChange={(e) => setSat(e.target.value)} placeholder="e.g. 1450" /></label>
-                  <label className="um-score-card"><span className="um-score-icon"><BookOpen size={22} /></span><strong>IELTS overall</strong><span className="um-score-caption">Band from 0 to 9</span><input type="number" min={0} max={9} step={0.5} value={ielts} onChange={(e) => setIelts(e.target.value)} placeholder="e.g. 7.0" /></label>
-                </div>
-                <p className="um-note"><ShieldCheck size={18} /> <span>SAT and IELTS alone do not determine admission. Grades, course rigor, essays, recommendations and activities also matter.</span></p>
-              </motion.div>
-            ) : null}
-
-            {step === 3 ? (
-              <motion.div key="s3" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} className="um-step-panel">
-                <div className="um-step-intro"><span>03 / YOUR PRIORITIES</span><h3>Make the list yours.</h3><p>Add your academic standing and a comfortable yearly living budget to narrow the search.</p></div>
-                <div className="um-score-grid">
-                  <label className="um-score-card"><span className="um-score-icon"><GraduationCap size={22} /></span><strong>GPA</strong><span className="um-score-caption">On a 0 to 4 scale</span><input type="number" min={0} max={4} step={0.1} value={gpa} onChange={(e) => setGpa(e.target.value)} placeholder="e.g. 3.5" /></label>
-                  <label className="um-score-card"><span className="um-score-icon"><CircleDollarSign size={22} /></span><strong>Yearly living budget <small>Optional</small></strong><span className="um-score-caption">Amount in USD</span><input type="number" min={0} step={500} value={budget} onChange={(e) => setBudget(e.target.value)} placeholder="e.g. 20000" /></label>
-                </div>
-                <p className="um-note"><ShieldCheck size={18} /> <span>These details guide your planning list. You can update them and explore again at any time.</span></p>
-              </motion.div>
-            ) : null}
-
-            {step === 4 ? (
-              <motion.div key="s4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} onAnimationComplete={() => {
-                if (resumeScrollTop) resultScrollRef.current?.scrollTo({ top: resumeScrollTop })
-              }} className="um-results">
-                <div className="um-results-hero"><div><span className="um-results-kicker">YOUR SHORTLIST STARTS HERE</span><h3>Universities worth exploring.</h3><p>Built around your goals, scores and priorities.</p></div><span className="um-results-count">{results.length}<small>results</small></span></div>
-                <p className="um-note um-results-note"><ShieldCheck size={18} /> <span>Planning fit is not an admission probability. Confirm your major and full entry requirements on each university’s official site.</span></p>
-                {results.slice(0, visibleResultCount).map((m) => {
-                  const cs = CLASS_STYLE[m.classification]
-                  const isSaved = savedSlug === m.university.slug
-                  return (
-                    <article key={m.university.id} className="um-result-card">
-                      <div className="um-result-top">
-                        <UniversityLogo id={m.university.id} name={m.university.name} brand={m.university.brand} website={m.university.website} size={40} rounded="0.6rem" />
-                        <div className="um-result-title">
-                          <h4>{m.university.name}</h4>
-                          <p><MapPin size={13} /> {m.university.city}, {m.university.country}{typeof m.university.rank === 'number' ? ` · QS ${formatUniversityRank(m.university, '#')}` : ''}</p>
-                        </div>
-                        <div className="um-result-fit" title="Planning fit, not admission probability">
-                          <strong>{m.fitPercent}%</strong><span>planning fit</span>
-                        </div>
-                      </div>
-                      <div className="um-fit-track" aria-hidden="true"><span style={{ width: `${m.fitPercent}%` }} /></div>
-                      <div className="um-result-classification"><span className={`um-match-chip ${cs.chip}`}>{cs.label}</span><span>Why it fits your plan</span></div>
-                      <ul className="um-result-reasons">
-                        {m.reasons.slice(0, 3).map((r, i) => (
-                          <li key={i}><Check size={14} /> <span>{r}</span></li>
-                        ))}
-                      </ul>
-                      <div className="um-result-actions">
-                        <button
-                          type="button"
-                          onClick={() => void setAsTarget(m.university.slug)}
-                          disabled={Boolean(savingSlug) || isSaved}
-                          className="um-result-target"
-                        >
-                          {isSaved ? <Check className="h-3.5 w-3.5" /> : savingSlug === m.university.slug ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Target className="h-3.5 w-3.5" />}
-                          {isSaved ? 'Saved as target' : 'Set as target'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => navigate(`/admission/universities/${m.university.slug}`, { state: {
-                            admissionReturnTo: '/admission', matcherInput: input,
-                            matcherVisibleCount: visibleResultCount, matcherScrollTop: resultScrollRef.current?.scrollTop ?? 0,
-                          } })}
-                          className="um-result-profile"
-                        >
-                          View profile <ArrowRight className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </article>
-                  )
-                })}
-                {visibleResultCount < results.length ? (
-                  <button
-                    type="button"
-                    onClick={() => setVisibleResultCount((count) => Math.min(count + RESULTS_PAGE_SIZE, results.length))}
-                    className="um-show-more"
-                  >
-                    Show more matches ({Math.min(results.length - visibleResultCount, RESULTS_PAGE_SIZE)} more)
-                  </button>
-                ) : null}
-              </motion.div>
-            ) : null}
-          </AnimatePresence>
-          {inputError ? <p role="alert" className="um-error">{inputError}</p> : null}
-        </div>
-
-        <footer className="um-footer">
-          {step > 1 && step < 4 ? (
-            <button type="button" onClick={() => setStep((s) => s - 1)} className="um-button um-button-secondary">
-              <ArrowLeft size={18} /> Back
-            </button>
-          ) : (
-            <span className="um-footer-hint">{step === 4 ? 'Your list is ready to explore' : 'Takes about a minute'}</span>
-          )}
-
-          {step < 3 ? (
-            <button type="button" onClick={continueStep} className="um-button um-button-primary">
-              Continue <ArrowRight size={18} />
-            </button>
-          ) : step === 3 ? (
-            <button type="button" onClick={computeAndShow} className="um-button um-button-primary">
-              <Sparkles size={18} /> See my matches
-            </button>
-          ) : (
-            <button type="button" onClick={() => setStep(1)} className="um-button um-button-secondary">
-              <GraduationCap size={18} /> Adjust answers
-            </button>
-          )}
-        </footer>
-      </motion.div>
-    </div>,
-    document.body,
-  )
+  return <main className="workspace-page um-page">
+    <div className="um-workspace">
+      <nav className="um-topbar" aria-label={c('University navigation')}>
+        <Link to="/admission" className="um-back"><ArrowLeft size={16} /><UiText text="University Applications" /></Link>
+        <Link to="/admission/shortlist" className="um-shortlist-link"><Heart size={16} /><UiText text="Shortlist" /><span>{shortlistCount}</span></Link>
+      </nav>
+      <header className="um-page-heading">
+        <span className="um-heading-icon"><Target size={25} /></span>
+        <div><h1>{showingResults ? <UiText text="Your university matches" /> : <UiText text="Find your university." />}</h1>
+          <p><UiText text={showingResults ? 'A starting point for your next chapter. Explore, compare and save your favourites.' : 'Your goals, your scores, your next chapter. Let’s find a place for you.'} /></p></div>
+        {showingResults && <button type="button" className="um-button um-button-secondary" onClick={adjust}><SlidersHorizontal size={16} /><UiText text="Adjust answers" /></button>}
+      </header>
+      {!showingResults ? <div className="um-builder">
+        <aside className="um-guide um-glass">
+          <div className="um-guide-title"><GraduationCap size={22} /><h2><UiText text="A plan that fits you" /></h2></div>
+          <p><UiText text="Three simple steps. A world of possibilities." /></p>
+          <nav className="um-progress" aria-label={c('Matcher progress')}>
+            {STEPS.map((item, index) => <button key={item.label} type="button" disabled={index + 1 > step} onClick={() => moveTo(index + 1)} className={`um-progress-step ${step === index + 1 ? 'is-current' : ''} ${step > index + 1 ? 'is-complete' : ''}`} aria-current={step === index + 1 ? 'step' : undefined}>
+              <span className="um-progress-number">{step > index + 1 ? <Check size={17} /> : index + 1}</span><span><strong><UiText text={item.label} /></strong><small><UiText text={item.hint} /></small></span>
+            </button>)}
+          </nav>
+          <div className="um-guide-bottom"><ShieldCheck size={20} /><p><UiText text="Explore at your pace. You can leave any score blank and update it later." /></p></div>
+        </aside>
+        <form className="um-form um-glass" noValidate onSubmit={(event) => {
+          event.preventDefault()
+          if (step === 3) { submit(); return }
+          const message = step === 2 ? validate(form) : ''
+          if (message) { setError(message); return }
+          moveTo(step + 1)
+        }}>
+          <div className="um-form-body">
+            <div className="um-step-caption"><span><UiText text="Step {{value1}} of {{value2}}" values={{ value1: String(step), value2: '3' }} /></span><span><UiText text="Takes about a minute" /></span></div>
+            <h2 ref={heading} tabIndex={-1}>{step === 1 ? <UiText text="Where do you want to go?" /> : step === 2 ? <UiText text="Add the scores you've earned." /> : <UiText text="Make the list yours." />}</h2>
+            <p className="um-intro"><UiText text={step === 1 ? 'Choose your degree and the subject you want to explore. You can refine the details later.' : step === 2 ? "Your results help shape the list. Leave a test blank if you haven't taken it yet." : 'Add your academic standing and a comfortable yearly living budget to narrow the search.'} /></p>
+            {step === 1 ? <>
+              <fieldset className="um-field-group"><legend><UiText text="Degree level" /></legend><div className="um-degree-grid">
+                {DEGREES.map((d) => <button key={d.value} type="button" aria-pressed={form.degree === d.value} onClick={() => change('degree', d.value)} className={`um-degree-card ${form.degree === d.value ? 'is-selected' : ''}`}><d.icon size={25} /><strong><UiText text={d.label} /></strong><small><UiText text={d.description} /></small><span className="um-degree-check">{form.degree === d.value && <Check size={12} />}</span></button>)}
+              </div></fieldset>
+              <div className="um-field-grid">
+                <label className="um-field"><span><UiText text="Field of study / major" /></span><span className="um-select-wrap"><select value={form.major} onChange={(e) => change('major', e.target.value)}><option value="">{c('Any subject')}</option>{form.major && !MAJORS.includes(form.major) && <option>{form.major}</option>}{MAJORS.map((m) => <option key={m} value={m}>{c(m)}</option>)}</select><ChevronDown size={16} /></span></label>
+                <label className="um-field"><span><UiText text="Preferred country" /></span><span className="um-select-wrap"><select value={form.country} onChange={(e) => change('country', e.target.value)}><option value="">{c('Any country')}</option>{COUNTRIES.map((v) => <option key={v}>{v}</option>)}</select><ChevronDown size={16} /></span></label>
+              </div>
+            </> : <div className="um-score-grid">
+              {(step === 2 ? [
+                { key: 'sat', label: 'SAT total', hint: 'Score from 400 to 1600', placeholder: '1450', min: 400, max: 1600, step: 1, icon: Sparkles },
+                { key: 'ielts', label: 'IELTS overall', hint: 'Band from 0 to 9', placeholder: '7.0', min: 0, max: 9, step: 0.5, icon: BookOpen },
+              ] : [
+                { key: 'gpa', label: 'GPA', hint: 'On a 0 to 4 scale', placeholder: '3.5', min: 0, max: 4, step: 0.01, icon: GraduationCap },
+                { key: 'budget', label: 'Yearly living budget', hint: 'Amount in USD', placeholder: '20000', min: 0, max: undefined, step: 1, icon: CircleDollarSign },
+              ]).map((field) => <label className="um-score-card" key={field.key}><span className="um-score-icon"><field.icon size={23} /></span><strong><UiText text={field.label} /></strong><span className="um-score-caption"><UiText text={field.hint} /></span><input type="number" inputMode="decimal" min={field.min} max={field.max} step={field.step} value={form[field.key as keyof Form]} placeholder={field.placeholder} onChange={(e) => change(field.key as keyof Form, e.target.value)} aria-invalid={Boolean(error)} aria-describedby={error ? 'um-input-error' : undefined} /></label>)}
+            </div>}
+            {error && <p id="um-input-error" role="alert" className="um-error">{c(error)}</p>}
+            <p className="um-note"><ShieldCheck size={17} /><span><UiText text={step === 2 ? 'SAT and IELTS alone do not determine admission. Grades, course rigor, essays, recommendations and activities also matter.' : step === 3 ? 'Living budget excludes tuition. Costs are compared only where a yearly USD figure is available.' : 'Your preferences help order the catalog. Check each university’s exact programme before applying.'} /></span></p>
+          </div>
+          <footer className="um-footer">{step > 1 ? <button type="button" onClick={() => moveTo(step - 1)} className="um-button um-button-secondary"><ArrowLeft size={16} /><UiText text="Back" /></button> : <Link to="/admission/universities" className="um-text-link"><UiText text="Browse universities" /></Link>}
+            <button type="submit" className="um-button um-button-primary"><UiText text={step === 3 ? 'See my matches' : 'Continue'} /><ArrowRight size={17} /></button></footer>
+        </form>
+      </div> : <>
+        <section className="um-profile-summary um-glass" aria-label={c('Your preferences')}>
+          <div className="um-summary-goals"><span className="um-summary-icon"><GraduationCap size={24} /></span><div><strong>{summary.map((s) => c(s)).join(' / ')}</strong><p><UiText text="Your preferences" />{form.budget && <> / ${Number(form.budget).toLocaleString()} <UiText text="living budget per year" /></>}</p></div></div>
+          <dl className="um-summary-scores">{scores.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
+        </section>
+        <section className="um-results-section" aria-labelledby="um-results-title">
+          <div className="um-results-heading"><div><h2 id="um-results-title"><UiText text="Universities worth exploring." /></h2><p role="status"><strong>{filtered.length.toLocaleString()}</strong> <UiText text="universities found" /> <span>/ {QS_EDITION}</span></p></div>
+            <div className="um-results-legend"><span className="um-legend-dot" /><UiText text="Planning fit, not admission probability" /></div></div>
+          <div className="um-filters um-glass">
+            <label className="um-search"><Search size={18} /><input type="search" aria-label={c('Search universities')} placeholder={c('Search universities')} value={query} onChange={(e) => { setQuery(e.target.value); setCount(PAGE_SIZE) }} /></label>
+            <label className="um-filter-country"><MapPin size={17} /><select aria-label={c('Country')} value={country} onChange={(e) => { setCountry(e.target.value); setCount(PAGE_SIZE) }}><option value="">{c('All countries')}</option>{COUNTRIES.map((v) => <option key={v}>{v}</option>)}</select><ChevronDown size={15} /></label>
+            <div className="um-filter-tabs" role="group" aria-label={c('Filter matches')}>{[['all', 'All matches'], ['match', 'Explore'], ['reach', 'Dream'], ['saved', 'Shortlisted']].map(([value, label]) => <button key={value} type="button" aria-pressed={category === value} className={category === value ? 'is-active' : ''} onClick={() => { setCategory(value); setCount(PAGE_SIZE) }}><UiText text={label} /></button>)}</div>
+          </div>
+          {validate(form, true) && <p role="alert" className="um-error">{c(validate(form, true))} <button type="button" className="um-text-link" onClick={adjust}><UiText text="Adjust answers" /></button></p>}
+          <div className="um-results-grid">
+            {filtered.slice(0, count).map((m) => {
+              const u = m.university
+              const saved = isShortlisted(u.slug)
+              return <article key={u.id} className="um-result-card um-glass">
+                <div className="um-result-top"><UniversityLogo id={u.id} name={u.name} brand={u.brand} website={u.website} size={52} rounded="14px" /><span className={`um-match-chip ${m.classification === 'reach' ? 'is-dream' : ''}`}><UiText text={m.classification === 'reach' ? 'Dream' : 'Explore'} /></span><button type="button" className={`um-save ${saved ? 'is-saved' : ''}`} aria-pressed={saved} aria-label={c(saved ? 'Remove from shortlist' : 'Save university') + ': ' + u.name} onClick={() => toggleShortlist(u.slug)}><Heart size={18} fill={saved ? 'currentColor' : 'none'} /></button></div>
+                <h3><Link to={`/admission/universities/${u.slug}`} state={{ admissionReturnTo: '/admission/matches' }}>{u.name}</Link></h3>
+                <p className="um-location"><MapPin size={14} />{u.city}, {u.country}</p>
+                <div className="um-card-metrics"><span><Trophy size={14} />{typeof u.rank === 'number' ? `QS ${formatUniversityRank(u, '#')}` : c('Ranking not listed')}</span><span title={c('Planning fit, not admission probability')}><strong>{m.fitPercent}%</strong> <UiText text="planning fit" /></span></div>
+                <div className="um-fit-track" aria-hidden="true"><span style={{ width: `${m.fitPercent}%` }} /></div>
+                <ul className="um-result-reasons">{m.reasons.filter((reason) => !reason.startsWith('No numeric ') || !m.reasons.includes('This university publishes no comparable numeric cutoff for the scores you entered')).slice(0, 3).map((reason) => <li key={reason}><Check size={14} /><span>{reasonCopy(reason)}</span></li>)}</ul>
+                <div className="um-result-actions"><button type="button" onClick={() => void saveTarget(u.slug)} disabled={Boolean(saving) || target === u.slug} className="um-target"><Target size={15} /><UiText text={target === u.slug ? 'Saved as target' : saving === u.slug ? 'Saving…' : 'Set as target'} /></button><Link to={`/admission/universities/${u.slug}`} state={{ admissionReturnTo: '/admission/matches' }} className="um-view-profile"><UiText text="View profile" /><ArrowRight size={15} /></Link></div>
+              </article>
+            })}
+          </div>
+          {!filtered.length && <div className="um-empty um-glass"><Search size={30} /><h3><UiText text={category === 'saved' ? 'Your shortlist is empty' : 'No universities found'} /></h3><p><UiText text={category === 'saved' ? 'Save universities you want to compare and revisit.' : 'Try a different search or reset your filters.'} /></p><button type="button" className="um-button um-button-secondary" onClick={() => { setQuery(''); setCountry(''); setCategory('all'); setCount(PAGE_SIZE) }}><UiText text="Reset filters" /></button></div>}
+          {count < filtered.length && <div className="um-more"><p>{Math.min(count, filtered.length)} / {filtered.length.toLocaleString()}</p><button type="button" className="um-button um-button-secondary" onClick={() => setCount((n) => n + PAGE_SIZE)}><UiText text="Show more universities" /><ChevronDown size={17} /></button></div>}
+          <p className="um-note um-bottom-note"><ShieldCheck size={18} /><span><UiText text="Planning fit is not an admission probability. Confirm your major and full entry requirements on each university’s official site." /></span></p>
+        </section>
+      </>}
+      <div className="um-endnote"><GraduationCap size={17} aria-hidden="true" /><span><UiText text="Your next chapter starts with a little exploration." /></span><Link to="/admission/universities"><UiText text="Browse universities" /><ArrowRight size={14} /></Link></div>
+    </div>
+  </main>
 }

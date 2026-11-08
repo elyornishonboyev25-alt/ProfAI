@@ -78,7 +78,7 @@ export function writingCatalogResult(history: WritingAnalysisEntry[], test: { id
 }
 
 export function speakingCatalogResult(sessions: SpeakingSessionRecord[], owner: string | undefined, test: { id: string; title: string }, mocks: FullMockSectionResult[] = []): IeltsCatalogResult {
-  const session = newest(sessions.filter(entry => entry.userId === (owner ?? null) && entry.modeLabel === test.title), entry => entry.date)[0]
+  const session = newest(sessions.filter(entry => entry.userId === (owner ?? null) && (entry.testId === test.id || entry.modeLabel === test.title)), entry => entry.date)[0]
   const mock = newest(mocks.filter(entry => entry.testId === test.id), entry => entry.completedAt)[0]
   if (mock && (!session || Date.parse(mock.completedAt) > Date.parse(session.date))) return { completed: true, band: mock.assessmentStatus !== 'pending' && validBand(mock.band) ? mock.band : undefined }
   if (session) return { completed: true, band: (!session.evaluation || session.evaluation.source === 'ai') && validBand(session.overallBand) ? session.overallBand : undefined }

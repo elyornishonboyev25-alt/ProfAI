@@ -1,6 +1,6 @@
 import { BILLING_PRODUCTS } from './catalog'
 type Text = (en: string, uz: string, ru: string) => string
-const AUDIENCE_NAME: Record<string, string> = { PRO: 'Pro', MAX: 'Max', STUDENT: 'Student', TEACHER: 'Teacher' }
+const AUDIENCE_NAME: Record<string, string> = { PRO: 'IvyGoo Pro', MAX: 'IvyGoo Elite', STUDENT: 'Student', TEACHER: 'Teacher' }
 export function productLabel(code: string, text: Text) {
   const product = BILLING_PRODUCTS.find(p => p.code === code)
   const [audience, months] = product ? [product.audience, product.months] : [code.split('_')[0], Number(code.split('_')[1])]

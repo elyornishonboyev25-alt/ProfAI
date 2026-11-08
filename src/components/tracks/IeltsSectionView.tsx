@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import {
   ArrowLeft,
   AudioLines,
@@ -199,41 +200,41 @@ export function IeltsSectionView({
                     className="premium-back-btn"
                   >
                     <ArrowLeft className="h-3.5 w-3.5" />
-                    {backLabel}
+                    <UiText text={backLabel} />
                   </button>
                 ) : null}
-                <span className="premium-top-chip">{content.chip}</span>
+                <span className="premium-top-chip"><UiText text={content.chip} /></span>
               </div>
               <h1 className="premium-section-title mt-4">
-                IELTS <span className="arena-title-accent-red">{ieltsTitleSuffix}</span>
+                IELTS <span className="arena-title-accent-red"><UiText text={ieltsTitleSuffix} /></span>
               </h1>
-              <p className="premium-section-subtitle">{content.subtitle}</p>
+              <p className="premium-section-subtitle"><UiText text={content.subtitle} /></p>
             </div>
 
             <div className="grid gap-2 sm:grid-cols-3 xl:w-[28rem]">
               <div className="premium-stat">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-600">{content.heroMetricLabel}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-600"><UiText text={content.heroMetricLabel} /></p>
                 <p className="mt-1 text-2xl font-black text-slate-900">{renderHeroMetric(content.heroMetricValue)}</p>
               </div>
               <div className="premium-stat">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-600">{content.modeLabel}</p>
-                <p className="mt-1 text-2xl font-black text-slate-900">{content.modeValue}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-600"><UiText text={content.modeLabel} /></p>
+                <p className="mt-1 text-2xl font-black text-slate-900"><UiText text={content.modeValue} /></p>
               </div>
               <div className="premium-stat">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-600">{content.feedbackLabel}</p>
-                <p className="mt-1 text-2xl font-black text-slate-900">{content.feedbackValue}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-600"><UiText text={content.feedbackLabel} /></p>
+                <p className="mt-1 text-2xl font-black text-slate-900"><UiText text={content.feedbackValue} /></p>
               </div>
             </div>
           </div>
 
           <div className="relative mt-6 flex flex-wrap gap-2">
             <button className="arena-primary-btn cta-sheen" onClick={handlePrimaryAction}>
-              {content.primaryAction}
+              <UiText text={content.primaryAction} />
               <Sparkles className="ml-2 h-4 w-4" />
             </button>
             <button className="arena-secondary-btn" onClick={handleSecondaryAction}>
               <TimerReset className="mr-2 h-4 w-4 text-blue-600" />
-              {content.secondaryAction}
+              <UiText text={content.secondaryAction} />
             </button>
           </div>
         </section>
@@ -249,8 +250,8 @@ export function IeltsSectionView({
                   <div className="mb-3 inline-flex rounded-xl bg-blue-100 p-2 text-blue-700">
                     <Icon className="h-4 w-4" />
                   </div>
-                  <h2 className="text-lg font-semibold text-slate-900">{item.title}</h2>
-                  <p className="mt-2 text-sm text-slate-700">{item.detail}</p>
+                  <h2 className="text-lg font-semibold text-slate-900"><UiText text={item.title} /></h2>
+                  <p className="mt-2 text-sm text-slate-700"><UiText text={item.detail} /></p>
                 </article>
               </Tilt3D>
             </StaggerItem>
@@ -263,14 +264,14 @@ export function IeltsSectionView({
           <div className="surface-card p-5">
             <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900">
               <CheckCircle2 className="h-4 w-4 text-blue-600" />
-              Practice Workflow
+              <UiText text={"Practice Workflow"} />
             </h3>
             <p className="mt-2 text-sm text-slate-700">
-              Timed mode, error-log sync, and coaching cues are active for this section.
+              <UiText text={"Timed mode, error-log sync, and coaching cues are active for this section."} />
             </p>
             <div className="mt-3 inline-flex items-center text-xs font-semibold text-blue-600">
               <CheckCircle2 className="mr-1 h-4 w-4" />
-              Practice pipeline ready
+              <UiText text={"Practice pipeline ready"} />
             </div>
           </div>
         </StaggerItem>
@@ -278,12 +279,12 @@ export function IeltsSectionView({
           <div className="surface-card p-5">
             <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900">
               {section === 'listening' ? <Headphones className="h-4 w-4 text-blue-700" /> : <Sparkles className="h-4 w-4 text-blue-700" />}
-              {content.insightTitle}
+              <UiText text={content.insightTitle} />
             </h3>
-            <p className="mt-2 text-sm text-slate-700">{content.insightDescription}</p>
+            <p className="mt-2 text-sm text-slate-700"><UiText text={content.insightDescription} /></p>
             <div className="mt-3 inline-flex items-center text-xs font-semibold text-blue-700">
               <Sparkles className="mr-1 h-4 w-4" />
-              Insight channel active
+              <UiText text={"Insight channel active"} />
             </div>
           </div>
         </StaggerItem>

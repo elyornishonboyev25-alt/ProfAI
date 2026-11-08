@@ -80,42 +80,65 @@ test('every account starts on the permanent Free plan; retired trials no longer 
   const overview = await accountOverview('u')
   assert.equal(overview.access.tier, 'FREE')
   assert.equal(overview.access.active, false)
-  assert.equal((await accessStatus('u', 'test', 'test:reading:first')).limit, PLAN_QUOTAS.FREE.test)
+  assert.equal((await accessStatus('u', 'test', 'test:reading:reading-roadmap-full-1')).unlocked, true)
   const trial = { plan: 'TRIAL_7', source: 'WELCOME', startsAt: new Date(Date.now() - 1000), expiresAt: new Date(Date.now() + 86400000) }
   assert.equal(describeAccess(trial).tier, 'FREE')
   assert.equal(describeAccess(trial).active, false)
 })
-test('Free plan meters tests per month; reopening the same test is free', async () => {
+test('Free access follows the first five catalog entries, regardless of previous unlocks', async () => {
   reset()
-  for (let i = 0; i < PLAN_QUOTAS.FREE.test; i++) {
-    assert.equal((await accessStatus('u', 'test', `test:reading:t${i}`)).unlocked, false)
-    await unlockResource('u', 'test', `test:reading:t${i}`)
-    assert.equal((await accessStatus('u', 'test', `test:reading:t${i}`)).unlocked, true)
+  for (let i = 1; i <= 5; i++) {
+    for (const [skill, id] of [['reading', `reading-roadmap-full-${i}`], ['listening', `ielts-listening-${i}`], ['writing', `writing-full-${i}`], ['speaking', `speaking-full-${i}`], ['sat', String(i)]]) {
+      const resource = `test:${skill}:${id}`
+      assert.equal((await accessStatus('u', 'test', resource)).unlocked, true)
+      await unlockResource('u', 'test', resource)
+      await unlockResource('u', 'test', resource)
+    }
+    await unlockResource('u', 'mock', `mock:ielts:full-mock-${i}`)
+    await unlockResource('u', 'mock', `mock:sat:${i}`)
   }
-  await unlockResource('u', 'test', 'test:reading:t0')
-  await assert.rejects(unlockResource('u', 'test', 'test:listening:next'), e => e.code === 'PREMIUM_REQUIRED')
-  assert.equal((await accessStatus('u', 'test', 'test:listening:next')).remaining, 0)
-  await unlockResource('u', 'mock', 'mock:ielts:1')
-  await assert.rejects(unlockResource('u', 'mock', 'mock:ielts:2'), e => e.code === 'PREMIUM_REQUIRED')
+  state.unlocks.push('test:listening:ielts-listening-6')
+  for (const resource of ['test:reading:reading-roadmap-full-6', 'test:listening:ielts-listening-6', 'test:writing:writing-full-6', 'test:speaking:speaking-full-6', 'test:sat:6:math']) await assert.rejects(unlockResource('u', 'test', resource), e => e.code === 'PREMIUM_REQUIRED')
+  for (const resource of ['mock:ielts:full-mock-6', 'mock:sat:6']) await assert.rejects(unlockResource('u', 'mock', resource), e => e.code === 'PREMIUM_REQUIRED')
+  assert.deepEqual(state.usage, {}, 'catalog practice does not spend a monthly attempt quota')
+  await unlockResource('u', 'podcast', 'podcast:abcdefghijk')
+  await unlockResource('u', 'shadowing', 'shadowing:abcdefghijk')
+  assert.deepEqual(state.usage, {}, 'academic media remains unlimited on Free')
 })
 test('Free AI allowances run out without calling the provider, and failed calls are refunded', async () => {
   reset()
   let called = false
   await assert.rejects(withStudyAccess('u', 'voice', async () => { called = true }), e => e.code === 'PREMIUM_REQUIRED')
   assert.equal(called, false)
+  for (let i = 0; i < 50; i++) assert.equal(await withStudyAccess('u', 'ai', async () => 'reply'), 'reply')
+  await assert.rejects(withStudyAccess('u', 'ai', async () => { called = true }), e => e.code === 'PREMIUM_REQUIRED')
+  assert.equal(called, false, 'exhaustion blocks the provider before generation')
   await assert.rejects(withStudyAccess('u', 'writing', async () => { throw new Error('provider down') }), /provider down/)
-  for (let i = 0; i < PLAN_QUOTAS.FREE.writing; i++) assert.equal(await withStudyAccess('u', 'writing', async () => 'ok'), 'ok')
-  await assert.rejects(withStudyAccess('u', 'writing', async () => { called = true }), e => e.code === 'PREMIUM_REQUIRED')
-  assert.equal(called, false)
   await assert.rejects(requireClassPlan('u'), e => e.code === 'CLASS_PLAN_REQUIRED')
   await assert.rejects(requireTeacherPlan('u'), e => e.code === 'TEACHER_PLAN_REQUIRED')
+})
+test('Writing and Speaking assessment stays included after old quotas and text AI are exhausted', async () => {
+  for (const tier of ['FREE', 'PRO', 'MAX']) {
+    reset()
+    if (tier !== 'FREE') state.subscriptions = [active(tier)]
+    const period = new Date().toISOString().slice(0, 7)
+    state.usage = { [`ai:${period}`]: PLAN_QUOTAS[tier].ai, [`writing:${period}`]: 500, [`speaking:${period}`]: 500 }
+    const before = structuredClone(state.usage)
+    for (const feature of ['writing', 'speaking']) {
+      assert.equal(PLAN_QUOTAS[tier][feature], null)
+      for (let i = 0; i < 6; i++) assert.equal(await withStudyAccess('u', feature, async () => 'assessed'), 'assessed')
+      await assert.rejects(withStudyAccess('u', feature, async () => { throw new Error('assessment unavailable') }), /assessment unavailable/)
+    }
+    assert.deepEqual(state.usage, before, 'included assessment never spends or refunds text AI or historical assessment counters')
+    assert.equal((await accessStatus('u', 'test', 'test:writing:writing-full-6')).unlocked, tier !== 'FREE', 'paid catalog access still applies')
+  }
 })
 test('Pro opens unlimited tests and classes; Max also creates classes; the best active plan wins', async () => {
   reset(); state.subscriptions = [active('PRO')]
   assert.equal((await accountOverview('u')).access.tier, 'PRO')
   assert.equal((await accessStatus('u', 'test', 'test:sat:1')).unlocked, true)
-  for (let i = 0; i < PLAN_QUOTAS.PRO.mock; i++) await unlockResource('u', 'mock', `mock:sat:${i}`)
-  await assert.rejects(unlockResource('u', 'mock', 'mock:sat:extra'), e => e.code === 'PREMIUM_REQUIRED')
+  await unlockResource('u', 'mock', 'mock:sat:6')
+  await unlockResource('u', 'mock', 'mock:ielts:full-mock-30')
   await requireClassPlan('u')
   await assert.rejects(requireTeacherPlan('u'), e => e.code === 'TEACHER_PLAN_REQUIRED')
   state.subscriptions.push(active('MAX'))

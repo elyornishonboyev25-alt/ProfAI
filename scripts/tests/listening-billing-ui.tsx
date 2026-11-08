@@ -20,6 +20,9 @@ export async function run() {
   useAuthStore.setState({ user: { id: 'listening-trial', email: 'trial@example.com', fullName: 'Trial', role: 'USER', access: { kind: 'TRIAL', active: true, startsAt: new Date().toISOString(), expiresAt: new Date(Date.now() + 604800000).toISOString(), trialDays: 7, daysRemaining: 7 } } as NonNullable<typeof previousUser> })
   await i18n.changeLanguage('uz')
   let posts = 0
+  let upgradePrompts = 0
+  const onUpgrade = () => { upgradePrompts++ }
+  window.addEventListener('profai:premium-required', onUpgrade)
   let accept!: () => void
   let reject!: (error: Error) => void
   apiClient.get = async <T,>(path: string) => {
@@ -76,7 +79,8 @@ export async function run() {
     assert.equal(posts, 3)
     await act(async () => reject(new ApiError('Trial expired', 402, 'PREMIUM_REQUIRED')))
     await settle()
-    assert.equal(element.textContent, 'Premium')
+    assert.equal(upgradePrompts, 1, 'locked starts show the upgrade prompt in place')
+    assert.notEqual(element.textContent, 'Premium', 'the learner stays on the current page')
     assert.equal(element.querySelector('audio'), null, 'expired trial cannot start an exam')
     await act(async () => root.unmount())
     root = createRoot(element)
@@ -87,6 +91,7 @@ export async function run() {
     assert.ok(element.querySelector('audio'), 'preset launch is not stranded by StrictMode')
     console.log('PASS: Listening trial access, no coin prices, authorization on Start, retryable failures, expired trial and StrictMode launch')
   } finally {
+    window.removeEventListener('profai:premium-required', onUpgrade)
     await act(async () => root.unmount())
     apiClient.get = previousGet
     apiClient.post = previousPost

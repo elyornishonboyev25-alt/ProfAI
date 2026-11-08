@@ -110,7 +110,7 @@ export async function awardActivityXp(
       where: { id: params.userId },
       select: { xp: true, level: true },
     })
-    return { duplicate: true, xpEarned: 0, originalXp: existing.amount, totalXp: user?.xp ?? 0, level: user?.level ?? 1 }
+    return { duplicate: true, xpEarned: 0, originalXp: existing.amount, totalXp: user?.xp ?? 0, level: resolveLevelFromXp(user?.xp ?? 0) }
   }
 
   const requestedAmount = calculateActivityXp(params)
@@ -118,7 +118,7 @@ export async function awardActivityXp(
   if (requestedAmount === 0 && params.source.startsWith('VOCAB_')) {
     const user = await client.user.findUnique({ where: { id: params.userId }, select: { xp: true, level: true } })
     if (!user) throw new Error('User not found while awarding XP.')
-    return { duplicate: false, xpEarned: 0, originalXp: 0, totalXp: user.xp, level: user.level }
+    return { duplicate: false, xpEarned: 0, originalXp: 0, totalXp: user.xp, level: resolveLevelFromXp(user.xp) }
   }
   const timeZone = validTimeZone(params.timeZone)
   const localDay = localDateKey(earnedAt, timeZone)
@@ -159,7 +159,8 @@ export async function awardActivityXp(
   })
 
   let totalXp = user.xp
-  let level = user.level
+  const previousLevel = resolveLevelFromXp(user.xp)
+  let level = previousLevel
   if (amount > 0) {
     const updatedUser = await client.user.update({
       where: { id: params.userId },
@@ -171,14 +172,14 @@ export async function awardActivityXp(
     if (level !== user.level) {
       await client.user.update({ where: { id: params.userId }, data: { level } })
     }
-    if (level > user.level) {
+    if (level > previousLevel) {
       await client.notification.create({
         data: {
           userId: params.userId,
           type: 'LEVEL_UP',
           title: 'Level Up!',
           message: `You reached level ${level}. Keep your momentum going.`,
-          metadata: { levelBefore: user.level, levelAfter: level, source: params.source },
+          metadata: { levelBefore: previousLevel, levelAfter: level, source: params.source },
         },
       })
     }

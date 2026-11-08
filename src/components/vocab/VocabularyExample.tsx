@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import type { VocabularyEntry } from '@/data/vocabularyCollections'
 import { normalizeVocabularyAnswer } from '@/utils/vocabularyAnswers'
 
@@ -12,7 +13,7 @@ export default function VocabularyExample({ entry }: { entry: VocabularyEntry })
   const source = isSourceExample(entry)
   return (
     <blockquote className="vocab-content-example" data-source={source}>
-      <p className="vocab-content-label">{source ? 'From the test' : 'Example sentence'}</p>
+      <p className="vocab-content-label">{source ? <UiText text={"From the test"} /> : <UiText text={"Example sentence"} />}</p>
       <p lang="en">{entry.example}</p>
       {entry.exampleUzbek ? <p lang="uz" className="vocab-example-translation">{entry.exampleUzbek}</p> : null}
     </blockquote>

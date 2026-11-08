@@ -8,6 +8,7 @@ import type { SpeechStats } from '@/lib/speakingScoring'
 import { estimateBandsFromStats } from '@/lib/speakingScoring'
 import { apiClient, ApiError } from '@/lib/apiClient'
 import { withAssessmentDeadline } from '@/utils/assessmentDeadline'
+import { prepareSpeakingAssessmentAudio } from '@/lib/speakingAssessmentAudio'
 import { collectSpeakingRewrites, validateSpeakingRewrites } from '../../backend/src/services/speakingRewrites'
 import { FAIR_ASSESSMENT_POLICY, SPEAKING_CALIBRATION } from '../../backend/src/services/ieltsAssessmentPolicy'
 import { useAuthStore } from '@/store/authStore'
@@ -217,9 +218,9 @@ export async function evaluateSpeaking(params: EvaluateParams): Promise<Speaking
     const { response, assessmentMode } = await withAssessmentDeadline(async signal => {
       if (params.audio?.length) {
         // Never discard recordings or replace failed audio assessment with a text score.
-        if (params.audio.reduce((sum, clip) => sum + clip.blob.size, 0) > 8000000) throw new Error('Recordings exceed the assessment upload limit.')
-        const audio = await Promise.all(params.audio.map(async ({ blob, answerIndex }) => ({
-          answerIndex, mimeType: blob.type.split(';')[0].replace('audio/x-m4a', 'audio/mp4').replace('audio/m4a', 'audio/mp4'),
+        const prepared = await prepareSpeakingAssessmentAudio(params.audio, signal)
+        const audio = await Promise.all(prepared.map(async ({ blob, answerIndex }) => ({
+          answerIndex, mimeType: blob.type.split(';')[0].toLowerCase().replace('audio/x-m4a', 'audio/mp4').replace('audio/m4a', 'audio/mp4').replace('audio/x-wav', 'audio/wav'),
           data: await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onerror = () => reject(new Error('Could not read audio.')); reader.onload = () => resolve(String(reader.result).split(',')[1] ?? ''); reader.readAsDataURL(blob) }),
         })))
         if (signal.aborted) throw new Error('Assessment timed out.')
@@ -228,7 +229,7 @@ export async function evaluateSpeaking(params: EvaluateParams): Promise<Speaking
       }
       const response = await requestSpeakingAssessment('/ai/speaking-audio/assess-transcript', { modeLabel: params.modeLabel, history: params.history, durationSec: params.stats.durationSec }, signal)
       return { response, assessmentMode: 'transcript' as const }
-    }, 120_000)
+    }, params.audio?.length ? 120_000 : 90_000)
     if (response.assessmentMode !== assessmentMode || response.source !== 'ai' ||
       ![response.fluencyBand, response.lexicalBand, response.grammarBand, response.pronunciationBand].every(band => typeof band === 'number' && Number.isFinite(band) && band >= 0 && band <= 9) ||
       !response.summary?.trim() || !Array.isArray(response.strengths) || !response.strengths.every(item => typeof item === 'string' && item.trim()) ||

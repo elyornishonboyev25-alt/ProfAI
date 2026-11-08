@@ -1,3 +1,4 @@
+import { useCopy } from '@/i18n/interface'
 import { useAccountDataSync } from '@/hooks/useAccountDataSync'
 import { Suspense, useEffect, useState, type ReactNode } from 'react'
 import { Navigate, Routes, Route, useLocation, useNavigate } from 'react-router-dom'
@@ -19,11 +20,13 @@ import SATBrowserExitGuard from '@/components/sat/SATBrowserExitGuard'
 import BillingBoundary from '@/features/billing/BillingBoundary'
 import BillingNotice from '@/features/billing/BillingNotice'
 import LaunchGift from '@/features/launchGift/LaunchGift'
+import CompanionPrompts from '@/features/companion/CompanionPrompts'
+import { useTelegramApp } from '@/hooks/useTelegramApp'
+import { telegramLaunch } from '@/lib/telegramWebApp'
 import PremiumOnly from '@/components/premium/PremiumOnly'
 import { ToastViewport } from '@/components/common/ToastViewport'
 import { XpNotification } from '@/components/common/XpNotification'
 import { ErrorBoundary } from '@/components/common/ErrorBoundary'
-import FullscreenToggle from '@/components/common/FullscreenToggle'
 import WordLookupLayer from '@/components/vocab/WordLookupLayer'
 import { sendHeartbeat } from '@/lib/speakingApi'
 import { recordXpActivity, type XpActivitySource } from '@/lib/xpApi'
@@ -39,7 +42,6 @@ import ReportIssueModal from '@/components/support/ReportIssueModal'
 import '@/styles/responsive-workspace.css'
 
 const AchievementCelebration = lazy(() => import('@/components/achievements/AchievementCelebration'))
-const FloatingAIAssistant = lazy(() => import('@/components/ai/FloatingAIAssistant'))
 const TalkOverlay = lazy(() => import('@/components/ai/TalkOverlay'))
 const Landing = lazy(() => import('@/pages/Landing'))
 const SpinWheel = lazy(() => import('@/pages/SpinWheel'))
@@ -51,7 +53,8 @@ const SATSection = lazy(() => import('@/pages/SATSection'))
 const SATQuestionBankRun = lazy(() => import('@/pages/SATQuestionBankRun'))
 const SATHardQuestions = lazy(() => import('@/pages/SATHardQuestions'))
 const SATQuestionBank = lazy(() => import('@/pages/SATQuestionBank'))
-const SATMistakes = lazy(() => import('@/pages/SATMistakes'))
+const SATResultReview = lazy(() => import('@/pages/SATResultReview'))
+const InProcessTests = lazy(() => import('@/pages/InProcessTests'))
 const SATCalculator = lazy(() => import('@/pages/SATCalculator'))
 const SATMockRun = lazy(() => import('@/pages/SATMockRun'))
 const IELTS = lazy(() => import('@/pages/IELTS'))
@@ -74,7 +77,6 @@ const Results = lazy(() => import('@/pages/Results'))
 const ResultsReview = lazy(() => import('@/pages/ResultsReview'))
 const SharedResult = lazy(() => import('@/pages/SharedResult'))
 const Profile = lazy(() => import('@/pages/Profile'))
-const AnalyzeMistakes = lazy(() => import('@/pages/AnalyzeMistakes'))
 const AccountProfile = lazy(() => import('@/pages/AccountProfile'))
 const Login = lazy(() => import('@/pages/Login'))
 const Register = lazy(() => import('@/pages/Register'))
@@ -89,6 +91,7 @@ const SharedShadowing = lazy(() => import('@/pages/SharedShadowing'))
 const ShadowingLab = lazy(() => import('@/pages/ShadowingLab'))
 const Podcast = lazy(() => import('@/pages/Podcast'))
 const Admission = lazy(() => import('@/pages/Admission'))
+const AdmissionMatches = lazy(() => import('@/components/admission/UniversityMatcher'))
 const AdmissionLessons = lazy(() => import('@/pages/AdmissionLessons'))
 const AdmissionLesson = lazy(() => import('@/pages/AdmissionLesson'))
 const AdmissionUniversities = lazy(() => import('@/pages/AdmissionUniversities'))
@@ -116,24 +119,8 @@ function xpSourceForActivity(activityKey: ReturnType<typeof routeToActivityKey>)
 }
 
 function RouteLoader() {
-  return <BrandPageLoader compact label="Opening page" />
-}
-
-function DeferredFloatingAIAssistant() {
-  const [ready, setReady] = useState(false)
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => setReady(true), 180)
-    return () => window.clearTimeout(timeoutId)
-  }, [])
-
-  if (!ready) return null
-
-  return (
-    <Suspense fallback={null}>
-      <FloatingAIAssistant />
-    </Suspense>
-  )
+  const { c: uiCopy } = useCopy()
+  return <BrandPageLoader compact label={uiCopy("Opening page")} />
 }
 
 function DeferredTalkOverlay() {
@@ -217,6 +204,7 @@ function LegacySpeakingRedirect() {
 }
 
 function App() {
+  const { c: uiCopy } = useCopy()
   const [reportOpen, setReportOpen] = useState(false)
   useEffect(() => {
     const openReport = () => setReportOpen(true)
@@ -229,6 +217,7 @@ function App() {
   const user = useAuthStore((state: AuthState) => state.user)
   const accountData = useAccountDataSync(user?.id)
   const hydrated = useAuthStore((state: AuthState) => state.hydrated)
+  const telegramBooting = useTelegramApp()
   const accessToken = useAuthStore((state: AuthState) => state.accessToken)
   const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
   const isExamModeActive = useAiAssistantStore((state) => state.isExamModeActive)
@@ -411,7 +400,7 @@ function App() {
   // sidebar and expands the page to full width. Keep one neutral shell visible
   // until the session state is authoritative so that layout can never flash or
   // settle into the wrong mode.
-  if (!hydrated) {
+  if (!hydrated || telegramBooting) {
     return (
       <div className="app-shell relative min-h-screen text-[#1E293B]">
         <AnimatedBackground />
@@ -437,15 +426,14 @@ function App() {
       <ToastViewport />
       <XpNotification deferActivityRewards={isTestMode || isExamModeActive} />
       <BillingNotice />
-      <LaunchGift enabled={!isTestMode && !isExamModeActive && !isAuthPage && !isLearningCenterMode && pathname !== '/onboarding' && pathname !== '/focus'} />
+      <LaunchGift enabled={!telegramLaunch && !isTestMode && !isExamModeActive && !isAuthPage && !isLearningCenterMode && pathname !== '/onboarding' && pathname !== '/focus'} />
+      <CompanionPrompts enabled={!isAuthPage && !isTestMode && !isExamModeActive && !isGuestDiagnostic && !isLearningCenterMode && pathname !== '/onboarding' && pathname !== '/focus' && pathname !== '/spin' && !pathname.startsWith('/shared/')} />
       <ClassAssignmentContext />
       {isAuthPage && <div className="liquid-auth-language glass-control"><LanguageSelector /></div>}
       <DeferredRegisterModal />
       <DeferredAchievementCelebration />
-      <FullscreenToggle />
       {!isTestMode ? (
         <>
-          {pathname === '/academic-skills' ? <DeferredFloatingAIAssistant /> : null}
           {!isExamModeActive && !isAuthPage && !isGuestExperience && !isLearningCenterMode ? <DeferredTalkOverlay /> : null}
           {!isLearningCenterMode ? <WordLookupLayer /> : null}
         </>
@@ -532,7 +520,9 @@ function App() {
                       <Route path="/sat/question-bank/run/:setId" element={<SATQuestionBankRun />} />
                       <Route path="/sat/hard-questions" element={<AnimatedRoute><SATHardQuestions /></AnimatedRoute>} />
                       <Route path="/sat/question-bank" element={<AnimatedRoute><SATQuestionBank /></AnimatedRoute>} />
-                      <Route path="/sat/mistakes" element={<AnimatedRoute><SATMistakes /></AnimatedRoute>} />
+                      <Route path="/sat/results/:attemptId" element={<AnimatedRoute><SATResultReview /></AnimatedRoute>} />
+                      <Route path="/sat/in-process" element={<AnimatedRoute><InProcessTests /></AnimatedRoute>} />
+                      <Route path="/ielts/in-process" element={<Navigate to="/ielts/tests#in-process" replace />} />
                       <Route
                         path="/sat/mock/:mockId/run"
                         element={
@@ -556,8 +546,8 @@ function App() {
                         element={
                           <AnimatedRoute>
                             <PremiumOnly
-                              title="Vocabulary Arena is Premium"
-                              description="Grow your word power with the Articles and My-Words vocabulary tracks on Ivygoo Premium."
+                              title={uiCopy("Vocabulary Arena is Premium")}
+                              description={uiCopy("Grow your word power with the Articles and My-Words vocabulary tracks on Ivygoo Premium.")}
                               perks={['Articles & My-Words tracks', 'Spaced practice activities', 'AI vocabulary help']}
                             >
                               <Vocabulary />
@@ -570,8 +560,8 @@ function App() {
                         element={
                           <AnimatedRoute>
                             <PremiumOnly
-                              title="Vocabulary Arena is Premium"
-                              description="Grow your word power with the Articles and My-Words vocabulary tracks on Ivygoo Premium."
+                              title={uiCopy("Vocabulary Arena is Premium")}
+                              description={uiCopy("Grow your word power with the Articles and My-Words vocabulary tracks on Ivygoo Premium.")}
                               perks={['Articles & My-Words tracks', 'Spaced practice activities', 'AI vocabulary help']}
                             >
                               <Vocabulary />
@@ -748,14 +738,6 @@ function App() {
                       <Route path="/shared/shadowing/:shareId" element={<AnimatedRoute><SharedShadowing /></AnimatedRoute>} />
                       <Route path="/shared/results/:shareId" element={<AnimatedRoute><SharedResult /></AnimatedRoute>} />
                       <Route
-                        path="/analyze-mistakes"
-                        element={
-                          <AnimatedRoute>
-                            <AnalyzeMistakes />
-                          </AnimatedRoute>
-                        }
-                      />
-                      <Route
                         path="/profile"
                         element={
                           <AnimatedRoute>
@@ -816,6 +798,7 @@ function App() {
                       />
                       <Route path="/admission/lessons" element={<AnimatedRoute><AdmissionLessons /></AnimatedRoute>} />
                       <Route path="/admission/lessons/:slug" element={<AnimatedRoute><AdmissionLesson /></AnimatedRoute>} />
+                      <Route path="/admission/matches" element={<AnimatedRoute><AdmissionMatches /></AnimatedRoute>} />
                       <Route path="/admission/universities" element={<AnimatedRoute><AdmissionUniversities /></AnimatedRoute>} />
                       <Route path="/admission/shortlist" element={<AnimatedRoute><AdmissionUniversities shortlistOnly /></AnimatedRoute>} />
                       <Route path="/admission/universities/:slug" element={<AnimatedRoute><AdmissionUniversity /></AnimatedRoute>} />
@@ -869,6 +852,8 @@ function App() {
 
 export default function VerifiedApp() {
   const { pathname } = useLocation()
+  // Old bookmarks go straight to the single results workspace, including nested URLs.
+  if (/^\/(?:analyze-mistakes|sat\/mistakes)(?:\/|$)/i.test(pathname)) return <Navigate to="/profile" replace />
   // Retired pages stay 404 even before sign-in or device-access verification.
   if (isRetiredPagePath(pathname)) return <div className="app-shell relative min-h-screen"><Suspense fallback={<RouteLoader />}><NotFound /></Suspense></div>
   // The Telegram wheel runs inside Telegram's Mini App frame, outside the account workspace.

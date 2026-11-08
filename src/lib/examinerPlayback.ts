@@ -1,4 +1,5 @@
 import { examinerAudio, type ExaminerVoice } from './speakingAudio'
+import { ApiError } from './apiClient'
 import { getExaminerVoice, speak, waitForExaminerVoice } from './speech'
 
 type Callbacks = {
@@ -71,11 +72,13 @@ export class ExaminerPlayback {
       usingDevice = true
       clearTimeout(this.timer)
       failed = false
+      // A failed device voice must allow a fresh provider request on the next
+      // user gesture, rather than trapping every retry on the broken voice.
+      this.retry = () => this.ask(text, voice, gender, callbacks, false, { ...options, audio: undefined })
       if (options.deviceFallback === false) { fail('Natural voice could not play. Please retry audio.'); return }
       const installedVoice = getExaminerVoice(gender) ?? await waitForExaminerVoice(gender, controller.signal)
       if (!current() || completed || controller.signal.aborted) return
       if (!installedVoice) { fail('Examiner audio is unavailable and a matching English voice is not installed. Check your connection and retry audio.'); return }
-      this.retry = () => this.ask(text, voice, gender, callbacks, true, options)
       this.stopSpeech = speak(text, {
         lang: 'en', voice: installedVoice, rate: 0.98,
         onStart: () => { if (current()) { callbacks.loading(false); callbacks.started('device') } },
@@ -94,6 +97,9 @@ export class ExaminerPlayback {
       this.url = url
       this.player.src = url
       let switchingToDevice = false
+      let heardAudio = false
+      let lastPosition = this.player.currentTime
+      let recoveries = 0
       const fallback = () => {
         if (!current() || completed || switchingToDevice) return
         switchingToDevice = true
@@ -104,35 +110,57 @@ export class ExaminerPlayback {
         this.player.pause()
         void playDevice()
       }
+      const interrupted = () => {
+        if (!current() || completed || failed || switchingToDevice) return
+        // Some browsers omit the ended event when an audio session changes.
+        // Only trust the media element's ended flag after playback has started.
+        if (heardAudio && this.player.ended) { finish(); return }
+        if (recoveries++ === 0) { play(); return }
+        fallback()
+      }
       const play = () => {
-        if (!current() || completed) return
+        if (!current() || completed || switchingToDevice) return
         failed = false
         callbacks.loading(true)
         clearTimeout(this.timer)
-        this.timer = setTimeout(() => {
-          if (!current() || completed) return
-          this.player.pause()
-          fallback()
-        }, 10_000)
+        this.timer = setTimeout(interrupted, 10_000)
         void this.player.play().catch((error: unknown) => {
           if (switchingToDevice) return
           if (error instanceof Error && error.name === 'NotSupportedError') fallback()
           else fail('Tap Play examiner to enable sound and hear the question.')
         })
       }
-      this.retry = play
-      let heardAudio = false
+      this.retry = () => { recoveries = 0; play() }
       const watchProgress = () => {
-        if (!current() || completed || failed) return
+        if (!current() || completed || failed || switchingToDevice) return
         clearTimeout(this.timer)
-        this.timer = setTimeout(fallback, 15_000)
+        this.timer = setTimeout(interrupted, 15_000)
       }
-      this.player.onplaying = () => { if (current() && !completed && !failed) { heardAudio = true; watchProgress(); callbacks.loading(false); callbacks.started('neural') } }
-      this.player.ontimeupdate = watchProgress
-      this.player.onended = () => { if (heardAudio) finish(); else fail('Examiner audio did not start. Tap Play examiner to hear the question.') }
+      this.player.onplaying = () => { if (current() && !completed && !failed && !switchingToDevice) { heardAudio = true; watchProgress(); callbacks.loading(false); callbacks.started('neural') } }
+      this.player.ontimeupdate = () => {
+        // timeupdate may also fire while paused or buffering. Only advancing
+        // playback can extend the watchdog, otherwise a stalled prompt hangs.
+        if (this.player.currentTime > lastPosition) {
+          lastPosition = this.player.currentTime
+          watchProgress()
+        }
+      }
+      this.player.onended = () => {
+        if (!current() || completed || failed || switchingToDevice) return
+        if (heardAudio) finish()
+        else fail('Examiner audio did not start. Tap Play examiner to hear the question.')
+      }
       this.player.onerror = fallback
       play()
-    }).catch(() => { if (current() && !controller.signal.aborted) void playDevice() })
+    }).catch((error: unknown) => {
+      if (!current() || controller.signal.aborted) return
+      if (error instanceof ApiError && [401, 403, 409, 429].includes(error.status)) {
+        this.retry = () => this.ask(text, voice, gender, callbacks, false, { ...options, audio: undefined })
+        fail(error.message)
+        return
+      }
+      void playDevice()
+    })
   }
 
   cancel(): void {

@@ -18,6 +18,36 @@ export function normalizeTimeZone(timeZone?: string | null) {
   }
 }
 
+// Most learners have never saved account settings, so they have no stored
+// time zone. Counting their days in UTC moved every session between midnight
+// and 05:00 in Tashkent onto the previous day and invented gaps that reset
+// long streaks. The product's home audience is the better default.
+export const DEFAULT_LEARNER_TIME_ZONE = 'Asia/Tashkent'
+
+export function resolveLearnerTimeZone(timeZone?: string | null) {
+  if (!timeZone) return DEFAULT_LEARNER_TIME_ZONE
+  const normalized = normalizeTimeZone(timeZone)
+  return normalized === 'UTC' && timeZone !== 'UTC' ? DEFAULT_LEARNER_TIME_ZONE : normalized
+}
+
+const DAILY_LOGIN_KEY = /^DAILY_LOGIN:(\d{4}-\d{2}-\d{2})$/
+
+/**
+ * A daily-login reward key stores the calendar date the learner's own device
+ * reported when they opened the app. It is the most faithful record of
+ * "visited on this day", independent of how the server later interprets the
+ * stored timestamp, so it always counts towards the streak.
+ */
+export function dailyLoginDayKey(eventKey?: string | null) {
+  const match = eventKey ? DAILY_LOGIN_KEY.exec(eventKey) : null
+  if (!match) return null
+  const [year, month, day] = match[1].split('-').map(Number)
+  const parsed = new Date(Date.UTC(year, month - 1, day))
+  return parsed.getUTCFullYear() === year && parsed.getUTCMonth() === month - 1 && parsed.getUTCDate() === day
+    ? match[1]
+    : null
+}
+
 function dateKey(value: Date, timeZone: string) {
   const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone,
@@ -38,9 +68,10 @@ export function calculateLearningStreak(
   activityDates: Date[],
   now = new Date(),
   requestedTimeZone?: string | null,
+  activityDayKeys: string[] = [],
 ): LearningStreakSnapshot {
-  const timeZone = normalizeTimeZone(requestedTimeZone)
-  const uniqueDays = [...new Set(activityDates.map((date) => dateKey(date, timeZone)))]
+  const timeZone = resolveLearnerTimeZone(requestedTimeZone)
+  const uniqueDays = [...new Set([...activityDates.map((date) => dateKey(date, timeZone)), ...activityDayKeys])]
     .sort((left, right) => dayNumber(left) - dayNumber(right))
 
   let longestStreak = 0
@@ -88,9 +119,11 @@ export async function getLearningStreakSnapshot(
       select: { createdAt: true },
       orderBy: { createdAt: 'asc' },
     }),
+    // Every recorded learning event counts, including ones that earned no XP
+    // because that day's reward cap had already been reached.
     client.xpEvent.findMany({
-      where: { userId, amount: { gt: 0 } },
-      select: { earnedAt: true },
+      where: { userId },
+      select: { earnedAt: true, eventKey: true },
       orderBy: { earnedAt: 'asc' },
     }),
   ])
@@ -104,5 +137,9 @@ export async function getLearningStreakSnapshot(
     ],
     now,
     timeZone,
+    xpEvents.flatMap((event) => {
+      const key = dailyLoginDayKey(event.eventKey)
+      return key ? [key] : []
+    }),
   )
 }

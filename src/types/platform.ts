@@ -217,6 +217,7 @@ export type ProfileOverview = {
     percentage: number
     xpEarned: number
     completedAt: string
+    assessment?: { sourceKey: string; skill: string; score: number; maxScore: number }
     test: {
       id: string
       title: string
@@ -406,6 +407,9 @@ export type LeaderboardResponse = {
 }
 
 export type LeaderboardRow = {
+  nickname?: string | null
+  level?: number
+  lifetimeXp?: number
   premium?: boolean
   rank: number
   previousRank: number

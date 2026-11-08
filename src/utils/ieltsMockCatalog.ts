@@ -322,8 +322,9 @@ export function retakeFullMock(mockId: string): boolean {
     const history = JSON.parse(accountStorage.getItem(historyKey) ?? '[]')
     accountStorage.setItem(historyKey, JSON.stringify([
       ...(Array.isArray(history) ? history : []),
-      { completedAt: new Date().toISOString(), overallBand: getFullMockOverallBand(mockId), sections: getFullMockResults(mockId) },
+      { completedAt: new Date().toISOString(), overallBand: getFullMockOverallBand(mockId), sections: getFullMockResults(mockId), mode: getFullMockMode(mockId) },
     ]))
+    setFullMockMode(mockId, null)
     for (const section of mock.sections) {
       const testId = section.launchPath?.split('/').pop()
       accountStorage.removeItem(`profai:full-mock:intro:v1:${mockId}:${section.key}`)
@@ -346,6 +347,83 @@ export function retakeFullMock(mockId: string): boolean {
     writeProgressStore(progress)
     return true
   } catch { return false }
+}
+
+// Exam mode runs the four sections back to back and reveals scores after the
+// last one. Practice mode lets the candidate take sections in any order and
+// shows each section's band as soon as it is finished.
+export type FullMockMode = 'exam' | 'practice'
+const MODE_STORAGE_KEY = 'smarttest:full-mock-mode:v1'
+
+function readModes(userId?: string): Record<string, FullMockMode> {
+  if (typeof window === 'undefined') return {}
+  try {
+    const storage = userId === undefined ? accountStorage : accountStorageFor(userId)
+    const parsed = JSON.parse(storage.getItem(MODE_STORAGE_KEY) ?? '{}')
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}
+  } catch { return {} }
+}
+
+/** The chosen mode, or null before the candidate has chosen one. */
+export function getFullMockChosenMode(mockId: string, userId?: string): FullMockMode | null {
+  const mode = readModes(userId)[mockId]
+  return mode === 'exam' || mode === 'practice' ? mode : null
+}
+
+/** Older attempts were started before modes existed and followed exam rules. */
+export function getFullMockMode(mockId: string, userId?: string): FullMockMode {
+  return getFullMockChosenMode(mockId, userId) ?? 'exam'
+}
+
+export function setFullMockMode(mockId: string, mode: FullMockMode | null): void {
+  if (typeof window === 'undefined' || !getFullMockById(mockId)) return
+  const modes = readModes()
+  if (mode) modes[mockId] = mode
+  else delete modes[mockId]
+  try {
+    accountStorage.setItem(MODE_STORAGE_KEY, JSON.stringify(modes))
+    window.dispatchEvent(new CustomEvent(FULL_MOCK_PROGRESS_EVENT))
+  } catch { /* The mock still runs with exam rules if storage is full. */ }
+}
+
+/** Where a runner goes after a section is submitted: the mock page asks before the next one. */
+export function fullMockAfterSection(mockId: string, section: MockSectionKey, from?: string) {
+  return { path: `/mock/ielts/${mockId}`, state: { from: from ?? 'mock', completedSection: section } }
+}
+
+export type FullMockResultGroup = {
+  mockId: string
+  index: number
+  mode: FullMockMode
+  completedAt: string
+  overallBand: number | null
+  sections: Partial<Record<MockSectionKey, FullMockSectionResult>>
+  complete: boolean
+  archived: boolean
+}
+
+/** Every finished or started mock attempt, for the My Results page. */
+export function getFullMockResultGroups(owner?: string): FullMockResultGroup[] {
+  const storage = accountStorageFor(owner)
+  return getFullMockCatalog().flatMap(mock => {
+    const groups: FullMockResultGroup[] = []
+    try {
+      const parsed = JSON.parse(storage.getItem(`smarttest:full-mock-history:v1:${mock.id}`) ?? '[]')
+      if (Array.isArray(parsed)) for (const entry of parsed) {
+        if (!entry || typeof entry.completedAt !== 'string' || !entry.sections || typeof entry.sections !== 'object') continue
+        groups.push({ mockId: mock.id, index: mock.index, mode: entry.mode === 'practice' ? 'practice' : 'exam', completedAt: entry.completedAt,
+          overallBand: calculateFullMockOverallBand(entry.sections), sections: entry.sections, complete: true, archived: true })
+      }
+    } catch { /* One damaged archive must not hide other mocks. */ }
+    const sections = getFullMockResults(mock.id, owner)
+    const dates = Object.values(sections).map(result => result.completedAt).filter(Boolean).sort()
+    if (dates.length) {
+      const complete = mock.sections.every(section => sections[section.key])
+      groups.push({ mockId: mock.id, index: mock.index, mode: getFullMockMode(mock.id, owner), completedAt: dates[dates.length - 1],
+        overallBand: complete ? calculateFullMockOverallBand(sections) : null, sections, complete, archived: false })
+    }
+    return groups
+  })
 }
 
 export function getNextFullMockSection(mockId: string, section: MockSectionKey): MockSection | null {
@@ -372,6 +450,11 @@ export function fullMockLaunchState(mockId: string, section: MockSectionKey, fro
 export function getFullMockSectionRedirect(mockId: string, section: MockSectionKey, pathname: string): string | null {
   const mock = getFullMockById(mockId)
   if (!mock) return '/mock/ielts'
+  if (getFullMockMode(mockId) === 'practice') {
+    const target = mock.sections.find(entry => entry.key === section)
+    const done = getFullMockCompletedSections(mockId).includes(section)
+    return target?.available && !done && target.launchPath === pathname ? null : `/mock/ielts/${mockId}`
+  }
   const pending = getFullMockPendingSection(mockId)
   if (pending?.key === section && pending.launchPath === pathname) return null
   return pending?.launchPath ?? `/mock/ielts/${mockId}`

@@ -9,6 +9,7 @@ import type { ExaminerTurn, SpeakingEvaluation } from '@/services/speakingAI'
 // per user id; a backend sync can be layered on top without changing this shape.
 
 export type SpeakingSessionRecord = {
+  testId?: string
   id: string
   attemptKey?: string
   userId: string | null

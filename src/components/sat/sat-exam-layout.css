@@ -16,7 +16,7 @@
 
 .sat-exam-viewport {
   overscroll-behavior: contain;
-  scrollbar-gutter: stable;
+
   scrollbar-width: thin;
   scrollbar-color: #aab4c4 transparent;
 }
@@ -39,4 +39,17 @@
   .sat-exam-canvas .sat-source-content img:not(.math-img) {
     max-height: clamp(9rem, 23dvh, 12rem);
   }
+}
+
+.sat-exam-paper-wrap { min-height: 100%; }
+.sat-exam-run > header > div:first-child { padding-top: 9px; padding-bottom: 9px; }
+.sat-exam-run > header h1 { font-size: clamp(16px, 1.5vw, 22px); }
+.sat-exam-run > footer > div:last-child { padding-top: 8px; padding-bottom: 8px; }
+@media (min-width: 900px) and (max-height: 800px) {
+  .sat-exam-run .sat-question-source, .sat-exam-run .sat-question-panel { padding-top: 16px; padding-bottom: 20px; }
+  .sat-exam-run .sat-response-directions { font-size: 14px; line-height: 1.4; }
+  .sat-exam-run .sat-response-directions li + li { margin-top: 5px; }
+  .sat-exam-run .sat-response-directions-content { margin-top: 10px; }
+  .sat-exam-run .sat-response-directions h3 { margin-top: 12px; }
+  .sat-exam-run .sat-response-examples th, .sat-exam-run .sat-response-examples td { padding: 6px 8px; }
 }

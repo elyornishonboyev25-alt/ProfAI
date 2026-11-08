@@ -148,6 +148,8 @@ model User {
   vocabularyNotebooks                 VocabularyNotebook[]
   speakingEvaluations                 SpeakingEvaluation[]
   speakingSessions                    SpeakingSession[]
+  blockedSpeakingCallers              SpeakingCallBlock[]                  @relation("SpeakingCallBlocker")
+  speakingCallBlocksReceived          SpeakingCallBlock[]                  @relation("SpeakingCallBlocked")
   shadowingVideos                     ShadowingVideo[]                     @relation("ShadowingSubmitter")
   podcastVideos                       PodcastVideo[]                       @relation("PodcastSubmitter")
   createdTests                        Test[]                               @relation("TestAuthor")
@@ -183,12 +185,25 @@ model User {
   wheelSpin                           WheelSpin?
   featureUsage                        FeatureUsage[]
   resourceUnlocks                     ResourceUnlock[]
+  voiceSessions                       VoiceAllowanceSession[]
   testDiscussionPosts                 TestDiscussionPost[]
   testDiscussionChecks                TestDiscussionCheck[]
   launchGift                          LaunchGift?
 
   @@index([xp, level])
   @@index([createdAt])
+}
+
+// Call blocks follow account identity across sessions and devices.
+model SpeakingCallBlock {
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+  blocker   User @relation("SpeakingCallBlocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked   User @relation("SpeakingCallBlocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+  @@index([blockedId])
 }
 
 // Email-keyed trial data is removed with permanent account deletion.
@@ -1310,6 +1325,22 @@ model FeatureUsage {
   user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, feature, period])
+}
+
+model VoiceAllowanceSession {
+  id              String    @id
+  userId          String
+  providerCallId  String?
+  startedAt       DateTime  @default(now())
+  expiresAt       DateTime
+  endedAt         DateTime?
+  month           String
+  day             String
+  reservedSeconds Int
+  metered         Boolean   @default(true)
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, endedAt, expiresAt])
 }
 
 model ResourceUnlock {

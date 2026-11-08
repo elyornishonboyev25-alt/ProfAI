@@ -1,15 +1,15 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { ArrowRight, LockKeyhole, X } from 'lucide-react'
-import { useBillingText } from './copy'
+import { useCallback, useEffect, useState } from 'react'
+import UpgradePrompt from './UpgradePrompt'
+import { useAccountAccess } from './useAccountAccess'
 export default function BillingNotice() {
   const [message, setMessage] = useState('')
-  const text = useBillingText()
+  const access = useAccountAccess()
+  const close = useCallback(() => setMessage(''), [])
   useEffect(() => {
-    const listener = (event: Event) => setMessage((event as CustomEvent<string>).detail)
+    const listener = (event: Event) => setMessage((event as CustomEvent<string>).detail || 'content')
     window.addEventListener('profai:premium-required', listener)
     return () => window.removeEventListener('profai:premium-required', listener)
   }, [])
   if (!message) return null
-  return <div className="billing-notice" role="alert"><LockKeyhole size={22} /><div><strong>{text('Upgrade to keep going', 'Davom etish uchun tarifni yangilang', 'Улучшите тариф, чтобы продолжить')}</strong><p>{text('You have reached this month’s limit. Continue with Pro ($5.99/month) or Max ($11.99/month). Your saved progress stays available.', 'Shu oylik limit tugadi. Pro ($5.99/oy) yoki Max ($11.99/oy) bilan davom eting. Saqlangan natijalar ochiq qoladi.', 'Лимит этого месяца исчерпан. Продолжайте с Pro ($5.99/мес.) или Max ($11.99/мес.). Прогресс сохранён.')}</p><Link to="/premium" onClick={() => setMessage('')}>{text('View plans', 'Tariflarni ko‘rish', 'Посмотреть тарифы')}<ArrowRight size={14} /></Link></div><button aria-label={text('Dismiss', 'Yopish', 'Закрыть')} onClick={() => setMessage('')}><X size={18} /></button></div>
+  return <UpgradePrompt modal onClose={close} tier={access?.active ? access.tier === 'MAX' ? 'RESET' : 'MAX' : 'PRO'} reason={/live|voice/i.test(message) ? 'voice' : /allowance|AI|limit/i.test(message) ? 'ai' : 'content'} />
 }

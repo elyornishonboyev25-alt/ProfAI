@@ -1,3 +1,4 @@
+import { useCopy } from '@/i18n/interface'
 import CrownBadge from '@/components/fx/CrownBadge'
 import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useState } from 'react'
@@ -47,6 +48,7 @@ import { lastSeenLabel } from '@/components/speaking/SpeakerDirectory'
 import { CountUp, ProgressRing, Reveal } from '@/components/fx'
 
 export default function SpeakerProfile() {
+  const { c: uiCopy } = useCopy()
   const { id = 'me' } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
@@ -111,8 +113,8 @@ export default function SpeakerProfile() {
       <Shell onBack={() => navigate(backPath)} backLabel={backLabel}>
         <div className="surface-card flex flex-col items-center p-10 text-center">
           <AtSign className="h-10 w-10 text-blue-400" />
-          <h2 className="mt-3 text-xl font-black text-slate-900">Choose a nickname first</h2>
-          <p className="mt-1 max-w-sm text-sm text-slate-600">Your public profile uses your nickname. Set one to appear in the community and share your progress.</p>
+          <h2 className="mt-3 text-xl font-black text-slate-900"><UiText text={"Choose a nickname first"} /></h2>
+          <p className="mt-1 max-w-sm text-sm text-slate-600"><UiText text={"Your public profile uses your nickname. Set one to appear in the community and share your progress."} /></p>
         </div>
       </Shell>
     )
@@ -147,14 +149,14 @@ export default function SpeakerProfile() {
                 ) : null}
               </div>
               <p className="mt-1 text-sm font-semibold text-slate-500">
-                {p.online ? <span className="text-emerald-600">● Online now</span> : `Last seen ${lastSeenLabel(p.lastSeen)}`}
-                {' · '}Member since {new Date(p.memberSince).toLocaleDateString()}
+                {p.online ? <span className="text-emerald-600"><UiText text={"● Online now"} /></span> : <UiText text={"Last seen {{value1}}"} values={{ value1: String(lastSeenLabel(p.lastSeen)) }} />}
+                {' · '}<UiText text={"Member since"} /> {new Date(p.memberSince).toLocaleDateString()}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
-                <Pill icon={<Trophy className="h-3.5 w-3.5" />} label={p.rank ? `Speaking rank #${p.rank}` : 'Unranked'} />
-                <Pill icon={<Mic className="h-3.5 w-3.5" />} label={`Best band ${summary.bestBand.toFixed(1)}`} />
-                <Pill icon={<Flame className="h-3.5 w-3.5" />} label={`${p.streak} day streak`} />
-                <Pill icon={<Zap className="h-3.5 w-3.5" />} label={`Level ${p.level}`} />
+                <Pill icon={<Trophy className="h-3.5 w-3.5" />} label={p.rank ? uiCopy("Speaking rank #{{value1}}", { value1: String(p.rank) }) : 'Unranked'} />
+                <Pill icon={<Mic className="h-3.5 w-3.5" />} label={uiCopy("Best band {{value1}}", { value1: String(summary.bestBand.toFixed(1)) })} />
+                <Pill icon={<Flame className="h-3.5 w-3.5" />} label={uiCopy("{{value1}} day streak", { value1: String(p.streak) })} />
+                <Pill icon={<Zap className="h-3.5 w-3.5" />} label={uiCopy("Level {{value1}}", { value1: String(p.level) })} />
               </div>
             </div>
 
@@ -162,10 +164,10 @@ export default function SpeakerProfile() {
               <ProgressRing value={percentile ?? 0} size={104} from="#f59e0b" to="#2563eb">
                 <div className="text-center leading-none">
                   <p className="text-xl font-black text-slate-900">{p.rank ? `#${p.rank}` : '—'}</p>
-                  <p className="text-[9px] font-bold uppercase tracking-wide text-slate-400">of {p.totalSpeakers}</p>
+                  <p className="text-[9px] font-bold uppercase tracking-wide text-slate-400"><UiText text={"of"} /> {p.totalSpeakers}</p>
                 </div>
               </ProgressRing>
-              <p className="mt-2 text-[11px] font-semibold text-slate-500">{percentile !== null ? `Top ${100 - percentile + 1}%` : 'No sessions yet'}</p>
+              <p className="mt-2 text-[11px] font-semibold text-slate-500">{percentile !== null ? <UiText text={"Top {{value1}}%"} values={{ value1: String(100 - percentile + 1) }} /> : <UiText text={"No sessions yet"} />}</p>
             </div>
           </div>
         </section>
@@ -174,8 +176,8 @@ export default function SpeakerProfile() {
       {records.length === 0 ? (
         <div className="surface-card mt-5 flex flex-col items-center p-10 text-center">
           <Headphones className="h-10 w-10 text-blue-300" />
-          <h2 className="mt-3 text-xl font-black text-slate-900">No speaking sessions yet</h2>
-          <p className="mt-1 text-sm text-slate-600">{isSelf ? 'Take a Full Mock to start building your profile.' : 'This speaker hasn’t completed a graded session yet.'}</p>
+          <h2 className="mt-3 text-xl font-black text-slate-900"><UiText text={"No speaking sessions yet"} /></h2>
+          <p className="mt-1 text-sm text-slate-600">{isSelf ? <UiText text={"Take a Full Mock to start building your profile."} /> : 'This speaker hasn’t completed a graded session yet.'}</p>
         </div>
       ) : (
         <RealCharts records={records} summary={summary} />
@@ -185,6 +187,7 @@ export default function SpeakerProfile() {
 }
 
 function RealCharts({ records, summary }: { records: SpeakingSessionRecord[]; summary: ReturnType<typeof computeSummary> }) {
+  const { c: uiCopy } = useCopy()
   const bandTrend = useMemo(() => computeBandTrend(records), [records])
   const skillRadar = useMemo(() => computeSkillRadar(records), [records])
   const dailyActivity = useMemo(() => computeDailyActivity(records), [records])
@@ -195,14 +198,14 @@ function RealCharts({ records, summary }: { records: SpeakingSessionRecord[]; su
     <Reveal>
       <section className="mt-5 space-y-5">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Kpi icon={<Trophy className="h-4 w-4" />} label="Best Band" value={summary.bestBand.toFixed(1)} />
-          <Kpi icon={<Gauge className="h-4 w-4" />} label="Avg Band" value={summary.averageBand.toFixed(1)} />
-          <Kpi icon={<Headphones className="h-4 w-4" />} label="Sessions" value={<CountUp value={summary.sessionCount} />} />
-          <Kpi icon={<Mic className="h-4 w-4" />} label="Minutes" value={<CountUp value={summary.totalMinutes} />} />
+          <Kpi icon={<Trophy className="h-4 w-4" />} label={uiCopy("Best Band")} value={summary.bestBand.toFixed(1)} />
+          <Kpi icon={<Gauge className="h-4 w-4" />} label={uiCopy("Avg Band")} value={summary.averageBand.toFixed(1)} />
+          <Kpi icon={<Headphones className="h-4 w-4" />} label={uiCopy("Sessions")} value={<CountUp value={summary.sessionCount} />} />
+          <Kpi icon={<Mic className="h-4 w-4" />} label={uiCopy("Minutes")} value={<CountUp value={summary.totalMinutes} />} />
         </div>
 
         <div className="grid gap-4 lg:grid-cols-2">
-          <ChartCard title="Band Trend" icon={<BarChart3 className="h-4 w-4 text-blue-600" />}>
+          <ChartCard title={uiCopy("Band Trend")} icon={<BarChart3 className="h-4 w-4 text-blue-600" />}>
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={bandTrend} margin={{ top: 10, right: 10, left: -18, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#dbeafe" />
@@ -214,7 +217,7 @@ function RealCharts({ records, summary }: { records: SpeakingSessionRecord[]; su
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Skill Radar" icon={<RadarIcon className="h-4 w-4 text-blue-600" />}>
+          <ChartCard title={uiCopy("Skill Radar")} icon={<RadarIcon className="h-4 w-4 text-blue-600" />}>
             <ResponsiveContainer width="100%" height={220}>
               <RadarChart data={skillRadar}>
                 <PolarGrid stroke="#bfdbfe" />
@@ -225,7 +228,7 @@ function RealCharts({ records, summary }: { records: SpeakingSessionRecord[]; su
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Speaking Activity (7 days)" icon={<BarChart3 className="h-4 w-4 text-blue-600" />}>
+          <ChartCard title={uiCopy("Speaking Activity (7 days)")} icon={<BarChart3 className="h-4 w-4 text-blue-600" />}>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={dailyActivity} margin={{ top: 10, right: 10, left: -18, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#dbeafe" />
@@ -237,7 +240,7 @@ function RealCharts({ records, summary }: { records: SpeakingSessionRecord[]; su
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Criteria Breakdown" icon={<RadarIcon className="h-4 w-4 text-blue-600" />}>
+          <ChartCard title={uiCopy("Criteria Breakdown")} icon={<RadarIcon className="h-4 w-4 text-blue-600" />}>
             <ResponsiveContainer width="100%" height={220}>
               <RadialBarChart data={criteria} innerRadius="25%" outerRadius="100%" startAngle={90} endAngle={-270}>
                 <RadialBar background dataKey="band" cornerRadius={8} />
@@ -247,7 +250,7 @@ function RealCharts({ records, summary }: { records: SpeakingSessionRecord[]; su
             <div className="mt-2 flex flex-wrap justify-center gap-2">
               {criteria.map((c) => (
                 <span key={c.criterion} className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600">
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: c.fill }} /> {c.criterion} {c.band.toFixed(1)}
+                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: c.fill }} /> <UiText text={c.criterion} /> {c.band.toFixed(1)}
                 </span>
               ))}
             </div>
@@ -256,13 +259,13 @@ function RealCharts({ records, summary }: { records: SpeakingSessionRecord[]; su
 
         <div className="surface-card p-5">
           <h3 className="inline-flex items-center gap-2 text-base font-black text-slate-900">
-            <Headphones className="h-4 w-4 text-blue-600" /> Recent Sessions
+            <Headphones className="h-4 w-4 text-blue-600" /> <UiText text={"Recent Sessions"} />
           </h3>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {recent.map((s) => (
               <div key={s.id} className="flex items-center justify-between rounded-xl border border-blue-50 bg-white px-3 py-2">
                 <div>
-                  <p className="text-sm font-bold text-slate-900">{s.modeLabel}</p>
+                  <p className="text-sm font-bold text-slate-900"><UiText text={s.modeLabel} /></p>
                   <p className="text-[11px] text-slate-500">{new Date(s.date).toLocaleDateString()} · {Math.round(s.durationSec / 60)}  <UiText text={"min"} /> </p>
                 </div>
                 <span className="rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1 text-sm font-black text-white">
@@ -282,7 +285,7 @@ function Shell({ children, onBack, backLabel }: { children: React.ReactNode; onB
     <div className="workspace-page relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
       <div className="relative mx-auto w-full max-w-6xl space-y-6">
         <button onClick={onBack} className="premium-back-btn">
-          <ArrowLeft className="h-3.5 w-3.5" /> {backLabel}
+          <ArrowLeft className="h-3.5 w-3.5" /> <UiText text={backLabel} />
         </button>
         {children}
       </div>
@@ -297,7 +300,7 @@ function Info({ text }: { text: string }) {
 function Pill({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-white px-3 py-1 text-xs font-bold text-slate-700">
-      <span className="text-blue-600">{icon}</span> {label}
+      <span className="text-blue-600">{icon}</span> <UiText text={label} />
     </span>
   )
 }
@@ -305,7 +308,7 @@ function Pill({ icon, label }: { icon: React.ReactNode; label: string }) {
 function Kpi({ icon, label, value }: { icon: React.ReactNode; label: string; value: React.ReactNode }) {
   return (
     <div className="surface-card p-4">
-      <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-blue-600">{icon} {label}</span>
+      <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-blue-600">{icon} <UiText text={label} /></span>
       <p className="mt-1 text-2xl font-black text-slate-900">{value}</p>
     </div>
   )

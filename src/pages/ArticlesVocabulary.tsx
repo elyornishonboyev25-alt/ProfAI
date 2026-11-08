@@ -28,14 +28,13 @@ export default function ArticlesVocabulary() {
                     <BookOpenCheck className="h-3.5 w-3.5" />
                      <UiText text={"Articles Vocabulary"} /> </span>
                 </div>
-                <h1 className="mt-4 text-4xl font-black leading-tight text-slate-900 sm:text-5xl">Article Vocabulary Studio</h1>
+                <h1 className="mt-4 text-4xl font-black leading-tight text-slate-900 sm:text-5xl"><UiText text={"Article Vocabulary Studio"} /></h1>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-                  Every article ships with its own set of key words. Pick an article to study its vocabulary with flashcards,
-                  matching, quiz, and typing drills — the same way as the IELTS &amp; SAT arenas.
+                  <UiText text={"Every article ships with its own set of key words. Pick an article to study its vocabulary with flashcards, matching, quiz, and typing drills — the same way as the IELTS & SAT arenas."} />
                 </p>
               </div>
               <div className="articles-vocabulary-summary rounded-2xl border px-4 py-3 text-right shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-red-700">Article Sets</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-red-700"><UiText text={"Article Sets"} /></p>
                 <p className="mt-1 text-lg font-extrabold text-slate-900">{articles.length}  <UiText text={"articles"} /> </p>
                 <p className="text-sm font-semibold text-red-700"><CountUp value={totalTerms} />  <UiText text={"terms"} /> </p>
               </div>
@@ -58,7 +57,7 @@ export default function ArticlesVocabulary() {
                     </span>
                     <h2 className="mt-2 text-base font-black leading-snug text-slate-900 line-clamp-2">{article.title}</h2>
                     <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-3">
-                      <span className="text-xs font-semibold text-slate-500">{article.vocabulary.length} key terms</span>
+                      <span className="text-xs font-semibold text-slate-500">{article.vocabulary.length} <UiText text={"key terms"} /></span>
                       <span className="inline-flex items-center gap-1 text-xs font-bold text-red-700 transition group-hover:gap-2">
                         <Sparkles className="h-3.5 w-3.5" />  <UiText text={"Study set"} /> </span>
                     </div>

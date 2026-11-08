@@ -187,21 +187,18 @@
   background: #fff;
 }
 .sqm-passage {
-  padding: 20px 22px;
-  border: 1px solid #e3e8ef;
-  border-radius: 18px;
-  background: linear-gradient(135deg, #f8fafc, #f1f4f8);
-  color: #1f2836;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 18px;
-  line-height: 1.8;
+  padding: 0;
+  color: #111;
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 21px;
+  line-height: 1.5;
 }
 .sqm-task {
-  color: var(--sqm-ink);
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 19px;
-  font-weight: 700;
-  line-height: 1.55;
+  color: #111;
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 21px;
+  font-weight: 400;
+  line-height: 1.5;
 }
 .sqm-choices {
   display: flex;
@@ -213,9 +210,9 @@
   align-items: flex-start;
   gap: 14px;
   padding: 14px 16px;
-  border: 1.5px solid var(--sqm-line);
-  border-radius: 18px;
-  background: #fff;
+  border: 2px solid #111;
+  border-radius: 13px;
+  background: #f8f9fa;
   transition:
     border-color 0.18s,
     background 0.18s;
@@ -224,22 +221,23 @@
   display: grid;
   flex: none;
   place-items: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  background: #eef1f5;
-  color: var(--sqm-ink-soft);
-  font-size: 15px;
-  font-weight: 800;
+  width: 31px;
+  height: 31px;
+  margin-top: 2px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  background: transparent;
+  color: #111;
+  font: 400 20px/1 'Times New Roman', Times, serif;
 }
 .sqm-choice-text {
   flex: 1;
   min-width: 0;
-  padding-top: 5px;
-  color: #1f2836;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 18px;
-  line-height: 1.6;
+  padding-top: 0;
+  color: #111;
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 21px;
+  line-height: 1.4;
 }
 .sqm-choice-text small {
   display: block;
@@ -529,10 +527,10 @@
   }
   .sqm-passage,
   .sqm-choice-text {
-    font-size: 16.5px;
+    font-size: 20px;
   }
   .sqm-task {
-    font-size: 17px;
+    font-size: 20px;
   }
   .sqm-choice-label {
     display: none;

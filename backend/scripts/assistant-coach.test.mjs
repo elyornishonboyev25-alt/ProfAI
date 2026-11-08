@@ -15,15 +15,28 @@ const { fixtureAccessToken: signAccessToken, installSessionFixtures } = await im
 const { parseAssistantReply, partialAssistantReply, boundedHistory, buildCoachPrompt, assistantContextSchema } = await import('../dist/services/assistantPolicy.js')
 const { validateAudioAssessment } = await import('../dist/services/speakingAssessment.service.js')
 const { voiceInstructions } = await import('../dist/services/realtimeCoach.service.js')
+const { loadAssistantRecords } = await import('../dist/services/assistant.service.js')
 const { generateAiText } = await import('../dist/services/aiProvider.service.js')
 const { readEventStream } = await import('../dist/utils/eventStream.js')
 
 // These integration tests exercise AI routes with a full-access test account.
 // Billing itself is covered by coin-billing.test.mjs; never use a live database.
+const voiceReservations = new Map()
+prisma.voiceAllowanceSession.findMany = async () => []
+prisma.voiceAllowanceSession.findFirst = async ({ where }) => [...voiceReservations.values()].find(row =>
+  (!where.id || row.id === where.id) && (!where.userId || row.userId === where.userId) && row.endedAt === null &&
+  (!where.expiresAt?.gt || row.expiresAt > where.expiresAt.gt)) ?? null
+prisma.voiceAllowanceSession.create = async ({ data }) => {
+  const row = { ...data, endedAt: null }; voiceReservations.set(row.id, row); return { ...row }
+}
+prisma.voiceAllowanceSession.update = async ({ where, data }) => Object.assign(voiceReservations.get(where.id), data)
 prisma.$transaction = async (operation) => operation({
   $queryRaw: async () => [], coinWallet: { findUnique: async () => ({ balance: 1000 }) },
   user: { findUniqueOrThrow: async () => ({ role: 'ADMIN', email: 'test@example.invalid', nickname: null }) },
   premiumGrant: { findUnique: async () => null },
+  billingSubscription: { findMany: async () => [] },
+  voiceAllowanceSession: prisma.voiceAllowanceSession,
+  featureUsage: { findUnique: async () => null },
 })
 installSessionFixtures(prisma)
 prisma.user.findUnique = async ({ where }) => ({ id: where.id, role: 'USER' })
@@ -178,13 +191,51 @@ test('a partial streamed answer never falls through to a second provider', async
   assert.deepEqual(text, ['partial']); assert.equal(calls, 1)
 })
 
-test('voice uses protected SDP negotiation, executes shared coaching and hangs up only its owner’s call', async (t) => {
+test('learner, memories and chat ownership are read concurrently', async (t) => {
+  const original = { user: prisma.user.findUnique, memory: prisma.aiMemory.findMany, thread: prisma.aiConversationThread.findFirst }
+  const started = []
+  let release
+  const gate = new Promise(resolve => { release = resolve })
+  prisma.user.findUnique = async () => { started.push('user'); await gate; return { fullName: 'Learner' } }
+  prisma.aiMemory.findMany = async () => { started.push('memory'); await gate; return [] }
+  prisma.aiConversationThread.findFirst = async ({ where }) => { started.push('thread'); assert.equal(where.userId, 'record-owner'); await gate; return { id: where.id } }
+  t.after(() => { prisma.user.findUnique = original.user; prisma.aiMemory.findMany = original.memory; prisma.aiConversationThread.findFirst = original.thread })
+  const reading = loadAssistantRecords('record-owner', 'owned-thread')
+  assert.deepEqual(started, ['user', 'memory', 'thread'], 'Every independent read begins before any read finishes')
+  release()
+  assert.equal((await reading).learner.fullName, 'Learner')
+})
+
+test('voice uses protected SDP negotiation, executes shared coaching and hangs up only its owner’s call', { timeout: 20000 }, async (t) => {
   const fake = express()
   let sessionConfig
   const nativeFetch = globalThis.fetch
-  const originals = { user: prisma.user.findUnique, memory: prisma.aiMemory.findMany, usage: prisma.aiUsageEvent.create }
+  const originals = { user: prisma.user.findUnique, memory: prisma.aiMemory.findMany, usage: prisma.aiUsageEvent.create, transaction: prisma.$transaction, thread: prisma.aiConversationThread.findFirst }
+  let releaseReservation
+  let reservationEntered = false
+  const reservationGate = new Promise(resolve => { releaseReservation = resolve })
+  prisma.$transaction = async (operation) => originals.transaction(tx => operation({ ...tx,
+    $queryRaw: async (...args) => {
+      // Authentication also uses transactions; delay only the voice allowance lock.
+      if (args[1] === 'voice:voice-user' && !reservationEntered) {
+        reservationEntered = true
+        await reservationGate
+      }
+      return tx.$queryRaw(...args)
+    },
+  }))
   prisma.user.findUnique = async ({ where }) => ({ id: where.id, role: 'USER', fullName: 'Test Learner', profile: null, aiPreference: null })
-  prisma.aiMemory.findMany = async () => []
+  let memoryReads = 0
+  let pauseMemory
+  let releaseMemory = () => {}
+  prisma.aiMemory.findMany = async () => {
+    memoryReads++
+    assert.equal(reservationEntered, true, 'Records start alongside the pending allowance reservation')
+    releaseReservation()
+    if (pauseMemory) await pauseMemory
+    return []
+  }
+  prisma.aiConversationThread.findFirst = async ({ where }) => where.id === 'own-thread' && where.userId === 'voice-user' ? { id: where.id } : null
   prisma.aiUsageEvent.create = async ({ data }) => data
   let ended = 0
   fake.post('/v1/realtime/calls/:id/hangup', (_req, res) => { ended++; res.sendStatus(200) })
@@ -207,19 +258,39 @@ test('voice uses protected SDP negotiation, executes shared coaching and hangs u
   const server = app.listen(0)
   const base = `http://127.0.0.1:${server.address().port}`
   const post = (path, body, user = 'voice-user') => nativeFetch(`${base}/api/v1/ai/voice${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${signAccessToken({ sub: user, role: 'USER' })}` }, body: JSON.stringify(body) })
-  t.after(() => { globalThis.fetch = nativeFetch; env.OPENAI_API_KEY = ''; env.OPENAI_API_BASE = 'https://api.openai.com/v1'; prisma.user.findUnique = originals.user; prisma.aiMemory.findMany = originals.memory; prisma.aiUsageEvent.create = originals.usage; ws.clients.forEach((client) => client.terminate()); ws.close(); fakeServer.closeAllConnections(); fakeServer.close(); server.closeAllConnections(); server.close() })
+  t.after(() => { releaseReservation(); releaseMemory(); globalThis.fetch = nativeFetch; env.OPENAI_API_KEY = ''; env.OPENAI_API_BASE = 'https://api.openai.com/v1'; prisma.user.findUnique = originals.user; prisma.aiMemory.findMany = originals.memory; prisma.aiUsageEvent.create = originals.usage; prisma.$transaction = originals.transaction; prisma.aiConversationThread.findFirst = originals.thread; ws.clients.forEach((client) => client.terminate()); ws.close(); fakeServer.closeAllConnections(); fakeServer.close(); server.closeAllConnections(); server.close() })
   const response = await post('/connect', { sdp: 'v=0\r\ns=local-offer\r\n', context: { language: 'uz' } })
-  assert.equal(response.status, 201)
+  assert.equal(response.status, 201, response.ok ? undefined : await response.text())
   const call = await response.json()
+  assert.match(response.headers.get('server-timing'), /voice_preparation;dur=\d+.*voice_provider;dur=\d+.*voice_control;dur=\d+/)
+  for (const value of Object.values(call.timings)) assert.ok(Number.isFinite(value) && value >= 0)
   assert.equal(call.session, undefined); assert.equal(call.client_secret, undefined)
   assert.equal(sessionConfig.audio.input.turn_detection.type, 'semantic_vad')
-  assert.equal(sessionConfig.audio.input.turn_detection.eagerness, 'medium', 'Ordinary coaching avoids the examiner long-pause setting')
+  assert.equal(sessionConfig.audio.input.turn_detection.eagerness, 'high', 'Live coaching responds promptly without using the examiner long-pause setting')
+  assert.equal(sessionConfig.audio.output.speed, 1.1)
+  assert.match(sessionConfig.instructions, /brisk, natural conversational pace/)
   assert.equal(sessionConfig.audio.input.turn_detection.interrupt_response, true)
   assert.equal(sessionConfig.tools[0].name, 'ask_coach')
   assert.equal((await post('/context', { id: call.id, context: { pathname: '/vocabulary', language: 'uz' } }, 'other-user')).status, 404)
   assert.equal((await post('/context', { id: call.id, context: { pathname: '/vocabulary', language: 'uz' } })).status, 204)
+  const afterChange = memoryReads
+  assert.equal((await post('/context', { id: call.id, context: { pathname: '/vocabulary', language: 'uz' } })).status, 204)
+  assert.equal(memoryReads, afterChange, 'Unchanged context skips database and provider work')
+  assert.equal((await post('/context', { id: call.id, context: { pathname: '/vocabulary', language: 'uz', threadId: 'foreign-thread' } })).status, 404)
+  assert.equal((await post('/context', { id: call.id, context: { pathname: '/vocabulary', language: 'uz', threadId: 'own-thread' } })).status, 204)
+  pauseMemory = new Promise(resolve => { releaseMemory = resolve })
+  const beforeSlow = memoryReads
+  const slowUpdate = post('/context', { id: call.id, context: { pathname: '/reading', language: 'uz' } })
+  for (let i = 0; i < 100 && memoryReads === beforeSlow; i++) await new Promise(resolve => setTimeout(resolve, 5))
+  assert.equal(memoryReads, beforeSlow + 1)
+  // Returning to the current page invalidates the older in-flight change too.
+  assert.equal((await post('/context', { id: call.id, context: { pathname: '/vocabulary', language: 'uz' } })).status, 204)
+  pauseMemory = null
+  releaseMemory()
+  assert.equal((await slowUpdate).status, 204)
   for (let i = 0; i < 50 && !received.some((event) => event.type === 'session.update'); i++) await new Promise((resolve) => setTimeout(resolve, 10))
   assert.match(received.find((event) => event.type === 'session.update').session.instructions, /\/vocabulary/)
+  assert.equal(received.some(event => event.type === 'session.update' && event.session.instructions.includes('"currentPage":"/reading"')), false, 'A stale lookup cannot replace the latest page')
   socket.send(JSON.stringify({ type: 'response.created', response: { id: 'tool_response' } }))
   socket.send(JSON.stringify({ type: 'response.function_call_arguments.done', name: 'ask_coach', call_id: 'tool_test', arguments: JSON.stringify({ request: 'Explain this grammar.' }) }))
   for (let i = 0; i < 50 && !received.some((event) => event.item?.type === 'function_call_output'); i++) await new Promise((resolve) => setTimeout(resolve, 10))
@@ -231,4 +302,15 @@ test('voice uses protected SDP negotiation, executes shared coaching and hangs u
   assert.equal(received.filter((event) => event.type === 'response.create').length, 1, 'Fast tool output must resume speaking after response.done')
   await post('/end', { id: call.id }, 'other-user'); assert.equal(ended, 0)
   await post('/end', { id: call.id }); assert.equal(ended, 1)
+  const exam = await post('/connect', { sdp: 'v=0\r\ns=local-offer\r\n', context: { language: 'en', mode: 'examiner' } })
+  assert.equal(exam.status, 201)
+  assert.equal(sessionConfig.audio.input.turn_detection.eagerness, 'low', 'Examiner practice still allows thinking pauses')
+  assert.equal(sessionConfig.audio.output.speed, 1)
+  await post('/end', { id: (await exam.json()).id })
+  const previousReservations = new Set(voiceReservations.keys())
+  const rejected = await post('/connect', { sdp: 'v=0\r\ns=local-offer\r\n', context: { threadId: 'foreign-thread' } })
+  assert.equal(rejected.status, 404)
+  const failedReservation = [...voiceReservations.values()].find(row => !previousReservations.has(row.id))
+  assert.ok(failedReservation.endedAt, 'A failed parallel ownership check releases its reservation')
+  assert.equal(failedReservation.providerCallId, undefined, 'No provider call starts before ownership and allowance pass')
 })

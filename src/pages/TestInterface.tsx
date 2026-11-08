@@ -1,3 +1,6 @@
+import { useCopy } from '@/i18n/interface'
+import AttemptEntryBoundary from '@/components/tests/AttemptEntryBoundary'
+import { testReturnPath } from '@/utils/testNavigation'
 import { accountStorageFor } from '@/utils/accountStorage'
 import { resolveFullMockRouteState } from '@/utils/fullMockRouteState'
 import { saveIeltsObjectiveAttempt } from '@/utils/saveIeltsObjectiveAttempt'
@@ -34,7 +37,7 @@ import {
 import { resolveGeneratedTrackTest } from '@/utils/generatedIeltsTests'
 import { resolveIeltsTestById } from '@/utils/ieltsTestCatalog'
 import { saveReviewState } from '@/utils/resultsReviewState'
-import { fullMockLaunchState, getFullMockPendingSection, getFullMockSectionRedirect, saveFullMockSectionResult, type MockSectionKey } from '@/utils/ieltsMockCatalog'
+import { fullMockAfterSection, fullMockLaunchState, getFullMockPendingSection, getFullMockSectionRedirect, saveFullMockSectionResult, type MockSectionKey } from '@/utils/ieltsMockCatalog'
 
 type TestLaunchPreset = {
   mode: 'practice' | 'simulation' | 'full-test'
@@ -47,10 +50,11 @@ function clamp(value: number, min: number, max: number) {
 }
 
 export default function TestInterface() {
-  return <FullMockSectionGate><TestInterfaceContent /></FullMockSectionGate>
+  return <AttemptEntryBoundary exam="IELTS"><FullMockSectionGate><TestInterfaceContent /></FullMockSectionGate></AttemptEntryBoundary>
 }
 
 function TestInterfaceContent() {
+  const { c: uiCopy } = useCopy()
   const { type, id } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
@@ -63,6 +67,9 @@ function TestInterfaceContent() {
     }
     sourceTest?: IELTSTest
     fromResults?: boolean
+    returnTo?: string
+    resultBackTo?: string
+    fullMockReview?: { mockId: string; completedAt: string }
     entry?: string
     from?: string
     catalogFilter?: string
@@ -232,12 +239,8 @@ function TestInterfaceContent() {
       saveFullMockSectionResult(mockContext.id, trackType, {
         band: result.score, completedAt: result.date, testId: result.testId, result,
       })
-      const next = getFullMockPendingSection(mockContext.id)
-      if (next?.launchPath) {
-        navigate(next.launchPath, { replace: true, state: fullMockLaunchState(mockContext.id, next.key, mockFrom) })
-      } else {
-        navigate(`/mock/ielts/${mockContext.id}`, { replace: true, state: { from: mockFrom } })
-      }
+      const after = fullMockAfterSection(mockContext.id, trackType, mockFrom)
+      navigate(after.path, { replace: true, state: after.state })
       return
     }
     navigate(`/results/${(results as { testId?: string })?.testId || 'unknown'}`, {
@@ -246,6 +249,7 @@ function TestInterfaceContent() {
         test: testData,
         mock: mockContext,
         from: mockFrom,
+        returnTo: routeState?.returnTo,
       },
     })
   }
@@ -258,10 +262,13 @@ function TestInterfaceContent() {
           test: testData ?? sourceTest ?? undefined,
           mock: mockContext,
           from: mockFrom,
+          returnTo: routeState?.resultBackTo,
         },
       })
       return
     }
+
+    if (routeState?.returnTo) { navigate(testReturnPath(routeState, '/ielts'), { state: { fullMockReview: routeState.fullMockReview } }); return }
 
     if (mockContext?.id) {
       navigate(`/mock/ielts/${mockContext.id}`, { state: { from: mockFrom } })
@@ -287,7 +294,7 @@ function TestInterfaceContent() {
   }
 
   if (loading || loadedRoute !== `${type}:${id}`) {
-    return <BrandPageLoader compact label="Opening page" />
+    return <BrandPageLoader compact label={uiCopy("Opening page")} />
   }
 
   if (trackTestComingSoon && !testData) {
@@ -298,7 +305,7 @@ function TestInterfaceContent() {
           <span className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
             <Clock3 className="h-7 w-7" />
           </span>
-          <h1 className="mt-4 text-3xl font-black text-slate-900">{label} Test Coming Soon</h1>
+          <h1 className="mt-4 text-3xl font-black text-slate-900">{label} <UiText text={"Test Coming Soon"} /></h1>
           <p className="mt-2 text-sm text-slate-600">
             <UiText text="This test is currently in preview mode. Choose an available test from the catalog." />
           </p>
@@ -308,7 +315,7 @@ function TestInterfaceContent() {
               className="route-back-button"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back to Catalog
+              <UiText text={"Back to Catalog"} />
             </button>
           </div>
         </div>
@@ -320,13 +327,13 @@ function TestInterfaceContent() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(155deg,#fff_0%,#fff5f5_55%,#fffaf8_100%)] px-4">
         <div className="w-full max-w-xl rounded-3xl border border-red-200 bg-white p-8 text-center shadow-[0_20px_46px_rgba(220,38,38,0.16)]">
-          <h1 className="text-2xl font-black text-slate-900">Test Not Found</h1>
-          <p className="mt-2 text-sm text-slate-600">Requested test payload is not available right now.</p>
+          <h1 className="text-2xl font-black text-slate-900"><UiText text={"Test Not Found"} /></h1>
+          <p className="mt-2 text-sm text-slate-600"><UiText text={"Requested test payload is not available right now."} /></p>
           <button
             onClick={handleExit}
             className="mt-4 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
           >
-            Go Back
+            <UiText text={"Go Back"} />
           </button>
         </div>
       </div>
@@ -379,5 +386,5 @@ function TestInterfaceContent() {
     )
   }
 
-  return <div>Unsupported Test Type</div>
+  return <div><UiText text={"Unsupported Test Type"} /></div>
 }

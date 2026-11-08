@@ -17,6 +17,11 @@ export async function run() {
   await i18n.changeLanguage('en')
   const originalFetch = globalThis.fetch
   const originalTimeout = globalThis.setTimeout
+  // Rendering 35 full mocks can cross a real second on slower machines.
+  // This suite checks fresh section deadlines, so keep the exam clock stable.
+  const originalNow = Date.now
+  const examNow = originalNow()
+  Date.now = () => examNow
   const originalWindowTimeout = window.setTimeout.bind(window)
   const fast = (ms?: number) => [1200, 1900, 2200, 3000].includes(ms ?? 0) ? 0 : ms
   globalThis.setTimeout = ((fn: (...args: unknown[]) => void, ms?: number, ...args: unknown[]) => originalTimeout(fn, fast(ms), ...args)) as typeof setTimeout
@@ -45,8 +50,16 @@ export async function run() {
     await flush()
   }
   const click = async (label: string) => {
-    const button = [...element.querySelectorAll<HTMLButtonElement>('button')].find(node => node.textContent?.trim() === label)
+    const button = [...element.querySelectorAll<HTMLButtonElement>('button')].find(node => node.textContent?.trim().toLowerCase() === label.toLowerCase())
     assert.ok(button, `Missing button: ${label} on ${path}`)
+    await act(async () => button.click())
+    await flush()
+  }
+  // Each section hands off to the mock page, which asks before the next one starts.
+  const confirmNext = async (mockId: string, next: string) => {
+    assert.equal(path, `/mock/ielts/${mockId}`, `${mockId}: a finished section returns to the mock page`)
+    const button = [...document.querySelectorAll<HTMLButtonElement>('.mrp-dialog button')].find(node => node.textContent?.includes(`start ${next}`))
+    assert.ok(button, `${mockId}: asks before starting ${next}`)
     await act(async () => button.click())
     await flush()
   }
@@ -78,11 +91,13 @@ export async function run() {
       assert.equal(element.textContent?.includes('To continue, click Play.'), false, 'A fresh full mock starts Listening audio automatically')
       assert.equal(element.querySelector('.ielts-exam-timer'), null)
       await submitObjective()
+      await confirmNext(mock.id, 'Reading')
       assert.equal(path, mock.sections[1].launchPath, `${mock.id}: Listening → Reading`)
       assert.equal(getFullMockResults(mock.id).listening?.band, 0, 'Unanswered Listening has band 0')
       assert.equal(element.querySelector('video'), null, 'Reading opens without an intro')
       assert.ok(element.querySelector('.ielts-exam-timer')?.textContent?.includes('60:00'), 'Reading starts with its own full time')
       await submitObjective()
+      await confirmNext(mock.id, 'Writing')
       assert.equal(path, mock.sections[2].launchPath, `${mock.id}: Reading → Writing, never Speaking`)
       assert.equal(getFullMockResults(mock.id).reading?.band, 0, 'Unanswered Reading has band 0')
       assert.equal(element.querySelector('video'), null, 'Writing opens without an intro')
@@ -105,6 +120,7 @@ export async function run() {
         failWriting = false
         await click('Retry')
       }
+      await confirmNext(mock.id, 'Speaking')
       assert.equal(path, mock.sections[3].launchPath, `${mock.id}: Writing → Speaking`)
       assert.equal(element.querySelector('video'), null, 'Speaking starts without an intro')
       assert.equal(getFullMockResults(mock.id).writing?.review?.length, 2)
@@ -129,6 +145,7 @@ export async function run() {
     if (root) await act(async () => root!.unmount())
     globalThis.fetch = originalFetch
     globalThis.setTimeout = originalTimeout
+    Date.now = originalNow
     window.setTimeout = originalWindowTimeout
     useAuthStore.getState().clearSession()
     localStorage.clear()

@@ -7,6 +7,7 @@ import { asyncHandler } from '../utils/asyncHandler.js'
 import { generateLeaderboard } from '../services/leaderboard.service.js'
 
 const router = Router()
+router.use((_req, res, next) => { res.set('Cache-Control', 'no-store'); next() })
 
 const querySchema = z.object({
   period: z.enum(['today', 'week', 'month', 'all']).default('all'),

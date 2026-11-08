@@ -14,9 +14,17 @@ export type MicMeter = {
 
 export async function createMicMeter(): Promise<MicMeter> {
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-  let ctx: AudioContext
-  let source: MediaStreamAudioSourceNode
+  let ctx: AudioContext | undefined
+  let source: MediaStreamAudioSourceNode | undefined
   let analyser: AnalyserNode
+  let stopped = false
+  const stop = () => {
+    if (stopped) return
+    stopped = true
+    for (const track of stream.getTracks()) { try { track.stop() } catch { /* Release the remaining tracks too. */ } }
+    try { source?.disconnect() } catch { /* Already disconnected. */ }
+    try { void ctx?.close().catch(() => {}) } catch { /* Already closed. */ }
+  }
   try {
     const AudioCtx: typeof AudioContext =
       window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
@@ -24,17 +32,18 @@ export async function createMicMeter(): Promise<MicMeter> {
     ctx = new AudioCtx()
     source = ctx.createMediaStreamSource(stream)
     analyser = ctx.createAnalyser()
+    analyser.fftSize = 512
+    analyser.smoothingTimeConstant = 0.82
+    source.connect(analyser)
   } catch (error) {
-    stream.getTracks().forEach((track) => track.stop())
+    stop()
     throw error
   }
-  analyser.fftSize = 512
-  analyser.smoothingTimeConstant = 0.82
-  source.connect(analyser)
 
   const data = new Uint8Array(analyser.frequencyBinCount)
 
   const getLevel = () => {
+    if (stopped) return 0
     analyser.getByteTimeDomainData(data)
     let sum = 0
     for (let i = 0; i < data.length; i += 1) {
@@ -44,24 +53,6 @@ export async function createMicMeter(): Promise<MicMeter> {
     const rms = Math.sqrt(sum / data.length)
     // Scale so normal speech lands in a lively 0.3–0.9 range.
     return Math.min(1, rms * 3.2)
-  }
-
-  const stop = () => {
-    try {
-      stream.getTracks().forEach((track) => track.stop())
-    } catch {
-      /* ignore */
-    }
-    try {
-      source.disconnect()
-    } catch {
-      /* ignore */
-    }
-    try {
-      void ctx.close()
-    } catch {
-      /* ignore */
-    }
   }
 
   return { getLevel, stop }

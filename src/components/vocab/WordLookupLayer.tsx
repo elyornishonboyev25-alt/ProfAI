@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { Sparkles } from 'lucide-react'
 import type { VocabContext } from '@/utils/myVocabularyStore'
@@ -137,7 +138,7 @@ export function WordLookupLayer() {
           className="z-[115] inline-flex items-center gap-1.5 rounded-full border border-blue-300/60 bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1.5 text-xs font-bold text-white shadow-[0_10px_24px_rgba(37,99,235,0.4)] transition hover:brightness-110"
         >
           <Sparkles className="h-3.5 w-3.5" />
-          Ask AI
+          <UiText text={"Ask AI"} />
         </button>
       ) : null}
 

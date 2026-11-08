@@ -10,6 +10,7 @@ export function waitForIeltsClassSync(testId: string, date: string) {
 }
 
 export function syncIeltsClassResult(type: 'reading' | 'listening', test: IELTSTest, result: TestResult, assignmentId?: string) {
+  if (result.leaderboardEligible === false) return Promise.resolve()
   if (!result.isPartial) {
     // Use the same idempotent attempt endpoint as Results, so class work and
     // review represent one attempt and award XP only once.
@@ -29,6 +30,7 @@ export function syncIeltsClassResult(type: 'reading' | 'listening', test: IELTST
       assignmentId,
     }, { expectedUserId: userId }).then((response) => {
       try { accountStorageFor(userId ?? 'guest').setItem(`smarttest-${type}-sync:${userId ?? 'guest'}:${result.testId}-${result.date}`, 'ok') } catch { /* Server sync succeeded even if storage is unavailable. */ }
+      window.dispatchEvent(new Event('smarttest:attempt-submitted'))
       return response
     }).finally(() => pending.delete(key))
     pending.set(key, request)

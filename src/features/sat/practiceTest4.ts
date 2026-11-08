@@ -10,6 +10,7 @@ import {
 export type SATMode = 'practice' | 'exam'
 export type SATModuleId = 'rw1' | 'rw2' | 'math1' | 'math2'
 export type SATSection = 'reading-writing' | 'math'
+export type SATAdaptiveRoute = 'lower' | 'higher'
 export type SATAttemptStatus = 'active' | 'submitted' | 'terminated'
 
 export type SATQuestion = {
@@ -43,6 +44,15 @@ export type SATModule = {
   section: SATSection
   durationSeconds: number
   questions: SATQuestion[]
+  /** Versioned alternatives; only one is delivered after the first module. */
+  adaptive?: {
+    version: '2026-11-02-v1'
+    firstModuleId: SATModuleId
+    higherMinimumCorrect: number
+    lower: SATQuestion[]
+    higher: SATQuestion[]
+  }
+  adaptiveRoute?: SATAdaptiveRoute
 }
 
 export type HighlightPoint = { x: number; y: number }
@@ -56,6 +66,10 @@ export type HighlightStroke = {
 }
 
 export type SATAttempt = {
+  /** Locked on module transition, retained on reload and in submitted history. */
+  adaptiveRoutes?: Partial<Record<SATModuleId, SATAdaptiveRoute>>
+  leaderboardEligible?: boolean
+  eligibilityNoticeAcknowledged?: boolean
   version: 1
   attemptId: string
   testId: string
@@ -83,6 +97,8 @@ export type SATAttempt = {
   timerPausedAt?: number
   /** A wall-clock break after Reading & Writing; the next module has not started. */
   sectionBreak?: { endsAt: number }
+  /** Orientation between modules; both module timers are stopped until it finishes. */
+  moduleTransition?: { endsAt: number }
 }
 
 export const SAT_TEST_TIMER_KEY = '__test__'
@@ -325,10 +341,48 @@ export type SATScoreReport = {
   percent: number
 }
 
+export function satModuleRoute(module: SATModule, modules: SATModule[], answers: Record<string, string>): SATAdaptiveRoute {
+  const spec = module.adaptive
+  if (!spec) return 'higher'
+  const first = modules.find(item => item.id === spec.firstModuleId)
+  if (!first) return module.adaptiveRoute ?? 'higher'
+  const correct = first?.questions.filter(question => isSATAnswerCorrect(question, answers[question.id])).length ?? 0
+  return correct >= spec.higherMinimumCorrect ? 'higher' : 'lower'
+}
+
+export function resolveSATModules(modules: SATModule[], answers: Record<string, string>, routes?: SATAttempt['adaptiveRoutes']): SATModule[] {
+  return modules.map(module => {
+    if (!module.adaptive) return module
+    const route = routes?.[module.id] ?? module.adaptiveRoute ?? satModuleRoute(module, modules, answers)
+    return { ...module, questions: module.adaptive[route], adaptiveRoute: route }
+  })
+}
+
+// Practice-only Rasch estimate using source difficulty categories, not College
+// Board item parameters or equating. Freeze this model with the form version.
+function adaptiveScoreRange(modules: SATModule[], answers: Record<string, string>): [number, number] {
+  const questions = modules.flatMap(module => module.questions)
+  const correct = questions.filter(q => isSATAnswerCorrect(q, answers[q.id])).length
+  const cap = modules.some(module => module.adaptiveRoute === 'lower') ? 650 : 800
+  if (!correct) return [200, 200]
+  if (correct === questions.length) return [cap, cap]
+  const difficulty = { Foundation: -1.25, Medium: 0, Advanced: 1.25 }
+  let low = -6, high = 6
+  for (let step = 0; step < 40; step++) {
+    const theta = (low + high) / 2
+    const expected = questions.reduce((sum, q) => sum + 1 / (1 + Math.exp(difficulty[q.difficulty] - theta)), 0)
+    if (expected < correct) low = theta
+    else high = theta
+  }
+  const score = Math.max(200, Math.min(cap, Math.round((500 + 100 * ((low + high) / 2)) / 10) * 10))
+  return [Math.max(200, score - 30), Math.min(cap, score + 30)]
+}
+
 export function scoreSATModules(
   modules: SATModule[],
   answers: Record<string, string>,
 ): SATScoreReport {
+  modules = resolveSATModules(modules, answers)
   const questions = modules.flatMap((module) => module.questions)
   let readingWritingRaw = 0
   let mathRaw = 0
@@ -353,8 +407,12 @@ export function scoreSATModules(
   const scaledMathRaw = Math.round(
     (mathRaw / Math.max(1, mathTotal)) * (MATH_SCORE_RANGES.length - 1),
   )
-  const readingWritingRange = RW_SCORE_RANGES[scaledReadingWritingRaw] ?? [200, 200]
-  const mathRange = MATH_SCORE_RANGES[scaledMathRaw] ?? [200, 200]
+  const rwModules = modules.filter(module => module.section === 'reading-writing')
+  const mathModules = modules.filter(module => module.section === 'math')
+  const readingWritingRange = rwModules.some(module => module.adaptive)
+    ? adaptiveScoreRange(rwModules, answers) : RW_SCORE_RANGES[scaledReadingWritingRaw] ?? [200, 200]
+  const mathRange = mathModules.some(module => module.adaptive)
+    ? adaptiveScoreRange(mathModules, answers) : MATH_SCORE_RANGES[scaledMathRaw] ?? [200, 200]
   const totalRange: [number, number] = [
     readingWritingRange[0] + mathRange[0],
     readingWritingRange[1] + mathRange[1],

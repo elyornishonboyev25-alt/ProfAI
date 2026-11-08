@@ -3,17 +3,29 @@ import { WebSocket, type WebSocketServer } from 'ws'
 
 export type CommunityIdentity = { userId: string; name: string; avatarUrl: string | null; public: boolean }
 export type CommunityAuthenticator = (token: string) => Promise<CommunityIdentity | null>
+export type BlockedCaller = { userId: string; name: string; avatarUrl: string | null }
+export type CommunityBlockStore = {
+  load: (userId: string) => Promise<BlockedCaller[]>
+  set: (blockerId: string, blockedId: string, blocked: boolean) => Promise<void>
+}
 type Member = CommunityIdentity & { id: string; ws: WebSocket; roomId: string | null; role: 'speaker' | 'listener'; muted: boolean; hand: boolean; side: string; lastMessage: number }
 type Chat = { id: string; name: string; text: string; createdAt: string }
 type Debate = { running: boolean; turnId: string | null; endsAt: number | null; round: number }
 type Room = { id: string; title: string; topic: string; kind: string; level: string; capacity: number; private: boolean; hostId: string; members: Member[]; messages: Chat[]; createdAt: string; debate: Debate }
 
 /** Live rooms exist while occupied. Private rooms are discoverable only through their unguessable link. */
-export function attachCommunitySignaling(wss: WebSocketServer, authenticate?: CommunityAuthenticator) {
+export function attachCommunitySignaling(wss: WebSocketServer, authenticate?: CommunityAuthenticator, blockStore?: CommunityBlockStore) {
   const members = new Set<Member>()
   const rooms = new Map<string, Room>()
   const invites = new Map<string, { from: Member; to: Member; expiresAt: number }>()
   const queue = new Set<Member>()
+  const blocks = new Map<string, Map<string, BlockedCaller>>()
+  const blockChanges = new Set<string>()
+  const blockedPair = (a: Member, b: Member) => !!blocks.get(a.userId)?.has(b.userId) || !!blocks.get(b.userId)?.has(a.userId)
+  const sendBlocks = (userId: string) => {
+    const people = [...(blocks.get(userId)?.values() ?? [])].map(({ userId: id, name, avatarUrl }) => ({ id, name, avatarUrl }))
+    members.forEach(member => { if (member.userId === userId) send(member, { type: 'communityBlocks', people }) })
+  }
   const send = (member: Member, payload: unknown) => {
     if (member.ws.readyState === WebSocket.OPEN) member.ws.send(JSON.stringify(payload))
   }
@@ -30,7 +42,13 @@ export function attachCommunitySignaling(wss: WebSocketServer, authenticate?: Co
     const people = [...members].filter(m => m.public && m.ws.readyState === WebSocket.OPEN)
     const availablePeople = [...new Map(people.filter(m => !occupied(m)).map(m => [m.userId, { name: m.name, avatarUrl: m.avatarUrl }])).values()]
     const payload = { type: 'communityLobby', rooms: [...rooms.values()].filter(r => !r.private).map(summary), online: [...new Set(people.map(m => m.userId))].length, available: availablePeople.map(m => m.name), availablePeople }
-    members.forEach(m => send(m, { ...payload, activity: activity(m), publicProfile: m.public }))
+    members.forEach(m => {
+      const allowed = availablePeople.filter(person => {
+        const peer = people.find(candidate => candidate.name === person.name)
+        return peer && !blockedPair(m, peer)
+      })
+      send(m, { ...payload, available: allowed.map(person => person.name), availablePeople: allowed, activity: activity(m), publicProfile: m.public })
+    })
   }
   const update = (room: Room) => {
     room.members.forEach(m => send(m, { type: 'communityRoom', room: summary(room), selfId: m.id, messages: room.messages }))
@@ -132,12 +150,25 @@ export function attachCommunitySignaling(wss: WebSocketServer, authenticate?: Co
         authenticating = true
         let identity: CommunityIdentity | null = null
         try { identity = await authenticate?.(typeof data.token === 'string' ? data.token : '') ?? null } catch { /* Invalid session or unavailable account. */ }
+        if (identity && blockStore) {
+          try {
+            const loaded = await blockStore.load(identity.userId)
+            // A concurrent tab may have changed blocks while this query was running.
+            if (!blocks.has(identity.userId)) blocks.set(identity.userId, new Map(loaded.map(person => [person.userId, person])))
+          } catch {
+            authenticating = false
+            if (!closed) ws.send(JSON.stringify({ type: 'communityError', message: 'Call preferences could not load. Reconnect to try again.' }))
+            return
+          }
+        }
         authenticating = false
         if (closed) return
         if (!identity) { ws.send(JSON.stringify({ type: 'communityError', message: 'Please sign in again to connect to speaking rooms.' })); return }
         member = { ...identity, id: randomUUID(), ws, roomId: null, role: 'speaker', muted: true, hand: false, side: '', lastMessage: 0 }
         members.add(member)
+        if (!blocks.has(member.userId)) blocks.set(member.userId, new Map())
         send(member, { type: 'communityReady', selfId: member.id, name: member.name })
+        sendBlocks(member.userId)
         lobby()
         return
       }
@@ -222,7 +253,7 @@ export function attachCommunitySignaling(wss: WebSocketServer, authenticate?: Co
           if (!member.public) { error(member, 'Enable your public profile to find a speaking partner.'); break }
           if (member.roomId) { error(member, 'Leave your current room before inviting a partner.'); break }
           if (occupied(member)) { error(member, 'You already have a pending invitation. Please wait for a reply.'); break }
-          const target = [...members].find(m => m.public && m.ws.readyState === WebSocket.OPEN && m.name === data.nickname && m.userId !== member!.userId && !occupied(m))
+          const target = [...members].find(m => m.public && m.ws.readyState === WebSocket.OPEN && m.name === data.nickname && m.userId !== member!.userId && !occupied(m) && !blockedPair(member!, m))
           if (!target) { error(member, 'This learner is no longer available for a call.'); break }
           const id = randomUUID()
           invites.set(id, { from: member, to: target, expiresAt: Date.now() + 60_000 })
@@ -235,7 +266,7 @@ export function attachCommunitySignaling(wss: WebSocketServer, authenticate?: Co
           if (!member.public) { error(member, 'Enable your public profile to find a speaking partner.'); break }
           if (queue.has(member)) { send(member, { type: 'communityMatching' }); break }
           if (occupied(member)) { error(member, 'Leave your room or pending invitation before finding a partner.'); lobby(); break }
-          const candidates = [...queue].filter(m => members.has(m) && m.ws.readyState === WebSocket.OPEN && m.public && !m.roomId && m.userId !== member!.userId)
+          const candidates = [...queue].filter(m => members.has(m) && m.ws.readyState === WebSocket.OPEN && m.public && !m.roomId && m.userId !== member!.userId && !blockedPair(member!, m))
           const partner = candidates[Math.floor(Math.random() * candidates.length)]
           if (!partner) { queue.add(member); send(member, { type: 'communityMatching' }); lobby(); break }
           queue.delete(partner)
@@ -249,9 +280,51 @@ export function attachCommunitySignaling(wss: WebSocketServer, authenticate?: Co
           if (!invite || invite.to !== member) break
           invites.delete(String(data.id))
           if (invite.expiresAt < Date.now() || !members.has(invite.from) || invite.from.ws.readyState !== WebSocket.OPEN) { error(member, 'This invitation has expired.'); lobby(); break }
-          if (data.accept !== true || member.roomId || invite.from.roomId) { send(invite.from, { type: 'communityNotice', message: 'Your partner is unavailable or declined the invitation.' }); lobby(); break }
+          if (data.accept !== true || member.roomId || invite.from.roomId || blockedPair(member, invite.from)) { send(invite.from, { type: 'communityNotice', message: 'Your partner is unavailable or declined the invitation.' }); lobby(); break }
           const target = create(invite.from, { title: `${invite.from.name} & ${member.name}`, topic: 'Introduce yourself, share your interests and practise English together.', capacity: 2 }, true)
           if (target) join(member, target)
+          break
+        }
+        case 'communityBlock': {
+          const invite = invites.get(String(data.id))
+          if (!invite || invite.to.userId !== member.userId || invite.expiresAt <= Date.now()) { error(member, 'This invitation has expired.'); break }
+          if (blockChanges.has(member.userId)) { error(member, 'Your call settings are updating. Please try again.'); break }
+          const caller = invite.from
+          const owner = member
+          blockChanges.add(owner.userId)
+          // Dismiss the call before persistence, so another tab cannot accept it.
+          for (const [id, pending] of invites) if ((pending.from.userId === caller.userId && pending.to.userId === owner.userId) || (pending.from.userId === owner.userId && pending.to.userId === caller.userId)) {
+            invites.delete(id)
+            members.forEach(session => { if (session.userId === pending.to.userId) send(session, { type: 'communityInvitationCancelled', id }) })
+            send(pending.from, { type: 'communityNotice', message: 'Your partner is unavailable or declined the invitation.' })
+          }
+          const previous = blocks.get(owner.userId) ?? new Map<string, BlockedCaller>()
+          previous.set(caller.userId, { userId: caller.userId, name: caller.name, avatarUrl: caller.avatarUrl })
+          blocks.set(owner.userId, previous)
+          lobby()
+          try {
+            await blockStore?.set(owner.userId, caller.userId, true)
+            sendBlocks(owner.userId)
+            send(owner, { type: 'communityNotice', message: 'Caller blocked. They cannot call or match with you.' })
+          } catch {
+            previous.delete(caller.userId)
+            error(owner, 'The call was declined, but blocking could not be saved. Please try again.')
+          } finally { blockChanges.delete(owner.userId); lobby() }
+          break
+        }
+        case 'communityUnblock': {
+          const owner = member
+          const person = blocks.get(owner.userId)?.get(String(data.userId))
+          if (blockChanges.has(owner.userId)) { error(owner, 'Your call settings are updating. Please try again.'); break }
+          if (!person) { sendBlocks(owner.userId); break }
+          blockChanges.add(owner.userId)
+          try {
+            await blockStore?.set(owner.userId, person.userId, false)
+            blocks.get(owner.userId)?.delete(person.userId)
+            sendBlocks(owner.userId)
+            send(owner, { type: 'communityNotice', message: 'Caller unblocked.' })
+          } catch { error(owner, 'Unable to unblock this caller. Please try again.') }
+          finally { blockChanges.delete(owner.userId); lobby() }
           break
         }
       }
@@ -261,6 +334,7 @@ export function attachCommunitySignaling(wss: WebSocketServer, authenticate?: Co
       if (!member) return
       leave(member)
       members.delete(member)
+      if (![...members].some(session => session.userId === member!.userId) && !blockChanges.has(member.userId)) blocks.delete(member.userId)
       lobby()
     })
   })

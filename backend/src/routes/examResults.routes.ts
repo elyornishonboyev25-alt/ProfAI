@@ -5,11 +5,19 @@ import { prisma } from '../lib/prisma.js'
 import { requireAuth } from '../middleware/auth.js'
 import { validateBody, validateQuery } from '../middleware/validate.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
+import { getIeltsStanding } from '../services/ieltsStanding.service.js'
+import { assessmentCountsForLeaderboard } from '../services/examLeaderboardEligibility.js'
 
 const router = Router()
 
 const testIdSchema = z.string().trim().regex(/^[a-z0-9][a-z0-9-]{0,119}$/i)
 const examSchema = z.enum(['SAT', 'IELTS'])
+
+router.get('/ielts/:testId/standing', requireAuth, asyncHandler(async (req, res) => {
+  const testId = testIdSchema.safeParse(req.params.testId)
+  if (!testId.success) return res.status(400).json({ message: 'Unknown test.' })
+  return res.json(await getIeltsStanding(testId.data, req.user!.id))
+}))
 
 const standingQuerySchema = z.object({
   total: z.coerce.number().int().min(0).max(1600).optional(),
@@ -58,7 +66,7 @@ function percentile(values: number[], score: number | undefined) {
   return Math.round((values.filter((value) => value <= score).length / values.length) * 1000) / 10
 }
 
-/** Each learner's first completed attempt is their test-day result. */
+/** Each learner's first eligible completed attempt is their test-day result. */
 router.get(
   '/sat/:testId/standing',
   requireAuth,
@@ -79,6 +87,7 @@ router.get(
     for (const result of results) {
       // A longer test id shares the prefix; only `<prefix><timestamp>` belongs to this test.
       if (!/^\d+$/.test(result.sourceKey.slice(prefix.length))) continue
+      if (!assessmentCountsForLeaderboard({ ...result, examType: 'SAT' })) continue
       if (!first.has(result.userId)) first.set(result.userId, result)
     }
     const attempts = [...first.values()].map((result) => {

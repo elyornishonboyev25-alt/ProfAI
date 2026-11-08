@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import { createContext, useContext, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { Bookmark, BookmarkCheck, Heart } from 'lucide-react'
 import type { VocabularyEntry } from '@/data/vocabularyCollections'
@@ -12,6 +14,7 @@ export function WordSaveProvider({ value, children }: { value: SaveContext | nul
 }
 
 export function SaveWordButton({ entry, iconOnly = false, accent = 'red' }: { entry: VocabularyEntry; iconOnly?: boolean; accent?: 'red' | 'blue' }) {
+  const { c: uiCopy } = useCopy()
   const config = useContext(WordSaveContext)
   const [error, setError] = useState(false)
   const saved = useSyncExternalStore(subscribeSavedWords, () => {
@@ -29,8 +32,8 @@ export function SaveWordButton({ entry, iconOnly = false, accent = 'red' }: { en
         type="button"
         disabled={saved}
         data-word-saved={saved}
-        aria-label={saved ? `${entry.term} saved to My Words` : `Save ${entry.term} to My Words`}
-        title={saved ? 'Saved to My Words' : 'Save to My Words'}
+        aria-label={saved ? uiCopy("{{value1}} saved to My Words", { value1: String(entry.term) }) : uiCopy("Save {{value1}} to My Words", { value1: String(entry.term) })}
+        title={saved ? uiCopy("Saved to My Words") : uiCopy("Save to My Words")}
         onClick={(event) => {
           event.stopPropagation()
           try {
@@ -46,10 +49,10 @@ export function SaveWordButton({ entry, iconOnly = false, accent = 'red' }: { en
       >
         {iconOnly ? <Heart aria-hidden="true" className="h-4 w-4" fill={saved ? 'currentColor' : 'none'} /> : <>
           {saved ? <BookmarkCheck className="h-3.5 w-3.5" /> : <Bookmark className="h-3.5 w-3.5" />}
-          {saved ? 'Saved to My Words' : 'Save to My Words'}
+          {saved ? <UiText text={"Saved to My Words"} /> : <UiText text={"Save to My Words"} />}
         </>}
       </button>
-      {error ? <span role="alert" className={iconOnly ? 'absolute right-0 top-full z-10 w-48 rounded-lg border border-red-100 bg-white p-2 text-xs text-red-600 shadow-sm' : 'text-xs text-red-600'}>Could not save. Please try again.</span> : null}
+      {error ? <span role="alert" className={iconOnly ? 'absolute right-0 top-full z-10 w-48 rounded-lg border border-red-100 bg-white p-2 text-xs text-red-600 shadow-sm' : 'text-xs text-red-600'}><UiText text={"Could not save. Please try again."} /></span> : null}
     </div>
   )
 }

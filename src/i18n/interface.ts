@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import i18n from 'i18next'
 
 export const russianInterface: Record<string, string> = {
   'Speaking Zone': 'Speaking Zone',
@@ -184,9 +185,11 @@ function canonicalInterfaceText(text: string, resources: object[]) {
     let keys = canonicalInterfaceKeys.get(resource)
     if (!keys) {
       keys = new Map(Object.entries(resource).filter(([, value]) => typeof value === 'string').map(([key, value]) => [value as string, key]))
+      // Server enums such as STUDENT use the same copy as the visible "Student" label.
+      for (const key of Object.keys(resource)) keys.set(`source:${key.toLowerCase()}`, key)
       canonicalInterfaceKeys.set(resource, keys)
     }
-    const key = keys.get(text)
+    const key = keys.get(text) ?? keys.get(`source:${text.toLowerCase()}`)
     if (key) return key
   }
   return text
@@ -194,11 +197,13 @@ function canonicalInterfaceText(text: string, resources: object[]) {
 
 /** Translate only explicitly marked interface copy, including cached UI labels.
  * User conversations, essays and test materials never pass through this helper. */
-export function useCopy() {
-  const { t, i18n } = useTranslation('interface')
+export function translateInterface(text: string, values?: Record<string, string | number>) {
   const resources = [i18n.getResourceBundle?.('uz', 'interface'), i18n.getResourceBundle?.('ru', 'interface')].filter(Boolean) as object[]
-  return { c: (text: string, values?: Record<string, string | number>) => {
-    const key = canonicalInterfaceText(text, resources)
-    return t(key, { ...values, defaultValue: key })
-  }, language: i18n.resolvedLanguage ?? i18n.language ?? 'en' }
+  const key = canonicalInterfaceText(text, resources)
+  return i18n.t(key, { ...values, ns: 'interface', defaultValue: key, keySeparator: false, nsSeparator: false })
+}
+
+export function useCopy() {
+  const { i18n } = useTranslation('interface')
+  return { c: translateInterface, language: i18n.resolvedLanguage ?? i18n.language ?? 'en' }
 }

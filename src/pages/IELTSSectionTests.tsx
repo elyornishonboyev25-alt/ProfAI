@@ -1,3 +1,4 @@
+import { useCopy } from '@/i18n/interface'
 import UiText from '@/components/common/UiText'
 import { useDeferredValue, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -20,6 +21,7 @@ import { useAuthStore, type AuthState } from '@/store/authStore'
 const CARD_EASE = [0.22, 1, 0.36, 1] as const
 
 export default function IELTSSectionTests({ sectionOverride, embedded = false }: { sectionOverride?: 'reading' | 'listening'; embedded?: boolean } = {}) {
+  const { c: uiCopy } = useCopy()
   const navigate = useNavigate()
   const location = useLocation()
   const { section } = useParams<{ section: string }>()
@@ -116,7 +118,7 @@ export default function IELTSSectionTests({ sectionOverride, embedded = false }:
           <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
             <motion.button
               type="button"
-              aria-label="Close"
+              aria-label={uiCopy("Close")}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -131,10 +133,10 @@ export default function IELTSSectionTests({ sectionOverride, embedded = false }:
               className="relative w-full max-w-md rounded-[1.75rem] border border-slate-200 bg-white p-7 text-center shadow-2xl"
             >
               <p className="mx-auto inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-amber-700">
-                <Crown className="h-3.5 w-3.5" /> Premium access
+                <Crown className="h-3.5 w-3.5" /> <UiText text={"Premium access"} />
               </p>
-              <h2 className="mt-4 text-2xl font-black text-slate-950">Free tests used</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">Premium gives you unlimited IELTS tests.</p>
+              <h2 className="mt-4 text-2xl font-black text-slate-950"><UiText text={"Free tests used"} /></h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600"><UiText text={"Premium gives you unlimited IELTS tests."} /></p>
               <div className="mt-5 flex justify-center gap-2">
                 <button type="button" onClick={() => setShowTrialGate(false)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700"> <UiText text={"Close"} /> </button>
                 <button type="button" onClick={() => navigate('/premium')} className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white"> <UiText text={"View Premium"} /> </button>
@@ -158,7 +160,7 @@ export default function IELTSSectionTests({ sectionOverride, embedded = false }:
         headerExtra={!trial.isPremium && Number.isFinite(trial.remaining) ? (
           <span className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-3 text-xs font-bold text-amber-700">
             <Sparkles className="h-3.5 w-3.5" />
-            {Math.max(0, trial.remaining)} free
+            {Math.max(0, trial.remaining)} <UiText text={"free"} />
           </span>
         ) : undefined}
       />

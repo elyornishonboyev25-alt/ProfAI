@@ -4,7 +4,10 @@ import {
   type SATModule,
   type SATModuleId,
   type SATSection,
+  type SATAttempt,
+  resolveSATModules,
 } from './practiceTest4'
+import { ADAPTIVE_SAT_TESTS } from './adaptiveCatalog'
 import { SAT_PAPER_17, SAT_PAPER_17_MODULES } from './paper17'
 import {
   SAT_DECEMBER_2025_INTL,
@@ -37,7 +40,7 @@ export type SATTestDefinition = {
   missingModuleIds?: readonly SATModuleId[]
 }
 
-export const SAT_TEST_CATALOG: Record<number, SATTestDefinition> = {
+export const LEGACY_SAT_TEST_CATALOG: Record<number, SATTestDefinition> = {
   1: {
     mockId: 1,
     ...SAT_PRACTICE_TEST_4,
@@ -102,6 +105,19 @@ export const SAT_TEST_CATALOG: Record<number, SATTestDefinition> = {
   ...SAT_QUESTION_BANK_TESTS,
 }
 
+export const SAT_TEST_CATALOG = ADAPTIVE_SAT_TESTS
+
+export function resolveSATTest(test: SATTestDefinition, attempt: SATAttempt): SATTestDefinition {
+  return { ...test, modules: resolveSATModules(test.modules, attempt.answers, attempt.adaptiveRoutes) }
+}
+
+/** All source questions, including undelivered branches, for the question bank. */
+export function satSourceModules(test: SATTestDefinition): SATModule[] {
+  return test.modules.flatMap(module => module.adaptive
+    ? [module, { ...module, questions: module.adaptive.lower }]
+    : [module])
+}
+
 export function isSATTestComplete(test: SATTestDefinition): boolean {
   if (test.missingModuleIds?.length) return false
   const readingWriting = test.modules.filter((module) => module.section === 'reading-writing').length
@@ -159,7 +175,7 @@ export function getSATReviewTests(): SATTestDefinition[] {
     mockId: 9, ...SAT_MAY_2026_US_LEGACY,
     badge: 'May 2026 US · Original 76-question version', difficulty: 'Easy',
   }
-  return [...Object.values(SAT_TEST_CATALOG), legacy, ...SAT_QUESTION_BANK_LEGACY_TESTS].flatMap((test) => [
+  return [...Object.values(LEGACY_SAT_TEST_CATALOG), legacy, ...SAT_QUESTION_BANK_LEGACY_TESTS, ...Object.values(SAT_TEST_CATALOG)].flatMap((test) => [
     test, selectSATSection(test, 'math'), selectSATSection(test, 'reading-writing'),
   ])
 }

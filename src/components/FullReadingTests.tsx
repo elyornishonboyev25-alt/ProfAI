@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 ﻿import { fullReadingTests } from "../data/fullReadingTest";
 import "../styles/globals.css";
 
@@ -5,7 +6,7 @@ const FullReadingTests = () => {
   return (
     <div className="reading-tests-container">
       <h1 className="text-center text-3xl font-bold mb-6 text-white">
-        IELTS Academic Reading Tests
+        <UiText text={"IELTS Academic Reading Tests"} />
       </h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {fullReadingTests.map((test) => (
@@ -32,11 +33,11 @@ const FullReadingTests = () => {
             <p className="text-sm text-gray-400 mb-2">{test.description}</p>
             <div className="flex justify-between text-sm text-gray-500">
               <span>вЏ± {test.duration}</span>
-              <span>рџ“‹ {test.questions} Questions</span>
+              <span>рџ“‹ {test.questions} <UiText text={"Questions"} /></span>
               <span>рџ“Љ {test.level}</span>
             </div>
             <button className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-              Start Test вћЎпёЏ
+              <UiText text="Start Test" />
             </button>
           </div>
         ))}

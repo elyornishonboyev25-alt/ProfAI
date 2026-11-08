@@ -9,6 +9,7 @@ export type Keyboard = KeyboardButton[][]
 export const telegramEnabled = () => Boolean(env.TELEGRAM_BOT_TOKEN.trim())
 export const siteUrl = () => (env.TELEGRAM_SITE_URL || env.BILLING_SITE_URL).replace(/\/+$/, '')
 export const wheelUrl = () => `${siteUrl()}/spin`
+export const miniAppUrl = (path = '/dashboard') => `${siteUrl()}${path}?from=telegram`
 export const escapeHtml = (value: string) => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
 export async function call<T = unknown>(method: string, body: Record<string, unknown>, signal?: AbortSignal): Promise<T | null> {

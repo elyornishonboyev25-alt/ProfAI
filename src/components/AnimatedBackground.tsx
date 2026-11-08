@@ -1,4 +1,5 @@
 import { memo } from 'react'
+import '@/styles/workspace-material.css'
 
 /** A single viewport-fixed, compositor-only ambient scene for the whole app. */
 export const AnimatedBackground = memo(function AnimatedBackground() {

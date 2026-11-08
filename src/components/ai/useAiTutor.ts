@@ -101,13 +101,14 @@ function describeAction(action: GeminiChatAction, locale: PremiumLanguage): stri
   return localized(locale, 'Open the suggested page', 'Открыть предложенную страницу', 'Tavsiya qilingan sahifani ochish')
 }
 
-export function useAiTutor() {
+export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspace') {
   const { i18n } = useTranslation()
   const uiLocale = premiumLanguage(i18n.resolvedLanguage ?? i18n.language)
   const navigate = useNavigate()
   const location = useLocation()
   const user = useAuthStore((state: AuthState) => state.user)
-  const hasPremium = hasPremiumAccess(user)
+  // Every registered learner has a text balance; Live AI checks its own plan.
+  const hasPremium = Boolean(user)
   const ownerKey = user?.id ? `user:${user.id}` : 'guest'
   const coachPreferences = useAiAssistantStore((state) => state.coachPreferencesByOwner[ownerKey] ?? DEFAULT_COACH_PREFERENCES)
 
@@ -161,6 +162,9 @@ export function useAiTutor() {
   const recognition = useSpeechRecognition(speechLangToBcp47(voiceLang))
   // When true, the final transcript is auto-sent + spoken when listening stops.
   const voiceTurnRef = useRef(false)
+  const voiceRunRef = useRef(0)
+  const meterVersionRef = useRef(0)
+  const voiceOutputVersionRef = useRef<number | null>(null)
   const levelTimerRef = useRef<number | null>(null)
   // Real microphone metering + hands-free silence detection.
   const meterRef = useRef<MicMeter | null>(null)
@@ -282,6 +286,8 @@ export function useAiTutor() {
   // the turn after a short silence (hands-free). Returns false if the mic is unavailable
   // so the caller can fall back to the synthetic pulse.
   const stopListeningMeter = useCallback(() => {
+    // Permission can resolve after close/unmount or after a newer start.
+    meterVersionRef.current++
     if (rafRef.current) {
       cancelAnimationFrame(rafRef.current)
       rafRef.current = null
@@ -292,9 +298,11 @@ export function useAiTutor() {
     }
   }, [])
 
-  const startListeningMeter = useCallback(async (): Promise<{ ok: true } | { ok: false; error: unknown }> => {
+  const startListeningMeter = useCallback(async (): Promise<{ ok: true } | { ok: false; error?: unknown; cancelled?: boolean }> => {
+    const version = meterVersionRef.current
     try {
       const meter = await createMicMeter()
+      if (version !== meterVersionRef.current) { meter.stop(); return { ok: false, cancelled: true } }
       meterRef.current = meter
       let spoke = false
       let lastLoud = Date.now()
@@ -319,17 +327,10 @@ export function useAiTutor() {
       rafRef.current = requestAnimationFrame(tick)
       return { ok: true }
     } catch (error) {
+      if (version !== meterVersionRef.current) return { ok: false, cancelled: true }
       return { ok: false, error }
     }
   }, [setVoiceLevel])
-
-  useEffect(
-    () => () => {
-      stopLevelPulse()
-      stopListeningMeter()
-    },
-    [stopLevelPulse, stopListeningMeter],
-  )
 
   const dispatchAction = useCallback(
     (action: GeminiChatAction, snapshot?: StudySnapshot) => {
@@ -383,8 +384,9 @@ export function useAiTutor() {
       const outImages = options.images ?? images
       if ((!text && outImages.length === 0) || useAiAssistantStore.getState().isSending) return
       setSending(true)
-      let threadId = activeThreadId ?? await createNewChat()
       const replyVersion = coachAudioVersion()
+      if (options.speak) voiceOutputVersionRef.current = replyVersion
+      let threadId = activeThreadId ?? await createNewChat()
       const draftThread = useAiAssistantStore.getState().threadsByOwner[ownerKey]?.find((thread) => thread.id === threadId)
       // A blank draft stays local. Create its server record once the
       // learner actually sends a message, keeping existing offline messages safe.
@@ -478,9 +480,10 @@ export function useAiTutor() {
         // Text matches each new message; voice retains its microphone/TTS language.
         if (options.speak && replyVersion === coachAudioVersion() && ttsSupported && response.reply.trim()) {
           speakCoachAudio(cleanForSpeech(response.reply), response.replyLanguage ?? voiceLang, {
-            loading: (loading) => { if (loading) { stopLevelPulse(); setVoiceState('thinking') } },
+            loading: (loading) => { if (loading) { voiceOutputVersionRef.current = coachAudioVersion(); stopLevelPulse(); setVoiceState('thinking') } },
             started: () => { setVoiceError(null); setVoiceState('speaking'); startLevelPulse() },
             ended: () => {
+              voiceOutputVersionRef.current = null
               stopLevelPulse()
               setVoiceState('idle')
             },
@@ -518,6 +521,7 @@ export function useAiTutor() {
         await userPersistPromise
       } finally {
         window.clearTimeout(timeout)
+        window.dispatchEvent(new Event('profai:billing-updated'))
         if (activeChatRequest?.controller === controller) activeChatRequest = null
         setSending(false)
       }
@@ -531,6 +535,10 @@ export function useAiTutor() {
   )
 
   const setVoiceLang = useCallback((language: SpeechLang) => {
+    voiceRunRef.current++
+    voiceTurnRef.current = false
+    stopListeningMeter()
+    recognition.abort()
     cancelSpeech()
     cancelCoachAudio()
     stopLevelPulse()
@@ -538,10 +546,16 @@ export function useAiTutor() {
     setVoiceError(null)
     setStoredVoiceLang(language)
     setPreferredLocale(language === 'uz' ? 'uz' : 'en')
-  }, [setStoredVoiceLang, setVoiceState, stopLevelPulse])
+  }, [recognition.abort, setStoredVoiceLang, setVoiceState, stopLevelPulse, stopListeningMeter])
 
   // ── Voice control ──────────────────────────────────────────────────────────
   const startVoice = useCallback(async () => {
+    if (!hasPremiumAccess(useAuthStore.getState().user)) {
+      window.dispatchEvent(new CustomEvent('profai:premium-required', { detail: 'Live AI' }))
+      return
+    }
+    const run = ++voiceRunRef.current
+    recognition.abort()
     cancelSpeech()
     cancelCoachAudio()
     unlockCoachAudio()
@@ -560,7 +574,9 @@ export function useAiTutor() {
     // Request real microphone access first. This gives us a reliable permission/device
     // result instead of showing a listening animation while capture is actually blocked.
     const meterResult = await startListeningMeter()
+    if (run !== voiceRunRef.current || (!meterResult.ok && meterResult.cancelled)) return
     if (!meterResult.ok) {
+      stopListeningMeter()
       const errorName = meterResult.error instanceof DOMException ? meterResult.error.name : ''
       const detail =
         errorName === 'NotFoundError' || errorName === 'DevicesNotFoundError'
@@ -577,17 +593,23 @@ export function useAiTutor() {
     }
 
     setVoiceState('listening')
-    recognition.start()
+    if (!recognition.start()) {
+      voiceTurnRef.current = false
+      stopListeningMeter()
+      setVoiceState('idle')
+    }
   }, [uiLocale, recognition, setVoiceState, startListeningMeter, stopLevelPulse, stopListeningMeter])
 
   const stopVoice = useCallback(async () => {
     if (stoppingVoiceRef.current) return
+    const run = voiceRunRef.current
     stoppingVoiceRef.current = true
     stopListeningMeter()
     stopLevelPulse()
     setVoiceState('thinking')
     // Wait for SpeechRecognition.onend: Chrome emits the final phrase after stop().
     const transcript = (await recognition.stop()).trim()
+    if (run !== voiceRunRef.current) return
     if (voiceTurnRef.current && transcript) {
       voiceTurnRef.current = false
       void send({ text: transcript, speak: true })
@@ -603,6 +625,8 @@ export function useAiTutor() {
 
   useEffect(() => {
     if (!recognition.error) return
+    voiceRunRef.current++
+    voiceTurnRef.current = false
     setVoiceError(localized(uiLocale, 'Voice recognition failed. Please try again.', 'Не удалось распознать речь. Повторите попытку.', 'Ovozni aniqlab bo‘lmadi. Qayta urinib ko‘ring.'))
     setVoiceState('idle')
     stopListeningMeter()
@@ -622,15 +646,56 @@ export function useAiTutor() {
   }, [setVoiceState, stopLevelPulse])
 
   const cancelVoice = useCallback(() => {
+    voiceRunRef.current++
     voiceTurnRef.current = false
+    voiceOutputVersionRef.current = null
     stoppingVoiceRef.current = true
     cancelSpeech()
     cancelCoachAudio()
     stopListeningMeter()
     stopLevelPulse()
-    void recognition.stop().catch(() => '')
+    recognition.abort()
+    recognition.reset()
+    setVoiceError(null)
     setVoiceState('idle')
-  }, [recognition, setVoiceState, stopLevelPulse, stopListeningMeter])
+  }, [recognition.abort, recognition.reset, setVoiceState, stopLevelPulse, stopListeningMeter])
+
+  const ownsVoice = useCallback(() => voiceTurnRef.current || meterRef.current !== null ||
+    (voiceOutputVersionRef.current !== null && voiceOutputVersionRef.current === coachAudioVersion()), [])
+  const cancelVoiceRef = useRef(cancelVoice)
+  cancelVoiceRef.current = cancelVoice
+  useEffect(() => {
+    const cancelOwnedVoice = () => { if (ownsVoice()) cancelVoiceRef.current() }
+    const unsubscribe = useAiAssistantStore.subscribe((state, previous) => {
+      if ((surface === 'talk' && previous.talkOpen && !state.talkOpen) ||
+          (surface === 'floating' && previous.isOpen && !state.isOpen) ||
+          (!previous.isExamModeActive && state.isExamModeActive)) {
+        cancelOwnedVoice()
+        recognition.reset()
+        setVoiceError(null)
+      }
+    })
+    window.addEventListener('pagehide', cancelOwnedVoice)
+    return () => {
+      unsubscribe()
+      window.removeEventListener('pagehide', cancelOwnedVoice)
+      cancelOwnedVoice()
+      // Invalidate pending permission even if no stream has arrived yet.
+      voiceRunRef.current++
+      stopListeningMeter()
+      recognition.abort()
+      stopLevelPulse()
+    }
+  }, [ownsVoice, recognition.abort, recognition.reset, stopLevelPulse, stopListeningMeter, surface])
+
+  const previousVoicePath = useRef(location.pathname)
+  useEffect(() => {
+    if (previousVoicePath.current !== location.pathname) {
+      if (ownsVoice()) cancelVoiceRef.current()
+      if (surface === 'talk') useAiAssistantStore.getState().closeTalk()
+      previousVoicePath.current = location.pathname
+    }
+  }, [location.pathname, ownsVoice, surface])
 
   // ── Images ─────────────────────────────────────────────────────────────────
   const addImages = useCallback(async (files: FileList | File[]) => {
@@ -651,15 +716,12 @@ export function useAiTutor() {
   }, [])
 
   const clear = useCallback(() => {
-    cancelSpeech()
-    stopLevelPulse()
-    stopListeningMeter()
-    setVoiceState('idle')
+    cancelVoice()
     setImages([])
     setPendingActions([])
     setVoiceError(null)
     void createNewChat()
-  }, [createNewChat, setVoiceState, stopLevelPulse, stopListeningMeter])
+  }, [cancelVoice, createNewChat])
 
   const approveAction = useCallback((id: string) => {
     const current = useAiAssistantStore.getState().pendingActions
@@ -681,6 +743,7 @@ export function useAiTutor() {
   const previousOwnerRef = useRef(ownerKey)
   useEffect(() => {
     if (previousOwnerRef.current !== ownerKey) {
+      cancelVoice()
       useAiAssistantStore.getState().endChatSession(previousOwnerRef.current)
       cancelCoachAudio()
       previousOwnerRef.current = ownerKey
@@ -690,7 +753,7 @@ export function useAiTutor() {
     if (activeChatRequest && activeChatRequest.owner !== ownerKey) {
       activeChatRequest.controller.abort('account_changed')
     }
-  }, [ownerKey, setPendingActions, setError])
+  }, [cancelVoice, ownerKey, setPendingActions, setError])
 
   return {
     user,

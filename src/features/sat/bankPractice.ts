@@ -1,6 +1,6 @@
 import { accountStorageFor } from '@/utils/accountStorage'
-import { getSATReviewTests, SAT_TEST_CATALOG } from './catalog'
-import type { HighlightStroke, SATQuestion } from './practiceTest4'
+import { getSATReviewTests, satSourceModules, type SATTestDefinition } from './catalog'
+import type { HighlightStroke, SATAttempt, SATModule, SATQuestion } from './practiceTest4'
 
 export type QuestionRow = { key: string; question: SATQuestion; testNumber: number }
 export type Result = {
@@ -15,6 +15,8 @@ export type Result = {
   flagged?: boolean
   highlights?: HighlightStroke[]
   eliminatedChoices?: string[]
+  /** Active seconds spent on the whole set; absent in older history. */
+  seconds?: number
 }
 // Older sets have no highlights. Ignore malformed annotations without losing answers.
 function readHighlights(value: unknown): HighlightStroke[] {
@@ -50,7 +52,8 @@ export function readHistory(userId: string): Result[] {
             Number.isFinite(Date.parse(row.at)) &&
             (row.answer === undefined || typeof row.answer === 'string') &&
             (row.setId === undefined || typeof row.setId === 'string') &&
-            (row.flagged === undefined || typeof row.flagged === 'boolean'),
+            (row.flagged === undefined || typeof row.flagged === 'boolean') &&
+            (row.seconds === undefined || (Number.isFinite(row.seconds) && row.seconds >= 0)),
           ),
         ).map((row) => ({ ...row, key: reviewQuestions.get(row.key)?.key ?? row.key,
           highlights: readHighlights(row.highlights) }))
@@ -63,10 +66,10 @@ export const questionKey = (question: SATQuestion, testId: string) =>
   `${question.section}:${question.sourceQuestionId ?? `${testId.replace(/-(math|reading-writing)$/, '')}:${question.id}`}`
 export const allQuestions: QuestionRow[] = (() => {
   const used = new Set<string>()
-  return Object.values(SAT_TEST_CATALOG)
+  return getSATReviewTests().filter(test => test.modules.length === 4)
     .sort((a, b) => a.mockId - b.mockId)
     .flatMap((test) =>
-      test.modules.flatMap((module) =>
+      satSourceModules(test).flatMap((module) =>
         module.questions.flatMap((question) => {
           const key = questionKey(question, test.id)
           if (used.has(key)) return []
@@ -79,7 +82,7 @@ export const allQuestions: QuestionRow[] = (() => {
 // Include retired catalog questions when reopening older practice sets.
 export const reviewQuestions = new Map(
   getSATReviewTests().flatMap((test) =>
-    test.modules.flatMap((module) =>
+    satSourceModules(test).flatMap((module) =>
       module.questions.map(
         (question) =>
           [
@@ -108,6 +111,8 @@ export type BankSession = {
   highlights: Record<string, HighlightStroke[]>
   eliminatedChoices?: Record<string, string[]>
   createdAt: string
+  /** Active practice seconds, excluding time the page was hidden. */
+  elapsedSeconds?: number
 }
 const sessionKey = (userId: string) => `profai:sat:question-bank:${userId}:active:v1`
 const attemptedKey = (userId: string) => `profai:sat:question-bank:${userId}:attempted:v1`
@@ -161,4 +166,73 @@ export function saveBankSession(userId: string, session: BankSession) {
 }
 export function clearBankSession(userId: string, id: string) {
   if (loadBankSession(userId)?.id === id) accountStorageFor(userId ?? 'guest').removeItem(sessionKey(userId))
+}
+
+// A finished set opens in the same analysis screen as full SAT tests. Each
+// bank key becomes the question id, so repeated catalog ids never collide.
+export function bankSetReview(setId: string, results: Result[]): { test: SATTestDefinition; attempt: SATAttempt } | null {
+  const items = results.flatMap((result) => {
+    const row = reviewQuestions.get(result.key)
+    return row ? [{ result, question: row.question }] : []
+  })
+  if (!items.length) return null
+  const modules: SATModule[] = (['reading-writing', 'math'] as const).flatMap((section) => {
+    const rows = items.filter((item) => item.question.section === section)
+    if (!rows.length) return []
+    const id = section === 'math' ? 'math1' as const : 'rw1' as const
+    return [{
+      id,
+      section,
+      title: section === 'math' ? 'Math questions' : 'Reading and Writing questions',
+      shortTitle: section === 'math' ? 'Math' : 'Reading & Writing',
+      durationSeconds: 0,
+      questions: rows.map((item) => ({ ...item.question, id: item.result.key, moduleId: id, number: items.indexOf(item) + 1 })),
+    }]
+  })
+  // Older history kept only correctness: a correct row matched the key, and a
+  // missed one shows that its answer was not recorded instead of a blank skip.
+  const answerOf = ({ result, question }: (typeof items)[number]) =>
+    result.answer ?? (result.correct ? question.correctAnswer : 'Not recorded')
+  const finishedAt = Date.parse(results[0].at)
+  const seconds = results[0].seconds
+  const startedAt = finishedAt - (seconds ?? 0) * 1000
+  const id = `question-bank-${setId}`
+  return {
+    test: {
+      mockId: 0,
+      id,
+      title: `${items.length}-question practice set`,
+      subtitle: 'Question Bank',
+      questionCount: items.length,
+      totalDurationSeconds: 0,
+      modules,
+      badge: 'Question Bank',
+      difficulty: 'Medium',
+    },
+    attempt: {
+      version: 1,
+      attemptId: id,
+      testId: id,
+      mode: 'practice',
+      status: 'submitted',
+      currentModuleIndex: 0,
+      currentQuestionIndex: 0,
+      answers: Object.fromEntries(items.map((item) => [item.result.key, answerOf(item)])),
+      flagged: items.filter((item) => item.result.flagged).map((item) => item.result.key),
+      notes: {},
+      highlights: Object.fromEntries(items.map((item) => [item.result.key, item.result.highlights ?? []])),
+      eliminatedChoices: Object.fromEntries(items.map((item) => [item.result.key, item.result.eliminatedChoices ?? []])),
+      startedAt,
+      updatedAt: finishedAt,
+      submittedAt: finishedAt,
+      moduleStartedAt: Object.fromEntries(modules.map((module) => [module.id, startedAt])),
+      moduleDeadlines: {},
+      ...(seconds === undefined ? {} : {
+        moduleElapsedSeconds: Object.fromEntries(modules.map((module) => [
+          module.id,
+          Math.round((seconds * module.questions.length) / items.length),
+        ])),
+      }),
+    },
+  }
 }

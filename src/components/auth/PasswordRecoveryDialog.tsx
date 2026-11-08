@@ -1,3 +1,4 @@
+import { useCopy } from '@/i18n/interface'
 import UiText from '@/components/common/UiText'
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -17,6 +18,7 @@ type VerificationResponse = {
 }
 
 export default function PasswordRecoveryDialog({ open, initialEmail = '', onClose }: Props) {
+  const { c: uiCopy } = useCopy()
   const pushToast = useToastStore((state) => state.pushToast)
   const [email, setEmail] = useState(initialEmail)
   const [code, setCode] = useState('')
@@ -101,7 +103,7 @@ export default function PasswordRecoveryDialog({ open, initialEmail = '', onClos
         <div className="fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto p-4">
           <motion.button
             type="button"
-            aria-label="Close password recovery"
+            aria-label={uiCopy("Close password recovery")}
             className="fixed inset-0 bg-slate-950/50 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -119,7 +121,7 @@ export default function PasswordRecoveryDialog({ open, initialEmail = '', onClos
             className="panel-surface relative w-full max-w-lg overflow-hidden rounded-[2rem] border border-white bg-white p-6 shadow-[0_32px_90px_rgba(15,23,42,.3)] sm:p-8"
           >
             <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-600 via-red-500 to-red-700" />
-            <button type="button" onClick={onClose} className="absolute right-4 top-4 rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Close">
+            <button type="button" onClick={onClose} className="absolute right-4 top-4 rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label={uiCopy("Close")}>
               <X className="h-5 w-5" />
             </button>
 
@@ -127,10 +129,10 @@ export default function PasswordRecoveryDialog({ open, initialEmail = '', onClos
               <KeyRound className="h-6 w-6" />
             </div>
             <p className="mt-5 inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-blue-700">
-              <ShieldCheck className="h-3.5 w-3.5" /> Secure recovery
+              <ShieldCheck className="h-3.5 w-3.5" /> <UiText text={"Secure recovery"} />
             </p>
-            <h2 id="password-recovery-title" className="mt-2 text-2xl font-black tracking-tight text-slate-950">Create a new password</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-500">We will send a one-time 6-digit code to the Gmail linked to your account.</p>
+            <h2 id="password-recovery-title" className="mt-2 text-2xl font-black tracking-tight text-slate-950"><UiText text={"Create a new password"} /></h2>
+            <p className="mt-2 text-sm leading-6 text-slate-500"><UiText text={"We will send a one-time 6-digit code to the Gmail linked to your account."} /></p>
 
             <label className="mt-6 block">
               <span className="mb-1.5 block text-sm font-bold text-slate-700"> <UiText text={"Gmail address"} /> </span>
@@ -145,7 +147,7 @@ export default function PasswordRecoveryDialog({ open, initialEmail = '', onClos
                 <label className="block">
                   <span className="mb-1.5 flex items-center justify-between text-sm font-bold text-slate-700">
                      <UiText text={"Verification code"} /> <button type="button" disabled={busy} onClick={() => void requestCode()} className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800">
-                      <RefreshCw className="h-3 w-3" /> Resend
+                      <RefreshCw className="h-3 w-3" /> <UiText text={"Resend"} />
                     </button>
                   </span>
                   <input value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" className="input h-12 rounded-2xl border-blue-100 bg-blue-50/40 text-center text-xl font-black tracking-[0.35em]" placeholder="000000" />
@@ -155,12 +157,12 @@ export default function PasswordRecoveryDialog({ open, initialEmail = '', onClos
                     <span className="mb-1.5 block text-sm font-bold text-slate-700"> <UiText text={"New password"} /> </span>
                     <div className="relative">
                       <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-400" />
-                      <input value={newPassword} onChange={(event) => setNewPassword(event.target.value)} type="password" autoComplete="new-password" className="input h-12 rounded-2xl border-blue-100 pl-11" placeholder="8+ characters" />
+                      <input value={newPassword} onChange={(event) => setNewPassword(event.target.value)} type="password" autoComplete="new-password" className="input h-12 rounded-2xl border-blue-100 pl-11" placeholder={uiCopy("8+ characters")} />
                     </div>
                   </label>
                   <label>
                     <span className="mb-1.5 block text-sm font-bold text-slate-700"> <UiText text={"Confirm password"} /> </span>
-                    <input value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} type="password" autoComplete="new-password" className="input h-12 rounded-2xl border-blue-100" placeholder="Repeat password" />
+                    <input value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} type="password" autoComplete="new-password" className="input h-12 rounded-2xl border-blue-100" placeholder={uiCopy("Repeat password")} />
                   </label>
                 </div>
               </div>
@@ -173,7 +175,7 @@ export default function PasswordRecoveryDialog({ open, initialEmail = '', onClos
               className="cta-sheen mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-700 via-blue-600 to-red-600 text-sm font-black text-white shadow-[0_16px_34px_rgba(37,99,235,.28)] disabled:opacity-60"
             >
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : codeSent ? <CheckCircle2 className="h-4 w-4" /> : <Mail className="h-4 w-4" />}
-              {busy ? 'Please wait...' : codeSent ? 'Set new password' : 'Send verification code'}
+              {busy ? <UiText text={"Please wait..."} /> : codeSent ? <UiText text={"Set new password"} /> : <UiText text={"Send verification code"} />}
             </button>
           </motion.section>
         </div>

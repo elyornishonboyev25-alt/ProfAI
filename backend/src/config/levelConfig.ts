@@ -1,48 +1,18 @@
-export const LEVEL_THRESHOLDS = [
-  0,
-  100,
-  250,
-  450,
-  700,
-  1000,
-  1400,
-  1900,
-  2500,
-  3200,
-  4000,
-  5000,
-  6200,
-  7600,
-  9200,
-  11000,
-  13000,
-  15200,
-  17600,
-  20200,
-]
+// Lifetime learning XP; mirrored by src/utils/learnerLevel.ts.
+export const LEVEL_THRESHOLDS = [0, 100, 300, 750, 1500, 3000, 5000, 8000, 13000, 20200] as const
+export const MAX_LEARNER_LEVEL = 10
 
 export function resolveLevelFromXp(xp: number): number {
-  let resolved = 1
-  for (let level = 1; level <= LEVEL_THRESHOLDS.length; level += 1) {
-    if (xp >= (LEVEL_THRESHOLDS[level - 1] ?? 0)) {
-      resolved = level
-    }
-  }
-  return resolved
+  const safeXp = Number.isFinite(xp) ? Math.max(0, xp) : 0
+  return LEVEL_THRESHOLDS.reduce<number>((level, threshold, index) => safeXp >= threshold ? index + 1 : level, 1)
 }
 
-export function getLevelProgress(xp: number, level: number) {
-  const currentLevelThreshold = LEVEL_THRESHOLDS[level - 1] ?? 0
-  const nextLevelThreshold = LEVEL_THRESHOLDS[level] ?? currentLevelThreshold + 3000
-  const xpIntoCurrent = Math.max(0, xp - currentLevelThreshold)
+export function getLevelProgress(xp: number, _savedLevel?: number) {
+  const level = resolveLevelFromXp(xp)
+  const currentLevelThreshold = LEVEL_THRESHOLDS[level - 1]!
+  const nextLevelThreshold = LEVEL_THRESHOLDS[level] ?? currentLevelThreshold
+  const xpIntoCurrent = Math.max(0, (Number.isFinite(xp) ? xp : 0) - currentLevelThreshold)
   const levelSpan = Math.max(1, nextLevelThreshold - currentLevelThreshold)
-  const progressPercent = Math.min(100, (xpIntoCurrent / levelSpan) * 100)
-
-  return {
-    currentLevelThreshold,
-    nextLevelThreshold,
-    xpIntoCurrent,
-    levelSpan,
-    progressPercent,
-  }
+  return { currentLevelThreshold, nextLevelThreshold, xpIntoCurrent, levelSpan,
+    progressPercent: level === MAX_LEARNER_LEVEL ? 100 : Math.min(100, xpIntoCurrent / levelSpan * 100) }
 }

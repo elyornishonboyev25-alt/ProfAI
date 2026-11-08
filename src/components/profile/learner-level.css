@@ -1,0 +1,20 @@
+﻿.learner-level-badge { display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; flex-shrink:0; vertical-align:middle; color:#a0213b; filter:drop-shadow(0 2px 3px #28374d18); }
+.learner-level-badge svg { display:block; width:100%; height:100%; overflow:visible; }
+.leaderboard-podium-name > .learner-level-badge { display:inline-flex; width:34px; height:34px; margin-top:0; color:#a0213b; }
+.learner-level-badge.is-max { color:#86182e; filter:drop-shadow(0 2px 4px #b72a4135); }
+.learner-level-trigger { display:inline-flex; align-items:center; justify-content:center; min-width:44px; min-height:44px; margin:-5px 0; border:1px solid transparent; border-radius:12px; cursor:pointer; vertical-align:middle; background:transparent; transition:background .15s,border-color .15s; }
+.learner-level-trigger:hover { background:#ffffffb3; border-color:#e1c4cd; }
+.learner-level-trigger:focus-visible,.learner-level-dialog :focus-visible { outline:3px solid #b52140; outline-offset:3px; }
+.learner-level-dialog { width:calc(100% - 32px); max-width:400px; max-height:calc(100dvh - 48px); margin:auto; padding:28px; overflow:auto; border:1px solid #fff; border-radius:26px; background:linear-gradient(135deg,#fff,#e8ecf3); box-shadow:0 28px 90px #24334e33,inset 0 1px 0 #fff; color:#29303d; }
+.learner-level-dialog::backdrop { background:#1d293d66; backdrop-filter:blur(7px); }
+.learner-level-close { position:absolute; top:14px; right:14px; display:grid; place-items:center; width:36px; height:36px; border:1px solid #dbe1ea; border-radius:12px; color:#687385; background:#ffffffa8; }
+.learner-level-heading { display:flex; align-items:center; gap:15px; margin-bottom:26px; padding-right:28px; }
+.learner-level-heading > .learner-level-badge { width:64px; height:64px; color:#a0213b; }
+.learner-level-heading h2 { margin:0 0 4px; font-size:25px; font-weight:750; letter-spacing:-.035em; }
+.learner-level-heading span { font-size:13px; color:#657083; font-weight:600; }
+.learner-level-next { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 12px; font-size:13px; color:#657083; font-weight:650; }
+.learner-level-progress { height:7px; overflow:hidden; border-radius:99px; background:#d7dde7; }
+.learner-level-progress > span { display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,#a61e39,#e84c66); transition:width .4s; }
+.learner-level-dialog > p:not(.learner-level-next),.learner-level-dialog summary,.learner-level-dialog details p { margin-top:12px; font-size:13px; line-height:1.7; color:#5c6779; }
+.learner-level-dialog summary { cursor:pointer; color:#98243a; font-weight:650; }
+@media(prefers-reduced-motion:reduce) { .learner-level-progress > span,.learner-level-trigger { transition:none; } }

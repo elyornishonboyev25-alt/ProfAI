@@ -1,7 +1,7 @@
 import React, { act } from 'react'
 import assert from 'node:assert/strict'
 import { createRoot } from 'react-dom/client'
-import { MemoryRouter, Route, Routes, useParams } from 'react-router-dom'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import SATSection from '../../src/pages/SATSection'
 import { SAT_TEST_CATALOG, getSATSectionTest } from '../../src/features/sat/catalog'
 import { createSATAttempt } from '../../src/features/sat/practiceTest4'
@@ -10,10 +10,6 @@ import { accountStorage } from '../../src/utils/accountStorage'
 import { useAuthStore } from '../../src/store/authStore'
 import i18n from '../../src/i18n'
 
-function ResumeTarget() {
-  const { mockId } = useParams()
-  return <div data-sat-resume-target={mockId}>Saved test runner</div>
-}
 
 export async function run() {
   localStorage.clear()
@@ -43,22 +39,23 @@ export async function run() {
     await act(async () => root!.render(<MemoryRouter initialEntries={[`/sat/${section}`]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
         <Route path="/sat/:section" element={<SATSection />} />
-        <Route path="/sat/mock/:mockId/run" element={<ResumeTarget />} />
       </Routes>
     </MemoryRouter>))
   }
   const completedCards = () => [...container.querySelectorAll('[data-sat-completed]')].map(badge => badge.closest('button')!)
+  // Saved tests live in the In process tab; the catalog shows progress on each card only.
   const inProcess = () => container.querySelector('[data-sat-in-process]')
+  const card = (title: string) => [...container.querySelectorAll('button')].find(button => button.querySelector('h2')?.textContent === title)!
   try {
     await render('mocks')
     assert.equal(completedCards().length, 1)
     assert.match(completedCards()[0].textContent!, /Full Mock 1/)
     assert.match(completedCards()[0].textContent!, /Continue/)
-    assert.match(inProcess()!.textContent!, /In process.*Full Mock 1/)
+    assert.equal(inProcess(), null, 'The catalog has no separate in-process banner')
+    assert.match(card('Full Mock 1').textContent!, /Saved progress/)
     await render('mocks')
     assert.equal(completedCards().length, 1, 'Completion survives a reload')
     await render('math')
-    assert.equal(inProcess(), null, 'The full-mock resume banner is not shown in section practice')
     assert.equal(completedCards().length, 1)
     assert.match(completedCards()[0].textContent!, /Practice Test 2/)
     await render('reading-writing')
@@ -66,7 +63,7 @@ export async function run() {
     await render('mocks')
     await act(async () => useAuthStore.setState({ user: { id: 'other-user' } as never }))
     assert.equal(completedCards().length, 0, 'Completion belongs to the signed-in account')
-    assert.equal(inProcess(), null, 'Unfinished tests belong to the signed-in account')
+    assert.doesNotMatch(card('Full Mock 1').textContent!, /Saved progress/, 'Unfinished tests belong to the signed-in account')
 
     await act(async () => useAuthStore.setState({ user: { id: 'catalog-user' } as never }))
     const newestTest = SAT_TEST_CATALOG[2]
@@ -88,28 +85,13 @@ export async function run() {
       saveFixture(ended)
       await new Promise(resolve => setTimeout(resolve, 80))
     })
-    assert.equal(container.querySelectorAll('[data-sat-in-process]').length, 1)
-    assert.match(inProcess()!.textContent!, /Full Mock 2/)
-    assert.match(inProcess()!.textContent!, new RegExp(`1 of ${newestTest.questionCount} questions answered`))
-    assert.equal(inProcess()!.querySelector('[role="progressbar"]')?.getAttribute('aria-valuenow'), '1')
+    assert.equal(inProcess(), null)
+    assert.match(card('Full Mock 2').textContent!, new RegExp(`Saved progress1/${newestTest.questionCount}`))
+    assert.match(card('Full Mock 2').textContent!, /Continue/)
     await render('mocks')
-    assert.match(inProcess()!.textContent!, /Full Mock 2/, 'The latest unfinished full mock survives a reload')
-    await act(async () => inProcess()!.querySelector('button')!.click())
-    assert.equal(container.querySelector('[data-sat-resume-target]')?.getAttribute('data-sat-resume-target'), '2', 'Continue opens the matching saved test runner')
-    assert.deepEqual(loadSATAttempt(newestTest.id), newest, 'Continuing preserves the attempt, answers, notes and question position')
-
-    await render('mocks')
-    await act(async () => {
-      saveSATAttempt({ ...newest, status: 'submitted', submittedAt: Date.now() })
-      await new Promise(resolve => setTimeout(resolve, 80))
-    })
-    assert.match(inProcess()!.textContent!, /Full Mock 1/, 'Finishing a mock reveals the remaining unfinished mock')
-    await act(async () => {
-      clearSATAttempt(full.id)
-      await new Promise(resolve => setTimeout(resolve, 80))
-    })
-    assert.equal(inProcess(), null, 'There is no banner when no unfinished full mocks remain')
-    console.log('SAT catalog: completion, latest unfinished mock, resume preservation, live updates, reloads, section and account isolation passed.')
+    assert.match(card('Full Mock 2').textContent!, /Continue/, 'Saved progress survives a reload')
+    assert.deepEqual(loadSATAttempt(newestTest.id), newest, 'The catalog preserves the attempt, answers, notes and question position')
+    console.log('SAT catalog: completion, saved progress on cards, no duplicate in-process banner, reloads, section and account isolation passed.')
   } finally {
     if (root) await act(async () => root!.unmount())
   }

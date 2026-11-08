@@ -39,7 +39,28 @@ export async function transcribeAnswer(blob: Blob, signal?: AbortSignal): Promis
   const mimeType = blob.type.split(';')[0].toLowerCase().replace('audio/x-m4a', 'audio/mp4').replace('audio/m4a', 'audio/mp4').replace('audio/x-wav', 'audio/wav')
   if (!['audio/webm', 'audio/mp4', 'audio/ogg', 'audio/wav'].includes(mimeType)) throw new Error('Unsupported recording format.')
   return withTimeout(signal, 80_000, async (bounded) => {
-    const response = await apiClient.post<{ text: string }>('/ai/speaking-audio/transcribe', { audioBase64, mimeType }, { signal: bounded })
+    const transcribe = () => {
+      bounded.throwIfAborted()
+      return apiClient.post<{ text: string }>('/ai/speaking-audio/transcribe', { audioBase64, mimeType }, { signal: bounded })
+    }
+    const response = await transcribe().catch((error: unknown) => {
+      // Recover once from a dropped connection or unavailable provider using
+      // the saved file. Both attempts share cancellation and the same deadline.
+      if (bounded.aborted || (error instanceof ApiError && ![502, 503, 504].includes(error.status))) throw error
+      return transcribe()
+    })
     return response.text.trim()
   })
+}
+
+export function transcriptionError(error: unknown): string {
+  const saved = 'Your recording is saved.'
+  if (error instanceof ApiError) {
+    if ([401, 403, 409].includes(error.status)) return `${saved} ${error.message}`
+    if (error.status === 429) return `${saved} Too many processing requests. Wait a moment, then retry processing.`
+    if (error.status === 413) return `${saved} This answer is too large to process. Record a shorter answer.`
+    if ([400, 415, 422].includes(error.status)) return `${saved} The audio could not be processed. Listen to it, then record again.`
+  }
+  if (error instanceof Error && error.name === 'AbortError') return `${saved} Processing timed out. Retry processing your saved answer.`
+  return `${saved} Transcription is temporarily unavailable. Check your connection and retry processing, or record again.`
 }

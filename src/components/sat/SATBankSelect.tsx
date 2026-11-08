@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
 import { Check, ChevronDown } from 'lucide-react'
 
@@ -56,7 +57,7 @@ export default function SATBankSelect({ label, value, options, onChange }: {
   return <div className="sat-bank-select" ref={root} onBlur={event => {
     if (!event.currentTarget.contains(event.relatedTarget as Node)) setOpen(false)
   }}>
-    <label htmlFor={id}>{label}</label>
+    <label htmlFor={id}><UiText text={label} /></label>
     <button ref={trigger} id={id} type="button" role="combobox" aria-label={label}
       aria-expanded={open} aria-haspopup="listbox" aria-controls={`${id}-options`}
       aria-activedescendant={open ? `${id}-option-${active}` : undefined}
@@ -69,7 +70,7 @@ export default function SATBankSelect({ label, value, options, onChange }: {
         role="option" aria-selected={value === option.value} data-active={index === active}
         onMouseDown={event => event.preventDefault()} onMouseMove={() => setActive(index)}
         onClick={() => choose(index)}>
-        <span>{option.label}</span>{value === option.value ? <Check size={18} aria-hidden="true" /> : null}
+        <span><UiText text={option.label} /></span>{value === option.value ? <Check size={18} aria-hidden="true" /> : null}
       </div>)}
     </div> : null}
   </div>

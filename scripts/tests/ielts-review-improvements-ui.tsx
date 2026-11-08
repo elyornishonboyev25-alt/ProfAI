@@ -107,8 +107,10 @@ export async function run() {
     const submit = [...container.querySelectorAll('button')].find(button => button.textContent?.includes('Submit'))!
     assert.ok(submit, `Writing submit button missing: ${[...container.querySelectorAll('button')].map(button => button.textContent).join(', ')}`)
     await act(async () => submit.click())
-    const confirm = [...document.querySelectorAll('button')].find(button => button.textContent?.includes('Submit full test'))!
-    assert.ok(confirm, 'Writing submission confirmation is missing')
+    const confirmationTitle = [...document.querySelectorAll('h2')].find(node => /^submit both responses\?$/i.test(node.textContent?.trim() ?? ''))
+    assert.ok(confirmationTitle, 'Submission confirmation explains that both tasks will be sent')
+    const confirm = [...confirmationTitle.parentElement!.querySelectorAll('button')].find(button => /^submit full test$/i.test(button.textContent?.trim() ?? ''))!
+    assert.ok(confirm, 'The confirmation has its own submission action')
     await act(async () => confirm.click())
     assert.deepEqual(submitted, responses)
     assert.deepEqual(completed.map(item => item.improvedVersion), responses.map(response => `Improved: ${response}`))

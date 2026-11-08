@@ -12,7 +12,8 @@ import { resolveIeltsTestById } from '@/utils/ieltsTestCatalog'
 import { saveReadingAnalysisHistory } from '@/utils/readingAnalysisStorage'
 import { saveWritingAnalysis } from '@/utils/writingAnalysisStorage'
 import { getSATReviewTests, isSATTestComplete } from '@/features/sat/catalog'
-import { saveSATAttemptToHistory } from '@/features/sat/attemptStorage'
+import { accountStorageFor } from '@/utils/accountStorage'
+import { getFullMockCatalog, getFullMockAttempts, retakeFullMock, saveFullMockSectionResult } from '@/utils/ieltsMockCatalog'
 import type { WritingEvaluation } from '@/services/geminiAI'
 
 function LocationProbe() {
@@ -50,11 +51,12 @@ export async function run() {
 
     const sat = getSATReviewTests().find((test) => isSATTestComplete(test) && test.modules.length === 4)!
     const startedAt = new Date('2026-08-15T08:00:00.000Z').getTime()
-    saveSATAttemptToHistory({
+    // Older installations retained submitted results only in the active slot.
+    accountStorageFor(user.id).setItem(`profai:sat:${sat.id}:attempt:v1`, JSON.stringify({
       version: 1, attemptId: `${sat.id}-${startedAt}`, testId: sat.id, mode: 'exam' as never, status: 'submitted',
       currentModuleIndex: 3, currentQuestionIndex: 0, answers: {}, flagged: [], notes: {}, highlights: {},
       startedAt, updatedAt: startedAt + 7_000_000, submittedAt: startedAt + 7_000_000, moduleStartedAt: {}, moduleDeadlines: {},
-    }, 'submitted')
+    }))
 
     await act(async () => root.render(
       <MemoryRouter initialEntries={['/profile']}>
@@ -83,7 +85,7 @@ export async function run() {
     await act(async () => satFilter.click())
     assert.equal(rows().length, 1, 'SAT filter isolates SAT results')
     await act(async () => rows()[0].querySelector<HTMLButtonElement>('.mr-analyze')!.click())
-    assert.ok(container.querySelector('[data-testid="location"]')?.textContent?.startsWith(`/sat/mistakes?attempt=${encodeURIComponent(`${sat.id}-${startedAt}`)}`), 'SAT Analyze opens the exact attempt review')
+    assert.ok(container.querySelector('[data-testid="location"]')?.textContent?.startsWith(`/sat/results/${encodeURIComponent(`${sat.id}-${startedAt}`)}`), 'SAT Analyze opens the exact attempt review without the retired lab')
     console.log('PASS: sorting, filtering and SAT analyze link')
 
     await act(async () => root.render(
@@ -108,6 +110,27 @@ export async function run() {
     await act(async () => writingRow.querySelector<HTMLButtonElement>('.mr-analyze')!.click())
     assert.ok(document.body.textContent?.includes('Writing review'), 'Writing Analyze opens the saved feedback')
     console.log('PASS: IELTS Listening and Writing analyze actions')
+
+    const mock = getFullMockCatalog()[0]
+    await act(async () => {
+      for (const section of mock.sections) saveFullMockSectionResult(mock.id, section.key, { band: 7, testId: section.key, completedAt: '2026-10-24T10:00:00Z' })
+      assert.equal(retakeFullMock(mock.id), true)
+    })
+    await act(async () => root.render(
+      <MemoryRouter key="full-mock" initialEntries={['/profile']}>
+        <Routes><Route path="/profile" element={<Profile />} /></Routes>
+      </MemoryRouter>,
+    ))
+    const fullMockHistory = container.querySelector('.mr-mock-row')!
+    assert.ok(fullMockHistory, 'Archived full mocks remain accessible in My Results')
+    await act(async () => fullMockHistory.querySelector<HTMLButtonElement>('.mr-mock-toggle')!.click())
+    const fullReport = [...fullMockHistory.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent?.includes('Full report'))!
+    await act(async () => fullReport.click())
+    assert.ok(document.querySelector('[aria-label="Saved full mock result"]')?.textContent?.includes('Your overall result.'))
+    await act(async () => document.querySelector<HTMLButtonElement>('[aria-label="Saved full mock result"] nav button')!.click())
+    assert.equal(document.querySelector('[aria-label="Saved full mock result"]'), null)
+    assert.equal(getFullMockAttempts('different-account').length, 0, 'Full mock results stay account scoped')
+    console.log('PASS: archived full mock review is accessible from My Results and stays account scoped')
   } finally {
     await act(async () => root.unmount())
     apiClient.get = originalGet

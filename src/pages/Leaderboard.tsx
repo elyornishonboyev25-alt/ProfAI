@@ -4,8 +4,6 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   ArrowRight,
-  ChevronLeft,
-  ChevronRight,
   Crown,
   Flame,
   Minus,
@@ -16,7 +14,8 @@ import {
   Users,
   Zap,
 } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { LevelBadge } from '@/components/profile/LearnerLevel'
 import UiText from '@/components/common/UiText'
 import { Skeleton } from '@/components/common/Skeleton'
 import LeaderboardAvatar from '@/components/leaderboard/LeaderboardAvatar'
@@ -32,7 +31,7 @@ const PERIODS = [
   { value: 'month', label: 'Last 30 days' },
   { value: 'all', label: 'All Time' },
 ] as const
-const PAGE_SIZE = 20
+const LEADERBOARD_LIMIT = 10
 const number = (value: number) => value.toLocaleString('en-US')
 const resultLabel = (row: LeaderboardRow) =>
   row.testsCompleted > 0 ? `${row.accuracy.toFixed(1)}%` : '—'
@@ -71,7 +70,6 @@ export default function Leaderboard() {
   const [reloadKey, setReloadKey] = useState(0)
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
   const [query, setQuery] = useState('')
-  const [page, setPage] = useState(1)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -135,9 +133,22 @@ export default function Leaderboard() {
     }
   }, [userId, period, reloadKey])
 
+  useEffect(() => {
+    const refresh = () => setReloadKey((value) => value + 1)
+    window.addEventListener('focus', refresh)
+    window.addEventListener('online', refresh)
+    window.addEventListener('smarttest:profile-updated', refresh)
+    return () => {
+      window.removeEventListener('focus', refresh)
+      window.removeEventListener('online', refresh)
+      window.removeEventListener('smarttest:profile-updated', refresh)
+    }
+  }, [])
+
   // Never display the previous window under the newly selected label.
   const board = data?.period === period ? data : null
   const rows = useMemo(() => board?.rows ?? [], [board])
+  const topRows = useMemo(() => rows.slice(0, LEADERBOARD_LIMIT), [rows])
   const current = rows.find((row) => row.isCurrentUser) ?? null
   const leader = rows[0] ?? null
   const next = current
@@ -161,26 +172,15 @@ export default function Leaderboard() {
         : null,
     }
   }, [rows])
-  const filtered = useMemo(
+  const visibleRows = useMemo(
     () =>
-      rows.filter((row) =>
+      topRows.filter((row) =>
         row.fullName
           .toLocaleLowerCase()
           .includes(query.trim().toLocaleLowerCase()),
       ),
-    [rows, query],
+    [topRows, query],
   )
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
-  const visiblePage = Math.min(page, pageCount)
-  const visibleRows = filtered.slice(
-    (visiblePage - 1) * PAGE_SIZE,
-    visiblePage * PAGE_SIZE,
-  )
-  const currentVisible = visibleRows.some((row) => row.isCurrentUser)
-  const selectPeriod = (value: typeof period) => {
-    setPeriod(value)
-    setPage(1)
-  }
   const refresh = () => setReloadKey((key) => key + 1)
 
   return (
@@ -213,7 +213,7 @@ export default function Leaderboard() {
                 <button
                   key={value}
                   type="button"
-                  onClick={() => selectPeriod(value)}
+                  onClick={() => setPeriod(value)}
                   aria-pressed={period === value}
                 >
                   <UiText text={label} />
@@ -397,13 +397,14 @@ export default function Leaderboard() {
                       </div>
                       <div className="leaderboard-podium-person">
                         <div className="leaderboard-podium-avatar">
-                          <LeaderboardAvatar row={row} size="lg" />
+                          {row.nickname ? <Link to={`/u/${encodeURIComponent(row.nickname)}`} state={{ from: '/leaderboard' }} aria-label={`${c('View profile')}: ${row.fullName}`}><LeaderboardAvatar row={row} size="lg" /></Link> : <LeaderboardAvatar row={row} size="lg" />}
                           <span className="leaderboard-medallion">
                             {row.rank.toString().padStart(2, '0')}
                           </span>
                         </div>
                         <div className="leaderboard-podium-name">
-                          <h3 title={row.fullName}>{row.fullName}</h3>
+                          <h3 title={row.fullName}>{row.nickname ? <Link to={`/u/${encodeURIComponent(row.nickname)}`} state={{ from: '/leaderboard' }}>{row.fullName}</Link> : row.fullName}</h3>
+                          {row.lifetimeXp !== undefined ? <LevelBadge xp={row.lifetimeXp} /> : null}
                           {row.premium ? <CrownBadge size="sm" /> : null}
                           <span>
                             {row.isCurrentUser ? (
@@ -468,7 +469,7 @@ export default function Leaderboard() {
                 <div className="leaderboard-table-title">
                   <div>
                     <p className="leaderboard-eyebrow">
-                      <UiText text="THE FULL PICTURE" />
+                      <UiText text="Top 10 · Pure XP" />
                     </p>
                     <h2 id="rankings-heading">
                       <UiText text="Rankings" />
@@ -476,7 +477,7 @@ export default function Leaderboard() {
                   </div>
                   <span className="leaderboard-count">
                     <Users size={15} />
-                    {loading ? '—' : number(rows.length)}{' '}
+                    {loading ? '—' : number(topRows.length)}{' '}
                     <UiText text="learners" />
                   </span>
                 </div>
@@ -489,10 +490,7 @@ export default function Leaderboard() {
                     type="search"
                     placeholder={c('Search learners')}
                     value={query}
-                    onChange={(event) => {
-                      setQuery(event.target.value)
-                      setPage(1)
-                    }}
+                    onChange={(event) => setQuery(event.target.value)}
                     disabled={loading}
                   />
                 </label>
@@ -503,108 +501,81 @@ export default function Leaderboard() {
                     ))}
                   </div>
                 ) : visibleRows.length ? (
-                  <>
-                    <table className="leaderboard-table">
-                      <caption className="sr-only">
-                        {PERIODS.find((item) => item.value === period)?.label}{' '}
-                        leaderboard, ordered by XP
-                      </caption>
-                      <thead>
-                        <tr>
-                          <th scope="col">
-                            <UiText text="Rank" />
-                          </th>
-                          <th scope="col">
-                            <UiText text="Learner" />
-                          </th>
-                          <th scope="col">
-                            <UiText text="Avg. result" />
-                          </th>
-                          <th scope="col">XP</th>
-                          <th scope="col">
-                            <UiText text="Movement" />
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {visibleRows.map((row) => (
-                          <tr
-                            key={row.userId}
-                            className={`${row.isCurrentUser ? 'is-current' : ''} ${row.premium ? 'is-premium-member' : ''}`}
-                          >
-                            <td>
-                              <span
-                                className={`leaderboard-rank ${row.rank <= 3 ? 'is-top' : ''}`}
-                              >
-                                {row.rank.toString().padStart(2, '0')}
-                              </span>
-                            </td>
-                            <th scope="row">
-                              <div className="leaderboard-learner">
-                                <LeaderboardAvatar row={row} />
-                                <div>
-                                  <p title={row.fullName}>
-                                    {row.fullName}
-                                    {row.premium ? <CrownBadge size="sm" /> : null}
-                                    {row.isCurrentUser && (
-                                      <span className="leaderboard-you">
-                                        <UiText text="YOU" />
-                                      </span>
-                                    )}
-                                  </p>
-                                  <small>
-                                    {row.testsCompleted} <UiText text="tests" />
-                                    <span className="leaderboard-mobile-result">
-                                      {' '}
-                                      · {resultLabel(row)}
+                  <table className="leaderboard-table">
+                    <caption className="sr-only">
+                      {PERIODS.find((item) => item.value === period)?.label}{' '}
+                      <UiText text={"leaderboard, ordered by XP"} />
+                    </caption>
+                    <thead>
+                      <tr>
+                        <th scope="col">
+                          <UiText text="Rank" />
+                        </th>
+                        <th scope="col">
+                          <UiText text="Learner" />
+                        </th>
+                        <th scope="col">
+                          <UiText text="Avg. result" />
+                        </th>
+                        <th scope="col">XP</th>
+                        <th scope="col">
+                          <UiText text="Movement" />
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {visibleRows.map((row) => (
+                        <tr
+                          key={row.userId}
+                          className={`${row.isCurrentUser ? 'is-current' : ''} ${row.premium ? 'is-premium-member' : ''}`}
+                        >
+                          <td>
+                            <span
+                              className={`leaderboard-rank ${row.rank <= 3 ? 'is-top' : ''}`}
+                            >
+                              {row.rank.toString().padStart(2, '0')}
+                            </span>
+                          </td>
+                          <th scope="row">
+                            <div className="leaderboard-learner">
+                              {row.nickname ? <Link to={`/u/${encodeURIComponent(row.nickname)}`} state={{ from: '/leaderboard' }} aria-label={`${c('View profile')}: ${row.fullName}`}><LeaderboardAvatar row={row} /></Link> :
+                              <LeaderboardAvatar row={row} />
+                              }
+                              <div>
+                                <p title={row.fullName}>
+                                  {row.nickname ? <Link to={`/u/${encodeURIComponent(row.nickname)}`} state={{ from: '/leaderboard' }}>{row.fullName}</Link> : row.fullName}
+                                  {row.premium ? <CrownBadge size="sm" /> : null}
+                                  {row.isCurrentUser && (
+                                    <span className="leaderboard-you">
+                                      <UiText text="YOU" />
                                     </span>
-                                  </small>
-                                </div>
+                                  )}
+                                </p>
+                                <small>
+                                  {row.testsCompleted} <UiText text="tests" />
+                                  {' '}{row.lifetimeXp !== undefined ? <LevelBadge xp={row.lifetimeXp} /> : null}
+                                  <span className="leaderboard-mobile-result">
+                                    {' '}
+                                    · {resultLabel(row)}
+                                  </span>
+                                </small>
                               </div>
-                            </th>
-                            <td className="leaderboard-result">
-                              {resultLabel(row)}
-                            </td>
-                            <td className="leaderboard-table-xp">
-                              {number(row.totalXp)}
-                              <small>XP</small>
-                            </td>
-                            <td className="leaderboard-table-movement">
-                              <Movement row={row} />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    <div className="leaderboard-pagination">
-                      <p>
-                        {(visiblePage - 1) * PAGE_SIZE + 1}–
-                        {Math.min(visiblePage * PAGE_SIZE, filtered.length)}{' '}
-                        <UiText text="of" /> {number(filtered.length)}
-                      </p>
-                      <div>
-                        <button
-                          type="button"
-                          aria-label={c('Previous page')}
-                          disabled={visiblePage === 1}
-                          onClick={() => setPage(visiblePage - 1)}
-                        >
-                          <ChevronLeft size={17} />
-                        </button>
-                        <span>
-                          {visiblePage} / {pageCount}
-                        </span>
-                        <button
-                          type="button"
-                          aria-label={c('Next page')}
-                          disabled={visiblePage === pageCount}
-                          onClick={() => setPage(visiblePage + 1)}
-                        >
-                          <ChevronRight size={17} />
-                        </button>
-                      </div>
-                    </div>
-                  </>
+                            </div>
+                          </th>
+                          <td className="leaderboard-result">
+                            {resultLabel(row)}
+                          </td>
+                          <td className="leaderboard-table-xp">
+                            {number(row.totalXp)}
+                            <small>XP</small>
+                          </td>
+                          <td className="leaderboard-table-movement">
+                            <Movement row={row} />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 ) : (
                   <div className="leaderboard-empty is-compact">
                     <Search size={24} />
@@ -628,26 +599,11 @@ export default function Leaderboard() {
                       <button
                         type="button"
                         className="leaderboard-text-button"
-                        onClick={() => {
-                          setQuery('')
-                          setPage(1)
-                        }}
+                        onClick={() => setQuery('')}
                       >
                         <UiText text="Clear search" />
                       </button>
                     )}
-                  </div>
-                )}
-                {!loading && current && !currentVisible && (
-                  <div className="leaderboard-pinned">
-                    <span className="leaderboard-rank">#{current.rank}</span>
-                    <div>
-                      <strong>
-                        <UiText text="Your position" />
-                      </strong>
-                      <small>{current.fullName}</small>
-                    </div>
-                    <b>{number(current.totalXp)} XP</b>
                   </div>
                 )}
                 <p className="leaderboard-table-note">

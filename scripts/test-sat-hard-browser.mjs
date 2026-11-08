@@ -4,7 +4,7 @@ import { createServer } from 'node:http'
 import { createRequire } from 'node:module'
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { join, resolve, sep } from 'node:path'
 import { build } from 'esbuild'
 import postcss from 'postcss'
 import tailwindcss from 'tailwindcss'
@@ -28,19 +28,19 @@ async function main() {
   `
   const bundle = await build({ stdin: { contents: source, loader: 'tsx', resolveDir: process.cwd() }, bundle: true, write: false, format: 'iife', tsconfig: 'tsconfig.json', define: { 'import.meta.env': '{}', 'process.env.NODE_ENV': '"production"' }, loader: { '.css': 'empty' } })
   const base = await readFile('src/index.css', 'utf8')
-  const extras = await Promise.all(['src/pages/SATHardQuestions.css', 'src/components/sat/DesmosDrawer.css', 'src/components/sat/SATSourceContent.css'].map(file=>readFile(file,'utf8')))
+  const extras = await Promise.all(['src/components/brand/brand.css', 'src/pages/SATHardQuestions.css', 'src/pages/SATHardQuestionsSilver.css', 'src/components/sat/SATQuestionCanvas.css', 'src/components/sat/PracticeQuestion.css', 'src/components/sat/SATFormulaSheet.css', 'src/styles/exam-flow.css', 'src/components/sat/DesmosDrawer.css', 'src/components/sat/SATSourceContent.css'].map(file=>readFile(file,'utf8')))
   const css = (await postcss([tailwindcss()]).process(base, {from:'src/index.css'})).css + '\n' + extras.join('\n')
   const server = createServer(async (req,res)=>{
     if(req.url==='/'){res.setHeader('Content-Type','text/html; charset=utf-8');res.end(`<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}</style><div id="root"></div><script src="/fixture.js"></script>`)}
     else if(req.url==='/fixture.js'){res.setHeader('Content-Type','text/javascript; charset=utf-8');res.end(bundle.outputFiles[0].text)}
     else {
       const file=resolve('public', '.' + decodeURIComponent(new URL(req.url,'http://localhost').pathname))
-      if(!file.startsWith(resolve('public')+'/')){res.writeHead(404);res.end();return}
+      if(!file.startsWith(resolve('public')+sep)){res.writeHead(404);res.end();return}
       try {const content=await readFile(file);res.setHeader('Content-Type',file.endsWith('.svg')?'image/svg+xml':'image/png');res.end(content)}catch{res.writeHead(404);res.end()}
     }
   })
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve))
-  const browser = spawn(process.env.SAT_TEST_BROWSER, ['--headless=new','--disable-gpu','--no-first-run','--no-default-browser-check','--remote-debugging-port=0','--user-data-dir='+directory,'about:blank'], {stdio:'ignore'})
+  const browser = spawn(process.env.SAT_TEST_BROWSER, ['--headless','--no-sandbox','--disable-gpu','--disable-dev-shm-usage','--no-first-run','--no-default-browser-check','--remote-debugging-port=0','--user-data-dir='+directory,'about:blank'], {stdio:'ignore'})
   const exited = new Promise(resolve=>{browser.once('exit',resolve);browser.once('error',resolve)})
   let socket
   try {
@@ -49,7 +49,7 @@ async function main() {
       try { port = (await readFile(join(directory, 'DevToolsActivePort'), 'utf8')).split('\n')[0]; break } catch { /* Starting browser. */ }
       await new Promise((resolve) => setTimeout(resolve, 100))
     }
-    assert.ok(port, 'Set SPEAKING_TEST_BROWSER to an installed Chromium browser')
+    assert.ok(port, 'The configured SAT_TEST_BROWSER must support headless Chromium debugging')
     const targets = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()
     socket = new WebSocket(targets.find((target) => target.type === 'page').webSocketDebuggerUrl)
     await new Promise((resolve) => socket.once('open', resolve))
@@ -85,7 +85,7 @@ async function main() {
     const clickLabel = label => evaluate(`document.querySelector('[aria-label="${label}"]').click()`)
     const clickText = text => evaluate(`[...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='${text}').click()`)
     const checkNavigation = async () => {
-      assert.equal(await evaluate(`([...document.querySelectorAll('.hard-question-toolbar button,.hard-question-footer button')].every(b=>{const r=b.getBoundingClientRect();return r.top>=0 && r.bottom<=innerHeight+1 && r.left>=0 && r.right<=innerWidth+1 && b.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))}))`), true, 'Hard question controls stay visible and clickable')
+      assert.equal(await evaluate(`([...document.querySelectorAll('.hard-question-toolbar button,.hard-test-topbar > button')].every(b=>{const r=b.getBoundingClientRect();return r.top>=0 && r.bottom<=innerHeight+1 && r.left>=0 && r.right<=innerWidth+1 && b.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))}))`), true, 'Hard question controls stay visible and clickable')
     }
     await send('Runtime.enable')
     await send('Page.enable')
@@ -106,15 +106,22 @@ async function main() {
       await evaluate('window.scrollTo(0,0);true')
       await capture(width+'-map')
       await evaluate(`document.querySelector('.hard-tile').click()`)
-      await until(`!!document.querySelector('.hard-choice')`)
+      await until(`!!document.querySelector('button[role=radio]')`)
       assert.equal(await evaluate('window.hardExamMode() && !document.querySelector(".hard-hero") && document.body.style.overflow==="hidden"'), true)
       await checkNavigation()
       if (await evaluate('!!document.querySelector(".hard-retry")')) await clickText('Try this question again')
-      await evaluate(`document.querySelector('.hard-choice').click()`)
-      await until(`!!document.querySelector('.hard-feedback')`)
+      assert.equal(await evaluate(`!!document.querySelector('.hard-question-footer,.practice-history')`),false,'The old footer and history are removed')
+      assert.equal(await evaluate(`!![...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='Next question'||b.textContent.trim()==='Solve a similar problem')`),false,'Unchecked questions hide follow-up actions')
+      await evaluate(`document.querySelector('button[role=radio]').click()`)
+      assert.equal(await evaluate(`!!document.querySelector('.practice-check-status')`),false,'Choosing does not grade')
+      await clickText('Check answer')
+      await until(`!!document.querySelector('.practice-check-status')`)
+      assert.equal(await evaluate(`!![...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='Next question')`),true,'A checked answer enables next')
+      assert.equal(await evaluate(`!!document.querySelector('#practice-solution')`),false,'Checking never reveals the solution')
+      await clickText('See solution')
+      await until(`!!document.querySelector('.practice-solution-content')`)
       assert.equal(await evaluate('document.documentElement.scrollWidth<=innerWidth+1'),true,`${width}: question has no horizontal overflow`)
-      assert.ok(await evaluate(`document.querySelector('.hard-explanation').innerText.length>100`))
-      await until(`document.querySelector('.hard-feedback-result').getBoundingClientRect().top>=0 && document.querySelector('.hard-feedback-result').getBoundingClientRect().bottom<document.querySelector('.hard-question-footer').getBoundingClientRect().top`)
+      assert.ok(await evaluate(`document.querySelector('.practice-solution-content').innerText.length>100`))
       await checkNavigation()
       await capture(width+'-feedback')
       await evaluate(`document.querySelector('.hard-question').scrollTop=1e6;true`)
@@ -122,10 +129,12 @@ async function main() {
       await clickText('Next question')
       await until(`document.querySelector('.hard-question-toolbar').innerText.includes('Question 2 / 100')`)
       assert.equal(await evaluate('document.querySelector(".hard-question").scrollTop'), 0, 'Next question starts at the top')
-      await clickText('Previous')
+      await clickText('All questions')
+      await until(`document.querySelectorAll('.hard-tile').length===100`)
+      await evaluate(`document.querySelector('.hard-tile').click()`)
       await until(`document.querySelector('.hard-question-toolbar').innerText.includes('Question 1 / 100')`)
       assert.equal(await evaluate('document.querySelector(".hard-question").scrollTop'), 0, 'Returning to a checked question starts at the question, not its explanation')
-      await clickText('All topics')
+      await clickText('All questions')
       await until('!window.hardExamMode()')
       assert.equal(await evaluate('document.body.style.overflow'), '', 'Leaving practice restores page scrolling')
       console.log(`PASS ${width}x${height}: topic map, question, feedback and responsive layout`)
@@ -139,7 +148,7 @@ async function main() {
         await until(`document.querySelector('.hard-question-toolbar')?.innerText.includes('Question ${index+1} / 100')`)
         await until(`[...document.querySelectorAll('.hard-question img')].every(i=>i.complete)`)
         assert.equal(await evaluate(`[...document.querySelectorAll('.hard-question img')].every(i=>i.naturalWidth>0)`),true,`${section} ${index+1}: source visuals load`)
-        assert.ok(await evaluate(`document.querySelector('.hard-task').innerText.trim().length>0`))
+        assert.ok(await evaluate(`document.querySelector('[data-sat-highlight-block=task]').innerText.trim().length>0`))
         if(index===0 && section==='math') {
           await capture('math-question')
           await clickText('Calculator')

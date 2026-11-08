@@ -1,13 +1,12 @@
+import { useCopy } from '@/i18n/interface'
 import UiText from '@/components/common/UiText'
 import { useEffect, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { ArrowRight, BookOpen, Compass, GraduationCap, Globe2, Sparkles, Target, Trophy } from 'lucide-react'
 import { CountUp, Reveal, Stagger, StaggerItem } from '@/components/fx'
 import { getCompletedLessons, subscribeLessonProgress } from '@/utils/admissionProgressStore'
 import './admission-home.css'
 import UniversityLogo from '@/components/admission/UniversityLogo'
-import UniversityMatcher from '@/components/admission/UniversityMatcher'
-import type { MatchInput } from '@/data/admission/match'
 import LucideIcon from '@/components/admission/LucideIcon'
 import {
   getUniversities,
@@ -22,13 +21,8 @@ import {
 } from '@/data/admission'
 
 export default function Admission() {
+  const { c: uiCopy } = useCopy()
   const navigate = useNavigate()
-  const location = useLocation()
-  const [resumeMatcherInput, setResumeMatcherInput] = useState<MatchInput | null>(
-    () => (location.state as { matcherInput?: MatchInput } | null)?.matcherInput ?? null,
-  )
-  const [resumeMatcherPosition, setResumeMatcherPosition] = useState(() => location.state as { matcherVisibleCount?: number; matcherScrollTop?: number } | null)
-  const [matcherOpen, setMatcherOpen] = useState(Boolean(resumeMatcherInput))
   const [completed, setCompleted] = useState(() => getCompletedLessons())
   const universities = getUniversities()
   const topFour = universities.slice(0, 4)
@@ -41,25 +35,13 @@ export default function Admission() {
 
   useEffect(() => subscribeLessonProgress(() => setCompleted(getCompletedLessons())), [])
 
-  const closeMatcher = () => {
-    setMatcherOpen(false)
-    setResumeMatcherInput(null)
-    setResumeMatcherPosition(null)
-    if ((location.state as { matcherInput?: MatchInput } | null)?.matcherInput) {
-      navigate(location.pathname, { replace: true, state: null })
-    }
-  }
-
   return (
     <main className="workspace-page admission-home relative min-h-screen overflow-x-clip px-4 pb-16 pt-6 sm:px-6 lg:px-8">
-      <UniversityMatcher open={matcherOpen} onClose={closeMatcher} resumeInput={resumeMatcherInput}
-        resumeVisibleCount={resumeMatcherPosition?.matcherVisibleCount} resumeScrollTop={resumeMatcherPosition?.matcherScrollTop} />
-
       <div className="relative z-10 mx-auto w-full max-w-[78rem] space-y-6">
         <header className="admission-home-heading">
-          <span className="admission-home-kicker"><Sparkles className="h-3.5 w-3.5" /> University journey</span>
-          <h1>University <span>Applications</span></h1>
-          <p>Plan your next steps, explore universities and move forward with confidence.</p>
+          <span className="admission-home-kicker"><Sparkles className="h-3.5 w-3.5" /> <UiText text={"University journey"} /></span>
+          <h1><UiText text={"University"} /> <span><UiText text={"Applications"} /></span></h1>
+          <p><UiText text={"Plan your next steps, explore universities and move forward with confidence."} /></p>
         </header>
         {/* ----------------------- Two destination cards ----------------------- */}
         <Stagger className="admission-home-card-grid grid gap-5 lg:grid-cols-2">
@@ -83,13 +65,12 @@ export default function Admission() {
                     <Trophy className="h-8 w-8" />
                   </span>
                   <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-blue-700">
-                    {QS_2027_RANKED_UNIVERSITY_COUNT.toLocaleString('en-US')} ranked · QS 2027
+                    {QS_2027_RANKED_UNIVERSITY_COUNT.toLocaleString('en-US')} <UiText text={"ranked · QS 2027"} />
                   </span>
                 </div>
                 <h2 className="admission-home-card-title relative mt-5 text-2xl font-black tracking-tight text-slate-900"> <UiText text={"Universities"} /> </h2>
                 <p className="admission-home-card-description relative mt-2 text-[14px] leading-6 text-slate-600">
-                  Explore Ivygoo’s complete QS 2027 catalog with ranking context, university profiles and official links
-                  where available. Confirm current programme requirements directly with each institution.
+                  <UiText text={"Explore Ivygoo’s complete QS 2027 catalog with ranking context, university profiles and official links where available. Confirm current programme requirements directly with each institution."} />
                 </p>
 
                 <div className="admission-home-rankings relative mt-5 space-y-2">
@@ -111,10 +92,10 @@ export default function Admission() {
                 <div className="admission-home-card-footer relative mt-auto flex items-center justify-between border-t border-slate-200/70 pt-4">
                   <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-slate-400">
                     <Globe2 className="h-4 w-4" />
-                    {UNIVERSITY_COUNT} catalog profiles
+                    {UNIVERSITY_COUNT} <UiText text={"catalog profiles"} />
                   </span>
                   <span className="inline-flex items-center gap-1 text-sm font-bold text-blue-600 transition group-hover:gap-2">
-                    Open rankings
+                    <UiText text={"Open rankings"} />
                     <ArrowRight className="h-4 w-4" />
                   </span>
                 </div>
@@ -141,13 +122,12 @@ export default function Admission() {
                     <GraduationCap className="h-8 w-8" />
                   </span>
                   <span className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-indigo-700">
-                    {LESSON_COUNT} lessons · 5 phases
+                    {LESSON_COUNT} <UiText text={"lessons · 5 phases"} />
                   </span>
                 </div>
                 <h2 className="admission-home-card-title relative mt-5 text-2xl font-black tracking-tight text-slate-900"> <UiText text={"Lessons"} /> </h2>
                 <p className="admission-home-card-description relative mt-2 text-[14px] leading-6 text-slate-600">
-                  Guided study-abroad lessons covering country research, tests, application writing, scholarships and
-                  visa preparation. Follow the sequence or open the topic you need now.
+                  <UiText text={"Guided study-abroad lessons covering country research, tests, application writing, scholarships and visa preparation. Follow the sequence or open the topic you need now."} />
                 </p>
 
                 <div className="admission-home-card-phases relative mt-5 grid grid-cols-2 gap-2">
@@ -162,7 +142,7 @@ export default function Admission() {
                       >
                         <LucideIcon name={phase.icon} className="h-3.5 w-3.5" />
                       </span>
-                      <span className="truncate text-[12px] font-semibold text-slate-700">{phase.title}</span>
+                      <span className="truncate text-[12px] font-semibold text-slate-700"><UiText text={phase.title} /></span>
                     </div>
                   ))}
                 </div>
@@ -170,10 +150,10 @@ export default function Admission() {
                 <div className="admission-home-card-footer relative mt-auto flex items-center justify-between border-t border-slate-200/70 pt-4">
                   <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-slate-400">
                     <Compass className="h-4 w-4" />
-                    {completedLessonCount ? `${completedLessonCount}/${LESSON_COUNT} lessons completed` : 'Start from Lesson 1'}
+                    {completedLessonCount ? <UiText text={"{{value1}}/{{value2}} lessons completed"} values={{ value1: String(completedLessonCount), value2: String(LESSON_COUNT) }} /> : <UiText text={"Start from Lesson 1"} />}
                   </span>
                   <span className="inline-flex items-center gap-1 text-sm font-bold text-indigo-600 transition group-hover:gap-2">
-                    {resumeLesson ? 'Continue lesson' : 'Open lessons'}
+                    {resumeLesson ? <UiText text={"Continue lesson"} /> : <UiText text={"Open lessons"} />}
                     <ArrowRight className="h-4 w-4" />
                   </span>
                 </div>
@@ -184,21 +164,22 @@ export default function Admission() {
         {/* ----------------------- Find-my-university banner ----------------------- */}
         <Reveal delay={0.03}>
           <button
-            onClick={() => { setResumeMatcherInput(null); setResumeMatcherPosition(null); setMatcherOpen(true) }}
-            className="admission-home-match group relative flex w-full items-center gap-4 overflow-hidden rounded-[1.6rem] p-6 text-left"
+            onClick={() => navigate('/admission/matches')}
+            className="admission-home-match group"
             type="button"
           >
-            <span className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-white backdrop-blur-sm">
+            <span className="admission-match-icon">
               <Target className="h-7 w-7" />
             </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-lg font-black text-white">Explore university matches</p>
-              <p className="mt-0.5 text-sm font-medium text-blue-50/90">
-                Compare the current catalog using your SAT, IELTS, GPA and study preferences as planning signals.
+            <div className="admission-match-copy">
+              <p><UiText text={"Explore university matches"} /></p>
+              <p>
+                <UiText text="Find your direction with your scores, goals and study preferences." />
               </p>
+              <span className="admission-match-signals">SAT <span>/</span> IELTS <span>/</span> GPA <span>/</span> <UiText text="Study goals" /></span>
             </div>
-            <span className="hidden shrink-0 items-center gap-1 rounded-xl bg-white px-4 py-2.5 text-sm font-black text-blue-700 transition group-hover:gap-2 sm:inline-flex">
-               <UiText text={"Start"} /> <ArrowRight className="h-4 w-4" />
+            <span className="admission-match-start">
+               <UiText text="Find my matches" /> <ArrowRight className="h-4 w-4" />
             </span>
           </button>
         </Reveal>
@@ -217,18 +198,16 @@ export default function Admission() {
                 <div className="premium-top-controls">
                   <span className="premium-top-chip">
                     <Compass className="h-3.5 w-3.5" />
-                    {completedLessonCount ? `${completedLessonCount} of ${LESSON_COUNT} lessons completed` : 'Your application roadmap'}
+                    {completedLessonCount ? <UiText text={"{{value1}} of {{value2}} lessons completed"} values={{ value1: String(completedLessonCount), value2: String(LESSON_COUNT) }} /> : <UiText text={"Your application roadmap"} />}
                   </span>
                 </div>
                 <h2 className="premium-section-title mt-4">
                    <UiText text={"Plan your"} /> <span className="arena-title-accent-red"> <UiText text={"university application"} /> </span>  <UiText text={"journey"} /> </h2>
                 <p className="premium-section-subtitle max-w-3xl">
-                  Use guided lessons and Ivygoo’s current university catalog to structure your research and next steps.
-                  University details can change, so consequential requirements should always be confirmed on the
-                  institution’s official website. Catalog ranking context: {QS_EDITION}.
+                  <UiText text={"Use guided lessons and Ivygoo’s current university catalog to structure your research and next steps. University details can change, so consequential requirements should always be confirmed on the institution’s official website. Catalog ranking context:"} /> {QS_EDITION}.
                 </p>
 
-                <div className="admission-home-phase-list mt-5 flex flex-wrap gap-2" aria-label="Open a lesson phase">
+                <div className="admission-home-phase-list mt-5 flex flex-wrap gap-2" aria-label={uiCopy("Open a lesson phase")}>
                   {lessonPhases.map((phase) => (
                     <button
                       key={phase.id}
@@ -238,7 +217,7 @@ export default function Admission() {
                         if (firstLesson) navigate(`/admission/lessons/${firstLesson.slug}`)
                       }}
                       className="admission-home-phase-chip inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-semibold"
-                      aria-label={`Start ${phase.title} phase`}
+                      aria-label={uiCopy("Start {{value1}} phase", { value1: String(phase.title) })}
                     >
                       <span
                         className="inline-flex h-5 w-5 items-center justify-center rounded-md text-white"
@@ -246,13 +225,13 @@ export default function Admission() {
                       >
                         <LucideIcon name={phase.icon} className="h-3 w-3" />
                       </span>
-                      {phase.title}
+                      <UiText text={phase.title} />
                     </button>
                   ))}
                 </div>
                 <div className="admission-home-actions">
-                  <button type="button" onClick={() => navigate('/admission/lessons')} className="admission-home-primary">Explore lessons <ArrowRight className="h-4 w-4" /></button>
-                  <button type="button" onClick={() => navigate('/admission/universities')} className="admission-home-secondary">Browse universities <Globe2 className="h-4 w-4" /></button>
+                  <button type="button" onClick={() => navigate('/admission/lessons')} className="admission-home-primary"><UiText text={"Explore lessons"} /> <ArrowRight className="h-4 w-4" /></button>
+                  <button type="button" onClick={() => navigate('/admission/universities')} className="admission-home-secondary"><UiText text={"Browse universities"} /> <Globe2 className="h-4 w-4" /></button>
                 </div>
               </div>
 
@@ -262,7 +241,7 @@ export default function Admission() {
                   <p className="hero-metric-value-sm">
                     <CountUp value={LESSON_COUNT} />
                   </p>
-                  <p className="hero-metric-note">≈ {studyHours}h guided track</p>
+                  <p className="hero-metric-note">≈ {studyHours}<UiText text={"h guided track"} /></p>
                 </div>
                 <div className="hero-metric-card admission-home-metric">
                   <p className="hero-metric-label"> <UiText text={"Universities"} /> </p>
@@ -286,7 +265,7 @@ export default function Admission() {
           <section className="admission-home-steps rounded-[1.6rem] p-6 sm:p-8">
             <div className="flex items-center gap-2">
               <BookOpen className="h-5 w-5 text-blue-600" />
-              <h3 className="text-lg font-black tracking-tight text-slate-900">How the journey works</h3>
+              <h3 className="text-lg font-black tracking-tight text-slate-900"><UiText text={"How the journey works"} /></h3>
             </div>
             <div className="mt-5 grid gap-4 sm:grid-cols-3">
               {[
@@ -308,8 +287,8 @@ export default function Admission() {
               ].map((item) => (
                 <div key={item.step} className="rounded-2xl border border-slate-100 bg-slate-50/60 p-5">
                   <span className="text-2xl font-black text-blue-200">{item.step}</span>
-                  <h4 className="mt-1 text-base font-bold text-slate-900">{item.title}</h4>
-                  <p className="mt-1.5 text-[13px] leading-6 text-slate-600">{item.text}</p>
+                  <h4 className="mt-1 text-base font-bold text-slate-900"><UiText text={item.title} /></h4>
+                  <p className="mt-1.5 text-[13px] leading-6 text-slate-600"><UiText text={item.text} /></p>
                 </div>
               ))}
             </div>

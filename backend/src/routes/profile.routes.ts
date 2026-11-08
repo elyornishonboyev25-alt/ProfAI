@@ -6,14 +6,14 @@ import { requireAuth } from '../middleware/auth.js'
 import { canUseOwnerNickname } from '../middleware/owner.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { addUtcDays } from '../utils/date.js'
-import { getLevelProgress } from '../config/levelConfig.js'
+import { getLevelProgress, resolveLevelFromXp } from '../config/levelConfig.js'
 import { generateLeaderboard, invalidateLeaderboardCache } from '../services/leaderboard.service.js'
-import { generateSkillAnalytics } from '../services/analytics.service.js'
+import { generateSkillAnalytics, invalidateSkillAnalyticsCache } from '../services/analytics.service.js'
 import { generateAiCoachReport, isAiCoachProviderError } from '../services/aiCoach.service.js'
 import { generateAiChatResponse } from '../services/aiChat.service.js'
 import { assessSpeakingText } from '../services/speakingAssessment.service.js'
 import { env } from '../config/env.js'
-import { getLearningStreakSnapshot, normalizeTimeZone } from '../services/activityStreak.service.js'
+import { getLearningStreakSnapshot, resolveLearnerTimeZone } from '../services/activityStreak.service.js'
 import {
   awardActivityXp,
   localDateKey,
@@ -22,8 +22,10 @@ import {
 } from '../services/xpRewards.service.js'
 import { hasPremiumIdentity, premiumIdentitySelect } from '../utils/premiumIdentity.js'
 import { TEST_XP_POLICY } from '../services/gamification.service.js'
+import { loadPerformanceAttempts, summarizePerformance } from '../services/performanceHistory.service.js'
 
 const router = Router()
+router.use((_req, res, next) => { res.set('Cache-Control', 'no-store'); next() })
 const aiReportBodySchema = z.object({
   refresh: z.boolean().optional(),
 })
@@ -278,7 +280,7 @@ const fallbackSpeakingQuestionBank: Array<{
 ]
 
 function getPastSevenLocalDays(now: Date, timeZone?: string | null) {
-  const zone = normalizeTimeZone(timeZone)
+  const zone = resolveLearnerTimeZone(timeZone)
   const [year, month, day] = localDateKey(now, zone).split('-').map(Number)
   const today = new Date(Date.UTC(year, month - 1, day, 12))
   return Array.from({ length: 7 }, (_, index) => localDateKey(addUtcDays(today, index - 6), 'UTC'))
@@ -395,7 +397,7 @@ router.get(
     const userId = req.user!.id
     const now = new Date()
 
-    const [user, attemptsAggregate, attemptsCount, recentAttempts, unlockedAchievements] = await Promise.all([
+    const [user, attempts, unlockedAchievements] = await Promise.all([
       prisma.user.findUnique({
         where: { id: userId },
         select: {
@@ -411,32 +413,7 @@ router.get(
           profile: { select: { timezone: true } },
         },
       }),
-      prisma.testAttempt.aggregate({
-        where: { userId },
-        _avg: { finalScore: true, percentage: true },
-        _sum: { xpEarned: true },
-      }),
-      prisma.testAttempt.count({ where: { userId } }),
-      prisma.testAttempt.findMany({
-        where: { userId },
-        orderBy: { completedAt: 'desc' },
-        take: 8,
-        select: {
-          id: true,
-          finalScore: true,
-          percentage: true,
-          xpEarned: true,
-          completedAt: true,
-          test: {
-            select: {
-              id: true,
-              title: true,
-              category: true,
-              difficulty: true,
-            },
-          },
-        },
-      }),
+      loadPerformanceAttempts(userId),
       prisma.userAchievement.findMany({
         where: { userId },
         orderBy: { unlockedAt: 'desc' },
@@ -470,15 +447,12 @@ router.get(
       getLearningStreakSnapshot(prisma, userId, user.profile?.timezone, now),
     ])
 
-    const timeZone = normalizeTimeZone(user.profile?.timezone)
+    const timeZone = resolveLearnerTimeZone(user.profile?.timezone)
     const days = getPastSevenLocalDays(now, timeZone)
     const broadWindowStart = addUtcDays(now, -8)
     const broadWindowEnd = addUtcDays(now, 1)
-    const [weeklyAttempts, xpEventRows] = await Promise.all([
-      prisma.testAttempt.findMany({
-        where: { userId, completedAt: { gte: broadWindowStart, lt: broadWindowEnd } },
-        select: { completedAt: true, totalQuestions: true, xpEarned: true },
-      }),
+    const weeklyAttempts = attempts.filter((attempt) => attempt.completedAt >= broadWindowStart && attempt.completedAt < broadWindowEnd)
+    const [xpEventRows] = await Promise.all([
       prisma.xpEvent.findMany({
         where: { userId, earnedAt: { gte: broadWindowStart, lt: broadWindowEnd }, amount: { gt: 0 } },
         select: { earnedAt: true, amount: true },
@@ -523,18 +497,13 @@ router.get(
         id: user.id,
         fullName: user.fullName,
         email: user.email,
-        level: user.level,
+        level: resolveLevelFromXp(user.xp),
         xp: user.xp,
         currentStreak: learningStreak.currentStreak,
         longestStreak: Math.max(user.longestStreak, learningStreak.longestStreak),
         memberSince: user.createdAt,
       },
-      stats: {
-        totalAttempts: attemptsCount,
-        averageScore: Number((attemptsAggregate._avg.finalScore ?? 0).toFixed(2)),
-        averageAccuracy: Number((attemptsAggregate._avg.percentage ?? 0).toFixed(2)),
-        totalXpFromAttempts: Number(attemptsAggregate._sum.xpEarned ?? 0),
-      },
+      stats: summarizePerformance(attempts),
       levelProgress,
       weeklyActivity,
       competitive: competitiveRow
@@ -555,7 +524,7 @@ router.get(
         : null,
       skillAnalytics,
       achievements: unlockedAchievements,
-      recentAttempts,
+      recentAttempts: attempts.slice().reverse(),
     })
   }),
 )
@@ -579,6 +548,8 @@ router.delete(
     await prisma.testAttempt.delete({
       where: { id: attempt.id },
     })
+    invalidateLeaderboardCache()
+    invalidateSkillAnalyticsCache()
 
     return res.status(204).send()
   }),
@@ -1419,11 +1390,14 @@ router.post(
         select: { currentStreak: true, longestStreak: true, profile: { select: { timezone: true } } },
       })
       if (!user) throw new Error('User not found while recording daily login.')
-      const timeZone = normalizeTimeZone(input.timezone ?? user.profile?.timezone)
-      if (input.timezone && timeZone === input.timezone) {
-        await tx.userProfile.updateMany({
+      const timeZone = resolveLearnerTimeZone(input.timezone ?? user.profile?.timezone)
+      // Persist the device time zone even when the learner has never saved a
+      // profile, so every later streak calculation uses the same calendar days.
+      if (input.timezone && timeZone === input.timezone && user.profile?.timezone !== timeZone) {
+        await tx.userProfile.upsert({
           where: { userId: req.user!.id },
-          data: { timezone: timeZone },
+          create: { userId: req.user!.id, timezone: timeZone },
+          update: { timezone: timeZone },
         })
       }
       const result = await awardActivityXp(tx, {
@@ -1469,7 +1443,7 @@ router.post(
         select: { currentStreak: true, longestStreak: true, profile: { select: { timezone: true } } },
       })
       if (!user) throw new Error('User not found while recording learning activity.')
-      const timeZone = normalizeTimeZone(user.profile?.timezone)
+      const timeZone = resolveLearnerTimeZone(user.profile?.timezone)
       const result = await awardActivityXp(tx, {
         userId: req.user!.id,
         source: input.source as XpRewardSource,
@@ -1528,7 +1502,7 @@ router.post(
             xpEarned: 0,
             originalXp: existing.amount,
             totalXp: current?.xp ?? 0,
-            level: current?.level ?? 1,
+            level: resolveLevelFromXp(current?.xp ?? 0),
           }
         }
       }
@@ -1544,7 +1518,7 @@ router.post(
         band: data.overallBand,
         durationSec: data.durationSec,
         earnedAt: now,
-        timeZone: user.profile?.timezone,
+        timeZone: resolveLearnerTimeZone(user.profile?.timezone),
         metadata: { mode: data.mode, modeLabel: data.modeLabel, band: data.overallBand },
       })
       const streak = await getLearningStreakSnapshot(tx, req.user!.id, user.profile?.timezone, now)
@@ -1644,7 +1618,7 @@ router.get(
         lastSeen: user.lastActiveDate,
         streak: user.currentStreak,
         longestStreak: user.longestStreak,
-        level: user.level,
+        level: resolveLevelFromXp(user.xp),
         xp: user.xp,
         memberSince: user.createdAt,
         rank: sessions.length ? rank : null,
@@ -1800,7 +1774,7 @@ router.get(
       nickname: user.nickname ?? null,
       avatarUrl: user.avatarUrl ?? null,
       googleAvatarUrl: user.googleAvatarUrl ?? null,
-      level: user.level,
+      level: resolveLevelFromXp(user.xp),
       xp: user.xp,
       memberSince: user.createdAt,
       profile: serializeProfile(profile),
@@ -2044,7 +2018,7 @@ router.get(
         nickname: u.nickname,
         premium: hasPremiumIdentity(u),
         avatarUrl: u.avatarUrl ?? null,
-        level: u.level,
+        level: resolveLevelFromXp(u.xp),
         xp: u.xp,
         streak: u.currentStreak,
         badgeCount: u._count.skillBadges,
@@ -2090,32 +2064,20 @@ router.get(
     }
 
     // Heavy analytics are best-effort: a failure must not break the profile page.
-    const [skillAnalytics, leaderboard, attemptsAgg, attemptsCount, badges, learningStreak, xpEvents, recentAttempts] = await Promise.all([
+    const [skillAnalytics, leaderboard, attempts, badges, learningStreak, xpEvents] = await Promise.all([
       generateSkillAnalytics(user.id).catch(() => null),
       generateLeaderboard({ period: 'all', currentUserId: user.id }).catch(() => null),
-      prisma.testAttempt
-        .aggregate({ where: { userId: user.id }, _avg: { finalScore: true, percentage: true }, _sum: { xpEarned: true } })
-        .catch(() => null),
-      prisma.testAttempt.count({ where: { userId: user.id } }).catch(() => 0),
-      prisma.skillBadge.findMany({ where: { userId: user.id }, orderBy: [{ tier: 'desc' }] }).catch(() => []),
-      getLearningStreakSnapshot(prisma, user.id, profile.timezone).catch(() => ({
-        currentStreak: user.currentStreak,
-        longestStreak: user.longestStreak,
-        lastLearningAt: null,
-      })),
+      loadPerformanceAttempts(user.id),
+      prisma.skillBadge.findMany({ where: { userId: user.id }, orderBy: [{ tier: 'desc' }] }),
+      getLearningStreakSnapshot(prisma, user.id, profile.timezone),
       prisma.xpEvent.groupBy({
         by: ['source'],
         where: { userId: user.id, amount: { gt: 0 } },
         _sum: { amount: true },
         orderBy: { source: 'asc' },
-      }).catch(() => []),
-      prisma.testAttempt.findMany({
-        where: { userId: user.id },
-        orderBy: { completedAt: 'desc' },
-        take: 8,
-        select: { completedAt: true, test: { select: { title: true, category: true } } },
-      }).catch(() => []),
+      }),
     ])
+    const stats = summarizePerformance(attempts)
     const rankRow = leaderboard?.rows.find((row) => row.userId === user.id) ?? null
 
     return res.json({
@@ -2124,7 +2086,7 @@ router.get(
         premium: hasPremiumIdentity(user),
         displayName: user.nickname ?? 'Learner',
         avatarUrl: user.avatarUrl ?? null,
-        level: user.level,
+        level: resolveLevelFromXp(user.xp),
         xp: user.xp,
         streak: learningStreak.currentStreak,
         longestStreak: Math.max(user.longestStreak, learningStreak.longestStreak),
@@ -2142,17 +2104,13 @@ router.get(
         showUniversity: profile.showUniversity,
         showBadges: profile.showBadges,
       },
-      recentAttempts: profile.showResults ? recentAttempts : [],
+      recentAttempts: profile.showResults ? attempts.slice(-8).reverse().map(({ completedAt, test }) => ({ completedAt, test: { title: test.title, category: test.category } })) : [],
       stats: profile.showResults
-        ? {
-            totalAttempts: attemptsCount ?? 0,
-            averageScore: Number((attemptsAgg?._avg.finalScore ?? 0).toFixed(2)),
-            averageAccuracy: Number((attemptsAgg?._avg.percentage ?? 0).toFixed(2)),
-          }
+        ? { totalAttempts: stats.totalAttempts, averageScore: stats.averageScore, averageAccuracy: stats.averageAccuracy }
         : null,
       xpBreakdown: [
-        ...((attemptsAgg?._sum.xpEarned ?? 0) > 0
-          ? [{ source: 'TEST', amount: attemptsAgg?._sum.xpEarned ?? 0 }]
+        ...(stats.totalXpFromAttempts > 0
+          ? [{ source: 'TEST', amount: stats.totalXpFromAttempts }]
           : []),
         ...xpEvents.map((event) => ({ source: event.source, amount: event._sum.amount ?? 0 })),
       ],

@@ -1,85 +1,124 @@
 import { useEffect, useRef, useState } from 'react'
-import { Coffee, Headphones, Music2, VolumeX } from 'lucide-react'
+import { ArrowRight, Coffee, LogOut, MoonStar, Pause, Play, SlidersHorizontal, Volume2 } from 'lucide-react'
 import { useCopy } from '@/i18n/interface'
 import { SAT_SECTION_BREAK_SECONDS } from '@/features/sat/sectionBreak'
+import { createSATBreakMusic } from '@/features/sat/breakMusic'
 import './SATSectionBreak.css'
 
-// Official Soothing Relaxation uploads, embedded directly from YouTube.
-const tracks = [
-  { id: '77ZozI0rw7w', label: 'Piano & water sounds' },
-  { id: 'QQ-WACJqc4Y', label: 'Peaceful piano' },
-]
-
-export default function SATSectionBreak({ endsAt, now, onExit }: { endsAt: number; now: number; onExit: () => void }) {
+export default function SATSectionBreak({ endsAt, now, onExit, onContinue }: { endsAt: number; now: number; onExit: () => void; onContinue: () => void }) {
   const { c } = useCopy()
   const [musicEnabled, setMusicEnabled] = useState(false)
-  const [trackIndex, setTrackIndex] = useState(0)
+  const [musicPending, setMusicPending] = useState(false)
+  const [musicError, setMusicError] = useState(false)
+  const [volume, setVolume] = useState(.45)
+  const audioRef = useRef<ReturnType<typeof createSATBreakMusic> | null>(null)
+  const playRequest = useRef(0)
   const headingRef = useRef<HTMLHeadingElement>(null)
+  const settingsRef = useRef<HTMLDetailsElement>(null)
   const remaining = Math.max(0, Math.ceil((endsAt - now) / 1000))
   const minutes = String(Math.floor(remaining / 60)).padStart(2, '0')
   const seconds = String(remaining % 60).padStart(2, '0')
-  const track = tracks[trackIndex]
 
-  useEffect(() => { headingRef.current?.focus() }, [])
+  useEffect(() => {
+    headingRef.current?.focus()
+    return () => { playRequest.current += 1; audioRef.current?.stop() }
+  }, [])
+
+  const stopMusic = () => {
+    playRequest.current += 1
+    audioRef.current?.stop()
+    audioRef.current = null
+    setMusicEnabled(false)
+    setMusicPending(false)
+  }
+
+  const playMusic = async () => {
+    const request = ++playRequest.current
+    audioRef.current?.stop()
+    setMusicPending(true)
+    setMusicEnabled(false)
+    setMusicError(false)
+    try {
+      const audio = createSATBreakMusic(volume, () => {
+        if (playRequest.current !== request) return
+        audioRef.current?.stop()
+        audioRef.current = null
+        setMusicEnabled(false)
+        setMusicPending(false)
+        setMusicError(true)
+      })
+      audioRef.current = audio
+      await audio.play()
+      if (playRequest.current === request) setMusicEnabled(true)
+    } catch {
+      if (playRequest.current === request) {
+        audioRef.current?.stop()
+        audioRef.current = null
+        setMusicError(true)
+      }
+    } finally {
+      if (playRequest.current === request) setMusicPending(false)
+    }
+  }
+
+  const leaveBreak = (action: () => void) => { stopMusic(); action() }
 
   return (
     <main className="sat-section-break">
-      <section className="sat-section-break__card" aria-labelledby="sat-break-title">
-        <div className="sat-section-break__intro">
-          <span className="sat-section-break__icon"><Coffee size={26} aria-hidden="true" /></span>
-          <p className="sat-section-break__eyebrow">{c('SAT Exam Mode')}</p>
-          <h1 id="sat-break-title" tabIndex={-1} ref={headingRef}>{c('Time for a break')}</h1>
-          <p>{c('Reading and Writing is complete. Take 10 minutes to rest before Math.')}</p>
-        </div>
+      <header className="sat-section-break__header">
+        <span className="sat-section-break__mode"><Coffee size={17} aria-hidden="true" />{c('SAT Exam Mode')}</span>
+        <button type="button" className="sat-section-break__exit" onClick={() => leaveBreak(onExit)}>
+          <LogOut size={16} aria-hidden="true" />{c('Save and exit')}
+        </button>
+      </header>
 
-        <div className="sat-section-break__body">
-          <div className="sat-section-break__rest">
-            <div className="sat-section-break__clock" role="timer" aria-label={c('Break time remaining')} aria-live="off">
-              <svg viewBox="0 0 200 200" aria-hidden="true">
-                <circle cx="100" cy="100" r="90" className="sat-section-break__ring-track" />
-                <circle cx="100" cy="100" r="90" className="sat-section-break__ring" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - Math.min(1, remaining / SAT_SECTION_BREAK_SECONDS)} />
-              </svg>
-              <span>{minutes}:{seconds}</span>
+      <section className="sat-section-break__content" aria-labelledby="sat-break-title">
+        <MoonStar className="sat-section-break__moon" size={28} strokeWidth={1.35} aria-hidden="true" />
+        <h1 id="sat-break-title" tabIndex={-1} ref={headingRef}>{c('Time for a break')}</h1>
+        <div className="sat-section-break__clock" role="timer" aria-label={c('Break time remaining')} aria-live="off">
+          <span>{minutes}:{seconds}</span>
+        </div>
+        <div className="sat-section-break__progress" aria-hidden="true">
+          <span style={{ width: (Math.min(1, remaining / SAT_SECTION_BREAK_SECONDS) * 100) + '%' }} />
+        </div>
+        <p className="sat-section-break__next">{c('Up next: Math Module 1')}</p>
+        <button type="button" className="sat-section-break__continue" onClick={() => leaveBreak(onContinue)}>
+          {c('Start Math now')}<ArrowRight size={17} aria-hidden="true" />
+        </button>
+
+        <div className="sat-section-break__music" data-playing={musicEnabled}>
+          <button type="button" className="sat-section-break__music-toggle" aria-label={c(musicEnabled ? 'Turn music off' : 'Play relaxing music')}
+            aria-pressed={musicEnabled} aria-busy={musicPending} disabled={musicPending}
+            onClick={() => musicEnabled ? stopMusic() : void playMusic()}>
+            <span className="sat-section-break__play-icon">{musicEnabled ? <Pause size={18} aria-hidden="true" /> : <Play size={18} aria-hidden="true" />}</span>
+            <span className="sat-section-break__track"><span>{c('Nature sounds')}</span><small>{c('Quiet stream at night')}</small></span>
+          </button>
+          <details ref={settingsRef} className="sat-section-break__settings" onKeyDown={event => {
+            if (event.key === 'Escape' && settingsRef.current?.open) {
+              settingsRef.current.open = false
+              settingsRef.current.querySelector('summary')?.focus()
+              event.stopPropagation()
+            }
+          }}>
+            <summary aria-label={c('Volume')} title={c('Volume')}><SlidersHorizontal size={17} aria-hidden="true" /></summary>
+            <div className="sat-section-break__settings-panel">
+              <label htmlFor="sat-break-volume" className="sat-section-break__volume-label"><Volume2 size={15} aria-hidden="true" />{c('Volume')}<span>{Math.round(volume * 100)}%</span></label>
+              <input id="sat-break-volume" type="range" min="0" max="100" value={Math.round(volume * 100)} onChange={event => {
+                const value = Number(event.target.value) / 100
+                setVolume(value)
+                audioRef.current?.setVolume(value)
+              }} />
             </div>
-            <p className="sat-section-break__next">{c('Up next: Math Module 1')}</p>
-            <p>{c('Math starts automatically when the break ends. Your Math time is reserved until then.')}</p>
-            <p className="sat-section-break__tip">{c('Look away from the screen, stretch and take a few slow breaths.')}</p>
-          </div>
-
-          <div className="sat-section-break__music">
-            <Headphones size={24} aria-hidden="true" />
-            <h2>{c('Relaxing music')}</h2>
-            <p>{c('Enjoy a quiet moment. Music is optional and starts only when you turn it on.')}</p>
-            <label htmlFor="sat-break-track">{c('Choose music')}</label>
-            <select id="sat-break-track" value={trackIndex} onChange={event => setTrackIndex(Number(event.target.value))}>
-              <option value={0}>{c('Piano & water sounds')}</option>
-              <option value={1}>{c('Peaceful piano')}</option>
-            </select>
-            <button type="button" className="sat-section-break__music-toggle" aria-pressed={musicEnabled} onClick={() => setMusicEnabled(enabled => !enabled)}>
-              {musicEnabled ? <VolumeX size={18} aria-hidden="true" /> : <Music2 size={18} aria-hidden="true" />}
-              {musicEnabled ? c('Turn music off') : c('Play relaxing music')}
-            </button>
-            {musicEnabled && (
-              <div className="sat-section-break__player">
-                <iframe
-                  key={track.id}
-                  title={`${c('Relaxing music')}: ${c(track.label)}`}
-                  src={`https://www.youtube-nocookie.com/embed/${track.id}?autoplay=1&playsinline=1&rel=0`}
-                  allow="autoplay; encrypted-media; picture-in-picture"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                />
-                <p>{c('If playback does not start, use the player controls. You can continue your break without music.')}</p>
-              </div>
-            )}
-            <span className="sat-section-break__credit">Peder B. Helland · Soothing Relaxation · YouTube</span>
-          </div>
+          </details>
         </div>
-
-        <footer className="sat-section-break__footer">
-          <p>{c('The break countdown continues if you reload or leave this page.')}</p>
-          <button type="button" onClick={onExit}>{c('Save and exit')}</button>
-        </footer>
+        {musicError && <p className="sat-section-break__audio-error" role="status">{c('Music could not start. Try again.')}</p>}
+        <p className="sat-section-break__rest-note">{c('Look away from the screen, stretch and take a few slow breaths.')}</p>
       </section>
+
+      <footer className="sat-section-break__footer">
+        <p>{c('Math starts automatically when the break ends. Your Math time is reserved until then.')}</p>
+        <p>{c('The break countdown continues if you reload or leave this page.')}</p>
+      </footer>
     </main>
   )
 }

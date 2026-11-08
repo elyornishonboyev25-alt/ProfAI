@@ -157,6 +157,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   }
 
   if (response.status === 204) {
+    if (path === '/ai/voice/end') window.dispatchEvent(new Event('profai:billing-updated'))
     return {} as T
   }
 

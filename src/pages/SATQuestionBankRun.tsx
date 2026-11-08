@@ -1,3 +1,8 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
+import AttemptEntryBoundary from '@/components/tests/AttemptEntryBoundary'
+import ConfirmDialog from '@/components/common/ConfirmDialog'
+import SATBrowserExitGuard from '@/components/sat/SATBrowserExitGuard'
 import { useActiveTest } from '@/hooks/useActiveTest'
 import { accountStorageFor } from '@/utils/accountStorage'
 import { useEffect, useRef, useState } from 'react'
@@ -7,6 +12,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import DesmosDrawer from '@/components/sat/DesmosDrawer'
 import SATFormulaSheet from '@/components/sat/SATFormulaSheet'
 import SATQuestionCanvas from '@/components/sat/SATQuestionCanvas'
+import SATSubmissionScreen, { useSATSubmission } from '@/components/sat/SATSubmissionScreen'
 import { clearBankSession, difficulty, historyKey, loadBankSession, readHistory, reviewQuestions, saveBankSession, type BankSession, type Result } from '@/features/sat/bankPractice'
 import { isSATAnswerCorrect } from '@/features/sat/practiceTest4'
 import { useFullscreen } from '@/hooks/useFullscreen'
@@ -14,13 +20,19 @@ import { useAuthStore } from '@/store/authStore'
 import { useAiAssistantStore } from '@/store/aiAssistantStore'
 import '@/components/sat/sat-exam-layout.css'
 import './SATQuestionBankRun.css'
+import './SATQuestionBankRunSilver.css'
 
 export default function SATQuestionBankRun() {
+  return <SATBrowserExitGuard><AttemptEntryBoundary exam="SAT"><SATQuestionBankRunContent /></AttemptEntryBoundary></SATBrowserExitGuard>
+}
+
+function SATQuestionBankRunContent() {
   const userId = useAuthStore((state) => state.user?.id) ?? 'guest'
   const { setId } = useParams()
   return <BankRun key={`${userId}:${setId}`} userId={userId} setId={setId} />
 }
 function BankRun({ userId, setId }: { userId: string; setId?: string }) {
+  const { c: uiCopy } = useCopy()
   const navigate = useNavigate()
   const learnerName = useAuthStore((state) => state.user?.fullName) || 'Ivygoo Student'
   const { isFullscreen, supported, toggle, exit } = useFullscreen()
@@ -30,6 +42,8 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
   })
   useActiveTest(Boolean(session))
   const [error, setError] = useState('')
+  const submission = useSATSubmission()
+  const [exitDialog, setExitDialog] = useState(false)
   const [navigatorOpen, setNavigatorOpen] = useState(false)
   const [directionsOpen, setDirectionsOpen] = useState(false)
   const [calculatorOpen, setCalculatorOpen] = useState(false)
@@ -42,6 +56,21 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
   const navigatorClose = useRef<HTMLButtonElement>(null)
   const directionsButton = useRef<HTMLButtonElement>(null)
   const directionsClose = useRef<HTMLButtonElement>(null)
+  // Count practice time only while the page is visible.
+  const elapsed = useRef(session?.elapsedSeconds ?? 0)
+  const activeSince = useRef<number | null>(Date.now())
+  const activeSeconds = () => elapsed.current + (activeSince.current === null ? 0 : (Date.now() - activeSince.current) / 1000)
+  const timed = (next: BankSession): BankSession => ({ ...next, elapsedSeconds: Math.round(activeSeconds()) })
+  useEffect(() => {
+    const visibility = () => {
+      if (document.visibilityState === 'hidden') {
+        elapsed.current = activeSeconds()
+        activeSince.current = null
+      } else if (activeSince.current === null) activeSince.current = Date.now()
+    }
+    document.addEventListener('visibilitychange', visibility)
+    return () => document.removeEventListener('visibilitychange', visibility)
+  }, [])
   const findQuestion = (key: string) => session?.questions?.[key] ?? reviewQuestions.get(key)
   const current = session ? findQuestion(session.keys[session.index]) : undefined
   const math = current?.question.section === 'math'
@@ -113,7 +142,8 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
       if (opener?.isConnected) opener.focus()
     }
   }, [navigatorOpen, directionsOpen])
-  const update = (next: BankSession) => {
+  const update = (change: BankSession) => {
+    const next = timed(change)
     setSession(next)
     try {
       saveBankSession(userId, next)
@@ -124,7 +154,7 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
   }
   const leave = () => {
     if (session) {
-      try { saveBankSession(userId, session) } catch {
+      try { saveBankSession(userId, timed(session)) } catch {
         setError('Your answers could not be saved. Free up browser storage and try again before leaving.')
         return
       }
@@ -132,9 +162,10 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
     void exit()
     navigate('/sat/question-bank')
   }
-  const finish = () => {
+  const finish = () => submission.run(() => {
     if (!session) return
     const at = new Date().toISOString()
+    const seconds = Math.round(activeSeconds())
     const results: Result[] = session.keys.map((key) => {
       const question = findQuestion(key)!.question
       return {
@@ -143,7 +174,7 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
         answer: session.answers[key]?.trim() ?? '', flagged: session.flagged.includes(key),
         highlights: session.highlights[key] ?? [],
         eliminatedChoices: session.eliminatedChoices?.[key] ?? [],
-        at, setId: session.id,
+        at, setId: session.id, seconds,
       }
     })
     try {
@@ -157,38 +188,40 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
     try { clearBankSession(userId, session.id) } catch { /* Saved history remains authoritative. */ }
     void exit()
     navigate(`/sat/question-bank?view=history&review=${encodeURIComponent(session.id)}`, { replace: true })
-  }
+  })
   if (!session || !current) return (
     <main className="sat-bank-run sat-bank-run-missing">
-      <h1>This practice set is unavailable</h1>
-      <p>Return to the Question Bank to resume your saved set or build a new one.</p>
-      <button type="button" onClick={leave}><ArrowLeft size={18} /> Question Bank</button>
+      <h1><UiText text={"This practice set is unavailable"} /></h1>
+      <p><UiText text={"Return to the Question Bank to resume your saved set or build a new one."} /></p>
+      <button type="button" onClick={leave}><ArrowLeft size={18} /> <UiText text={"Question Bank"} /></button>
     </main>
   )
   return (
-    <main className="sat-bank-run" aria-label="SAT Question Bank practice">
+    <main className="sat-bank-run" aria-label={uiCopy("SAT Question Bank practice")}>
+      {submission.pending ? <SATSubmissionScreen /> : null}
+      <ConfirmDialog open={exitDialog} title={uiCopy("Save and exit?")} description={uiCopy("Your answers, notes and highlights will be saved. Continue this set from SAT / In process.")} confirmLabel={uiCopy("Save & exit")} cancelLabel={uiCopy("Continue test")} onClose={() => setExitDialog(false)} onConfirm={leave} />
       <header ref={header} className="sat-bank-run-header">
         <div className="sat-bank-run-header-content">
           <div className="sat-bank-run-heading">
-            <h1>Question Bank: {math ? 'Math' : 'Reading and Writing'}</h1>
-            <button ref={directionsButton} type="button" className="sat-bank-run-directions" onClick={() => setDirectionsOpen(true)}>Directions</button>
+            <h1><UiText text={"Question Bank:"} /> {math ? <UiText text={"Math"} /> : <UiText text={"Reading and Writing"} />}</h1>
+            <button ref={directionsButton} type="button" className="sat-bank-run-directions" onClick={() => setDirectionsOpen(true)}><UiText text={"Directions"} /></button>
           </div>
           <div className="sat-bank-run-status">
-            <p>Untimed practice</p>
-            <span>{answered}/{session.keys.length} answered</span>
+            <p><UiText text={"Untimed practice"} /></p>
+            <span>{answered}/{session.keys.length} <UiText text={"answered"} /></span>
           </div>
           <div className="sat-bank-run-tools">
             {math ? <>
-              <button type="button" className="sat-bank-run-reference" aria-label="Open Math reference sheet" aria-expanded={formulasOpen} aria-controls="sat-formula-sheet" title="Formula Sheet" onClick={() => { setFormulasOpen((value) => !value); setCalculatorOpen(false) }}><Sheet size={20} /><span>Formula Sheet</span></button>
+              <button type="button" className="sat-bank-run-reference" aria-label={uiCopy("Open Math reference sheet")} aria-expanded={formulasOpen} aria-controls="sat-formula-sheet" title={uiCopy("Formula Sheet")} onClick={() => { setFormulasOpen((value) => !value); setCalculatorOpen(false) }}><Sheet size={20} /><span><UiText text={"Formula Sheet"} /></span></button>
               <button type="button" className="sat-bank-run-desmos" aria-expanded={calculatorOpen}
                 aria-label={calculatorOpen ? 'Close Desmos calculator' : 'Open Desmos calculator'}
                 onClick={() => { setCalculatorOpen((value) => !value); setFormulasOpen(false) }}><Calculator size={20} /> <span>Desmos</span></button>
             </> : null}
-            <button type="button" className="sat-bank-run-navigator-toggle" aria-label="Open question navigator" onClick={() => setNavigatorOpen(true)}><FileText size={24} /></button>
-            {supported ? <button type="button" onClick={toggle} aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}>
+            <button type="button" className="sat-bank-run-navigator-toggle" aria-label={uiCopy("Open question navigator")} onClick={() => setNavigatorOpen(true)}><FileText size={24} /></button>
+            {supported ? <button type="button" onClick={toggle} aria-label={isFullscreen ? uiCopy("Exit fullscreen") : uiCopy("Enter fullscreen")}>
               {isFullscreen ? <Minimize2 size={24} /> : <Maximize2 size={24} />}
             </button> : null}
-            <button type="button" onClick={leave} aria-label="Save and exit practice"><X size={24} /><span>Save & exit</span></button>
+            <button type="button" onClick={() => setExitDialog(true)} aria-label={uiCopy("Save and exit practice")}><X size={24} /><span><UiText text={"Save & exit"} /></span></button>
           </div>
         </div>
         <div className="sat-bank-run-divider" />
@@ -208,7 +241,7 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
             eliminatedChoices: { ...session.eliminatedChoices, [current.key]: choices },
             answers: { ...session.answers, [current.key]: choices.includes(session.answers[current.key]) ? '' : session.answers[current.key] ?? '' },
           })}
-          highlightAvailable={!math}
+          highlightAvailable
           onChange={(strokes) => update({ ...session, highlights: { ...session.highlights, [current.key]: strokes } })}
           flagged={session.flagged.includes(current.key)}
           onToggleFlag={() => update({ ...session, flagged: session.flagged.includes(current.key)
@@ -222,28 +255,28 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
         <div className="sat-bank-run-footer-content">
           <p className="sat-bank-run-learner">{learnerName}</p>
           <button ref={navigatorButton} type="button" className="sat-bank-run-question-menu" aria-expanded={navigatorOpen} aria-controls="bank-question-navigator" onClick={() => setNavigatorOpen((value) => !value)}>
-            Question {session.index + 1} of {session.keys.length} <ChevronDown size={16} />
-            <span className="sr-only">{session.flagged.length} marked</span>
+            <UiText text={"Question"} /> {session.index + 1} <UiText text={"of"} /> {session.keys.length} <ChevronDown size={16} />
+            <span className="sr-only">{session.flagged.length} <UiText text={"marked"} /></span>
           </button>
           <div className="sat-bank-run-navigation">
-            <button type="button" disabled={!session.index} onClick={() => update({ ...session, index: session.index - 1 })}>Back</button>
+            <button type="button" disabled={!session.index} onClick={() => update({ ...session, index: session.index - 1 })}><UiText text={"Back"} /></button>
             {session.index < session.keys.length - 1 ?
-              <button type="button" onClick={() => update({ ...session, index: session.index + 1 })}>Next</button> :
-              <button type="button" className="sat-bank-run-finish" onClick={finish}>Finish set</button>}
+              <button type="button" onClick={() => update({ ...session, index: session.index + 1 })}><UiText text={"Next"} /></button> :
+              <button type="button" className="sat-bank-run-finish" onClick={finish}><UiText text={"Finish set"} /></button>}
           </div>
         </div>
       </footer>
       {directionsOpen ? createPortal(
         <div className="sat-bank-run-overlay" onClick={() => { setDirectionsOpen(false); directionsButton.current?.focus() }}>
           <section className="sat-bank-run-dialog" role="dialog" aria-modal="true" aria-labelledby="bank-directions-title" onClick={(event) => event.stopPropagation()}>
-            <header><div><p>Test directions</p><h2 id="bank-directions-title">{math ? 'Math' : 'Reading and Writing'}</h2></div>
-              <button ref={directionsClose} type="button" aria-label="Close directions" onClick={() => { setDirectionsOpen(false); directionsButton.current?.focus() }}><X size={18} /></button>
+            <header><div><p><UiText text={"Test directions"} /></p><h2 id="bank-directions-title">{math ? <UiText text={"Math"} /> : <UiText text={"Reading and Writing"} />}</h2></div>
+              <button ref={directionsClose} type="button" aria-label={uiCopy("Close directions")} onClick={() => { setDirectionsOpen(false); directionsButton.current?.focus() }}><X size={18} /></button>
             </header>
             <div className="sat-bank-run-directions-body">
-              <p>{math ? 'Solve each problem and select or enter the best answer. Desmos and the formula sheet are available in the Math toolbar.' : 'Read each passage carefully and choose the answer that is best supported by the text and standard written English.'}</p>
-              <p>This practice set is untimed. You may move between questions and mark any question for review. Your answers and current position are saved automatically on this device.</p>
-              {!math ? <p>Select text to highlight it in one of four colors. Click a highlight to remove it.</p> : null}
-              <p className="sat-bank-run-question-topic">Current question: {difficulty(current.question.difficulty)} · {current.question.skill}</p>
+              <p>{math ? <UiText text={"Solve each problem and select or enter the best answer. Desmos and the formula sheet are available in the Math toolbar."} /> : <UiText text={"Read each passage carefully and choose the answer that is best supported by the text and standard written English."} />}</p>
+              <p><UiText text={"This practice set is untimed. You may move between questions and mark any question for review. Your answers and current position are saved automatically on this device."} /></p>
+              {!math ? <p><UiText text={"Select text to highlight it in one of four colors. Click a highlight to remove it."} /></p> : null}
+              <p className="sat-bank-run-question-topic"><UiText text={"Current question:"} /> {difficulty(current.question.difficulty)} · <UiText text={current.question.skill} /></p>
             </div>
           </section>
         </div>, document.body,
@@ -251,8 +284,8 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
       {navigatorOpen ? createPortal(
         <div className="sat-bank-run-overlay" onClick={() => { setNavigatorOpen(false); navigatorButton.current?.focus() }}>
           <section id="bank-question-navigator" className="sat-bank-run-dialog sat-bank-run-navigator" role="dialog" aria-modal="true" aria-labelledby="bank-navigator-title" onClick={(event) => event.stopPropagation()}>
-            <header><div><p>Question Bank</p><h2 id="bank-navigator-title">Question navigator</h2></div>
-              <button ref={navigatorClose} type="button" aria-label="Close question navigator" onClick={() => { setNavigatorOpen(false); navigatorButton.current?.focus() }}><X size={19} /></button>
+            <header><div><p><UiText text={"Question Bank"} /></p><h2 id="bank-navigator-title"><UiText text={"Question navigator"} /></h2></div>
+              <button ref={navigatorClose} type="button" aria-label={uiCopy("Close question navigator")} onClick={() => { setNavigatorOpen(false); navigatorButton.current?.focus() }}><X size={19} /></button>
             </header>
             <div className="sat-bank-run-divider" />
             <div className="sat-bank-run-navigator-body">
@@ -260,16 +293,16 @@ function BankRun({ userId, setId }: { userId: string; setId?: string }) {
                 {session.keys.map((key, index) => (
                   <button type="button" key={key} className={`sat-bank-run-number ${session.answers[key]?.trim() ? 'answered' : ''}`}
                     aria-current={session.index === index ? 'step' : undefined}
-                    aria-label={`Go to question ${index + 1}${session.flagged.includes(key) ? ', Marked for Review' : ''}${session.answers[key]?.trim() ? ', Answered' : ', Unanswered'}`}
+                    aria-label={uiCopy("Go to question {{value1}}{{value2}}{{value3}}", { value1: String(index + 1), value2: String(session.flagged.includes(key) ? ', Marked for Review' : ''), value3: String(session.answers[key]?.trim() ? ', Answered' : ', Unanswered') })}
                     onClick={() => { update({ ...session, index }); setNavigatorOpen(false); navigatorButton.current?.focus() }}>
                     {index + 1}{session.flagged.includes(key) ? <Bookmark size={13} className="sat-bank-run-mark" /> : null}
                   </button>
                 ))}
               </div>
-              <p>Unanswered questions will be saved as skipped when you finish.</p>
+              <p><UiText text={"Unanswered questions will be saved as skipped when you finish."} /></p>
             </div>
-            <footer><p>{answered} answered · {session.keys.length - answered} unanswered · {session.flagged.length} marked for review</p>
-              <button type="button" className="sat-bank-run-primary" onClick={finish}>Finish set <Check size={17} /></button>
+            <footer><p>{answered} <UiText text={"answered ·"} /> {session.keys.length - answered} <UiText text={"unanswered ·"} /> {session.flagged.length} <UiText text={"marked for review"} /></p>
+              <button type="button" className="sat-bank-run-primary" onClick={finish}><UiText text={"Finish set"} /> <Check size={17} /></button>
             </footer>
           </section>
         </div>, document.body,

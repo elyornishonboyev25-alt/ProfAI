@@ -1,9 +1,12 @@
-import { lazy, Suspense, useEffect, useState, type KeyboardEvent } from 'react'
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
+import { lazy, Suspense, useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { BookOpenText, Headphones, Layers3, Mic2, PenLine } from 'lucide-react'
+import { ArrowUpRight, BookOpenText, ChartNoAxesCombined, Headphones, Layers3, Mic2, PenLine, FolderClock } from 'lucide-react'
+import InProcessPanel from '@/components/tests/InProcessPanel'
 import BrandPageLoader from '@/components/common/BrandPageLoader'
-import ResumeIeltsAttempts from '@/components/ielts/ResumeIeltsAttempts'
 import { Link } from 'react-router-dom'
+import '@/styles/exam-catalog.css'
 const IELTSSectionTests = lazy(() => import('./IELTSSectionTests'))
 const IELTSWritingTests = lazy(() => import('./IELTSWritingTests'))
 const IELTSSpeakingTests = lazy(() => import('./IELTSSpeakingTests'))
@@ -15,6 +18,7 @@ const skills = [
   { id: 'writing', label: 'Writing', icon: PenLine, detail: 'Task 1 and Task 2' },
   { id: 'speaking', label: 'Speaking', icon: Mic2, detail: 'Fluency and feedback' },
   { id: 'mocks', label: 'Full mocks', icon: Layers3, detail: 'All four skills together' },
+  { id: 'in-process', label: 'In process', icon: FolderClock, detail: 'Continue your saved tests' },
 ] as const
 
 type TabId = (typeof skills)[number]['id']
@@ -28,14 +32,30 @@ function skillFromLocation(pathname: string, hash: string, section?: string): Ta
 }
 
 export default function IELTSTestLibrary() {
+  const { c: uiCopy } = useCopy()
   const location = useLocation()
   const navigate = useNavigate()
   const { section } = useParams<{ section?: string }>()
   const [activeSkill, setActiveSkill] = useState<TabId>(() => skillFromLocation(location.pathname, location.hash, section))
+  const tabList = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setActiveSkill(skillFromLocation(location.pathname, location.hash, section))
   }, [location.hash, location.pathname, section])
+
+  useEffect(() => {
+    const reveal = () => {
+      const current = document.getElementById(`ielts-tab-${activeSkill}`)
+      const list = tabList.current
+      if (!current || !list) return
+      const left = current.offsetLeft - list.offsetLeft
+      if (left < list.scrollLeft) list.scrollLeft = left
+      else if (left + current.offsetWidth > list.scrollLeft + list.clientWidth) list.scrollLeft = left + current.offsetWidth - list.clientWidth
+    }
+    reveal()
+    window.addEventListener('resize', reveal)
+    return () => window.removeEventListener('resize', reveal)
+  }, [activeSkill])
 
   const selectTab = (id: TabId) => {
     setActiveSkill(id)
@@ -56,22 +76,25 @@ export default function IELTSTestLibrary() {
   }
 
   return (
-    <main className="workspace-page relative min-h-screen px-4 pb-20 pt-3 sm:px-6 lg:px-8">
+    <main className="workspace-page exam-library-page relative min-h-screen px-4 pb-20 pt-3 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-[1480px]">
-        <ResumeIeltsAttempts />
-        <div className="mb-3 flex justify-end"><Link to="/analyze-mistakes" className="text-sm font-bold text-red-700">Review · Mistake Lab</Link></div>
-        <div id="ielts-skill-tabs" className="sticky top-2 z-20 rounded-2xl border border-white bg-white/95 p-2 shadow-[0_12px_35px_rgba(15,23,42,.09)]">
-          <div role="tablist" aria-label="IELTS skills" className="flex gap-2 overflow-x-auto">
-            {skills.map(({ id, label, icon: Icon, detail }) => <button key={id} id={`ielts-tab-${id}`} type="button" role="tab" tabIndex={activeSkill === id ? 0 : -1} aria-selected={activeSkill === id} aria-controls="ielts-test-panel" onKeyDown={(event) => handleTabKeyDown(event, id)} onClick={() => selectTab(id)} className={`flex min-w-[10rem] flex-1 items-center gap-3 rounded-xl border px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 ${activeSkill === id ? 'border-red-200 bg-gradient-to-br from-white to-red-50 text-red-700 shadow-[0_6px_18px_rgba(185,28,28,.08)]' : 'border-transparent text-slate-800 hover:bg-red-50/70'}`}><Icon className="h-5 w-5 shrink-0 text-red-600" /><span><strong className="block text-sm">{label}</strong><small className="block whitespace-nowrap text-[11px] font-semibold text-slate-500">{detail}</small></span></button>)}
+        <header className="exam-library-heading">
+          <div><span>IELTS Academic</span><h1><UiText text="Test library" /></h1></div>
+          <Link to="/profile" className="exam-library-results"><ChartNoAxesCombined size={17} /><UiText text="My Results" /><ArrowUpRight size={15} /></Link>
+        </header>
+        <div id="ielts-skill-tabs" className="exam-library-nav sticky top-2 z-20 rounded-2xl border border-white bg-white/95 p-2 shadow-[0_12px_35px_rgba(15,23,42,.09)]">
+          <div ref={tabList} role="tablist" aria-label={uiCopy("IELTS skills")} className="exam-section-tabs">
+            {skills.map(({ id, label, icon: Icon, detail }) => <button key={id} id={`ielts-tab-${id}`} type="button" role="tab" tabIndex={activeSkill === id ? 0 : -1} aria-selected={activeSkill === id} aria-controls="ielts-test-panel" onKeyDown={(event) => handleTabKeyDown(event, id)} onClick={() => selectTab(id)} className={`flex min-w-0 flex-1 items-center gap-3 rounded-xl border px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 ${activeSkill === id ? 'border-red-200 bg-gradient-to-br from-white to-red-50 text-red-700 shadow-[0_6px_18px_rgba(185,28,28,.08)]' : 'border-transparent text-slate-800 hover:bg-red-50/70'}`}><Icon className="h-5 w-5 shrink-0 text-red-600" /><span><strong className="block text-sm"><UiText text={label} /></strong><small className="block text-[11px] font-semibold text-slate-500"><UiText text={detail} /></small></span></button>)}
           </div>
         </div>
         <div id="ielts-test-panel" role="tabpanel" tabIndex={0} aria-labelledby={`ielts-tab-${activeSkill}`} className="mt-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300">
-          <Suspense fallback={<BrandPageLoader compact label="Opening page" />}>
+          <Suspense fallback={<BrandPageLoader compact label={uiCopy("Opening page")} />}>
             {activeSkill === 'listening' && <IELTSSectionTests sectionOverride="listening" embedded />}
             {activeSkill === 'reading' && <IELTSSectionTests sectionOverride="reading" embedded />}
             {activeSkill === 'writing' && <IELTSWritingTests embedded />}
             {activeSkill === 'speaking' && <IELTSSpeakingTests embedded />}
             {activeSkill === 'mocks' && <MockIELTS embedded />}
+            {activeSkill === 'in-process' && <InProcessPanel exam="IELTS" showEmpty />}
           </Suspense>
         </div>
       </div>

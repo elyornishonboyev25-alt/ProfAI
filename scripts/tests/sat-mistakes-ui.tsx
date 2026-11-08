@@ -4,16 +4,16 @@ import SATQuestionCanvas from '../../src/components/sat/SATQuestionCanvas'
 import { finishModule, migrateModuleTiming, moduleSeconds, moduleTimes, pauseModule, resumeModule, totalTime } from '../../src/features/sat/timing'
 import React, { act, StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { MemoryRouter, useLocation } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import assert from 'node:assert/strict'
-import SATMistakes from '../../src/pages/SATMistakes'
+import SATResultReview from '../../src/pages/SATResultReview'
 import SATReview from '../../src/components/sat/SATReview'
 import { SAT_TEST_CATALOG, getSATSectionTest, getSATReviewTests } from '../../src/features/sat/catalog'
 import { createSATAttempt, scoreSATModules } from '../../src/features/sat/practiceTest4'
 import { loadSATAttemptHistory, saveSATAttempt, saveSATAttemptToHistory } from '../../src/features/sat/attemptStorage'
 import { useBadgeStore } from '../../src/store/badgeStore'
 import { accountStorage } from '../../src/utils/accountStorage'
-import '../../src/i18n'
+import i18n from '../../src/i18n'
 
 const container = document.getElementById('root')!
 let root: ReturnType<typeof createRoot>
@@ -21,12 +21,17 @@ function Location() {
   const location = useLocation()
   return <output data-location>{location.pathname}{location.search}</output>
 }
-async function render(path = '/sat/mistakes', content = <SATMistakes />) {
+async function render(path = '/sat/results/older-result', content = <SATResultReview />) {
   if (root) await act(async () => root.unmount())
   root = createRoot(container)
   await act(async () => root.render(
     <StrictMode><MemoryRouter initialEntries={[path]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <Location />{content}
+      <Location />
+      <Routes>
+        <Route path="/sat/results/:attemptId" element={content} />
+        <Route path="/profile" element={<h1>My Results</h1>} />
+        <Route path="*" element={content} />
+      </Routes>
     </MemoryRouter></StrictMode>,
   ))
 }
@@ -36,9 +41,9 @@ async function click(node: HTMLElement | null | undefined) {
   await act(async () => node.click())
 }
 const text = () => container.textContent!
-const rows = () => [...container.querySelectorAll<HTMLButtonElement>('button[aria-label^="Review "]')]
 
-export async function run() {
+export async function run({ reviewOnly = false } = {}) {
+  await i18n.changeLanguage('en')
   localStorage.clear()
   const timingModules = SAT_TEST_CATALOG[1].modules
   for (const mode of ['exam', 'practice'] as const) {
@@ -73,7 +78,7 @@ export async function run() {
 
   // Audit every current and historical Math question through the actual canvas.
   let audited = 0
-  for (const test of getSATReviewTests().filter((test) => !test.id.endsWith('-math') && !test.id.endsWith('-reading-writing'))) {
+  if (!reviewOnly) for (const test of getSATReviewTests().filter((test) => !test.id.endsWith('-math') && !test.id.endsWith('-reading-writing'))) {
     for (const question of test.modules.filter((module) => module.section === 'math').flatMap((module) => module.questions)) {
       const markup = renderToStaticMarkup(<SATQuestionCanvas question={question} answer="" onAnswer={() => {}} strokes={[]} highlightEnabled={false} highlightColor="#ffff00" onChange={() => {}} flagged={false} onToggleFlag={() => {}} />)
       const node = document.createElement('div')
@@ -85,7 +90,7 @@ export async function run() {
       audited++
     }
   }
-  console.log(`Audited ${audited} current and historical Math question renders; module timing and persistence passed.`)
+  if (!reviewOnly) console.log(`Audited ${audited} current and historical Math question renders; module timing and persistence passed.`)
   localStorage.clear()
   // Full mocks retain the 400 floor even with every answer wrong or missing.
   for (const test of Object.values(SAT_TEST_CATALOG)) {
@@ -114,56 +119,44 @@ export async function run() {
   const currentRaw = accountStorage.getItem(`profai:sat:${test.id}:attempt:v1`)
 
   await render()
-  assert.equal(rows().length, 2)
-  assert.match(rows()[1].textContent!, /Correct answers1\/98/)
-  assert.match(rows()[1].textContent!, /Estimated SAT total400–400 \/ 1600/)
-  assert.match(rows()[1].textContent!, /1 incorrect · 96 unanswered/)
-  assert.match(text(), /Mistakes to review97/)
-  await click(rows()[1])
-  assert.equal(container.querySelectorAll('.sr-answer-table tbody tr').length, 98, 'History opens with every answer visible')
-  await click(container.querySelectorAll('.sr-review-view button')[1])
-  assert.match(text(), /Question navigator/)
-  assert.match(text(), /Correct 1\/98/)
-  await click(container.querySelector('#sat-result-tab-performance'))
-  assert.match(text(), /10m 5s total/)
-  assert.match(container.querySelector('.sr-module-row')!.textContent!, /R&W Module 1.*1m 5s/)
-  assert.match([...container.querySelectorAll('.sr-module-row')].at(-1)!.textContent!, /Math Module 2.*4m 0s/)
+  assert.doesNotMatch(text(), /Mistake Lab/)
+  assert.ok(container.querySelector('.srx-score-stage'), 'History opens with compact scores')
+  assert.equal(container.querySelectorAll('.srx-q-row').length, 0, 'Detailed review starts collapsed')
   await click(container.querySelector('#sat-result-tab-questions'))
-  await click(container.querySelector('.sr-answer-table tr[data-status="incorrect"] button'))
-  assert.match(text(), /Saved note from the older attempt/)
-  assert.match(container.querySelector('[data-location]')!.textContent!, /attempt=older-result/)
+  assert.equal(container.querySelectorAll('.srx-q-row').length, 98, 'Opening review shows every saved answer')
+  assert.equal(container.querySelectorAll('.srx-row-correct').length, 1)
+  await click(container.querySelector('#sat-result-tab-performance'))
+  assert.match(container.querySelector('.srx-module')!.textContent!, /Reading and Writing.*Module 1.*1m 5s/)
+  assert.match([...container.querySelectorAll('.srx-module')].at(-1)!.textContent!, /Math.*Module 2.*4m 0s/)
+  await click(container.querySelector('#sat-result-tab-questions'))
+  await click(container.querySelector('.srx-row-incorrect button'))
+  assert.match(document.body.textContent!, /Saved note from the older attempt/)
+  await click(document.querySelector('[aria-label="Close question"]'))
+  assert.match(container.querySelector('[data-location]')!.textContent!, /\/sat\/results\/older-result/)
   assert.ok(!button('Start fresh'))
   assert.equal(accountStorage.getItem(`profai:sat:${test.id}:attempt:v1`), currentRaw)
   const reviewPath = container.querySelector('[data-location]')!.textContent!
   await render(reviewPath)
-  assert.match(text(), /Correct 1\/98/)
-  await click(container.querySelectorAll('.sr-review-view button')[1])
-  await click(button('correct'))
-  assert.equal(container.querySelectorAll('aside button[class*="w-full"]').length, 1)
-  await click(container.querySelector('aside button[class*="w-full"]'))
-  assert.match(container.querySelector('article')!.textContent!, /Question 1Correct/)
-  await click(button('incorrect'))
-  assert.equal(container.querySelectorAll('aside button[class*="w-full"]').length, 1)
-  await click(button('unanswered'))
-  assert.equal(container.querySelectorAll('aside button[class*="w-full"]').length, 96)
-  await click(button('Back to SAT Mistake Lab'))
-  assert.equal(rows().length, 2)
-  await click(rows()[0])
-  assert.match(text(), /Correct 98\/98/)
+  await click(container.querySelector('#sat-result-tab-questions'))
+  assert.equal(container.querySelectorAll('.srx-row-correct').length, 1)
+  await click(container.querySelector('.chip-correct'))
+  assert.equal(container.querySelectorAll('.srx-q-row').length, 1)
+  await click(container.querySelector('.chip-incorrect'))
+  assert.equal(container.querySelectorAll('.srx-q-row').length, 1)
+  await click(container.querySelector('.chip-unanswered'))
+  assert.equal(container.querySelectorAll('.srx-q-row').length, 96)
+  await click(container.querySelector('.sr-back'))
+  assert.equal(container.querySelector('h1')?.textContent, 'My Results')
+  await render('/sat/results/newer-result')
+  await click(container.querySelector('#sat-result-tab-questions'))
+  assert.equal(container.querySelectorAll('.srx-row-correct').length, 98)
   assert.equal(badgeCalls, 0, 'Reviewing history must not award badges or write to the profile')
-  await click(button('Back to SAT Mistake Lab'))
-
-  let confirmCalls = 0
-  window.confirm = () => { confirmCalls++; return true }
-  await click(container.querySelector('button[aria-label^="Delete "]'))
-  assert.equal(confirmCalls, 1)
-  assert.equal(rows().length, 1)
-  assert.doesNotMatch(text(), /Question navigator/)
-  assert.equal(loadSATAttemptHistory()[0].id, old.attemptId)
+  await click(container.querySelector('.sr-back'))
+  assert.equal(loadSATAttemptHistory().length, 2, 'Review keeps both saved attempts')
 
   const incomplete = { ...newer, attemptId: 'unfinished', status: 'active' as const, submittedAt: undefined }
   saveSATAttemptToHistory(incomplete, 'exit')
-  await render('/sat/mistakes?attempt=unfinished')
+  await render('/sat/results/unfinished')
   assert.match(text(), /Saved incomplete/)
   assert.match(text(), /saved before submission/)
   assert.doesNotMatch(text(), /Estimated score range/)
@@ -174,13 +167,12 @@ export async function run() {
   const mathQuestions = section.modules.flatMap((module) => module.questions)
   sectionAttempt.answers = Object.fromEntries(mathQuestions.slice(0, 20).map((q) => [q.id, q.correctAnswer]))
   saveSATAttemptToHistory(sectionAttempt, 'submitted')
-  await render()
-  const sectionRow = rows().find((row) => row.textContent!.includes('· Math'))!
-  const range = sectionRow.textContent!.match(/Estimated Math(\d+–\d+) \/ 800/)![1]
-  await click(sectionRow)
-  assert.match(text(), /Correct 20\/44/)
+  await render('/sat/results/math-section')
+  await click(container.querySelector('#sat-result-tab-questions'))
+  const range = scoreSATModules(section.modules, sectionAttempt.answers).mathRange.join('–')
+  assert.equal(container.querySelectorAll('.srx-row-correct').length, 20)
   await click(container.querySelector('#sat-result-tab-scores'))
-  assert.equal(container.querySelector('.sr-total-range strong')!.textContent, range)
+  assert.equal(container.querySelector('.srx-total-range b')!.textContent, range)
 
   const oldMath = getSATSectionTest(1, 'math')
   const lowMathAttempt = {
@@ -192,22 +184,24 @@ export async function run() {
   saveSATAttemptToHistory(lowMathAttempt, 'submitted')
   const readingWriting = getSATSectionTest(1, 'reading-writing')
   saveSATAttemptToHistory({ ...old, attemptId: 'rw-minimum', testId: readingWriting.id, answers: {} }, 'submitted')
-  await render()
-  assert.match(rows().find((row) => row.textContent!.includes(oldMath.title))!.textContent!, /Estimated Math340–370 \/ 800/)
-  assert.match(rows().find((row) => row.textContent!.includes(readingWriting.title))!.textContent!, /Estimated R&W200–200 \/ 800/)
+  await render('/sat/results/old-math-low-score')
+  assert.equal(container.querySelector('.srx-total-range b')!.textContent, scoreSATModules(oldMath.modules, lowMathAttempt.answers).mathRange.join('–'))
+  await render('/sat/results/rw-minimum')
+  assert.equal(container.querySelector('.srx-total-range b')!.textContent, '200–200')
 
   // Adding Test 9 Math 2 must not reinterpret a saved original 76-question result.
   const legacyNine = getSATReviewTests().find((entry) => entry.id === 'may-2026-us-v1')!
   const legacyAnswers = Object.fromEntries(legacyNine.modules.flatMap((module) => module.questions).map((q) => [q.id, q.correctAnswer]))
   saveSATAttemptToHistory({ ...old, attemptId: 'legacy-nine', testId: legacyNine.id, answers: legacyAnswers }, 'submitted')
-  await render('/sat/mistakes?attempt=legacy-nine')
-  assert.match(text(), /Correct 76\/76/)
+  await render('/sat/results/legacy-nine')
+  await click(container.querySelector('#sat-result-tab-questions'))
+  assert.equal(container.querySelectorAll('.srx-row-correct').length, 76)
   assert.match(text(), /Math Module 2 is unavailable/)
   assert.doesNotMatch(text(), /Estimated SAT range/)
 
-  await render('/sat/mistakes?attempt=deleted')
-  assert.match(container.querySelector('[role="status"]')!.textContent!, /no longer available/)
-  assert.ok(rows().length)
+  await render('/sat/results/deleted')
+  assert.equal(container.querySelector('[data-location]')!.textContent, '/profile', 'Missing result returns to My Results')
+  assert.equal(container.querySelector('h1')?.textContent, 'My Results')
 
   // The existing end-of-test screen retains its restart action and badge behavior.
   let restarted = false
@@ -215,6 +209,11 @@ export async function run() {
   assert.ok(badgeCalls > 0)
   await click(button('Start fresh'))
   assert.ok(restarted)
+  console.log('PASS: SAT exact-attempt review, reload, answer filters, notes, incomplete/section/legacy results and My Results return')
+  if (reviewOnly) {
+    await act(async () => root.unmount())
+    return
+  }
   // Exercise the actual runner: automatic exam progression, final submission,
   // manual practice progression, and resume after a saved pause.
   const runTest = SAT_TEST_CATALOG[1]
@@ -223,6 +222,8 @@ export async function run() {
   exam.moduleDeadlines.rw1 = Date.now() - 1
   saveSATAttempt(exam)
   await render('/mock/sat/1/run', <SATMockRun />)
+  assert.ok(container.querySelector('.sat-module-transition'))
+  await act(async () => { await new Promise(resolve => setTimeout(resolve, 1800)) })
   assert.match(text(), /Section 1, Module 2/)
   assert.match(container.querySelector('button[title="Hide timer"]')!.textContent!, /32:00/)
   let stored = JSON.parse(accountStorage.getItem(`profai:sat:${runTest.id}:attempt:v1`)!)
@@ -238,7 +239,7 @@ export async function run() {
   await render('/mock/sat/1/run', <SATMockRun />)
   stored = JSON.parse(accountStorage.getItem(`profai:sat:${runTest.id}:attempt:v1`)!)
   assert.equal(stored.status, 'submitted')
-  assert.match(text(), /Your SAT results/)
+  assert.match(text(), /Your SAT results/i)
   await render('/empty', <div />)
   Object.defineProperty(document, 'fullscreenElement', { value: null, configurable: true })
   let practice = createSATAttempt(runTest.id, runTest.modules, 'practice')
@@ -250,10 +251,12 @@ export async function run() {
   await click([...container.querySelectorAll('button')].find((node) => node.textContent?.includes('Question 1 of')))
   await click(button('Finish module'))
   await click(button('Continue to next module'))
+  assert.ok(container.querySelector('.sat-module-transition'))
+  await act(async () => { await new Promise(resolve => setTimeout(resolve, 1800)) })
   assert.match(container.querySelector('button[title="Hide timer"]')!.textContent!, /00:00/)
   stored = JSON.parse(accountStorage.getItem(`profai:sat:${runTest.id}:attempt:v1`)!)
   assert.equal(stored.currentModuleIndex, 1)
   assert.ok(stored.moduleElapsedSeconds.rw1 >= 65)
   await act(async () => root.unmount())
-  console.log('SAT mistake lab UI: historical answers, counts, filters, refresh, deletion, incomplete and section reviews passed.')
+  console.log('SAT result review: exact attempts, reload, answer filters, saved notes, incomplete attempts, section scores and My Results return passed.')
 }

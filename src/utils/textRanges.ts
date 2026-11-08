@@ -1,4 +1,32 @@
 /** Text offsets survive inline formatting, repeated words and DOM mark wrappers. */
+export function annotationText(container: HTMLElement): string {
+  const walker = document.createTreeWalker(container, window.NodeFilter.SHOW_TEXT)
+  let text = ''
+  while (walker.nextNode()) {
+    if (!walker.currentNode.parentElement?.closest('[data-annotation-ignore]')) text += walker.currentNode.textContent ?? ''
+  }
+  return text
+}
+
+/** Recover an older annotation when nearby question labels or formatting changed. */
+export function resolveTextQuote(container: HTMLElement, quote: { start: number; end: number; text: string; prefix?: string; suffix?: string }): Range | null {
+  const original = textRange(container, quote.start, quote.end)
+  if (!quote.text) return null
+  if (original?.toString() === quote.text && !quote.prefix && !quote.suffix) return original
+  const text = annotationText(container)
+  if (original?.toString() === quote.text && (!quote.prefix || text.slice(0, quote.start).endsWith(quote.prefix)) &&
+    (!quote.suffix || text.slice(quote.end).startsWith(quote.suffix))) return original
+  let best = -1
+  let bestScore = -Infinity
+  for (let index = text.indexOf(quote.text); index >= 0; index = text.indexOf(quote.text, index + 1)) {
+    const prefix = quote.prefix && text.slice(0, index).endsWith(quote.prefix) ? 1 : 0
+    const suffix = quote.suffix && text.slice(index + quote.text.length).startsWith(quote.suffix) ? 1 : 0
+    const score = (prefix + suffix) * (text.length + 1) - Math.abs(index - quote.start)
+    if (score > bestScore) { bestScore = score; best = index }
+  }
+  return best < 0 ? null : textRange(container, best, best + quote.text.length)
+}
+
 export function clipTextRange(container: HTMLElement, source: Range): Range | null {
   const contents = document.createRange()
   contents.selectNodeContents(container)

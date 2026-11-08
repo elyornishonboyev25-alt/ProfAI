@@ -1,6 +1,7 @@
+import { interfaceLocale } from '@/i18n/locale'
+import { useCopy } from '@/i18n/interface'
 import { ACCOUNT_DATA_EVENT, accountStorageFor } from '@/utils/accountStorage'
 import UiText from '@/components/common/UiText'
-import ResumeIeltsAttempts from '@/components/ielts/ResumeIeltsAttempts'
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
@@ -117,7 +118,7 @@ function SkillCard({ skill, score, onOpen }: { skill: (typeof SKILLS)[number]; s
       <div className="ielts-skill-mobile">
         <span className="ielts-mobile-icon"><Icon size={21} /></span>
         <h2><UiText text={skill.title.replace('IELTS ', '')} /></h2>
-        <small>{skill.tests} full tests{score !== null ? ` · Band ${formatBand(score)}` : ''}</small>
+        <small>{skill.tests} <UiText text={"full tests"} />{score !== null ? <UiText text={" · Band {{value1}}"} values={{ value1: String(formatBand(score)) }} /> : ''}</small>
         <span className="ielts-mobile-action"><UiText text="Open tests" /><ArrowRight size={16} /></span>
       </div>
       <div className="ielts-skill-content relative flex h-full flex-col">
@@ -125,14 +126,14 @@ function SkillCard({ skill, score, onOpen }: { skill: (typeof SKILLS)[number]; s
 
         <div className="ielts-skill-details mt-5 flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <h3 className="text-base font-black text-[#1b1c27] sm:text-lg">Skills</h3>
+            <h3 className="text-base font-black text-[#1b1c27] sm:text-lg"><UiText text={"Skills"} /></h3>
             <ul className="mt-1 space-y-1 text-base font-semibold leading-6 text-[#353744] sm:text-lg">
-              {skill.topics.map((topic) => <li key={topic}>{topic}</li>)}
+              {skill.topics.map((topic) => <li key={topic}><UiText text={topic} /></li>)}
             </ul>
           </div>
           {score === null ? (
             <span className="flex min-h-[7.25rem] w-[7.25rem] shrink-0 items-center justify-center rounded-2xl border border-dashed border-red-200 bg-red-50/50 px-3 text-center text-sm font-bold leading-5 text-red-700">
-              {`Start your first ${skill.title.replace('IELTS ', '')} test`}
+              {<UiText text={"Start your first {{value1}} test"} values={{ value1: String(skill.title.replace('IELTS ', '')) }} />}
             </span>
           ) : <ProgressRing band={score} />}
         </div>
@@ -140,7 +141,7 @@ function SkillCard({ skill, score, onOpen }: { skill: (typeof SKILLS)[number]; s
         <div className="ielts-skill-footer mt-auto flex items-end justify-between gap-4 pt-4">
           <div className="ielts-skill-art relative" aria-hidden="true">
             <StudyIllustration variant={skill.visual} compact />
-            <span className="absolute bottom-1 right-0 rounded-full border border-red-100/80 bg-white/70 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.13em] text-red-700 backdrop-blur-md">{skill.tests} full tests</span>
+            <span className="absolute bottom-1 right-0 rounded-full border border-red-100/80 bg-white/70 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.13em] text-red-700 backdrop-blur-md">{skill.tests} <UiText text={"full tests"} /></span>
           </div>
           <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#d91f2b] to-[#ef353d] px-5 py-3 text-sm font-black text-white shadow-[0_12px_28px_rgba(220,38,38,.24),inset_0_1px_0_rgba(255,255,255,.35)]">
              <UiText text={"Open tests"} /> <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -152,6 +153,7 @@ function SkillCard({ skill, score, onOpen }: { skill: (typeof SKILLS)[number]; s
 }
 
 export default function IELTS() {
+  const { c: uiCopy } = useCopy()
   const navigate = useNavigate()
   const location = useLocation()
   const user = useAuthStore((state: AuthState) => state.user)
@@ -207,10 +209,9 @@ export default function IELTS() {
   return (
     <main className="workspace-page ielts-hub relative min-h-screen overflow-x-clip px-4 pb-16 pt-6 sm:px-6 lg:px-8">
       <div className="relative z-10 mx-auto max-w-[112rem]">
-        <ResumeIeltsAttempts />
         {fromMock ? (
           <button type="button" onClick={() => navigate('/ielts/tests#mocks', { state: { from: entry?.from } })} className="route-back-button">
-            <ArrowLeft className="h-4 w-4" /> Mock IELTS
+            <ArrowLeft className="h-4 w-4" /> <UiText text={"Mock IELTS"} />
           </button>
         ) : null}
 
@@ -220,10 +221,10 @@ export default function IELTS() {
           className="arena-hub-heading relative pb-8 pt-5 text-center sm:pb-10 sm:pt-4"
         >
           <div className="relative inline-flex items-center gap-2 rounded-full border border-white/90 bg-white/70 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[.18em] text-red-600">
-            <Sparkles className="h-3 w-3" /> IELTS command center
+            <Sparkles className="h-3 w-3" /> <UiText text={"IELTS command center"} />
           </div>
           <h1 className="relative mt-3 text-[2.55rem] font-extrabold tracking-[-.065em] text-[#11121c] sm:text-6xl lg:text-[5.2rem]">IELTS <span className="text-red-600"> <UiText text={"Arena"} /> </span></h1>
-          <p className="mx-auto mt-3 max-w-5xl text-sm font-medium tracking-[-.025em] text-[#262733] sm:text-xl lg:text-[1.65rem]">Listening + Reading + Writing + Speaking — your path to Band {target}+</p>
+          <p className="mx-auto mt-3 max-w-5xl text-sm font-medium tracking-[-.025em] text-[#262733] sm:text-xl lg:text-[1.65rem]"><UiText text={"Listening + Reading + Writing + Speaking — your path to Band"} /> {target}+</p>
         </motion.header>
 
         <section className="ielts-hub-grid mt-5 grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(18rem,.62fr)]">
@@ -232,16 +233,16 @@ export default function IELTS() {
             <article className={`${GLASS} p-6`}>
               <h2 className="text-2xl font-black tracking-[-.045em] text-slate-900"> <UiText text={"Your IELTS overview"} /> </h2>
               <div className="mt-5 flex items-center justify-between gap-4 rounded-[1.5rem] border border-white/90 bg-white/45 p-4">
-                <div><p className="text-xs font-bold uppercase tracking-wider text-slate-500">Overall band</p><p className="mt-2 text-4xl font-black text-slate-900">{formatBand(overall)}</p><p className="mt-1 text-xs font-semibold text-slate-500">{completed.length}/4 skills scored</p></div>
-                <ProgressRing band={overall} label="Overall" />
+                <div><p className="text-xs font-bold uppercase tracking-wider text-slate-500"><UiText text={"Overall band"} /></p><p className="mt-2 text-4xl font-black text-slate-900">{formatBand(overall)}</p><p className="mt-1 text-xs font-semibold text-slate-500">{completed.length}<UiText text={"/4 skills scored"} /></p></div>
+                <ProgressRing band={overall} label={uiCopy("Overall")} />
               </div>
               <div className="mt-5 space-y-3">{SKILLS.map((skill) => <div key={skill.id} className="grid grid-cols-[5rem_1fr_2rem] items-center gap-2 text-xs font-bold"><span className="text-slate-600">{skill.title.replace('IELTS ', '')}</span><span className="h-2 overflow-hidden rounded-full bg-slate-200"><i className="block h-full rounded-full bg-gradient-to-r from-red-700 to-red-400" style={{ width: `${((scores[skill.id] ?? 0) / 9) * 100}%` }} /></span><b className="text-right text-slate-900">{formatBand(scores[skill.id])}</b></div>)}</div>
             </article>
 
             <article className={`${GLASS} p-6`}>
-              <div className="flex items-center justify-between"><div><p className="text-xs font-extrabold uppercase tracking-wider text-red-600"> <UiText text={"Exam plan"} /> </p><h2 className="mt-1 text-2xl font-black text-slate-900">{remainingDays === null ? 'Set your test date' : remainingDays === 0 ? 'Exam day' : `${remainingDays} days to go`}</h2></div><CalendarDays className="h-7 w-7 text-blue-600" /></div>
-              <p className="mt-2 text-sm font-medium text-slate-500">{examDate ? new Date(`${examDate}T${examTime}:00`).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Use the date from your official booking.'}</p>
-              {editingDate ? <div className="mt-4 grid gap-2"><input type="date" min={localToday()} value={draftDate} onChange={(event) => setDraftDate(event.target.value)} className="input" /><input type="time" value={draftTime} onChange={(event) => setDraftTime(event.target.value)} className="input" /><div className="flex gap-2"><button type="button" disabled={!draftDate} onClick={() => { saveExam(draftDate, draftTime, user?.id); setExamDate(draftDate); setExamTime(draftTime); setEditingDate(false) }} className="ui-action ui-action-primary flex-1"><Check className="h-4 w-4" />  <UiText text={"Save"} /> </button><button type="button" onClick={() => setEditingDate(false)} className="ui-action ui-action-secondary" aria-label="Cancel"><X className="h-4 w-4" /></button></div></div> : <button type="button" onClick={() => { setDraftDate(examDate); setDraftTime(examTime); setEditingDate(true) }} className="ui-action ui-action-secondary mt-4 w-full">{examDate ? 'Change date' : 'Set exam date'}</button>}
+              <div className="flex items-center justify-between"><div><p className="text-xs font-extrabold uppercase tracking-wider text-red-600"> <UiText text={"Exam plan"} /> </p><h2 className="mt-1 text-2xl font-black text-slate-900">{remainingDays === null ? <UiText text={"Set your test date"} /> : remainingDays === 0 ? <UiText text={"Exam day"} /> : <UiText text={"{{value1}} days to go"} values={{ value1: String(remainingDays) }} />}</h2></div><CalendarDays className="h-7 w-7 text-blue-600" /></div>
+              <p className="mt-2 text-sm font-medium text-slate-500">{examDate ? new Date(`${examDate}T${examTime}:00`).toLocaleString(interfaceLocale(), { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : <UiText text={"Use the date from your official booking."} />}</p>
+              {editingDate ? <div className="mt-4 grid gap-2"><input type="date" min={localToday()} value={draftDate} onChange={(event) => setDraftDate(event.target.value)} className="input" /><input type="time" value={draftTime} onChange={(event) => setDraftTime(event.target.value)} className="input" /><div className="flex gap-2"><button type="button" disabled={!draftDate} onClick={() => { saveExam(draftDate, draftTime, user?.id); setExamDate(draftDate); setExamTime(draftTime); setEditingDate(false) }} className="ui-action ui-action-primary flex-1"><Check className="h-4 w-4" />  <UiText text={"Save"} /> </button><button type="button" onClick={() => setEditingDate(false)} className="ui-action ui-action-secondary" aria-label={uiCopy("Cancel")}><X className="h-4 w-4" /></button></div></div> : <button type="button" onClick={() => { setDraftDate(examDate); setDraftTime(examTime); setEditingDate(true) }} className="ui-action ui-action-secondary mt-4 w-full"><UiText text={examDate ? 'Change date' : 'Set exam date'} /></button>}
             </article>
           </aside>
 
@@ -251,14 +252,14 @@ export default function IELTS() {
         <section className="ielts-hub-extras mt-6 grid gap-5 lg:grid-cols-[1.25fr_1fr]">
           <article className={`${GLASS} flex flex-col justify-between gap-6 p-6 sm:flex-row sm:items-center sm:p-7`}>
             <div><p className="text-xs font-extrabold uppercase tracking-[.16em] text-red-600"> <UiText text={"Full IELTS mock"} /> </p><h2 className="mt-2 text-2xl font-black tracking-[-.04em] text-slate-900"> <UiText text={"Practice all four skills in one flow"} /> </h2><p className="mt-1 text-sm font-medium text-slate-500"> <UiText text={"Use verified results to update your overview."} /> </p></div>
-            <button type="button" onClick={() => navigate('/ielts/tests#mocks', { state: { from: 'ielts' } })} className="ui-action ui-action-primary shrink-0 rounded-full px-6">Start full mock <ArrowRight className="h-4 w-4" /></button>
+            <button type="button" onClick={() => navigate('/ielts/tests#mocks', { state: { from: 'ielts' } })} className="ui-action ui-action-primary shrink-0 rounded-full px-6"><UiText text={"Start full mock"} /> <ArrowRight className="h-4 w-4" /></button>
           </article>
           <div className="grid grid-cols-3 gap-3">
             {[{ label: 'Target band', value: `${target}+`, icon: Flag }, { label: 'Completed', value: `${completed.length}/4`, icon: Check }, { label: 'Study time', value: studyMinutes >= 60 ? `${Math.round(studyMinutes / 60)}h` : `${studyMinutes}m`, icon: Clock3 }].map(({ label, value, icon: Icon }) => <article key={label} className={`${GLASS} flex min-h-[9rem] flex-col justify-center p-4`}><Icon className="mb-3 h-5 w-5 text-red-500" /><p className="text-[11px] font-semibold text-slate-500"><UiText text={label} /></p><strong className="mt-1 text-2xl font-black tracking-[-.05em] text-slate-900">{value}</strong></article>)}
           </div>
         </section>
 
-        <button type="button" onClick={() => navigate('/analyze-mistakes')} className={`${GLASS} mt-5 flex w-full items-center justify-between gap-4 p-5 text-left`}><span className="flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-red-50 text-red-600"><FileSearch className="h-5 w-5" /></span><span><b className="block text-base font-black text-slate-900"> <UiText text={"Mistake lab"} /> </b><small className="text-slate-500">Review weak skills and missed answers</small></span></span><ArrowRight className="h-5 w-5 text-red-600" /></button>
+        <button type="button" onClick={() => navigate('/profile')} className={`${GLASS} mt-5 flex w-full items-center justify-between gap-4 p-5 text-left`}><span className="flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-red-50 text-red-600"><FileSearch className="h-5 w-5" /></span><span><b className="block text-base font-black text-slate-900"> <UiText text="My Results" /> </b><small className="text-slate-500"><UiText text="Review your answers" /></small></span></span><ArrowRight className="h-5 w-5 text-red-600" /></button>
       </div>
     </main>
   )

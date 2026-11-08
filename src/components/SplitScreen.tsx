@@ -1,3 +1,4 @@
+import { useCopy } from '@/i18n/interface'
 import { ReactNode, useEffect, useRef, useState } from 'react'
 
 interface SplitScreenProps {
@@ -21,6 +22,7 @@ export default function SplitScreen({
   className = '',
   fillHeight = false,
 }: SplitScreenProps) {
+  const { c: uiCopy } = useCopy()
   const containerRef = useRef<HTMLDivElement>(null)
   const leftPaneRef = useRef<HTMLDivElement>(null)
   const rightPaneRef = useRef<HTMLDivElement>(null)
@@ -117,7 +119,7 @@ export default function SplitScreen({
           aria-valuemin={MIN_LEFT_PERCENT}
           aria-valuemax={MAX_LEFT_PERCENT}
           aria-valuenow={Math.round(leftPercent)}
-          aria-label="Resize split view"
+          aria-label={uiCopy("Resize split view")}
           onPointerDown={(event) => {
             event.preventDefault()
             livePercentRef.current = leftPercent
@@ -131,7 +133,7 @@ export default function SplitScreen({
           }}
           onDoubleClick={() => setLeftPercent(50)}
           className={`ielts-split-handle relative hidden w-3 shrink-0 cursor-col-resize touch-none items-center justify-center lg:flex ${isDragging ? 'is-dragging' : ''}`}
-          title="Drag or use arrow keys to resize. Double-click to reset."
+          title={uiCopy("Drag or use arrow keys to resize. Double-click to reset.")}
         >
           <span aria-hidden="true" />
       </div>

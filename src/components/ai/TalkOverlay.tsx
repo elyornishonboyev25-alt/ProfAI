@@ -4,16 +4,20 @@ import { Mic, MicOff, Minimize2, Square, X, RotateCcw, AudioLines } from 'lucide
 import { useAiAssistantStore } from '@/store/aiAssistantStore'
 import { useAiTutor, type AiTutorController } from '@/components/ai/useAiTutor'
 import { useRealtimeCoach } from './useRealtimeCoach'
+import LiveVoiceTranscript from './LiveVoiceTranscript'
 import { apiClient } from '@/lib/apiClient'
 import CoachMascot from '@/components/ai/CoachMascot'
 import CoachControls from './CoachControls'
 import { useCopy } from '@/i18n/interface'
+import { useAccountAccess } from '@/features/billing/useAccountAccess'
+import UpgradePrompt from '@/features/billing/UpgradePrompt'
+import StandardLiveSession from '@/features/billing/StandardLiveSession'
+import UsageBalance from '@/features/billing/UsageBalance'
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
 // Immersive, full-screen "talk to Ivygoo" experience. Mounted once at the app root so
-// it keeps running while the learner navigates. Can be docked to the corner (animated
-// via a shared layoutId) and re-expanded — it never stops listening or speaking.
+// it can be docked and re-expanded. Closing or leaving the page ends capture.
 function StandardTalkOverlay({ tutor }: { tutor: AiTutorController }) {
   const { c } = useCopy()
   const talkOpen = useAiAssistantStore((s) => s.talkOpen)
@@ -33,6 +37,9 @@ function StandardTalkOverlay({ tutor }: { tutor: AiTutorController }) {
   }
   const endTalkRef = useRef(endTalk)
   endTalkRef.current = endTalk
+  const cancelVoiceRef = useRef(cancelVoice)
+  cancelVoiceRef.current = cancelVoice
+  useEffect(() => () => cancelVoiceRef.current(), [])
 
   useEffect(() => {
     if (!talkOpen || docked) return
@@ -249,8 +256,11 @@ function StandardTalkOverlay({ tutor }: { tutor: AiTutorController }) {
 }
 
 export function TalkOverlay() {
+  const { c: uiCopy } = useCopy()
   const { language: uiLanguage } = useCopy()
-  const tutor = useAiTutor()
+  const access = useAccountAccess()
+  const canLive = Boolean(access?.active)
+  const tutor = useAiTutor('talk')
   const talkOpen = useAiAssistantStore((s) => s.talkOpen)
   const closeTalk = useAiAssistantStore((s) => s.closeTalk)
   const [standard, setStandard] = useState(false)
@@ -261,13 +271,14 @@ export function TalkOverlay() {
   const [capabilityError, setCapabilityError] = useState(false)
   const [capabilityRetry, setCapabilityRetry] = useState(0)
   const dialog = useRef<HTMLDivElement>(null)
-  const live = useRealtimeCoach(tutor, talkOpen && !standard && available === true, mode)
+  // Connect alongside the capability probe; /connect enforces access itself.
+  const live = useRealtimeCoach(tutor, talkOpen && canLive && !standard && available !== false, mode)
   const lang = tutor.voiceLang
   const t = (en: string, uz: string, ru: string) => uiLanguage === 'uz' ? uz : uiLanguage === 'ru' ? ru : en
 
   useEffect(() => {
     if (!talkOpen) { setStandard(false); setDocked(false); setAvailable(null); return }
-    if (!tutor.hasPremium) return
+    if (!canLive || !tutor.hasPremium) return
     const controller = new AbortController()
     const timeout = window.setTimeout(() => controller.abort('timeout'), 8000)
     setAvailable(null); setCapabilityError(false)
@@ -276,18 +287,14 @@ export function TalkOverlay() {
         if (controller.signal.aborted) return
         setAvailable(result.naturalVoice)
         setSpokenReplies(Boolean(result.spokenReplies))
-        // Prefer streamed speech. The Speaking audio service remains the
-        // natural-voice fallback when WebRTC is unavailable.
-        if ((!result.naturalVoice || !live.supported) && result.spokenReplies && tutor.voiceSupported) setStandard(true)
+        // Keep the chosen live transport. Standard voice is an explicit choice,
+        // so a connection failure cannot silently become a slower text/TTS loop.
       })
-      .catch(() => { if (!controller.signal.aborted || controller.signal.reason === 'timeout') { setAvailable(false); setCapabilityError(true) } })
+      // A failed advisory probe must not cancel a working WebRTC connection.
+      .catch(() => { if (!controller.signal.aborted || controller.signal.reason === 'timeout') setCapabilityError(true) })
       .finally(() => window.clearTimeout(timeout))
     return () => { window.clearTimeout(timeout); controller.abort() }
-  }, [talkOpen, tutor.hasPremium, tutor.user?.id, tutor.voiceSupported, live.supported, capabilityRetry])
-
-  useEffect(() => {
-    if (talkOpen && !standard && available && live.error && spokenReplies && tutor.voiceSupported) setStandard(true)
-  }, [talkOpen, standard, available, live.error, spokenReplies, tutor.voiceSupported])
+  }, [talkOpen, canLive, tutor.hasPremium, tutor.user?.id, tutor.voiceSupported, live.supported, capabilityRetry])
 
   useEffect(() => {
     if (!talkOpen || docked || standard) return
@@ -310,10 +317,11 @@ export function TalkOverlay() {
   }, [talkOpen, docked, standard])
 
   if (!talkOpen || !tutor.hasPremium) return null
-  if (standard) return <StandardTalkOverlay tutor={tutor} />
+  if (!canLive) return <UpgradePrompt modal reason="voice" onClose={closeTalk} />
+  if (standard) return <><span className="fixed left-5 top-5 z-[210] rounded-full border border-white/20 bg-slate-900 px-4 py-2 text-xs font-semibold text-slate-300">{t('Standard voice', 'Oddiy ovozli suhbat', 'Обычный голосовой чат')}</span><StandardLiveSession onEnd={closeTalk}><StandardTalkOverlay tutor={tutor} /></StandardLiveSession></>
   const end = () => { live.stop(); tutor.cancelVoice(); closeTalk() }
-  const status = available === null ? t('Connecting…', 'Ulanmoqda…', 'Подключение…')
-    : live.error || !available ? t('Voice needs attention', 'Ovozli ulanishni tekshiring', 'Проверьте голосовое соединение')
+  const status = live.error || available === false ? t('Voice needs attention', 'Ovozli ulanishni tekshiring', 'Проверьте голосовое соединение')
+    : available === null && !['speaking', 'listening'].includes(tutor.voiceState) ? t('Connecting…', 'Ulanmoqda…', 'Подключение…')
     : live.muted ? t('Microphone muted', 'Mikrofon o‘chirilgan', 'Микрофон выключен')
     : tutor.voiceState === 'speaking' ? t('Speaking', 'Gapiryapti', 'Говорит')
     : tutor.voiceState === 'thinking' ? t('Thinking', 'O‘ylayapti', 'Думает')
@@ -324,7 +332,7 @@ export function TalkOverlay() {
     <button onClick={end} className="flex h-10 w-10 items-center justify-center rounded-full text-slate-500 hover:bg-red-50" aria-label={t('End voice', 'Suhbatni tugatish', 'Завершить разговор')}><X size={18} /></button>
   </div>
 
-  return <div ref={dialog} role="dialog" aria-modal="true" aria-label="Ivygoo voice" className="coach-voice-stage fixed inset-0 z-[200] overflow-y-auto bg-slate-950 text-white">
+  return <div ref={dialog} role="dialog" aria-modal="true" aria-label={uiCopy("Ivygoo voice")} className="coach-voice-stage fixed inset-0 z-[200] overflow-y-auto bg-slate-950 text-white">
     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(159,18,57,.28),transparent_65%)]" />
     <div className="relative mx-auto flex min-h-full max-w-3xl flex-col items-center px-5 pb-10 pt-5 text-center">
       <div className="flex w-full items-center justify-between gap-3">
@@ -334,17 +342,22 @@ export function TalkOverlay() {
       <div className="mb-7 mt-8 flex flex-wrap justify-center gap-2" role="group" aria-label={t('Conversation mode', 'Suhbat rejimi', 'Режим разговора')}>
         {(['coach', 'examiner'] as const).map((choice) => <button key={choice} onClick={() => setMode(choice)} aria-pressed={mode === choice} className={`min-h-11 rounded-full border px-5 text-sm font-semibold ${mode === choice ? 'border-white bg-white text-slate-950' : 'border-white/20 text-slate-300 hover:bg-white/10'}`}>{choice === 'coach' ? t('Personal coach', 'Shaxsiy murabbiy', 'Личный наставник') : t('IELTS examiner', 'IELTS imtihon oluvchi', 'Экзаменатор IELTS')}</button>)}
       </div>
+      <UsageBalance compact />
+      <div className="mb-4 mt-3 flex items-center gap-2 text-xs text-slate-400" role="group" aria-label={t('Speech speed', 'Gapirish tezligi', 'Скорость речи')}>
+        <span>{t('Speech speed', 'Gapirish tezligi', 'Скорость речи')}</span>
+        {[0.9, 1.1, 1.25].map(speed => <button key={speed} type="button" aria-pressed={live.speechSpeed === speed} onClick={() => live.setSpeechSpeed(speed)} className={`min-h-9 rounded-full border px-3 font-semibold ${live.speechSpeed === speed ? 'border-white bg-white text-slate-950' : 'border-white/20 text-slate-300'}`}>{speed}×</button>)}
+      </div>
       <CoachMascot state={tutor.voiceState} level={tutor.voiceLevel} size={240} />
       {mode === 'coach' ? <CoachControls compact /> : null}
       <h2 className="mt-6 text-2xl font-bold" aria-live="polite">{status}</h2>
       <p className="mt-2 max-w-lg text-sm leading-6 text-slate-400">{mode === 'coach' ? t('Speak naturally. You can interrupt me. Your conversation stays in your chat.', 'Bemalol gapiring. Gapimni bo‘lishingiz mumkin. Suhbat chat tarixida saqlanadi.', 'Говорите свободно. Вы можете перебить меня. Разговор сохраняется в чате.') : t('English speaking practice with feedback at the end. Open Speaking tests for a timed full mock.', 'Inglizcha Speaking mashqi; fikr-mulohaza yakunda beriladi. Vaqtli to‘liq mock uchun Speaking testlarini oching.', 'Практика Speaking на английском с обратной связью в конце. Полный тест с таймером доступен в Speaking tests.')}</p>
-      <div className="mt-5 min-h-20 w-full max-w-xl" aria-live="polite" aria-atomic="true">
-        {live.error || available === false || !live.supported ? <div className="rounded-2xl border border-amber-300/30 bg-amber-300/10 p-4 text-sm leading-6 text-amber-100"><p>{!live.supported ? t('This browser cannot start natural voice. Try an updated browser or type in chat.', 'Bu brauzer tabiiy ovozli suhbatni ocholmaydi. Yangilangan brauzer yoki yozma chatdan foydalaning.', 'Этот браузер не поддерживает голосовой чат. Обновите браузер или используйте текстовый чат.') : live.error ?? (capabilityError ? t('Voice could not connect. Retry or use standard voice.', 'Ovozli ulanish amalga oshmadi. Qayta urining yoki oddiy ovozdan foydalaning.', 'Не удалось подключить голос. Повторите попытку или используйте обычный голос.') : t('Natural voice is not connected yet. You can continue with standard voice or text chat.', 'Tabiiy ovozli suhbat hali ulanmagan. Oddiy ovoz yoki yozma chatdan foydalanishingiz mumkin.', 'Естественный голос пока не подключён. Используйте обычный голос или текстовый чат.'))}</p><div className="mt-3 flex flex-wrap justify-center gap-2"><button onClick={() => { live.reconnect(); setCapabilityRetry((value) => value + 1) }} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-amber-200/40 px-4"><RotateCcw size={15} />{t('Retry', 'Qayta urinish', 'Повторить')}</button>{tutor.voiceSupported ? <button onClick={() => { live.stop(); setStandard(true) }} className="min-h-11 rounded-full bg-white px-4 font-semibold text-slate-950">{t('Use standard voice', 'Oddiy ovozdan foydalanish', 'Обычный голос')}</button> : null}</div></div> : <p className="max-h-40 overflow-y-auto text-base leading-7 text-slate-200">{live.caption || t('What would you like to work on?', 'Nima ustida ishlaymiz?', 'Над чем поработаем?')}</p>}
+      <div className="mt-5 min-h-20 w-full max-w-xl">
+        {live.error || available === false || !live.supported ? <div className="rounded-2xl border border-amber-300/30 bg-amber-300/10 p-4 text-sm leading-6 text-amber-100"><p>{!live.supported ? t('This browser cannot start natural voice. Try an updated browser or type in chat.', 'Bu brauzer tabiiy ovozli suhbatni ocholmaydi. Yangilangan brauzer yoki yozma chatdan foydalaning.', 'Этот браузер не поддерживает голосовой чат. Обновите браузер или используйте текстовый чат.') : live.error ?? (capabilityError ? t('Voice could not connect. Retry or use standard voice.', 'Ovozli ulanish amalga oshmadi. Qayta urining yoki oddiy ovozdan foydalaning.', 'Не удалось подключить голос. Повторите попытку или используйте обычный голос.') : t('Natural voice is not connected yet. You can continue with standard voice or text chat.', 'Tabiiy ovozli suhbat hali ulanmagan. Oddiy ovoz yoki yozma chatdan foydalanishingiz mumkin.', 'Естественный голос пока не подключён. Используйте обычный голос или текстовый чат.'))}</p><div className="mt-3 flex flex-wrap justify-center gap-2"><button onClick={() => { live.reconnect(); setCapabilityRetry((value) => value + 1) }} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-amber-200/40 px-4"><RotateCcw size={15} />{t('Retry', 'Qayta urinish', 'Повторить')}</button>{tutor.voiceSupported && (spokenReplies || capabilityError) ? <button onClick={() => { live.stop(); setStandard(true) }} className="min-h-11 rounded-full bg-white px-4 font-semibold text-slate-950">{t('Use standard voice', 'Oddiy ovozdan foydalanish', 'Обычный голос')}</button> : null}</div></div> : <LiveVoiceTranscript messages={tutor.activeThread?.messages ?? []} caption={live.caption} language={uiLanguage} />}
       </div>
       <div className="mt-6 flex gap-2" role="group" aria-label={t('Language', 'Til', 'Язык')}>{([{ id: 'en', label: t('English', 'Inglizcha', 'Английский') }, { id: 'uz', label: t('Uzbek', 'O‘zbekcha', 'Узбекский') }, { id: 'ru', label: t('Russian', 'Ruscha', 'Русский') }] as const).map((language) => <button key={language.id} onClick={() => tutor.setVoiceLang(language.id)} aria-pressed={lang === language.id} className={`min-h-11 rounded-full border px-4 text-xs font-semibold ${lang === language.id ? 'border-white bg-white text-slate-950' : 'border-white/20 text-slate-300'}`}>{language.label}</button>)}</div>
-      {available && !live.error ? <div className="mt-6 flex gap-3"><button onClick={live.toggleMute} aria-pressed={live.muted} aria-label={t('Mute microphone', 'Mikrofonni o‘chirish', 'Выключить микрофон')} className={`flex h-14 w-14 items-center justify-center rounded-full ${live.muted ? 'bg-slate-700' : 'bg-red-600 hover:bg-red-500'}`}>{live.muted ? <MicOff /> : <Mic />}</button><button onClick={live.interrupt} aria-label={t('Stop speaking', 'Javobni to‘xtatish', 'Остановить ответ')} className="flex h-14 w-14 items-center justify-center rounded-full border border-white/25 hover:bg-white/10"><Square size={20} /></button></div> : null}
+      {available !== false && !live.error ? <div className="mt-6 flex gap-3"><button onClick={live.toggleMute} aria-pressed={live.muted} aria-label={t('Mute microphone', 'Mikrofonni o‘chirish', 'Выключить микрофон')} className={`flex h-14 w-14 items-center justify-center rounded-full ${live.muted ? 'bg-slate-700' : 'bg-red-600 hover:bg-red-500'}`}>{live.muted ? <MicOff /> : <Mic />}</button><button onClick={live.interrupt} aria-label={t('Stop speaking', 'Javobni to‘xtatish', 'Остановить ответ')} className="flex h-14 w-14 items-center justify-center rounded-full border border-white/25 hover:bg-white/10"><Square size={20} /></button></div> : null}
       {tutor.pendingActions.map((pending) => <div key={pending.id} className="mt-4 flex w-full max-w-xl flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/20 bg-white/5 p-4 text-left"><p className="text-sm">{pending.label}</p><div className="flex gap-2"><button onClick={() => tutor.approveAction(pending.id)} className="min-h-11 rounded-full bg-red-600 px-4 text-xs font-bold">{t('Allow', 'Ruxsat berish', 'Разрешить')}</button><button onClick={() => tutor.dismissAction(pending.id)} className="min-h-11 rounded-full border border-white/25 px-4 text-xs">{t('Dismiss', 'Bekor qilish', 'Отклонить')}</button></div></div>)}
-      {mode === 'examiner' && available && !live.error ? <button onClick={live.requestFeedback} className="mt-5 min-h-11 rounded-full border border-white/25 px-5 text-sm font-semibold">{t('Finish practice and get feedback', 'Mashqni tugatib, tahlil olish', 'Завершить практику и получить отзыв')}</button> : null}
+      {mode === 'examiner' && available !== false && !live.error ? <button onClick={live.requestFeedback} className="mt-5 min-h-11 rounded-full border border-white/25 px-5 text-sm font-semibold">{t('Finish practice and get feedback', 'Mashqni tugatib, tahlil olish', 'Завершить практику и получить отзыв')}</button> : null}
       <button onClick={end} className="mt-7 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-slate-300 hover:text-white"><AudioLines size={16} />{t('Return to chat', 'Chatga qaytish', 'Вернуться в чат')}</button>
     </div>
   </div>

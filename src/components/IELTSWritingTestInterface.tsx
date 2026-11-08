@@ -1,4 +1,7 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import { useActiveTest } from '@/hooks/useActiveTest'
+import TestLeaderboard from '@/components/results/TestLeaderboard'
 import SubmittedWritingAnswers from '@/components/ielts/SubmittedWritingAnswers'
 import { saveActiveTestPaper, clearActiveTestPaper } from '@/utils/activeTestPaper'
 import { useIeltsAttemptResume } from '@/hooks/useIeltsAttemptResume'
@@ -282,11 +285,11 @@ function ErrorCard({ error, index }: { error: WritingError; index: number }) {
       {expanded && (
         <div className="border-t border-slate-100 px-4 py-3 space-y-2">
           <div className="rounded-lg bg-red-50/70 px-3 py-2">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-red-500 mb-1">Original</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-red-500 mb-1"><UiText text={"Original"} /></p>
             <p className="text-sm text-red-800 line-through">{error.original}</p>
           </div>
           <div className="rounded-lg bg-emerald-50/70 px-3 py-2">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-500 mb-1">Corrected</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-500 mb-1"><UiText text={"Corrected"} /></p>
             <p className="text-sm text-emerald-800 font-medium">{error.corrected}</p>
           </div>
           <p className="text-xs text-slate-600 leading-relaxed">{error.explanation}</p>
@@ -303,6 +306,7 @@ export default function IELTSWritingTestInterface({
   autoTimerEnabled,
   autoDurationMinutes,
 }: Props) {
+  const { c: uiCopy } = useCopy()
   const [searchParams] = useSearchParams()
   const [phase, setPhase] = useState<'landing' | 'writing' | 'submitted'>('landing')
   const [timerEnabled, setTimerEnabled] = useState(true)
@@ -474,6 +478,7 @@ export default function IELTSWritingTestInterface({
           completedAt: savedEntry.savedAt,
           assignmentId: searchParams.get('assignmentId') ?? undefined,
           breakdown: {
+            testId: task.id,
             taskType: task.taskType,
             taskAchievement: result.taskAchievement,
             coherenceCohesion: result.coherenceCohesion,
@@ -527,7 +532,7 @@ export default function IELTSWritingTestInterface({
       <div className="min-h-screen bg-[linear-gradient(160deg,#fff7f7_0%,#fee2e2_52%,#fff_100%)] flex items-center justify-center p-6 relative overflow-hidden">
         <AnimatePresence>
           {isLaunching ? (
-            <TestLaunchOverlay title="Your test will begin shortly" subtitle="Preparing your Writing task" />
+            <TestLaunchOverlay title={uiCopy("Your test will begin shortly")} subtitle="Preparing your Writing task" />
           ) : null}
         </AnimatePresence>
         <div className="pointer-events-none absolute inset-0">
@@ -569,28 +574,27 @@ export default function IELTSWritingTestInterface({
                     <Timer className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-slate-900">Simulation Mode</h3>
+                    <h3 className="text-xl font-bold text-slate-900"><UiText text={"Simulation Mode"} /></h3>
                     <span className="text-[10px] font-bold text-red-500 uppercase tracking-widest">
-                      Exam Simulation
+                      <UiText text={"Exam Simulation"} />
                     </span>
                   </div>
                 </div>
                 <p className="text-slate-600 text-sm leading-relaxed mb-6 italic">
-                  Practice under real exam conditions with a {task.durationMinutes}-minute countdown timer.
-                  Build your time management skills.
+                  <UiText text={"Practice under real exam conditions with a"} /> {task.durationMinutes}<UiText text={"-minute countdown timer. Build your time management skills."} />
                 </p>
                 <div className="space-y-3 mb-8">
                   <div className="flex items-center gap-2 text-xs font-semibold text-rose-400">
                     <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                    Strict {task.durationMinutes}-minute limit
+                    <UiText text={"Strict"} /> {task.durationMinutes}<UiText text={"-minute limit"} />
                   </div>
                   <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
                     <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                    Real-time word counter
+                    <UiText text={"Real-time word counter"} />
                   </div>
                 </div>
                 <div className="w-full py-3.5 bg-gradient-to-r from-red-600 to-rose-600 rounded-2xl text-white text-sm font-bold flex items-center justify-center shadow-lg shadow-red-500/25 group-hover:from-red-500 group-hover:to-rose-500 transition-all">
-                  Start Simulation
+                  <UiText text={"Start Simulation"} />
                 </div>
               </div>
             </motion.button>
@@ -612,28 +616,27 @@ export default function IELTSWritingTestInterface({
                     <TimerOff className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-slate-900">Practice Mode</h3>
+                    <h3 className="text-xl font-bold text-slate-900"><UiText text={"Practice Mode"} /></h3>
                     <span className="text-[10px] font-bold text-orange-500 uppercase tracking-widest">
-                      No Time Limit
+                      <UiText text={"No Time Limit"} />
                     </span>
                   </div>
                 </div>
                 <p className="text-slate-600 text-sm leading-relaxed mb-6 italic">
-                  Write at your own pace without time pressure. Perfect for learning structure and
-                  vocabulary.
+                  <UiText text={"Write at your own pace without time pressure. Perfect for learning structure and vocabulary."} />
                 </p>
                 <div className="space-y-3 mb-8">
                   <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
                     <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />
-                    Unlimited writing time
+                    <UiText text={"Unlimited writing time"} />
                   </div>
                   <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
                     <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                    Focus on quality and structure
+                    <UiText text={"Focus on quality and structure"} />
                   </div>
                 </div>
                 <div className="w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl text-white text-sm font-bold flex items-center justify-center shadow-lg shadow-orange-500/25 group-hover:from-orange-400 group-hover:to-amber-400 transition-all">
-                  Start Practice
+                  <UiText text={"Start Practice"} />
                 </div>
               </div>
             </motion.button>
@@ -650,7 +653,7 @@ export default function IELTSWritingTestInterface({
               onClick={onExit}
               className="text-sm text-slate-500 hover:text-red-600 transition-colors flex items-center gap-2 mx-auto px-6 py-2 rounded-full border border-slate-200 hover:border-red-200 hover:bg-red-50/30"
             >
-              <ArrowLeft className="w-4 h-4" /> Return to Writing Tests
+              <ArrowLeft className="w-4 h-4" /> <UiText text={"Return to Writing Tests"} />
             </button>
           </motion.div>
         </div>
@@ -680,14 +683,13 @@ export default function IELTSWritingTestInterface({
                 <Sparkles className="h-9 w-9 animate-pulse" />
               </div>
             </div>
-            <h2 className="mt-6 text-2xl font-black text-slate-900">AI is analyzing your writing</h2>
+            <h2 className="mt-6 text-2xl font-black text-slate-900"><UiText text={"AI is analyzing your writing"} /></h2>
             <p className="mt-2 text-sm text-slate-500">
-              Our examiner is scoring your response against official IELTS band descriptors, finding every
-              mistake, and preparing a corrected version...
+              <UiText text={"Our examiner is scoring your response against official IELTS band descriptors, finding every mistake, and preparing a corrected version..."} />
             </p>
             <div className="mt-6 flex items-center justify-center gap-2 text-xs font-semibold text-red-600">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Assessment can take up to 90 seconds. Your response is saved.
+              <UiText text={"Assessment can take up to 90 seconds. Your response is saved."} />
             </div>
           </motion.div>
         </div>
@@ -706,7 +708,7 @@ export default function IELTSWritingTestInterface({
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-red-100 text-red-600">
               <AlertCircle className="h-8 w-8" />
             </div>
-            <h2 className="mt-5 text-2xl font-black text-slate-900">Evaluation Failed</h2>
+            <h2 className="mt-5 text-2xl font-black text-slate-900"><UiText text={"Evaluation Failed"} /></h2>
             <p className="mt-2 text-sm text-slate-600">{evalError}</p>
             <SubmittedWritingAnswers tasks={[task]} answers={{ [task.id]: answer }} />
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
@@ -716,7 +718,7 @@ export default function IELTSWritingTestInterface({
                 className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-red-500/20 hover:brightness-105 transition"
               >
                 <RotateCcw className="h-4 w-4" />
-                Retry Evaluation
+                <UiText text={"Retry Evaluation"} />
               </button>
               <button
                 type="button"
@@ -724,7 +726,7 @@ export default function IELTSWritingTestInterface({
                 className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition"
               >
                 <Pen className="h-4 w-4" />
-                Back to Editing
+                <UiText text={"Back to Editing"} />
               </button>
             </div>
           </motion.div>
@@ -753,7 +755,7 @@ export default function IELTSWritingTestInterface({
               className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-sm hover:bg-red-50 transition"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back to Tests
+              <UiText text={"Back to Tests"} />
             </button>
             <div className="flex items-center gap-2">
               <button
@@ -772,7 +774,7 @@ export default function IELTSWritingTestInterface({
                 className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-red-500/20 hover:brightness-105 transition"
               >
                 <RotateCcw className="h-4 w-4" />
-                Try Again
+                <UiText text={"Try Again"} />
               </button>
             </div>
           </div>
@@ -783,19 +785,20 @@ export default function IELTSWritingTestInterface({
               animate={{ opacity: 1, y: 0 }}
               className="space-y-5"
             >
+              <details className="ir-glass p-5"><summary className="cursor-pointer font-bold"><UiText text={"Test leaderboard"} /></summary><div className="mt-5"><TestLeaderboard testId={task.id} title={task.title} /></div></details>
               {/* Hero: overall band + XP */}
               <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
                 <div className="relative overflow-hidden rounded-3xl border border-red-100 bg-white p-6 shadow-[0_24px_55px_-36px_rgba(239,68,68,0.45)]">
                   <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${bandColor(ev.overallBand)}`} />
                   <div className="flex items-center gap-6">
-                    <BandScoreRing score={ev.overallBand} label="Estimated task band" size="lg" />
+                    <BandScoreRing score={ev.overallBand} label={uiCopy("Estimated task band")} size="lg" />
                     <div className="flex-1">
                       <div className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-red-700">
                         <Sparkles className="h-3 w-3" />
-                        AI Evaluation
+                        <UiText text={"AI Evaluation"} />
                       </div>
                       <div className="mt-2 flex items-baseline gap-2">
-                        <h2 className="text-2xl font-black text-slate-900">Band {ev.overallBand.toFixed(1)}</h2>
+                        <h2 className="text-2xl font-black text-slate-900"><UiText text={"Band"} /> {ev.overallBand.toFixed(1)}</h2>
                         <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-600">
                           {bandLabel(ev.overallBand)}
                         </span>
@@ -810,13 +813,13 @@ export default function IELTSWritingTestInterface({
                     <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-lg shadow-amber-500/30">
                       <Trophy className="h-7 w-7" />
                     </div>
-                    <p className="mt-3 text-[11px] font-bold uppercase tracking-widest text-amber-600">XP Earned</p>
+                    <p className="mt-3 text-[11px] font-bold uppercase tracking-widest text-amber-600"><UiText text={"XP Earned"} /></p>
                     <p className="text-4xl font-black text-slate-900">
                       +{ev.xpAwarded}
                     </p>
                     <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-[11px] font-bold text-amber-700">
                       <Zap className="h-3 w-3 fill-amber-500 text-amber-600" />
-                      Total: {getWritingXP(user?.id)} XP
+                      <UiText text={"Total:"} /> {getWritingXP(user?.id)} XP
                     </div>
                   </div>
                 </div>
@@ -826,48 +829,48 @@ export default function IELTSWritingTestInterface({
               <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                 <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-slate-500 mb-4">
                   <Target className="h-4 w-4 text-red-500" />
-                  Band Breakdown
+                  <UiText text={"Band Breakdown"} />
                 </h3>
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                   <BandScoreRing score={ev.taskAchievement} label={task.taskType === 'task1' ? 'Task Achievement' : 'Task Response'} />
-                  <BandScoreRing score={ev.coherenceCohesion} label="Coherence" />
-                  <BandScoreRing score={ev.lexicalResource} label="Vocabulary" />
-                  <BandScoreRing score={ev.grammaticalRange} label="Grammar" />
+                  <BandScoreRing score={ev.coherenceCohesion} label={uiCopy("Coherence")} />
+                  <BandScoreRing score={ev.lexicalResource} label={uiCopy("Vocabulary")} />
+                  <BandScoreRing score={ev.grammaticalRange} label={uiCopy("Grammar")} />
                 </div>
                 <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-xs text-slate-500">
-                  <span className="inline-flex items-center gap-1.5"><Type className="h-3.5 w-3.5" /> {wordCount} words</span>
+                  <span className="inline-flex items-center gap-1.5"><Type className="h-3.5 w-3.5" /> {wordCount} <UiText text={"words"} /></span>
                   {timeSpentDisplay && <span className="inline-flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" /> {timeSpentDisplay}</span>}
-                  <span className="inline-flex items-center gap-1.5"><AlertCircle className="h-3.5 w-3.5" /> {ev.errors.length} corrections</span>
+                  <span className="inline-flex items-center gap-1.5"><AlertCircle className="h-3.5 w-3.5" /> {ev.errors.length} <UiText text={"corrections"} /></span>
                 </div>
               </div>
 
               <WritingScoreExplanation feedback={ev.criterionFeedback} taskType={task.taskType} />
               {/* Strengths + Improvements */}
               <details className="rounded-3xl border border-red-100 bg-white p-5 shadow-sm">
-                <summary className="cursor-pointer text-sm font-bold text-slate-800">Review task prompt</summary>
+                <summary className="cursor-pointer text-sm font-bold text-slate-800"><UiText text={"Review task prompt"} /></summary>
                 <p className="mt-4 whitespace-pre-line text-sm leading-7 text-slate-700">{task.prompt}</p>
               </details>
               {task.chart?.type === 'line' ? (
                 <details className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <summary className="cursor-pointer text-sm font-bold text-slate-800">Review Task 1 chart</summary>
+                  <summary className="cursor-pointer text-sm font-bold text-slate-800"><UiText text={"Review Task 1 chart"} /></summary>
                   <div className="mt-4"><LineChart chart={task.chart} /></div>
                 </details>
               ) : null}
               {task.diagram ? (
                 <details className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <summary className="cursor-pointer text-sm font-bold text-slate-800">Review Task 1 chart</summary>
+                  <summary className="cursor-pointer text-sm font-bold text-slate-800"><UiText text={"Review Task 1 chart"} /></summary>
                   <div className="mx-auto mt-4 max-w-[650px]"><WritingTaskDiagram diagram={task.diagram} /></div>
                 </details>
               ) : null}
               {task.visual ? (
                 <details className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <summary className="cursor-pointer text-sm font-bold text-slate-800">Review Task 1 data</summary>
+                  <summary className="cursor-pointer text-sm font-bold text-slate-800"><UiText text={"Review Task 1 data"} /></summary>
                   <div className="mx-auto mt-4 max-w-[750px]"><WritingDataVisual visual={task.visual} /></div>
                 </details>
               ) : null}
               {task.imageUrl ? (
                 <details className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <summary className="cursor-pointer text-sm font-bold text-slate-800">Review Task 1 image</summary>
+                  <summary className="cursor-pointer text-sm font-bold text-slate-800"><UiText text={"Review Task 1 image"} /></summary>
                   <WritingTaskImage task={task} className="mx-auto mt-4 h-auto max-w-full" />
                 </details>
               ) : null}
@@ -875,7 +878,7 @@ export default function IELTSWritingTestInterface({
                 <div className="rounded-3xl border border-emerald-200 bg-emerald-50/40 p-6">
                   <h3 className="flex items-center gap-2 text-base font-bold text-emerald-800 mb-3">
                     <CheckCircle2 className="h-5 w-5" />
-                    Strengths
+                    <UiText text={"Strengths"} />
                   </h3>
                   <ul className="space-y-2">
                     {ev.strengths.map((s, i) => (
@@ -889,7 +892,7 @@ export default function IELTSWritingTestInterface({
                 <div className="rounded-3xl border border-amber-200 bg-amber-50/40 p-6">
                   <h3 className="flex items-center gap-2 text-base font-bold text-amber-800 mb-3">
                     <TrendingUp className="h-5 w-5" />
-                    How to Improve
+                    <UiText text={"How to Improve"} />
                   </h3>
                   <ul className="space-y-2">
                     {ev.improvements.map((s, i) => (
@@ -907,10 +910,10 @@ export default function IELTSWritingTestInterface({
                 <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                   <h3 className="flex items-center gap-2 text-base font-bold text-slate-900 mb-1">
                     <AlertCircle className="h-5 w-5 text-red-500" />
-                    Mistake Analysis
+                    <UiText text={"Mistake Analysis"} />
                   </h3>
                   <p className="text-xs text-slate-500 mb-3">
-                    Tap each item to see the correction and explanation. {ev.errors.length} issues found.
+                    <UiText text={"Tap each item to see the correction and explanation."} /> {ev.errors.length} <UiText text={"issues found."} />
                   </p>
                   <div className="mb-4 flex flex-wrap gap-1.5">
                     {Object.entries(
@@ -925,7 +928,7 @@ export default function IELTSWritingTestInterface({
                           key={cat}
                           className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${meta.color}`}
                         >
-                          {meta.label} · {count}
+                          <UiText text={meta.label} /> · {count}
                         </span>
                       )
                     })}
@@ -945,7 +948,7 @@ export default function IELTSWritingTestInterface({
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="flex items-center gap-2 text-base font-bold text-slate-900">
                       <BookOpen className="h-5 w-5 text-emerald-500" />
-                      Corrected Version
+                      <UiText text={"Corrected Version"} />
                     </h3>
                     <div className="flex items-center gap-2">
                       <button
@@ -954,7 +957,7 @@ export default function IELTSWritingTestInterface({
                         className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"
                       >
                         {copiedCorrected ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
-                        {copiedCorrected ? 'Copied' : 'Copy'}
+                        {copiedCorrected ? <UiText text={"Copied"} /> : <UiText text={"Copy"} />}
                       </button>
                       <button
                         type="button"
@@ -962,7 +965,7 @@ export default function IELTSWritingTestInterface({
                         className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition"
                       >
                         {showCorrected ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                        {showCorrected ? 'Hide' : 'Show'}
+                        {showCorrected ? <UiText text={"Hide"} /> : <UiText text={"Show"} />}
                       </button>
                     </div>
                   </div>
@@ -989,7 +992,7 @@ export default function IELTSWritingTestInterface({
               <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                 <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-slate-500 mb-3">
                   <PenLine className="h-4 w-4" />
-                  Your Original Response
+                  <UiText text={"Your Original Response"} />
                 </h3>
                 <p className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
                   {answer || '(empty)'}
@@ -998,7 +1001,7 @@ export default function IELTSWritingTestInterface({
 
               <div className="rounded-2xl border border-blue-100 bg-blue-50/40 p-4 text-center text-xs text-blue-700">
                 <Sparkles className="inline h-3.5 w-3.5 mr-1" />
-                This evaluation has been saved to <strong>Analyze Mistakes</strong>. Your XP counts toward the leaderboard.
+                <UiText text={"This evaluation has been saved to"} /> <strong><UiText text={"Analyze Mistakes"} /></strong><UiText text={". Your XP counts toward the leaderboard."} />
               </div>
             </motion.div>
           )}
@@ -1029,20 +1032,20 @@ export default function IELTSWritingTestInterface({
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
                 <Send className="h-7 w-7" />
               </div>
-              <h3 className="mt-4 text-xl font-black text-slate-900">Submit your response?</h3>
+              <h3 className="mt-4 text-xl font-black text-slate-900"><UiText text={"Submit your response?"} /></h3>
               <p className="mt-2 text-sm text-slate-600">
-                You've written <strong>{wordCount}</strong> words.
+                <UiText text={"You've written"} /> <strong>{wordCount}</strong> <UiText text={"words."} />
                 {wordCount < minWords && (
                   <span className="text-amber-600">
                     {' '}
-                    The suggested minimum is {minWords} words.
+                    <UiText text={"The suggested minimum is"} /> {minWords} <UiText text={"words."} />
                   </span>
                 )}
               </p>
               {!writingTrial.isPremium && Number.isFinite(writingTrial.remaining) ? (
                 <span className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[11px] font-bold text-amber-700">
                   <Sparkles className="h-3 w-3" />
-                  {Math.max(0, writingTrial.remaining)} of {writingTrial.limit} free AI checks left
+                  {Math.max(0, writingTrial.remaining)} <UiText text={"of"} /> {writingTrial.limit} <UiText text={"free AI checks left"} />
                 </span>
               ) : null}
               <div className="mt-5 flex items-center justify-center gap-2">
@@ -1051,14 +1054,14 @@ export default function IELTSWritingTestInterface({
                   onClick={() => setShowSubmitConfirm(false)}
                   className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50"
                 >
-                  Keep Writing
+                  <UiText text={"Keep Writing"} />
                 </button>
                 <button
                   type="button"
                   onClick={handleSubmit}
                   className="rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-500/20 hover:brightness-105"
                 >
-                  Submit
+                  <UiText text={"Submit"} />
                 </button>
               </div>
             </motion.div>
@@ -1089,12 +1092,11 @@ export default function IELTSWritingTestInterface({
               </div>
               <span className="premium-top-chip mt-5 inline-flex items-center gap-1.5">
                 <Sparkles className="h-3.5 w-3.5" />
-                Premium only
+                <UiText text={"Premium only"} />
               </span>
-              <h3 className="mt-3 text-2xl font-black tracking-tight text-slate-900">Free AI checks used up</h3>
+              <h3 className="mt-3 text-2xl font-black tracking-tight text-slate-900"><UiText text={"Free AI checks used up"} /></h3>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                You&apos;ve used your {writingTrial.limit} free AI writing evaluations. Subscribe to Premium for
-                unlimited instant band scores, full error analysis and corrected versions.
+                <UiText text={"You've used your"} /> {writingTrial.limit} <UiText text={"free AI writing evaluations. Subscribe to Premium for unlimited instant band scores, full error analysis and corrected versions."} />
               </p>
               <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
                 <a
@@ -1102,19 +1104,19 @@ export default function IELTSWritingTestInterface({
                   className="cta-sheen inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#DC2626] via-[#EF4444] to-[#B91C1C] px-5 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(220,38,38,0.34)]"
                 >
                   <Crown className="h-4 w-4" />
-                  Subscribe to Premium
+                  <UiText text={"Subscribe to Premium"} />
                 </a>
                 <button
                   type="button"
                   onClick={() => setShowWritingGate(false)}
                   className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50"
                 >
-                  Maybe later
+                  <UiText text={"Maybe later"} />
                 </button>
               </div>
               <p className="mt-3 inline-flex items-center justify-center gap-1.5 text-[11px] font-semibold text-slate-400">
                 <Lock className="h-3 w-3" />
-                Your writing is saved — upgrade anytime to score it
+                <UiText text={"Your writing is saved — upgrade anytime to score it"} />
               </p>
             </motion.div>
           </div>
@@ -1132,7 +1134,7 @@ export default function IELTSWritingTestInterface({
         answer={answer}
         onAnswerChange={setAnswer}
         textareaRef={textareaRef}
-        action={<button type="button" onClick={() => setShowSubmitConfirm(true)} className="writing-primary"><Send size={15} />Submit</button>}
+        action={<button type="button" onClick={() => setShowSubmitConfirm(true)} className="writing-primary"><Send size={15} /><UiText text={"Submit"} /></button>}
         prompt={<>
           <WritingTaskPrompt task={task} />
 

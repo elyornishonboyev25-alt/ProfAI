@@ -4,17 +4,15 @@ import { boundedHistory, buildCoachPrompt, parseAssistantReply, partialAssistant
 import { researchForAssistant } from './assistantResearch.service.js'
 
 export async function loadAssistantRecords(userId: string, threadId?: string) {
-  const [user, memories] = await Promise.all([
+  const [user, memories, owned] = await Promise.all([
     prisma.user.findUnique({ where: { id: userId }, select: { fullName: true, profile: { select: { targetExam: true, targetScore: true, examDate: true, currentIeltsScore: true, targetIeltsScore: true, dailyStudyHours: true } }, aiPreference: { select: { preferredName: true } },
       assessmentResults: { orderBy: { completedAt: 'desc' }, take: 24, select: { examType: true, skill: true, title: true, score: true, maxScore: true, accuracy: true, durationSec: true, completedAt: true } },
     } }),
     prisma.aiMemory.findMany({ where: { userId, key: { not: 'last_locale' } }, orderBy: { updatedAt: 'desc' }, take: 40, select: { key: true, value: true } }),
+    threadId ? prisma.aiConversationThread.findFirst({ where: { id: threadId, userId }, select: { id: true } }) : null,
   ])
   if (!user) throw new AiGenerationError(404, 'USER_NOT_FOUND', 'User not found.')
-  if (threadId) {
-    const owned = await prisma.aiConversationThread.findFirst({ where: { id: threadId, userId }, select: { id: true } })
-    if (!owned) throw new AiGenerationError(404, 'CHAT_NOT_FOUND', 'Chat not found.')
-  }
+  if (threadId && !owned) throw new AiGenerationError(404, 'CHAT_NOT_FOUND', 'Chat not found.')
   return { learner: user, memories }
 }
 

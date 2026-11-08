@@ -5,6 +5,7 @@ import { useAuthStore } from '@/store/authStore'
 export type BillingOrder = { id: string; plan: string; currency: 'UZS' | 'USD'; amountMinor: number; status: string; method: string; checkoutUrl: string | null; createdAt: string }
 export type FeatureUsage = Record<import('./catalog').AccessFeature, { used: number; limit: number | null }>
 export type WalletOverview = { canCreateClass: boolean; canJoinClass: boolean; tier?: import('./catalog').PlanTier; usage?: FeatureUsage;
+  voiceUsage?: { daily: { used: number; limit: number | null }; monthly: { used: number; limit: number | null }; activeUntil: string | null };
   access?: import('../../../backend/src/utils/accessEntitlement').AccessEntitlement;
   subscriptions: Array<{ audience: string; plan: string; expiresAt: string }>; orders: BillingOrder[] }
 type BillingState = { userId: string | null; wallet: WalletOverview | null; loading: boolean; error: string; refresh: () => Promise<void> }

@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url'
 import cors from 'cors'
 import express from 'express'
 import helmet from 'helmet'
+import { miniAppDocument } from './middleware/miniAppDocument.js'
 import morgan from 'morgan'
 import cookieParser from 'cookie-parser'
 import { env, isProduction } from './config/env.js'
@@ -121,6 +122,7 @@ app.get('/googleea0efe504503609e.html', (_req, res) => {
 })
 
 if (isProduction && fs.existsSync(frontendDistPath)) {
+  app.use(miniAppDocument)
   app.use(express.static(frontendDistPath))
   app.get(/^\/(?!api\/).*/, (_req, res) => {
     res.sendFile(path.join(frontendDistPath, 'index.html'))

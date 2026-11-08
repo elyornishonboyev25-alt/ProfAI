@@ -1,3 +1,4 @@
+import { useCopy } from '@/i18n/interface'
 import UiText from '@/components/common/UiText'
 import '@/styles/dashboard-learning.css'
 import { useEffect, useMemo, useState } from 'react'
@@ -34,7 +35,6 @@ import {
   getNextDashboardAchievement,
   type DashboardLearningKey,
 } from '@/utils/dashboardMetrics'
-import { mergeLocalDashboardPerformance } from '@/utils/localProfilePerformance'
 import { loadOnboardingProfile } from '@/utils/weeklyPlanner'
 import { loadSiteTime, recentSiteTimeSeconds, SITE_TIME_UPDATED_EVENT, siteTimeStorageKey } from '@/utils/siteTime'
 
@@ -122,6 +122,7 @@ function StatCard({
 }
 
 export default function Dashboard() {
+  const { c: uiCopy } = useCopy()
   const navigate = useNavigate()
   const user = useAuthStore((state: AuthState) => state.user)
   const [siteTimeRevision, setSiteTimeRevision] = useState(0)
@@ -154,10 +155,20 @@ export default function Dashboard() {
 
   const baseOverview = data ?? cachedOverview ?? EMPTY_OVERVIEW
   const isInitialLoading = loading && !cachedOverview
-  const overview = useMemo(
-    () => (user ? mergeLocalDashboardPerformance(baseOverview, user.id) : baseOverview),
-    [baseOverview, user],
-  )
+  const overview = baseOverview
+  useEffect(() => {
+    const refresh = () => { void refetch() }
+    window.addEventListener('focus', refresh)
+    window.addEventListener('online', refresh)
+    window.addEventListener('smarttest:attempt-submitted', refresh)
+    window.addEventListener('smarttest:profile-updated', refresh)
+    return () => {
+      window.removeEventListener('focus', refresh)
+      window.removeEventListener('online', refresh)
+      window.removeEventListener('smarttest:attempt-submitted', refresh)
+      window.removeEventListener('smarttest:profile-updated', refresh)
+    }
+  }, [refetch])
   const localMetrics = useMemo(
     () => user ? getDashboardLearningMetrics(user.id) : null,
     [overview, user],
@@ -212,7 +223,7 @@ export default function Dashboard() {
       <div className="dashboard-main-shell mx-auto max-w-[98rem]">
         {error ? (
           <div role="alert" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-sm">
-            <span className="flex items-center gap-2 font-semibold"><AlertCircle className="h-4 w-4" /> Dashboard data could not refresh. The values below may be out of date.</span>
+            <span className="flex items-center gap-2 font-semibold"><AlertCircle className="h-4 w-4" /> <UiText text={"Dashboard data could not refresh. The values below may be out of date."} /></span>
             <button type="button" onClick={() => void refetch()} className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-xs font-black shadow-sm transition hover:bg-amber-100">
               <RefreshCw className="h-3.5 w-3.5" />  <UiText text={"Try again"} /> </button>
           </div>
@@ -232,7 +243,7 @@ export default function Dashboard() {
               </h1>
               <p className="mt-1 text-xs font-medium text-slate-500"> <UiText text={"Small steps today. Big results tomorrow."} /> </p>
             </div>
-            <span className="dashboard-streak hidden sm:inline-flex" title="Current streak">
+            <span className="dashboard-streak hidden sm:inline-flex" title={uiCopy("Current streak")}>
               <Flame className="h-5 w-5 fill-current" />
               <strong>{overview.metrics.currentStreak}</strong>
             </span>
@@ -240,7 +251,7 @@ export default function Dashboard() {
 
           <div className="flex items-center gap-2.5">
             <NotificationsBell />
-            <button type="button" onClick={() => navigate('/account')} aria-label="Profile settings" className="dashboard-icon-button">
+            <button type="button" onClick={() => navigate('/account')} aria-label={uiCopy("Profile settings")} className="dashboard-icon-button">
               <Settings className="h-5 w-5" />
             </button>
           </div>
@@ -285,8 +296,8 @@ export default function Dashboard() {
             <div className={`relative z-10 mt-5 grid gap-2 ${examTargets.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
               {examTargets.map((exam) => (
                 <div key={exam.label} className="rounded-xl border border-white/15 bg-white/10 px-3 py-2">
-                  <span className="block text-[9px] font-black uppercase tracking-wider text-white/65">{exam.label} current</span>
-                  <strong className="mt-0.5 block text-base">{exam.current || 'Not set'}</strong>
+                  <span className="block text-[9px] font-black uppercase tracking-wider text-white/65">{exam.label} <UiText text={"current"} /></span>
+                  <strong className="mt-0.5 block text-base">{exam.current || <UiText text={"Not set"} />}</strong>
                 </div>
               ))}
             </div>
@@ -320,15 +331,15 @@ export default function Dashboard() {
               </button>)}
             </div>
             <div className="dashboard-metrics grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <StatCard label="Study time" value={weeklyStudyTimeLabel} note="This week" icon={Clock3} />
+              <StatCard label={uiCopy("Study time")} value={weeklyStudyTimeLabel} note="This week" icon={Clock3} />
               <StatCard
-                label="Practices completed"
+                label={uiCopy("Practices completed")}
                 value={String(overview.metrics.totalTests)}
                 note={`${localMetrics?.completedMocks ?? 0} full mocks`}
                 icon={CheckCircle2}
               />
-              <StatCard label="Average score" value={`${overview.metrics.averageScore.toFixed(0)}%`} note="Scored practice" icon={BarChart3} />
-              <StatCard label="Current rank" value={currentRank ? `#${currentRank}` : 'Unranked'} note="Global board" icon={Trophy} />
+              <StatCard label={uiCopy("Average score")} value={`${overview.metrics.averageScore.toFixed(0)}%`} note="Scored practice" icon={BarChart3} />
+              <StatCard label={uiCopy("Current rank")} value={currentRank ? `#${currentRank}` : 'Unranked'} note="Global board" icon={Trophy} />
             </div>
 
             <article className="dashboard-glass-card dashboard-activity p-5">
@@ -355,7 +366,7 @@ export default function Dashboard() {
                         </linearGradient>
                       </defs>
                       <CartesianGrid vertical={false} stroke="#e8dfe1" strokeDasharray="4 4" />
-                      <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} />
+                      <XAxis dataKey="label" tickFormatter={(label: string) => uiCopy(label)} axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} />
                       <YAxis
                         axisLine={false}
                         tickLine={false}
@@ -445,7 +456,7 @@ export default function Dashboard() {
                 <span className="dashboard-medal-icon"><Award className="h-5 w-5" /></span>
                 <div>
                   <p className="text-sm font-black text-slate-900"> <UiText text={"Next achievement"} /> </p>
-                  <p className="text-[10px] font-semibold text-slate-500">{nextAchievement.description}</p>
+                  <p className="text-[10px] font-semibold text-slate-500"><UiText text={nextAchievement.description} /></p>
                 </div>
               </div>
               <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200/75">
@@ -484,7 +495,7 @@ export default function Dashboard() {
                     <span className="text-[10px] font-black text-red-600">{metric.progress}%</span>
                   </div>
                   <h3 id={`learning-${card.key}`} className="mt-3 text-sm font-black text-slate-900"><UiText text={card.title} /></h3>
-                  <p className="mt-0.5 text-[11px] font-medium text-slate-500">{metric.detail}</p>
+                  <p className="mt-0.5 text-[11px] font-medium text-slate-500"><UiText text={metric.detail} /></p>
                   <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-200/75" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={metric.progress} aria-labelledby={`learning-${card.key}`}>
                     <div className="h-full rounded-full bg-gradient-to-r from-rose-900 via-red-600 to-rose-300" style={{ width: `${metric.progress}%` }} />
                   </div>

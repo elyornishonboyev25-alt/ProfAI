@@ -61,7 +61,9 @@ async function load(entry) {
   const result = await build({ entryPoints: [entry], bundle: true, platform: 'node', format: 'esm', write: false })
   return import(`data:text/javascript;base64,${Buffer.from(result.outputFiles[0].text).toString('base64')}`)
 }
-const { getSATTest, getSATSectionTest, isSATTestComplete, satAvailabilityNote, getSATReviewTests } = await load('src/features/sat/catalog.ts')
+const { LEGACY_SAT_TEST_CATALOG, isSATTestComplete, satAvailabilityNote, getSATReviewTests } = await load('src/features/sat/catalog.ts')
+const getSATTest = id => LEGACY_SAT_TEST_CATALOG[id]
+const getSATSectionTest = (id, section) => getSATReviewTests().find(test => test.id === `${getSATTest(id).id}-${section}`)
 const { createSATAttempt, scoreSATModules, isSATAnswerCorrect } = await load('src/features/sat/practiceTest4.ts')
 const test = getSATTest(9)
 assert.equal(test.mockId, 9)

@@ -1,6 +1,11 @@
+import { useCopy } from '@/i18n/interface'
+import { isSATLeaderboardEligible } from '@/features/sat/leaderboardEligibility'
+import AttemptEntryBoundary from '@/components/tests/AttemptEntryBoundary'
+import ConfirmDialog from '@/components/common/ConfirmDialog'
+import { testReturnPath } from '@/utils/testNavigation'
 import { accountStorageFor } from '@/utils/accountStorage'
 import { useActiveTest } from '@/hooks/useActiveTest'
-import { readActiveTestPaper, saveActiveTestPaper } from '@/utils/activeTestPaper'
+import { saveActiveTestPaper } from '@/utils/activeTestPaper'
 import UiText from '@/components/common/UiText'
 import {
   useCallback,
@@ -19,7 +24,6 @@ import {
   Flag,
   FileText,
   Lightbulb,
-  ListChecks,
   NotebookPen,
   Save,
   ShieldAlert,
@@ -32,16 +36,17 @@ import {
   ZoomIn,
   ZoomOut,
 } from 'lucide-react'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import DesmosDrawer from '@/components/sat/DesmosDrawer'
 import SATFormulaSheet from '@/components/sat/SATFormulaSheet'
 import SATQuestionCanvas from '@/components/sat/SATQuestionCanvas'
-import SATReview from '@/components/sat/SATReview'
+import SATSubmissionScreen, { useSATSubmission } from '@/components/sat/SATSubmissionScreen'
+import SATModuleReview from '@/components/sat/SATModuleReview'
+import SATModuleTransition from '@/components/sat/SATModuleTransition'
 import SATSectionBreak from '@/components/sat/SATSectionBreak'
 import SATNotes, { SATNoteList } from '@/components/sat/SATNotes'
 import { readSATNotes } from '@/features/sat/notes'
-import SATRichText from '@/components/sat/SATRichText'
-import SATSourceContent from '@/components/sat/SATSourceContent'
+import SATExplanation from '@/components/sat/SATExplanation'
 import '@/components/sat/sat-exam-layout.css'
 import {
   isSATAnswerCorrect,
@@ -50,18 +55,18 @@ import {
   type SATAttempt,
 } from '@/features/sat/practiceTest4'
 import {
-  clearSATAttempt,
   loadSATAttempt,
   saveSATAttempt,
   saveSATAttemptToHistory,
 } from '@/features/sat/attemptStorage'
-import { getSATSectionTest, isSATSection, isSATTestComplete } from '@/features/sat/catalog'
+import { isSATSection, isSATTestComplete, resolveSATTest } from '@/features/sat/catalog'
+import { getSATSessionTest } from '@/features/sat/sessionTest'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { markXpActivitySynced, recordXpActivity } from '@/lib/xpApi'
 import { syncSATAttemptResult } from '@/features/sat/resultSync'
-import { saveSATBaseline } from '@/features/sat/baseline'
 import { advanceSATModule, needsSATSectionBreak } from '@/features/sat/sectionBreak'
+import { beginSATModuleTransition, completeSATModuleTransition, needsSATModuleTransition } from '@/features/sat/moduleTransition'
 
 import { finishModule, migrateModuleTiming, moduleSeconds, pauseModule, resumeModule, totalTime } from '@/features/sat/timing'
 
@@ -78,25 +83,33 @@ function fullscreenElement() {
 }
 
 export default function SATMockRun() {
+  return <AttemptEntryBoundary exam="SAT"><SATMockRunContent /></AttemptEntryBoundary>
+}
+
+function SATMockRunContent() {
+  const { c: uiCopy } = useCopy()
   const navigate = useNavigate()
+  const location = useLocation()
   const { mockId = '1' } = useParams<{ mockId: string }>()
   const [searchParams] = useSearchParams()
   const section = isSATSection(searchParams.get('section')) ? searchParams.get('section')! : null
-  const test = useMemo(() => {
-    const candidate = getSATSectionTest(mockId, section)
-    return readActiveTestPaper<typeof candidate>(`profai:sat:${candidate.id}:attempt:v1`) ?? candidate
-  }, [mockId, section])
+  const requestedTestId = searchParams.get('testId')
+  const baseTest = useMemo(() => getSATSessionTest(mockId, section, requestedTestId), [mockId, section, requestedTestId])
   const diagnostic = !section && searchParams.get('diagnostic') === '1'
   const sectionQuery = section ? `?section=${section}` : diagnostic ? '?diagnostic=1' : ''
-  const backPath = section ? `/sat/${section}` : '/sat'
-  const modules = test.modules
+  const backPath = testReturnPath(location.state, section ? `/sat/${section}` : '/sat')
   const user = useAuthStore((state: AuthState) => state.user)
   const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
   const { isFullscreen, supported, toggle, exit } = useFullscreen()
   const [attempt, setAttempt] = useState<SATAttempt | null>(() => {
-    const saved = loadSATAttempt(test.id)
-    return saved ? migrateModuleTiming(saved, modules) : null
+    const saved = loadSATAttempt(baseTest.id)
+    return saved ? migrateModuleTiming(saved, baseTest.modules) : null
   })
+  const test = useMemo(() => attempt ? resolveSATTest(baseTest, attempt) : baseTest,
+    [baseTest, attempt?.answers, attempt?.adaptiveRoutes])
+  const modules = test.modules
+  const modulesRef = useRef(modules)
+  modulesRef.current = modules
   useActiveTest(attempt?.status === 'active')
   const [now, setNow] = useState(Date.now())
   const uiKey = `profai:sat:${test.id}:workspace`
@@ -116,8 +129,7 @@ export default function SATMockRun() {
   const [zoom, setZoom] = useState(sameAttempt ? savedUi.zoom ?? 1 : 1)
   const [moduleComplete, setModuleComplete] = useState(false)
   const [confirmSubmit, setConfirmSubmit] = useState(false)
-  const [baselineStatus, setBaselineStatus] = useState<'saving' | 'saved' | 'error'>('saving')
-  const [baselineRetry, setBaselineRetry] = useState(0)
+  const submission = useSATSubmission()
   const [checkedQuestions, setCheckedQuestions] = useState<string[]>(sameAttempt ? savedUi.checkedQuestions ?? [] : [])
   const [exitConfirmOpen, setExitConfirmOpen] = useState(false)
   const attemptRef = useRef<SATAttempt | null>(attempt)
@@ -160,23 +172,12 @@ export default function SATMockRun() {
   attemptRef.current = attempt
 
   useEffect(() => {
-    if (!diagnostic || !user || attempt?.status !== 'submitted') return
-    let cancelled = false
-    setBaselineStatus('saving')
-    void saveSATBaseline(user.id, test, attempt).then(() => {
-      if (!cancelled) setBaselineStatus('saved')
-    }).catch(() => {
-      if (!cancelled) setBaselineStatus('error')
-    })
-    return () => { cancelled = true }
-  }, [diagnostic, user?.id, test, attempt, baselineRetry])
-
-  useEffect(() => {
     if (!user || !attempt || attempt.status !== 'submitted' || !attempt.submittedAt) return
     const sourceKey = `${test.id}-${attempt.submittedAt}`
     const report = scoreSATModules(test.modules, attempt.answers)
     const assignmentId = searchParams.get('assignmentId') ?? undefined
     void syncSATAttemptResult(user.id, test, attempt, assignmentId).catch(() => {})
+    if (!isSATLeaderboardEligible(attempt, modules)) return
     void recordXpActivity({
       source: 'SAT_PRACTICE',
       eventKey: sourceKey,
@@ -192,11 +193,11 @@ export default function SATMockRun() {
   const pauseAndSaveAttempt = useCallback(() => {
     const current = attemptRef.current
     if (!current || current.status !== 'active') return
-    const paused = pauseModule(current, modules)
+    const paused = pauseModule(current, modulesRef.current)
     attemptRef.current = paused
     saveSATAttempt(paused)
     saveSATAttemptToHistory(paused, 'exit')
-  }, [modules])
+  }, [])
 
   const saveAndExit = useCallback(() => {
     pauseAndSaveAttempt()
@@ -206,7 +207,7 @@ export default function SATMockRun() {
   }, [backPath, exit, navigate, pauseAndSaveAttempt])
 
   const exitTest = useCallback(() => {
-    if (attemptRef.current?.mode === 'exam' && attemptRef.current.status === 'active') {
+    if (attemptRef.current?.status === 'active') {
       setMoreOpen(false)
       setExitConfirmOpen(true)
       return
@@ -223,14 +224,20 @@ export default function SATMockRun() {
     setToolsOpen(false)
   }, [])
 
-  const submitAttempt = useCallback(() => {
-    persistUpdate((current) => ({
+  const submitAttempt = useCallback(() => submission.run(() => {
+    const current = attemptRef.current
+    if (!current || current.status !== 'active') return
+    const completed: SATAttempt = {
       ...finishModule(current, modules),
       status: 'submitted',
+      leaderboardEligible: isSATLeaderboardEligible(current, modules),
+      eligibilityNoticeAcknowledged: false,
       submittedAt: Date.now(),
       pausedModuleSeconds: undefined,
       timerPausedAt: undefined,
-    }))
+    }
+    saveSATAttempt(completed)
+    persistUpdate(() => completed)
     setModuleComplete(false)
     setConfirmSubmit(false)
     setNavigatorOpen(false)
@@ -238,13 +245,13 @@ export default function SATMockRun() {
     setCalculatorOpen(false)
     setFormulaSheetOpen(false)
     if (fullscreenElement()) void exit()
-  }, [exit, modules, persistUpdate])
+  }), [exit, modules, persistUpdate, submission.run])
 
   const closeCalculator = useCallback(() => {
     setCalculatorOpen(false)
   }, [])
 
-  const advanceModule = useCallback(() => {
+  const advanceModule = useCallback((endBreakEarly = false) => {
     const current = attemptRef.current
     if (!current || current.status !== 'active') return
     if (current.currentModuleIndex + 1 >= modules.length) {
@@ -253,7 +260,12 @@ export default function SATMockRun() {
     }
     const startedAt = Date.now()
     persistUpdate(value => value.currentModuleIndex === current.currentModuleIndex
-      ? advanceSATModule(value, modules, startedAt) : value)
+      ? current.moduleTransition
+        ? completeSATModuleTransition(value, modules, startedAt)
+        : needsSATModuleTransition(value, modules)
+          ? beginSATModuleTransition(value, modules, startedAt)
+          : advanceSATModule(value, modules, startedAt, endBreakEarly)
+      : value)
     setNow(startedAt)
     setModuleComplete(false)
     setConfirmSubmit(false)
@@ -279,9 +291,9 @@ export default function SATMockRun() {
   useEffect(() => {
     if (attempt) {
       saveSATAttempt(attempt)
-      saveActiveTestPaper(`profai:sat:${test.id}:attempt:v1`, test)
+      saveActiveTestPaper(`profai:sat:${test.id}:attempt:v1`, baseTest)
     }
-  }, [attempt, test])
+  }, [attempt, test, baseTest])
 
   useEffect(() => {
     const current = attemptRef.current
@@ -312,7 +324,13 @@ export default function SATMockRun() {
   useEffect(() => {
     if (
       !attempt ||
-      attempt.status !== 'active' ||
+      attempt.status !== 'active'
+    ) return
+    if (attempt.moduleTransition) {
+      if (now >= attempt.moduleTransition.endsAt) advanceModule()
+      return
+    }
+    if (
       attempt.mode !== 'exam' ||
       attempt.pausedModuleSeconds !== undefined
     ) return
@@ -329,7 +347,7 @@ export default function SATMockRun() {
   ])
 
   useEffect(() => {
-    if (!attempt || attempt.status !== 'active' || attempt.sectionBreak) return
+    if (!attempt || attempt.status !== 'active' || attempt.sectionBreak || attempt.moduleTransition) return
     const handleKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null
       if (
@@ -339,7 +357,7 @@ export default function SATMockRun() {
         calculatorOpen ||
         notesOpen ||
         navigatorOpen ||
-        exitConfirmOpen
+        exitConfirmOpen || moduleComplete || confirmSubmit || directionsOpen
       ) {
         return
       }
@@ -383,7 +401,7 @@ export default function SATMockRun() {
     openNotes,
     persistUpdate,
     questionIndex,
-    exitConfirmOpen,
+    exitConfirmOpen, moduleComplete, confirmSubmit, directionsOpen,
   ])
 
   if (!attempt) {
@@ -391,34 +409,31 @@ export default function SATMockRun() {
       <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
         <div className="max-w-md rounded-3xl border border-slate-200 bg-white p-7 text-center shadow-xl">
           <ShieldAlert className="mx-auto h-10 w-10 text-red-600" />
-          <h1 className="mt-4 text-2xl font-black">No SAT attempt found</h1>
-          <p className="mt-2 text-sm leading-6 text-slate-500">Choose Practice or Exam Mode before opening the test.</p>
+          <h1 className="mt-4 text-2xl font-black"><UiText text={"No SAT attempt found"} /></h1>
+          <p className="mt-2 text-sm leading-6 text-slate-500"><UiText text={"Choose Practice or Exam Mode before opening the test."} /></p>
           <button type="button" onClick={() => navigate(`/mock/sat/${test.mockId}${sectionQuery}`)} className="mt-5 rounded-xl bg-red-600 px-5 py-3 text-sm font-black text-white">
-            Choose test mode
+            <UiText text={"Choose test mode"} />
           </button>
         </div>
       </main>
     )
   }
 
+  if (submission.pending) return <SATSubmissionScreen />
+  if (submission.error) return (
+    <main className="exam-flow attempt-entry">
+      <section role="alert" className="mx-auto max-w-lg p-8">
+        <h1 className="text-2xl font-bold"><UiText text="Your answers are still here" /></h1>
+        <p className="my-4"><UiText text="Your results could not be saved. Free up browser storage, then try again." /></p>
+        <button type="button" className="rounded-xl bg-red-700 px-5 py-3 font-bold text-white" onClick={submitAttempt}>
+          <UiText text="Try again" />
+        </button>
+      </section>
+    </main>
+  )
+
   if (attempt.status === 'submitted') {
-    return (
-      <>
-      {diagnostic && user && <div role={baselineStatus === 'error' ? 'alert' : 'status'} className="mx-auto mt-4 max-w-6xl rounded-2xl border border-blue-100 bg-blue-50 px-5 py-4 text-sm text-slate-700">
-        <UiText text={baselineStatus === 'saving' ? 'Saving your starting SAT score...' : baselineStatus === 'saved' ? 'Your starting SAT score is saved. Review your mistakes below, then practise the skills you missed.' : 'Your mock is saved, but your profile score could not sync. Please retry.'} />
-        {baselineStatus === 'error' && <button type="button" onClick={() => setBaselineRetry(value => value + 1)} className="ml-3 font-bold text-blue-700"><UiText text="Try again" /></button>}
-        <button type="button" onClick={() => navigate('/sat/question-bank?status=incorrect')} className="ml-3 font-bold text-blue-700"><UiText text="Practise my mistakes" /></button>
-      </div>}
-      <SATReview
-        attempt={attempt}
-        test={test}
-        onStartAgain={() => {
-          clearSATAttempt(test.id)
-          navigate(`/mock/sat/${test.mockId}${sectionQuery}`)
-        }}
-      />
-      </>
-    )
+    return <Navigate replace to={`/sat/results/${encodeURIComponent(attempt.attemptId)}`} state={{ returnTo: backPath, justCompleted: true, diagnostic }} />
   }
 
   if (attempt.status === 'terminated') {
@@ -433,25 +448,29 @@ export default function SATMockRun() {
           <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-red-500/15 text-red-300 ring-1 ring-red-400/25">
             <ShieldAlert className="h-8 w-8" />
           </span>
-          <p className="mt-5 text-[10px] font-black uppercase tracking-[0.18em] text-red-300">Exam integrity</p>
-          <h1 className="mt-2 text-3xl font-black">Attempt ended</h1>
+          <p className="mt-5 text-[10px] font-black uppercase tracking-[0.18em] text-red-300"><UiText text={"Exam integrity"} /></p>
+          <h1 className="mt-2 text-3xl font-black"><UiText text={"Attempt ended"} /></h1>
           <p className="mt-3 text-sm font-medium leading-6 text-white/65">
-            This exam attempt has ended and cannot be resumed. Start a new attempt to take the test again.
+            <UiText text={"This exam attempt has ended and cannot be resumed. Start a new attempt to take the test again."} />
           </p>
           <button
             type="button"
             onClick={() => navigate(backPath)}
             className="mt-6 w-full rounded-2xl bg-white px-5 py-3.5 text-sm font-black text-slate-950"
           >
-            Return to SAT Arena
+            <UiText text={"Return to SAT Arena"} />
           </button>
         </motion.section>
       </main>
     )
   }
 
+  if (attempt.moduleTransition && modules[moduleIndex + 1]) {
+    return <SATModuleTransition previous={currentModule} next={modules[moduleIndex + 1]} />
+  }
+
   if (attempt.sectionBreak) {
-    return <SATSectionBreak endsAt={attempt.sectionBreak.endsAt} now={now} onExit={() => {
+    return <SATSectionBreak endsAt={attempt.sectionBreak.endsAt} now={now} onContinue={() => advanceModule(true)} onExit={() => {
       pauseAndSaveAttempt()
       if (fullscreenElement()) void exit()
       navigate(backPath)
@@ -486,16 +505,24 @@ export default function SATMockRun() {
   const sectionTitle = currentModule.section === 'reading-writing' ? 'Reading and Writing' : 'Math'
   const learnerName = user?.fullName || 'Ivygoo Student'
 
+  if (moduleComplete || confirmSubmit) return <SATModuleReview
+    module={currentModule} attempt={attempt} time={formatTime(testSeconds)} final={confirmSubmit}
+    continueLabel={confirmSubmit ? 'Submit & score' : needsSATSectionBreak(attempt, modules) ? 'Start 10-minute break' : 'Continue to next module'}
+    onBack={() => { setModuleComplete(false); setConfirmSubmit(false) }}
+    onQuestion={index => { setModuleComplete(false); setConfirmSubmit(false); goToQuestion(index) }}
+    onContinue={confirmSubmit ? submitAttempt : () => advanceModule()}
+  />
+
   return (
-    <main className="flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-[#f7f8fa] text-[#151515]">
+    <main className="sat-exam-run flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-[#f7f8fa] text-[#151515]">
       <header className="relative z-[80] shrink-0 border-b border-slate-200 bg-white">
         <div className="relative mx-auto grid max-w-[112rem] grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 px-4 py-3 sm:px-6 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:px-8">
           <div className="min-w-0 font-serif">
             <h1 className="truncate font-serif text-base font-bold text-slate-800 sm:text-xl lg:text-2xl">
-              Section {sectionNumber}, Module {moduleNumber}: {sectionTitle}
+              <UiText text={"Section"} /> {sectionNumber}<UiText text={", Module"} /> {moduleNumber}: {sectionTitle}
             </h1>
             <button type="button" onClick={() => setDirectionsOpen(true)} className="mt-0.5 text-sm font-bold text-[#2355ed] hover:underline sm:text-base">
-              Directions
+              <UiText text={"Directions"} />
             </button>
           </div>
 
@@ -505,7 +532,7 @@ export default function SATMockRun() {
             className="flex min-w-24 items-center justify-center gap-2 font-serif text-2xl font-bold tabular-nums sm:text-3xl"
             title={timerVisible ? 'Hide timer' : 'Show timer'}
           >
-            {timerVisible ? formatTime(testSeconds) : 'Hidden'}
+            {timerVisible ? formatTime(testSeconds) : <UiText text={"Hidden"} />}
             <EyeOff className="h-5 w-5 text-slate-600" />
           </button>
 
@@ -520,13 +547,13 @@ export default function SATMockRun() {
                     setToolsOpen(false)
                     setMoreOpen(false)
                   }}
-                  aria-label="Open SAT formula sheet"
+                  aria-label={uiCopy("Open SAT formula sheet")}
                   aria-expanded={formulaSheetOpen}
                   aria-controls="sat-formula-sheet"
-                  title="Formula Sheet"
+                  title={uiCopy("Formula Sheet")}
                   className={`flex h-12 items-center justify-center gap-2 rounded-xl px-3 font-serif text-sm font-bold transition sm:px-4 ${formulaSheetOpen ? 'bg-[#4053d7] text-white' : 'bg-sky-50 text-sky-800 hover:bg-sky-100'}`}
                 >
-                  <Sheet className="h-5 w-5" /> <span className="hidden xl:inline">Formula Sheet</span>
+                  <Sheet className="h-5 w-5" /> <span className="hidden xl:inline"><UiText text={"Formula Sheet"} /></span>
                 </button>
                 <button
                   type="button"
@@ -538,7 +565,7 @@ export default function SATMockRun() {
                   }}
                   aria-expanded={calculatorOpen}
                   aria-label={calculatorOpen ? 'Close Desmos calculator' : 'Open Desmos calculator'}
-                  title={calculatorOpen ? 'Close Desmos' : 'Open Desmos'}
+                  title={calculatorOpen ? uiCopy("Close Desmos") : 'Open Desmos'}
                   className={`flex h-12 items-center justify-center gap-2 rounded-xl px-3 font-serif text-sm font-bold transition sm:px-4 ${
                     calculatorOpen
                       ? 'bg-red-600 text-white shadow-[0_8px_20px_rgba(220,38,38,.22)]'
@@ -549,19 +576,20 @@ export default function SATMockRun() {
                 </button>
               </>
             ) : null}
-            <button type="button" onClick={() => setNavigatorOpen(true)} className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-600" aria-label="Open question navigator">
+            <button type="button" onClick={() => setNavigatorOpen(true)} className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-600" aria-label={uiCopy("Open question navigator")}>
               <FileText className="h-6 w-6" />
             </button>
             <button
               type="button"
-              aria-label="Highlights & Notes" aria-expanded={toolsOpen}
+              aria-label={uiCopy("Highlights & Notes")} aria-expanded={toolsOpen}
               onClick={() => { setToolsOpen((open) => !open); setMoreOpen(false) }}
               className="flex items-center gap-2 px-2 py-2 font-serif text-sm font-bold text-slate-700 sm:text-base"
             >
-              <NotebookPen className="h-6 w-6" /> <span className="hidden sm:inline">Highlights & Notes</span>
+              <NotebookPen className="h-6 w-6" /> <span className="hidden sm:inline"><UiText text={"Highlights & Notes"} /></span>
             </button>
             <button
               type="button"
+              aria-label={uiCopy("More")}
               onClick={() => { setMoreOpen((open) => !open); setToolsOpen(false) }}
               className="flex flex-col items-center px-2 py-1 font-serif text-xs font-bold text-slate-700"
             >
@@ -572,17 +600,17 @@ export default function SATMockRun() {
           {toolsOpen ? (
             <div className="absolute right-4 top-[calc(100%+.5rem)] z-50 max-h-[calc(100dvh-8rem)] w-[min(22rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl border border-slate-300 bg-white p-4 shadow-2xl">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-black">Highlights & Notes</p>
-                <button type="button" aria-label="Close highlights and notes" onClick={() => setToolsOpen(false)} className="text-slate-500"><X className="h-4 w-4" /></button>
+                <p className="text-sm font-black"><UiText text={"Highlights & Notes"} /></p>
+                <button type="button" aria-label={uiCopy("Close highlights and notes")} onClick={() => setToolsOpen(false)} className="text-slate-500"><X className="h-4 w-4" /></button>
               </div>
-              <p className="mt-4 text-xs font-medium text-slate-600">Select text to highlight it in one of four colors. Click a highlight to remove it.</p>
+              <p className="mt-4 text-xs font-medium text-slate-600"><UiText text={"Select text to highlight it in one of four colors. Click a highlight to remove it."} /></p>
               <div className="mt-3 flex items-center gap-2">
-                <button type="button" onClick={() => changeHighlights(currentStrokes.slice(0, -1))} disabled={!currentStrokes.length} className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 disabled:opacity-30" title="Undo"><Undo2 className="h-4 w-4" /></button>
-                <button type="button" onClick={() => changeHighlights([])} disabled={!currentStrokes.length} className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 disabled:opacity-30" title="Clear"><Trash2 className="h-4 w-4" /></button>
+                <button type="button" onClick={() => changeHighlights(currentStrokes.slice(0, -1))} disabled={!currentStrokes.length} className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 disabled:opacity-30" title={uiCopy("Undo")}><Undo2 className="h-4 w-4" /></button>
+                <button type="button" onClick={() => changeHighlights([])} disabled={!currentStrokes.length} className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 disabled:opacity-30" title={uiCopy("Clear")}><Trash2 className="h-4 w-4" /></button>
               </div>
               <div className="mt-3 max-h-[min(18rem,40dvh)] overflow-y-auto"><SATNoteList value={attempt.notes[currentQuestion.id]} /></div>
               <button type="button" onClick={openNotes} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-black px-3 py-3 text-xs font-black text-white">
-                <NotebookPen className="h-4 w-4" /> {readSATNotes(attempt.notes[currentQuestion.id]).length ? `Manage notes (${readSATNotes(attempt.notes[currentQuestion.id]).length})` : 'Add note'}
+                <NotebookPen className="h-4 w-4" /> {readSATNotes(attempt.notes[currentQuestion.id]).length ? <UiText text={"Manage notes ({{value1}})"} values={{ value1: String(readSATNotes(attempt.notes[currentQuestion.id]).length) }} /> : <UiText text={"Add note"} />}
               </button>
             </div>
           ) : null}
@@ -590,13 +618,13 @@ export default function SATMockRun() {
           {moreOpen ? (
             <div className="absolute right-4 top-[calc(100%+.5rem)] z-50 w-56 rounded-2xl border border-slate-300 bg-white p-2 shadow-2xl">
               <div className="flex items-center gap-1 rounded-xl px-2 py-2">
-                <button type="button" aria-label="Zoom out" disabled={zoom <= 0.7} onClick={() => setZoom((value) => Math.max(0.7, Number((value - 0.1).toFixed(2))))} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-slate-100 disabled:opacity-30"><ZoomOut className="h-4 w-4" /></button>
+                <button type="button" aria-label={uiCopy("Zoom out")} disabled={zoom <= 0.7} onClick={() => setZoom((value) => Math.max(0.7, Number((value - 0.1).toFixed(2))))} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-slate-100 disabled:opacity-30"><ZoomOut className="h-4 w-4" /></button>
                 <span className="min-w-16 flex-1 text-center text-xs font-black tabular-nums">{Math.round(zoom * 100)}%</span>
-                <button type="button" aria-label="Zoom in" disabled={zoom >= 1.6} onClick={() => setZoom((value) => Math.min(1.6, Number((value + 0.1).toFixed(2))))} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-slate-100 disabled:opacity-30"><ZoomIn className="h-4 w-4" /></button>
+                <button type="button" aria-label={uiCopy("Zoom in")} disabled={zoom >= 1.6} onClick={() => setZoom((value) => Math.min(1.6, Number((value + 0.1).toFixed(2))))} className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-slate-100 disabled:opacity-30"><ZoomIn className="h-4 w-4" /></button>
               </div>
-              <button type="button" onClick={() => { setZoom(1); setMoreOpen(false) }} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black hover:bg-slate-100"><Undo2 className="h-4 w-4" /> Reset zoom</button>
+              <button type="button" onClick={() => { setZoom(1); setMoreOpen(false) }} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black hover:bg-slate-100"><Undo2 className="h-4 w-4" /> <UiText text={"Reset zoom"} /></button>
               {supported && <button type="button" onClick={toggle} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black hover:bg-slate-100">
-                <ZoomIn className="h-4 w-4" /> {isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                <ZoomIn className="h-4 w-4" /> {isFullscreen ? <UiText text={"Exit fullscreen"} /> : <UiText text={"Enter fullscreen"} />}
               </button>}
               <button type="button" onClick={exitTest} className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-xs font-black text-[#4053d7] hover:bg-indigo-50"><Save className="h-4 w-4" /> <UiText text="Save and exit" /></button>
             </div>
@@ -608,7 +636,7 @@ export default function SATMockRun() {
       <div className="sat-exam-workspace">
       <div ref={questionViewportRef} className={`sat-exam-viewport min-h-0 flex-1 overflow-y-auto overflow-x-hidden transition-[padding] duration-300 ${calculatorOpen && calculatorDocked ? 'lg:pr-[50vw]' : ''}`}>
         <div
-          className="origin-top-left"
+          className="sat-exam-paper-wrap origin-top-left"
           style={{ zoom } as CSSProperties}
         >
         <SATQuestionCanvas
@@ -634,7 +662,7 @@ export default function SATMockRun() {
           practicePanel={attempt.mode === 'practice' ? (
             <div className="mt-7 border-t border-slate-300 pt-5">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-xs font-bold text-slate-500">Your response is saved automatically.</p>
+                <p className="text-xs font-bold text-slate-500"><UiText text={"Your response is saved automatically."} /></p>
                 {currentAnswer ? <button type="button" onClick={() => updateAnswer('')} className="text-xs font-black text-red-700"> <UiText text={"Clear"} /> </button> : null}
               </div>
               <button
@@ -643,20 +671,20 @@ export default function SATMockRun() {
                 onClick={() => setCheckedQuestions((current) => [...new Set([...current, currentQuestion.id])])}
                 className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-black px-4 py-3.5 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-35"
               >
-                <Lightbulb className="h-4 w-4" /> {practiceChecked ? 'Answer checked' : 'Check answer'}
+                <Lightbulb className="h-4 w-4" /> {practiceChecked ? <UiText text={"Answer checked"} /> : <UiText text={"Check answer"} />}
               </button>
               {practiceChecked ? (
                 <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={`mt-4 rounded-xl border-2 p-4 ${practiceCorrect ? 'border-emerald-600 bg-emerald-50' : 'border-red-600 bg-red-50'}`}>
                   <div className="flex items-start gap-3">
                     {practiceCorrect ? <Sparkles className="mt-0.5 h-5 w-5 text-emerald-700" /> : <XCircle className="mt-0.5 h-5 w-5 text-red-700" />}
                     <div>
-                      <p className={`font-serif text-base font-bold ${practiceCorrect ? 'text-emerald-900' : 'text-red-900'}`}>{practiceCorrect ? 'Correct answer' : `Incorrect — correct answer: ${currentQuestion.correctAnswer}`}</p>
-                      <p className="mt-1 text-xs font-semibold text-slate-600">Review the reasoning before moving to the next question.</p>
+                      <p className={`font-serif text-base font-bold ${practiceCorrect ? 'text-emerald-900' : 'text-red-900'}`}>{practiceCorrect ? <UiText text={"Correct answer"} /> : <UiText text={"Incorrect — correct answer: {{value1}}"} values={{ value1: String(currentQuestion.correctAnswer) }} />}</p>
+                      <p className="mt-1 text-xs font-semibold text-slate-600"><UiText text={"Review the reasoning before moving to the next question."} /></p>
                     </div>
                   </div>
                   <details className="mt-3 rounded-lg border border-slate-300 bg-white px-3 py-3">
-                    <summary className="cursor-pointer text-xs font-black text-slate-800">Step-by-step explanation</summary>
-                    {currentQuestion.sourceContent ? <SATSourceContent html={currentQuestion.sourceContent.explanation} className="mt-3 text-sm font-medium leading-6 text-slate-700" /> : <SATRichText text={currentQuestion.explanation} className="mt-3 text-sm font-medium leading-6 text-slate-700" />}
+                    <summary className="cursor-pointer text-xs font-black text-slate-800"><UiText text={"Step-by-step explanation"} /></summary>
+                    <SATExplanation question={currentQuestion} response={attempt.answers[currentQuestion.id]} className="mt-3" />
                   </details>
                 </motion.div>
               ) : null}
@@ -673,14 +701,14 @@ export default function SATMockRun() {
         <div className="mx-auto grid min-h-20 max-w-[112rem] grid-cols-[1fr_auto] items-center gap-3 px-4 py-2 sm:px-6 md:grid-cols-[1fr_auto_1fr] lg:px-8">
           <p className="hidden truncate font-serif text-lg font-bold text-slate-800 md:block">{learnerName}</p>
           <button type="button" onClick={() => setNavigatorOpen(true)} className="inline-flex h-12 items-center justify-center gap-3 rounded-2xl bg-black px-5 font-serif text-base font-bold text-white sm:text-lg">
-            Question {questionIndex + 1} of {currentModule.questions.length} <ChevronDown className="h-4 w-4" />
+            <UiText text={"Question"} /> {questionIndex + 1} <UiText text={"of"} /> {currentModule.questions.length} <ChevronDown className="h-4 w-4" />
           </button>
           <div className="flex items-center justify-end gap-2">
             <button type="button" disabled={questionIndex === 0} onClick={() => goToQuestion(questionIndex - 1)} className="h-12 rounded-full bg-[#4053d7] px-5 font-serif text-base font-bold text-white disabled:cursor-not-allowed disabled:opacity-50 sm:px-7 sm:text-lg"> <UiText text={"Back"} /> </button>
             {questionIndex < currentModule.questions.length - 1 ? (
               <button type="button" onClick={() => goToQuestion(questionIndex + 1)} className="h-12 rounded-full bg-[#4053d7] px-5 font-serif text-base font-bold text-white sm:px-7 sm:text-lg"> <UiText text={"Next"} /> </button>
             ) : (
-              <button type="button" onClick={endCurrentModule} className="h-12 rounded-full bg-black px-5 font-serif text-sm font-bold text-white sm:px-7 sm:text-base">Review module</button>
+              <button type="button" onClick={endCurrentModule} className="h-12 rounded-full bg-black px-5 font-serif text-sm font-bold text-white sm:px-7 sm:text-base"><UiText text={"Review module"} /></button>
             )}
           </div>
         </div>
@@ -697,6 +725,7 @@ export default function SATMockRun() {
       <AnimatePresence>
         {directionsOpen ? (
           <motion.div
+            key="directions"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -710,18 +739,18 @@ export default function SATMockRun() {
             >
               <header className="flex items-center justify-between border-b border-slate-300 px-5 py-4 sm:px-7">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-[0.12em] text-[#4053d7]">Test directions</p>
-                  <h2 className="mt-1 font-serif text-xl font-bold sm:text-2xl">Section {sectionNumber}, Module {moduleNumber}: {sectionTitle}</h2>
+                  <p className="text-xs font-black uppercase tracking-[0.12em] text-[#4053d7]"><UiText text={"Test directions"} /></p>
+                  <h2 className="mt-1 font-serif text-xl font-bold sm:text-2xl"><UiText text={"Section"} /> {sectionNumber}<UiText text={", Module"} /> {moduleNumber}: {sectionTitle}</h2>
                 </div>
                 <button type="button" onClick={() => setDirectionsOpen(false)} className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300"><X className="h-4 w-4" /></button>
               </header>
               <div className="px-5 py-6 font-serif text-base leading-7 text-slate-700 sm:px-7 sm:text-lg">
                 {currentModule.section === 'reading-writing' ? (
-                  <p>Read each passage carefully and choose the answer that is best supported by the text and standard written English. You may move between questions in this module and mark any question for review.</p>
+                  <p><UiText text={"Read each passage carefully and choose the answer that is best supported by the text and standard written English. You may move between questions in this module and mark any question for review."} /></p>
                 ) : (
-                  <p>Solve each problem and select or enter the best answer. Desmos is built into the Math toolbar and opens without leaving the test. You may move between questions in this module and mark any question for review.</p>
+                  <p><UiText text={"Solve each problem and select or enter the best answer. Desmos is built into the Math toolbar and opens without leaving the test. You may move between questions in this module and mark any question for review."} /></p>
                 )}
-                <p className="mt-4">Your answers, notes, highlights, and current position are saved automatically on this device.</p>
+                <p className="mt-4"><UiText text={"Your answers, notes, highlights, and current position are saved automatically on this device."} /></p>
               </div>
               <footer className="flex justify-end border-t border-slate-300 bg-slate-50 px-5 py-4 sm:px-7">
                 <button type="button" onClick={() => setDirectionsOpen(false)} className="rounded-full bg-[#4053d7] px-6 py-3 font-serif text-base font-bold text-white"> <UiText text={"Continue"} /> </button>
@@ -732,6 +761,7 @@ export default function SATMockRun() {
 
         {navigatorOpen ? (
           <motion.div
+            key="question-navigator"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -746,7 +776,7 @@ export default function SATMockRun() {
               <header className="flex items-center justify-between border-b border-slate-300 bg-white px-5 py-4">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#4053d7]">{currentModule.shortTitle}</p>
-                  <h2 className="mt-1 font-serif text-xl font-bold">Question navigator</h2>
+                  <h2 className="mt-1 font-serif text-xl font-bold"><UiText text={"Question navigator"} /></h2>
                 </div>
                 <button type="button" onClick={() => setNavigatorOpen(false)} className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-600">
                   <X className="h-4 w-4" />
@@ -784,17 +814,17 @@ export default function SATMockRun() {
                 <div className="mt-5 flex flex-wrap gap-3 text-[9px] font-black text-slate-500">
                   {attempt.mode === 'practice' ? <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-emerald-600" />  <UiText text={"Correct"} /> </span> : null}
                   {attempt.mode === 'practice' ? <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-red-600" />  <UiText text={"Incorrect"} /> </span> : null}
-                  <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-slate-950" /> Answered</span>
+                  <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-slate-950" /> <UiText text={"Answered"} /></span>
                   <span className="inline-flex items-center gap-1.5"><span className="h-3 w-3 rounded border border-slate-300 bg-slate-50" />  <UiText text={"Unanswered"} /> </span>
-                  <span className="inline-flex items-center gap-1.5"><Flag className="h-3 w-3 fill-amber-400 text-amber-500" /> Flagged</span>
+                  <span className="inline-flex items-center gap-1.5"><Flag className="h-3 w-3 fill-amber-400 text-amber-500" /> <UiText text={"Flagged"} /></span>
                 </div>
               </div>
               <footer className="flex items-center justify-between gap-3 border-t border-slate-300 bg-[#e7edf8] px-5 py-4">
                 <p className="text-[10px] font-bold text-slate-500">
-                  {answeredInModule} answered · {currentModule.questions.length - answeredInModule} remaining
+                  {answeredInModule} <UiText text={"answered ·"} /> {currentModule.questions.length - answeredInModule} <UiText text={"remaining"} />
                 </p>
                 <button type="button" onClick={endCurrentModule} className="rounded-full bg-[#4053d7] px-5 py-2.5 text-[10px] font-black text-white">
-                  Finish module
+                  <UiText text={"Finish module"} />
                 </button>
               </footer>
             </motion.section>
@@ -803,6 +833,7 @@ export default function SATMockRun() {
 
         {notesOpen ? (
           <motion.div
+            key="question-notes"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -822,10 +853,10 @@ export default function SATMockRun() {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#4053d7]">Private notes</p>
-                  <h2 id="sat-note-title" className="mt-1 font-serif text-xl font-bold">Question {currentQuestion.number}</h2>
+                  <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#4053d7]"><UiText text={"Private notes"} /></p>
+                  <h2 id="sat-note-title" className="mt-1 font-serif text-xl font-bold"><UiText text={"Question"} /> {currentQuestion.number}</h2>
                 </div>
-                <button type="button" aria-label="Close notes" onClick={() => setNotesOpen(false)} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-500">
+                <button type="button" aria-label={uiCopy("Close notes")} onClick={() => setNotesOpen(false)} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-500">
                   <X className="h-4 w-4" />
                 </button>
               </div>
@@ -836,103 +867,7 @@ export default function SATMockRun() {
           </motion.div>
         ) : null}
 
-        {moduleComplete || confirmSubmit ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-950/45 p-3 backdrop-blur-md"
-          >
-            <motion.section
-              initial={{ scale: 0.95, y: 16 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 16 }}
-              className="w-full max-w-xl rounded-2xl border border-slate-300 bg-white p-6 shadow-2xl sm:p-8"
-            >
-              <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-50 text-[#4053d7]">
-                <ListChecks className="h-7 w-7" />
-              </span>
-              <p className="mt-5 text-[10px] font-black uppercase tracking-[0.14em] text-[#4053d7]">
-                {confirmSubmit ? 'Final submission' : 'Module ready'}
-              </p>
-              <h2 className="mt-1 font-serif text-2xl font-bold tracking-tight">
-                {confirmSubmit ? 'Submit your SAT attempt?' : `${currentModule.shortTitle} complete`}
-              </h2>
-              <p className="mt-2 text-sm font-medium leading-6 text-slate-500">
-                You answered {answeredInModule} of {currentModule.questions.length} questions.
-                {currentModule.questions.length - answeredInModule > 0
-                  ? ` ${currentModule.questions.length - answeredInModule} unanswered question(s) will remain blank.`
-                  : ' Every question has a response.'}
-              </p>
-              <div className="mt-5 grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setModuleComplete(false)
-                    setConfirmSubmit(false)
-                    setNavigatorOpen(true)
-                  }}
-                  className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-[11px] font-black text-slate-600"
-                >
-                  Review answers
-                </button>
-                <button
-                  type="button"
-                  onClick={confirmSubmit ? submitAttempt : advanceModule}
-                  className="rounded-xl bg-[#4053d7] px-4 py-3 text-[11px] font-black text-white"
-                >
-                  {confirmSubmit ? 'Submit & score' : needsSATSectionBreak(attempt, modules) ? <UiText text="Start 10-minute break" /> : 'Continue to next module'}
-                </button>
-              </div>
-              {!confirmSubmit && attempt.mode === 'practice' && currentModule.section === 'reading-writing' && modules[moduleIndex + 1]?.section === 'math' ? (
-                <p className="mt-4 rounded-xl bg-blue-50 px-3 py-2 text-center text-[10px] font-bold text-blue-700">
-                  Recommended: take a 10-minute break before beginning Math.
-                </p>
-              ) : null}
-            </motion.section>
-          </motion.div>
-        ) : null}
-
-        {exitConfirmOpen ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[220] flex items-center justify-center bg-slate-950/95 px-4 text-white"
-          >
-            <motion.section
-              initial={{ scale: 0.94, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="sat-exit-title"
-              aria-describedby="sat-exit-description"
-              className="w-full max-w-lg text-center"
-            >
-              <Save className="mx-auto h-12 w-12 text-indigo-300" />
-              <h1 id="sat-exit-title" className="mt-3 text-3xl font-black"><UiText text="Save and exit?" /></h1>
-              <p id="sat-exit-description" className="mx-auto mt-3 max-w-md text-sm font-medium leading-6 text-white/60">
-                <UiText text="Your answers and remaining time will be saved. You can resume this test later." />
-              </p>
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                <button
-                  type="button"
-                  onClick={continueExam}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3.5 text-sm font-black text-slate-950 shadow-xl"
-                >
-                  <ZoomIn className="h-4 w-4" /> <UiText text="Continue test" />
-                </button>
-                <button
-                  type="button"
-                  onClick={saveAndExit}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#4053d7] px-6 py-3.5 text-sm font-black text-white shadow-xl"
-                >
-                  <Save className="h-4 w-4" /> <UiText text="Save and exit" />
-                </button>
-              </div>
-            </motion.section>
-          </motion.div>
-        ) : null}
+        <ConfirmDialog open={exitConfirmOpen} title={uiCopy("Save and exit?")} description={uiCopy("Your answers, notes and remaining SAT time will be saved. Continue later from SAT / In process.")} confirmLabel={uiCopy("Save & exit")} cancelLabel={uiCopy("Continue test")} onClose={continueExam} onConfirm={saveAndExit} />
       </AnimatePresence>
     </main>
   )

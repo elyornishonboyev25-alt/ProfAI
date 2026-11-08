@@ -1,0 +1,344 @@
+/* Shared workspace materials. The route shell opts in; papers, recordings,
+   media and semantic success/error states retain their own presentation.
+   The repeated shell class gives these tokens priority over legacy skins. */
+.app-shell.app-shell[data-material='silver-glass'] {
+  --workspace-ink: #202735;
+  --workspace-muted: #626e80;
+  --workspace-red: #ac2440;
+  --workspace-red-deep: #912039;
+  --workspace-edge: rgba(255, 255, 255, .94);
+  --workspace-line: rgba(142, 157, 179, .26);
+  --workspace-panel: linear-gradient(125deg, #ffffff94, #ecf0f66b 58%, #d8e0ec61);
+  --workspace-card:
+    linear-gradient(118deg, #ffffff6b, #ffffff0a 45%, #ffffff42 46%, transparent 72%),
+    linear-gradient(145deg, #ffffffa8, #edf0f66b 60%, #dce3ee80);
+  --workspace-control: linear-gradient(135deg, #ffffffb0, #e6ecf578);
+  --workspace-crimson: linear-gradient(135deg, #ce3c53, #a81e39);
+  --workspace-glass-shadow: 0 12px 28px -12px #28394e26, inset 0 1px 0 #fff, inset 0 -1px 0 #ffffff80;
+  --workspace-glass-hover: 0 18px 35px -16px #5e30432b, inset 0 1px 0 #fff, inset 0 -1px 0 #ffffffb3;
+  --workspace-backdrop-card: blur(16px) saturate(130%);
+  --workspace-backdrop-hero: blur(24px) saturate(130%);
+  --workspace-backdrop-nav: blur(28px) saturate(130%);
+  --workspace-backdrop-compact: blur(10px);
+  --workspace-canvas:
+    radial-gradient(ellipse at 2% 10%, #c58e9a26, transparent 40%),
+    radial-gradient(ellipse at 93% 5%, #ffffffb8, transparent 44%),
+    linear-gradient(135deg, #e8eaf0, #dce3ee 58%, #edf0f5);
+  --silver-surface: var(--workspace-card);
+  --silver-control: var(--workspace-control);
+  --silver-ink: var(--workspace-ink);
+  --silver-muted: var(--workspace-muted);
+  --silver-red: var(--workspace-red);
+  --silver-red-deep: var(--workspace-red-deep);
+  --silver-edge: var(--workspace-edge);
+  --silver-line: var(--workspace-line);
+  --silver-shadow: var(--workspace-glass-shadow);
+  --silver-shadow-hover: var(--workspace-glass-hover);
+  --silver-crimson: var(--workspace-crimson);
+  --silver-red-shadow: 0 6px 16px #a81e3926, inset 0 1px 0 #ffffff66;
+  --liquid-ink: var(--workspace-ink);
+  --liquid-muted: var(--workspace-muted);
+  --liquid-red: var(--workspace-red);
+  --liquid-line: var(--workspace-line);
+  --liquid-control: var(--workspace-control);
+  --liquid-shadow: var(--workspace-glass-shadow);
+  --app-text: var(--workspace-ink);
+  --app-red: var(--workspace-red);
+  --app-red-deep: var(--workspace-red-deep);
+  --app-border: var(--workspace-line);
+  --app-shadow: var(--workspace-glass-shadow);
+  --arena-shadow: var(--workspace-glass-shadow);
+  --arena-glass: #ffffff70;
+  --arena-glass-strong: #ffffffa8;
+  --ui-primary: var(--workspace-red);
+  --ui-primary-strong: var(--workspace-red-deep);
+  --ui-muted: var(--workspace-muted);
+  --ui-border: var(--workspace-line);
+  color: var(--workspace-ink);
+}
+
+.app-shell[data-material='silver-glass'] .workspace-background { background: var(--workspace-canvas); }
+.app-shell[data-material='silver-glass'] .workspace-background .ambient-grid { opacity: .08; }
+.app-shell[data-material='silver-glass'] .workspace-background .ambient-sphere { opacity: .25; }
+.app-shell[data-material='silver-glass'] .workspace-background .ambient-mesh {
+  background: radial-gradient(ellipse at 10% 20%, #bc7c9012, transparent 38%), radial-gradient(ellipse at 80% 80%, #b1bfd024, transparent 50%);
+}
+
+/* Named surface families make the treatment consistent without recolouring
+   photographs, charts, answer choices, badges or arbitrary nested elements. */
+.app-shell[data-material='silver-glass'] .workspace-main :is(
+  .glass-surface, .ivygoo-card, .silver-card, .ui-surface, .surface-card,
+  .panel-surface, .app-panel, .apple-glass-card, .hero-metric-card,
+  .arena-card, .arena-surface, .dashboard-glass-card, .dashboard-stat-card,
+  .dashboard-learning-card, .academic-glass-card, .achievement-glass,
+  .articles-studio-card, .articles-vocabulary-card, .learning-card,
+  .podcast-glass, .podcast-episode-card, .podcast-detail-card,
+  .my-vocabulary-card, .my-vocabulary-panel, .vocab-activity-card,
+  .vocab-flash-card, .ielts-vocab-panel, .recent-attempt-card,
+  .community-glass-panel, .community-learner-card, .community-suggested-card,
+  .leaderboard-personal-card, .leaderboard-podium-card, .leaderboard-table-panel,
+  .leaderboard-rules-card, .coach-glass, .ai-chat-window--studio,
+  .account-profile-card, .admission-university-card, .lessons-card,
+  .lessons-progress-panel, .um-score-card, .um-degree-card, .um-result-card,
+  .sat-bank-panel, .sat-bank-session, .sat-bank-history-card,
+  .billing-glass, .lc-panel, .lc-metric-card, .lc-note-card,
+  .lc-portal-class-card, .lc-portal-create-card, .owner-report-card,
+  .in-process, .in-process-card, .usage-balance, .articles-studio-tools,
+  .vocabulary-track-card, .vocabulary-metric, .ielts-vocab-test,
+  .ielts-vocab-part, .ielts-vocab-skill, .hub-room-card, .hub-partner-card,
+  .tutor-composer, .admission-home-destination, .performance-metric-card,
+  .landing-arena-preview, .landing-arena-exam-card, .landing-arena-step,
+  .landing-review-card, .landing-reviews-marquee-card,
+  .landing-arena-plans-list, .landing-arena-faq-item
+):not(.dashboard-target-card):not(.premium-member-hero) {
+  border: 1px solid var(--workspace-edge);
+  border-radius: 22px;
+  background: var(--workspace-card);
+  box-shadow: var(--workspace-glass-shadow);
+  -webkit-backdrop-filter: var(--workspace-backdrop-card);
+  backdrop-filter: var(--workspace-backdrop-card);
+}
+
+.app-shell[data-material='silver-glass'] .workspace-main :is(
+  .premium-hero, .ui-page-hero, .ui-page-header, .account-profile-hero,
+  .sat-bank-hero, .articles-studio-hero, .articles-vocabulary-hero,
+  .learning-hero, .my-vocabulary-hero, .my-vocabulary-collection-hero,
+  .leaderboard-hero, .lessons-hero, .um-results-hero, .lc-portal-hero,
+  .owner-hero, .vocabulary-hero, .hub-discovery-heading
+):not(.premium-member-hero) {
+  border: 1px solid var(--workspace-edge);
+  border-radius: 28px;
+  background: var(--workspace-panel);
+  box-shadow: 0 22px 55px -26px #25374e40, inset 0 1px 0 #fff;
+  -webkit-backdrop-filter: var(--workspace-backdrop-hero);
+  backdrop-filter: var(--workspace-backdrop-hero);
+}
+
+/* Library backgrounds reveal the same canvas as the IELTS/SAT catalog. */
+.app-shell[data-material='silver-glass'] .workspace-main :is(
+  .learning-page, .podcast-library.educational-podcast, .tutor-page, .billing-page,
+  .my-vocabulary-page, .articles-vocabulary-studio, .academic-skills-page,
+  .performance-studio
+) { background: transparent; }
+.app-shell[data-material='silver-glass'] .workspace-main .dashboard-main-shell {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+/* A legacy results rule explicitly disabled blur. Keep the reading area
+   stable while restoring the same material on its surrounding panels. */
+.app-shell[data-material='silver-glass'] .workspace-main .performance-studio :is(.premium-hero, .surface-card, .performance-metric-card) {
+  -webkit-backdrop-filter: var(--workspace-backdrop-card) !important;
+  backdrop-filter: var(--workspace-backdrop-card) !important;
+}
+.app-shell[data-material='silver-glass'] .workspace-main .performance-studio .premium-hero { background: var(--workspace-panel) !important; }
+.app-shell[data-material='silver-glass'] .workspace-main .dashboard-target-card {
+  border-color: #ffffff99;
+  background: radial-gradient(ellipse at 0 0, #ffffff26, transparent 60%), var(--workspace-crimson);
+  box-shadow: 0 14px 32px -14px #9f1d3b66, inset 0 1px 0 #ffffff80;
+}
+.app-shell[data-material='silver-glass'] .workspace-main :is(
+  .liquid-page-heading, .articles-studio-intro, .learning-hero-copy,
+  .my-vocabulary-hero, .account-profile-hero, .lc-portal-hero
+) h1 { color: var(--workspace-ink); font-weight: 750; letter-spacing: -.045em; line-height: 1.15; }
+
+/* Navigation is slightly denser glass so content stays visually in front. */
+.app-shell[data-material='silver-glass'] .liquid-sidebar.liquid-sidebar {
+  border-color: var(--workspace-edge);
+  background: linear-gradient(145deg, #f7f8fcc7, #d4ddeaab 68%, #e5ebf4b8);
+  box-shadow: 0 18px 44px -16px #25374e40, inset 0 1px 0 #fff;
+  -webkit-backdrop-filter: var(--workspace-backdrop-nav);
+  backdrop-filter: var(--workspace-backdrop-nav);
+}
+.app-shell[data-material='silver-glass'] .liquid-sidebar .liquid-nav-item.is-current {
+  border-color: #c9405880;
+  background: var(--workspace-crimson);
+  color: #fff;
+  box-shadow: 0 5px 13px #a81e3929, inset 0 1px 0 #ffffff70;
+}
+.app-shell[data-material='silver-glass'] :is(.liquid-mobile-nav, .glass-control, .account-profile-tabs) {
+  border-color: var(--workspace-edge);
+  background: linear-gradient(125deg, #ffffffc7, #dfe6f1bd);
+  box-shadow: var(--workspace-glass-shadow);
+  -webkit-backdrop-filter: var(--workspace-backdrop-nav);
+  backdrop-filter: var(--workspace-backdrop-nav);
+}
+.app-shell[data-material='silver-glass'] .liquid-mobile-nav a.is-current {
+  color: var(--workspace-red-deep);
+  background: linear-gradient(125deg, #ffffffd6, #f4e2e899);
+  box-shadow: inset 0 1px 0 #fff;
+}
+
+/* Primary actions use crimson; secondary controls use silver. */
+.app-shell[data-material='silver-glass'] .workspace-main :is(
+  .ivygoo-button-primary, .silver-button-primary, .liquid-button.primary,
+  .learning-primary, .admission-home-primary, .tutor-primary,
+  .flow-button.is-primary, .upgrade-action, .lc-primary-button,
+  .lc-portal-button-primary, .billing-primary, .sat-vocab-practise,
+  .sat-bank-primary, .my-vocabulary-primary, .hub-button
+) {
+  border: 1px solid #b82c4680;
+  background: var(--workspace-crimson);
+  color: #fff;
+  box-shadow: 0 6px 16px #a81e3926, inset 0 1px 0 #ffffff66;
+}
+.app-shell[data-material='silver-glass'] .workspace-main :is(
+  .ivygoo-button-secondary, .ivygoo-button-outline, .ivygoo-button-glass,
+  .silver-button-secondary, .silver-button-outline, .silver-button-glass,
+  .liquid-button.secondary, .learning-secondary, .admission-home-secondary,
+  .flow-button:not(.is-primary):not(.is-danger), .sat-bank-secondary,
+  .billing-secondary, .lc-portal-button-secondary
+) {
+  border: 1px solid var(--workspace-edge);
+  background: var(--workspace-control);
+  color: #4b586c;
+  box-shadow: inset 0 1px 0 #fff, 0 4px 12px #28394e0a;
+}
+.app-shell[data-material='silver-glass'] .workspace-main :is(
+  .learning-search, .learning-level, .articles-studio-search,
+  .liquid-search-field, .tutor-search, .my-vocabulary-search,
+  .sat-bank-search, .lc-search
+) {
+  border: 1px solid var(--workspace-edge);
+  background: var(--workspace-control);
+  box-shadow: inset 0 1px 3px #3345620a, 0 1px 0 #ffffffc7;
+}
+.app-shell[data-material='silver-glass'] .workspace-main :is(
+  .learning-search, .articles-studio-search, .liquid-search-field,
+  .tutor-search, .my-vocabulary-search, .sat-bank-search
+):focus-within { border-color: #bd587180; outline: 3px solid #ac244018; outline-offset: 2px; }
+.app-shell[data-material='silver-glass'] .workspace-main .account-profile-card :is(
+  input:not([type='checkbox']):not([type='radio']):not([type='file']), select, textarea
+) { border-color: var(--workspace-line); background: #ffffff75; color: var(--workspace-ink); }
+
+.app-shell[data-material='silver-glass'] .workspace-main :is(
+  .dashboard-stat-icon, .learning-step-icon, .academic-glass-art,
+  .learning-visual-caption, .my-vocabulary-icon
+) {
+  border: 1px solid var(--workspace-edge);
+  color: var(--workspace-red);
+  background: var(--workspace-control);
+  box-shadow: inset 0 1px 0 #fff, 0 5px 12px #28394e0d;
+}
+.app-shell[data-material='silver-glass'] .workspace-main .learning-method > div {
+  border-color: var(--workspace-edge);
+  background: var(--workspace-control);
+  box-shadow: inset 0 1px 0 #fff;
+}
+.app-shell[data-material='silver-glass'] .workspace-main .tutor-rail {
+  border-color: var(--workspace-line);
+  background: var(--workspace-panel);
+}
+.app-shell[data-material='silver-glass'] .workspace-main .tutor-page {
+  --tu-red: var(--workspace-red);
+  --tu-red-grad: var(--workspace-crimson);
+  --tu-ink: var(--workspace-ink);
+  --tu-muted: var(--workspace-muted);
+  --tu-faint: #6c798b;
+  --tu-silver: var(--workspace-control);
+}
+.app-shell[data-material='silver-glass'] .workspace-main :is(.learning-card-focus, .learning-method p, .learning-intro, .articles-studio-lead) { color: var(--workspace-muted); }
+.app-shell[data-material='silver-glass'] .workspace-main .learning-card-copy h3 { font-size: 16px; }
+.app-shell[data-material='silver-glass'] .workspace-main .academic-glass-card {
+  --skill-accent: var(--workspace-red);
+  --skill-tint: #dfe6f0;
+}
+.app-shell[data-material='silver-glass'] .workspace-main .sat-vocab-studio {
+  --vocab-accent-border: #d5bbc6;
+  --vocab-accent-divider: #dce2eb;
+  --vocab-accent-surface: #f1f3f8;
+  --vocab-accent-soft: #f5e9ef;
+  --vocab-accent: var(--workspace-red);
+  --vocab-accent-text: var(--workspace-red-deep);
+}
+.app-shell[data-material='silver-glass'] .workspace-main :is(.vocabulary-hub, .sat-vocab-studio) :is(.text-blue-500, .text-blue-600, .text-blue-700) { color: var(--workspace-red); }
+.app-shell[data-material='silver-glass'] .workspace-main .vocabulary-hero h1 > span { background: none; color: var(--workspace-red); -webkit-text-fill-color: currentColor; }
+.app-shell[data-material='silver-glass'] .workspace-main :is(.sat-vocab-module[aria-pressed='true'], .learning-topics button.is-active) {
+  border-color: #ffffffd9;
+  background: linear-gradient(125deg, #ffffffd6, #f4e2e899);
+  color: var(--workspace-red-deep);
+  box-shadow: 0 3px 9px #76304412, inset 0 1px 0 #fff;
+}
+.app-shell[data-material='silver-glass'] .workspace-main .billing-plan-featured {
+  border-color: #c47c8f99;
+  box-shadow: var(--workspace-glass-shadow), 0 0 0 2px #ac244010;
+}
+
+/* Dialogs can be rendered into a body portal, outside the route shell.
+   A denser silver surface keeps overlay text readable over any page. */
+:is(.mrp-dialog, .lc-modal, .tutor-sheet, .flow-dialog, .upgrade-prompt) {
+  border-color: #fffffff0;
+  background: linear-gradient(135deg, #fafbfff5, #e3e9f3ed);
+  box-shadow: 0 24px 72px #18263d40, inset 0 1px 0 #fff;
+  -webkit-backdrop-filter: blur(28px) saturate(130%);
+  backdrop-filter: blur(28px) saturate(130%);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .app-shell[data-material='silver-glass'] .workspace-main :is(
+    a.glass-surface, button.glass-surface, .silver-card-interactive,
+    .dashboard-learning-card, .academic-glass-card, .articles-studio-card,
+    .learning-card, .podcast-episode-card, .my-vocabulary-card,
+    .admission-university-card, .lessons-card, .lc-portal-class-card
+  ):hover {
+    border-color: #c47c8f99;
+    box-shadow: var(--workspace-glass-hover);
+    transform: none;
+  }
+}
+@media (max-width: 700px) {
+  .app-shell[data-material='silver-glass'] .workspace-main :is(
+    .glass-surface, .surface-card, .learning-card, .podcast-episode-card,
+    .account-profile-card, .dashboard-stat-card, .dashboard-learning-card
+  ) { border-radius: 19px; -webkit-backdrop-filter: var(--workspace-backdrop-compact); backdrop-filter: var(--workspace-backdrop-compact); }
+}
+
+/* Respect both the OS preference and the app's existing effects setting. */
+html[data-effects='reduced'] .app-shell.app-shell[data-material='silver-glass'] {
+  --workspace-panel: linear-gradient(125deg, #f0f3f8, #e1e7f0);
+  --workspace-card: linear-gradient(145deg, #f6f8fc, #e5ebf3);
+  --workspace-control: linear-gradient(135deg, #f7f9fc, #e6ecf4);
+  --workspace-backdrop-card: none;
+  --workspace-backdrop-hero: none;
+  --workspace-backdrop-nav: none;
+  --workspace-backdrop-compact: none;
+}
+html[data-effects='reduced'] :is(.mrp-dialog, .lc-modal, .tutor-sheet, .flow-dialog, .upgrade-prompt) {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+@media (prefers-reduced-transparency: reduce) {
+  .app-shell.app-shell[data-material='silver-glass'] {
+    --workspace-panel: #e9eef5;
+    --workspace-card: #f0f3f8;
+    --workspace-control: #f6f8fc;
+    --workspace-backdrop-card: none;
+    --workspace-backdrop-hero: none;
+    --workspace-backdrop-nav: none;
+    --workspace-backdrop-compact: none;
+  }
+  :is(.mrp-dialog, .lc-modal, .tutor-sheet, .flow-dialog, .upgrade-prompt) {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+@media (forced-colors: active) {
+  .app-shell.app-shell[data-material='silver-glass'] {
+    --workspace-ink: CanvasText;
+    --workspace-muted: CanvasText;
+    --workspace-red: LinkText;
+    --workspace-red-deep: LinkText;
+    --workspace-edge: CanvasText;
+    --workspace-line: CanvasText;
+    --workspace-card: Canvas;
+    --workspace-panel: Canvas;
+    --workspace-control: Canvas;
+    --workspace-crimson: ButtonFace;
+    --workspace-glass-shadow: none;
+    --workspace-glass-hover: none;
+  }
+  .app-shell[data-material='silver-glass'] .workspace-main :is(
+    .ivygoo-button-primary, .silver-button-primary, .liquid-button.primary,
+    .learning-primary, .admission-home-primary, .tutor-primary, .flow-button.is-primary
+  ) { color: ButtonText; border-color: ButtonText; }
+}

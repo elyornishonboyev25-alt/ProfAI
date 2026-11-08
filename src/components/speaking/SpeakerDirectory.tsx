@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import CrownBadge from '@/components/fx/CrownBadge'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -22,6 +24,7 @@ export function lastSeenLabel(iso: string | null): string {
 // Community directory — real users who have used the speaking studio, sourced from
 // the backend. Shows nicknames + live presence; never an email. Search by nickname.
 export default function SpeakerDirectory() {
+  const { c: uiCopy } = useCopy()
   const navigate = useNavigate()
   const user = useAuthStore((state: AuthState) => state.user)
   const [speakers, setSpeakers] = useState<CommunitySpeaker[]>([])
@@ -55,9 +58,9 @@ export default function SpeakerDirectory() {
     return (
       <div className="surface-card flex flex-col items-center p-8 text-center">
         <UserRound className="h-10 w-10 text-red-300" />
-        <h3 className="mt-3 text-lg font-black text-slate-900">Discover speakers</h3>
-        <p className="mt-1 max-w-sm text-sm text-slate-600">Sign in to find other learners by nickname, see who’s online and view their speaking profiles.</p>
-        <button onClick={() => navigate('/login')} className="arena-primary-btn mt-4">Sign in</button>
+        <h3 className="mt-3 text-lg font-black text-slate-900"><UiText text={"Discover speakers"} /></h3>
+        <p className="mt-1 max-w-sm text-sm text-slate-600"><UiText text={"Sign in to find other learners by nickname, see who’s online and view their speaking profiles."} /></p>
+        <button onClick={() => navigate('/login')} className="arena-primary-btn mt-4"><UiText text={"Sign in"} /></button>
       </div>
     )
   }
@@ -66,13 +69,13 @@ export default function SpeakerDirectory() {
     <div className="surface-card p-5 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="inline-flex items-center gap-2 text-xl font-black text-slate-900">
-          <UserRound className="h-5 w-5 text-red-600" /> Community Speakers
+          <UserRound className="h-5 w-5 text-red-600" /> <UiText text={"Community Speakers"} />
         </h2>
         <button
           onClick={() => navigate(user.nickname ? `/speaker/${user.nickname}` : '/speaker/me', { state: { from: '/speaking-community' } })}
           className="arena-secondary-btn text-sm"
         >
-          My profile
+          <UiText text={"My profile"} />
         </button>
       </div>
 
@@ -82,13 +85,13 @@ export default function SpeakerDirectory() {
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search speakers by nickname…"
+          placeholder={uiCopy("Search speakers by nickname…")}
           className="input w-full pl-9"
         />
       </div>
 
       {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
-      {loading ? <p className="mt-4 text-sm text-slate-500">Loading speakers…</p> : null}
+      {loading ? <p className="mt-4 text-sm text-slate-500"><UiText text={"Loading speakers…"} /></p> : null}
 
       <div className="mt-4 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((s) => (
@@ -102,14 +105,14 @@ export default function SpeakerDirectory() {
               <ProfileAvatar src={s.avatarUrl} name={s.displayName} className="rounded-full" />
               <span
                 className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white ${s.online ? 'bg-emerald-500' : 'bg-slate-300'}`}
-                title={s.online ? 'Online now' : lastSeenLabel(s.lastSeen)}
+                title={s.online ? uiCopy("Online now") : lastSeenLabel(s.lastSeen)}
               />
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-bold text-slate-900">
                 {s.displayName}
                 {user.nickname && s.nickname === user.nickname ? (
-                  <span className="ml-1.5 rounded-full bg-red-100 px-1.5 py-0.5 text-[9px] font-bold text-red-700">YOU</span>
+                  <span className="ml-1.5 rounded-full bg-red-100 px-1.5 py-0.5 text-[9px] font-bold text-red-700"><UiText text={"YOU"} /></span>
                 ) : null}
               </p>
               {s.premium ? <CrownBadge size="sm" className="my-1" /> : null}
@@ -124,7 +127,7 @@ export default function SpeakerDirectory() {
         ))}
         {!loading && filtered.length === 0 ? (
           <p className="col-span-full py-6 text-center text-sm text-slate-500">
-            {query ? 'No speakers match your search.' : 'No one has used the speaking studio yet — be the first!'}
+            {query ? <UiText text={"No speakers match your search."} /> : <UiText text={"No one has used the speaking studio yet — be the first!"} />}
           </p>
         ) : null}
       </div>

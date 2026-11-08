@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, CreditCard, ShieldCheck, X } from 'lucide-react'
-import { apiClient } from '@/lib/apiClient'
+import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, CreditCard, Loader2, ShieldCheck, TicketPercent, X } from 'lucide-react'
+import { ApiError, apiClient } from '@/lib/apiClient'
 import { useAuthStore } from '@/store/authStore'
 import PricingCards, { formatBillingMoney } from './PricingCards'
 import PlanDuration from './PlanDuration'
@@ -15,10 +15,11 @@ import { useBillingText } from './copy'
 import { orderStatusLabel, productLabel } from './labels'
 import { useAccountAccess } from './useAccountAccess'
 import './billing.css'
+import './membership.css'
 
 type Provider = { code: 'CLICK' | 'PAYME' | 'STRIPE'; currency: 'UZS' | 'USD'; enabled: boolean }
 type Catalog = { products: BillingProduct[]; providers: Provider[] }
-type Quote = { product: string; amountUsd: number; amountUzs: number; rate: number; date: string; expiresAt: number; token: string }
+type Quote = { product: string; currency: 'USD' | 'UZS'; promoCode: string; amountUsd: number; amountUzs: number; subtotalUsd: number; subtotalUzs: number; promoDiscountUsd: number; promoDiscountUzs: number; rate: number; date: string; expiresAt: number; token: string }
 
 export default function Membership() {
   const text = useBillingText()
@@ -28,7 +29,6 @@ export default function Membership() {
   const { wallet: storedWallet, userId: walletUserId, refresh, error: walletError } = useBillingStore()
   const wallet = user?.id === walletUserId ? storedWallet : null
   const access = useAccountAccess()
-  const fullAccess = access?.active
   const wheel = useWheelDiscount()
   const wheelPercent = wheel.discount?.percent ?? 0
   const [catalog, setCatalog] = useState<Catalog | null>(null)
@@ -39,6 +39,9 @@ export default function Membership() {
   const [quote, setQuote] = useState<Quote | null>(null)
   const [quoteError, setQuoteError] = useState(false)
   const [quoteVersion, setQuoteVersion] = useState(0)
+  const [promoInput, setPromoInput] = useState((params.get('promo') ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 40))
+  const [appliedPromo, setAppliedPromo] = useState('')
+  const [promoError, setPromoError] = useState<'INVALID_PROMO_CODE' | 'PROMO_EXPIRED' | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const checkoutRef = useRef<HTMLElement>(null)
@@ -46,7 +49,11 @@ export default function Membership() {
   const products = catalog?.products ?? BILLING_PRODUCTS
   const providers = catalog?.providers ?? []
   const providerReady = providers.some(p => p.code === provider && p.enabled)
-  const quoteReady = currency === 'USD' || (quote?.product === selected?.code && quote !== null && quote.expiresAt > Date.now())
+  const needsQuote = currency === 'UZS' || !!appliedPromo
+  const quoteMatches = quote !== null && quote.product === selected?.code && quote.currency === currency && quote.promoCode === appliedPromo && quote.expiresAt > Date.now()
+  const quoteReady = !needsQuote || quoteMatches
+  const finalUsd = quoteMatches ? quote.amountUsd : selected ? discountedAmount(selected.amountUsd, wheelPercent) : 0
+  const free = quoteReady && finalUsd === 0 && (currency === 'USD' || quote?.amountUzs === 0)
   const openOrder = wallet?.orders.find(order => ['PENDING', 'SUBMITTED', 'PROCESSING'].includes(order.status))
   const returnedOrder = wallet?.orders.find(order => order.id === params.get('order'))
 
@@ -63,17 +70,33 @@ export default function Membership() {
     return () => window.clearInterval(timer)
   }, [params, user?.id, refresh])
   useEffect(() => {
-    setQuote(null); setQuoteError(false)
-    if (!selected || !user || currency !== 'UZS') return
+    setQuote(null); setQuoteError(false); setPromoError(null)
+    if (!selected || !user || !needsQuote) return
     let alive = true
     let timer: number | undefined
-    void apiClient.get<Quote>(`/billing/quote?product=${encodeURIComponent(selected.code)}`).then(value => {
+    const query = new URLSearchParams({ product: selected.code, currency })
+    if (appliedPromo) query.set('promoCode', appliedPromo)
+    void apiClient.get<Quote>(`/billing/quote?${query}`).then(value => {
       if (!alive) return
       setQuote(value)
       timer = window.setTimeout(() => { setQuote(null); setQuoteVersion(v => v + 1) }, Math.max(0, value.expiresAt - Date.now()))
-    }).catch(() => { if (alive) setQuoteError(true) })
+    }).catch(error => {
+      if (!alive) return
+      if (error instanceof ApiError && (error.code === 'INVALID_PROMO_CODE' || error.code === 'PROMO_EXPIRED')) setPromoError(error.code)
+      else setQuoteError(true)
+    })
     return () => { alive = false; window.clearTimeout(timer) }
-  }, [selected?.code, currency, quoteVersion, user?.id, wheel.discount?.id])
+  }, [selected?.code, currency, quoteVersion, user?.id, wheel.discount?.id, wheelPercent, appliedPromo, needsQuote])
+
+  function applyPromo(event: FormEvent) {
+    event.preventDefault()
+    if (busy || promoInput.length < 3) return
+    setAppliedPromo(promoInput); setQuote(null); setQuoteError(false); setPromoError(null); setError('')
+    setQuoteVersion(v => v + 1)
+  }
+  function removePromo() {
+    setAppliedPromo(''); setPromoInput(''); setQuote(null); setPromoError(null); setQuoteError(false); setError('')
+  }
 
   function choose(product: BillingProduct) {
     if (!user) { navigate('/register', { state: { from: { pathname: '/premium' } } }); return }
@@ -83,14 +106,16 @@ export default function Membership() {
     window.setTimeout(() => checkoutRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 20)
   }
   async function pay() {
-    if (!selected || busy || !quoteReady || !providerReady) return
+    if (!selected || busy || !quoteReady || (!providerReady && !free)) return
     setBusy(true); setError('')
     try {
-      const result = await apiClient.post<{ id: string; url: string }>('/billing/checkout', { product: selected.code, currency, provider, quote: currency === 'UZS' ? quote?.token : undefined })
-      await refresh(); window.location.assign(result.url)
+      const result = await apiClient.post<{ id: string; url?: string; status?: string }>('/billing/checkout', { product: selected.code, currency, provider, quote: needsQuote ? quote?.token : undefined, ...(appliedPromo ? { promoCode: appliedPromo } : {}) })
+      await refresh()
+      if (result.status === 'APPROVED') { setSelected(null); removePromo() }
+      else if (result.url) window.location.assign(result.url)
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Could not open checkout.')
-      if (currency === 'UZS') { setQuote(null); setQuoteVersion(v => v + 1) }
+      if (needsQuote) { setQuote(null); setQuoteVersion(v => v + 1) }
     } finally { setBusy(false) }
   }
   async function cancelOrder(id: string) {
@@ -101,44 +126,54 @@ export default function Membership() {
   }
   return <main className="workspace-page billing-page billing-simple-page"><div className="billing-content">
     <div className="billing-page-nav"><Link to="/dashboard" className="billing-text-button"><ArrowLeft size={17} />{text('Dashboard', 'Bosh sahifa', 'Главная')}</Link><span><ShieldCheck size={15} />{text('No auto-renewal', 'Avtomatik uzaytirilmaydi', 'Без автопродления')}</span></div>
-    {user && access && <div className={`billing-status ${access.active ? 'is-success' : ''}`} role="status"><CheckCircle2 size={20} />{fullAccess ? text(`${access.tier === 'MAX' ? 'Max' : 'Pro'} is active${access.expiresAt ? ` until ${new Date(access.expiresAt).toLocaleDateString()}` : ''}.`, `${access.tier === 'MAX' ? 'Max' : 'Pro'} faol${access.expiresAt ? ` — ${new Date(access.expiresAt).toLocaleDateString()} gacha` : ''}.`, `${access.tier === 'MAX' ? 'Max' : 'Pro'} активен${access.expiresAt ? ` до ${new Date(access.expiresAt).toLocaleDateString()}` : ''}.`) : text('You are on the Free plan. Upgrade any time for more tests, mocks and AI feedback.', 'Siz Free tarifidasiz. Ko‘proq test, mock va AI tahlil uchun istalgan vaqtda o‘ting.', 'У вас тариф Free. Перейдите на платный для большего числа тестов и AI-разборов.')}</div>}
+    {user && access?.active && <div className="billing-status is-success" role="status"><CheckCircle2 size={20} />{text(`${access.tier === 'MAX' ? 'IvyGoo Elite' : 'IvyGoo Pro'} is active${access.expiresAt ? ` until ${new Date(access.expiresAt).toLocaleDateString()}` : ''}.`, `${access.tier === 'MAX' ? 'IvyGoo Elite' : 'IvyGoo Pro'} faol${access.expiresAt ? ` — ${new Date(access.expiresAt).toLocaleDateString()} gacha` : ''}.`, `${access.tier === 'MAX' ? 'IvyGoo Elite' : 'IvyGoo Pro'} активен${access.expiresAt ? ` до ${new Date(access.expiresAt).toLocaleDateString()}` : ''}.`)}</div>}
     {walletError && <div className="billing-error" role="alert">{walletError}<button onClick={() => void refresh()}>{text('Retry', 'Qayta urinish', 'Повторить')}</button></div>}
     {returnedOrder && <div className={`billing-status ${returnedOrder.status === 'APPROVED' ? 'is-success' : ''}`} role="status"><CheckCircle2 size={20} />{returnedOrder.status === 'APPROVED' ? text('Payment confirmed. Your Premium access is ready.', 'To‘lov tasdiqlandi. Premium imkoniyatlar ochiq.', 'Оплата подтверждена. Premium доступ открыт.') : text('Payment status', 'To‘lov holati', 'Статус оплаты') + ': ' + orderStatusLabel(returnedOrder.status, text)}<button className="billing-text-button" onClick={() => void refresh()}>{text('Refresh', 'Yangilash', 'Обновить')}</button></div>}
-    {!!wallet?.subscriptions.length && <div className="billing-active-plans">{wallet.subscriptions.map(plan => <span key={plan.audience}><CheckCircle2 size={15} />{productLabel(plan.plan, text)} · {text('until', 'gacha', 'до')} {new Date(plan.expiresAt).toLocaleDateString()}</span>)}</div>}
+    {wallet && wallet.subscriptions.length > 1 && <div className="billing-active-plans">{wallet.subscriptions.map(plan => <span key={plan.audience}><CheckCircle2 size={15} />{productLabel(plan.plan, text)} · {text('until', 'gacha', 'до')} {new Date(plan.expiresAt).toLocaleDateString()}</span>)}</div>}
 
-    <section aria-labelledby="billing-plans-title">
-      <div className="billing-section-heading"><h2 id="billing-plans-title">{text('Choose a plan', 'Tarifni tanlang', 'Выберите тариф')}</h2><PlanDuration products={products} months={months} onChange={value => { setMonths(value); setSelected(null) }} /></div>
+    <section className="membership-plans" aria-labelledby="billing-plans-title">
+      <div className="billing-section-heading"><h1 id="billing-plans-title">{text('Choose a plan', 'Tarifni tanlang', 'Выберите тариф')}</h1><PlanDuration products={products} months={months} onChange={value => { setMonths(value); setSelected(null) }} /></div>
       {catalogError && <div role="alert" className="billing-error">{catalogError}<button onClick={() => void loadCatalog()}>{text('Reload plans', 'Qayta yuklash', 'Обновить тарифы')}</button></div>}
       <PricingCards products={products} months={months} onChoose={choose} disabled={busy || !catalog} discountPercent={wheelPercent} />
-      <p className="billing-plan-footnote">{text('Free $0 · Pro $5.99/month · Max $11.99/month. Pay once for the period you choose — no auto-renewal.', 'Free $0 · Pro $5.99/oy · Max $11.99/oy. Tanlangan muddat uchun bir marta to‘laysiz — avtomatik uzaytirilmaydi.', 'Free $0 · Pro $5.99/мес. · Max $11.99/мес. Разовая оплата за выбранный срок — без автопродления.')}</p>
+      <div className="membership-included"><CheckCircle2 size={17} /><p>{text('On every plan: free articles, podcasts, shadowing and personal vocabulary. AI scoring is included in your available tests.', 'Barcha tariflarda: maqola, podcast, shadowing va shaxsiy lug‘at bepul. Ochiq testlaringizda AI baholashi ham mavjud.', 'На любом тарифе: бесплатные статьи, подкасты, шэдоуинг и личный словарь. AI-оценка входит в доступные вам тесты.')}</p></div>
     </section>
-
-    <PlanComparison currentTier={user ? access?.tier : undefined} />
-
-    <PromoCode wheel={wheel} onRedeemed={() => void refresh()} />
 
     {selected && <section ref={checkoutRef} className="billing-glass billing-checkout" aria-labelledby="checkout-title">
       <div className="billing-section-heading"><div><span className="billing-eyebrow"><CreditCard size={15} />{text('PAYMENT', 'TO‘LOV', 'ОПЛАТА')}</span><h2 id="checkout-title">{text('Review your purchase', 'To‘lovni tekshiring', 'Проверьте покупку')}</h2></div><button type="button" className="billing-round-link" aria-label={text('Close checkout', 'To‘lov oynasini yopish', 'Закрыть оплату')} onClick={() => setSelected(null)}><X size={18} /></button></div>
       <div className="billing-checkout-grid"><div>
-        <div className="billing-checkout-summary"><ShieldCheck size={24} /><div><strong>{productLabel(selected.code, text)}</strong><span>{text(`${selected.months} months of Premium access`, `${selected.months} oy Premium`, `${selected.months} мес. Premium`)}</span></div><strong>{wheelPercent > 0 && <s className="plans-old-price">{formatBillingMoney(selected.amountUsd, 'USD')}</s>}{formatBillingMoney(discountedAmount(selected.amountUsd, wheelPercent), 'USD')}</strong></div>
+        <div className="billing-checkout-summary"><ShieldCheck size={24} /><div><strong>{productLabel(selected.code, text)}</strong><span>{text(`${selected.months} months of Premium access`, `${selected.months} oy Premium`, `${selected.months} мес. Premium`)}</span></div><strong>{(wheelPercent > 0 || (quoteMatches && quote.promoDiscountUsd > 0)) && <s className="plans-old-price">{formatBillingMoney(selected.amountUsd, 'USD')}</s>}{appliedPromo && !quoteReady ? '—' : formatBillingMoney(finalUsd, 'USD')}</strong></div>
         {wheelPercent > 0 && <p className="billing-checkout-discount">🎡 {text(`Wheel discount −${wheelPercent}% applied`, `Baraban chegirmasi −${wheelPercent}% qo‘llandi`, `Скидка с колеса −${wheelPercent}% применена`)}</p>}
         <p>{text('One payment for the full period. No automatic charges.', 'Butun muddat uchun bir martalik to‘lov. Avtomatik pul yechilmaydi.', 'Один платёж за весь срок. Без автоматических списаний.')}</p>
-        <div className="billing-checkout-amount" aria-live="polite"><span>{text('Amount to pay', 'To‘lanadigan summa', 'К оплате')}</span><strong>{currency === 'USD' ? formatBillingMoney(discountedAmount(selected.amountUsd, wheelPercent), 'USD') : quoteReady && quote ? formatBillingMoney(quote.amountUzs, 'UZS') : quoteError ? '—' : text('Calculating…', 'Hisoblanmoqda…', 'Рассчитываем…')}</strong>
+        <form className="billing-checkout-promo" onSubmit={applyPromo} aria-busy={!!appliedPromo && !quoteReady && !quoteError && !promoError}>
+          <label htmlFor="checkout-promo-code"><TicketPercent size={16} />{text('Promo code', 'Promokod', 'Промокод')}</label>
+          <div className="billing-checkout-promo-input"><input id="checkout-promo-code" value={promoInput} onChange={event => setPromoInput(event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 40))} placeholder={text('Enter promo code', 'Promokodni kiriting', 'Введите промокод')} autoComplete="off" autoCapitalize="characters" spellCheck={false} maxLength={40} disabled={busy} aria-describedby={promoError ? 'checkout-promo-error' : undefined} aria-invalid={!!promoError} />
+            <button type="submit" className="billing-secondary" disabled={busy || promoInput.length < 3 || (!!appliedPromo && !quoteReady && !quoteError && !promoError)}>{!!appliedPromo && !quoteReady && !quoteError && !promoError ? <Loader2 size={15} className="animate-spin" /> : text('Apply', 'Qo‘llash', 'Применить')}</button>
+          </div>
+          {appliedPromo && <div className="billing-checkout-promo-applied">{quoteReady && <CheckCircle2 size={15} />}<span>{appliedPromo}{quoteReady ? ` · ${text('Applied', 'Qo‘llandi', 'Применён')}` : ''}</span><button type="button" className="billing-text-button" onClick={removePromo} disabled={busy}>{text('Remove', 'Olib tashlash', 'Удалить')}</button></div>}
+          {promoError && <p id="checkout-promo-error" className="billing-checkout-promo-error" role="alert">{promoError === 'PROMO_EXPIRED' ? text('This promo code has expired.', 'Bu promokodning muddati tugagan.', 'Срок действия промокода истёк.') : text('This promo code is not valid for the selected plan.', 'Bu promokod tanlangan tarif uchun yaroqsiz.', 'Этот промокод не подходит для выбранного тарифа.')}</p>}
+        </form>
+        <div className="billing-checkout-amount" aria-live="polite" aria-busy={!quoteReady && !quoteError && !promoError}>
+          {quoteMatches && quote.promoCode && <div className="billing-checkout-breakdown"><div><span>{text('Subtotal', 'Jami narx', 'Стоимость')}</span><b>{formatBillingMoney(currency === 'USD' ? quote.subtotalUsd : quote.subtotalUzs, currency)}</b></div><div className="billing-checkout-promo-saving"><span>{text('Promo discount', 'Promokod chegirmasi', 'Скидка по промокоду')}</span><b>−{formatBillingMoney(currency === 'USD' ? quote.promoDiscountUsd : quote.promoDiscountUzs, currency)}</b></div></div>}
+          <span>{text('Amount to pay', 'To‘lanadigan summa', 'К оплате')}</span><strong>{quoteReady ? formatBillingMoney(currency === 'USD' ? finalUsd : quote!.amountUzs, currency) : quoteError || promoError ? '—' : text('Calculating…', 'Hisoblanmoqda…', 'Рассчитываем…')}</strong>
           {currency === 'UZS' && quoteReady && quote && <small>{text('Central Bank rate', 'Markaziy bank kursi', 'Курс Центрального банка')} · {quote.date}<br />$1 = {formatBillingMoney(quote.rate, 'UZS')}</small>}
-          {currency === 'UZS' && quoteError && <p className="billing-error">{text('Rate unavailable. Retry or choose USD payment.', 'Kursni olish imkoni bo‘lmadi. Qayta urining yoki USD to‘lovini tanlang.', 'Курс недоступен. Повторите или выберите оплату в USD.')}<button type="button" onClick={() => setQuoteVersion(v => v + 1)}>{text('Retry', 'Qayta urinish', 'Повторить')}</button></p>}
+          {quoteError && <p className="billing-error">{currency === 'USD' ? text('Could not calculate the total. Please retry.', 'Yakuniy narxni hisoblab bo‘lmadi. Qayta urinib ko‘ring.', 'Не удалось рассчитать сумму. Попробуйте снова.') : text('Rate unavailable. Retry or choose USD payment.', 'Kursni olish imkoni bo‘lmadi. Qayta urining yoki USD to‘lovini tanlang.', 'Курс недоступен. Повторите или выберите оплату в USD.')}<button type="button" onClick={() => setQuoteVersion(v => v + 1)}>{text('Retry', 'Qayta urinish', 'Повторить')}</button></p>}
         </div>
       </div><div>
-        <label className="billing-provider-label">{text('Payment method', 'To‘lov usuli', 'Способ оплаты')}<select value={provider} onChange={event => { setProvider(event.target.value as Provider['code']); setError('') }}>
+        <label className="billing-provider-label">{text('Payment method', 'To‘lov usuli', 'Способ оплаты')}<select value={provider} disabled={busy} onChange={event => { setProvider(event.target.value as Provider['code']); setError('') }}>
           {(['PAYME', 'CLICK', 'STRIPE'] as const).map(code => <option key={code} value={code}>{code === 'STRIPE' ? text('International card · USD', 'Xalqaro karta · USD', 'Международная карта · USD') : `${code === 'PAYME' ? 'Payme' : 'Click'} · UZS`}{!providers.some(p => p.code === code && p.enabled) ? ` · ${text('Coming soon', 'Tez orada', 'Скоро')}` : ''}</option>)}
         </select></label>
-        {!providerReady && <p className="billing-provider-notice">{text('Online payments are being connected. Contact support for plan activation.', 'Onlayn to‘lovlar ulanmoqda. Tarifni faollashtirish uchun yordamga murojaat qiling.', 'Онлайн-оплата подключается. Для активации тарифа обратитесь в поддержку.')}</p>}
-        <button type="button" className="billing-primary" disabled={busy || !!openOrder || !providerReady || !quoteReady} onClick={() => void pay()}>{busy ? text('Opening payment…', 'To‘lov ochilmoqda…', 'Открываем оплату…') : text('Continue to payment', 'To‘lovga o‘tish', 'Перейти к оплате')}<ArrowRight size={17} /></button>
+        {!providerReady && !free && <p className="billing-provider-notice">{text('Online payments are being connected. Contact support for plan activation.', 'Onlayn to‘lovlar ulanmoqda. Tarifni faollashtirish uchun yordamga murojaat qiling.', 'Онлайн-оплата подключается. Для активации тарифа обратитесь в поддержку.')}</p>}
+        <button type="button" className="billing-primary billing-checkout-pay" disabled={busy || !!openOrder || (!providerReady && !free) || !quoteReady} onClick={() => void pay()}>{busy ? text('Opening payment…', 'To‘lov ochilmoqda…', 'Открываем оплату…') : free ? text('Activate plan', 'Tarifni faollashtirish', 'Активировать тариф') : text('Continue to payment', 'To‘lovga o‘tish', 'Перейти к оплате')}<ArrowRight size={17} /></button>
       </div></div>
     </section>}
     {openOrder && <section className="billing-glass billing-open-order" aria-label={text('Current payment', 'Joriy to‘lov', 'Текущая оплата')}><CreditCard size={23} /><div><strong>{text('Your open order', 'Ochiq buyurtmangiz', 'Ваш текущий заказ')}</strong><p>{productLabel(openOrder.plan, text)} · {formatBillingMoney(openOrder.currency === 'UZS' ? openOrder.amountMinor / 100 : openOrder.amountMinor, openOrder.currency)}</p></div>{openOrder.checkoutUrl && <a className="billing-secondary" href={openOrder.checkoutUrl}>{text('Continue payment', 'To‘lovni davom ettirish', 'Продолжить оплату')}<ArrowRight size={16} /></a>}{openOrder.status !== 'PROCESSING' && <button type="button" className="billing-text-button" disabled={busy} onClick={() => void cancelOrder(openOrder.id)}>{text('Cancel order', 'Bekor qilish', 'Отменить')}</button>}<button className="billing-text-button" onClick={() => void refresh()}>{text('Refresh status', 'Holatni yangilash', 'Обновить статус')}</button></section>}
     {error && <div role="alert" className="billing-error">{error}</div>}
 
-    <p className="billing-free-note"><CheckCircle2 size={18} /><span>{text('Saved results, reviews and vocabulary remain available when your trial or plan ends.', 'Sinov yoki tarif tugaganda ham natijalar, tahlillar va lug‘at ochiq qoladi.', 'Результаты, разборы и словарь доступны после окончания пробного периода или тарифа.')}</span></p>
-    {wallet && <section className="billing-glass billing-history"><details><summary><CreditCard size={19} />{text('Your payments', 'To‘lovlaringiz', 'Ваши платежи')}<ChevronDown size={17} /></summary><div className="billing-payment-list">{wallet.orders.length ? wallet.orders.map(order => <div className="billing-history-row" key={order.id}><span><strong>{productLabel(order.plan, text)}</strong><small>{new Date(order.createdAt).toLocaleDateString()} · {order.method}</small></span><b>{orderStatusLabel(order.status, text)}</b></div>) : <p>{text('Your payments will appear here.', 'To‘lovlaringiz shu yerda ko‘rinadi.', 'Здесь появятся ваши платежи.')}</p>}</div></details></section>}
+    <PlanComparison />
+    <details className="billing-glass membership-offers">
+      <summary><span>{text('Discounts & promo codes', 'Chegirmalar va promokodlar', 'Скидки и промокоды')}{wheelPercent > 0 && <small>−{wheelPercent}%</small>}</span><ChevronDown size={18} /></summary>
+      <div className="membership-offers-content"><PromoCode wheel={wheel} onRedeemed={() => void refresh()} /></div>
+    </details>
+    {!!wallet?.orders.length && <section className="billing-glass billing-history"><details><summary><CreditCard size={19} />{text('Your payments', 'To‘lovlaringiz', 'Ваши платежи')}<ChevronDown size={17} /></summary><div className="billing-payment-list">{wallet.orders.length ? wallet.orders.map(order => <div className="billing-history-row" key={order.id}><span><strong>{productLabel(order.plan, text)}</strong><small>{new Date(order.createdAt).toLocaleDateString()} · {order.method}</small></span><b>{orderStatusLabel(order.status, text)}</b></div>) : <p>{text('Your payments will appear here.', 'To‘lovlaringiz shu yerda ko‘rinadi.', 'Здесь появятся ваши платежи.')}</p>}</div></details></section>}
   </div></main>
 }

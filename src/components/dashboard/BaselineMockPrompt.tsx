@@ -1,3 +1,4 @@
+import { useCopy } from '@/i18n/interface'
 import { ArrowRight, Target } from 'lucide-react'
 import UiText from '@/components/common/UiText'
 
@@ -10,8 +11,9 @@ export default function BaselineMockPrompt({ sat, ielts, onStart, disabled = fal
   onStart: (exam: 'SAT' | 'IELTS') => void
   disabled?: boolean
 }) {
+  const { c: uiCopy } = useCopy()
   if (!sat && !ielts) return null
-  return <section aria-label="Find your starting score" className="mb-5 rounded-2xl border border-blue-100 bg-blue-50/80 p-4 sm:p-5">
+  return <section aria-label={uiCopy("Find your starting score")} className="mb-5 rounded-2xl border border-blue-100 bg-blue-50/80 p-4 sm:p-5">
     <div className="flex items-start gap-3">
       <Target className="mt-0.5 h-5 w-5 shrink-0 text-blue-700" />
       <div className="min-w-0">

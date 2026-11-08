@@ -1,3 +1,4 @@
+import { useCopy } from '@/i18n/interface'
 import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -14,6 +15,7 @@ import { BrandLockup } from '@/components/brand/BrandLogo'
 import NotificationsBell from '@/components/layout/NotificationsBell'
 
 export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }) {
+  const { c: uiCopy } = useCopy()
   const navigate = useNavigate()
   const location = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -127,9 +129,9 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
                   <div className="relative mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-rose-100 bg-white text-rose-600 shadow-[0_18px_34px_rgba(223,0,48,0.18)]">
                     <LogOut className="h-8 w-8" />
                   </div>
-                  <h3 className="relative mt-4 text-2xl font-black text-slate-950">Sign out of your account?</h3>
+                  <h3 className="relative mt-4 text-2xl font-black text-slate-950"><UiText text={"Sign out of your account?"} /></h3>
                   <p className="relative mt-2 text-sm leading-6 text-slate-600">
-                    Your progress is saved to this account. You can sign back in anytime with your email and password.
+                    <UiText text={"Your progress is saved to this account. You can sign back in anytime with your email and password."} />
                   </p>
                   <div className="relative mt-5 flex items-center justify-center gap-2">
                     <button
@@ -138,7 +140,7 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
                       onClick={() => setShowSignOutConfirm(false)}
                       className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      Stay signed in
+                      <UiText text={"Stay signed in"} />
                     </button>
                     <button
                       type="button"
@@ -146,7 +148,7 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
                       onClick={() => void confirmSignOut()}
                       className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 px-4 py-2.5 text-sm font-black text-white shadow-[0_14px_26px_rgba(223,0,48,0.28)] hover:brightness-105 disabled:cursor-wait disabled:opacity-75"
                     >
-                      {signingOut ? 'Signing out...' : 'Yes, sign out'}
+                      {signingOut ? <UiText text={"Signing out..."} /> : <UiText text={"Yes, sign out"} />}
                     </button>
                   </div>
                 </motion.div>
@@ -193,7 +195,7 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
         </button>
 
         <div className="hidden items-center gap-1 rounded-2xl border border-rose-200/70 bg-white/95 p-1 text-sm font-semibold shadow-[0_8px_22px_rgba(15,23,42,0.07)] lg:flex">
-          <TopLink label="Home" active={isActive('/dashboard')} onClick={() => handleNavigate('/dashboard')} />
+          <TopLink label={uiCopy("Home")} active={isActive('/dashboard')} onClick={() => handleNavigate('/dashboard')} />
 
           {/* Prep dropdown — groups the exam tracks */}
           <div ref={prepRef} className="relative">
@@ -213,7 +215,7 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
                   transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                 />
               ) : null}
-              <span className="relative z-10">Prep</span>
+              <span className="relative z-10"><UiText text={"Prep"} /></span>
               <ChevronDown className={cn('relative z-10 h-3.5 w-3.5 transition-transform', prepOpen && 'rotate-180')} />
             </button>
 
@@ -244,7 +246,7 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
                         <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-50 text-rose-500">
                           <Icon className="h-4 w-4" />
                         </span>
-                        {item.label}
+                        <UiText text={item.label} />
                       </button>
                     )
                   })}
@@ -252,7 +254,7 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
             ) : null}
           </div>
 
-          <TopLink label="Leaderboard" active={isActive('/leaderboard')} onClick={() => handleNavigate('/leaderboard')} />
+          <TopLink label={uiCopy("Leaderboard")} active={isActive('/leaderboard')} onClick={() => handleNavigate('/leaderboard')} />
         </div>
 
         <div className="hidden items-center gap-2 sm:flex">
@@ -277,7 +279,7 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
                 className="cta-sheen interactive-lift rounded-xl bg-gradient-to-r from-[#df0030] via-[#f4224b] to-[#b60025] px-4 py-2 text-white hover:opacity-95"
                 onClick={() => handleNavigate('/register')}
               >
-                Get Started
+                <UiText text={"Get Started"} />
               </Button>
             </>
           ) : (
@@ -293,7 +295,7 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
                 className="interactive-lift rounded-xl border border-rose-200 bg-white/90 px-3 py-2 text-slate-800 hover:bg-rose-50 hover:text-rose-800"
                 onClick={requestSignOut}
               >
-                <LogOut className="mr-1 h-4 w-4" /> Sign Out
+                <LogOut className="mr-1 h-4 w-4" /> <UiText text={"Sign Out"} />
               </Button>
             </>
           )}
@@ -302,7 +304,7 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
         <button
           className="rounded-xl border border-rose-200 bg-white p-2 text-slate-800 shadow-sm transition-colors hover:bg-rose-50 lg:hidden"
           onClick={() => setMobileOpen((value) => !value)}
-          aria-label="Toggle navigation menu"
+          aria-label={uiCopy("Toggle navigation menu")}
           aria-expanded={mobileOpen}
         >
           <Menu className="h-5 w-5" />
@@ -329,7 +331,7 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
               <div className="flex flex-col gap-1 text-sm">
                 <button className="rounded-lg px-3 py-2 text-left font-semibold text-slate-800 transition-colors hover:bg-rose-50 hover:text-rose-800" onClick={() => handleNavigate('/dashboard')}> <UiText text={"Home"} /> </button>
 
-                <p className="px-3 pb-1 pt-2 text-[10px] font-black uppercase tracking-[0.16em] text-rose-400">Prep</p>
+                <p className="px-3 pb-1 pt-2 text-[10px] font-black uppercase tracking-[0.16em] text-rose-400"><UiText text={"Prep"} /></p>
                 {prepItems.map((item) => {
                   const Icon = item.icon
                   return (
@@ -338,13 +340,13 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
                       className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-left font-semibold text-slate-700 transition-colors hover:bg-rose-50 hover:text-rose-800"
                       onClick={() => handleNavigate(item.path)}
                     >
-                      <Icon className="h-4 w-4 text-rose-500" /> {item.label}
+                      <Icon className="h-4 w-4 text-rose-500" /> <UiText text={item.label} />
                     </button>
                   )
                 })}
 
                 <p className="px-3 pb-1 pt-2 text-[10px] font-black uppercase tracking-[0.16em] text-rose-400"> <UiText text={"More"} /> </p>
-                <button className="rounded-lg px-3 py-2 text-left font-semibold text-slate-800 transition-colors hover:bg-rose-50 hover:text-rose-800" onClick={openMockFromLanding}>Mock Arena</button>
+                <button className="rounded-lg px-3 py-2 text-left font-semibold text-slate-800 transition-colors hover:bg-rose-50 hover:text-rose-800" onClick={openMockFromLanding}><UiText text={"Mock Arena"} /></button>
                 <button className="rounded-lg px-3 py-2 text-left font-semibold text-slate-800 transition-colors hover:bg-rose-50 hover:text-rose-800" onClick={() => handleNavigate('/leaderboard')}> <UiText text={"Leaderboard"} /> </button>
 
                 <div className="my-1.5 h-px bg-rose-100" />
@@ -355,13 +357,13 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
                       className="rounded-lg px-3 py-2 text-left text-slate-800 transition-colors hover:bg-rose-50 hover:text-rose-800"
                       onClick={() => handleNavigate('/register')}
                     >
-                      Get Started
+                      <UiText text={"Get Started"} />
                     </button>
                   </>
                 ) : (
                   <>
                     <button className="rounded-lg px-3 py-2 text-left text-slate-800 transition-colors hover:bg-rose-50 hover:text-rose-800" onClick={() => handleNavigate('/account')}> <UiText text={"Profile"} /> </button>
-                    <button className="rounded-lg px-3 py-2 text-left text-slate-800 transition-colors hover:bg-rose-50 hover:text-rose-800" onClick={requestSignOut}>Sign Out</button>
+                    <button className="rounded-lg px-3 py-2 text-left text-slate-800 transition-colors hover:bg-rose-50 hover:text-rose-800" onClick={requestSignOut}><UiText text={"Sign Out"} /></button>
                   </>
                 )}
               </div>
@@ -392,7 +394,7 @@ function TopLink({ label, active, onClick }: { label: string; active: boolean; o
           transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
         />
       ) : null}
-      <span className="relative z-10">{label}</span>
+      <span className="relative z-10"><UiText text={label} /></span>
     </button>
   )
 }

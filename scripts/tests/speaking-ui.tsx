@@ -3,11 +3,12 @@ import React, { act, StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import assert from 'node:assert/strict'
 import SpeakingExaminerSession from '../../src/components/speaking/ExaminerSession'
-import '@/i18n'
+import i18n from '@/i18n'
 import IELTSSpeakingTest from '../../src/pages/IELTSSpeakingTest'
 import IeltsSpeaking from '../../src/components/speaking/sections/IeltsSpeaking'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { apiClient } from '../../src/lib/apiClient'
+import { apiClient, ApiError } from '../../src/lib/apiClient'
+import { transcribeAnswer, transcriptionError } from '../../src/lib/speakingAudio'
 import { AnswerRecording, canRecognizeWhileRecording } from '../../src/lib/speakingMedia'
 import { ExaminerPlayback } from '../../src/lib/examinerPlayback'
 import { getExaminerVoice } from '../../src/lib/speech'
@@ -26,6 +27,7 @@ let blockPlayback = false
 let recognitionStarts = 0
 let recorderStarts = 0
 let transcriptionFails = false
+let transientTranscriptionFailures = 0
 let transcribedFiles: Array<{ audioBase64: string; mimeType: string }> = []
 let requestedVoices: string[] = []
 let recordingMimeType = 'audio/mp4'
@@ -101,13 +103,14 @@ class FakeRecognition {
 const wait = async (ms = 20) => act(async () => { await new Promise((resolve) => setTimeout(resolve, ms)) })
 const until = async (ready: () => unknown, label: string) => {
   for (let attempt = 0; attempt < 75; attempt++) { if (ready()) return; await wait() }
-  assert.fail(`Timed out: ${label}`)
+  assert.fail(`Timed out: ${label}\n${container.textContent}`)
 }
 const button = (label: string) => [...container.querySelectorAll('button')].find((item) => item.textContent?.includes(label))!
 const click = async (label: string) => { assert.ok(button(label), label); await act(async () => button(label).click()); await wait() }
 const endAudio = async () => { const player = players.at(-1)!; assert.ok(player.onended); await act(async () => player.onended?.()); await wait() }
 
 export async function run() {
+  await i18n.changeLanguage('en')
   Object.defineProperty(globalThis, 'Audio', { value: FakeAudio, configurable: true })
   Object.defineProperty(globalThis, 'MediaRecorder', { value: FakeRecorder, configurable: true })
   Object.defineProperty(globalThis, 'Blob', { value: window.Blob, configurable: true })
@@ -147,6 +150,7 @@ export async function run() {
     if (path.endsWith('/voice')) { requestedVoices.push(body.voice); if (voiceFails) throw new Error('Voice provider unavailable'); return { audioBase64: btoa('test-audio') } }
     if (path.endsWith('/transcribe')) {
       transcribedFiles.push(body)
+      if (transientTranscriptionFailures > 0) { transientTranscriptionFailures--; throw new ApiError('Temporarily unavailable', 503) }
       if (transcriptionFails) throw new Error('offline')
       return { text: 'I study English because I want to communicate with people around the world.' }
     }
@@ -164,6 +168,35 @@ export async function run() {
   assert.equal(first.type, 'audio/mp4', 'Safari MP4 is never mislabeled as WebM')
   assert.equal(first, second, 'Concurrent stops share the final recording')
   console.log('PASS: MP4 format, final chunks, duplicate stops, and matching male/female device voices')
+
+  transientTranscriptionFailures = 1
+  const beforeRetry = transcribedFiles.length
+  assert.match(await transcribeAnswer(first), /I study English/)
+  assert.equal(transcribedFiles.length, beforeRetry + 2, 'A temporary transcription failure recovers automatically')
+  assert.deepEqual(transcribedFiles.at(-1), transcribedFiles.at(-2), 'Automatic recovery sends the same saved recording')
+  const sessionPost = apiClient.post
+  for (const status of [400, 401, 403, 409, 413, 415, 422, 429]) {
+    let calls = 0
+    const failure = new ApiError('Processing rejected', status)
+    apiClient.post = (async () => { calls++; throw failure }) as typeof apiClient.post
+    await assert.rejects(transcribeAnswer(first), error => error === failure)
+    assert.equal(calls, 1, `HTTP ${status} must not retry automatically`)
+  }
+  assert.match(transcriptionError(new ApiError('Limited', 429)), /Wait a moment/)
+  let silenceCalls = 0
+  apiClient.post = (async () => { silenceCalls++; return { text: '' } }) as typeof apiClient.post
+  assert.equal(await transcribeAnswer(first), '', 'Silence remains empty')
+  assert.equal(silenceCalls, 1, 'Silence does not trigger a retry')
+  const cancelled = new AbortController()
+  let cancelledCalls = 0
+  apiClient.post = (async () => { cancelledCalls++; cancelled.abort(); throw new Error('Cancelled') }) as typeof apiClient.post
+  await assert.rejects(transcribeAnswer(first, cancelled.signal))
+  assert.equal(cancelledCalls, 1, 'Cancelling an in-flight request prevents retry')
+  await assert.rejects(transcribeAnswer(first, cancelled.signal))
+  assert.equal(cancelledCalls, 1, 'A cancelled session cannot upload another recording')
+  apiClient.post = sessionPost
+  transcribedFiles = []
+  console.log('PASS: temporary transcription recovery preserves audio; permanent failures, silence and cancellation never retry')
 
   const playback = new ExaminerPlayback()
   let ended = 0, failed = 0
@@ -233,13 +266,16 @@ export async function run() {
     await click('Finish answer')
     await until(() => button('Retry processing saved answer'), 'saved full-mock answer after failed transcription')
     assert.ok(button('Retry processing saved answer'))
+    assert.match(container.querySelector('.speaking-phase-chip')!.textContent!, /Processing paused/)
+    assert.match(container.querySelector('.speaking-header-status')!.textContent!, /Answer processing paused/)
+    assert.equal(transcribedFiles.length, 2, 'Persistent failures stop after one automatic retry')
     assert.ok(container.querySelector('audio[aria-label="Your saved answer"]'))
     assert.equal(saved, null)
     transcriptionFails = false
     await click('Retry processing saved answer')
     assert.equal(transcribedFiles[0].mimeType, 'audio/mp4')
     assert.equal(atob(transcribedFiles[0].audioBase64).length, 200)
-    assert.equal(transcribedFiles[0].audioBase64, transcribedFiles[1].audioBase64, 'Retry reuses the exact answer file')
+    assert.equal(transcribedFiles[0].audioBase64, transcribedFiles[2].audioBase64, 'Manual retry reuses the exact answer file')
     await endAudio() // seeded question
     await click('Finish answer')
     await endAudio() // adaptive Part 1 follow-up
@@ -312,13 +348,24 @@ export async function run() {
       assert.match(container.textContent!, /English device voice/)
       assert.equal(utterances.at(-1)!.voice?.name, voiceName)
       assert.equal(recorderStarts, before, 'Fallback cannot record before the question ends')
-      for (let i = 0; i < 3; i++) { await act(async () => utterances.at(-1)!.onend?.()); await wait(40) }
+      await act(async () => utterances.at(-1)!.onend?.()) // greeting -> Part 1 instructions
+      await wait(40)
+      assert.equal(requestedVoices.length, 2, 'A temporary device fallback avoids repeated failed provider requests')
+      const now = Date.now
+      voiceFails = false
+      try {
+        Date.now = () => now() + 61_000
+        await act(async () => utterances.at(-1)!.onend?.())
+        await wait(40)
+      } finally { Date.now = now }
+      assert.equal(requestedVoices.length, 3, 'A later question retries the recovered provider after the fallback cooldown')
+      assert.match(container.textContent!, /Natural AI voice/)
+      await endAudio()
       assert.ok(button('Finish answer'), 'Provider failure automatically recovers to the matching device voice')
-      assert.equal(requestedVoices.length, 2, 'One transient retry precedes the device fallback, which stays selected for the session')
-    } finally { await act(async () => fallbackRoot.unmount()) }
+    } finally { voiceFails = true; await act(async () => fallbackRoot.unmount()) }
   }
   voiceFails = false
-  console.log('PASS: unavailable natural voice automatically recovers with matching male/female voice')
+  console.log('PASS: unavailable natural voice uses a matching device voice, then retries the recovered provider')
 
   const normalEvaluation = evaluationPayload
   const history = [{ role: 'candidate' as const, text: 'I like music. I actually enjoy playing piano every day with my friends.' }]

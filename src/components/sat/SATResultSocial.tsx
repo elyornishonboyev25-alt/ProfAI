@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import {
   CheckCircle2,
@@ -54,10 +56,10 @@ function SignInPrompt({ text }: { text: string }) {
   return (
     <div className="sr-card srx-empty">
       <Users size={30} />
-      <h3>Sign in to join in</h3>
+      <h3><UiText text={"Sign in to join in"} /></h3>
       <p>{text}</p>
       <Link className="sr-button sr-button-primary" to="/login">
-        Sign in
+        <UiText text={"Sign in"} />
       </Link>
     </div>
   )
@@ -75,9 +77,9 @@ function StandingRow({ row, sectioned }: { row: SATStandingRow; sectioned: boole
         <span>
           <strong>
             {row.name}
-            {row.isMe && <em>You</em>}
+            {row.isMe && <em><UiText text={"You"} /></em>}
           </strong>
-          <small>{row.nickname ? `@${row.nickname}` : row.country || 'Ivygoo learner'}</small>
+          <small>{row.nickname ? `@${row.nickname}` : row.country || <UiText text={"Ivygoo learner"} />}</small>
         </span>
       </span>
       {sectioned && (
@@ -95,7 +97,7 @@ function StandingRow({ row, sectioned }: { row: SATStandingRow; sectioned: boole
         {formatSATDuration(row.durationSec)}
       </span>
       <span className="srx-rank-total" data-label="Score">
-        {row.total}
+        {row.maxScore === 9 ? row.total.toFixed(1) : row.total}
       </span>
     </li>
   )
@@ -114,32 +116,33 @@ export function SATLeaderboard({
   sectioned: boolean
   maximum: number
 }) {
+  const { c: uiCopy } = useCopy()
   if (standing.status === 'guest')
     return <SignInPrompt text="See where your first attempt ranks among every Ivygoo learner who took this test." />
   if (standing.status === 'unavailable')
     return (
       <div className="sr-card srx-empty">
         <Trophy size={30} />
-        <h3>Ranking opens with a full score</h3>
-        <p>Submit the complete test to compare your score with other learners.</p>
+        <h3><UiText text={"Ranking opens with a full score"} /></h3>
+        <p><UiText text={"Submit the complete test to compare your score with other learners."} /></p>
       </div>
     )
   if (standing.status === 'loading')
     return (
       <div className="sr-card srx-empty" role="status">
         <Loader2 size={28} className="srx-spin" />
-        <p>Loading the leaderboard…</p>
+        <p><UiText text={"Loading the leaderboard…"} /></p>
       </div>
     )
   if (standing.status === 'error')
     return (
       <div className="sr-card srx-empty" role="alert">
         <Trophy size={30} />
-        <h3>The leaderboard did not load</h3>
-        <p>Check your connection, then try again.</p>
+        <h3><UiText text={"The leaderboard did not load"} /></h3>
+        <p><UiText text={"Check your connection, then try again."} /></p>
         <button type="button" className="sr-button" onClick={onRetry}>
           <RotateCcw size={14} />
-          Try again
+          <UiText text={"Try again"} />
         </button>
       </div>
     )
@@ -151,38 +154,38 @@ export function SATLeaderboard({
       <div className="srx-standing-cards">
         <div className="sr-card">
           <Trophy size={20} />
-          <span>Your rank</span>
+          <span><UiText text={"Your rank"} /></span>
           <strong>{data.me ? `#${data.me.rank}` : '—'}</strong>
-          <small>{data.me ? `of ${data.participants} learners` : 'Your result is still syncing'}</small>
+          <small>{data.me ? <UiText text={"of {{value1}} learners"} values={{ value1: String(data.participants) }} /> : <UiText text={"Your result is still syncing"} />}</small>
         </div>
         <div className="sr-card">
           <Users size={20} />
-          <span>Learners</span>
+          <span><UiText text={"Learners"} /></span>
           <strong>{data.participants}</strong>
-          <small>first attempts on this test</small>
+          <small><UiText text={"first attempts on this test"} /></small>
         </div>
         <div className="sr-card">
           <Crown size={20} />
-          <span>Average score</span>
+          <span><UiText text={"Average score"} /></span>
           <strong>{data.average ?? '—'}</strong>
-          <small>out of {maximum}</small>
+          <small><UiText text={"out of"} /> {maximum}</small>
         </div>
       </div>
       <section className="sr-card srx-rank-card">
         <div className="srx-rank-head" aria-hidden="true">
           <span>#</span>
-          <span>Learner</span>
+          <span><UiText text={"Learner"} /></span>
           {sectioned && (
             <>
-              <span>R&amp;W</span>
-              <span>Math</span>
+              <span><UiText text={"R&W"} /></span>
+              <span><UiText text={"Math"} /></span>
             </>
           )}
-          <span>Time</span>
-          <span>Score</span>
+          <span><UiText text={"Time"} /></span>
+          <span><UiText text={"Score"} /></span>
         </div>
         {data.rows.length ? (
-          <ol className={`srx-rank-list ${sectioned ? 'is-sectioned' : ''}`} aria-label={`${testTitle} leaderboard`}>
+          <ol className={`srx-rank-list ${sectioned ? 'is-sectioned' : ''}`} aria-label={uiCopy("{{value1}} leaderboard", { value1: String(testTitle) })}>
             {data.rows.map((row) => (
               <StandingRow key={`${row.rank}-${row.name}`} row={row} sectioned={sectioned} />
             ))}
@@ -198,14 +201,13 @@ export function SATLeaderboard({
         ) : (
           <div className="srx-empty">
             <Trophy size={28} />
-            <h3>Be the first on the board</h3>
-            <p>Results appear here as learners finish this test.</p>
+            <h3><UiText text={"Be the first on the board"} /></h3>
+            <p><UiText text={"Results appear here as learners finish this test."} /></p>
           </div>
         )}
       </section>
       <p className="sr-estimate-note">
-        Ranked by each learner’s first completed attempt, like a real test day. Ties go to the faster finish. Learners
-        who hide their ranking appear as “Private learner”.
+        <UiText text={"Ranked by each learner’s first eligible completed attempt, like a real test day. Ties go to the faster finish. Learners who hide their ranking appear as “Private learner”."} />
       </p>
     </>
   )
@@ -311,12 +313,12 @@ function DiscussionComposer({
           </span>
           {onCancel && (
             <button type="button" className="sr-button srx-ghost" onClick={onCancel}>
-              Cancel
+              <UiText text={"Cancel"} />
             </button>
           )}
           <button type="submit" className="sr-button sr-button-primary" disabled={!ready}>
             {sending ? <Loader2 size={15} className="srx-spin" /> : <Send size={15} />}
-            {submitLabel}
+            <UiText text={submitLabel} />
           </button>
         </div>
         {error && (
@@ -358,7 +360,7 @@ function DiscussionItem({
       <div className="srx-post-main">
         <header className="srx-post-meta">
           <strong>{post.author.name}</strong>
-          {post.mine && <em className="srx-you">You</em>}
+          {post.mine && <em className="srx-you"><UiText text={"You"} /></em>}
           {post.author.nickname && <span>@{post.author.nickname}</span>}
           <span aria-hidden="true">·</span>
           <time dateTime={post.createdAt} title={new Date(post.createdAt).toLocaleString()}>
@@ -377,19 +379,19 @@ function DiscussionItem({
             onClick={() => onCheck(post)}
           >
             <CheckCircle2 size={15} />
-            <span>{post.checked ? 'Checked' : 'Helpful'}</span>
+            <span>{post.checked ? <UiText text={"Checked"} /> : <UiText text={"Helpful"} />}</span>
             {post.checks > 0 && <b>{post.checks}</b>}
           </button>
           <button type="button" className="srx-action" onClick={() => onReply(post)}>
             <Reply size={15} />
-            <span>Reply</span>
+            <span><UiText text={"Reply"} /></span>
             {!isReply && replies > 0 && <b>{replies}</b>}
           </button>
           {post.canDelete &&
             (confirming ? (
               <button type="button" className="srx-action is-danger is-confirm" onClick={() => onDelete(post)}>
                 <Trash2 size={14} />
-                <span>{!isReply && replies ? `Delete with ${replies} ${replies === 1 ? 'reply' : 'replies'}` : 'Confirm delete'}</span>
+                <span>{!isReply && replies ? <UiText text={"Delete with {{value1}} {{value2}}"} values={{ value1: String(replies), value2: String(replies === 1 ? 'reply' : 'replies') }} /> : <UiText text={"Confirm delete"} />}</span>
               </button>
             ) : (
               <button
@@ -422,6 +424,7 @@ export function SATDiscussion({
   questionRef: string
   onQuestionRefChange: (value: string) => void
 }) {
+  const { c: uiCopy } = useCopy()
   const [posts, setPosts] = useState<Post[]>([])
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [reload, setReload] = useState(0)
@@ -546,25 +549,25 @@ export function SATDiscussion({
       <DiscussionComposer
         id="sat-discussion-body"
         userName={userName}
-        placeholder="Ask about a question or share how you solved it…"
+        placeholder={uiCopy("Ask about a question or share how you solved it…")}
         submitLabel="Post"
         onSubmit={createPost}
         extra={
           <>
             <label className="srx-visually-hidden" htmlFor="sat-discussion-question">
-              Question
+              <UiText text={"Question"} />
             </label>
             <select
               id="sat-discussion-question"
               value={questionRef}
               onChange={(event) => onQuestionRefChange(event.target.value)}
             >
-              <option value="">General discussion</option>
+              <option value=""><UiText text={"General discussion"} /></option>
               {modules.map((module) => (
                 <optgroup key={module.id} label={module.shortTitle}>
                   {module.questions.map((question) => (
                     <option key={question.id} value={`${module.id}:${question.number}`}>
-                      {module.shortTitle} · Question {question.number}
+                      {module.shortTitle} <UiText text={"· Question"} /> {question.number}
                     </option>
                   ))}
                 </optgroup>
@@ -576,14 +579,14 @@ export function SATDiscussion({
       {status === 'ready' && posts.length > 0 && (
         <div className="srx-thread-bar">
           <p>
-            <strong>{posts.length}</strong> {posts.length === 1 ? 'post' : 'posts'}
+            <strong>{posts.length}</strong> {posts.length === 1 ? <UiText text={"post"} /> : <UiText text={"posts"} />}
             <span aria-hidden="true">·</span>
-            <strong>{replyTotal}</strong> {replyTotal === 1 ? 'reply' : 'replies'}
+            <strong>{replyTotal}</strong> {replyTotal === 1 ? <UiText text={"reply"} /> : <UiText text={"replies"} />}
           </p>
-          <div className="srx-sort" role="group" aria-label="Sort posts">
+          <div className="srx-sort" role="group" aria-label={uiCopy("Sort posts")}>
             {(['newest', 'helpful'] as const).map((mode) => (
               <button key={mode} type="button" aria-pressed={sort === mode} onClick={() => setSort(mode)}>
-                {mode === 'newest' ? 'Newest' : 'Most helpful'}
+                {mode === 'newest' ? <UiText text={"Newest"} /> : <UiText text={"Most helpful"} />}
               </button>
             ))}
           </div>
@@ -595,7 +598,7 @@ export function SATDiscussion({
         </p>
       )}
       {status === 'loading' && (
-        <ul className="srx-posts" aria-busy="true" aria-label="Loading the discussion">
+        <ul className="srx-posts" aria-busy="true" aria-label={uiCopy("Loading the discussion")}>
           {[0, 1, 2].map((item) => (
             <li key={item} className="sr-card srx-thread srx-skeleton" aria-hidden="true">
               <span className="srx-skeleton-avatar" />
@@ -611,19 +614,19 @@ export function SATDiscussion({
       {status === 'error' && (
         <div className="sr-card srx-empty" role="alert">
           <MessageSquareText size={28} />
-          <h3>The discussion did not load</h3>
-          <p>Check your connection, then try again.</p>
+          <h3><UiText text={"The discussion did not load"} /></h3>
+          <p><UiText text={"Check your connection, then try again."} /></p>
           <button type="button" className="sr-button" onClick={() => setReload((value) => value + 1)}>
             <RotateCcw size={14} />
-            Try again
+            <UiText text={"Try again"} />
           </button>
         </div>
       )}
       {status === 'ready' && !posts.length && (
         <div className="sr-card srx-empty">
           <MessageSquareText size={30} />
-          <h3>Start the conversation</h3>
-          <p>No posts yet. Ask the first question about this test.</p>
+          <h3><UiText text={"Start the conversation"} /></h3>
+          <p><UiText text={"No posts yet. Ask the first question about this test."} /></p>
         </div>
       )}
       {status === 'ready' && posts.length > 0 && (
@@ -652,11 +655,11 @@ export function SATDiscussion({
                         onClick={() => setExpanded((current) => new Set(current).add(post.id))}
                       >
                         <ChevronDown size={15} />
-                        View {hidden} earlier {hidden === 1 ? 'reply' : 'replies'}
+                        <UiText text={"View"} /> {hidden} <UiText text={"earlier"} /> {hidden === 1 ? <UiText text={"reply"} /> : <UiText text={"replies"} />}
                       </button>
                     )}
                     {shown.length > 0 && (
-                      <ul aria-label={`Replies to ${post.author.name}`}>
+                      <ul aria-label={uiCopy("Replies to {{value1}}", { value1: String(post.author.name) })}>
                         {shown.map((reply) => (
                           <li key={reply.id}>
                             <DiscussionItem
@@ -675,7 +678,7 @@ export function SATDiscussion({
                         key={`${post.id}-${replyTo.mention}`}
                         id={`sat-reply-${post.id}`}
                         userName={userName}
-                        placeholder={`Reply to ${post.author.name}…`}
+                        placeholder={uiCopy("Reply to {{value1}}…", { value1: String(post.author.name) })}
                         submitLabel="Reply"
                         initialBody={replyTo.mention}
                         compact

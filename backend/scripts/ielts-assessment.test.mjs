@@ -83,10 +83,11 @@ test('missing improved answers are repaired in small batches without changing th
   assert.equal(calls, 3)
 })
 
-test('all six recordings reach the provider; transcript scores exclude missing pronunciation', async (t) => {
+test('all six recordings including compressed MP3 and Safari MP4 reach the provider; transcript scores exclude missing pronunciation', async (t) => {
   const nativeFetch = globalThis.fetch, originalUsage = prisma.aiUsageEvent.create
   env.GEMINI_API_KEY = 'fake-ielts-key'; env.GEMINI_MODELS = 'gemini-2.5-flash'
   prisma.aiUsageEvent.create = async ({ data }) => data
+  const mixedAudio = audio.map((clip, index) => ({ ...clip, mimeType: index === 0 ? 'audio/mpeg' : index === 1 ? 'audio/mp4' : clip.mimeType }))
   let calls = 0
   globalThis.fetch = async (_url, options) => {
     const body = JSON.parse(options.body)
@@ -99,13 +100,14 @@ test('all six recordings reach the provider; transcript scores exclude missing p
         assert.deepEqual(Object.keys(part.inlineData).sort(), ['data', 'mimeType'], 'Gemini inlineData must not contain application metadata such as answerIndex')
       }
       assert.deepEqual(body.contents[0].parts.slice(1).map(part => part.inlineData.data), audio.map(clip => clip.data))
+      assert.deepEqual(body.contents[0].parts.slice(1).map(part => part.inlineData.mimeType), mixedAudio.map(clip => clip.mimeType === 'audio/mp4' ? 'audio/m4a' : clip.mimeType))
       return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify(speaking) }] } }] })
     }
     assert.equal(body.contents[0].parts.length, 1)
     return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({ ...speaking, fluencyBand: 7, lexicalBand: 8, grammarBand: 8, pronunciationBand: 1, evidence: speaking.evidence.filter(item => item.criterion !== 'pronunciation') }) }] } }] })
   }
   t.after(() => { globalThis.fetch = nativeFetch; prisma.aiUsageEvent.create = originalUsage; env.GEMINI_API_KEY = '' })
-  const request = speakingAssessmentSchema.parse({ modeLabel: 'Speaking Full Mock', history, durationSec: 200, audio })
+  const request = speakingAssessmentSchema.parse({ modeLabel: 'Speaking Full Mock', history, durationSec: 200, audio: mixedAudio })
   assert.equal((await assessSpeakingAudio('ielts-user', request)).overallBand, 8.5)
   const text = await assessSpeakingTranscript('ielts-user', { modeLabel: 'Typed practice', history, durationSec: 0 })
   assert.equal(text.pronunciationBand, 0)
@@ -125,7 +127,7 @@ test('coaching failure keeps the audio band and every previously completed rewri
       assert.ok(body.generationConfig.maxOutputTokens <= 6144, 'Scoring is bounded independently of transcript length')
       assert.deepEqual(body.generationConfig.thinkingConfig, { thinkingBudget: 1024 }, 'Internal reasoning cannot consume the entire scoring response budget')
       assert.match(body.systemInstruction.parts[0].text, /Do not generate improvedAnswers/)
-      assert.equal(body.contents[0].parts[1].inlineData.mimeType, 'audio/mp4', 'Safari recordings retain the accepted MP4 MIME type')
+      assert.equal(body.contents[0].parts[1].inlineData.mimeType, 'audio/m4a', 'Safari recordings use Gemini’s accepted M4A MIME type without changing their audio bytes')
       return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({ ...speaking, improvedAnswers: [] }) }] } }] })
     }
     coachingCalls++; active++; peak = Math.max(peak, active)

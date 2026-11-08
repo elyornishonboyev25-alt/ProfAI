@@ -410,6 +410,22 @@ router.post(
     const weightedScore = percentage
 
     const attemptResponse = await prisma.$transaction(async (tx) => {
+      // Serialize recovery and live submissions for the same learner. The
+      // optimistic lookup above alone allows two devices to award XP twice.
+      await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${userId} FOR UPDATE`
+      const duplicate = await tx.testAttempt.findFirst({
+        where: {
+          userId, testId: test.id, timeSpentSec: payload.timeSpentSec,
+          totalQuestions: payload.totalQuestions, correctAnswers: payload.correctAnswers,
+          completedAt: { gte: new Date(safeCompletedAt.getTime() - 60_000), lte: new Date(safeCompletedAt.getTime() + 60_000) },
+        },
+        select: { id: true },
+      })
+      if (duplicate) {
+        await completeClassSync(userId, payload.assignmentId, tx)
+        return { attemptId: duplicate.id, duplicate: true, xpEarned: 0 }
+      }
+
       const user = await tx.user.findUnique({
         where: { id: userId },
         select: {
@@ -551,13 +567,13 @@ router.post(
     })
 
     invalidateLeaderboardCache()
-    invalidateSkillAnalyticsCache(userId)
+    invalidateSkillAnalyticsCache()
     invalidateAiCoachCache(userId)
     void precomputeAiCoachReport(userId)
 
     return res.status(201).json({
       synced: true,
-      duplicate: false,
+      duplicate: attemptResponse.duplicate ?? false,
       ...attemptResponse,
     })
   }),
@@ -670,6 +686,22 @@ router.post(
     const rawScore = clamp((payload.correctAnswers / safeTotalQuestions) * 100, 0, 100)
 
     const attemptResponse = await prisma.$transaction(async (tx) => {
+      // Serialize recovery and live submissions for the same learner. The
+      // optimistic lookup above alone allows two devices to award XP twice.
+      await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${userId} FOR UPDATE`
+      const duplicate = await tx.testAttempt.findFirst({
+        where: {
+          userId, testId: test.id, timeSpentSec: payload.timeSpentSec,
+          totalQuestions: payload.totalQuestions, correctAnswers: payload.correctAnswers,
+          completedAt: { gte: new Date(safeCompletedAt.getTime() - 60_000), lte: new Date(safeCompletedAt.getTime() + 60_000) },
+        },
+        select: { id: true },
+      })
+      if (duplicate) {
+        await completeClassSync(userId, payload.assignmentId, tx)
+        return { attemptId: duplicate.id, duplicate: true, xpEarned: 0 }
+      }
+
       const user = await tx.user.findUnique({
         where: { id: userId },
         select: {
@@ -811,13 +843,13 @@ router.post(
     })
 
     invalidateLeaderboardCache()
-    invalidateSkillAnalyticsCache(userId)
+    invalidateSkillAnalyticsCache()
     invalidateAiCoachCache(userId)
     void precomputeAiCoachReport(userId)
 
     return res.status(201).json({
       synced: true,
-      duplicate: false,
+      duplicate: attemptResponse.duplicate ?? false,
       ...attemptResponse,
     })
   }),
@@ -865,7 +897,7 @@ router.get(
       return res.status(404).json({ message: 'Test not found.' })
     }
 
-    if (!(await accessStatus(req.user!.id, 'test', `test:database:${test.id}`)).unlocked) throw new BillingError('PREMIUM_REQUIRED', 'You have used this month’s free tests. Upgrade to Pro ($5.99/month) or Max ($11.99/month) to continue.')
+    if (!(await accessStatus(req.user!.id, 'test', `test:database:${test.id}`)).unlocked) throw new BillingError('PREMIUM_REQUIRED', 'This test is available with IvyGoo Pro or IvyGoo Elite.')
     return res.json({ test })
   }),
 )
@@ -877,7 +909,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const userId = req.user!.id
     const testId = req.params.id
-    if (!(await accessStatus(userId, 'test', `test:database:${testId}`)).unlocked) throw new BillingError('PREMIUM_REQUIRED', 'You have used this month’s free tests. Upgrade to Pro ($5.99/month) or Max ($11.99/month) to continue.')
+    if (!(await accessStatus(userId, 'test', `test:database:${testId}`)).unlocked) throw new BillingError('PREMIUM_REQUIRED', 'This test is available with IvyGoo Pro or IvyGoo Elite.')
     const { answers, timeSpentSec, assignmentId } = req.body
 
     const test = await prisma.test.findUnique({
@@ -1156,7 +1188,7 @@ router.post(
     })
 
     invalidateLeaderboardCache()
-    invalidateSkillAnalyticsCache(userId)
+    invalidateSkillAnalyticsCache()
     invalidateAiCoachCache(userId)
     void precomputeAiCoachReport(userId)
 

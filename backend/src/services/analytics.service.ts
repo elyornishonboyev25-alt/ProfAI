@@ -1,6 +1,7 @@
 import { onAccountDeleted } from './accountLifecycle.js'
 import { TestCategory } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
+import { loadPerformanceAttempts } from './performanceHistory.service.js'
 import { calculateConsistencyScore, calculateSpeedEfficiency } from './leaderboard.service.js'
 
 type AnalyticsInsightType = 'warning' | 'tip' | 'success'
@@ -104,7 +105,8 @@ type TrackSkillDefinition = {
 const ANALYTICS_CACHE_TTL_MS = 60_000
 
 const analyticsCache = new Map<string, { expiresAt: number; payload: SkillAnalyticsPayload }>()
-onAccountDeleted((userId) => { analyticsCache.delete(userId) })
+onAccountDeleted(() => invalidateSkillAnalyticsCache())
+let analyticsCacheRevision = 0
 
 const TRACKED_CATEGORIES: TestCategory[] = ['SAT', 'IELTS']
 
@@ -197,6 +199,7 @@ function subjectIncludes(subjects: string[], keywords: string[]) {
 }
 
 export function invalidateSkillAnalyticsCache(userId?: string) {
+  analyticsCacheRevision += 1
   if (userId) {
     analyticsCache.delete(userId)
     return
@@ -365,49 +368,15 @@ function buildInsights(params: {
 }
 
 export async function generateSkillAnalytics(userId: string): Promise<SkillAnalyticsPayload> {
+  const cacheRevision = analyticsCacheRevision
   const cached = analyticsCache.get(userId)
   if (cached && cached.expiresAt > Date.now()) {
     return cached.payload
   }
 
   const [userAttemptsRaw, platformAttemptsRaw, allUsers] = await Promise.all([
-    prisma.testAttempt.findMany({
-      where: { userId },
-      orderBy: { completedAt: 'asc' },
-      select: {
-        userId: true,
-        percentage: true,
-        finalScore: true,
-        timeSpentSec: true,
-        xpEarned: true,
-        completedAt: true,
-        test: {
-          select: {
-            category: true,
-            durationSec: true,
-            subjects: true,
-          },
-        },
-      },
-    }),
-    prisma.testAttempt.findMany({
-      orderBy: { completedAt: 'asc' },
-      select: {
-        userId: true,
-        percentage: true,
-        finalScore: true,
-        timeSpentSec: true,
-        xpEarned: true,
-        completedAt: true,
-        test: {
-          select: {
-            category: true,
-            durationSec: true,
-            subjects: true,
-          },
-        },
-      },
-    }),
+    loadPerformanceAttempts(userId),
+    loadPerformanceAttempts(),
     prisma.user.findMany({
       select: { id: true },
     }),
@@ -545,7 +514,7 @@ export async function generateSkillAnalytics(userId: string): Promise<SkillAnaly
     insights,
   }
 
-  analyticsCache.set(userId, {
+  if (cacheRevision === analyticsCacheRevision) analyticsCache.set(userId, {
     expiresAt: Date.now() + ANALYTICS_CACHE_TTL_MS,
     payload,
   })

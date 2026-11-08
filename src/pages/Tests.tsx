@@ -104,34 +104,34 @@ export default function Tests() {
 
           <div className="relative grid gap-4 xl:grid-cols-[minmax(0,1fr)_25rem] xl:items-start">
             <div className="xl:pr-2">
-              <span className="premium-top-chip">Track Navigation</span>
+              <span className="premium-top-chip"><UiText text={"Track Navigation"} /></span>
               <h1 className="premium-section-title mt-4 md:whitespace-nowrap">
-                Choose your <span className="arena-title-accent-red">Test Library</span>
+                <UiText text={"Choose your"} /> <span className="arena-title-accent-red"><UiText text={"Test Library"} /></span>
               </h1>
               <p className="premium-section-subtitle">
-                IELTS, SAT, Writing, and Speaking run as dedicated premium pages with real exam environment flow.
+                <UiText text={"IELTS, SAT, Writing, and Speaking run as dedicated premium pages with real exam environment flow."} />
               </p>
             </div>
 
             <div className="grid gap-2 sm:grid-cols-3 xl:w-full">
               <div className="hero-metric-card interactive-lift">
-                <p className="hero-metric-label">Tracks</p>
+                <p className="hero-metric-label"><UiText text={"Tracks"} /></p>
                 <p className="hero-metric-value-sm">
                   <CountUp value={trackCards.length} />
                 </p>
-                <p className="hero-metric-note">Learning arenas</p>
+                <p className="hero-metric-note"><UiText text={"Learning arenas"} /></p>
               </div>
               <div className="hero-metric-card interactive-lift">
-                <p className="hero-metric-label">Total Sections</p>
+                <p className="hero-metric-label"><UiText text={"Total Sections"} /></p>
                 <p className="hero-metric-value-sm">
                   <CountUp value={8} />
                 </p>
-                <p className="hero-metric-note">Independent pages</p>
+                <p className="hero-metric-note"><UiText text={"Independent pages"} /></p>
               </div>
               <div className="hero-metric-card interactive-lift">
-                <p className="hero-metric-label">Question Bank</p>
+                <p className="hero-metric-label"><UiText text={"Question Bank"} /></p>
                 <p className="hero-metric-value-sm hero-metric-value-compact"> <UiText text={"Refresh"} /> </p>
-                <p className="hero-metric-note">New premium sets loading</p>
+                <p className="hero-metric-note"><UiText text={"New premium sets loading"} /></p>
               </div>
             </div>
           </div>
@@ -140,15 +140,15 @@ export default function Tests() {
 
       <Reveal delay={0.06} className="mt-6">
         <section className="rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50/80 to-orange-50/60 p-4 text-sm text-amber-900">
-          <p className="font-semibold">Current test questions are temporarily removed.</p>
+          <p className="font-semibold"><UiText text={"Current test questions are temporarily removed."} /></p>
           <p className="mt-1">
-            New sets will be added next. For now, continue via IELTS/SAT section pages and shared Writing/Speaking studios.
+            <UiText text={"New sets will be added next. For now, continue via IELTS/SAT section pages and shared Writing/Speaking studios."} />
           </p>
           <button
             onClick={() => navigate('/ielts/tests#mocks')}
             className="mt-3 inline-flex items-center rounded-xl border border-blue-200 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-blue-700 transition hover:bg-blue-50"
           >
-            Open Mock Arena
+            <UiText text={"Open Mock Arena"} />
           </button>
         </section>
       </Reveal>
@@ -165,19 +165,19 @@ export default function Tests() {
                 >
                   <div className={`inline-flex items-center gap-2 rounded-full border bg-white px-3 py-1 text-xs font-semibold ${iconToneClass(track.tone)}`}>
                     <Icon className="h-3.5 w-3.5" />
-                    {track.subtitle}
+                    <UiText text={track.subtitle} />
                   </div>
-                  <h2 className="mt-4 text-3xl font-black text-slate-900">{track.title}</h2>
-                  <p className="mt-2 text-sm leading-6 text-slate-700">{track.detail}</p>
+                  <h2 className="mt-4 text-3xl font-black text-slate-900"><UiText text={track.title} /></h2>
+                  <p className="mt-2 text-sm leading-6 text-slate-700"><UiText text={track.detail} /></p>
                   <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
                     {track.chips.map((chip) => (
                       <span key={chip} className="rounded-full bg-white px-3 py-1 text-slate-700">
-                        {chip}
+                        <UiText text={chip} />
                       </span>
                     ))}
                   </div>
                   <p className={`mt-6 inline-flex items-center text-sm font-semibold transition group-hover:translate-x-1 ${linkToneClass(track.tone)}`}>
-                     <UiText text={"Open"} /> {track.title}
+                     <UiText text={"Open"} /> <UiText text={track.title} />
                     <ArrowRight className="ml-1 h-4 w-4" />
                   </p>
                 </button>
@@ -191,14 +191,14 @@ export default function Tests() {
         <section className="rounded-2xl border border-blue-100 bg-white/90 p-4">
           <p className="inline-flex items-center gap-2 text-sm font-semibold text-blue-700">
             <Sparkles className="h-4 w-4" />
-            Vocabulary Arena remains available as a separate immersive track.
+            <UiText text={"Vocabulary Arena remains available as a separate immersive track."} />
           </p>
           <button
             onClick={() => navigate('/vocabulary')}
             className="mt-3 inline-flex items-center rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
           >
             <BookOpen className="mr-2 h-4 w-4" />
-            Open Vocabulary Arena
+            <UiText text={"Open Vocabulary Arena"} />
           </button>
         </section>
       </Reveal>

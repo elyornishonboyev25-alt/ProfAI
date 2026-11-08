@@ -1,5 +1,11 @@
+import { useCopy } from '@/i18n/interface'
 import { accountStorageFor } from '@/utils/accountStorage'
 import UiText from '@/components/common/UiText'
+import LeaderboardEligibilityNotice from '@/components/common/LeaderboardEligibilityNotice'
+import { testReturnLabel, testReturnPath } from '@/utils/testNavigation'
+import TestLeaderboard from '@/components/results/TestLeaderboard'
+import { BrandLogo } from '@/components/brand/BrandLogo'
+import '@/styles/ielts-results.css'
 import ResultBoundary from '@/components/ielts/ResultBoundary'
 import { downloadTestResult } from '@/utils/downloadTestResult'
 import { waitForIeltsClassSync } from '@/features/learningCenter/ieltsResultSync'
@@ -11,16 +17,17 @@ import {
   Clock3,
   Eye,
   EyeOff,
-  Home,
   RotateCcw,
   Share2,
-  Sparkles,
-  Target,
   TriangleAlert,
+  Trophy,
+  CheckCircle2,
+  XCircle,
+  ChevronRight,
+  Download,
 } from 'lucide-react'
 
 import { AnimatedBackground } from '@/components/AnimatedBackground'
-import { Burst, CountUp, ProgressRing, Reveal } from '@/components/fx'
 import { apiClient } from '@/lib/apiClient'
 import { useAuthStore } from '@/store/authStore'
 import type {
@@ -51,6 +58,7 @@ type ResultLocationState = {
   test?: IELTSTest
   mock?: { id: string; section: string }
   from?: string
+  returnTo?: string
 }
 
 const EMPTY_ANALYSIS: ReadingAnalysisReport = {
@@ -87,6 +95,7 @@ export default function Results() {
 }
 
 function ResultsContent() {
+  const { c: uiCopy } = useCopy()
   const location = useLocation()
   const navigate = useNavigate()
   const { testId } = useParams<{ testId: string }>()
@@ -109,6 +118,8 @@ function ResultsContent() {
     : storedTest, [storedTest, result, testId])
 
   const [showCorrectAnswers, setShowCorrectAnswers] = useState(false)
+  const [resultTab, setResultTab] = useState<'answers' | 'leaderboard'>('answers')
+  const [outcomeFilter, setOutcomeFilter] = useState<'all' | 'correct' | 'incorrect' | 'skipped'>('all')
   const [sharingResult, setSharingResult] = useState(false)
   const pushToast = useToastStore((state) => state.pushToast)
 
@@ -117,8 +128,8 @@ function ResultsContent() {
   const isListeningTest = `${resolvedTestId} ${test?.title ?? ''} ${test?.module ?? ''}`.toLowerCase().includes('listening')
   const testType = isListeningTest ? 'listening' : 'reading'
   const catalogPath = `/ielts/${testType}/tests`
-  const backPath = mock?.id ? `/mock/ielts/${mock.id}` : catalogPath
-  const backLabel = mock?.id ? 'Full Mock' : `${isListeningTest ? 'Listening' : 'Reading'} Tests`
+  const backPath = testReturnPath(state, mock?.id ? `/mock/ielts/${mock.id}` : catalogPath)
+  const backLabel = testReturnLabel(backPath, mock?.id ? 'Full Mock' : `${isListeningTest ? 'Listening' : 'Reading'} Tests`)
   const goBack = () => navigate(backPath, mock?.id ? { state: { from } } : undefined)
 
   const allSections = useMemo(
@@ -144,18 +155,6 @@ function ResultsContent() {
     ...result, score: effectiveBandScore,
     correctAnswers: analysis.summary.correctAnswers, totalQuestions: analysis.summary.totalQuestions,
   } : undefined, [result, effectiveBandScore, analysis.summary.correctAnswers, analysis.summary.totalQuestions])
-  const recommendations = useMemo(() => [
-    analysis.summary.skippedAnswers > 0
-      ? `Revisit the ${analysis.summary.skippedAnswers} skipped questions before your next mock.`
-      : 'Keep your complete-answer discipline in the next mock.',
-    analysis.summary.incorrectAnswers > 0
-      ? `Review ${analysis.summary.incorrectAnswers} mistakes by question type and record the reason.`
-      : 'Move to a harder passage while keeping the same pace.',
-    effectiveBandScore < 7
-      ? 'Schedule one timed Reading session and one vocabulary session this week.'
-      : 'Protect this band with one full timed simulation this week.',
-  ], [analysis.summary.incorrectAnswers, analysis.summary.skippedAnswers, effectiveBandScore])
-
   const questionMetaMap = useMemo(() => {
     const map = new Map<string, { question: Section['questions'][number]; section: Section }>()
     activeSections.forEach((section) => {
@@ -171,9 +170,6 @@ function ResultsContent() {
         .sort((a, b) => firstQuestionNumber(a.displayNumber) - firstQuestionNumber(b.displayNumber)),
     [analysis.questionResults],
   )
-
-  const rowOne = useMemo(() => flatQuestionResults.filter((item) => firstQuestionNumber(item.displayNumber) <= 20), [flatQuestionResults])
-  const rowTwo = useMemo(() => flatQuestionResults.filter((item) => firstQuestionNumber(item.displayNumber) >= 21), [flatQuestionResults])
 
   useEffect(() => {
     if (!result || !test) return
@@ -299,6 +295,7 @@ function ResultsContent() {
         },
         sourceTest: test,
         fromResults: true,
+        resultBackTo: backPath,
         mock,
         from,
       },
@@ -329,7 +326,7 @@ function ResultsContent() {
           totalQuestions: section.totalQuestions,
           accuracy: section.accuracy,
         })),
-        recommendations,
+        recommendations: [],
       })
 
       const url = new URL(response.path, window.location.origin).toString()
@@ -359,6 +356,15 @@ function ResultsContent() {
     }
   }
 
+  if (result && test && result.leaderboardEligible === false && result.eligibilityNoticeAcknowledged === false) {
+    return <main className="exam-flow attempt-entry"><LeaderboardEligibilityNotice seconds={result.timeSpent}
+      minimumSeconds={result.leaderboardMinimumSeconds ?? (result.totalQuestions >= 30 ? 1800 : 600)} onContinue={() => {
+        const acknowledged = { ...result, eligibilityNoticeAcknowledged: true }
+        saveReviewState(result.testId, { result: acknowledged, test })
+        navigate(location.pathname + location.search + location.hash, { replace: true, state: { ...state, result: acknowledged, test, mock, from } })
+      }} /></main>
+  }
+
   if (!result || !test) {
     return (
       <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[linear-gradient(155deg,#fff_0%,#fff5f5_55%,#fffaf8_100%)] px-4 py-8">
@@ -374,307 +380,73 @@ function ResultsContent() {
   }
 
   return (
-    <div className="workspace-page ielts-results-page relative min-h-screen overflow-hidden">
-      <AnimatedBackground />
-      <div className="relative z-10">
-        <header className="sticky top-0 z-20 border-b border-red-100 bg-white/90 backdrop-blur-md">
-          <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6">
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={goBack}
-                className="premium-back-btn-sm normal-case tracking-normal text-slate-700"
-              >
-                <ArrowLeft className="h-4 w-4 text-red-600" />
-                <span className="text-sm font-semibold text-slate-700">{backLabel}</span>
-              </button>
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-red-600"> <UiText text={"Result Studio"} /> </p>
-                <h1 className="text-lg font-black text-slate-900">IELTS {isListeningTest ? 'Listening' : 'Reading'} Result</h1>
-              </div>
-            </div>
-          </div>
+    <main className="workspace-page ielts-results-page exam-flow">
+      <div className="ir-shell">
+        <header className="ir-topbar">
+          <button type="button" onClick={goBack} className="flow-button ir-back"><ArrowLeft size={17} /><UiText text={backLabel} /></button>
+          <BrandLogo height={34} />
+          <button type="button" className="flow-button ir-download" onClick={() => downloadTestResult(reviewedResult ?? result)}><Download size={16} /><UiText text="Download result" /></button>
         </header>
-
-        <main className="mx-auto w-full max-w-7xl px-4 py-8 pb-12 sm:px-6">
-          <Reveal>
-          <section className="relative premium-hero p-6 sm:p-8">
-            <Burst count={24} play={analysis.summary.accuracy >= 80} />
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <span className="premium-top-chip">
-                   <UiText text={"Unified Result Flow"} /> </span>
-                <h2 className="mt-4 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
-                  {test.title}
-                </h2>
-                <p className="mt-2 text-sm text-slate-600">
-                   <UiText text={"Completed"} /> {' '}
-                  {new Date(result.date).toLocaleString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                   <UiText text={"Open Access"} /> </span>
-                <span className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-white px-3 py-1 text-xs font-semibold text-red-700">
-                  <Clock3 className="h-3.5 w-3.5" />
-                   <UiText text={"Time spent"} /> {formatSpentTime(result.timeSpent)}
-                </span>
-                {!result.isPartial ? (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                    <Sparkles className="h-3.5 w-3.5" />
-                     <UiText text={"Full submit"} /> </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-                    <TriangleAlert className="h-3.5 w-3.5" />
-                     <UiText text={"Partial submit"} /> </span>
-                )}
-              </div>
-            </div>
-
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-              {/* Certificate-style band ring (concept: 16-Mock-Result) */}
-              <div className="hero-metric-card flex flex-col items-center justify-center py-3">
-                <ProgressRing value={(Math.max(0, Math.min(9, effectiveBandScore)) / 9) * 100} size={104} stroke={10}>
-                  <div className="text-center">
-                    <p className="text-2xl font-black leading-none text-slate-900">
-                      <CountUp value={effectiveBandScore} decimals={1} />
-                    </p>
-                    <p className="mt-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-red-600"> <UiText text={"Band"} /> </p>
-                  </div>
-                </ProgressRing>
-                <p className="hero-metric-note mt-1.5"> <UiText text={"Estimated score"} /> </p>
-              </div>
-              <div className="hero-metric-card">
-                <p className="hero-metric-label"> <UiText text={"Accuracy"} /> </p>
-                <p className="hero-metric-value-sm">
-                  <CountUp value={analysis.summary.accuracy} suffix="%" />
-                </p>
-                <p className="hero-metric-note"> <UiText text={"Overall precision"} /> </p>
-              </div>
-              <div className="hero-metric-card">
-                <p className="hero-metric-label"> <UiText text={"Correct"} /> </p>
-                <p className="hero-metric-value-sm">
-                  <CountUp value={analysis.summary.correctAnswers} />
-                </p>
-                <p className="hero-metric-note"> <UiText text={"Right answers"} /> </p>
-              </div>
-              <div className="hero-metric-card">
-                <p className="hero-metric-label"> <UiText text={"Incorrect"} /> </p>
-                <p className="hero-metric-value-sm">
-                  <CountUp value={analysis.summary.incorrectAnswers} />
-                </p>
-                <p className="hero-metric-note"> <UiText text={"Need correction"} /> </p>
-              </div>
-              <div className="hero-metric-card">
-                <p className="hero-metric-label"> <UiText text={"Skipped"} /> </p>
-                <p className="hero-metric-value-sm">
-                  <CountUp value={analysis.summary.skippedAnswers} />
-                </p>
-                <p className="hero-metric-note"> <UiText text={"Unanswered"} /> </p>
-              </div>
-            </div>
-          </section>
-          </Reveal>
-
-          <section className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1.65fr)_minmax(19rem,.75fr)]">
-            <Reveal>
-              <article className="surface-card p-5 sm:p-6">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-red-500"> <UiText text={"Performance map"} /> </p>
-                    <h3 className="mt-1 text-2xl font-black text-slate-900"> <UiText text={"Your result, clearly explained"} /> </h3>
-                  </div>
-                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">
-                    {analysis.summary.accuracy >= 70 ? 'Strong attempt' : 'Growth opportunity'}
-                  </span>
-                </div>
-                <div className="mt-5 grid gap-4 sm:grid-cols-[16rem_1fr] sm:items-center">
-                  <div className="relative mx-auto aspect-square w-full max-w-[15rem]">
-                    <svg viewBox="0 0 220 220" className="h-full w-full overflow-visible" aria-label="Performance radar chart">
-                      {[42, 72, 102].map((radius) => (
-                        <polygon
-                          key={radius}
-                          points={`110,${110 - radius} ${110 + radius * 0.95},${110 - radius * 0.31} ${110 + radius * 0.59},${110 + radius * 0.81} ${110 - radius * 0.59},${110 + radius * 0.81} ${110 - radius * 0.95},${110 - radius * 0.31}`}
-                          fill="none"
-                          stroke="#fecaca"
-                          strokeWidth="1.5"
-                        />
-                      ))}
-                      <polygon
-                        points={`110,${110 - analysis.summary.accuracy} ${110 + Math.min(92, analysis.summary.correctAnswers * 3)},82 ${110 + Math.min(72, Math.max(32, 100 - result.timeSpent / 80))},168 ${110 - Math.min(72, Math.max(34, 100 - analysis.summary.skippedAnswers * 8))},168 ${110 - Math.min(92, effectiveBandScore * 10)},82`}
-                        fill="rgba(239,68,68,.28)"
-                        stroke="#dc2626"
-                        strokeWidth="3"
-                      />
-                      {['Accuracy', 'Correct', 'Pace', 'Complete', 'Band'].map((label, index) => {
-                        const positions = [[110, 7], [212, 80], [180, 215], [40, 215], [7, 80]]
-                        return <text key={label} x={positions[index][0]} y={positions[index][1]} textAnchor="middle" className="fill-slate-500 text-[10px] font-bold">{label}</text>
-                      })}
-                    </svg>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    {[
-                      ['Accuracy', `${analysis.summary.accuracy}%`, 'Overall precision'],
-                      ['Completion', `${Math.round(((analysis.summary.totalQuestions - analysis.summary.skippedAnswers) / Math.max(1, analysis.summary.totalQuestions)) * 100)}%`, 'Questions attempted'],
-                      ['Band estimate', effectiveBandScore.toFixed(1), 'IELTS scale'],
-                      ['Time', formatSpentTime(result.timeSpent), 'Total session'],
-                    ].map(([label, value, note]) => (
-                      <div key={label} className="rounded-2xl border border-red-100 bg-white/85 p-3 shadow-sm">
-                        <p className="text-[9px] font-black uppercase tracking-[0.14em] text-red-500">{label}</p>
-                        <p className="mt-1 text-xl font-black text-slate-900">{value}</p>
-                        <p className="mt-0.5 text-[10px] font-semibold text-slate-400">{note}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </article>
-            </Reveal>
-
-            <Reveal delay={0.05}>
-              <aside className="surface-card flex h-full flex-col p-5 sm:p-6">
-                <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500 to-rose-700 text-white shadow-[0_12px_26px_rgba(220,38,38,.3)]">
-                  <Sparkles className="h-5 w-5" />
-                </div>
-                <h3 className="mt-3 text-xl font-black text-slate-900"> <UiText text={"AI recommendations"} /> </h3>
-                <div className="mt-4 flex-1 space-y-3">
-                  {recommendations.map((recommendation, index) => (
-                    <div key={recommendation} className="flex gap-3 rounded-2xl border border-red-100 bg-red-50/55 p-3">
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-xs font-black text-red-600 shadow-sm">{index + 1}</span>
-                      <p className="text-xs font-semibold leading-5 text-slate-600">{recommendation}</p>
-                    </div>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => void shareResult()}
-                  disabled={sharingResult}
-                  className="arena-primary-btn mt-4 justify-center py-2.5 text-sm"
-                >
-                  <Share2 className="mr-2 h-4 w-4" /> {sharingResult ? 'Creating secure link…' : 'Share result'}
-                </button>
-                <button type="button" className="mt-3 rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold" onClick={() => downloadTestResult(reviewedResult ?? result)}>
-                  <UiText text="Download result" />
-                </button>
-              </aside>
-            </Reveal>
-          </section>
-
-          <section className="mt-5 surface-card p-4">
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <h3 className="text-2xl font-black text-slate-900"> <UiText text={"Answer Sheet"} /> </h3>
-                <p className="text-sm text-slate-500">
-                   <UiText text={"Your answers and status only. Correct answers appear only when enabled."} /> </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowCorrectAnswers((value) => !value)}
-                className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition ${
-                  showCorrectAnswers
-                    ? 'border-red-300 bg-red-50 text-red-700'
-                    : 'border-slate-200 bg-white text-slate-700'
-                }`}
-              >
-                {showCorrectAnswers ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                {showCorrectAnswers ? 'Hide Correct Answers' : 'Show Correct Answers'}
-              </button>
-            </div>
-
-            {[rowOne, rowTwo].map((row, rowIndex) => (
-              <div key={`answer-row-${rowIndex}`} className="mb-3 last:mb-0 rounded-2xl border border-red-100 bg-white px-3 py-3">
-                <p className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-red-600">
-                  {rowIndex === 0 ? 'Questions 1 - 20' : 'Questions 21 - 40'}
-                </p>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-10">
-                  {row.map((question) => {
-                    const meta = questionMetaMap.get(question.questionId)
-                    const userAnswer = formatUserAnswer(question.userAnswer, meta?.question.options)
-                    const correctAnswer = formatCorrectAnswer(question.correctAnswer)
-                    const statusBadge = questionStatusBadge(question.status)
-                    const SheetCard = isListeningTest ? 'article' : 'button'
-
-                    const numberTone =
-                      question.status === 'correct'
-                        ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
-                        : question.status === 'incorrect'
-                          ? 'bg-red-100 text-red-700 border-red-200'
-                          : 'bg-slate-100 text-slate-600 border-slate-200'
-
-                    return (
-                      <SheetCard key={`sheet-${question.questionId}`} {...(!isListeningTest ? { type: 'button' as const, onClick: () => activateFullReview(question.questionId), 'aria-label': `Review question ${question.displayNumber} in passage` } : {})} className={`rounded-xl border border-red-100 bg-[#fffdfd] p-2.5 text-left ${!isListeningTest ? 'transition hover:border-red-300 hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500' : ''}`}>
-                        <div className="flex items-center justify-between gap-1">
-                          <span className={`inline-flex h-6 min-w-6 items-center justify-center rounded-full border px-1.5 text-[10px] font-black ${numberTone}`}>
-                            {question.displayNumber}
-                          </span>
-                          <span className={`rounded-full border px-1.5 py-0.5 text-[9px] font-semibold ${statusBadge.tone}`}>
-                            {statusBadge.label}
-                          </span>
-                        </div>
-
-                        <p className="mt-1 truncate text-[11px] font-semibold text-slate-700" title={userAnswer}>
-                           <UiText text={"Your:"} /> {userAnswer}
-                        </p>
-
-                        {question.status !== 'correct' ? (
-                          <p className="mt-0.5 text-[10px] font-semibold text-red-600">
-                            {question.status === 'incorrect' ? 'Status: wrong' : 'Status: skipped'}
-                          </p>
-                        ) : (
-                          <p className="mt-0.5 text-[10px] font-semibold text-emerald-600"> <UiText text={"Status: correct"} /> </p>
-                        )}
-
-                        {showCorrectAnswers && question.status !== 'correct' ? (
-                          <p className="mt-0.5 truncate text-[10px] font-semibold text-emerald-700" title={correctAnswer}>
-                             <UiText text={"Correct:"} /> {correctAnswer}
-                          </p>
-                        ) : null}
-                      </SheetCard>
-                    )
-                  })}
-                </div>
-              </div>
-            ))}
-          </section>
-
-          <section className="mt-5 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-            <button
-              type="button"
-              onClick={() => navigate('/dashboard')}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-            >
-              <Home className="h-4 w-4" />
-               <UiText text={"Back to Home"} /> </button>
-            <button
-              type="button"
-              onClick={goBack}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-            >
-              <BookOpen className="h-4 w-4" />
-               {backLabel} </button>
-            <button
-              type="button"
-              onClick={() => activateFullReview()}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-100"
-            >
-              <Target className="h-4 w-4" />
-               <UiText text={"Full Review"} /> </button>
-            <button
-              type="button"
-              onClick={startRetake}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-300 bg-gradient-to-r from-red-500 to-rose-500 px-3 py-2.5 text-sm font-bold text-white hover:from-red-400 hover:to-rose-400"
-            >
-              <RotateCcw className="h-4 w-4" />
-               <UiText text={"Re-Do Test"} /> </button>
-          </section>
-
-        </main>
+        <section className="ir-glass ir-hero" aria-label={uiCopy("Test result")}>
+          <div className="ir-hero-copy">
+            <span className="ir-exam-label">IELTS {isListeningTest ? <UiText text={"Listening"} /> : <UiText text={"Reading"} />}</span>
+            <h1>{test.title.split(/\s+-\s+/, 2)[0]}</h1>
+            {test.title.includes(' - ') && <p className="ir-paper-topics">{test.title.split(' - ').slice(1).join(' - ')}</p>}
+            <div className="ir-meta"><span>{result.isPartial ? <TriangleAlert size={15} /> : <CheckCircle2 size={15} />}<UiText text={result.isPartial ? 'Partial submit' : 'Completed'} /></span><time dateTime={result.date}>{new Date(result.date).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</time></div>
+            <p className="ir-summary">{analysis.summary.correctAnswers} <UiText text={"of"} /> {analysis.summary.totalQuestions} <UiText text={"correct"} /> <span>&middot;</span> {Math.round(analysis.summary.accuracy)}<UiText text={"% accuracy"} /></p>
+            <div className="ir-hero-actions"><button type="button" className="flow-button is-primary" onClick={() => activateFullReview()}><BookOpen size={17} /><UiText text="Full Review" /></button><button type="button" className="flow-button" onClick={startRetake}><RotateCcw size={16} /><UiText text="Re-Do Test" /></button></div>
+          </div>
+          <div className="ir-band" aria-label={uiCopy("IELTS band {{value1}}", { value1: String(effectiveBandScore.toFixed(1)) })}>
+            <svg viewBox="0 0 180 180" aria-hidden="true"><circle className="ir-band-track" cx="90" cy="90" r="75" /><circle className="ir-band-progress" cx="90" cy="90" r="75" pathLength="100" strokeDasharray="100" strokeDashoffset={100 - effectiveBandScore / 9 * 100} transform="rotate(-90 90 90)" /></svg>
+            <div><small><UiText text={"IELTS band"} /></small><strong>{effectiveBandScore.toFixed(1)}</strong><span><UiText text={"out of 9.0"} /></span></div>
+          </div>
+        </section>
+        <section className="ir-metrics" aria-label={uiCopy("Attempt summary")}>
+          {[
+            { label: 'Correct', value: analysis.summary.correctAnswers, icon: CheckCircle2, tone: 'correct', note: 'Right answers' },
+            { label: 'Incorrect', value: analysis.summary.incorrectAnswers, icon: XCircle, tone: 'incorrect', note: 'Answers to review' },
+            { label: 'Skipped', value: analysis.summary.skippedAnswers, icon: EyeOff, tone: 'skipped', note: 'Unanswered' },
+            { label: 'Time spent', value: formatSpentTime(result.timeSpent), icon: Clock3, tone: 'time', note: 'Time on this attempt' },
+          ].map(({ label, value, icon: Icon, tone, note }) => <article className={`ir-glass ir-metric is-${tone}`} key={label}><span className="ir-metric-icon"><Icon size={20} /></span><div><p><UiText text={label} /></p><strong>{value}</strong><small><UiText text={note} /></small></div></article>)}
+        </section>
+        <div className="ir-tabs" role="tablist" aria-label={uiCopy("Result views")} onKeyDown={event => {
+          if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+          event.preventDefault()
+          const next = event.key === 'Home' ? 'answers' : event.key === 'End' ? 'leaderboard' : resultTab === 'answers' ? 'leaderboard' : 'answers'
+          setResultTab(next); document.getElementById(`ielts-result-tab-${next}`)?.focus()
+        }}>
+          {([{ id: 'answers', label: 'Answer Sheet', icon: BookOpen }, { id: 'leaderboard', label: 'Leaderboard', icon: Trophy }] as const).map(({ id, label, icon: Icon }) => <button key={id} id={`ielts-result-tab-${id}`} type="button" role="tab" aria-selected={resultTab === id} aria-controls={`ielts-result-panel-${id}`} tabIndex={resultTab === id ? 0 : -1} onClick={() => setResultTab(id)}><Icon size={18} /><UiText text={label} /></button>)}
+        </div>
+        {resultTab === 'answers' ? <section className="ir-glass ir-answers" role="tabpanel" id="ielts-result-panel-answers" aria-labelledby="ielts-result-tab-answers">
+          <header className="ir-section-heading"><div><BookOpen size={22} /><h2><UiText text="Answer Sheet" /></h2></div><button type="button" className="flow-button" aria-pressed={showCorrectAnswers} onClick={() => setShowCorrectAnswers(value => !value)}>{showCorrectAnswers ? <EyeOff size={16} /> : <Eye size={16} />}<UiText text={showCorrectAnswers ? 'Hide Correct Answers' : 'Show Correct Answers'} /></button></header>
+          <div className="ir-outcomes" role="group" aria-label={uiCopy("Filter answers")}>{(['all', 'correct', 'incorrect', 'skipped'] as const).map(status => <button type="button" key={status} aria-pressed={outcomeFilter === status} onClick={() => setOutcomeFilter(status)}>{status === 'all' ? <UiText text={"All answers"} /> : status === 'skipped' ? <UiText text={"Skipped"} /> : status === 'correct' ? <UiText text={"Correct"} /> : <UiText text={"Incorrect"} />} <span>{status === 'all' ? flatQuestionResults.length : flatQuestionResults.filter(question => question.status === status).length}</span></button>)}</div>
+          <div className={`ir-answer-groups${activeSections.length === 3 ? ' has-three-parts' : ''}${showCorrectAnswers ? ' shows-correct' : ''}`}>
+            {activeSections.map((section, index) => {
+              const sectionQuestions = flatQuestionResults.filter(question => questionMetaMap.get(question.questionId)?.section.id === section.id && (outcomeFilter === 'all' || question.status === outcomeFilter))
+              if (!sectionQuestions.length) return null
+              return <section className="ir-answer-group" key={section.id} aria-labelledby={`ir-part-${section.id}`}>
+                <header className="ir-answer-group-heading"><h3 id={`ir-part-${section.id}`}><UiText text={"Part"} /> {sectionQuestions[0].partNumber ?? index + 1}</h3><p>{section.title}</p><span>{sectionQuestions.length}</span></header>
+                <div className="ir-answer-columns" aria-hidden="true"><span><UiText text={"No."} /></span><span><UiText text={"Your answer"} /></span>{showCorrectAnswers && <span><UiText text={"Correct answer"} /></span>}<span><UiText text={"Status"} /></span><span /></div>
+                <div className="ir-answer-grid">{sectionQuestions.map(question => {
+                  const meta = questionMetaMap.get(question.questionId)
+                  const userAnswer = formatUserAnswer(question.userAnswer, meta?.question.options)
+                  const status = questionStatusBadge(question.status)
+                  const StatusIcon = question.status === 'correct' ? CheckCircle2 : question.status === 'incorrect' ? XCircle : EyeOff
+                  return <button type="button" className={`ir-answer is-${question.status}`} key={question.questionId} onClick={() => activateFullReview(question.questionId)} aria-label={uiCopy("Review question {{value1}} in {{value2}}", { value1: String(question.displayNumber), value2: String(isListeningTest ? 'listening' : 'passage') })}>
+                    <b className="ir-answer-number">{question.displayNumber}</b>
+                    <span className="ir-answer-response"><span className="sr-only"><UiText text={"Your answer:"} /> </span><strong>{question.status === 'skipped' ? <span className="ir-answer-unanswered"><UiText text={"Unanswered"} /></span> : userAnswer}</strong></span>
+                    {showCorrectAnswers && <span className="ir-answer-correct"><span className="sr-only"><UiText text={"Correct answer:"} /> </span><strong>{formatCorrectAnswer(question.correctAnswer)}</strong></span>}
+                    <span className="ir-answer-status"><StatusIcon size={15} /><span><UiText text={status.label} /></span></span>
+                    <ChevronRight className="ir-answer-link" size={15} aria-hidden="true" />
+                  </button>
+                })}</div>
+              </section>
+            })}
+          </div>
+          {!flatQuestionResults.some(question => outcomeFilter === 'all' || question.status === outcomeFilter) && <p className="ir-empty"><UiText text={"No answers match this filter."} /></p>}
+        </section> : <section className="ir-glass ir-leaderboard-panel" role="tabpanel" id="ielts-result-panel-leaderboard" aria-labelledby="ielts-result-tab-leaderboard"><TestLeaderboard testId={resolvedTestId} title={test.title} eligible={!result.isPartial} /></section>}
+        <footer className="ir-footer"><button type="button" className="flow-button" onClick={goBack}><ArrowLeft size={16} /><UiText text={backLabel} /></button><button type="button" className="flow-button" disabled={sharingResult} onClick={() => void shareResult()}><Share2 size={16} />{sharingResult ? <UiText text={"Creating link…"} /> : <UiText text={"Share result"} />}</button></footer>
       </div>
-    </div>
+    </main>
   )
 }

@@ -1,14 +1,20 @@
 import { onAccountDeleted } from './accountLifecycle.js'
-import { createHash, randomUUID } from 'node:crypto'
+import { createHash } from 'node:crypto'
 import WebSocket from 'ws'
 import { env } from '../config/env.js'
 import { prisma } from '../lib/prisma.js'
 import { AiGenerationError } from './aiProvider.service.js'
 import { assistantContextSchema, assistantRequestSchema, boundedHistory, coachPersonality, type AssistantContext } from './assistantPolicy.js'
 import { answerAssistant, assistantData, loadAssistantRecords } from './assistant.service.js'
+import { reserveVoiceTime, settleVoiceTime } from './voiceAllowance.service.js'
+import { BillingError } from './billing.service.js'
 
-type VoiceCall = { id: string; userId: string; callId: string; socket: WebSocket; timer: NodeJS.Timeout; abort: AbortController; context: AssistantContext; history: Array<{ role: 'user' | 'assistant'; content: string }> }
+type VoiceCall = { id: string; userId: string; callId: string; socket: WebSocket; timer: NodeJS.Timeout; abort: AbortController; context: AssistantContext; contextVersion: number; history: Array<{ role: 'user' | 'assistant'; content: string }> }
 const calls = new Map<string, VoiceCall>()
+function contextSignature(context: AssistantContext) {
+  return JSON.stringify(context, (_key, value) => value && typeof value === 'object' && !Array.isArray(value)
+    ? Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b))) : value)
+}
 onAccountDeleted(async (userId) => {
   await Promise.all([...calls.values()].filter(call => call.userId === userId).map(call => endVoiceCall(userId, call.id)))
 })
@@ -20,7 +26,7 @@ ${context.mode === 'examiner'
   ? 'You are an IELTS Speaking mock examiner. Speak English. Ask one short question at a time. Conduct Part 1 familiar topics, then give a Part 2 cue card and allow preparation and a long answer, then Part 3 discussion. Never correct, praise, coach or score during the examination. Give practice feedback only when the learner ends the exam. Timing is controlled by the application, never pretend to measure a duration yourself.'
   : `Speak ${context.language === 'auto' ? 'the language of the learner’s latest spoken question: Uzbek, English or Russian; switch naturally when the learner switches' : context.language === 'uz' ? 'natural Uzbek in Latin-script transcripts' : context.language === 'ru' ? 'Russian' : 'English'}. English practice examples can stay English. Explain one thing at a time, usually 1-3 short sentences. React to what the learner actually said and ask at most one useful follow-up. Adapt to their level.`}
 Let the learner finish, including thinking pauses. When interrupted, follow their latest request and do not repeat unheard speech. If speech is unclear, ask a brief clarification; never invent words. Never read Markdown, URLs, emojis or JSON aloud.
-Keep the same calm, clear, conversational voice style as IELTS Speaking practice. Use natural British English pronunciation for English, and native pronunciation and intonation for Uzbek or Russian. Avoid an exaggerated, robotic or theatrical delivery.
+Speak at a brisk, natural conversational pace with clear articulation and short pauses. Start with the useful answer, without a stock introduction. Use warm, varied intonation rather than slowly reading a document. Match the learner's tone without exaggeration. Use natural British English pronunciation for English, and native pronunciation and intonation for Uzbek or Russian. If the learner asks you to slow down, adapt immediately.
 The same learner uses text and voice chat. Use the supplied context and history accurately. Never invent their progress or memories, claim to see an unsupplied screenshot, or claim an app action happened.
 Use verifiedRecentResults to personalise practice. Do not read a list of private scores aloud. For a maths solution or detailed IELTS assessment, use ask_coach rather than improvising a score. Mild banter preferences never override examiner rules.
 Call ask_coach for: a detailed explanation/plan or essay review; a math solution needing checking; current university requirements, fees, scholarships or deadlines; app navigation/test launch; saving a durable goal/preference; or an explicit request for written detail. The tool uses the same professional coach as text chat and saves its result. Briefly explain the result in natural speech. Actions are proposals for the app's Allow button, not completed changes. Never invent source URLs.
@@ -36,12 +42,20 @@ async function hangup(callId: string) {
 }
 export async function endVoiceCall(userId: string, id: string) {
   const call = calls.get(id)
-  if (!call || call.userId !== userId) return false
+  if (!call) {
+    const saved = await prisma.voiceAllowanceSession.findFirst({ where: { id, userId, endedAt: null } })
+    if (!saved) return false
+    if (saved.providerCallId) await hangup(saved.providerCallId)
+    await settleVoiceTime(userId, id)
+    return true
+  }
+  if (call.userId !== userId) return false
   calls.delete(id)
   clearTimeout(call.timer)
   call.abort.abort()
   call.socket.close()
   await hangup(call.callId)
+  await settleVoiceTime(userId, id)
   return true
 }
 
@@ -49,9 +63,12 @@ export async function updateVoiceContext(userId: string, id: string, context: As
   const call = calls.get(id)
   if (!call || call.userId !== userId) return false
   // The call remains attached to its original chat even when the learner navigates.
-  const next = { ...context, threadId: call.context.threadId }
+  const next = { ...context, threadId: call.context.threadId ?? context.threadId }
+  const version = ++call.contextVersion
+  if (contextSignature(next) === contextSignature(call.context)) return true
   const records = await loadAssistantRecords(userId, next.threadId)
   if (call.abort.signal.aborted) return false
+  if (version !== call.contextVersion) return true
   call.context = next
   if (call.socket.readyState === WebSocket.OPEN) call.socket.send(JSON.stringify({ type: 'session.update', session: { type: 'realtime', instructions: voiceInstructions(next, assistantData(next, records)) } }))
   return true
@@ -59,12 +76,34 @@ export async function updateVoiceContext(userId: string, id: string, context: As
 
 export async function startVoiceCall(userId: string, sdp: string, context: AssistantContext, history: VoiceCall['history'], signal?: AbortSignal) {
   if (!env.OPENAI_API_KEY) throw new AiGenerationError(503, 'VOICE_NOT_CONFIGURED', 'Natural voice is not connected yet. You can use standard voice or type in chat.')
-  const records = await loadAssistantRecords(userId, context.threadId)
+  const started = performance.now()
+  // Read only this authenticated learner's records while reserving allowance.
+  // No provider connection starts until both checks have succeeded.
+  const [reserved, loaded] = await Promise.allSettled([
+    reserveVoiceTime(userId, env.AI_VOICE_MAX_MINUTES * 60),
+    loadAssistantRecords(userId, context.threadId),
+  ])
+  if (reserved.status === 'rejected') throw reserved.reason
+  const reservation = reserved.value
+  try {
+    if (loaded.status === 'rejected') throw loaded.reason
+    signal?.throwIfAborted()
+    return await startReservedVoiceCall(userId, sdp, context, history, reservation.id, reservation.expiresAt, loaded.value, started, signal)
+  } catch (error) {
+    const saved = await prisma.voiceAllowanceSession.findFirst({ where: { id: reservation.id, userId } })
+    if (saved?.providerCallId) await hangup(saved.providerCallId)
+    await settleVoiceTime(userId, reservation.id, true)
+    throw error
+  }
+}
+
+async function startReservedVoiceCall(userId: string, sdp: string, context: AssistantContext, history: VoiceCall['history'], id: string, expiresAt: Date, records: Awaited<ReturnType<typeof loadAssistantRecords>>, started: number, signal?: AbortSignal) {
+  const prepared = performance.now()
   const session = {
     type: 'realtime', model: env.AI_VOICE_MODEL, instructions: voiceInstructions(context, assistantData(context, records)),
     output_modalities: ['audio'], max_output_tokens: 900,
     audio: { input: { noise_reduction: { type: 'near_field' }, transcription: { model: 'gpt-4o-transcribe', prompt: 'Transcribe the speaker verbatim, preserving their original language, mixed-language words, fillers and errors. Do not translate or improve their speech.' },
-      turn_detection: { type: 'semantic_vad', eagerness: context.mode === 'examiner' ? 'low' : 'medium', create_response: true, interrupt_response: true } }, output: { voice: 'marin' } },
+      turn_detection: { type: 'semantic_vad', eagerness: context.mode === 'examiner' ? 'low' : 'high', create_response: true, interrupt_response: true } }, output: { voice: 'marin', speed: context.mode === 'examiner' ? 1 : 1.1 } },
     tools: [{ type: 'function', name: 'ask_coach', description: 'Ask the shared tutor for accurate detailed coaching, current official research, a saved memory or an app action proposal. Returns a written answer plus actions for the learner to approve.',
       parameters: { type: 'object', properties: { request: { type: 'string', description: 'The learner\'s actual request, including relevant wording.' } }, required: ['request'], additionalProperties: false } }],
     tool_choice: 'auto',
@@ -77,16 +116,17 @@ export async function startVoiceCall(userId: string, sdp: string, context: Assis
   })
   if (!response.ok) throw new AiGenerationError(502, 'VOICE_CONNECTION_FAILED', 'Natural voice could not connect. Retry or use standard voice.')
   const answer = await response.text()
+  const negotiated = performance.now()
   const location = response.headers.get('location')
   const callId = location?.split('/').pop()?.split('?')[0]
   if (!answer.startsWith('v=') || !callId || !/^[A-Za-z0-9_-]+$/.test(callId)) throw new AiGenerationError(502, 'VOICE_INVALID_SESSION', 'Voice returned an invalid session. Please retry.')
-  const id = randomUUID()
+  await prisma.voiceAllowanceSession.update({ where: { id }, data: { providerCallId: callId } })
   const socketUrl = new URL(env.OPENAI_API_BASE.replace(/\/$/, '') + '/realtime')
   socketUrl.protocol = socketUrl.protocol === 'https:' ? 'wss:' : 'ws:'
   socketUrl.searchParams.set('call_id', callId)
   const socket = new WebSocket(socketUrl, { headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}` } })
   const abort = new AbortController()
-  const call: VoiceCall = { id, userId, callId, socket, abort, context, history: boundedHistory(history), timer: setTimeout(() => { void endVoiceCall(userId, id) }, env.AI_VOICE_MAX_MINUTES * 60000) }
+  const call: VoiceCall = { id, userId, callId, socket, abort, context, contextVersion: 0, history: boundedHistory(history), timer: setTimeout(() => { void endVoiceCall(userId, id).catch(() => {}) }, Math.max(0, expiresAt.getTime() - Date.now())) }
   call.timer.unref()
   const handledTools = new Set<string>()
   let speechVersion = 0
@@ -150,12 +190,22 @@ export async function startVoiceCall(userId: string, sdp: string, context: Assis
       socket.once('error', () => { clearTimeout(timer); reject(new Error('Voice control connection failed.')) })
     })
     signal?.throwIfAborted()
+    if (expiresAt.getTime() <= Date.now()) throw new BillingError('PREMIUM_REQUIRED', 'The Live AI time window ended. Your unused reservation will be returned; try again after your allowance renews.')
     for (const previous of calls.values()) if (previous.userId === userId) await endVoiceCall(userId, previous.id)
     calls.set(id, call)
-    return { id, sdp: answer, maxMinutes: env.AI_VOICE_MAX_MINUTES }
+    const timings = { preparationMs: Math.round(prepared - started), providerMs: Math.round(negotiated - prepared), controlMs: Math.round(performance.now() - negotiated), totalMs: Math.round(performance.now() - started) }
+    console.info('voice.performance', { stage: 'setup', ...timings, model: env.AI_VOICE_MODEL })
+    return { id, sdp: answer, expiresAt: expiresAt.toISOString(), maxMinutes: Math.max(0, (expiresAt.getTime() - Date.now()) / 60000), timings }
   } catch (error) {
     clearTimeout(call.timer); socket.close(); await hangup(callId)
     throw error
   }
 }
 export { assistantContextSchema }
+
+// Reclaim provider calls after a process restart or a missed browser disconnect.
+const allowanceCleanup = setInterval(() => {
+  void prisma.voiceAllowanceSession.findMany({ where: { endedAt: null, expiresAt: { lte: new Date() } }, take: 50 })
+    .then(rows => Promise.allSettled(rows.map(row => endVoiceCall(row.userId, row.id)))).catch(() => {})
+}, 15000)
+allowanceCleanup.unref()

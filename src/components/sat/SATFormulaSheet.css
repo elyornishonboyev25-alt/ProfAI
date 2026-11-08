@@ -39,6 +39,11 @@
 .sat-formula-card h4 { min-height: 17px; margin: 0 0 6px; color: #475569; font-size: 11px; line-height: 17px; font-weight: 650; }
 .sat-formula-diagram { display: block; width: 100%; max-width: 158px; height: 88px; margin: 0 auto 4px; color: #334155; }
 .sat-formula-equation { color: #0f172a; font-family: ui-serif, Georgia, Cambria, 'Times New Roman', serif; font-size: 19px; line-height: 1.6; }
+/* These short reference equations fit their cards; allow fraction/root ink to
+   extend vertically instead of creating a separate scroll area per formula. */
+.sat-formula-equation > div { overflow: visible; padding-block: 4px; }
+.sat-formula-equation > div + div { margin-top: 0; }
+.sat-formula-equation math { min-width: 0; max-width: 100%; }
 .sat-formula-note { margin: 6px 0 0; color: #64748b; font-size: 10px; line-height: 1.6; }
 .sat-formula-facts { border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; padding: 14px; font-size: 12px; line-height: 1.8; }
 .sat-formula-facts > div + div { margin-top: 8px; }

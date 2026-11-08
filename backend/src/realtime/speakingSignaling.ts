@@ -1,7 +1,7 @@
 import { onAccountDeleted } from '../services/accountLifecycle.js'
 import type { Server } from 'http'
 import { WebSocketServer, WebSocket } from 'ws'
-import { attachCommunitySignaling, type CommunityAuthenticator } from './communitySignaling.js'
+import { attachCommunitySignaling, type CommunityAuthenticator, type CommunityBlockStore } from './communitySignaling.js'
 
 // Live-partner matchmaking + WebRTC signaling relay.
 // The server never touches audio — it only pairs two learners who are searching in
@@ -343,9 +343,9 @@ async function changeDiscussion(client: Client, roomId: string, messageId: strin
   }
 }
 
-function attach(server: Server, authenticate?: CommunityAuthenticator) {
+function attach(server: Server, authenticate?: CommunityAuthenticator, blockStore?: CommunityBlockStore) {
   const wss = new WebSocketServer({ server, path: '/ws/speaking', maxPayload: 1_000_000 })
-  attachCommunitySignaling(wss, authenticate)
+  attachCommunitySignaling(wss, authenticate, blockStore)
   const alive = new WeakSet<WebSocket>()
   const heartbeat = setInterval(() => {
     for (const ws of wss.clients) {

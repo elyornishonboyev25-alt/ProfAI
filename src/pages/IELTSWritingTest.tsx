@@ -1,3 +1,6 @@
+import UiText from '@/components/common/UiText'
+import AttemptEntryBoundary from '@/components/tests/AttemptEntryBoundary'
+import { testReturnPath } from '@/utils/testNavigation'
 import { readActiveTestPaper } from '@/utils/activeTestPaper'
 import { resolveFullMockRouteState } from '@/utils/fullMockRouteState'
 import FullMockSectionGate from '@/components/ielts/FullMockSectionGate'
@@ -9,7 +12,7 @@ import { getWritingFullTestById, getWritingTaskById } from '@/data/writingTestDa
 import type { WritingTask, WritingFullTest } from '@/data/writingTestData'
 import IELTSWritingTestInterface from '@/components/IELTSWritingTestInterface'
 import IELTSWritingFullTestInterface from '@/components/IELTSWritingFullTestInterface'
-import { fullMockLaunchState, getFullMockPendingSection, getFullMockSectionRedirect, saveFullMockSectionResult, type MockSectionKey } from '@/utils/ieltsMockCatalog'
+import { fullMockAfterSection, fullMockLaunchState, getFullMockPendingSection, getFullMockSectionRedirect, saveFullMockSectionResult, type MockSectionKey } from '@/utils/ieltsMockCatalog'
 
 type WritingTestNavState = {
   autoStart?: boolean
@@ -17,11 +20,12 @@ type WritingTestNavState = {
   durationMinutes?: number
   entry?: string
   from?: string
+  returnTo?: string
   mock?: { id: string; section: MockSectionKey }
 } | null
 
 export default function IELTSWritingTest() {
-  return <FullMockSectionGate><WritingTestContent /></FullMockSectionGate>
+  return <AttemptEntryBoundary exam="IELTS"><FullMockSectionGate><WritingTestContent /></FullMockSectionGate></AttemptEntryBoundary>
 }
 
 function WritingTestContent() {
@@ -50,6 +54,7 @@ function WritingTestContent() {
   }
 
   const handleExit = () => {
+    if (navState?.returnTo) { navigate(testReturnPath(navState, '/ielts')); return }
     if (navState?.mock?.id) {
       navigate(`/mock/ielts/${navState.mock.id}`, { state: { from: navState.from } })
       return
@@ -71,9 +76,8 @@ function WritingTestContent() {
           saveFullMockSectionResult(mockId, 'writing', {
             band, summary, review, testId: fullTest.id, completedAt: new Date().toISOString(),
           })
-          const next = getFullMockPendingSection(mockId)
-          if (next?.launchPath) navigate(next.launchPath, { replace: true, state: fullMockLaunchState(mockId, next.key, navState?.from) })
-          else navigate(`/mock/ielts/${mockId}`, { replace: true, state: { from: navState?.from } })
+          const after = fullMockAfterSection(mockId, 'writing', navState?.from)
+          navigate(after.path, { replace: true, state: after.state })
         }}
         autoStart={navState?.mock?.id ? true : navState?.autoStart}
         autoTimerEnabled={navState?.mock?.id ? true : navState?.timerEnabled}
@@ -90,12 +94,12 @@ function WritingTestContent() {
             <Clock3 className="h-7 w-7" />
           </span>
           <h1 className="mt-4 text-3xl font-black text-slate-900">
-            {task || fullTest ? 'Writing Test Coming Soon' : 'Test Not Found'}
+            {task || fullTest ? <UiText text={"Writing Test Coming Soon"} /> : <UiText text={"Test Not Found"} />}
           </h1>
           <p className="mt-2 text-sm text-slate-600">
             {task || fullTest
-              ? 'This writing test is currently in preview mode. Writing Full Test 1 is live now.'
-              : 'The requested writing test could not be found.'}
+              ? <UiText text={"This writing test is currently in preview mode. Writing Full Test 1 is live now."} />
+              : <UiText text={"The requested writing test could not be found."} />}
           </p>
           <div className="mt-5 flex flex-wrap justify-center gap-2">
             <button
@@ -103,7 +107,7 @@ function WritingTestContent() {
               className="route-back-button"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back to Writing Tests
+              <UiText text={"Back to Writing Tests"} />
             </button>
           </div>
         </div>

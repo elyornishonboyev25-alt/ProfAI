@@ -1,3 +1,5 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import { useId } from 'react'
 import { BookOpen, ChevronDown } from 'lucide-react'
 import type { VocabularyEntry } from '@/data/vocabularyCollections'
@@ -9,10 +11,11 @@ export default function VocabularyInlineLibrary({ entries, accent, open, onToggl
   open: boolean
   onToggle: () => void
 }) {
+  const { c: uiCopy } = useCopy()
   const panelId = useId()
-  return <section className="vocab-inline-library" aria-label="Vocabulary">
+  return <section className="vocab-inline-library" aria-label={uiCopy("Vocabulary")}>
     <button type="button" className="vocab-word-list" aria-expanded={open} aria-controls={panelId} onClick={onToggle}>
-      <span><BookOpen size={17} aria-hidden="true" />Vocabulary<span className="vocab-word-count">{entries.length}</span></span>
+      <span><BookOpen size={17} aria-hidden="true" /><UiText text={"Vocabulary"} /><span className="vocab-word-count">{entries.length}</span></span>
       <ChevronDown size={16} aria-hidden="true" />
     </button>
     <VocabularyPanel id={panelId} open={open}>

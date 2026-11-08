@@ -16,8 +16,9 @@ async function main() {
   const directory = await mkdtemp(join(tmpdir(), 'profai-speaking-browser-'))
   const source = `
     import React from 'react'; import {createRoot} from 'react-dom/client';
+    import {MemoryRouter} from 'react-router-dom';
     import ExaminerSession from './src/components/speaking/ExaminerSession';
-    import {apiClient} from './src/lib/apiClient';
+    import {apiClient, ApiError} from './src/lib/apiClient';
     window.webkitSpeechRecognition = undefined; window.SpeechRecognition = undefined;
     const wav = new Uint8Array(4844), view = new DataView(wav.buffer);
     const write = (offset, text) => [...text].forEach((char, index) => wav[offset + index] = char.charCodeAt(0));
@@ -26,7 +27,7 @@ async function main() {
     view.setUint32(24, 8000, true); view.setUint32(28, 16000, true);
     view.setUint16(32, 2, true); view.setUint16(34, 16, true); write(36, 'data'); view.setUint32(40, 4800, true);
     const audioBase64 = btoa(String.fromCharCode(...wav));
-    window.files = []; window.voices = []; window.failVoice = false;
+    window.files = []; window.voices = []; window.failVoice = false; window.transcriptionFailures = 1;
     apiClient.post = async (path, body) => {
       if (path.endsWith('/voice')) {
         window.voices.push(body.voice);
@@ -36,23 +37,24 @@ async function main() {
       }
       if (path.endsWith('/transcribe')) {
         window.files.push(body);
+        if (window.transcriptionFailures-- > 0) throw new ApiError('Temporary provider failure', 503);
         return {text: 'I enjoy learning English because it helps me communicate with people around the world.'};
       }
       return {text: JSON.stringify({reply: 'Why is that important to you?'})};
     };
     const root = createRoot(document.getElementById('root'));
-    root.render(<div className="ielts-speaking-live-workspace"><ExaminerSession config={{mode:'full_mock', mockSeed:{
+    root.render(<MemoryRouter><div className="ielts-speaking-live-workspace"><ExaminerSession config={{mode:'full_mock', mockSeed:{
       part1:['What do you study?'], part2:{title:'Describe a useful skill.',bullets:['What it is','How you learned it','When you use it','Why it is useful'],followUp:'Do you use it every day?'}, part3:['How do people learn new skills?']
-    }}} modeLabel="Speaking Full Mock 1" onExit={()=>{}} onSaved={()=>{}} /></div>);
+    }}} modeLabel="Speaking Full Mock 1" onExit={()=>{}} onSaved={()=>{}} /></div></MemoryRouter>);
   `
-  const bundle = await build({ stdin: { contents: source, loader: 'tsx', resolveDir: process.cwd() }, bundle: true, write: false, format: 'iife', tsconfig: 'tsconfig.json', define: { 'import.meta.env': '{}', 'process.env.NODE_ENV': '"production"' }, loader: { '.jpg': 'dataurl', '.png': 'dataurl' } })
+  const bundle = await build({ stdin: { contents: source, loader: 'tsx', resolveDir: process.cwd() }, outfile: join(directory, 'fixture.js'), bundle: true, write: false, format: 'iife', tsconfig: 'tsconfig.json', define: { 'import.meta.env': '{}', 'process.env.NODE_ENV': '"production"' }, loader: { '.jpg': 'dataurl', '.png': 'dataurl' } })
   const styles = await Promise.all(['src/index.css', 'src/styles/ielts-exam-workspace.css'].map((file) => readFile(file, 'utf8')))
-  const css = (await postcss([tailwindcss()]).process(styles[0], { from: 'src/index.css' })).css + '\n' + styles[1]
+  const css = (await postcss([tailwindcss()]).process(styles[0], { from: 'src/index.css' })).css + '\n' + styles[1] + '\n' + bundle.outputFiles.filter(file => file.path.endsWith('.css')).map(file => file.text).join('\n')
   const server = createServer((req, res) => {
     if (req.url === '/') {
-      res.setHeader('Content-Type', 'text/html')
+      res.setHeader('Content-Type', 'text/html; charset=utf-8')
       res.end(`<meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}</style><div style="height:76px"></div><div id="root"></div><script src="/fixture.js"></script>`)
-    } else if (req.url === '/fixture.js') { res.setHeader('Content-Type', 'text/javascript'); res.end(bundle.outputFiles[0].text) }
+    } else if (req.url === '/fixture.js') { res.setHeader('Content-Type', 'text/javascript; charset=utf-8'); res.end(bundle.outputFiles.find(file => file.path.endsWith('.js')).text) }
     else { res.writeHead(404); res.end() }
   })
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve))
@@ -75,6 +77,7 @@ async function main() {
     await new Promise((resolve) => socket.once('open', resolve))
     let id = 0
     const pending = new Map()
+    const browserErrors = []
     const send = (method, params = {}) => new Promise((resolve, reject) => {
       const requestId = ++id
       const timeout = setTimeout(() => { pending.delete(requestId); reject(new Error(method)) }, 15000)
@@ -83,6 +86,7 @@ async function main() {
     })
     socket.on('message', (data) => {
       const message = JSON.parse(data), call = pending.get(message.id)
+      if (message.method === 'Runtime.exceptionThrown') browserErrors.push(message.params.exceptionDetails.exception?.description ?? message.params.exceptionDetails.text)
       if (!call) return
       clearTimeout(call.timeout); pending.delete(message.id)
       if (message.error) call.reject(message.error); else call.resolve(message.result)
@@ -97,9 +101,10 @@ async function main() {
         if (await evaluate(expression)) return
         await new Promise((resolve) => setTimeout(resolve, 100))
       }
-      throw new Error(`Timed out: ${expression}; ${await evaluate('document.body.innerText')}`)
+      throw new Error(`Timed out: ${expression}; ${await evaluate('document.body.innerText')}; ${browserErrors.join('\n')}`)
     }
     const click = (text) => evaluate(`[...document.querySelectorAll('button')].find(b=>b.textContent.includes(${JSON.stringify(text)})).click()`)
+    await send('Runtime.enable')
     await send('Emulation.setDeviceMetricsOverride', { width: 1366, height: 768, deviceScaleFactor: 1, mobile: false })
     await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/` })
     await until(`document.body.innerText.includes('Begin speaking test')`)
@@ -108,11 +113,12 @@ async function main() {
     assert.equal(await evaluate(`window.voices.every(v=>v==='cedar')`), true)
     await new Promise((resolve) => setTimeout(resolve, 1200))
     await click('Finish answer')
-    await until('window.files.length === 1')
+    await until('window.files.length === 2')
+    assert.equal(await evaluate('JSON.stringify(window.files[0]) === JSON.stringify(window.files[1])'), true, 'Automatic transcription retry preserves the native recording')
     const file = await evaluate(`({bytes:atob(window.files[0].audioBase64).length,mime:window.files[0].mimeType})`)
     assert.ok(file.bytes > 1000, 'Native MediaRecorder retains actual audio and final chunks')
     assert.equal(file.mime, 'audio/webm')
-    console.log('PASS: native browser Audio ends before recording; real MediaRecorder creates a valid WebM answer')
+    console.log('PASS: native Audio ends before recording; real MediaRecorder audio survives a temporary transcription failure')
 
     // Reproduce unavailable examiner audio and check the recovery controls at
     // desktop, zoom-sized, short-window, tablet and narrow mobile viewports.

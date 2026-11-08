@@ -1,3 +1,4 @@
+import UiText from '@/components/common/UiText'
 import { Suspense, useCallback, useEffect, useMemo } from 'react'
 import { useLocation } from 'react-router-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
@@ -6,7 +7,6 @@ import { apiClient } from '@/lib/apiClient'
 import { BrandMark } from '@/components/brand/BrandLogo'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useAiAssistantStore } from '@/store/aiAssistantStore'
-import { hasPremiumAccess } from '@/utils/premiumAccess'
 import type { AiReportResponse } from '@/types/platform'
 import { lazyWithRetry as lazy } from '@/utils/lazyWithRetry'
 
@@ -34,7 +34,7 @@ export function FloatingAIAssistant() {
   const location = useLocation()
   const reduceMotion = useReducedMotion()
   const user = useAuthStore((state: AuthState) => state.user)
-  const hasPremium = hasPremiumAccess(user)
+  const hasPremium = Boolean(user)
   const isOpen = useAiAssistantStore((state) => state.isOpen)
   const open = useAiAssistantStore((state) => state.open)
   const close = useAiAssistantStore((state) => state.close)
@@ -134,7 +134,7 @@ export function FloatingAIAssistant() {
             aria-hidden="true"
             className="pointer-events-none absolute bottom-full right-0 z-20 mb-2 whitespace-nowrap rounded-lg border border-slate-200/80 bg-slate-950/95 px-2.5 py-1.5 text-[11px] font-semibold tracking-wide text-white opacity-0 shadow-lg transition-all duration-150 group-hover:-translate-y-0.5 group-hover:opacity-100 group-focus-visible:-translate-y-0.5 group-focus-visible:opacity-100 dark:border-white/10"
           >
-            Ivygoo tutor
+            <UiText text={"Ivygoo tutor"} />
           </span>
         ) : null}
         {!isOpen ? (

@@ -20,6 +20,7 @@ const result = { taskAchievement: 6, coherenceCohesion: 7, lexicalResource: 6, g
     { original: 'These student learns', corrected: 'These students learn', explanation: 'Plural agreement.', category: 'grammar' },
     { original: 'They study every day.', corrected: 'They study every day.', explanation: 'Already correct.', category: 'grammar' },
     { original: 'I has a problem', corrected: 'I have a problem', explanation: 'Invented evidence.', category: 'grammar' },
+    { original: 'Regular practice', corrected: 'Consistent practice', explanation: 'Unknown category.', category: 'style' },
   ] }
 
 test('Writing scores are computed by the server; corrections must quote the submitted essay', () => {
@@ -68,5 +69,62 @@ test('Writing generation uses the trusted rubric and server word count, preservi
   }
   t.after(() => { globalThis.fetch = nativeFetch; prisma.aiUsageEvent.create = originalUsage; env.OPENAI_API_KEY = '' })
   const checked = await assessWriting('writing-test-user', { taskType: 'task1', prompt: 'Describe the chart.', response, visualContext: '2000: 10; 2010: 20' })
+  assert.equal(checked.overallBand, 6)
+})
+
+test('Writing retries invalid feedback and falls back to JSON mode when Gemini rejects the schema', async (t) => {
+  const originalKey = env.GEMINI_API_KEY
+  const originalUsage = prisma.aiUsageEvent.create
+  env.GEMINI_API_KEY = 'fake-writing-test-key'
+  prisma.aiUsageEvent.create = async ({ data }) => data
+  t.after(() => { env.GEMINI_API_KEY = originalKey; prisma.aiUsageEvent.create = originalUsage })
+  t.mock.method(console, 'warn', () => {})
+
+  const fetchMock = t.mock.method(globalThis, 'fetch', async (_url, options) => {
+    const { generationConfig } = JSON.parse(options.body)
+    assert.equal(generationConfig.responseMimeType, 'application/json')
+    const call = fetchMock.mock.callCount()
+    const schema = generationConfig.responseSchema
+    if (call === 1) {
+      assert.equal(schema, undefined)
+    } else {
+      assert.equal(schema.type, 'OBJECT')
+      assert.ok(schema.required.includes('improvedVersion'))
+      assert.ok(schema.properties.criterionFeedback.required.includes('grammaticalRange'))
+    }
+    if (call === 0) return Response.json({ error: { status: 'INVALID_ARGUMENT' } }, { status: 400 })
+    const feedback = call === 1 ? { ...result, improvedVersion: undefined } : result
+    return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify(feedback) }] } }] })
+  })
+
+  const checked = await assessWriting('writing-test-user', { taskType: 'task2', prompt: 'Discuss regular practice.', response })
+  assert.equal(fetchMock.mock.callCount(), 3)
+  assert.equal(checked.overallBand, 6)
+  assert.equal(checked.improvedVersion, result.improvedVersion)
+})
+
+test('Writing tries a model with separate limits when the configured Gemini models are rate-limited', async (t) => {
+  const originalKey = env.GEMINI_API_KEY
+  const originalModels = env.GEMINI_MODELS
+  const originalUsage = prisma.aiUsageEvent.create
+  env.GEMINI_API_KEY = 'fake-writing-test-key'
+  env.GEMINI_MODELS = 'gemini-2.5-flash,gemini-2.5-flash-lite'
+  prisma.aiUsageEvent.create = async ({ data }) => data
+  t.after(() => {
+    env.GEMINI_API_KEY = originalKey
+    env.GEMINI_MODELS = originalModels
+    prisma.aiUsageEvent.create = originalUsage
+  })
+
+  const models = []
+  t.mock.method(globalThis, 'fetch', async (url) => {
+    const model = new URL(url).pathname.split('/').at(-1).split(':')[0]
+    models.push(model)
+    if (model !== 'gemini-3.5-flash-lite') return new Response(null, { status: 429 })
+    return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify(result) }] } }] })
+  })
+
+  const checked = await assessWriting('writing-test-user', { taskType: 'task2', prompt: 'Discuss regular practice.', response })
+  assert.deepEqual(models, ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-3.5-flash-lite'])
   assert.equal(checked.overallBand, 6)
 })

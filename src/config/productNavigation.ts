@@ -44,7 +44,6 @@ export const PRODUCT_NAVIGATION: ProductNavigationItem[] = [
       '/tests',
       '/test',
       '/results',
-      '/analyze-mistakes',
     ].some((prefix) => matchesPrefix(pathname, prefix)),
   },
   {
@@ -82,6 +81,7 @@ export const PRODUCT_NAVIGATION: ProductNavigationItem[] = [
     icon: ClipboardCheck,
     matches: (pathname) =>
       pathname === '/admission' ||
+      matchesPrefix(pathname, '/admission/matches') ||
       matchesPrefix(pathname, '/admission/lessons') ||
       matchesPrefix(pathname, '/admission/shortlist'),
   },

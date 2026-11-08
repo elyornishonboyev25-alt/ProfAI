@@ -33,7 +33,9 @@ export function useFeatureTrial(feature: TrialFeature): FeatureTrial {
   const { wallet, userId, refresh } = useBillingStore()
   useEffect(() => { if (user && userId !== user.id) void refresh() }, [user?.id, userId, refresh])
   const isPremium = hasPremiumAccess(user)
-  const usage = userId === user?.id ? wallet?.usage?.[SERVER_FEATURE[feature]] : undefined
+  // Catalog entries have permanent ID-based access, independent of assessment quotas.
+  const catalogFeature = feature === 'reading' || feature === 'listening' || feature === 'mock'
+  const usage = !catalogFeature && userId === user?.id ? wallet?.usage?.[SERVER_FEATURE[feature]] : undefined
   const used = usage?.used ?? 0
   const limit = usage ? usage.limit ?? Number.POSITIVE_INFINITY : Number.POSITIVE_INFINITY
   const remaining = Math.max(0, limit - used)

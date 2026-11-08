@@ -1,0 +1,64 @@
+/* ProfAI silver-glass skin over the Bluebook layout: same structure, frosted
+   silver bars and the crimson accent used across SAT practice. */
+.sat-bank-run {
+  --qr-red: #c41e3a;
+  --qr-red-soft: #fdf1f3;
+  --qr-red-line: #e8b1bc;
+  --qr-ink: #141b29;
+  --qr-text: #2a3447;
+  --qr-muted: #687387;
+  --qr-line: #d4dbe5;
+  --qr-edge: 1px solid rgba(255,255,255,.95);
+  --qr-silver: linear-gradient(145deg, #fff, #eef1f5 50%, #e0e5ec);
+  --qr-ink-grad: linear-gradient(160deg, #2a3446, #121927);
+  --qr-shadow-sm: inset 0 1px 0 rgba(255,255,255,.95), 0 8px 18px -10px rgba(27,38,58,.26);
+  --qr-red-grad: linear-gradient(135deg, #d5263f, #b51b34 58%, #96162c);
+  background:
+    radial-gradient(900px 420px at 100% 0, rgba(196,30,58,.05), transparent 62%),
+    linear-gradient(165deg, #f3f5f8, #e9edf2 50%, #e0e5ec);
+  color: var(--qr-ink);
+}
+.sat-bank-run button { transition: background-color .16s, border-color .16s, box-shadow .16s, color .16s; }
+.sat-bank-run button:focus-visible, .sat-bank-run-overlay button:focus-visible { outline-color: rgba(196,30,58,.45); }
+
+.sat-bank-run-header { border-bottom: 1px solid rgba(255,255,255,.9); background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(243,245,249,.78)); box-shadow: 0 1px 0 rgba(203,211,223,.7), 0 10px 26px -18px rgba(27,38,58,.3); backdrop-filter: blur(20px) saturate(150%); }
+.sat-bank-run-heading h1 { color: var(--qr-ink); }
+.sat-bank-run-directions { color: var(--qr-red); }
+.sat-bank-run-status p { color: var(--qr-ink); }
+.sat-bank-run-status span { display: inline-block; margin-top: 4px; padding: 3px 10px; border: var(--qr-edge); border-radius: 999px; background: rgba(255,255,255,.75); box-shadow: var(--qr-shadow-sm); color: var(--qr-muted); font-size: 11px; font-weight: 700; }
+.sat-bank-run-tools button { border: var(--qr-edge); background: rgba(255,255,255,.8); box-shadow: var(--qr-shadow-sm); color: var(--qr-text); font-family: inherit; font-weight: 750; }
+.sat-bank-run-tools button:hover { color: var(--qr-red); }
+.sat-bank-run-tools .sat-bank-run-navigator-toggle,
+.sat-bank-run-tools .sat-bank-run-reference,
+.sat-bank-run-tools .sat-bank-run-desmos { background: rgba(255,255,255,.8); color: var(--qr-text); }
+.sat-bank-run-tools .sat-bank-run-reference:hover,
+.sat-bank-run-tools .sat-bank-run-desmos:hover { background: #fff; color: var(--qr-red); }
+.sat-bank-run-tools .sat-bank-run-reference[aria-expanded='true'],
+.sat-bank-run-tools .sat-bank-run-desmos[aria-expanded='true'] { border-color: transparent; background: var(--qr-red-grad); color: #fff; box-shadow: 0 10px 20px -10px rgba(157,23,48,.7); }
+.sat-bank-run-divider { height: 2px; background: linear-gradient(90deg, var(--qr-red), #e9a2af 26%, #dfe4ec 60%, transparent); }
+
+.sat-bank-run-footer { background: linear-gradient(0deg, rgba(255,255,255,.92), rgba(243,245,249,.78)); box-shadow: 0 -1px 0 rgba(203,211,223,.7), 0 -10px 26px -20px rgba(27,38,58,.3); backdrop-filter: blur(20px) saturate(150%); }
+.sat-bank-run-footer .sat-bank-run-divider { display: none; }
+.sat-bank-run-learner { color: var(--qr-text); font-family: inherit; font-size: 15px; font-weight: 750; }
+.sat-bank-run-question-menu { border: 0; background: var(--qr-ink-grad); box-shadow: 0 10px 22px -12px rgba(18,25,39,.8), inset 0 1px 0 rgba(255,255,255,.12); font-family: inherit; font-size: 15px; font-weight: 750; }
+.sat-bank-run-question-menu:hover { background: linear-gradient(160deg, #334057, #18202f); }
+.sat-bank-run-navigation button { border-radius: 13px; background: var(--qr-red-grad); box-shadow: 0 10px 22px -12px rgba(157,23,48,.75), inset 0 1px 0 rgba(255,255,255,.2); font-family: inherit; font-size: 15px; font-weight: 800; }
+.sat-bank-run-navigation button:first-child { border: var(--qr-edge); background: linear-gradient(150deg, #fff, #eceff4); box-shadow: var(--qr-shadow-sm), 0 0 0 1px rgba(203,211,223,.6); color: var(--qr-text); }
+.sat-bank-run-navigation .sat-bank-run-finish { background: var(--qr-ink-grad); font-size: 15px; }
+
+/* The shared question paper uses SATQuestionCanvas.css in every SAT mode. */
+
+/* Dialogs are portalled to body, so they carry literal values. */
+.sat-bank-run-overlay { background: rgba(17,24,39,.45); backdrop-filter: blur(6px); }
+.sat-bank-run-dialog { border: 1px solid #fff; border-radius: 22px; background: linear-gradient(160deg, rgba(255,255,255,.98), rgba(243,245,249,.96)); box-shadow: 0 0 0 1px rgba(203,211,223,.6), 0 30px 60px -20px rgba(15,23,42,.45); }
+.sat-bank-run-dialog > header { border-color: #e5e9f0; }
+.sat-bank-run-dialog > header p { color: #c41e3a; }
+.sat-bank-run-dialog > header button { border: 1px solid #fff; background: rgba(255,255,255,.85); box-shadow: inset 0 1px 0 #fff, 0 8px 18px -10px rgba(27,38,58,.26); }
+.sat-bank-run-dialog > header button:hover { color: #c41e3a; }
+.sat-bank-run-number { border: 1px solid #d4dbe5; background: linear-gradient(145deg, #fff, #eef1f5 50%, #e0e5ec); box-shadow: inset 0 1px 0 #fff; color: #2a3447; }
+.sat-bank-run-number:hover { border-color: #e8b1bc; }
+.sat-bank-run-number.answered { border-color: transparent; background: linear-gradient(160deg, #2a3446, #121927); color: #fff; }
+.sat-bank-run-number[aria-current='step'] { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #c41e3a; }
+.sat-bank-run-mark { fill: #c41e3a; color: #c41e3a; }
+.sat-bank-run-navigator > footer { border-color: #e5e9f0; background: linear-gradient(0deg, #eef1f5, #f6f7fa); }
+.sat-bank-run-primary { border-radius: 12px; background: linear-gradient(135deg, #d5263f, #b51b34 58%, #96162c); box-shadow: 0 10px 20px -10px rgba(157,23,48,.7); }

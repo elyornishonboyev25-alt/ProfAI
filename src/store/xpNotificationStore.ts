@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { learnerLevel } from '@/utils/learnerLevel'
 
 export const XP_NOTIFICATION_DURATION = 2200
 
@@ -7,11 +8,12 @@ type XpNotification = {
   userId: string
   amount: number
   testCompleted: boolean
+  levelUp?: number
 }
 
 type XpNotificationState = {
   rewards: XpNotification[]
-  award: (userId: string, amount: number, testCompleted: boolean) => void
+  award: (userId: string, amount: number, testCompleted: boolean, levelUp?: number) => void
   dismiss: (id: number) => void
   clear: () => void
 }
@@ -20,14 +22,14 @@ let nextId = 0
 
 export const useXpNotificationStore = create<XpNotificationState>((set) => ({
   rewards: [],
-  award: (userId, amount, testCompleted) => {
+  award: (userId, amount, testCompleted, levelUp) => {
     if (!Number.isFinite(amount) || amount <= 0) return
     set((state) => {
       const rewards = state.rewards.filter((reward) => reward.userId === userId)
       const previous = rewards.find((reward) => reward.testCompleted === testCompleted)
       return { rewards: [
         ...rewards.filter((reward) => reward !== previous),
-        { id: ++nextId, userId, amount: amount + (previous?.amount ?? 0), testCompleted },
+        { id: ++nextId, userId, amount: amount + (previous?.amount ?? 0), testCompleted, levelUp: levelUp ?? previous?.levelUp },
       ] }
     })
   },
@@ -39,10 +41,13 @@ export const useXpNotificationStore = create<XpNotificationState>((set) => ({
 // failed requests and session refreshes must never celebrate historical XP.
 export function notifyXpAward(userId: string, payload: unknown, path: string, body: unknown) {
   if (!payload || typeof payload !== 'object') return
-  const reward = payload as { xpEarned?: unknown; duplicate?: boolean }
+  const reward = payload as { xpEarned?: unknown; totalXp?: number; duplicate?: boolean }
   if (reward.duplicate || typeof reward.xpEarned !== 'number') return
   const source = body && typeof body === 'object' ? (body as { source?: string }).source : undefined
   const testCompleted = path.startsWith('/tests/') || path === '/profile/speaking/session' ||
     (path === '/profile/xp/activity' && (source === 'WRITING' || source === 'SAT_PRACTICE'))
-  useXpNotificationStore.getState().award(userId, reward.xpEarned, testCompleted)
+  const total = reward.totalXp
+  const after = typeof total === 'number' && Number.isFinite(total) ? learnerLevel(total).level : 1
+  const before = typeof total === 'number' ? learnerLevel(total - reward.xpEarned).level : after
+  useXpNotificationStore.getState().award(userId, reward.xpEarned, testCompleted, after > before ? after : undefined)
 }

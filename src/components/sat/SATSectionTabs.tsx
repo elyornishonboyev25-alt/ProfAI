@@ -1,18 +1,22 @@
+import { useCopy } from '@/i18n/interface'
+import UiText from '@/components/common/UiText'
 import { useEffect, useRef, type KeyboardEvent } from 'react'
-import { BookOpenText, Calculator, Layers3, Flame } from 'lucide-react'
+import { BookOpenText, Calculator, Layers3, Flame, FolderClock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import ResumeSATAttempts from './ResumeSATAttempts'
+import '@/styles/exam-catalog.css'
 
 export const SAT_SECTION_TABS = [
   { id: 'mocks', label: 'Full Mocks', detail: 'Both sections together', icon: Layers3 },
   { id: 'reading-writing', label: 'Reading & Writing', detail: 'Evidence and expression', icon: BookOpenText },
   { id: 'math', label: 'Math', detail: 'Problem solving', icon: Calculator },
   { id: 'hard-questions', label: 'Hard Questions', detail: '100 English · 100 Math', icon: Flame },
+  { id: 'in-process', label: 'In process', detail: 'Continue your saved tests', icon: FolderClock },
 ] as const
 
 
 type TabId = (typeof SAT_SECTION_TABS)[number]['id']
 export default function SATSectionTabs({ section }: { section: TabId }) {
+  const { c: uiCopy } = useCopy()
   const navigate = useNavigate()
   const list = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -39,16 +43,15 @@ export default function SATSectionTabs({ section }: { section: TabId }) {
 
   return (
     <>
-      <ResumeSATAttempts />
-        <div className="sticky top-2 z-20 rounded-2xl border border-white bg-white/95 p-2 shadow-[0_12px_35px_rgba(15,23,42,.09)]">
-          <div ref={list} role="tablist" aria-label="SAT test sections" className="flex gap-2 overflow-x-auto">
+        <div className="exam-library-nav sticky top-2 z-20 rounded-2xl border border-white bg-white/95 p-2 shadow-[0_12px_35px_rgba(15,23,42,.09)]">
+          <div ref={list} role="tablist" aria-label={uiCopy("SAT test sections")} className="exam-section-tabs">
             {SAT_SECTION_TABS.map(({ id, label, detail, icon: Icon }) => (
               <button key={id} id={`sat-tab-${id}`} type="button" role="tab" tabIndex={section === id ? 0 : -1}
                 aria-selected={section === id} aria-controls="sat-test-panel"
                 onKeyDown={(event) => handleTabKeyDown(event, id)} onClick={() => navigate(`/sat/${id}`)}
-                className={`flex min-w-[11rem] flex-1 items-center gap-3 rounded-xl border px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 ${section === id ? 'border-red-200 bg-gradient-to-br from-white to-red-50 text-red-700 shadow-[0_6px_18px_rgba(185,28,28,.08)]' : 'border-transparent text-slate-800 hover:bg-red-50/70'}`}>
+                className={`flex min-w-0 flex-1 items-center gap-3 rounded-xl border px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 ${section === id ? 'border-red-200 bg-gradient-to-br from-white to-red-50 text-red-700 shadow-[0_6px_18px_rgba(185,28,28,.08)]' : 'border-transparent text-slate-800 hover:bg-red-50/70'}`}>
                 <Icon className="h-5 w-5 shrink-0 text-red-600" />
-                <span><strong className="block text-sm">{label}</strong><small className="block whitespace-nowrap text-[11px] font-semibold text-slate-500">{detail}</small></span>
+                <span><strong className="block text-sm"><UiText text={label} /></strong><small className="block text-[11px] font-semibold text-slate-500"><UiText text={detail} /></small></span>
               </button>
             ))}
           </div>

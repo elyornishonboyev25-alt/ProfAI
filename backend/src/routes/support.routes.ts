@@ -107,10 +107,10 @@ router.post('/owner/reports/notify', requireAuth, requireOwner, asyncHandler(asy
     reportIds: z.array(z.string().min(1).max(100)).min(1).max(100),
     requestId: z.string().uuid(),
     title: z.string().trim().min(3).max(120),
-    message: z.string().trim().min(10).max(3000),
+    message: z.string().trim().min(1).max(3000),
     resolve: z.boolean().default(false),
   }).safeParse(req.body)
-  if (!parsed.success) return res.status(400).json({ message: 'Select up to 100 reports, add a title (3–120 characters) and a message (10–3000 characters).' })
+  if (!parsed.success) return res.status(400).json({ message: 'Select up to 100 reports, add a title (3–120 characters) and a message (1–3000 characters).' })
   const { requestId, title, message, resolve } = parsed.data
   const reportIds = [...new Set(parsed.data.reportIds)]
   const result = await prisma.$transaction(async tx => {

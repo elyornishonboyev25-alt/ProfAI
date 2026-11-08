@@ -52,12 +52,16 @@ export default function OwnerReportInbox({ language, reload, onChanged }: { lang
   const [resolve, setResolve] = useState(false)
   const [sending, setSending] = useState(false)
   const [updating, setUpdating] = useState<string | null>(null)
-  const titleRef = useRef<HTMLInputElement>(null)
+  const messageRef = useRef<HTMLTextAreaElement>(null)
   const composerRef = useRef<HTMLElement>(null)
   const requestRef = useRef<{ payload: string; id: string } | null>(null)
   const sendLock = useRef(false)
   const reports = Object.values(selected)
   const recipients = new Set(reports.map(report => report.userId)).size
+  const notificationTitle = title.trim() || t('An update on your report')
+  const sendHint = !recipients ? t('Choose a report to reply to.')
+    : notificationTitle.length < 3 ? t('Use at least 3 characters for the title, or leave it blank.')
+    : !message.trim() ? t('Write a reply to enable sending.') : ''
   const maxPage = Math.max(1, Math.ceil((data?.total ?? 0) / (data?.pageSize ?? 20)))
   const dateFormat = new Intl.DateTimeFormat(language === 'uz' ? 'uz-UZ' : language === 'ru' ? 'ru-RU' : 'en-US', { dateStyle: 'medium', timeStyle: 'short' })
 
@@ -88,7 +92,7 @@ export default function OwnerReportInbox({ language, reload, onChanged }: { lang
 
   function reply(report: Report) {
     setSelected({ [report.id]: report }); setNotice(''); setError('')
-    titleRef.current?.focus({ preventScroll: true })
+    messageRef.current?.focus({ preventScroll: true })
     composerRef.current?.scrollIntoView({ block: 'nearest', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
   }
 
@@ -103,9 +107,9 @@ export default function OwnerReportInbox({ language, reload, onChanged }: { lang
 
   async function submit(event: FormEvent) {
     event.preventDefault()
-    if (sendLock.current || !reports.length || title.trim().length < 3 || message.trim().length < 10) return
+    if (sendLock.current || updating || sendHint) return
     sendLock.current = true; setSending(true); setError(''); setNotice('')
-    const payload = { reportIds: reports.map(report => report.id).sort(), title: title.trim(), message: message.trim(), resolve }
+    const payload = { reportIds: reports.map(report => report.id).sort(), title: notificationTitle, message: message.trim(), resolve }
     const fingerprint = JSON.stringify(payload)
     try {
       if (requestRef.current?.payload !== fingerprint) requestRef.current = { payload: fingerprint, id: crypto.randomUUID() }
@@ -167,12 +171,13 @@ export default function OwnerReportInbox({ language, reload, onChanged }: { lang
         </div>
         <form onSubmit={event => void submit(event)} className="mt-5 space-y-4">
           <fieldset disabled={sending} className="space-y-4">
-            <label className="block text-xs font-bold text-slate-700">{t('Notification title')}<input ref={titleRef} required minLength={3} maxLength={120} value={title} onChange={event => setTitle(event.target.value)} placeholder={t('An update on your report')} className="owner-field mt-2 w-full text-sm" /></label>
-            <label className="block text-xs font-bold text-slate-700">{t('Message')}<textarea required minLength={10} maxLength={3000} rows={5} value={message} onChange={event => setMessage(event.target.value)} placeholder={t('Explain what changed or how the user can proceed.')} className="owner-field mt-2 w-full resize-y text-sm leading-6" /><span className="mt-1 block text-right text-[11px] font-medium text-slate-500">{message.length} / 3000</span></label>
+            <label className="block text-xs font-bold text-slate-700">{t('Notification title (optional)')}<input maxLength={120} value={title} onChange={event => setTitle(event.target.value)} placeholder={t('An update on your report')} className="owner-field mt-2 w-full text-sm" /><span className="mt-1 block text-[11px] font-medium text-slate-500">{t('Leave blank to use the default report reply title.')}</span></label>
+            <label className="block text-xs font-bold text-slate-700">{t('Message')}<textarea ref={messageRef} required minLength={1} maxLength={3000} rows={5} value={message} onChange={event => setMessage(event.target.value)} placeholder={t('Explain what changed or how the user can proceed.')} className="owner-field mt-2 w-full resize-y text-sm leading-6" /><span className="mt-1 block text-right text-[11px] font-medium text-slate-500">{message.length} / 3000</span></label>
             <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200/70 bg-white/40 p-3"><input type="checkbox" checked={resolve} onChange={event => setResolve(event.target.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-red-600" /><span><span className="block text-xs font-bold text-slate-700">{t('Also mark selected reports resolved')}</span><span className="mt-1 block text-xs leading-5 text-slate-500">{t('Use this when the reported issue has been fixed.')}</span></span></label>
           </fieldset>
-          {(title.trim() || message.trim()) && <div className="owner-preview"><p className="owner-eyebrow mb-3">{t('NOTIFICATION PREVIEW')}</p><div className="flex items-start gap-3"><span className="owner-preview-icon"><MessageSquareText size={17} /></span><div className="min-w-0"><p className="break-words text-sm font-black text-slate-800">{title.trim() || t('Notification title')}</p><p className="mt-1 whitespace-pre-wrap break-words text-xs leading-6 text-slate-600">{message.trim() || t('Message')}</p><p className="mt-2 text-[10px] font-bold text-red-700">Ivygoo · {t('Support team')}</p></div></div></div>}
-          <button type="submit" disabled={sending || Boolean(updating) || !recipients || title.trim().length < 3 || message.trim().length < 10} className="owner-primary w-full justify-center !py-3.5"><Send size={17} />{t(sending ? 'Sending...' : 'Send notification')}</button>
+          {(title.trim() || message.trim()) && <div className="owner-preview"><p className="owner-eyebrow mb-3">{t('NOTIFICATION PREVIEW')}</p><div className="flex items-start gap-3"><span className="owner-preview-icon"><MessageSquareText size={17} /></span><div className="min-w-0"><p className="break-words text-sm font-black text-slate-800">{notificationTitle}</p><p className="mt-1 whitespace-pre-wrap break-words text-xs leading-6 text-slate-600">{message.trim() || t('Message')}</p><p className="mt-2 text-[10px] font-bold text-red-700">Ivygoo · {t('Support team')}</p></div></div></div>}
+          {sendHint && <p role="status" className="text-xs font-semibold text-slate-600">{sendHint}</p>}
+          <button type="submit" disabled={sending || Boolean(updating) || Boolean(sendHint)} className="owner-primary w-full justify-center !py-3.5"><Send size={17} />{t(sending ? 'Sending...' : 'Send notification')}</button>
         </form>
       </aside>
     </div>

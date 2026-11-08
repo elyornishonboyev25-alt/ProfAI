@@ -19,6 +19,8 @@ const reports = new Map([
 const notifications = new Map()
 const owner = signAccessToken({ sub: 'owner', role: 'USER' })
 const additionalOwner = signAccessToken({ sub: 'additional-owner', role: 'USER' })
+const nicknameOwner = signAccessToken({ sub: 'nickname-owner', role: 'USER' })
+const lookalike = signAccessToken({ sub: 'lookalike', role: 'USER' })
 const other = signAccessToken({ sub: 'other', role: 'ADMIN' })
 const original = { user: prisma.user.findUnique, findMany: prisma.issueReport.findMany, findUnique: prisma.issueReport.findUnique, updateMany: prisma.issueReport.updateMany, count: prisma.issueReport.count, users: prisma.user.findMany, userCount: prisma.user.count, createNotifications: prisma.notification.createMany, notifications: prisma.notification.findMany, transaction: prisma.$transaction }
 let server, base, failWrite = false, lastReportWhere, restoreSessions
@@ -30,7 +32,7 @@ function matches(report, where = {}) {
   return true
 }
 before(async () => {
-  prisma.user.findUnique = async ({ where }) => ({ id: where.id, role: 'USER', email: where.id === 'owner' ? 'elyornishonboyev000@gmail.com' : where.id === 'additional-owner' ? ' Firdavsalimqulov998@Gmail.com ' : 'other@example.test' })
+  prisma.user.findUnique = async ({ where }) => ({ id: where.id, role: 'USER', email: where.id === 'owner' ? 'elyornishonboyev000@gmail.com' : where.id === 'additional-owner' ? ' Firdavsalimqulov998@Gmail.com ' : 'other@example.test', nickname: where.id === 'nickname-owner' ? ' ERKINOV ' : where.id === 'lookalike' ? 'erkinov7' : null })
   prisma.user.findMany = async () => []
   prisma.user.count = async () => 2
   prisma.issueReport.findUnique = async ({ where }) => reports.get(where.id) ?? null
@@ -69,21 +71,21 @@ const draft = (overrides = {}) => ({ reportIds: ['r1'], title: 'Report update', 
 const request = (path, { token = owner, method = 'GET', body } = {}) => fetch(base + path, { method, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, ...(body ? { body: JSON.stringify(body) } : {}) })
 const send = (body, token = owner) => request('/owner/reports/notify', { token, method: 'POST', body })
 
-test('both owner accounts can access the overview and report replies', async () => {
-  for (const token of [owner, additionalOwner]) {
+test('email owners and @erkinov can access the overview and report replies', async () => {
+  for (const token of [owner, additionalOwner, nicknameOwner]) {
     assert.equal((await request('/owner/overview', { token })).status, 200)
     assert.equal((await request('/owner/reports/r1/replies', { token })).status, 200)
   }
 })
 test('other accounts cannot notify reporters or inspect their reply history', async () => {
-  for (const [token, expected] of [[null, 401], [other, 403]]) {
+  for (const [token, expected] of [[null, 401], [other, 403], [lookalike, 403]]) {
     assert.equal((await send(draft(), token)).status, expected)
     assert.equal((await request('/owner/reports/r1/replies', { token })).status, expected)
   }
   assert.equal(notifications.size, 0)
 })
 test('invalid input and missing reports produce no partial delivery or resolution', async () => {
-  for (const overrides of [{ reportIds: [] }, { reportIds: Array(101).fill('r1') }, { title: '  ' }, { title: 'x'.repeat(121) }, { message: 'short' }, { message: 'x'.repeat(3001) }, { requestId: 'invalid' }, { resolve: 'yes' }]) assert.equal((await send(draft(overrides))).status, 400)
+  for (const overrides of [{ reportIds: [] }, { reportIds: Array(101).fill('r1') }, { title: '  ' }, { title: 'x'.repeat(121) }, { message: '' }, { message: ' \n\t ' }, { message: 'x'.repeat(3001) }, { requestId: 'invalid' }, { resolve: 'yes' }]) assert.equal((await send(draft(overrides))).status, 400)
   assert.equal((await send(draft({ reportIds: ['r1', 'missing'], resolve: true }))).status, 404)
   assert.equal(reports.get('r1').status, 'OPEN')
   assert.equal(notifications.size, 0)
@@ -133,4 +135,13 @@ test('search and category filters apply across the catalog, and malformed filter
   assert.equal(lastReportWhere.OR[0].name.mode, 'insensitive')
   assert.equal(data.reports.items[0].userId, 'learner-a')
   for (const query of ['category=INVALID', 'q=' + 'x'.repeat(201), 'reportPage=0']) assert.equal((await request('/owner/overview?' + query)).status, 400)
+})
+
+test('@erkinov can send short report replies without an owner email or admin role', async () => {
+  const count = notifications.size
+  const response = await send(draft({ message: ' Tuzatildi ' }), nicknameOwner)
+  assert.equal(response.status, 201)
+  assert.deepEqual(await response.json(), { sentCount: 1, recipientCount: 1, reportCount: 1 })
+  assert.equal(notifications.size, count + 1)
+  assert.equal([...notifications.values()].at(-1).message, 'Tuzatildi')
 })

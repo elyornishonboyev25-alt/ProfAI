@@ -1,5 +1,10 @@
 /** Owner dashboard interface labels. User-entered report content is never translated. */
 const labels: Record<string, { ru: string; uz: string }> = {
+  'Notification title (optional)': { ru: 'Заголовок уведомления (необязательно)', uz: 'Bildirishnoma sarlavhasi (ixtiyoriy)' },
+  'Leave blank to use the default report reply title.': { ru: 'Оставьте пустым для стандартного заголовка ответа.', uz: 'Bo‘sh qoldirsangiz, javob sarlavhasi avtomatik qo‘yiladi.' },
+  'Choose a report to reply to.': { ru: 'Выберите обращение для ответа.', uz: 'Javob yozish uchun murojaatni tanlang.' },
+  'Use at least 3 characters for the title, or leave it blank.': { ru: 'Введите заголовок от 3 символов или оставьте пустым.', uz: 'Sarlavhaga kamida 3 ta belgi yozing yoki bo‘sh qoldiring.' },
+  'Write a reply to enable sending.': { ru: 'Напишите ответ, чтобы отправить его.', uz: 'Yuborish uchun javob matnini yozing.' },
   '14-day free trial': { ru: '14 дней бесплатного пробного периода', uz: '14 kunlik bepul sinov muddati' },
   'SUPPORT CENTER': { ru: 'ЦЕНТР ПОДДЕРЖКИ', uz: 'YORDAM MARKAZI' },
   'Read reports, reply directly, and keep your users informed.': { ru: 'Читайте обращения, отвечайте напрямую и сообщайте пользователям о ходе решения.', uz: 'Murojaatlarni o‘qing, javob bering va foydalanuvchilarni xabardor qiling.' },

@@ -95,15 +95,19 @@ export async function run() {
     assert.ok(!container.querySelectorAll('tbody tr')[1].querySelector('.premium-identity-badge'), 'Free learners have no Premium badge')
     assert.equal(
       container.querySelectorAll('tbody tr').length,
-      20,
-      'first page shows 20 real rows',
+      10,
+      'only the top 10 learners are listed',
     )
-    assert.ok(
-      container
-        .querySelector('.leaderboard-pinned')
-        ?.textContent?.includes('#25'),
-      'current learner is visible outside the first page',
+    assert.deepEqual(
+      Array.from(container.querySelectorAll('tbody .leaderboard-rank'), (rank) => Number(rank.textContent)),
+      Array.from({ length: 10 }, (_, index) => index + 1),
+      'rankings retain the server order from first through tenth',
     )
+    assert.equal(container.querySelector('.leaderboard-pagination'), null, 'lower ranks cannot be reached through pagination')
+    assert.equal(container.querySelector('.leaderboard-pinned'), null, 'a learner outside the top 10 is not added as an extra row')
+    assert.ok(!container.textContent?.includes('Learner 25'), 'the current learner outside the top 10 is not listed elsewhere')
+    assert.ok(container.querySelector('.leaderboard-count')?.textContent?.includes('10 learners'))
+    assert.ok(container.querySelector('.leaderboard-personal-rank')?.textContent?.includes('#25'), 'personal rank remains accurate outside the top 10')
     assert.ok(
       container
         .querySelector('.leaderboard-personal-bottom')
@@ -121,9 +125,6 @@ export async function run() {
         ?.textContent?.includes('80.0%'),
       'untested learners do not lower the result average',
     )
-    await act(async () => button('Next page').click())
-    assert.equal(container.querySelectorAll('tbody tr').length, 5)
-    assert.equal(container.querySelector('.leaderboard-pinned'), null)
     const search = container.querySelector<HTMLInputElement>(
       'input[type="search"]',
     )!
@@ -135,12 +136,16 @@ export async function run() {
         )!.set!.call(search, value)
         search.dispatchEvent(new window.Event('input', { bubbles: true }))
       })
-    await typeSearch('learner 25')
+    await typeSearch('learner 10')
     assert.equal(container.querySelectorAll('tbody tr').length, 1)
     assert.ok(
-      container.querySelector('tbody')?.textContent?.includes('25'),
+      container.querySelector('tbody .leaderboard-rank')?.textContent === '10',
       'search preserves global rank',
     )
+    await typeSearch('learner 11')
+    assert.equal(container.querySelector('tbody'), null, 'search cannot reveal rank 11')
+    await typeSearch('learner 25')
+    assert.equal(container.querySelector('tbody'), null, 'search cannot reveal the current learner outside the top 10')
     await typeSearch('Nobody matches this')
     assert.ok(container.textContent?.includes('No learners found'))
     assert.ok(
@@ -150,7 +155,7 @@ export async function run() {
       'search does not turn a populated board into a global empty state',
     )
     await act(async () => button('Clear search').click())
-    assert.equal(container.querySelectorAll('tbody tr').length, 20)
+    assert.equal(container.querySelectorAll('tbody tr').length, 10)
     await act(async () => button('All Time').click())
     assert.equal(
       container.querySelector('tbody'),
@@ -160,6 +165,7 @@ export async function run() {
     await act(async () => button('Last 30 days').click())
     await flush()
     assert.equal(button('Last 30 days').getAttribute('aria-pressed'), 'true')
+    assert.equal(container.querySelectorAll('tbody tr').length, 10, 'the monthly board also shows only the top 10')
     await act(async () =>
       delayed!(
         response('all', [{ ...rows[0], fullName: 'Stale all-time leader' }]),
@@ -194,7 +200,7 @@ export async function run() {
     fail = false
     await act(async () => button('Retry').click())
     await flush()
-    assert.equal(container.querySelectorAll('tbody tr').length, 20)
+    assert.equal(container.querySelectorAll('tbody tr').length, 10)
     await act(async () => i18n.changeLanguage('uz'))
     assert.ok(container.textContent?.includes('Oxirgi 7 kun'))
     assert.equal(
@@ -203,7 +209,7 @@ export async function run() {
       'O‘quvchilarni qidirish',
     )
     console.log(
-      'Leaderboard UI passed: server XP, full ranking, pagination, search, missing results, period races, abort, error/retry and Uzbek copy.',
+      'Leaderboard UI passed: top 10 only, restricted search, personal rank, server XP, missing results, period races, abort, error/retry and Uzbek copy.',
     )
   } finally {
     await act(async () => root.unmount())

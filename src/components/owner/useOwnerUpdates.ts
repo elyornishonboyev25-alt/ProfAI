@@ -44,7 +44,7 @@ export function useOwnerUpdates(ownerId: string | undefined, enabled: boolean, r
     return () => { active = false; window.clearInterval(timer); document.removeEventListener('visibilitychange', onVisibility) }
   }, [enabled, key, reload])
   const markSeen = useCallback((section: OwnerSection) => {
-    if (!updates) return
+    if (!updates || section === 'reports') return
     revision.current++
     cursors.current = { ...cursors.current, [section]: updates.checkedAt }
     try { localStorage.setItem(key, JSON.stringify(cursors.current)) } catch { /* Counts still work when storage is unavailable. */ }

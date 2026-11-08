@@ -187,6 +187,9 @@
 }
 .owner-status { flex-shrink: 0; padding: 6px 10px; border-radius: 999px; font-size: 10px; font-weight: 800; background: #e7edf2; color: #475569; }
 .owner-status.is-open { background: #fde8ec; color: #a71f38; }
+.owner-dashboard .owner-report-card.needs-reply { border-color: #e4ad44; box-shadow: inset 3px 0 0 #d99018; }
+.owner-dashboard .owner-report-card.needs-reply.is-selected { border-color: #b9233c; box-shadow: inset 3px 0 0 #b9233c; }
+.owner-pending-label { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; color: #92400e; font-size: 11px; font-weight: 800; }
 .owner-dashboard .owner-primary,
 .owner-dashboard .owner-secondary {
   display: inline-flex; align-items: center; gap: 8px; min-height: 42px;

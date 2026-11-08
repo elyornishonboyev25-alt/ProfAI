@@ -44,6 +44,9 @@ jobs:
       - name: Check adaptive SAT routing and historical attempts
         run: npm run test:sat-adaptive
 
+      - name: Check report handling and support conversations
+        run: npm run test:support
+
       - name: Build frontend
         run: npm run build
 

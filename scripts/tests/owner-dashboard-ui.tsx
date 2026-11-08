@@ -28,6 +28,10 @@ export async function run() {
     await click(nav(1))
     assert.equal(nav(1).querySelector('.owner-update-badge'), null)
     assert.ok(nav(3).querySelector('.owner-update-badge'))
+    await click(nav(3))
+    assert.equal(nav(3).querySelector('.owner-update-badge')?.textContent, '1', 'Opening Reports must not dismiss pending work')
+    assert.equal(JSON.parse(localStorage.getItem('owner-updates:v1:owner-ui')!).reports, undefined)
+    await click(nav(1))
     assert.equal(JSON.parse(localStorage.getItem('owner-updates:v1:owner-ui')!).users, fixture.checkedAt)
     assert.match(element.querySelector('.owner-users-list')?.textContent ?? '', /All Learner/)
     await click(metric(2))
@@ -74,6 +78,7 @@ export async function run() {
     await act(async () => root.render(<MemoryRouter><OwnerDashboard key="reloaded" /></MemoryRouter>)); await settle()
     assert.equal(nav(2).querySelector('.owner-update-badge'), null, 'read cursors survive remount/reload')
     assert.ok(nav(1).querySelector('.owner-update-badge'), 'other sections retain their own new events')
+    assert.equal(nav(3).querySelector('.owner-update-badge')?.textContent, '1', 'Pending report badges survive remount/reload')
     await click(nav(2)); await act(async () => i18n.changeLanguage('uz')); await settle()
     assert.match(element.querySelector('.owner-promotions-list')?.textContent ?? '', /Promokod: IVYEXAMPLE/)
     fixture.failOverview = true

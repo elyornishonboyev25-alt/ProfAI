@@ -1,36 +1,19 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { Bell, CheckCheck, CheckCircle2, ChevronLeft, ChevronRight, Inbox, MessageSquareText, Search, Send, Users, X } from 'lucide-react'
+import { AlertCircle, Bell, BellOff, CheckCheck, CheckCircle2, ChevronLeft, ChevronRight, Inbox, MessageSquareText, Search, Send, Users, X } from 'lucide-react'
 import { ApiError, apiClient } from '@/lib/apiClient'
 import { ownerText, type OwnerLanguage } from '@/i18n/owner'
+import ReportConversation from './ReportConversation'
 
-type Report = { id: string; userId: string; name: string; email: string; category: string; description: string; pagePath: string | null; status: 'OPEN' | 'RESOLVED'; createdAt: string }
+type Report = { id: string; userId: string; name: string; email: string; category: string; description: string; pagePath: string | null; status: 'OPEN' | 'RESOLVED' | 'IGNORED'; needsReply: boolean; createdAt: string; messages?: Array<{ message: string; createdAt: string }> }
 type ReportPage = { items: Report[]; total: number; page: number; pageSize: number }
-type Reply = { id: string; title: string; message: string; createdAt: string; readAt: string | null }
 const categories: Record<string, string> = { BUG: 'Technical issue', BILLING: 'Billing issue', FEATURE: 'Suggestion', OTHER: 'Other' }
 
 function ReplyHistory({ report, language }: { report: Report; language: OwnerLanguage }) {
   const t = (text: string) => ownerText(text, language)
   const [open, setOpen] = useState(false)
-  const [items, setItems] = useState<Reply[] | null>(null)
-  const [error, setError] = useState(false)
-  useEffect(() => {
-    if (!open) return
-    let active = true
-    setItems(null); setError(false)
-    void apiClient.get<{ items: Reply[] }>(`/support/owner/reports/${encodeURIComponent(report.id)}/replies`)
-      .then(data => { if (active) setItems(data.items) })
-      .catch(() => { if (active) setError(true) })
-    return () => { active = false }
-  }, [open, report.id])
   return <div className="mt-3">
     <button type="button" aria-expanded={open} onClick={() => setOpen(value => !value)} className="inline-flex min-h-10 items-center gap-2 text-xs font-bold text-slate-600 hover:text-red-700"><MessageSquareText size={14} />{t(open ? 'Hide reply history' : 'Reply history')}</button>
-    {open && <div className="mt-2 space-y-2 border-t border-slate-200/70 pt-3">
-      {error ? <p role="alert" className="text-xs text-red-700">{t('Could not load replies.')} <button type="button" onClick={() => setOpen(false)} className="underline">{t('Close')}</button></p> : !items ? <p role="status" className="text-xs text-slate-500">{t('Loading replies...')}</p> : items.length === 0 ? <p className="text-xs text-slate-500">{t('No replies yet.')}</p> : items.map(reply => <div key={reply.id} className="rounded-xl border border-white bg-white/70 p-3">
-        <div className="flex flex-wrap justify-between gap-2"><strong className="break-words text-sm text-slate-800">{reply.title}</strong><span className="text-xs font-semibold text-slate-500">{t(reply.readAt ? 'Read' : 'Delivered')}</span></div>
-        <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-6 text-slate-600">{reply.message}</p>
-        <p className="mt-2 text-xs text-slate-500">{new Date(reply.createdAt).toLocaleString(language === 'uz' ? 'uz-UZ' : language === 'ru' ? 'ru-RU' : 'en-US')}</p>
-      </div>)}
-    </div>}
+    {open && <ReportConversation reportId={report.id} language={language} owner />}
   </div>
 }
 
@@ -63,21 +46,29 @@ export default function OwnerReportInbox({ language, reload, onChanged }: { lang
     : notificationTitle.length < 3 ? t('Use at least 3 characters for the title, or leave it blank.')
     : !message.trim() ? t('Write a reply to enable sending.') : ''
   const maxPage = Math.max(1, Math.ceil((data?.total ?? 0) / (data?.pageSize ?? 20)))
-  const dateFormat = new Intl.DateTimeFormat(language === 'uz' ? 'uz-UZ' : language === 'ru' ? 'ru-RU' : 'en-US', { dateStyle: 'medium', timeStyle: 'short' })
+  const dateFormat = new Intl.DateTimeFormat(language === 'uz' ? 'uz-UZ' : language === 'ru' ? 'ru-RU' : 'en-US', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Tashkent' })
 
   useEffect(() => {
-    let active = true
+    let active = true, inFlight = false
     setLoading(true); setLoadError('')
     const params = new URLSearchParams({ reportPage: String(page), status, category, q: query })
-    void apiClient.get<{ reports: ReportPage }>(`/support/owner/overview?${params}`)
-      .then(result => {
+    const load = async () => {
+      if (inFlight || document.visibilityState === 'hidden') return
+      inFlight = true
+      try {
+        const result = await apiClient.get<{ reports: ReportPage }>(`/support/owner/overview?${params}`)
         if (!active) return
         const last = Math.max(1, Math.ceil(result.reports.total / result.reports.pageSize))
         if (page > last) setPage(last)
         else setData(result.reports)
-      }).catch(() => { if (active) setLoadError(t('Could not load reports.')) })
-      .finally(() => { if (active) setLoading(false) })
-    return () => { active = false }
+        setLoadError('')
+      } catch { if (active) setLoadError(t('Could not load reports.')) }
+      finally { inFlight = false; if (active) setLoading(false) }
+    }
+    void load()
+    const timer = window.setInterval(() => void load(), 30_000)
+    window.addEventListener('focus', load)
+    return () => { active = false; window.clearInterval(timer); window.removeEventListener('focus', load) }
   }, [page, status, category, query, reload, language])
 
   function toggle(report: Report) {
@@ -96,12 +87,12 @@ export default function OwnerReportInbox({ language, reload, onChanged }: { lang
     composerRef.current?.scrollIntoView({ block: 'nearest', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
   }
 
-  async function changeStatus(report: Report) {
+  async function changeStatus(report: Report, status: Report['status']) {
     setUpdating(report.id); setError('')
     try {
-      await apiClient.patch(`/support/owner/reports/${encodeURIComponent(report.id)}`, { status: report.status === 'OPEN' ? 'RESOLVED' : 'OPEN' })
+      await apiClient.patch(`/support/owner/reports/${encodeURIComponent(report.id)}`, { status })
       onChanged()
-    } catch { setError(t('Could not change the status.')) }
+    } catch (failure) { setError(t(failure instanceof ApiError && failure.status === 409 ? 'Reply to the user or ignore this report first.' : 'Could not change the status.')) }
     finally { setUpdating(null) }
   }
 
@@ -136,7 +127,7 @@ export default function OwnerReportInbox({ language, reload, onChanged }: { lang
           <button type="submit" className="owner-secondary">{t('Search')}</button>
         </form>
         <div className="mt-3 flex flex-wrap gap-2">
-          <select aria-label={t('Report status')} value={status} onChange={event => { setStatus(event.target.value); setPage(1) }} className="owner-field min-w-0 flex-1 text-sm"><option value="ALL">{t('All statuses')}</option><option value="OPEN">{t('Open')}</option><option value="RESOLVED">{t('Resolved')}</option></select>
+          <select aria-label={t('Report status')} value={status} onChange={event => { setStatus(event.target.value); setPage(1) }} className="owner-field min-w-0 flex-1 text-sm"><option value="ALL">{t('All statuses')}</option><option value="PENDING">{t('Awaiting reply')}</option><option value="OPEN">{t('Open')}</option><option value="RESOLVED">{t('Resolved')}</option><option value="IGNORED">{t('Ignored')}</option></select>
           <select aria-label={t('Type of issue')} value={category} onChange={event => { setCategory(event.target.value); setPage(1) }} className="owner-field min-w-0 flex-1 text-sm"><option value="ALL">{t('All issue types')}</option>{Object.entries(categories).map(([key, label]) => <option key={key} value={key}>{t(label)}</option>)}</select>
         </div>
         <div className="mb-4 mt-4 flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-slate-500"><span>{t('Select similar reports to send one update.')}</span><button type="button" disabled={loading || Boolean(loadError) || sending || !data?.items.length} onClick={() => setSelected(current => {
@@ -145,16 +136,18 @@ export default function OwnerReportInbox({ language, reload, onChanged }: { lang
           return next
         })} className="min-h-10 font-bold text-red-700 disabled:opacity-40">{t('Select this page')}</button></div>
         {loading ? <div role="status" className="owner-empty"><Inbox size={28} /><p>{t('Loading reports...')}</p></div> : loadError && !data ? <button type="button" onClick={onChanged} className="owner-secondary">{t('Refresh')}</button> : <div className="space-y-4" aria-busy={loading}>
-          {!loadError && data?.items.map(report => <article key={report.id} className={`owner-report-card ${selected[report.id] ? 'is-selected' : ''}`}>
+          {!loadError && data?.items.map(report => <article key={report.id} className={`owner-report-card ${report.needsReply ? 'needs-reply' : ''} ${selected[report.id] ? 'is-selected' : ''}`}>
             <div className="flex items-start gap-3">
               <input type="checkbox" checked={Boolean(selected[report.id])} disabled={sending || (!selected[report.id] && reports.length >= 100)} onChange={() => toggle(report)} aria-label={t('Select report from {name}', { name: report.name })} className="mt-1 h-5 w-5 shrink-0 accent-red-600" />
               <div className="min-w-0 flex-1"><h3 className="break-words font-black text-slate-900">{report.name}</h3><p className="mt-0.5 break-all text-xs text-slate-500">{report.email}</p></div>
-              <span className={`owner-status ${report.status === 'OPEN' ? 'is-open' : ''}`}>{t(report.status === 'OPEN' ? 'Open' : 'Resolved')}</span>
+              <span className={`owner-status ${report.status === 'OPEN' ? 'is-open' : ''}`}>{t(report.status === 'OPEN' ? 'Open' : report.status === 'IGNORED' ? 'Ignored' : 'Resolved')}</span>
             </div>
+            {report.needsReply && <p className="owner-pending-label mt-3"><AlertCircle size={15} />{t('Awaiting reply')}<span className="font-medium">· {t('Reply or ignore to dismiss')}</span></p>}
             <p className="mt-4 flex flex-wrap gap-x-2 gap-y-1 text-xs font-semibold text-slate-500"><span className="text-red-700">{t(categories[report.category] ?? report.category)}</span><span aria-hidden="true">·</span><time dateTime={report.createdAt}>{dateFormat.format(new Date(report.createdAt))}</time></p>
             <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-7 text-slate-700">{report.description}</p>
+            {report.messages?.[0] && <div className="mt-3 rounded-xl border border-red-100 bg-red-50/50 p-3"><p className="text-xs font-bold text-red-800">{t('Latest user reply')}</p><p className="mt-1 whitespace-pre-wrap break-words text-sm leading-6 text-slate-700">{report.messages[0].message}</p><time dateTime={report.messages[0].createdAt} className="mt-2 block text-[11px] text-slate-500">{dateFormat.format(new Date(report.messages[0].createdAt))}</time></div>}
             {report.pagePath && <p className="mt-3 break-all rounded-lg bg-slate-200/40 px-3 py-2 font-mono text-[11px] text-slate-600">{t('Page:')} {report.pagePath}</p>}
-            <div className="mt-4 flex flex-wrap gap-2"><button type="button" disabled={sending} onClick={() => reply(report)} className="owner-primary"><Send size={15} />{t('Reply to user')}</button><button type="button" disabled={Boolean(updating) || sending} onClick={() => void changeStatus(report)} className="owner-secondary"><CheckCircle2 size={15} />{t(updating === report.id ? 'Saving...' : report.status === 'OPEN' ? 'Mark resolved' : 'Reopen')}</button></div>
+            <div className="mt-4 flex flex-wrap gap-2"><button type="button" disabled={sending} onClick={() => reply(report)} className="owner-primary"><Send size={15} />{t('Reply to user')}</button>{report.status !== 'IGNORED' && <button type="button" disabled={Boolean(updating) || sending} onClick={() => void changeStatus(report, 'IGNORED')} className="owner-secondary"><BellOff size={15} />{t(updating === report.id ? 'Saving...' : 'Ignore')}</button>}{(!report.needsReply || report.status !== 'OPEN') && <button type="button" disabled={Boolean(updating) || sending} onClick={() => void changeStatus(report, report.status === 'OPEN' ? 'RESOLVED' : 'OPEN')} className="owner-secondary"><CheckCircle2 size={15} />{t(updating === report.id ? 'Saving...' : report.status === 'OPEN' ? 'Mark resolved' : 'Reopen')}</button>}</div>
             <ReplyHistory key={`${report.id}-${reload}`} report={report} language={language} />
           </article>)}
           {!loadError && data?.items.length === 0 && <div className="owner-empty"><Inbox size={30} /><h3 className="font-bold text-slate-700">{t('No matching reports')}</h3><p>{t('Try another search or change the filters.')}</p></div>}

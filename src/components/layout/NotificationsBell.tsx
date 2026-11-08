@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Bell, CheckCheck, ChevronRight, ClipboardCheck, Flame, Loader2, MessageSquareText, RefreshCw, Sparkles, X } from 'lucide-react'
+import { Bell, CheckCheck, ChevronRight, ClipboardCheck, Flame, Loader2, MessageSquareText, RefreshCw, Reply, Sparkles, X } from 'lucide-react'
 import { apiClient } from '@/lib/apiClient'
 import { fetchBadges, type SkillBadgeRecord } from '@/lib/profileApi'
 import { useAuthStore, type AuthState } from '@/store/authStore'
@@ -17,6 +17,7 @@ import { premiumLanguage } from '@/i18n/premium'
 import { classText } from '@/features/learningCenter/messages'
 import SkillBadge from '@/components/achievements/SkillBadge'
 import { TRACK_META, formatAchievementScore } from '@/components/achievements/badgeMeta'
+import UserReportReply from '@/components/support/UserReportReply'
 
 type NotificationItem = {
   id: string
@@ -55,6 +56,7 @@ export default function NotificationsBell() {
   const [badges, setBadges] = useState<SkillBadgeRecord[]>([])
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [expandedReply, setExpandedReply] = useState<string | null>(null)
+  const [replyingTo, setReplyingTo] = useState<string | null>(null)
   const [unreadCount, setUnreadCount] = useState(0)
   const [loaded, setLoaded] = useState(false)
   const [loadError, setLoadError] = useState(false)
@@ -94,7 +96,7 @@ export default function NotificationsBell() {
 
   useEffect(() => {
     setNotifications([]); setUnreadCount(0); setWeek([]); setBadges([])
-    setLoaded(false); setLoadError(false); setReadError(false); setExpandedReply(null); setOpen(false)
+    setLoaded(false); setLoadError(false); setReadError(false); setExpandedReply(null); setReplyingTo(null); setOpen(false)
     setMarkingAll(false); readingIds.current.clear(); revision.current++
   }, [userId])
 
@@ -138,7 +140,7 @@ export default function NotificationsBell() {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setOpen(false)
       if (event.key === 'Tab') {
-        const items = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled), a[href], [tabindex="0"]') ?? [])
+        const items = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled), textarea:not(:disabled), select:not(:disabled), a[href], [tabindex="0"]') ?? [])
         const first = items[0], last = items[items.length - 1]
         if (!first) { event.preventDefault(); return }
         if (event.shiftKey && (document.activeElement === first || !dialogRef.current?.contains(document.activeElement))) { event.preventDefault(); last.focus() }
@@ -277,8 +279,8 @@ export default function NotificationsBell() {
                   <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-600">{textFor('Latest updates')}</p>
                   <div className="space-y-2">
                     {notifications.map((notification) => (
+                      <div key={notification.id}>
                       <button
-                        key={notification.id}
                         aria-expanded={['ISSUE_REPORT_REPLY', 'TEACHER_NOTE'].includes(String(notification.metadata?.kind)) ? expandedReply === notification.id : undefined}
                         onClick={() => void openNotification(notification)}
                         className={`profai-notification-row relative flex w-full items-start gap-3 rounded-2xl border px-3 py-3 text-left transition ${
@@ -303,6 +305,11 @@ export default function NotificationsBell() {
                         </span>
                         {!notification.readAt ? <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-red-500" /> : null}
                       </button>
+                      {notification.metadata?.kind === 'ISSUE_REPORT_REPLY' && <div className="px-3 pb-2">
+                        <button type="button" aria-expanded={replyingTo === notification.id} onClick={() => { void markRead(notification.id); setExpandedReply(notification.id); setReplyingTo(current => current === notification.id ? null : notification.id) }} className="mt-1 inline-flex min-h-10 items-center gap-2 rounded-lg px-2 text-xs font-bold text-red-700 hover:bg-red-50"><Reply size={15} />{ownerText(replyingTo === notification.id ? 'Close conversation' : 'Reply', language)}</button>
+                        {replyingTo === notification.id && <UserReportReply key={`${userId}-${notification.id}`} notificationId={notification.id} language={language} />}
+                      </div>}
+                      </div>
                     ))}
                   </div>
                 </div>

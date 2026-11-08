@@ -280,11 +280,31 @@ model IssueReport {
   description String
   pagePath    String?
   status      String   @default("OPEN")
+  needsReply  Boolean  @default(true)
+  lastActivityAt DateTime @default(now())
   createdAt   DateTime @default(now())
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages    IssueReportMessage[]
 
   @@index([userId, createdAt])
   @@index([status, createdAt])
+  @@index([needsReply, lastActivityAt])
+}
+
+model IssueReportMessage {
+  id             String   @id @default(cuid())
+  reportId       String
+  kind           String
+  authorId       String?
+  authorName     String?
+  authorEmail    String?
+  title          String?
+  message        String
+  notificationId String?
+  createdAt      DateTime @default(now())
+  report         IssueReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([reportId, createdAt, id])
 }
 
 // A tenant workspace for an IELTS/SAT school. Product permissions are scoped

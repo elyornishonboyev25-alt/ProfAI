@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "test:support": "npm --prefix backend run build && node --test backend/scripts/support-notifications.test.mjs backend/scripts/owner-dashboard.test.mjs && node scripts/test-listening-parts-ui.mjs scripts/tests/support-notifications-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/support-conversation-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/owner-dashboard-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/class-notifications-ui.tsx",
     "test:exam-workspace": "node scripts/test-listening-parts-ui.mjs scripts/tests/ielts-workspace-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/ielts-automatic-notice-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/ielts-workspace-audit-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/reading-annotation-recovery-ui.tsx && node scripts/test-sat-mistakes-ui.mjs scripts/tests/sat-hard-questions-ui.tsx && node scripts/test-sat-mistakes-ui.mjs scripts/tests/sat-submission-eligibility-ui.tsx",
     "test:exam-flow": "node scripts/test-listening-parts-ui.mjs scripts/tests/unified-exam-flow-ui.tsx && node scripts/test-sat-mistakes-ui.mjs scripts/tests/sat-resume-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/listening-audio-completion.tsx",
     "dev": "concurrently \"npm run dev:web\" \"npm run api:dev\"",

@@ -30,7 +30,7 @@ const users = [
 const order = (id, extra = {}) => ({ id, userId: 'wheel', user: { id: 'wheel', fullName: 'Wheel winner', email: 'wheel@example.test', promoCode: { code: 'IVYEXAMPLE', redeemedAt: today } }, plan: 'PRO_1', status: 'PENDING', method: 'PAYME', currency: 'UZS', amountUzs: 39000, amountMinor: 3900000, discountPercent: 50, wheelSpinId: 'spin-50', createdAt: previous(today), updatedAt: today, ...extra })
 const orders = [order('discount-pending'), order('discount-paid', { currency: 'USD', amountMinor: 300, amountUzs: 0, status: 'APPROVED' }), order('regular', { discountPercent: 0, wheelSpinId: null, status: 'PROCESSING', updatedAt: previous(today) })]
 users.find(user => user.id === 'wheel').paymentRequests = orders.slice(0, 2)
-const reports = [{ id: 'old', status: 'OPEN', createdAt: previous(today) }, { id: 'new', status: 'OPEN', createdAt: today }]
+const reports = [{ id: 'old', status: 'OPEN', needsReply: true, createdAt: previous(today) }, { id: 'new', status: 'OPEN', needsReply: false, createdAt: today }]
 const reviews = [{ id: 'new-review', createdAt: today }]
 const logins = [{ method: 'PASSWORD', loginAt: today }, { method: 'RESTORED', loginAt: today }]
 const ownerToken = fixtureAccessToken({ sub: 'owner', role: 'USER' })

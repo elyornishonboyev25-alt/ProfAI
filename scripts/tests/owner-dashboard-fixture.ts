@@ -15,7 +15,7 @@ export function installOwnerDashboardFixture() {
   apiClient.get = async <T,>(path: string) => {
     fixture.requests.push(path)
     const url = new URL(path, 'http://localhost'), params = url.searchParams
-    if (url.pathname === '/support/owner/updates') return { checkedAt: fixture.checkedAt, counts: Object.fromEntries(Object.entries(fixture.counts).map(([section, count]) => [section, (params.get(section) ?? '') >= fixture.checkedAt ? 0 : count])) } as T
+    if (url.pathname === '/support/owner/updates') return { checkedAt: fixture.checkedAt, counts: Object.fromEntries(Object.entries(fixture.counts).map(([section, count]) => [section, section !== 'reports' && (params.get(section) ?? '') >= fixture.checkedAt ? 0 : count])) } as T
     if (url.pathname === '/support/owner/overview') {
       if (fixture.failOverview && params.has('userPeriod')) throw new Error('Failed overview')
       const period = params.get('userPeriod') ?? 'ALL'

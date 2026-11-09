@@ -32,6 +32,8 @@ import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useBillingText } from '@/features/billing/copy'
 import './mock-ielts-run.css'
 import { regradeFullMockSpeaking } from '@/services/fullMockSpeakingReview'
+import { learningCenterApi } from '@/features/learningCenter/api'
+import { saveSpeakingSession } from '@/lib/speakingApi'
 import { useAuthStore } from '@/store/authStore'
 import { useBadgeStore } from '@/store/badgeStore'
 import { useSpeakingStore } from '@/store/speakingStore'
@@ -229,10 +231,26 @@ function MockIELTSRunContent() {
       })
       try {
         markSpeakingTestCompleted(saved.testId, userId ?? undefined)
-        useSpeakingStore.getState().addSession({ userId, modeLabel: `Speaking Full Mock ${mock.index}`, kind: 'examiner', date: saved.completedAt,
+        const session = useSpeakingStore.getState().addSession({ userId, testId: saved.testId, modeLabel: `Speaking Full Mock ${mock.index}`, kind: 'examiner', date: saved.completedAt,
           overallBand: evaluation.overallBand, fluencyBand: evaluation.fluencyBand, lexicalBand: evaluation.lexicalBand, grammarBand: evaluation.grammarBand, pronunciationBand: evaluation.pronunciationBand,
           durationSec: evaluation.stats.durationSec, wordCount: evaluation.stats.wordCount, fillerCount: evaluation.stats.fillerCount, summary: evaluation.summary, evaluation, transcript: saved.speaking.transcript,
         })
+        if (userId) {
+          void learningCenterApi.syncResult({
+            sourceKey: `speaking-${session.id}`, sourceType: 'IELTS_SPEAKING_MOCK',
+            examType: 'IELTS', skill: 'IELTS_SPEAKING', title: session.modeLabel,
+            score: evaluation.overallBand, maxScore: 9,
+            durationSec: Math.round(evaluation.stats.durationSec), completedAt: saved.completedAt,
+            breakdown: { testId: saved.testId, fluency: evaluation.fluencyBand, lexical: evaluation.lexicalBand,
+              grammar: evaluation.grammarBand, pronunciation: evaluation.pronunciationBand, wordCount: evaluation.stats.wordCount },
+          }).catch(() => {})
+          void saveSpeakingSession({
+            eventKey: session.id, mode: 'full_mock', modeLabel: session.modeLabel,
+            overallBand: evaluation.overallBand, fluencyBand: evaluation.fluencyBand, lexicalBand: evaluation.lexicalBand,
+            grammarBand: evaluation.grammarBand, pronunciationBand: evaluation.pronunciationBand,
+            durationSec: evaluation.stats.durationSec, wordCount: evaluation.stats.wordCount,
+          }, userId)
+        }
       } catch { /* The saved exam report remains available if optional history storage is full. */ }
     }} />
 

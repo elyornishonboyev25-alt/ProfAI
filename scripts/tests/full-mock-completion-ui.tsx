@@ -11,6 +11,8 @@ import { analyseTranscript } from '@/lib/speakingScoring'
 import { apiClient } from '@/lib/apiClient'
 import type { SpeakingEvaluation } from '@/services/speakingAI'
 import { useBadgeStore } from '@/store/badgeStore'
+import { useAuthStore } from '@/store/authStore'
+import { useSpeakingStore } from '@/store/speakingStore'
 import i18n from '@/i18n'
 
 export async function run() {
@@ -19,6 +21,7 @@ export async function run() {
   const element = document.getElementById('root')!
   let root: ReturnType<typeof createRoot> | undefined
   const originalPost = apiClient.post
+  const originalUser = useAuthStore.getState().user
   const originalBlob = globalThis.Blob
   const originalIndexedDB = globalThis.indexedDB
   const originalReader = globalThis.FileReader
@@ -52,7 +55,9 @@ export async function run() {
   let providerFails = true
   let path = ''
   let assessmentCalls = 0
-  apiClient.post = (async (url: string) => {
+  const synced: Array<{ url: string; body: any }> = []
+  apiClient.post = (async (url: string, body: unknown) => {
+    if (url === '/learning-centers/results/sync' || url === '/profile/speaking/session') synced.push({ url, body })
     if (url.endsWith('/rewrites')) return { improvedAnswers: [{ answerIndex: 0, original: text, improved: 'I enjoy reading books at home with my sister.' }] }
     if (url.endsWith('/assess')) { assessmentCalls++; if (providerFails) throw new Error('Provider unavailable'); return evaluation }
     return { totalXp: 0, level: 1 }
@@ -71,6 +76,7 @@ export async function run() {
     await act(async () => { await new Promise(resolve => setTimeout(resolve, 100)) })
   }
   try {
+    useAuthStore.setState({ user: { id: 'pending-speaking-learner', fullName: 'Test Learner', email: 'learner@example.test', role: 'USER', premium: true, xp: 0, level: 1, currentStreak: 0, onboardingCompleted: true } })
     useBadgeStore.setState({ records: [] })
     for (const skill of ['listening', 'reading', 'writing'] as const) saveFullMockSectionResult(mock.id, skill, { band: 7, testId: skill, completedAt: '2026-10-14' })
     accountStorage.setItem('profai:full-mock:intro:v1:full-mock-1:speaking', 'started')
@@ -98,10 +104,25 @@ export async function run() {
     await click('Retry Speaking assessment')
     assert.ok(element.querySelector('[role="alert"]')?.textContent?.includes('recordings are unavailable'))
     assert.equal(assessmentCalls, 2, 'Missing audio never falls back to a text score')
+    assert.equal(synced.length, 0, 'Pending scores are never published to the leaderboard')
     missingAudio = false
     providerFails = false
-    await click('Retry Speaking assessment')
+    await act(async () => {
+      window.dispatchEvent(new Event('online'))
+      await new Promise(resolve => setTimeout(resolve, 100))
+    })
     assert.equal(getFullMockOverallBand(mock.id), 7)
+    assert.equal(assessmentCalls, 3, 'Reconnection automatically assesses the saved audio')
+    assert.equal(synced.length, 2, 'Recovery publishes the assessment and Speaking session')
+    const resultSync = synced.find(entry => entry.url === '/learning-centers/results/sync')!.body
+    const sessionSync = synced.find(entry => entry.url === '/profile/speaking/session')!.body
+    assert.equal(resultSync.sourceKey, `speaking-${sessionSync.eventKey}`)
+    assert.equal(resultSync.score, 7)
+    assert.equal(resultSync.completedAt, getFullMockResults(mock.id).speaking!.completedAt)
+    assert.equal(resultSync.breakdown.testId, speaking.id)
+    assert.equal(useSpeakingStore.getState().sessions[0].testId, speaking.id)
+    await act(async () => window.dispatchEvent(new Event('online')))
+    assert.equal(assessmentCalls, 3, 'A graded attempt is never assessed again on reconnect')
     assert.ok(element.querySelector('.mock-run-band')?.textContent?.startsWith('7.0'))
     assert.equal(element.querySelectorAll('.full-mock-result-review').length, 4)
     await mount('/mock/ielts/full-mock-1')
@@ -120,6 +141,7 @@ export async function run() {
     globalThis.FileReader = originalReader
     URL.createObjectURL = originalCreateURL
     URL.revokeObjectURL = originalRevokeURL
+    useAuthStore.setState({ user: originalUser })
     localStorage.clear()
   }
 }

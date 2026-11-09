@@ -1,6 +1,6 @@
 import { useCopy } from '@/i18n/interface'
 import UiText from '@/components/common/UiText'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ArrowLeft, ArrowUpRight, BookOpen, CheckCircle2, Headphones, Mic2, PenSquare, Trophy, X } from 'lucide-react'
 import ImprovedResponse from './ImprovedResponse'
 import SpeakingResult from '@/components/speaking/SpeakingResult'
@@ -23,6 +23,10 @@ export default function FullMockResults({ mock, results, onBack, onReview, onReg
   const [selected, setSelected] = useState<MockSectionKey | null>(null)
   const [regrading, setRegrading] = useState(false)
   const [error, setError] = useState('')
+  const regradeCallback = useRef(onRegrade)
+  regradeCallback.current = onRegrade
+  const regradeInFlight = useRef(false)
+  const retryTimer = useRef<ReturnType<typeof window.setTimeout>>()
   const overall = calculateFullMockOverallBand(results)
   const detailRef = useRef<HTMLElement>(null)
   useEffect(() => {
@@ -30,17 +34,32 @@ export default function FullMockResults({ mock, results, onBack, onReview, onReg
     detailRef.current?.focus({ preventScroll: true })
     detailRef.current?.scrollIntoView({ behavior: 'auto', block: 'start' })
   }, [selected])
-  const regrade = async () => {
-    if (regrading || !onRegrade) return
+  const regrade = useCallback(async () => {
+    if (regradeInFlight.current || !regradeCallback.current) return
+    window.clearTimeout(retryTimer.current)
+    regradeInFlight.current = true
     setRegrading(true); setError('')
-    try { await onRegrade() } catch (failure) { setError(failure instanceof Error ? failure.message : 'Could not complete the assessment. Please retry.') }
-    finally { setRegrading(false) }
-  }
+    try { await regradeCallback.current() } catch (failure) { setError(failure instanceof Error ? failure.message : 'Could not complete the assessment. Please retry.') }
+    finally { regradeInFlight.current = false; setRegrading(false) }
+  }, [])
   const section = mock.sections.find(item => item.key === selected)
   const saved = selected ? results[selected] : undefined
   const objective = selected === 'listening' || selected === 'reading'
   const pending = saved?.assessmentStatus === 'pending'
   const speakingPending = results.speaking?.assessmentStatus === 'pending'
+  const canRegrade = !!onRegrade
+  useEffect(() => {
+    if (!speakingPending || readOnly || !canRegrade) return
+    // Recover old pending attempts when their report opens, and when a lost
+    // connection returns. One scheduled retry avoids a perpetual paid AI loop.
+    const retry = () => { if (navigator.onLine !== false) void regrade() }
+    retryTimer.current = window.setTimeout(retry, 5000)
+    window.addEventListener('online', retry)
+    return () => {
+      window.clearTimeout(retryTimer.current)
+      window.removeEventListener('online', retry)
+    }
+  }, [speakingPending, results.speaking?.completedAt, mock.id, readOnly, canRegrade, regrade])
   const closeSection = () => {
     const card = document.getElementById(`result-card-${selected}`)
     setSelected(null)
@@ -67,7 +86,7 @@ export default function FullMockResults({ mock, results, onBack, onReview, onReg
           </button>
         })}
       </div>
-      {speakingPending && <div className="full-mock-assessment-notice" role="status"><div><h3><UiText text={"Your answers are saved"} /></h3><p><UiText text={"All four sections are complete. Your overall band will appear after Speaking is assessed."} /></p></div>{onRegrade && <button type="button" disabled={regrading} className="mock-run-review" onClick={() => void regrade()}>{regrading ? <UiText text={"Assessing your saved recordings..."} /> : <UiText text={"Retry Speaking assessment"} />}</button>}</div>}
+      {speakingPending && <div className="full-mock-assessment-notice" role="status"><div><h3><UiText text={"Your answers are saved"} /></h3><p><UiText text={"All four sections are complete. Your overall band will appear after Speaking is assessed."} /></p></div>{onRegrade && !readOnly && <button type="button" disabled={regrading} className="mock-run-review" onClick={() => void regrade()}>{regrading ? <UiText text={"Assessing your saved recordings..."} /> : <UiText text={"Retry Speaking assessment"} />}</button>}</div>}
       {error && <p role="alert" className="full-mock-assessment-error">{error}</p>}
       {selected && section && saved && <section ref={detailRef} tabIndex={-1} aria-labelledby="full-mock-section-title" id="full-mock-result-detail" className="full-mock-result-detail" key={selected}>
         <header><div><p className="full-mock-results-eyebrow"><UiText text={"SECTION RESULT"} /></p><h2 id="full-mock-section-title">{section.title} <span>{pending ? <UiText text={"Assessment pending"} /> : saved.band.toFixed(1)}</span></h2></div>{objective && saved.result && <button type="button" className="mock-run-review" onClick={() => onReview(section)}><UiText text={"Review answers"} /> <ArrowUpRight size={16} /></button>}<button type="button" className="full-mock-result-close" onClick={closeSection} aria-label={uiCopy("Close section review")}><X size={18} /></button></header>

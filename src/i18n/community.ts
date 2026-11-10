@@ -1,6 +1,13 @@
 import { useCopy } from './interface'
 
 const copy: Record<string, [string, string]> = {
+  'Find a partner or create a room.': ['Suhbatdosh toping yoki xona yarating.', 'Найдите собеседника или создайте комнату.'],
+  'Speak with a partner': ['Partner bilan suhbat', 'Разговор с партнёром'],
+  'Meet someone new and practise English together.': ['Suhbatdosh toping va birga inglizcha mashq qiling.', 'Знакомьтесь и практикуйте английский вместе.'],
+  'No partners available yet. Try random matching.': ['Hozircha bo‘sh suhbatdosh yo‘q. Tasodifiy qidiruvni sinab ko‘ring.', 'Пока нет свободных собеседников. Попробуйте случайный поиск.'],
+  'No rooms yet': ['Hozircha xonalar yo‘q', 'Пока нет комнат'],
+  'Create a room and invite others to join.': ['Xona yarating va boshqalarni taklif qiling.', 'Создайте комнату и пригласите других.'],
+  'Call settings': ['Qo‘ng‘iroq sozlamalari', 'Настройки звонков'],
   'Your call settings are updating. Please try again.': ['Qo‘ng‘iroq sozlamalari yangilanmoqda. Qayta urining.', 'Настройки звонков обновляются. Повторите попытку.'],
   'Incoming call': ['Kiruvchi qo‘ng‘iroq', 'Входящий звонок'],
   'You can decline or let the call expire.': ['Rad etishingiz yoki javob bermasligingiz mumkin.', 'Можно отклонить звонок или не отвечать.'],

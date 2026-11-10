@@ -115,18 +115,17 @@ async function main() {
         throw new Error(`Timed out: ${expression}; ${await evaluate('document.body.innerText')}; browser errors: ${JSON.stringify(errors)}`)
       }
       const click = async text => {
-        await until(`[...document.querySelectorAll('button')].some(b=>!b.disabled && b.textContent.includes(${JSON.stringify(text)}))`)
-        return evaluate(`(()=>{const buttons=[...document.querySelectorAll('button')].filter(b=>!b.disabled);(buttons.find(b=>b.textContent.trim()===${JSON.stringify(text)})||buttons.find(b=>b.textContent.includes(${JSON.stringify(text)}))).click();})()`)
+        await until(`[...document.querySelectorAll('button,summary')].some(b=>!b.disabled && b.textContent.includes(${JSON.stringify(text)}))`)
+        return evaluate(`(()=>{const buttons=[...document.querySelectorAll('button,summary')].filter(b=>!b.disabled);(buttons.find(b=>b.textContent.trim()===${JSON.stringify(text)})||buttons.find(b=>b.textContent.includes(${JSON.stringify(text)}))).click();})()`)
       }
       await send('Runtime.enable')
       await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] })
       await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 950, deviceScaleFactor: 1, mobile: false })
       await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/?name=${name}` })
-      await until(`document.querySelector('.hub-connection.is-live') && document.querySelector('.hub-lobby')`); assert.equal(await evaluate("document.querySelectorAll('.community-main-nav button').length"),2); await click('Partner'); await until("document.querySelector('.community-learner-card')")
+      await until(`document.querySelector('.hub-connection.is-live') && document.querySelector('.hub-partner-discovery')`); assert.equal(await evaluate("document.querySelectorAll('.community-main-nav button').length"),2)
       return { send, evaluate, until, click, errors }
     }
     const host = await page('Host'), guest = await page('Guest', true)
-    await host.until(`document.querySelector('.community-speak-button')`)
     const screenshots = resolve('output/playwright/community-browser')
     await mkdir(screenshots, { recursive: true })
     async function layout(page, label) {
@@ -135,204 +134,100 @@ async function main() {
         await page.send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: width < 760 })
         assert.equal(await page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1'), true, `${label}: ${width}px has no horizontal overflow`)
         if (label === 'room' || label === 'private-room') assert.equal(await page.evaluate(`(() => { const rect=document.querySelector('.hub-call-controls').getBoundingClientRect(); return rect.top>=0 && rect.bottom<=innerHeight+1; })()`), true, 'Call controls stay visible on desktop and mobile')
-        if (label === 'learners') await page.evaluate(`document.querySelector('.community-layout').scrollIntoView({block:'start'})`)
         if (process.env.COMMUNITY_SCREENSHOTS !== '1' || (width !== 1440 && width !== 390)) continue
         const screenshot = await page.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false })
         await writeFile(join(screenshots, `${label}-${width}.png`), Buffer.from(screenshot.data, 'base64'))
       }
     }
-    await layout(host, 'lobby')
-    await layout(host, 'learners')
-    await host.evaluate('window.scrollTo(0,0)')
-    await host.send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 950, deviceScaleFactor: 1, mobile: false });
-    await host.send('Page.bringToFront');
-    // Render hover directly; pointer synthesis after mobile emulation varies by host.
-    await host.send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'},{name:'hover',value:'hover'},{name:'pointer',value:'fine'}]});
-    await host.send('DOM.enable');await host.send('CSS.enable');
-    const dom = await host.send('DOM.getDocument');
-    const {nodeId:cardNode} = await host.send('DOM.querySelector',{nodeId:dom.root.nodeId,selector:'.community-learner-card'});
-    await host.send('CSS.forcePseudoState',{nodeId:cardNode,forcedPseudoClasses:['hover']});
-    await host.until("(()=>{const transform=getComputedStyle(document.querySelector('.community-learner-card')).transform;return transform!=='none' && new DOMMatrixReadOnly(transform).m42 < -4;})()");
-    await host.send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'},{name:'hover',value:'hover'},{name:'pointer',value:'fine'}]});
-    await host.until("getComputedStyle(document.querySelector('.community-learner-card')).transform==='none'");
-    await host.send('CSS.forcePseudoState',{nodeId:cardNode,forcedPseudoClasses:[]});
-    assert.equal(await host.evaluate("!!document.querySelector('.community-room-list') || !!document.querySelector('.community-suggestions')"), false, 'Section shortcuts and learner lists are not duplicated');
-    for (const width of [1440,1024,390,320]) {
-      await host.send('Emulation.setDeviceMetricsOverride',{width,height:844,deviceScaleFactor:1,mobile:width<760});
-      assert.equal(await host.evaluate("(()=>{const v=document.querySelector('.community-card-viewport');v.scrollTop=100;return getComputedStyle(v).overflowY==='auto'&&v.scrollHeight>v.clientHeight&&v.scrollTop>0;})()"),true,'Learner directory scrolls independently at '+width+'px');
-    }
-    const setInput=async(selector,value)=>host.evaluate('(()=>{const input=document.querySelector('+JSON.stringify(selector)+');Object.getOwnPropertyDescriptor(input instanceof HTMLSelectElement?HTMLSelectElement.prototype:HTMLInputElement.prototype,"value").set.call(input,'+JSON.stringify(value)+');input.dispatchEvent(new Event(input instanceof HTMLSelectElement?"change":"input",{bubbles:true}));})()');
-    await setInput('.community-search-field input','DifferentBand');
-    await host.until("document.querySelectorAll('.community-learner-card').length===1 && document.querySelector('.community-learner-card').innerText.includes('DifferentBand')");
-    await host.click('Same target band');
-    await host.until("document.querySelector('.community-empty')");
-    await host.click('Show all learners');
-    await host.until("document.querySelectorAll('.community-learner-card').length===16 && document.querySelector('.community-search-field input').value===''");
-    await host.click('Same target band');
-    await host.until("document.querySelectorAll('.community-learner-card').length===14");
-    assert.equal(await host.evaluate("document.querySelector('.community-card-grid').innerText.includes('SatSameScore')"),false,'Same band also respects the exam');
-    await host.click('Clear filters');
-    await setInput('.community-exam-filter select','SAT');
-    await host.until("document.querySelectorAll('.community-learner-card').length===1 && document.querySelector('.community-learner-card').innerText.includes('SatSameScore')");
-    await host.click('Clear filters');
-    await host.click('Same country');
-    await host.until("document.querySelectorAll('.community-learner-card').length===15");
-    await host.click('Online now');
-    await host.until("document.querySelectorAll('.community-learner-card').length===14");
-    await host.click('Clear filters');
-    await host.evaluate("window.failSearch=true;window.dispatchEvent(new Event('focus'))");
-    await host.until("document.querySelector('.community-error')");
-    await host.click('Try again');
-    await host.until("!document.querySelector('.community-error')&&document.querySelectorAll('.community-learner-card').length===16");
-    await setInput('.community-sort select','xp');
-    await host.until("document.querySelectorAll('.community-learner-card')[2]?.innerText.includes('SatSameScore')");
-    await host.evaluate("document.querySelector('.community-card-footer button').click()");
-    await host.until("window.communityPath==='/u/Leader'");
-    await host.evaluate("window.navigateCommunity('/community')");
-    await host.click('Voice rooms');
-    await guest.click('Voice rooms');
-    await layout(host, 'voice');
+    const setInput = async (page, selector, value) => page.evaluate('(()=>{const input=document.querySelector('+JSON.stringify(selector)+');Object.getOwnPropertyDescriptor(input instanceof HTMLSelectElement?HTMLSelectElement.prototype:HTMLInputElement.prototype,"value").set.call(input,'+JSON.stringify(value)+');input.dispatchEvent(new Event(input instanceof HTMLSelectElement?"change":"input",{bubbles:true}));})()');
+    const assertAudio = page => page.until("(async()=>{for(const pc of window.peerConnections){if(pc.connectionState!=='connected')continue;const stats=await pc.getStats();for(const report of stats.values()){if(report.type==='inbound-rtp'&&report.kind==='audio'&&report.bytesReceived>0)return true;}}return false;})()");
+    const createRoom = async (page, title, topic = '') => {
+      await page.click('Create a room');
+      await page.until("document.querySelector('dialog[open]')");
+      if (title) await setInput(page, 'dialog input', title);
+      if (topic) await setInput(page, 'dialog label:nth-of-type(2) input', topic);
+      await page.evaluate("document.querySelector('dialog button[type=submit]').click()");
+      await page.until("document.querySelector('.hub-room-header') && !document.querySelector('dialog')");
+    };
+    await host.until("document.querySelector('.hub-partner-card')?.innerText.includes('Guest')");
+    assert.equal(await host.evaluate("!!document.querySelector('.zone-launchpad,.zone-discovery-grid,.community-layout,.hub-starters,.hub-mode-bar')"), false, 'Speaking Zone contains only partner and room flows');
+    await layout(host, 'partner');
+    await host.send('Emulation.setDeviceMetricsOverride', {width:1440,height:950,deviceScaleFactor:1,mobile:false});
+    await host.evaluate("window.scrollTo(0,0)");
+    await host.click('Call settings');
     await host.evaluate("document.querySelector('.hub-audio-setup').open=true");
     await host.click('Test microphone');
     await host.until("document.querySelector('.hub-audio-setup').innerText.includes('Say a few words')");
     await host.click('Stop test');
-    assert.equal(await host.evaluate("window.captureStreams.every(stream=>stream.getTracks().every(track=>track.readyState==='ended'))"),true,'Mic test releases capture');
-    await host.click('Test microphone');
-    await host.until("document.querySelector('.hub-audio-setup').innerText.includes('Say a few words')");
-    await host.until("document.querySelector('.hub-audio-setup').innerText.includes('Microphone works') || document.querySelector('.hub-audio-setup').innerText.includes('No sound detected')");
-    assert.equal(await host.evaluate("window.captureStreams.every(stream=>stream.getTracks().every(track=>track.readyState==='ended'))"),true,'Mic test ends automatically');
+    assert.equal(await host.evaluate("window.captureStreams.every(stream=>stream.getTracks().every(track=>track.readyState==='ended'))"), true, 'Microphone check releases capture');
+    await host.click('Call settings');
     const micTests = await host.evaluate('window.captureStreams.length');
-    // The launchpad turns a prompt into a real room, without opening a form.
-    const firstSpark = await host.evaluate("document.querySelector('.zone-spark-question p').textContent");
-    await host.evaluate("document.querySelector('.zone-shuffle').click()");
-    const selectedSpark = await host.evaluate("document.querySelector('.zone-spark-question p').textContent");
-    assert.notEqual(selectedSpark, firstSpark, 'Shuffle changes the conversation question');
-    await host.click('Talk about this');
-    await host.until("document.querySelector('.hub-topic h2')?.textContent==="+JSON.stringify(selectedSpark));
-    await host.click('Leave room');
-    await host.until("document.querySelector('.zone-start') && !document.querySelector('.hub-room-header')");
-    await host.evaluate("document.querySelector('.zone-start').click()");
+    await host.click('Voice rooms');
+    await guest.click('Voice rooms');
+    await host.until("document.querySelector('.hub-lobby-empty')");
+    await layout(host,'rooms-empty');
+    await host.click('Create a room');
+    await host.until("document.querySelector('dialog[open]')");
+    assert.equal(await host.evaluate("document.querySelectorAll('dialog input:not([type=checkbox])').length"),2,'Create form has only a name and topic');
+    await layout(host,'create');
+    await host.evaluate("document.querySelector('dialog button[aria-label=Close]').click()");
+    await host.until("!document.querySelector('dialog')");
+    await createRoom(host);
     await host.until("document.querySelector('.hub-room-header')?.innerText.includes('Say hello')");
+    assert.equal(await host.evaluate('window.captureStreams.length'),micTests,'Room creation starts with the microphone off');
+    assert.equal(await host.evaluate("!!document.querySelector('.hub-mode-bar,.hub-conversation-toolkit,.community-main-nav')"),false,'Active conversation has no extra modes or launchers');
     await host.click('Leave room');
     await host.until("document.querySelector('.hub-lobby')");
-    // Topic tiles start a room directly, without a form or typing.
-    await host.click('Say hello')
-    await host.until(`document.querySelector('.hub-room-header')?.innerText.includes('Say hello')`)
-    assert.equal(await host.evaluate(`!!document.querySelector('dialog')`), false)
-    assert.equal(await host.evaluate('window.captureStreams.length'), micTests, 'One-tap creation never waits for microphone permission')
-    await host.click('Leave room')
-    await host.until(`document.querySelector('.hub-connection.is-live')`)
-    // The custom launcher also works with its defaults, with settings optional.
-    await host.click('Create a room')
-    await host.until(`document.querySelector('dialog[open]')`)
-    assert.equal(await host.evaluate(`document.querySelector('dialog button[type=submit]').disabled`), false)
-    await host.click('Open my room')
-    await host.until(`document.querySelector('.hub-room-header')?.innerText.includes('Say hello')`)
-    await host.click('Leave room')
-    await host.until(`document.querySelector('.hub-connection.is-live')`)
-    await host.click('Create a room')
-    await host.until(`document.querySelector('dialog[open]')`)
-    await host.evaluate(`[...document.querySelectorAll('dialog button')].find(b=>b.textContent.includes('Debate club')).click()`)
-    await host.evaluate(`(() => { const input=document.querySelector('dialog input'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'Climate debate'); input.dispatchEvent(new Event('input',{bubbles:true})); document.querySelector('.hub-optional-settings').open=true; const topic=document.querySelector('dialog textarea'); Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype,'value').set.call(topic,'Should cities ban private cars?'); topic.dispatchEvent(new Event('input',{bubbles:true})); })()`)
-    await host.evaluate(`document.querySelector('dialog button[type=submit]').click()`)
-    await host.until(`document.querySelector('.hub-room-header')?.innerText.includes('Climate debate')`)
-    assert.equal(await host.evaluate('window.captureStreams.length'), micTests, 'Custom creation also opens without microphone permission')
-    await guest.until(`document.querySelector('.hub-room-card')?.innerText.includes('Climate debate')`)
-    await guest.evaluate("document.querySelector('.zone-start').click()");
-    await guest.until("document.querySelector('.hub-room-header')?.innerText.includes('Climate debate')");
-    await guest.click('Leave room');
-    await guest.until("document.querySelector('.hub-room-card')?.innerText.includes('Climate debate')");
-    await guest.evaluate("(()=>{const input=document.querySelector('.hub-room-search input');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'  CLIMATE  ');input.dispatchEvent(new Event('input',{bubbles:true}));})()");
-    await guest.until("document.querySelectorAll('.hub-room-card').length===1");
-    await guest.evaluate("(()=>{const input=document.querySelector('.hub-room-search input');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'unmatched-topic');input.dispatchEvent(new Event('input',{bubbles:true}));})()");
-    await guest.until("document.querySelector('.hub-lobby-empty').innerText.includes('No rooms match')");
-    await guest.click('Clear filters');
+    await createRoom(host,'Evening conversation','Travel and everyday life');
+    await guest.until("document.querySelector('.hub-room-card')?.innerText.includes('Evening conversation')");
+    await layout(guest,'rooms');
+    await setInput(guest,'.hub-room-search input',' unmatched ');
+    await guest.until("document.querySelector('.hub-lobby-empty')?.innerText.includes('No rooms match')");
+    await guest.click('Clear search');
     await guest.until("document.querySelector('.hub-room-card')");
-    await guest.evaluate("(()=>{const select=document.querySelector('.hub-level-filter select');Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,'value').set.call(select,'advanced');select.dispatchEvent(new Event('change',{bubbles:true}));})()");
-    await guest.until("document.querySelector('.hub-room-card')");
-    assert.equal(await guest.evaluate("document.querySelector('.hub-level-filter select').value"),'advanced','All-level rooms remain available to advanced learners');
     await host.click('Invite friends');
     const invitation = await host.evaluate("document.querySelector('.hub-share-link input').value");
     const invitePath = new URL(invitation).pathname + new URL(invitation).search;
-    await guest.evaluate(`window.navigateCommunity(${JSON.stringify(invitePath)})`);
+    await guest.evaluate('window.navigateCommunity('+JSON.stringify(invitePath)+')');
     await guest.until("document.querySelector('.hub-invitation') && !document.querySelector('.hub-lobby')");
     await guest.click('Join invited room');
-    await guest.until("document.querySelector('.hub-room-header')?.innerText.includes('Climate debate')");
+    await guest.until("document.querySelector('.hub-listener')?.innerText.includes('Guest')");
+    assert.equal(await guest.evaluate('window.captureStreams.length'),0,'Joining as a listener does not request microphone permission');
+    await guest.click('Raise hand');
+    await host.until("document.querySelector('.hub-listener i')");
+    await guest.evaluate('window.rejectMicrophoneOnce=true');
+    await guest.click('Take a seat');
+    await guest.until("document.querySelector('.hub-feedback.is-error')?.innerText.includes('Microphone access is blocked')");
+    assert.equal(await guest.evaluate("!!document.querySelector('.hub-room-header') && document.querySelector('.hub-listener')?.innerText.includes('Guest')"),true,'Denied microphone keeps the listener in the room');
+    await guest.click('Take a seat');
+    await host.until("document.querySelector('.hub-speaker.is-speaking')?.innerText.includes('Guest')");
+    await assertAudio(host);
+    await guest.click('Mute');
+    await guest.until("[...document.querySelectorAll('.hub-call-controls button')].some(b=>b.textContent.includes('Unmute'))");
+    assert.equal(await guest.evaluate('window.captureStreams.at(-1).getAudioTracks()[0].enabled'),false);
+    await guest.click('Unmute');
+    await guest.click('Listen instead');
+    await host.until("document.querySelector('.hub-listener')?.innerText.includes('Guest')");
+    assert.equal(await guest.evaluate("window.captureStreams.every(stream=>stream.getTracks().every(track=>track.readyState==='ended'))"),true,'Listening releases microphone tracks');
+    await guest.click('Take a seat');
+    await host.until("document.querySelector('.hub-speaker.is-speaking')?.innerText.includes('Guest')");
+    assert.equal(await guest.evaluate("window.peerConnections.filter(pc=>pc.connectionState==='connected').length"),1,'Returning to speak reuses the connection');
+    await setInput(guest,'.hub-chat input','Hello from the live room');
+    await guest.evaluate("document.querySelector('.hub-chat button[type=submit]').click()");
+    await host.until("document.querySelector('.hub-chat-messages').innerText.includes('Hello from the live room')");
+    await layout(host,'room');
+    await host.click('Unmute');
+    await assertAudio(guest);
     await guest.click('Leave room');
-    await guest.evaluate("window.navigateCommunity('/community?mode=voice')");
-    await guest.until("document.querySelector('.hub-room-card')?.innerText.includes('Climate debate')");
-    await layout(guest, 'feed')
-    await guest.click('Enter room')
-    await guest.until(`document.querySelector('.hub-listener')?.innerText.includes('Guest')`)
-    assert.equal(await guest.evaluate('window.captureStreams.length'), 0, 'Entering to listen never requests the microphone')
-    await host.until(`window.peerConnections.some(pc=>pc.connectionState==='connected') && document.querySelectorAll('audio').length===1`)
-    await guest.click('Raise hand')
-    await host.until(`document.querySelector('.hub-listener i')`)
-    await guest.evaluate(`window.rejectMicrophoneOnce=true`)
-    await guest.click('Take a seat')
-    await guest.until(`document.querySelector('.hub-feedback.is-error')?.innerText.includes('Microphone access is blocked')`)
-    assert.equal(await guest.evaluate(`!!document.querySelector('.hub-room-header') && document.querySelector('.hub-listener')?.innerText.includes('Guest')`), true, 'A denied microphone keeps the learner listening in the room')
-    await guest.click('Take a seat')
-    await guest.until(`document.querySelectorAll('.hub-speaker:not(.is-empty)').length===2`)
-    await host.until(`document.querySelector('.hub-speaker.is-speaking')?.innerText.includes('Guest')`)
-    await host.until(`(async()=>{for(const pc of window.peerConnections){if(pc.connectionState!=='connected')continue;const stats=await pc.getStats();for(const report of stats.values()){if(report.type==='inbound-rtp'&&report.kind==='audio'&&report.bytesReceived>0)return true;}}return false;})()`)
-    await guest.click('Mute')
-    await guest.until(`[...document.querySelectorAll('.hub-call-controls button')].some(b=>b.textContent.includes('Unmute'))`)
-    assert.equal(await guest.evaluate('window.captureStreams.at(-1).getAudioTracks()[0].enabled'), false)
-    await guest.click('Unmute')
-    await host.until(`document.querySelector('.hub-speaker.is-speaking')?.innerText.includes('Guest')`)
-    await guest.click('Listen instead')
-    await host.until(`document.querySelector('.hub-listener')?.innerText.includes('Guest')`)
-    assert.equal(await guest.evaluate('window.captureStreams.every(stream=>stream.getTracks().every(track=>track.readyState===\'ended\'))'), true, 'Stepping down releases microphone tracks')
-    await guest.click('Take a seat')
-    await host.until(`document.querySelector('.hub-speaker.is-speaking')?.innerText.includes('Guest')`)
-    assert.equal(await guest.evaluate('window.peerConnections.filter(pc=>pc.connectionState===\'connected\').length'), 1, 'Switching from listening to speaking reuses the audio connection')
-    await host.until(`document.querySelector('.team-for')?.innerText.includes('Host') && document.querySelector('.team-against')?.innerText.includes('Guest')`)
-    const peerCount = await host.evaluate('window.peerConnections.length')
-    await host.click('Conversation')
-    await guest.until(`!document.querySelector('.hub-debate-teams') && document.querySelectorAll('.hub-speaker:not(.is-empty)').length===2`)
-    await host.click('Debate')
-    await guest.until(`document.querySelector('.team-against')?.innerText.includes('Guest')`)
-    assert.equal(await host.evaluate('window.peerConnections.length'), peerCount, 'Switching room modes preserves voice connections')
-    await host.click('Start debate')
-    await guest.until(`document.querySelector('.hub-debate-clock')?.innerText.includes('Current turn: @Host')`)
-    await host.click('Next turn')
-    await guest.until(`document.querySelector('.hub-debate-clock')?.innerText.includes('Current turn: @Guest')`)
-    await host.click('Pause')
-    await guest.until(`document.querySelector('.hub-debate-clock')?.innerText.includes('Ready for a friendly debate?')`)
-    await guest.evaluate(`(() => { const input=document.querySelector('.hub-chat input'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'Hello from the live room'); input.dispatchEvent(new Event('input',{bubbles:true})); })()`)
-    await guest.evaluate(`document.querySelector('.hub-chat button[type=submit]').click()`)
-    await host.until(`document.querySelector('.hub-chat-messages').innerText.includes('Hello from the live room')`)
-    const promptBefore = await host.evaluate("document.querySelector('.hub-conversation-toolkit p').textContent");
-    await host.click('Next prompt');
-    assert.notEqual(await host.evaluate("document.querySelector('.hub-conversation-toolkit p').textContent"),promptBefore,'Speaking prompts change within a session');
-    await layout(host, 'room')
-    await host.click('Unmute')
-    await host.until(`window.captureStreams.at(-1)?.getAudioTracks()[0]?.enabled`)
-    await guest.until(`(async()=>{for(const pc of window.peerConnections){if(pc.connectionState!=='connected')continue;const stats=await pc.getStats();for(const report of stats.values()){if(report.type==='inbound-rtp'&&report.kind==='audio'&&report.bytesReceived>0)return true;}}return false;})()`)
-    await guest.click('Leave room')
-    await host.click('Leave room')
-    await host.click('Partner')
-    await host.until(`document.querySelector('.community-speak-button')`)
-    await host.click('Call now')
-    await guest.until(`document.querySelector('.hub-invitation')?.innerText.includes('Host')`)
-    await guest.click('Accept & join')
-    await host.until(`document.querySelector('.hub-room-header')?.innerText.includes('Private room')`)
-    await guest.until(`document.querySelector('.hub-room-header')?.innerText.includes('Private room')`)
-    await host.click('Unmute')
-    await guest.click('Unmute')
-    for (const page of [host, guest]) await page.until(`(async()=>{for(const pc of window.peerConnections){if(pc.connectionState!=='connected')continue;const stats=await pc.getStats();for(const report of stats.values()){if(report.type==='inbound-rtp'&&report.kind==='audio'&&report.bytesReceived>0)return true;}}return false;})()`)
-    await host.click('Leave room')
-    await guest.click('Leave room')
-    await host.click('Partner')
-    await guest.click('Partner')
-    await host.until(`document.querySelector('.hub-partner-card')?.innerText.includes('Guest')`)
-    await layout(host, 'partner')
-    await setInput('.hub-partner-discovery .hub-room-search input',' nobody ');
-    await host.until("document.querySelector('.hub-partner-discovery .hub-lobby-empty')?.innerText.includes('No partner found')");
-    await host.click('Clear search');
+    await host.click('Leave room');
+    await host.click('Partner');
+    await guest.click('Partner');
     await host.until("document.querySelector('.hub-partner-card')?.innerText.includes('Guest')");
-    await setInput('.hub-partner-discovery .hub-room-search input','  gUeSt  ');
+    await setInput(host,'.hub-partner-discovery input',' nobody ');
+    await host.until("document.querySelector('.zone-partner-empty')?.innerText.includes('No partner found')");
+    await host.click('Clear search');
+    await host.until("document.querySelector('.hub-partner-card')");
+    await setInput(host,'.hub-partner-discovery input','  gUeSt  ');
     await host.until("document.querySelectorAll('.hub-partner-card').length===1");
     await host.click('Call now');
     await host.until("document.querySelector('.hub-pending.is-inviting')?.innerText.includes('@Guest')");
@@ -346,9 +241,9 @@ async function main() {
     await host.until("!document.querySelector('.hub-pending') && document.querySelector('.hub-partner-card')");
     await host.click('Call now');
     await guest.until("document.querySelector('.hub-invitation')?.innerText.includes('Host')");
-    assert.equal(await guest.evaluate('window.captureStreams.every(stream=>stream.getTracks().every(track=>track.readyState===\'ended\'))'), true, 'Ringing does not activate the recipient microphone');
+    assert.equal(await guest.evaluate("window.captureStreams.every(stream=>stream.getTracks().every(track=>track.readyState==='ended'))"),true,'Ringing leaves the microphone off');
     await guest.click('Block caller');
-    await guest.until("document.querySelector('[role=alertdialog]')?.innerText.includes('Block this caller?')");
+    await guest.until("document.querySelector('[role=alertdialog]')");
     await guest.click('Cancel');
     await guest.until("!document.querySelector('[role=alertdialog]')");
     await guest.click('Block caller');
@@ -364,79 +259,65 @@ async function main() {
     await guest.click('Accept & join');
     await host.until("document.querySelector('.hub-room-header')?.innerText.includes('Private room')");
     await guest.until("document.querySelector('.hub-room-header')?.innerText.includes('Private room')");
-    await host.click('Leave room');await guest.click('Leave room');
+    await host.click('Unmute');
+    await guest.click('Unmute');
+    await assertAudio(host); await assertAudio(guest);
+    await layout(host,'private-room');
+    await host.click('Leave room'); await guest.click('Leave room');
     await host.until("document.querySelector('.hub-partner-card')");
-    const microphoneCount = await host.evaluate('window.captureStreams.length')
-    await host.click('Find a random partner')
-    await host.until(`document.querySelector('.hub-pending')?.innerText.includes('Looking for your next conversation')`)
-    await host.click('Cancel')
-    await host.until(`!document.querySelector('.hub-pending')`)
-    await host.click('Find a random partner')
-    await host.until(`document.querySelector('.hub-pending')?.innerText.includes('Looking for your next conversation')`)
-    const recovery = await page('Host', true)
-    await recovery.until(`document.querySelector('.hub-activity-recovery')?.innerText.includes('active session')`)
-    await recovery.click('End session & start again')
-    await host.until(`!document.querySelector('.hub-pending') && !document.querySelector('.hub-activity-recovery')`)
-    assert.deepEqual(recovery.errors, [], 'Recovery tab has no browser exceptions')
-    await recovery.send('Page.close').catch(() => {})
-    await host.click('Find a random partner')
-    await host.until(`document.querySelector('.hub-pending')?.innerText.includes('Looking for your next conversation')`)
-    await guest.click('Find a random partner')
-    await host.until(`document.querySelector('.hub-room-header')?.innerText.includes('Private room')`)
-    await guest.until(`document.querySelector('.hub-room-header')?.innerText.includes('Private room')`)
-    assert.equal(await host.evaluate('window.captureStreams.length'), microphoneCount, 'Random matching connects without requesting a microphone')
-    await host.click('Unmute')
-    await guest.click('Unmute')
-    for (const page of [host, guest]) await page.until(`(async()=>{for(const pc of window.peerConnections){if(pc.connectionState!=='connected')continue;const stats=await pc.getStats();for(const report of stats.values()){if(report.type==='inbound-rtp'&&report.kind==='audio'&&report.bytesReceived>0)return true;}}return false;})()`)
-    await layout(host, 'private-room')
-    await guest.click('Find next partner')
-    await guest.until(`document.querySelector('.hub-pending')?.innerText.includes('Looking for your next conversation')`)
-    await host.click('Leave room')
-    await host.until(`document.querySelector('.hub-partner-discovery')`)
-    await host.click('Find a random partner')
-    await guest.until(`document.querySelector('.hub-room-header')?.innerText.includes('Private room')`)
-    await host.until(`document.querySelector('.hub-room-header')?.innerText.includes('Private room')`)
-    await guest.click('Leave room')
-    await host.click('Leave room')
-    assert.equal(await host.evaluate('window.captureStreams.every(stream=>stream.getTracks().every(track=>track.readyState===\'ended\'))'), true, 'Leaving stops every host microphone track')
-    assert.equal(await guest.evaluate('window.captureStreams.every(stream=>stream.getTracks().every(track=>track.readyState===\'ended\'))'), true, 'Leaving stops every guest microphone track')
-    for (const mode of ['questions','admissions','people']) {
-      await host.evaluate(`window.navigateCommunity('/community?mode=${mode}')`);
-      await host.until(mode === 'people' ? "document.querySelector('.hub-partner-discovery')" : "document.querySelector('.hub-lobby')");
-      assert.equal(await host.evaluate("!!document.querySelector('.discussion-room')"),false,'Removed sections resolve to speaking');
+    const microphoneCount = await host.evaluate('window.captureStreams.length');
+    await host.click('Find a random partner');
+    await host.until("document.querySelector('.hub-pending')?.innerText.includes('Looking for your next conversation')");
+    await host.click('Cancel');
+    await host.until("!document.querySelector('.hub-pending')");
+    await host.click('Find a random partner');
+    await host.until("document.querySelector('.hub-pending')");
+    const recovery = await page('Host',true);
+    await recovery.until("document.querySelector('.hub-activity-recovery')?.innerText.includes('active session')");
+    await recovery.click('End session & start again');
+    await host.until("!document.querySelector('.hub-pending') && !document.querySelector('.hub-activity-recovery')");
+    assert.deepEqual(recovery.errors,[]);
+    await recovery.send('Page.close').catch(()=>{});
+    await host.click('Find a random partner');
+    await host.until("document.querySelector('.hub-pending')");
+    await guest.click('Find a random partner');
+    await host.until("document.querySelector('.hub-room-header')?.innerText.includes('Private room')");
+    await guest.until("document.querySelector('.hub-room-header')?.innerText.includes('Private room')");
+    assert.equal(await host.evaluate('window.captureStreams.length'),microphoneCount,'Matching does not request microphone permission');
+    await guest.click('Find next partner');
+    await guest.until("document.querySelector('.hub-pending')");
+    await host.click('Leave room');
+    await host.until("document.querySelector('.hub-partner-discovery')");
+    await host.click('Find a random partner');
+    await guest.until("document.querySelector('.hub-room-header')");
+    await host.until("document.querySelector('.hub-room-header')");
+    await guest.click('Leave room'); await host.click('Leave room');
+    for(const p of [host,guest]) assert.equal(await p.evaluate("window.captureStreams.every(stream=>stream.getTracks().every(track=>track.readyState==='ended'))"),true,'Leaving releases every microphone track');
+    for(const mode of ['questions','admissions','people']) {
+      await host.evaluate('window.navigateCommunity('+JSON.stringify('/community?mode='+mode)+')');
+      await host.until(mode==='people'?"document.querySelector('.hub-partner-discovery')":"document.querySelector('.hub-lobby')");
       assert.equal(await host.evaluate("document.querySelectorAll('.community-main-nav button').length"),2);
     }
-    await host.click('Partner');
-    await host.send('Page.bringToFront')
-    await host.evaluate(`window.champion='Guest'; window.dispatchEvent(new Event('focus'))`)
-    await host.until(`document.querySelector('.hub-champion').innerText.includes('@Guest')`)
-    await host.until("document.querySelectorAll('.community-learner-card.is-featured').length===1 && document.querySelector('.community-learner-card.is-featured').innerText.includes('@Guest') && document.querySelector('.community-learner-card.is-featured').innerText.includes('950')");
-    await setInput('.community-search-field input','Leader');
-    await host.until("document.querySelectorAll('.community-learner-card').length===1 && document.querySelector('.community-learner-card').innerText.includes('@Leader')");
-    assert.equal(await host.evaluate("!!document.querySelector('.community-learner-card.is-featured')"),false,'Filtering never awards the crown to a lower-XP learner');
-    assert.equal(await host.evaluate("document.querySelector('.hub-champion').innerText.includes('@Guest')"),true,'The global highest-XP learner stays visible across filters');
-    await host.click('Voice rooms');await host.click('Say hello');
-    await host.until("document.querySelector('.hub-room-header')");await host.click('Unmute');
+    await host.click('Voice rooms');
+    await createRoom(host,'Account switch');
+    await host.click('Unmute');
     await host.until("window.captureStreams.at(-1)?.getAudioTracks()[0]?.enabled");
     const previousSockets = await host.evaluate('window.communitySockets.length');
     await host.evaluate("window.switchFixtureAccount('SwitchedAccount')");
-    await host.until(`window.communitySockets.length>${previousSockets} && document.querySelector('.hub-connection.is-live') && !document.querySelector('.hub-room-header')`);
-    assert.equal(await host.evaluate("window.captureStreams.every(stream=>stream.getTracks().every(track=>track.readyState==='ended'))"), true, 'Changing account releases the old session microphone');
-    await guest.click('Partner');
-    await guest.until("document.querySelector('.hub-partner-grid').innerText.includes('SwitchedAccount')");
-    for (const language of ['uz', 'ru']) {
+    await host.until('window.communitySockets.length>'+previousSockets+" && document.querySelector('.hub-connection.is-live') && !document.querySelector('.hub-room-header')");
+    assert.equal(await host.evaluate("window.captureStreams.every(stream=>stream.getTracks().every(track=>track.readyState==='ended'))"),true,'Switching accounts releases the microphone');
+    for(const language of ['uz','ru']) {
       await host.evaluate('window.setFixtureLanguage('+JSON.stringify(language)+')');
-      await host.evaluate("window.navigateCommunity('/community?mode=voice'); window.scrollTo(0,0)");
-      await host.until("document.querySelector('.zone-spark') && document.documentElement.lang==="+JSON.stringify(language));
-      await layout(host, 'voice-'+language);
-      assert.equal(await host.evaluate("(()=>{const title=document.querySelector('.zone-launch-copy h2');return title.scrollWidth<=title.clientWidth+1;})()"),true,'Localized title fits at 320px: '+language);
-      await host.evaluate("window.navigateCommunity('/community?mode=partner'); window.scrollTo(0,0)");
-      await host.until("document.querySelector('.hub-partner-discovery')");
-      await layout(host, 'partner-'+language);
+      await host.evaluate("window.navigateCommunity('/community?mode=voice');window.scrollTo(0,0)");
+      await host.until("document.querySelector('.hub-lobby') && document.documentElement.lang==="+JSON.stringify(language));
+      await layout(host,'rooms-'+language);
+      await host.evaluate("window.navigateCommunity('/community?mode=partner');window.scrollTo(0,0)");
+      await host.until("document.querySelector('.zone-partner-start')");
+      await layout(host,'partner-'+language);
     }
-    assert.deepEqual(host.errors, [], 'Host has no browser exceptions')
-    assert.deepEqual(guest.errors, [], 'Guest has no browser exceptions')
-    console.log('Community browser passed: two-way WebRTC audio, debate modes/teams/turns, random matching/cancellation/next partner and cross-tab recovery, private invitations and deep links, declined calls, confirmed blocking and unblocking, microphone release, chat, speaking-only navigation and legacy redirects, learner search/filters/reset/sorting/profile navigation/retry, independent learner scrolling and layouts at 320–1440px, visible call controls and champion refresh.')
+    assert.deepEqual(host.errors,[],'No host browser errors');
+    assert.deepEqual(guest.errors,[],'No guest browser errors');
+    console.log('Community browser passed: minimal partner/room navigation; creation, search, deep links, chat, two-way WebRTC audio, denied microphone recovery and release; invitation acceptance/cancellation/decline, blocking/unblocking, random matching, next partner, cross-tab recovery and account switching; English/Uzbek/Russian layouts at 320-1440px and visible call controls.');
     await host.send('Browser.close').catch(() => {})
   } finally {
     connections.forEach(socket => socket.close())

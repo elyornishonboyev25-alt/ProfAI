@@ -55,9 +55,14 @@ export async function run() {
       await render(<SpeakingResult evaluation={evaluation} transcript={history} modeLabel="Speaking Mock 1" reviewMode={reviewMode} onRetry={() => {}} onExit={() => {}} />)
       assert.equal(container.querySelector('a[href="/shadowing-lab"]'), null, 'Speaking feedback has no practice-resource promotion')
       assert.equal(container.querySelector('[data-test-vocabulary]'), null, 'Speaking feedback has no vocabulary promotion')
-      assert.ok(container.querySelector('details[open]'))
-      for (const answer of evaluation.improvedAnswers!) assert.ok(container.textContent!.includes(answer.improved))
-      assert.equal(container.querySelectorAll('section').length, 2, 'No rewrite is fabricated for empty speech')
+      assert.ok(container.querySelector('[role="tablist"]'), 'Compact tabs replace a long expanded review')
+      for (const answer of evaluation.improvedAnswers!) {
+        await act(async () => container.querySelector<HTMLButtonElement>(`[aria-label="Question ${answer.answerIndex + 1}"]`)!.click())
+        assert.ok(container.textContent!.includes(answer.improved))
+      }
+      await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Question 2"]')!.click())
+      assert.equal(container.querySelectorAll('.assessment-panel section').length, 0, 'No rewrite is fabricated for empty speech')
+      await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Question 1"]')!.click())
     }
     await render(<SpeakingResult evaluation={{ ...evaluation, improvedAnswers: [{ ...evaluation.improvedAnswers![0], original: 'Unrelated response' }] }} transcript={history} modeLabel="Speaking Mock 1" reviewMode onRetry={() => {}} onExit={() => {}} />)
     assert.equal(container.textContent!.includes('I enjoy reading books.'), false, 'Saved mismatched data is never displayed as the learner\'s rewrite')
@@ -73,10 +78,13 @@ export async function run() {
     const partial = { ...evaluation, improvedAnswers: [evaluation.improvedAnswers![0]] }
     await render(<React.StrictMode><SpeakingResult evaluation={partial} transcript={history} modeLabel="Speaking Mock 1" autoImprove onRetry={() => {}} onExit={() => {}} /></React.StrictMode>)
     assert.equal(repairCalls, 1, 'StrictMode and overlapping recovery share one request')
+    await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Question 3"]')!.click())
     assert.ok(container.textContent!.includes('I read at home with my sister.'))
+    await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Question 1"]')!.click())
     assert.ok(container.textContent!.includes('I enjoy reading books.'))
     assert.ok(container.textContent!.includes('6.0'), 'The valid band stays visible during coaching recovery')
     await render(<SpeakingResult evaluation={partial} transcript={history} modeLabel="Speaking Mock 1" reviewMode onRetry={() => {}} onExit={() => {}} />)
+    await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Question 3"]')!.click())
     assert.ok(container.textContent!.includes('I read at home with my sister.'), 'Reloaded reviews reuse recovered coaching')
     assert.equal(repairCalls, 1)
 
@@ -114,7 +122,8 @@ export async function run() {
     await act(async () => confirm.click())
     assert.deepEqual(submitted, responses)
     assert.deepEqual(completed.map(item => item.improvedVersion), responses.map(response => `Improved: ${response}`))
-    for (const response of responses) assert.ok(container.textContent!.includes(`Improved: ${response}`), 'Both tasks show their own stronger answer immediately')
+    for (const button of [...container.querySelectorAll<HTMLButtonElement>('[role="tab"]')].filter(button => button.textContent?.includes('Stronger version'))) await act(async () => button.click())
+    for (const response of responses) assert.ok(container.textContent!.includes(`Improved: ${response}`), 'Both tasks retain their own stronger answer in the compact review')
     assert.deepEqual(getWritingAnalysisHistory().slice(0, 2).map(item => item.improvedVersion).sort(), responses.map(response => `Improved: ${response}`).sort())
     console.log('PASS: translated resource navigation, grounded Speaking rewrites, empty/legacy answers, both Writing tasks and persisted mock review data')
   } finally {

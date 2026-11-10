@@ -284,3 +284,18 @@
   .ai-chat-window--studio .coach-composer > div:last-of-type > .coach-send-button { width:42px; height:42px; border-radius:13px; }
 }
 @media (prefers-reduced-motion:reduce) { .ai-chat-window--studio .coach-composer > div:last-of-type { transition:none; } }
+
+/* Expression changes are illustrative and remain independent of audio amplitude. */
+.coach-mascot--unimpressed .nova-head>rect[x="48"]{fill:#f3b9c4;stroke:#cf6b80}
+.coach-mascot--unimpressed .nova-ear{filter:drop-shadow(0 0 5px #cc173c45)}
+.coach-mascot--affectionate .nova-head>ellipse{opacity:.85}
+.coach-mascot--affectionate .nova-eyes{filter:drop-shadow(0 0 3px #ed7894)}
+.coach-mascot--delighted .nova-smile{stroke-width:4px}
+.coach-mascot--focused .nova-brow{stroke:#e0d5dc}
+.coach-voice-stage{background:radial-gradient(ellipse at 50% 22%,#fff 0,transparent 55%),linear-gradient(145deg,#f4f5f8,#dce1e9)!important}
+.coach-voice-stage .coach-mascot{border:1px solid #ffffffb3;border-radius:40%;background:radial-gradient(circle,#fff9,#fff1 65%);box-shadow:inset 0 1px 0 white,0 20px 70px #3444590b}
+.coach-voice-stage .coach-controls--compact{background:linear-gradient(135deg,#ffffffc9,#edf0f5b3);box-shadow:inset 0 1px 0 white,0 8px 25px #3444590b}
+.coach-voice-stage button.bg-red-600{background:linear-gradient(140deg,#cf3653,#ae1536);color:#fff;box-shadow:0 8px 20px #a5123020,inset 0 1px 0 #ffffff40}
+.coach-voice-stage button:focus-visible{outline:2px solid #ae1536;outline-offset:4px}
+@media(min-width:900px) and (min-height:730px){.coach-voice-stage .coach-mascot{width:200px!important;height:200px!important}}
+@media(prefers-reduced-motion:reduce){.coach-mascot *{animation:none!important;transition:none!important}}

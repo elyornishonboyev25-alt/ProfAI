@@ -17,5 +17,6 @@ export async function regradeFullMockSpeaking(owner: string, saved: FullMockSect
   const evaluation = await evaluateSpeaking({ modeLabel: saved.testId, history: saved.speaking.transcript, stats: saved.speaking.evaluation.stats,
     audio: clips.filter((clip): clip is NonNullable<typeof clip> => !!clip), expectedAudioAnswers })
   if (evaluation.source !== 'ai' || evaluation.assessmentMode !== 'audio') throw new Error('Assessment is temporarily unavailable. Please try again; your answers are saved.')
+  evaluation.recording = { audioKey: checkpoint.audioKey, layout: 'session', examinerVoice: checkpoint.examiner?.voice }
   return evaluation
 }

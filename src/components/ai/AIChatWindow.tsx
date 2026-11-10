@@ -33,7 +33,6 @@ import { useAiAssistantStore } from '@/store/aiAssistantStore'
 import AiMessageContent from '@/components/ai/AiMessageContent'
 import { useAiTutor } from '@/components/ai/useAiTutor'
 import VoiceOrb from '@/components/ai/VoiceOrb'
-import CoachControls from './CoachControls'
 import NovaWelcome from './NovaWelcome'
 import { coachCopy } from '@/services/ai/coachPreferences'
 import { useCopy } from '@/i18n/interface'
@@ -464,7 +463,6 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                       </button>
                     })}</div>
                   </section>
-                  <CoachControls/>
                 </div>
               )}
             </motion.aside>
@@ -570,7 +568,6 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
           ) : null}
         </div>
       </header>
-      <CoachControls compact />
       </>}
 
       <div className={`relative ${isPage ? 'flex min-h-0 flex-1 flex-col' : ''}`}>

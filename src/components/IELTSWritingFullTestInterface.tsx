@@ -1,3 +1,5 @@
+import AssessmentPending from '@/components/ielts/AssessmentPending'
+import WritingReviewWorkbench from '@/components/writing/WritingReviewWorkbench'
 import { useCopy } from '@/i18n/interface'
 import UiText from '@/components/common/UiText'
 import { useActiveTest } from '@/hooks/useActiveTest'
@@ -7,24 +9,10 @@ import { saveActiveTestPaper, clearActiveTestPaper } from '@/utils/activeTestPap
 import { accountStorageFor } from '@/utils/accountStorage'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import {
-  AlertCircle,
-  ArrowLeft,
-  ArrowRight,
-  CheckCircle2,
-  Crown,
-  Lightbulb,
-  Loader2,
-  Maximize2,
-  Monitor,
-  RotateCcw,
-  Send,
-  Target,
-} from 'lucide-react'
+import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle2, Crown, Lightbulb, Maximize2, Monitor, RotateCcw, Send } from 'lucide-react'
 
 import { AnimatedBackground } from '@/components/AnimatedBackground'
 import TestLaunchOverlay from '@/components/common/TestLaunchOverlay'
-import ImprovedResponse from '@/components/ielts/ImprovedResponse'
 import SubmittedWritingAnswers from '@/components/ielts/SubmittedWritingAnswers'
 import { useMotionPreferences } from '@/hooks/useMotionPreferences'
 import WritingTaskDiagram from '@/components/writing/WritingTaskDiagram'
@@ -78,7 +66,7 @@ export default function IELTSWritingFullTestInterface({
   inFullMock = false,
   fullMockId,
 }: Props) {
-  const { c: uiCopy } = useCopy()
+  const { c: uiCopy, language } = useCopy()
   const [searchParams] = useSearchParams()
   const tasks = fullTest.tasks
   const defaultDuration = tasks.reduce((total, task) => total + task.durationMinutes, 0)
@@ -464,21 +452,7 @@ export default function IELTSWritingFullTestInterface({
   }
 
   if (phase === 'submitted') {
-    if (evaluating) {
-      return (
-        <div className="flex min-h-screen flex-col items-center justify-center bg-[linear-gradient(160deg,#fff7f7_0%,#fee2e2_52%,#fff_100%)] p-6">
-          <motion.div role="status" aria-live="polite" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-md rounded-3xl border border-red-100 bg-white p-9 text-center shadow-[0_30px_70px_rgba(220,38,38,0.18)]">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 text-white shadow-lg shadow-red-500/25">
-              <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-            <h2 className="mt-5 text-2xl font-black text-slate-900"><UiText text={"Analyzing both responses"} /></h2>
-            <p className="mt-2 text-sm leading-6 text-slate-500"><UiText text={"Task 1 and Task 2 are being scored separately, then combined using IELTS Writing weighting."} /></p>
-            <p className="mt-3 text-sm font-bold text-red-700">{Object.keys(evaluations).length} <UiText text={"of"} /> {tasks.length} <UiText text={"assessments ready"} /></p>
-          </motion.div>
-          <SubmittedWritingAnswers tasks={tasks} answers={answers} />
-        </div>
-      )
-    }
+    if (evaluating) return <AssessmentPending />
 
     if (evalError) {
       return (
@@ -498,6 +472,8 @@ export default function IELTSWritingFullTestInterface({
     }
 
     const overallBand = weightedBand(evaluations, tasks.map((task) => task.id))
+    const correctedOverall = tasks.every(task => !answers[task.id]?.trim() || evaluations[task.id]?.correctedAssessment)
+      ? writingSectionBand(evaluations[tasks[0]?.id]?.correctedAssessment, evaluations[tasks[1]?.id]?.correctedAssessment) : null
     return (
       <div className="workspace-page ielts-writing-review min-h-screen px-4 py-6 sm:px-6 lg:py-10">
         <div className="mx-auto max-w-5xl">
@@ -517,6 +493,7 @@ export default function IELTSWritingFullTestInterface({
                   <CheckCircle2 className="h-3.5 w-3.5" /> <UiText text={"Full test completed"} />
                 </span>
                 <h1 className="mt-3 text-3xl font-black text-slate-900"><UiText text={"Estimated Overall Band"} /> {overallBand.toFixed(1)}</h1>
+                {correctedOverall !== null && <p className="mt-2 text-sm font-semibold text-emerald-700">{language.startsWith('uz') ? 'Tuzatilgan ikkala javob uchun umumiy taxminiy band' : language.startsWith('ru') ? 'Общая оценка исправленных ответов' : 'Estimated overall with both answers corrected'}: {correctedOverall.toFixed(1)}</p>}
                 <p className="mt-1 text-sm text-slate-500"><UiText text={"Task 2 carries twice the weight of Task 1. This AI estimate is not an official IELTS result."} /></p>
               </div>
               <div className="rounded-2xl bg-gradient-to-br from-red-600 to-rose-500 px-6 py-4 text-center text-white shadow-lg shadow-red-500/20">
@@ -571,35 +548,7 @@ export default function IELTSWritingFullTestInterface({
                     <p className="mt-3 whitespace-pre-line text-sm leading-6 text-slate-700">{task.promptLead ?? task.prompt}</p>
                     {task.promptQuestion ? <p className="mt-3 whitespace-pre-line text-sm font-semibold leading-6 text-slate-800">{task.promptQuestion}</p> : null}
                   </details>
-                  <div className="mt-5 grid gap-4 lg:grid-cols-2">
-                    <FeedbackList title={uiCopy("Strengths")} items={evaluation.strengths} tone="emerald" />
-                    <FeedbackList title={uiCopy("Improve next")} items={evaluation.improvements} tone="amber" />
-                  </div>
-                  {evaluation.errors.length > 0 ? (
-                    <details className="mt-4 rounded-2xl border border-amber-200 bg-amber-50/30 p-4">
-                      <summary className="cursor-pointer text-sm font-bold text-slate-800"><UiText text={"Corrections ("} />{evaluation.errors.length})</summary>
-                      <div className="mt-4 space-y-3">
-                        {evaluation.errors.map((error, errorIndex) => (
-                          <div key={`${task.id}-error-${errorIndex}`} className="rounded-xl border border-amber-100 bg-white p-3 text-sm">
-                            <p className="text-slate-500 line-through">{error.original}</p>
-                            <p className="mt-1 font-semibold text-emerald-700">{error.corrected}</p>
-                            <p className="mt-1 text-slate-600">{error.explanation}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </details>
-                  ) : null}
-                  {answers[task.id]?.trim() ? <ImprovedResponse text={evaluation.improvedVersion} /> : null}
-                  {evaluation.correctedVersion ? (
-                    <details className="mt-4 rounded-2xl border border-blue-100 bg-blue-50/40 p-4">
-                      <summary className="cursor-pointer text-sm font-bold text-blue-800"><UiText text={"View corrected version"} /></summary>
-                      <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700">{evaluation.correctedVersion}</p>
-                    </details>
-                  ) : null}
-                  <details className="mt-4 rounded-2xl border border-slate-200 bg-slate-50/50 p-4">
-                    <summary className="cursor-pointer text-sm font-bold text-slate-800"><UiText text={"Your original response"} /></summary>
-                    <p className="mt-3 max-h-80 overflow-y-auto whitespace-pre-wrap text-sm leading-7 text-slate-700">{answers[task.id] || '(empty)'}</p>
-                  </details>
+                  <WritingReviewWorkbench evaluation={evaluation} original={answers[task.id] || ""} />
                 </section>
               )
             })}
@@ -750,13 +699,4 @@ function ConfirmModal({ open, icon, title, description, cancelLabel, confirmLabe
 
 function Score({ label, value }: { label: string; value: number }) {
   return <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-center"><p className="text-2xl font-black text-slate-900">{value.toFixed(1)}</p><p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-500"><UiText text={label} /></p></div>
-}
-
-function FeedbackList({ title, items, tone }: { title: string; items: string[]; tone: 'emerald' | 'amber' }) {
-  return (
-    <div className={`rounded-2xl border p-4 ${tone === 'emerald' ? 'border-emerald-100 bg-emerald-50/50' : 'border-amber-100 bg-amber-50/50'}`}>
-      <h3 className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest ${tone === 'emerald' ? 'text-emerald-700' : 'text-amber-700'}`}><Target className="h-4 w-4" /> <UiText text={title} /></h3>
-      <ul className="mt-3 space-y-2 text-sm leading-5 text-slate-700">{items.map((item) => <li key={item}>• <UiText text={item} /></li>)}</ul>
-    </div>
-  )
 }

@@ -18,6 +18,7 @@ export type AiAssistantMessage = {
   images?: string[]
   status?: 'streaming' | 'interrupted'
   delivery?: 'text' | 'voice'
+  expression?: 'warm' | 'delighted' | 'focused' | 'affectionate' | 'unimpressed'
 }
 
 export type AiAssistantThread = {

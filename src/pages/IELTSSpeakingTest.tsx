@@ -527,6 +527,7 @@ function DayRunner({ day, onExit, onComplete }: { day: SpeakingDayEntry; onExit:
         return blob ? { blob, answerIndex } : null
       }))
       const result = await evaluateSpeaking({ modeLabel: day.title, history, stats: analyseTranscript(answers.map(item => item.spoken).join('\n'), answers.reduce((total, item) => total + (item.durationSec ?? 0), 0)), audio: clips.filter((clip): clip is NonNullable<typeof clip> => !!clip), expectedAudioAnswers: answers.flatMap((item, index) => item.recorded ? [index] : []) })
+      result.recording = { audioKey, layout: 'day' }
       if (disposedRef.current) return
       setEvaluation(result)
       setFinished(true)

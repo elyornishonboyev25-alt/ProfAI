@@ -35,7 +35,6 @@ import {
 } from 'lucide-react'
 import ConfirmDialog from '@/components/common/ConfirmDialog'
 import AiMessageContent from './AiMessageContent'
-import CoachControls from './CoachControls'
 import CoachMascot from './CoachMascot'
 import CoachConnectionStatus from './CoachConnectionStatus'
 import { useAiTutor } from './useAiTutor'
@@ -571,7 +570,6 @@ export default function AITutorWorkspace() {
               <span><Icon size={16} /></span><span><b>{coachText[id]}</b><small>{coachText[`${id}Detail`]}</small></span>{workspace.id === id ? <Check size={15} /> : null}
             </button>
           })}</div>
-          <CoachControls />
           <h3><BrainCircuit size={16} />{text.memory}</h3>
           <p className="tutor-sheet-note">{text.memoryHint}</p>
           {memories.length ? <ul className="tutor-memories">{memories.map((memory) => <li key={memory.id}>

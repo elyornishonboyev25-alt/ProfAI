@@ -246,3 +246,11 @@
 @media (prefers-reduced-motion: reduce) {
   .tutor-page * { transition: none !important; animation: none !important; }
 }
+
+/* Silver conversation surfaces share the assessment studio's material palette. */
+.tutor-page{background:radial-gradient(ellipse at 75% 0,#ffffffc2,transparent 60%),linear-gradient(150deg,#f5f6f9,#e5e9f0)}
+.tutor-topbar{background:linear-gradient(125deg,#ffffffba,#edf0f6a6);backdrop-filter:blur(22px);box-shadow:inset 0 1px 0 #fff}
+.tutor-hero h2{letter-spacing:-.045em;line-height:1.17}
+.tutor-composer{border-color:#ffffffed;box-shadow:inset 0 1px 0 #fff,0 16px 40px #26364c0c,0 0 0 1px #cbd2df80}
+.tutor-chips button{border-color:#ffffffed;background:linear-gradient(135deg,#ffffffd9,#e8ecf3b5);box-shadow:inset 0 1px 0 white,0 5px 14px #34445909}
+.tutor-talk{box-shadow:inset 0 1px 0 white,0 5px 15px #3444590c}

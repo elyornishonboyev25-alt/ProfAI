@@ -1,8 +1,6 @@
 import { useCopy } from '@/i18n/interface'
 import UiText from '@/components/common/UiText'
 import '@/styles/dashboard-learning.css'
-import DashboardExamOverview from '@/components/dashboard/DashboardExamOverview'
-import '@/styles/dashboard-glass.css'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -20,6 +18,7 @@ import {
   Settings,
   RefreshCw,
   Sparkles,
+  Target,
   Trophy,
 } from 'lucide-react'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
@@ -78,6 +77,14 @@ const learningCards = [
 function bestAvailableScore(...scores: Array<number | null | undefined>) {
   const available = scores.filter((score): score is number => typeof score === 'number' && score > 0)
   return available.length ? Math.max(...available) : 0
+}
+
+function scoreRecommendation(exam: 'IELTS' | 'SAT', current: number, target: number) {
+  if (!current) return 'Start with a full mock to find your current level.'
+  if (current >= target) return 'Keep your score strong with regular practice.'
+  if (exam === 'IELTS' && target - current >= 1.5) return 'Build your foundation across all four IELTS skills.'
+  if (exam === 'SAT' && target - current >= 200) return 'Strengthen Math and Reading & Writing before your next mock.'
+  return 'Review mistakes and practice the areas that need a final push.'
 }
 
 function formatStudyTime(seconds: number) {
@@ -189,6 +196,10 @@ export default function Dashboard() {
     ...(ieltsTarget != null ? [{ label: 'IELTS' as const, current: ieltsCurrent, target: ieltsTarget, path: '/ielts/tests#mocks' }] : []),
     ...(satTarget != null ? [{ label: 'SAT' as const, current: satCurrent, target: satTarget, path: '/sat/mocks' }] : []),
   ]
+  const practiceCards = [
+    { label: 'IELTS' as const, current: ieltsCurrent, target: ieltsTarget, path: '/ielts/tests#mocks' },
+    { label: 'SAT' as const, current: satCurrent, target: satTarget, path: '/sat/mocks' },
+  ]
   const targetProgress = Math.max(0, Math.min(100, Math.round(
     examTargets.reduce((sum, exam) => sum + exam.current / Math.max(1, exam.target), 0) / Math.max(1, examTargets.length) * 100,
   )))
@@ -210,7 +221,7 @@ export default function Dashboard() {
     ?? null
 
   return (
-    <div className="workspace-page profai-dashboard dashboard-material relative min-h-screen px-3 pb-24 pt-3 sm:px-5 sm:pt-5 lg:px-5 lg:pb-5">
+    <div className="workspace-page profai-dashboard relative min-h-screen px-3 pb-24 pt-3 sm:px-5 sm:pt-5 lg:px-5 lg:pb-5">
       <div className="dashboard-main-shell mx-auto max-w-[98rem]">
         {error ? (
           <div role="alert" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-sm">
@@ -248,9 +259,7 @@ export default function Dashboard() {
           </div>
         </header>
 
-        <div className="dashboard-glass-stage">
         <section className="dashboard-entrance-grid grid gap-4">
-          <DashboardExamOverview owner={user?.id ?? 'guest'} ielts={ieltsCurrent} sat={satCurrent} ieltsTarget={ieltsTarget} satTarget={satTarget} />
           <article className="dashboard-target-card dashboard-card-sheen">
             <span className="dashboard-target-ribbon" aria-hidden="true" />
             <span className="dashboard-target-orb" aria-hidden="true" />
@@ -294,16 +303,35 @@ export default function Dashboard() {
                 </div>
               ))}
             </div>
-            <button
+            {examTargets.length > 0 && <button
               type="button"
-              onClick={() => navigate(examTargets[0]?.path ?? '/account')}
+              onClick={() => navigate(examTargets[0].path)}
               className="dashboard-target-cta relative z-10 mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-black text-red-950 shadow-lg transition hover:-translate-y-0.5"
             >
-               <UiText text={examTargets.length ? 'Continue preparing' : 'Account settings'} /> <ArrowRight className="h-3.5 w-3.5" />
-            </button>
+               <UiText text="Continue preparing" /> <ArrowRight className="h-3.5 w-3.5" />
+            </button>}
+          </article>
+
+          <article className="dashboard-focus-strip">
+            <div className="dashboard-focus-label"><Target className="h-4 w-4" /><UiText text="Your target" /></div>
+            <div className="dashboard-focus-scores">
+              {examTargets.length ? examTargets.map(exam => <button type="button" key={exam.label} onClick={() => navigate(exam.path)}>
+                <span>{exam.label}</span><strong>{exam.current || '—'}</strong><span className="dashboard-focus-goal">/ {exam.target}</span><ArrowRight className="h-3.5 w-3.5" />
+              </button>) : <button type="button" onClick={() => navigate('/account')}><UiText text="Account settings" /><ArrowRight className="h-3.5 w-3.5" /></button>}
+            </div>
+            {hasCurrentScore && <span className="dashboard-focus-progress" aria-label={`${targetProgress}%`}><progress max={100} value={targetProgress} /><b>{targetProgress}%</b></span>}
           </article>
 
           <div className="dashboard-study-main min-w-0 space-y-4">
+            <div className="dashboard-practice-links grid gap-3 sm:grid-cols-2">
+              {practiceCards.map(exam => <button key={exam.label} type="button" onClick={() => navigate(exam.path)} className="dashboard-glass-card flex items-start gap-3 p-4 text-left transition hover:-translate-y-0.5 hover:shadow-lg">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600"><Target className="h-5 w-5" /></span>
+                <span className="min-w-0"><strong className="block text-sm font-black text-slate-900">{exam.label}</strong>
+                  <span className="mt-1 block text-xs leading-5 text-slate-600"><UiText text={exam.target != null ? scoreRecommendation(exam.label, exam.current, exam.target) : exam.current ? 'Review mistakes and practice the areas that need a final push.' : 'Start with a full mock to find your current level.'} /></span>
+                  <span className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-red-700"><UiText text={exam.label === 'IELTS' ? 'Open IELTS practice' : 'Open SAT practice'} /> <ArrowRight className="h-3.5 w-3.5" /></span>
+                </span>
+              </button>)}
+            </div>
             <div className="dashboard-metrics grid grid-cols-2 gap-3 lg:grid-cols-4">
               <StatCard label={uiCopy("Study time")} value={weeklyStudyTimeLabel} note="This week" icon={Clock3} />
               <StatCard
@@ -481,7 +509,6 @@ export default function Dashboard() {
             })}
           </div>
         </section>
-        </div>
       </div>
     </div>
   )

@@ -135,8 +135,6 @@ html:has(.mobile-tools-sheet[open]) { overflow: hidden; }
   .app-shell .ielts-catalog-header { gap: 10px; }
   .app-shell .ielts-catalog-header > div:first-child > p { display: none; }
   .app-shell .ielts-catalog-header h2 { font-size: 18px; }
-  .app-shell .ielts-catalog-filters { flex-wrap: nowrap; gap: 5px; margin-top: 12px; }
-  .app-shell .ielts-catalog-filters button { flex: 1; min-width: 0; min-height: 40px; padding: 6px; border-radius: 11px; font-size: 11px; }
 
   /* SAT keeps the same information, presented as short action rows. */
   .app-shell .sat-mock-link { flex-direction: row; align-items: center; gap: 12px; margin-bottom: 10px; padding: 16px; }

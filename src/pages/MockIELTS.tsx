@@ -8,10 +8,12 @@ import UiText from '@/components/common/UiText'
 import {
   ArrowRight,
   BookOpen,
+  Check,
   CheckCircle2,
   Clock3,
   Headphones,
   Layers3,
+  LockKeyhole,
   Mic2,
   PenSquare,
   Search,
@@ -101,7 +103,7 @@ function IELTSMockCatalog() {
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-red-600">IELTS Academic</p>
+          <p className="text-xs font-semibold text-slate-600">IELTS Academic</p>
           <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl"><UiText text={"Full mock exams"} /></h1>
           <p className="mt-1 text-sm text-slate-600"><UiText text="All four skills together" /></p>
         </div>
@@ -114,21 +116,20 @@ function IELTSMockCatalog() {
               onChange={(event) => setSearch(event.target.value)}
               placeholder={uiCopy("Search mock...")}
               aria-label={uiCopy("Search full mocks")}
-              className="mock-ielts-glass-search h-11 w-full rounded-full pl-10 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:ring-4 focus:ring-red-100"
+              className="exam-catalog-search h-11 w-full pl-10 pr-4 text-sm text-slate-900 placeholder:text-slate-500"
             />
           </label>
         </div>
       </div>
 
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-2" role="group" aria-label={uiCopy("Filter full mocks")}>
+        <div className="exam-catalog-filters" role="group" aria-label={uiCopy("Filter full mocks")}>
           {FILTERS.map(({ id, label }) => (
             <button
               key={id}
               type="button"
               aria-pressed={filter === id}
               onClick={() => setFilter(id)}
-              className="mock-ielts-glass-filter rounded-full px-4 py-2.5 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100"
             >
               <UiText text={label} />
             </button>
@@ -163,31 +164,32 @@ function IELTSMockCatalog() {
                   <span className="test-card-icon"><Layers3 size={21} strokeWidth={1.7} aria-hidden="true" /></span>
                   <h2 className="test-card-title"><UiText text="Full Mock" /> {mock.index}</h2>
                 </div>
-                <div className="test-card-tags">
+                <div className="test-card-info">
                   <StudyAccessChip resource={`mock:ielts:${mock.id}`} />
-                  {mode && <span className="test-card-chip"><UiText text={mode === 'exam' ? 'Exam mode' : 'Practice mode'} /></span>}
-                  {!mock.fullyReady && <span className="test-card-chip is-progress">{mock.readyCount}/{MOCK_SECTION_COUNT} <UiText text="ready" /></span>}
+                  {mode && <span><UiText text={mode === 'exam' ? 'Exam mode' : 'Practice mode'} /></span>}
+                  {!mock.fullyReady && <span>{mock.readyCount}/{MOCK_SECTION_COUNT} <UiText text="ready" /></span>}
                 </div>
 
-                <div className="mock-ielts-skills">
+                <ul className="mock-ielts-skills">
                   {mock.sections.map((section) => {
                     const Icon = SECTION_ICONS[section.key]
                     const done = doneSections.has(section.key)
                     const status = done ? 'Completed' : section.available ? 'Not taken yet' : 'Coming soon'
                     return (
-                      <span
+                      <li
                         key={section.key}
                         title={`${uiCopy(section.title)} · ${uiCopy(status)}`}
-                        className={`test-card-chip mock-ielts-skill${done ? ' is-done' : section.available ? '' : ' is-unavailable'}`}
+                        className="mock-ielts-skill"
                       >
                         <Icon size={15} aria-hidden="true" />
                         <UiText text={section.title} />
-                        {done && <CheckCircle2 className="mock-ielts-skill-check" size={15} aria-hidden="true" />}
+                        {done && <Check className="mock-ielts-skill-check" size={16} aria-hidden="true" />}
+                        {!done && !section.available && <LockKeyhole className="mock-ielts-skill-lock" size={13} aria-hidden="true" />}
                         <span className="sr-only">{' '}<UiText text={status} /></span>
-                      </span>
+                      </li>
                     )
                   })}
-                </div>
+                </ul>
 
                 <div className="test-card-meta">
                   <span><Clock3 size={15} aria-hidden="true" />{formatMockDuration(mock.totalMinutes)}</span>
@@ -213,7 +215,7 @@ function IELTSMockCatalog() {
           })}
         </div>
       ) : (
-        <div className="mock-ielts-glass-empty mt-5 rounded-[1.75rem] border border-dashed border-red-200 px-4 py-12 text-center text-sm font-semibold text-slate-600" role="status"><UiText text={"No mocks found for this filter."} /></div>
+        <div className="mt-5 rounded-2xl border border-dashed border-slate-300 bg-white/50 px-4 py-12 text-center text-sm font-semibold text-slate-600" role="status"><UiText text={"No mocks found for this filter."} /></div>
       )}
       {retakeError && <p role="alert" className="mt-3 text-sm text-red-700">{retakeError}</p>}
     </section>

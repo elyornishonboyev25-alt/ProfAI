@@ -2,7 +2,7 @@ import { useCopy } from '@/i18n/interface'
 import { useStudyAccessPrompt } from '@/features/billing/useStudyAccessPrompt'
 import StudyAccessChip from '@/features/billing/StudyAccessChip'
 import { useState } from 'react'
-import { ArrowLeft, ArrowRight, CheckCircle2, Clock3, Search } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check, Clock3, Search } from 'lucide-react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { loadSATAttempt, loadSATAttemptHistory } from '@/features/sat/attemptStorage'
 import UiText from '@/components/common/UiText'
@@ -57,13 +57,13 @@ export default function SATSection() {
       <div className="mx-auto max-w-[1480px]">
         <SATSectionTabs section={section} />
 
-        <div id="sat-test-panel" role="tabpanel" tabIndex={0} aria-labelledby={`sat-tab-${section}`} className="mt-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300">
+        <div id="sat-test-panel" role="tabpanel" tabIndex={0} aria-labelledby={`sat-tab-${section}`} className="mt-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500">
           <section className="exam-catalog mock-ielts-glass relative isolate overflow-hidden p-4 sm:p-5 lg:p-6">
             <div className="sat-catalog-header relative">
               <div className="sat-catalog-header-layout">
                 <div>
-                  <button type="button" onClick={() => navigate('/sat')} className="route-back-button mb-5"><ArrowLeft className="h-4 w-4" /> <UiText text={"SAT Prep"} /></button>
-                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-red-600"><UiText text={"Digital SAT"} /></p>
+                  <button type="button" onClick={() => navigate('/sat')} className="exam-catalog-back mb-3"><ArrowLeft size={16} aria-hidden="true" /><UiText text="SAT Prep" /></button>
+                  <p className="text-xs font-semibold text-slate-600"><UiText text={"Digital SAT"} /></p>
                   <h1 className="mt-0.5 text-xl font-black tracking-tight text-slate-950">{isFullMock ? <UiText text={"Full mock exams"} /> : <UiText text={"{{value1}} tests"} values={{ value1: String(activeTab.label) }} />}</h1>
                   <p className="mt-1 text-xs font-semibold text-slate-500">{tests.length} <UiText text={"available ·"} /> {isFullMock ? <UiText text={"Reading & Writing and Math together"} /> : <UiText text={"Practice one SAT section at a time"} />}</p>
                 </div>
@@ -71,7 +71,7 @@ export default function SATSection() {
                   <label className="relative block w-full">
                     <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={uiCopy("Search test...")} aria-label={uiCopy("Search SAT tests")}
-                      className="mock-ielts-glass-search h-11 w-full rounded-full pl-10 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:ring-4 focus:ring-red-100" />
+                      className="exam-catalog-search h-11 w-full pl-10 pr-4 text-sm text-slate-900 placeholder:text-slate-500" />
                   </label>
                 </div>
               </div>
@@ -110,10 +110,10 @@ export default function SATSection() {
                         <span className="test-card-icon"><activeTab.icon size={21} strokeWidth={1.7} aria-hidden="true" /></span>
                         <h2 className="test-card-title"><UiText text={testLabel} /> {test.mockId}</h2>
                       </div>
-                      <div className="test-card-tags">
+                      <div className="test-card-info">
                         <StudyAccessChip resource={`mock:sat:${test.mockId}`} />
-                        <span className="test-card-chip"><UiText text={test.difficulty} /></span>
-                        {completed && <span className="test-card-chip is-done" data-sat-completed><CheckCircle2 size={14} aria-hidden="true" /><UiText text="Completed" /></span>}
+                        <span><UiText text={test.difficulty} /></span>
+                        {completed && <span data-sat-completed><Check size={14} aria-hidden="true" /><UiText text="Completed" /></span>}
                       </div>
                       <p className="test-card-note"><UiText text={version} /></p>
                       <div className="test-card-meta">

@@ -4,14 +4,12 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 4px 12px;
-  padding: 8px 10px;
-  border: 1px solid #bd879b49;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #fffbfdec, #f1e4edb0);
-  color: #4d5a70;
+  padding: 10px 0 0;
+  border-top: 1px solid #a8b3bf73;
+  color: #465465;
   font-size: 12px;
 }
 .catalog-score__value { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; }
-.catalog-score__value strong { color: #8e2647; font-size: 21px; font-weight: 750; line-height: 1.2; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+.catalog-score__value strong { color: #18222e; font-size: 22px; font-weight: 750; line-height: 1.2; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
 .catalog-score__value small { color: #5f6b80; font-size: 11px; font-weight: 600; letter-spacing: 0; }
 .catalog-score__summary { font-size: 11px; }

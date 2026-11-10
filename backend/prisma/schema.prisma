@@ -172,6 +172,7 @@ model User {
   issueReports                        IssueReport[]
   studyPlan                           StudyPlan?
   premiumGrant                        PremiumGrant?
+  premiumEvents                       PremiumEvent[]
   paymentRequests                     PaymentRequest[]
   billingSubscriptions                BillingSubscription[]
   referralCode                        String?                              @unique
@@ -227,6 +228,35 @@ model PremiumGrant {
   @@index([expiresAt])
 }
 
+// Immutable source snapshots survive renewals and revocation of current access.
+model PremiumEvent {
+  id              String   @id @default(cuid())
+  userId          String
+  originKey       String?  @unique
+  source          String
+  plan            String
+  months          Int?
+  days            Int?
+  startsAt        DateTime
+  expiresAt       DateTime?
+  createdAt       DateTime @default(now())
+  actorId         String?
+  actorName       String?
+  actorEmail      String?
+  promoCode       String?
+  giftRank        Int?
+  discountPercent Int?
+  promoDiscountMinor Int?
+  wheelSpinId     String?
+  currency        String?
+  amountMinor     Int?
+  method          String?
+  revokedAt       DateTime?
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
 model PaymentRequest {
   id            String   @id @default(cuid())
   userId        String
@@ -247,6 +277,7 @@ model PaymentRequest {
   status        String   @default("PENDING")
   method        String   @default("CARD_TRANSFER")
   discountPercent Int    @default(0)
+  promoDiscountMinor Int?
   wheelSpinId   String?
   reference     String?
   reviewedBy    String?

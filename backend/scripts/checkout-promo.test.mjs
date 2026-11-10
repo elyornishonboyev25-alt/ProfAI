@@ -23,6 +23,7 @@ let spin = null, orders = [], subscriptions = []
 prisma.telegramLink.findUnique = async () => null
 prisma.wheelSpin.findFirst = async () => spin
 const tx = {
+  premiumEvent: { create: async ({ data }) => data },
   $queryRaw: async () => [],
   paymentRequest: {
     findFirst: async () => orders.find(order => order.status === 'PENDING') ?? null,

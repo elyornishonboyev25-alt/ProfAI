@@ -2,6 +2,7 @@ import crypto from 'node:crypto'
 import type { Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
 import { lockBilling } from './billing.service.js'
+import { recordPremiumEvent } from './premiumHistory.service.js'
 
 const DAY_MS = 86_400_000
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -44,7 +45,8 @@ export async function ensureReferralCode(userId: string) {
 }
 
 /** Adds free access days on top of whatever the account already has (trial, paid or earlier rewards). */
-export async function grantAccessDays(tx: Prisma.TransactionClient, userId: string, days: number, now = new Date()) {
+export async function grantAccessDays(tx: Prisma.TransactionClient, userId: string, days: number, now = new Date(),
+  origin: { originKey?: string; source?: string; promoCode?: string } = {}) {
   await lockBilling(tx, userId)
   const user = await tx.user.findUnique({ where: { id: userId }, select: { email: true } })
   if (!user) return null
@@ -59,6 +61,8 @@ export async function grantAccessDays(tx: Prisma.TransactionClient, userId: stri
     create: { userId, audience: 'STUDENT', plan: 'REFERRAL', expiresAt },
     update: { expiresAt },
   })
+  await recordPremiumEvent(tx, { userId, source: origin.source ?? 'REFERRAL', originKey: origin.originKey,
+    promoCode: origin.promoCode, plan: 'PRO', days, startsAt: new Date(base), expiresAt, createdAt: now })
   return expiresAt
 }
 
@@ -83,8 +87,8 @@ export async function claimReferral(inviteeId: string, rawCode: string): Promise
   try {
     await prisma.$transaction(async tx => {
       await tx.referral.create({ data: { inviterId: inviter.id, inviteeId: invitee.id } })
-      await tx.referralReward.create({ data: { userId: invitee.id, kind: 'INVITEE', tier: 0, days: INVITEE_BONUS_DAYS } })
-      await grantAccessDays(tx, invitee.id, INVITEE_BONUS_DAYS)
+      const reward = await tx.referralReward.create({ data: { userId: invitee.id, kind: 'INVITEE', tier: 0, days: INVITEE_BONUS_DAYS } })
+      await grantAccessDays(tx, invitee.id, INVITEE_BONUS_DAYS, new Date(), { originKey: `referral:${reward.id}`, promoCode: code })
     })
   } catch (error) {
     if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') return { ok: false, code: 'ALREADY_CLAIMED' }
@@ -108,8 +112,8 @@ export async function qualifyInvitee(inviteeId: string): Promise<TierPayout[]> {
     const done = await tx.referral.updateMany({ where: { id: referral.id, qualifiedAt: null }, data: { qualifiedAt: new Date() } })
     if (!done.count) return null
     const count = await tx.referral.count({ where: { inviterId, qualifiedAt: { not: null } } })
-    await tx.referralReward.create({ data: { userId: inviterId, kind: 'FRIEND', tier: count, days: FRIEND_DAYS } })
-    await grantAccessDays(tx, inviterId, FRIEND_DAYS)
+    const reward = await tx.referralReward.create({ data: { userId: inviterId, kind: 'FRIEND', tier: count, days: FRIEND_DAYS } })
+    await grantAccessDays(tx, inviterId, FRIEND_DAYS, new Date(), { originKey: `referral:${reward.id}` })
     return { inviterId, days: FRIEND_DAYS, count, kind: 'FRIEND' as const }
   })
   if (!friend) return []
@@ -128,8 +132,8 @@ async function payMilestones(inviterId: string): Promise<TierPayout[]> {
     if (count < tier.count) break
     try {
       await prisma.$transaction(async tx => {
-        await tx.referralReward.create({ data: { userId: inviterId, kind: 'MILESTONE', tier: tier.count, days: tier.days } })
-        await grantAccessDays(tx, inviterId, tier.days)
+        const reward = await tx.referralReward.create({ data: { userId: inviterId, kind: 'MILESTONE', tier: tier.count, days: tier.days } })
+        await grantAccessDays(tx, inviterId, tier.days, new Date(), { originKey: `referral:${reward.id}` })
       })
       payouts.push({ inviterId, days: tier.days, count: tier.count, kind: 'MILESTONE' })
     } catch (error) {

@@ -20,8 +20,9 @@ function reset() { state = { subscriptions: [], order: null, role: 'USER', email
 reset()
 const usageKey = where => `${where.userId_feature_period.feature}:${where.userId_feature_period.period}`
 const tx = {
+  premiumEvent: { create: async ({ data }) => data },
   $queryRaw: async () => [],
-  user: { findUniqueOrThrow: async () => ({ id: 'u', role: state.role, email: state.email, nickname: state.nickname }) },
+  user: { findUnique: async () => ({ fullName: 'Test admin', email: 'test-admin@example.test' }), findUniqueOrThrow: async () => ({ id: 'u', role: state.role, email: state.email, nickname: state.nickname }) },
   premiumGrant: { findUnique: async () => state.grant },
   billingSubscription: {
     findMany: async ({ where }) => state.subscriptions.filter(sub => sub.startsAt <= where.startsAt.lte && sub.expiresAt > where.expiresAt.gt),

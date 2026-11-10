@@ -7,8 +7,8 @@ import { requireOwner } from '../middleware/owner.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { isPremiumUser } from '../utils/premium.js'
 import { extendPremiumExpiry, type PaidPlan } from '../utils/premiumPlans.js'
-import { BILLING_PRODUCTS, GROUP_MIN_SIZE, GROUP_MONTHLY_USD, PLAN_MONTHLY_USD, PLAN_QUOTAS, billingProduct, extendBillingExpiry } from '../utils/billingCatalog.js'
-import { describeAccess } from '../utils/accessEntitlement.js'
+import { BILLING_PRODUCTS, GROUP_MIN_SIZE, GROUP_MONTHLY_USD, PLAN_MONTHLY_USD, PLAN_QUOTAS, billingProduct, extendBillingExpiry, tierOfAudience } from '../utils/billingCatalog.js'
+import { ownerPremiumSelect, ownerPremiumSummary, recordPremiumEvent } from '../services/premiumHistory.service.js'
 import { activeDiscount } from '../services/wheel.service.js'
 import { accessStatus, unlockResource, accountOverview, usageSnapshot, lockBilling, fulfillPayment, BillingError } from '../services/billing.service.js'
 import { paymentProviders, checkoutUrl, expireStripeCheckout } from '../services/paymentProviders.service.js'
@@ -18,7 +18,11 @@ import { createPaymentQuote, dollarRate, readPaymentQuote, verifyPaymentQuote } 
 import { checkoutAmounts, checkoutPromotion } from '../services/checkoutPromo.service.js'
 
 const router = Router()
-const grantSchema = z.object({ plan: z.string().refine(value => ['MONTHLY', 'QUARTERLY', 'YEARLY', 'UNLIMITED'].includes(value) || Boolean(billingProduct(value))) })
+const grantSchema = z.object({
+  plan: z.string().refine(value => ['MONTHLY', 'QUARTERLY', 'YEARLY', 'UNLIMITED'].includes(value) || Boolean(billingProduct(value))),
+  source: z.enum(['OWNER', 'PAYMENT']).default('OWNER'),
+  amountUzs: z.number().int().positive().max(20_000_000).optional(),
+}).refine(value => value.source !== 'PAYMENT' || value.amountUzs !== undefined)
 const pageSchema = z.coerce.number().int().min(1).max(10000).default(1)
 const PAGE_SIZE = 20
 
@@ -95,6 +99,7 @@ router.post('/checkout', requireAuth, asyncHandler(async (req, res) => {
     const order = await tx.paymentRequest.create({ data: { userId: req.user!.id, plan: product.code, audience: product.audience, months: product.months,
       currency: payload.currency, amountUzs, discountPercent: Math.round((1 - product.amountUsd / listed.amountUsd) * 100), wheelSpinId: discount?.id ?? null,
       reference: promo ? `promo:${promo.code}` : null,
+      promoDiscountMinor: promo ? (payload.currency === 'USD' ? amounts.promoDiscountUsd : amounts.promoDiscountUzs * 100) : null,
       amountMinor: payload.currency === 'UZS' ? amountUzs * 100 : product.amountUsd, method: free ? 'PROMO' : payload.provider } })
     if (free) await fulfillPayment(tx, order, 'PROMO')
     return order
@@ -158,14 +163,13 @@ router.get('/owner/users', requireAuth, requireOwner, asyncHandler(async (req, r
   const [total, users] = await Promise.all([
     prisma.user.count({ where }),
     prisma.user.findMany({ where, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], skip: (page - 1) * PAGE_SIZE, take: PAGE_SIZE,
-      select: { id: true, fullName: true, email: true, nickname: true, role: true, createdAt: true,
-        billingSubscriptions: { select: { audience: true, plan: true, expiresAt: true } },
-        premiumGrant: { select: { plan: true, source: true, expiresAt: true, startsAt: true } } } }),
+      select: ownerPremiumSelect }),
   ])
-  return res.json({ items: users.map(user => {
-    const access = describeAccess(user.premiumGrant, isPremiumUser(user))
-    return { ...user, fixedPremium: isPremiumUser(user) && access.kind === 'UNLIMITED', access }
-  }), total, page, pageSize: PAGE_SIZE })
+  const actorIds = [...new Set(users.flatMap(user => [user.premiumGrant?.grantedBy, ...(user.paymentRequests ?? []).map(order => order.reviewedBy)]).filter((id): id is string => Boolean(id)))]
+  const actors = actorIds.length ? await prisma.user.findMany({ where: { id: { in: actorIds } }, select: { id: true, fullName: true, email: true } }) : []
+  const actorMap = new Map(actors.map(actor => [actor.id, actor]))
+  const now = new Date()
+  return res.json({ items: users.map(user => ownerPremiumSummary(user, actorMap, now)), total, page, pageSize: PAGE_SIZE })
 }))
 
 router.put('/owner/users/:id/grant', requireAuth, requireOwner, asyncHandler(async (req, res) => {
@@ -173,28 +177,46 @@ router.put('/owner/users/:id/grant', requireAuth, requireOwner, asyncHandler(asy
   if (!parsed.success) return res.status(400).json({ message: 'Invalid premium plan.' })
   const user = await prisma.user.findUnique({ where: { id: req.params.id }, select: { id: true } })
   if (!user) return res.status(404).json({ message: 'User not found.' })
-  const product = billingProduct(parsed.data.plan)
+  const aliases: Record<string, string> = { MONTHLY: 'PRO_1', QUARTERLY: 'PRO_3', YEARLY: 'PRO_12' }
+  const product = billingProduct(aliases[parsed.data.plan] ?? parsed.data.plan)
   if (product) {
     await prisma.$transaction(async tx => {
       await lockBilling(tx, user.id)
       if (product.months) {
-        const current = await tx.billingSubscription.findUnique({ where: { userId_audience: { userId: user.id, audience: product.audience } } })
-        const expiresAt = extendBillingExpiry(product.months, current?.expiresAt)
+        const now = new Date()
+        const [subscriptions, legacy] = await Promise.all([
+          tx.billingSubscription.findMany({ where: { userId: user.id } }),
+          tx.premiumGrant.findUnique({ where: { userId: user.id } }),
+        ])
+        const current = subscriptions.find(row => row.audience === product.audience)
+        const sameTier = subscriptions.filter(row => tierOfAudience(row.audience) === tierOfAudience(product.audience)).map(row => row.expiresAt.getTime())
+        if (legacy?.expiresAt && !legacy.plan.startsWith('TRIAL_') && (legacy.plan.startsWith('MAX') ? 'MAX' : 'PRO') === tierOfAudience(product.audience)) sameTier.push(legacy.expiresAt.getTime())
+        const startsAt = new Date(Math.max(now.getTime(), ...sameTier))
+        const expiresAt = extendBillingExpiry(product.months, startsAt, now)
         await tx.billingSubscription.upsert({ where: { userId_audience: { userId: user.id, audience: product.audience } },
-          create: { userId: user.id, audience: product.audience, plan: product.code, expiresAt }, update: { plan: product.code, expiresAt } })
+          create: { userId: user.id, audience: product.audience, plan: product.code, startsAt: now, expiresAt },
+          update: { plan: product.code, expiresAt, ...(current && current.expiresAt > now ? {} : { startsAt: now }) } })
+        await recordPremiumEvent(tx, { userId: user.id, source: parsed.data.source, plan: product.code, months: product.months,
+          startsAt, expiresAt, createdAt: now, actorId: req.user!.id,
+          ...(parsed.data.source === 'PAYMENT' ? { currency: 'UZS', amountMinor: parsed.data.amountUzs! * 100, method: 'CARD_TRANSFER' } : {}) })
       }
     })
     return res.json({ status: 'GRANTED' })
   }
-  const existing = await prisma.premiumGrant.findUnique({ where: { userId: user.id }, select: { expiresAt: true, source: true } })
-  const now = new Date()
-  const source = existing?.source === 'SELECTED_ACCESS' && parsed.data.plan === 'UNLIMITED' ? 'SELECTED_ACCESS' : 'OWNER'
-  const expiresAt = parsed.data.plan === 'UNLIMITED' ? null : extendPremiumExpiry(parsed.data.plan as PaidPlan, existing?.expiresAt, now)
-  const grant = await prisma.premiumGrant.upsert({
-    where: { userId: user.id },
-    create: { userId: user.id, plan: parsed.data.plan, source, startsAt: now, expiresAt, grantedBy: req.user!.id },
-    update: { plan: parsed.data.plan, source, startsAt: now, expiresAt, grantedBy: req.user!.id },
-    select: { plan: true, source: true, startsAt: true, expiresAt: true },
+  const grant = await prisma.$transaction(async tx => {
+    await lockBilling(tx, user.id)
+    const now = new Date()
+    const existing = await tx.premiumGrant.findUnique({ where: { userId: user.id }, select: { source: true } })
+    const source = existing?.source === 'SELECTED_ACCESS' ? 'SELECTED_ACCESS' : parsed.data.source
+    const grant = await tx.premiumGrant.upsert({
+      where: { userId: user.id },
+      create: { userId: user.id, plan: 'UNLIMITED', source, startsAt: now, expiresAt: null, grantedBy: req.user!.id },
+      update: { plan: 'UNLIMITED', source, startsAt: now, expiresAt: null, grantedBy: req.user!.id },
+      select: { plan: true, source: true, startsAt: true, expiresAt: true },
+    })
+    await recordPremiumEvent(tx, { userId: user.id, source: parsed.data.source, plan: 'UNLIMITED', startsAt: now, createdAt: now,
+      actorId: req.user!.id, ...(parsed.data.source === 'PAYMENT' ? { currency: 'UZS', amountMinor: parsed.data.amountUzs! * 100, method: 'CARD_TRANSFER' } : {}) })
+    return grant
   })
   return res.json({ grant })
 }))
@@ -203,8 +225,20 @@ router.delete('/owner/users/:id/grant', requireAuth, requireOwner, asyncHandler(
   const user = await prisma.user.findUnique({ where: { id: req.params.id }, select: { id: true, role: true, email: true, nickname: true } })
   if (!user) return res.status(404).json({ message: 'User not found.' })
   if (isPremiumUser(user)) return res.status(409).json({ message: 'This account has fixed premium access.' })
-  await prisma.premiumGrant.deleteMany({ where: { userId: user.id } })
-  await prisma.billingSubscription.deleteMany({ where: { userId: user.id } })
+  await prisma.$transaction(async tx => {
+    await lockBilling(tx, user.id)
+    const now = new Date()
+    const legacy = await tx.premiumGrant.findUnique({ where: { userId: user.id } })
+    if (legacy) {
+      const recorded = await tx.premiumEvent.findFirst({ where: { userId: user.id, plan: legacy.plan, createdAt: legacy.startsAt } })
+      if (!recorded) await recordPremiumEvent(tx, { userId: user.id, source: legacy.source === 'OWNER' ? 'OWNER' : legacy.source === 'PAYMENT' ? 'PAYMENT' : 'LEGACY',
+        plan: legacy.plan, startsAt: legacy.startsAt, expiresAt: legacy.expiresAt, createdAt: legacy.startsAt, actorId: legacy.grantedBy })
+    }
+    await recordPremiumEvent(tx, { userId: user.id, source: 'REVOKED', plan: 'NONE', startsAt: now, expiresAt: now, createdAt: now, actorId: req.user!.id })
+    await tx.premiumEvent.updateMany({ where: { userId: user.id, revokedAt: null, source: { not: 'REVOKED' }, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] }, data: { revokedAt: now } })
+    await tx.premiumGrant.deleteMany({ where: { userId: user.id } })
+    await tx.billingSubscription.deleteMany({ where: { userId: user.id } })
+  })
   return res.json({ grant: null })
 }))
 
@@ -277,6 +311,10 @@ router.patch('/owner/requests/:id', requireAuth, requireOwner, asyncHandler(asyn
           create: { userId: request.userId, plan, source: 'PAYMENT', startsAt: now, expiresAt, grantedBy: req.user!.id },
           update: { plan, source: 'PAYMENT', startsAt: now, expiresAt, grantedBy: req.user!.id },
         })
+        await recordPremiumEvent(tx, { userId: request.userId, originKey: `payment:${request.id}`, source: 'PAYMENT', plan,
+          months: ({ MONTHLY: 1, QUARTERLY: 3, YEARLY: 12 } as Record<string, number>)[plan], startsAt: current?.expiresAt && current.expiresAt > now ? current.expiresAt : now,
+          expiresAt, createdAt: now, actorId: req.user!.id, currency: request.currency,
+          amountMinor: request.amountMinor || request.amountUzs * 100, method: request.method, discountPercent: request.discountPercent })
       }
     }
     return { status: parsed.data.action === 'APPROVE' ? 'APPROVED' : 'REJECTED' }

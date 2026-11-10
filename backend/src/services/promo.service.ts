@@ -52,7 +52,7 @@ export async function redeemCode(userId: string, rawCode: string): Promise<Redee
     const redeemed = await prisma.$transaction(async tx => {
       const claimed = await tx.promoCode.updateMany({ where: { code: promo.code, redeemedAt: null }, data: { redeemedAt: new Date() } })
       if (!claimed.count) return false
-      await grantAccessDays(tx, userId, promo.days)
+      await grantAccessDays(tx, userId, promo.days, new Date(), { source: 'PROMO', originKey: `promo:${promo.code}`, promoCode: promo.code })
       return true
     })
     return redeemed ? { ok: true, kind: 'PROMO', days: promo.days } : { ok: false, code: 'ALREADY_USED' }

@@ -3,6 +3,7 @@ import { prisma } from '../lib/prisma.js'
 import { extendBillingExpiry } from '../utils/billingCatalog.js'
 import { accountOverview, lockBilling } from './billing.service.js'
 import { ensureReferralCode } from './referral.service.js'
+import { recordPremiumEvent } from './premiumHistory.service.js'
 
 /** The first 200 accounts receive one month of Pro ($6), $1,200 in total. */
 export const LAUNCH_GIFT_CAPACITY = 200
@@ -83,6 +84,8 @@ export async function claimLaunchGift(userId: string) {
         create: { userId, audience: 'PRO', plan: 'PRO_1', startsAt: paidUntil, expiresAt },
         update: { plan: 'PRO_1', startsAt: paidUntil, expiresAt } })
     }
+    await recordPremiumEvent(tx, { userId, originKey: `launch:${userId}`, source: 'LAUNCH_GIFT', plan: 'PRO_1', months: LAUNCH_GIFT_MONTHS,
+      startsAt: paidUntil, expiresAt, createdAt: now, giftRank: current.rank })
     return tx.launchGift.update({ where: { userId }, data: { claimedAt: now, expiresAt, extended: paidUntil > now } })
   })
   return describe(gift, userId)

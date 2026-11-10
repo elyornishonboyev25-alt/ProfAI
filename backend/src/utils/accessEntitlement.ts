@@ -34,7 +34,8 @@ export function resolveAccountAccess(grant: AccessGrant | null, permanent: boole
     .sort((a, b) => TIER_RANK[tierOfAudience(b.audience)] - TIER_RANK[tierOfAudience(a.audience)] || b.expiresAt.getTime() - a.expiresAt.getTime())[0]
   if (!subscription) return legacy
   const tier = tierOfAudience(subscription.audience)
-  if (legacy.active && TIER_RANK[legacy.tier] >= TIER_RANK[tier]) return legacy
+  if (legacy.active && (legacy.kind === 'UNLIMITED' || TIER_RANK[legacy.tier] > TIER_RANK[tier] ||
+    TIER_RANK[legacy.tier] === TIER_RANK[tier] && Date.parse(legacy.expiresAt!) >= subscription.expiresAt.getTime())) return legacy
   return { kind: 'PREMIUM', tier, active: true, startsAt: subscription.startsAt.toISOString(), expiresAt: subscription.expiresAt.toISOString(),
     trialDays: null, daysRemaining: Math.max(0, Math.ceil((subscription.expiresAt.getTime() - now.getTime()) / 86_400_000)) }
 }

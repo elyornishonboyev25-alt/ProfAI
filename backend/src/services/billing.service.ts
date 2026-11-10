@@ -4,6 +4,7 @@ import { PLAN_QUOTAS, extendBillingExpiry, type AccessFeature, type PlanTier } f
 import { resolveAccountAccess } from '../utils/accessEntitlement.js'
 import { isPremiumUser } from '../utils/premium.js'
 import { isFreeStudyResource } from '../utils/studyAccess.js'
+import { recordPremiumEvent } from './premiumHistory.service.js'
 type Tx = Prisma.TransactionClient
 export class BillingError extends Error {
   constructor(public code: string, message: string, public statusCode = 402) { super(message) }
@@ -125,8 +126,17 @@ export async function fulfillPayment(tx: Tx, order: PaymentRequest, source: stri
   if (order.wheelSpinId) await tx.wheelSpin.updateMany({ where: { id: order.wheelSpinId, usedAt: null }, data: { usedAt: new Date() } })
   if (!order.audience || !order.months) return true
   const current = await tx.billingSubscription.findUnique({ where: { userId_audience: { userId: order.userId, audience: order.audience } } })
-  const expiresAt = extendBillingExpiry(order.months, current?.expiresAt)
+  const now = new Date()
+  const startsAt = current && current.expiresAt > now ? current.expiresAt : now
+  const expiresAt = extendBillingExpiry(order.months, current?.expiresAt, now)
   await tx.billingSubscription.upsert({ where: { userId_audience: { userId: order.userId, audience: order.audience } },
-    create: { userId: order.userId, audience: order.audience, plan: order.plan, expiresAt }, update: { plan: order.plan, expiresAt } })
+    create: { userId: order.userId, audience: order.audience, plan: order.plan, startsAt: now, expiresAt },
+    update: { plan: order.plan, expiresAt, ...(current && current.expiresAt > now ? {} : { startsAt: now }) } })
+  await recordPremiumEvent(tx, { userId: order.userId, originKey: `payment:${order.id}`, source: order.method === 'PROMO' ? 'PROMO' : 'PAYMENT',
+    plan: order.plan, months: order.months, startsAt, expiresAt, createdAt: now,
+    actorId: ['CLICK', 'PAYME', 'STRIPE', 'PROMO'].includes(source) ? null : source,
+    promoCode: order.reference?.startsWith('promo:') ? order.reference.slice(6) : null,
+    currency: order.currency, amountMinor: order.amountMinor || order.amountUzs * 100,
+    discountPercent: order.discountPercent, promoDiscountMinor: order.promoDiscountMinor, wheelSpinId: order.wheelSpinId, method: order.method })
   return true
 }

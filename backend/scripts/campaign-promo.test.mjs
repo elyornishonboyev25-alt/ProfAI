@@ -20,6 +20,7 @@ const subscription = (audience, expiresAt, startsAt = '2026-10-01T10:00:00Z') =>
   id: audience, userId: 'u', audience, plan: `${audience}_1`, startsAt: new Date(startsAt), expiresAt: new Date(expiresAt),
 })
 const tx = {
+  premiumEvent: { create: async ({ data }) => data },
   $queryRaw: async () => [],
   user: { findUnique: async () => user, findUniqueOrThrow: async () => user },
   premiumGrant: { findUnique: async () => state.grant },

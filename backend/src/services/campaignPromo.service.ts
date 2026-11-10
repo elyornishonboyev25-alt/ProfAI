@@ -2,6 +2,7 @@ import { prisma } from '../lib/prisma.js'
 import { extendBillingExpiry } from '../utils/billingCatalog.js'
 import { lockBilling } from './billing.service.js'
 import { claimLaunchGift } from './launchGift.service.js'
+import { recordPremiumEvent } from './premiumHistory.service.js'
 
 export const CAMPAIGN_PROMO_CODE = 'FIRDAVSS7'
 export const CAMPAIGN_PROMO_MONTHS = 3
@@ -35,6 +36,8 @@ export async function redeemCampaignPromo(userId: string): Promise<CampaignRedee
       update: currentPro ? { expiresAt } : { plan: 'PRO_3', startsAt, expiresAt },
     })
     await tx.campaignRedemption.create({ data: { userId, code: CAMPAIGN_PROMO_CODE, months: CAMPAIGN_PROMO_MONTHS, startsAt, expiresAt } })
+    await recordPremiumEvent(tx, { userId, originKey: `campaign:${userId}:${CAMPAIGN_PROMO_CODE}`, source: 'PROMO', plan: 'PRO_3',
+      promoCode: CAMPAIGN_PROMO_CODE, months: CAMPAIGN_PROMO_MONTHS, startsAt, expiresAt, createdAt: now })
     return { ok: true, kind: 'CAMPAIGN', months: CAMPAIGN_PROMO_MONTHS,
       startsAt: startsAt.toISOString(), expiresAt: expiresAt.toISOString(), deferred: startsAt > now,
       afterLaunchGift: Boolean(gift?.claimedAt && gift.expiresAt && gift.expiresAt > now && startsAt >= gift.expiresAt) }

@@ -128,7 +128,7 @@ test('promotion users distinguish redeemed codes, referrals and wheel discounts 
   assert.equal(data.items.find(user => user.id === 'wheel').paymentRequests[0].discountPercent, 50)
 })
 test('new owner routes reject other accounts, unauthenticated requests, and malformed filters', async () => {
-  for (const path of ['/support/owner/overview?userPeriod=TODAY', '/support/owner/updates', '/billing/owner/requests', '/billing/owner/promotions']) {
+  for (const path of ['/support/owner/overview?userPeriod=TODAY', '/support/owner/updates', '/billing/owner/requests', '/billing/owner/promotions', '/billing/owner/users']) {
     assert.equal((await request(path, null)).status, 401)
     assert.equal((await request(path, otherToken)).status, 403)
   }

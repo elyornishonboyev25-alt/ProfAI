@@ -14,13 +14,11 @@ import OwnerPaymentDetails, { paymentAmount, type OwnerPayment } from '@/compone
 import { useOwnerUpdates, type OwnerSection } from '@/components/owner/useOwnerUpdates'
 import { activityText } from '@/i18n/ownerActivity'
 import './OwnerDashboard.css'
-import { BILLING_PRODUCTS } from '@/features/billing/catalog'
+import OwnerPremiumUser, { premiumPlanLabel, type ManagedUser, type PremiumGrantInput } from '@/components/owner/OwnerPremiumUser'
 import { hasOwnerAccess } from '@/utils/ownerAccess'
 
 type Page<T> = { items: T[]; total: number; page: number; pageSize: number }
 type NewUser = { id: string; fullName: string; email: string; createdAt: string; lastSeenAt?: string | null }
-type PremiumGrant = { plan: string; source: string; startsAt: string; expiresAt: string | null }
-type ManagedUser = NewUser & { nickname: string | null; role: string; fixedPremium: boolean; premiumGrant: PremiumGrant | null; billingSubscriptions?: Array<{ plan: string; expiresAt: string }> }
 type PaymentRequest = OwnerPayment & { method?: string; user: NewUser & { promoCode?: { code: string; redeemedAt: string | null } | null } }
 type Overview = {
   metrics: { totalUsers: number; todayUsers: number; weekUsers: number; totalReports: number; openReports: number }
@@ -28,7 +26,6 @@ type Overview = {
 }
 
 const paymentStatusLabels: Record<string, string> = { SUBMITTED: 'Needs review', PENDING: 'Pending', PROCESSING: 'Processing', APPROVED: 'Approved', REJECTED: 'Rejected', CANCELED: 'Canceled' }
-const planLabels: Record<string, string> = { MONTHLY: '1 month', QUARTERLY: '3 months', YEARLY: '12 months', UNLIMITED: 'Indefinitely' }
 
 function Pagination({ page, total, pageSize, onChange, language }: { page: number; total: number; pageSize: number; onChange: (page: number) => void; language: OwnerLanguage }) {
   const maxPage = Math.max(1, Math.ceil(total / pageSize))
@@ -63,13 +60,14 @@ export default function OwnerDashboard() {
   const [userQuery, setUserQuery] = useState('')
   const [managedPage, setManagedPage] = useState(1)
   const [managedUsers, setManagedUsers] = useState<Page<ManagedUser> | null>(null)
+  const [managedLoading, setManagedLoading] = useState(true)
+  const [managedFailed, setManagedFailed] = useState(false)
   const [paymentPage, setPaymentPage] = useState(1)
   const [paymentStatus, setPaymentStatus] = useState('ALL')
   const [paymentLoading, setPaymentLoading] = useState(true)
   const [payments, setPayments] = useState<Page<PaymentRequest> | null>(null)
   const [paymentPromotion, setPaymentPromotion] = useState('ALL')
   const { counts, markSeen } = useOwnerUpdates(user?.id, isOwner, reload)
-  const [grantPlans, setGrantPlans] = useState<Record<string, string>>({})
 
   useEffect(() => {
     if (!isOwner) return
@@ -92,9 +90,12 @@ export default function OwnerDashboard() {
     if (!isOwner) return
     let active = true
     const query = new URLSearchParams({ page: String(managedPage), q: userQuery })
+    setManagedUsers(null)
+    setManagedLoading(true)
+    setManagedFailed(false)
     void apiClient.get<Page<ManagedUser>>(`/billing/owner/users?${query}`).then(data => {
       if (active) setManagedUsers(data)
-    }).catch(() => { if (active) setError(t('Could not load users.')) })
+    }).catch(() => { if (active) setManagedFailed(true) }).finally(() => { if (active) setManagedLoading(false) })
     return () => { active = false }
   }, [isOwner, managedPage, userQuery, reload, language])
 
@@ -110,11 +111,11 @@ export default function OwnerDashboard() {
     return () => { active = false }
   }, [isOwner, paymentPage, paymentStatus, paymentPromotion, reload, language])
 
-  async function grantPremium(person: ManagedUser) {
+  async function grantPremium(person: ManagedUser, input: PremiumGrantInput) {
     setUpdatingId(person.id)
     setError('')
     try {
-      await apiClient.put(`/billing/owner/users/${person.id}/grant`, { plan: grantPlans[person.id] ?? 'MONTHLY' })
+      await apiClient.put(`/billing/owner/users/${person.id}/grant`, input)
       setReload(value => value + 1)
     } catch {
       setError(t('Could not grant Premium.'))
@@ -206,31 +207,17 @@ export default function OwnerDashboard() {
 
     <div hidden={section !== 'users'}><section className="mt-7 rounded-2xl border border-slate-200 bg-white/95 p-5 shadow-sm sm:p-6" aria-labelledby="premium-users-title">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div><h2 id="premium-users-title" className="flex items-center gap-2 text-xl font-black text-slate-900"><Crown size={21} className="text-amber-500" /> {t('Premium management')}</h2><p className="mt-1 text-sm text-slate-500">{t('Search for an account and grant Premium for 1, 3 or 12 months, or indefinitely.')}</p></div>
+        <div><h2 id="premium-users-title" className="flex items-center gap-2 text-xl font-black text-slate-900"><Crown size={21} className="text-amber-500" /> {t('Premium management')}</h2><p className="mt-1 text-sm text-slate-500">{t('See access status, sources and dates. Grant Pro or Elite with a clear duration.')}</p></div>
         <form onSubmit={event => { event.preventDefault(); setManagedPage(1); setUserQuery(search.trim()) }} className="flex w-full max-w-sm gap-2">
           <input aria-label={t('Search users')} value={search} onChange={event => setSearch(event.target.value)} placeholder={t('Email, name or nickname')} className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm" />
           <button type="submit" className="rounded-xl bg-blue-600 px-3 py-2 text-white" aria-label={t('Search')}><Search size={18} /></button>
         </form>
       </div>
-      <div className="mt-5 divide-y divide-slate-100">
-        {managedUsers?.items.map(person => {
-          const grant = person.premiumGrant
-          const grantActive = Boolean(grant && (!grant.expiresAt || new Date(grant.expiresAt) > new Date()))
-          return <div key={person.id} className="flex flex-wrap items-center justify-between gap-4 py-4">
-            <div className="min-w-0"><p className="font-bold text-slate-900">{person.fullName} {person.nickname && <span className="text-sm font-normal text-slate-500">@{person.nickname}</span>}</p><p className="break-all text-sm text-slate-600">{person.email}</p><p className="mt-1 text-xs text-slate-500">{t('Joined:')} {dateFormat.format(new Date(person.createdAt))}</p>
-              <p className={`mt-1 text-xs font-bold ${person.fixedPremium || grantActive ? 'text-emerald-700' : 'text-slate-500'}`}>{person.fixedPremium ? t('Permanent Premium') : grantActive ? `${t(planLabels[grant?.plan ?? ''] ?? grant?.plan ?? '')} · ${grant?.expiresAt ? t('until {date}', { date: dateFormat.format(new Date(grant.expiresAt)) }) : t('Indefinitely')}` : t('No Premium')}</p>
-            </div>
-            <p className="text-xs text-slate-500">{person.billingSubscriptions?.map(plan => `${plan.plan} (${dateFormat.format(new Date(plan.expiresAt))})`).join(', ')}</p>
-            <div className="flex flex-wrap items-center gap-2">
-              <select aria-label={t('Premium duration for {email}', { email: person.email })} value={grantPlans[person.id] ?? 'MONTHLY'} onChange={event => setGrantPlans(value => ({ ...value, [person.id]: event.target.value }))} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm">
-                {BILLING_PRODUCTS.map(product => <option key={product.code} value={product.code}>{product.code} · ${(product.amountUsd / 100).toFixed(2)}</option>)}
-                <option value="MONTHLY">{t('1 month')}</option><option value="QUARTERLY">{t('3 months')}</option><option value="YEARLY">{t('12 months')}</option><option value="UNLIMITED">{t('Indefinitely')}</option>
-              </select>
-              <button type="button" disabled={updatingId === person.id} onClick={() => void grantPremium(person)} className="rounded-xl bg-amber-500 px-3 py-2 text-sm font-bold text-white disabled:opacity-50">{t('Grant Premium')}</button>
-              {(grant || person.billingSubscriptions?.length) && !person.fixedPremium && <button type="button" disabled={updatingId === person.id} onClick={() => void revokePremium(person)} className="rounded-xl border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 disabled:opacity-50">{t('Revoke')}</button>}
-            </div>
-          </div>
-        })}
+      <p className="mt-4 text-xs text-slate-500">{t('Dates and periods use Tashkent time (UTC+5).')} {t('New grants extend the selected plan from its current expiry.')}</p>
+      <div className="owner-premium-list mt-5">
+        {managedLoading && <p role="status" className="py-5 text-sm text-slate-500">{t('Loading data…')}</p>}
+        {managedFailed && <p role="alert" className="py-5 text-sm text-red-700">{t('Could not load users.')}</p>}
+        {managedUsers?.items.map(person => <OwnerPremiumUser key={person.id} person={person} language={language} busy={updatingId !== null} onGrant={(person, input) => void grantPremium(person, input)} onRevoke={person => void revokePremium(person)} />)}
         {managedUsers?.items.length === 0 && <p className="py-5 text-sm text-slate-500">{t('No users found.')}</p>}
       </div>
       {managedUsers && <Pagination page={managedPage} total={managedUsers.total} pageSize={managedUsers.pageSize} onChange={setManagedPage} language={language} />}
@@ -244,7 +231,7 @@ export default function OwnerDashboard() {
       </div>
       {paymentLoading && <p role="status" className="py-5 text-sm text-slate-500">{t('Loading data…')}</p>}
       <div className="mt-5 divide-y divide-slate-100">
-        {payments?.items.map(request => <div key={request.id} className="flex flex-wrap items-center justify-between gap-4 py-4"><div><p className="font-bold text-slate-900">{request.user.fullName} · {paymentAmount(request, language)}</p><p className="break-all text-sm text-slate-600">{request.user.email}</p>{request.user.promoCode?.redeemedAt && <p className="mt-2 text-xs font-semibold text-rose-800">{t('Account promo code')}: <code>{request.user.promoCode.code}</code></p>}<p className="mt-1 text-xs text-slate-500">{t('Order:')} {request.id} · {t(planLabels[request.plan] ?? request.plan)} · {dateFormat.format(new Date(request.createdAt))}</p><span className="mt-2 inline-block rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700">{t(paymentStatusLabels[request.status] ?? request.status)}</span><OwnerPaymentDetails payment={request} language={language} /></div>
+        {payments?.items.map(request => <div key={request.id} className="flex flex-wrap items-center justify-between gap-4 py-4"><div><p className="font-bold text-slate-900">{request.user.fullName} · {paymentAmount(request, language)}</p><p className="break-all text-sm text-slate-600">{request.user.email}</p>{request.user.promoCode?.redeemedAt && <p className="mt-2 text-xs font-semibold text-rose-800">{t('Account promo code')}: <code>{request.user.promoCode.code}</code></p>}<p className="mt-1 text-xs text-slate-500">{t('Order:')} {request.id} · {premiumPlanLabel(request.plan, language)} · {dateFormat.format(new Date(request.createdAt))}</p><span className="mt-2 inline-block rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700">{t(paymentStatusLabels[request.status] ?? request.status)}</span><OwnerPaymentDetails payment={request} language={language} /></div>
           {request.status === 'SUBMITTED' && request.method === 'CARD_TRANSFER' && <div className="flex gap-2"><button type="button" disabled={updatingId === request.id} onClick={() => void reviewPayment(request, 'APPROVE')} className="rounded-xl bg-emerald-600 px-3 py-2 text-sm font-bold text-white disabled:opacity-50">{t('Approve payment')}</button><button type="button" disabled={updatingId === request.id} onClick={() => void reviewPayment(request, 'REJECT')} className="rounded-xl border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 disabled:opacity-50">{t('Reject')}</button></div>}
         </div>)}
         {payments?.items.length === 0 && <p className="py-5 text-sm text-slate-500">{t('No requests with this status.')}</p>}

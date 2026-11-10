@@ -47,6 +47,9 @@ jobs:
       - name: Check report handling and support conversations
         run: npm run test:support
 
+      - name: Check live voice controls and automatic recovery
+        run: node scripts/test-listening-parts-ui.mjs scripts/tests/voice-controls-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/voice-recovery-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/realtime-coach-streaming.tsx
+
       - name: Build frontend
         run: npm run build
 
@@ -77,4 +80,8 @@ jobs:
 
       - name: Build backend
         run: npm run build
+        working-directory: backend
+
+      - name: Check live voice protocol, generation readiness and session recovery
+        run: node --test scripts/gemini-live.test.mjs scripts/voice-allowance.test.mjs ../scripts/tests/nova-pcm-capture.test.mjs
         working-directory: backend

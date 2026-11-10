@@ -296,6 +296,7 @@ export function TalkOverlay() {
   if (standard) return <><span className="fixed left-5 top-5 z-[210] rounded-full border border-white/20 bg-slate-900 px-4 py-2 text-xs font-semibold text-slate-300">{t('Standard voice', 'Oddiy ovozli suhbat', 'Обычный голосовой чат')}</span><StandardLiveSession onEnd={closeTalk}><StandardTalkOverlay tutor={tutor} /></StandardLiveSession></>
   const end = () => { live.stop(); tutor.cancelVoice(); closeTalk() }
   const status = live.error || capabilityError || available === false ? t('Voice needs attention', 'Ovozli ulanishni tekshiring', 'Проверьте голосовое соединение')
+    : live.reconnecting ? t('Reconnecting…', 'Qayta ulanmoqda…', 'Переподключение…')
     : available === null && !['speaking', 'listening'].includes(tutor.voiceState) ? t('Connecting…', 'Ulanmoqda…', 'Подключение…')
     : live.muted ? t('Microphone muted', 'Mikrofon o‘chirilgan', 'Микрофон выключен')
     : tutor.voiceState === 'speaking' ? t('Speaking', 'Gapiryapti', 'Говорит')

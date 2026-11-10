@@ -11,7 +11,7 @@ import { reserveVoiceTime, settleVoiceTime, requireVoiceReservation, onVoiceRese
 import { voiceInstructions } from './voiceInstructions.js'
 import { geminiLiveKeys, naturalVoiceProvider } from './voiceProvider.js'
 import { onAccountDeleted } from './accountLifecycle.js'
-import { openGeminiLive } from './geminiLiveTransport.js'
+import { openGeminiLive, verifyGeminiLiveAudio } from './geminiLiveTransport.js'
 
 type History = Array<{ role: 'user' | 'assistant'; content: string }>
 type Call = {
@@ -19,6 +19,7 @@ type Call = {
   context: AssistantContext; history: History; timer: NodeJS.Timeout; abort: AbortController
   expiresAt: Date
   input: string; output: string; tools: Set<string>; cancelledTools: Set<string>; greeted: boolean
+  startedAt: number; audioIn: number; audioOut: number; turns: number
 }
 const calls = new Map<string, Call>()
 const digest = (value: string) => createHash('sha256').update(value).digest('hex')
@@ -28,13 +29,15 @@ export const GEMINI_VOICE_PATH = '/ws/ai-coach'
 export async function probeGeminiLive() {
   if (naturalVoiceProvider() !== 'gemini') return
   const started = Date.now()
+  let socket: WebSocket | undefined
   try {
-    const socket = await openGeminiLive(geminiLiveSetup(assistantContextSchema.parse({}), {}), geminiLiveKeys(), AbortSignal.timeout(18000))
-    socket.on('error', () => {}); socket.close()
-    console.info('voice.gemini.readiness', { ready: true, model: env.GEMINI_LIVE_MODEL, durationMs: Date.now() - started })
-  } catch {
-    console.error('voice.gemini.readiness', { ready: false, model: env.GEMINI_LIVE_MODEL, code: 'GEMINI_LIVE_CONNECTION_FAILED' })
-  }
+    const signal = AbortSignal.timeout(20000)
+    socket = await openGeminiLive(geminiLiveSetup(assistantContextSchema.parse({ language: 'en' }), {}), geminiLiveKeys(), signal)
+    const audio = await verifyGeminiLiveAudio(socket, signal)
+    console.info('voice.gemini.readiness', { ready: true, stage: 'audio', model: env.GEMINI_LIVE_MODEL, ...audio, durationMs: Date.now() - started })
+  } catch (error) {
+    console.error('voice.gemini.readiness', { ready: false, model: env.GEMINI_LIVE_MODEL, code: error instanceof Error && error.message.startsWith('GEMINI_AUDIO_') ? error.message : 'GEMINI_LIVE_CONNECTION_FAILED', ...error && typeof error === 'object' && 'providerCloseCode' in error ? { providerCloseCode: error.providerCloseCode } : {} })
+  } finally { socket?.on('error', () => {}); socket?.close() }
 }
 export const geminiVoiceFrame = z.discriminatedUnion('type', [
   z.object({ type: z.literal('audio'), data: z.string().min(4).max(44000).regex(/^[A-Za-z0-9+/]+={0,2}$/) }).strict(),
@@ -69,11 +72,12 @@ function rememberTurn(call: Call, role: 'user' | 'assistant', text: string) {
   if (text.trim()) call.history = boundedHistory([...call.history, { role, content: text.trim().slice(0, 12000) }])
 }
 
-export async function endGeminiVoiceCall(userId: string, id: string, failed = false) {
+export async function endGeminiVoiceCall(userId: string, id: string, failed = false, source = 'client_end') {
   const call = calls.get(id)
   if (!call || call.userId !== userId) return false
   calls.delete(id); clearTimeout(call.timer); call.abort.abort()
-  call.provider.close(); call.client?.close(1000, 'Session ended')
+  console.info('voice.gemini.ended', { id, source, durationMs: Date.now() - call.startedAt, audioIn: call.audioIn, audioOut: call.audioOut, turns: call.turns })
+  call.provider.close(); call.client?.close(source === 'provider_close' ? 1011 : source === 'provider_rejected' ? 1008 : 1000, 'Session ended')
   await settleVoiceTime(userId, id, failed || !call.client)
   return true
 }
@@ -124,15 +128,17 @@ export async function startGeminiVoiceCall(userId: string, context: AssistantCon
     signal?.throwIfAborted()
     await requireVoiceReservation(userId, reservation.id)
     const ticket = randomBytes(32).toString('base64url')
-    const call: Call = { id: reservation.id, userId, provider, client: null, ticketHash: digest(ticket), context, history: boundedHistory(history), expiresAt: reservation.expiresAt, abort: new AbortController(), input: '', output: '', tools: new Set(), cancelledTools: new Set(), greeted: false,
+    const call: Call = { id: reservation.id, userId, provider, client: null, ticketHash: digest(ticket), context, history: boundedHistory(history), expiresAt: reservation.expiresAt, abort: new AbortController(), input: '', output: '', tools: new Set(), cancelledTools: new Set(), greeted: false, startedAt, audioIn: 0, audioOut: 0, turns: 0,
       timer: setTimeout(() => { void endGeminiVoiceCall(userId, reservation.id, true).catch(() => {}) }, 25000) }
     call.timer.unref(); calls.set(call.id, call)
     provider.on('message', raw => {
       let event: any
       try { event = JSON.parse(String(raw)) } catch { return }
-      if (event.error) { send(call.client, { type: 'error', message: 'Gemini Live could not complete this turn. Please retry.' }); void endGeminiVoiceCall(userId, call.id).catch(() => {}); return }
+      if (event.error) { console.warn('voice.gemini.provider_error', { id: call.id, code: Number(event.error.code) || 0 }); send(call.client, { type: 'error', code: 'VOICE_PROVIDER_REJECTED', retryable: false, message: 'Gemini Live could not complete this turn. Please retry.' }); void endGeminiVoiceCall(userId, call.id, false, 'provider_error').catch(() => {}); return }
       const content = event.serverContent
       if (content) {
+        call.audioOut += (content.modelTurn?.parts ?? []).filter((part: any) => part.inlineData?.mimeType?.startsWith('audio/pcm')).length
+        if (content.turnComplete) call.turns++
         if (content.inputTranscription?.text) call.input = (call.input + content.inputTranscription.text).slice(-12000)
         if (content.outputTranscription?.text) call.output = (call.output + content.outputTranscription.text).slice(-12000)
         if (content.interrupted || content.turnComplete) {
@@ -146,8 +152,13 @@ export async function startGeminiVoiceCall(userId: string, context: AssistantCon
       if (event.toolCall?.functionCalls) for (const tool of event.toolCall.functionCalls) void runTool(call, tool)
       if (event.usageMetadata) void prisma.aiUsageEvent.create({ data: { userId, purpose: 'assistant_voice', provider: 'gemini', model: env.GEMINI_LIVE_MODEL, status: 'success', requestChars: 0, latencyMs: Math.max(0, Date.now() - startedAt), inputTokens: event.usageMetadata.promptTokenCount ?? null, outputTokens: event.usageMetadata.responseTokenCount ?? null } }).catch(() => {})
     })
-    provider.once('close', () => { send(call.client, { type: 'error', message: 'The live voice session ended. Retry to reconnect; your chat is saved.' }); void endGeminiVoiceCall(userId, call.id).catch(() => {}) })
-    provider.on('error', () => { void endGeminiVoiceCall(userId, call.id).catch(() => {}) })
+    provider.once('close', code => {
+      if (!calls.has(call.id)) return
+      console.warn('voice.gemini.provider_closed', { id: call.id, code })
+      send(call.client, { type: 'error', code: `VOICE_PROVIDER_${code}`, retryable: [1000, 1001, 1006, 1011, 1012, 1013].includes(code), message: code === 1008 ? 'Gemini Live rejected the voice stream. Your chat is saved.' : 'The voice connection was interrupted. Your chat is saved.' })
+      void endGeminiVoiceCall(userId, call.id, false, code === 1008 ? 'provider_rejected' : 'provider_close').catch(() => {})
+    })
+    provider.on('error', () => { console.warn('voice.gemini.provider_transport_error', { id: call.id }) })
     return { id: call.id, ticket, expiresAt: reservation.expiresAt.toISOString(), provider: 'gemini' as const, model: env.GEMINI_LIVE_MODEL, streamPath: GEMINI_VOICE_PATH }
   } catch (error) {
     provider?.close(); await settleVoiceTime(userId, reservation.id, true); throw error
@@ -163,10 +174,10 @@ export function attachGeminiVoice(server: Server) {
   wss.on('connection', client => {
     let active: Call | undefined
     let alive = true
-    let windowStart = Date.now(), bytes = 0, frames = 0
+    let windowStart = Date.now(), bytes = 300000, frames = 180
     const authTimer = setTimeout(() => client.close(1008, 'Session ticket required'), 5000)
     authTimer.unref()
-    const heartbeat = setInterval(() => { if (!alive) { client.terminate(); return } alive = false; client.ping() }, 15000)
+    const heartbeat = setInterval(() => { if (!alive) { console.warn('voice.gemini.client_timeout', { id: active?.id }); client.terminate(); return } alive = false; client.ping() }, 15000)
     heartbeat.unref()
     client.on('pong', () => { alive = true })
     client.on('message', raw => {
@@ -186,11 +197,15 @@ export function attachGeminiVoice(server: Server) {
           send(client, { type: 'ready' })
           return
         }
-        if (Date.now() - windowStart >= 1000) { windowStart = Date.now(); bytes = 0; frames = 0 }
-        bytes += Buffer.byteLength(String(raw)); frames++
-        if (bytes > 100000 || frames > 60) { client.close(1008, 'Audio rate exceeded'); return }
+        // A brief network/main-thread stall can deliver several seconds together.
+        // Bound sustained traffic while allowing a small catch-up burst.
+        const now = Date.now(), elapsed = (now - windowStart) / 1000; windowStart = now
+        bytes = Math.min(300000, bytes + elapsed * 100000) - Buffer.byteLength(String(raw))
+        frames = Math.min(180, frames + elapsed * 60) - 1
+        if (bytes < 0 || frames < 0) { console.warn('voice.gemini.client_rejected', { id: active.id, reason: 'rate_limit' }); client.close(1008, 'Audio rate exceeded'); return }
         const frame = geminiVoiceFrame.parse(event)
         if (frame.type === 'audio') {
+          active.audioIn++
           const data = Buffer.from(frame.data, 'base64')
           if (data.length % 2 || data.length > 32000) { client.close(1008, 'Invalid PCM audio'); return }
           send(active.provider, { realtimeInput: { audio: { data: frame.data, mimeType: 'audio/pcm;rate=16000' } } })
@@ -200,13 +215,13 @@ export function attachGeminiVoice(server: Server) {
         } else if (frame.type === 'mute' && frame.muted) send(active.provider, { realtimeInput: { audioStreamEnd: true } })
         else if (frame.type === 'interrupt') send(active.provider, { clientContent: { turns: [{ role: 'user', parts: [{ text: 'Please stop speaking and listen to my next question.' }] }], turnComplete: false } })
         else if (frame.type === 'feedback') send(active.provider, { clientContent: { turns: [{ role: 'user', parts: [{ text: 'End this examiner practice and call ask_coach for written feedback on my actual answers. Do not invent a pronunciation score from a text transcript.' }] }], turnComplete: true } })
-      } catch { client.close(1008, 'Invalid voice frame') }
+      } catch { console.warn('voice.gemini.client_rejected', { id: active?.id, reason: 'invalid_frame' }); client.close(1008, 'Invalid voice frame') }
     })
-    const close = () => {
+    const close = (code?: number) => {
       clearTimeout(authTimer); clearInterval(heartbeat)
-      if (active) void endGeminiVoiceCall(active.userId, active.id).catch(() => {})
+      if (active && calls.has(active.id)) { console.info('voice.gemini.client_closed', { id: active.id, code }); void endGeminiVoiceCall(active.userId, active.id, false, 'browser_close').catch(() => {}) }
     }
-    client.on('close', close); client.on('error', close)
+    client.on('close', close); client.on('error', () => close())
   })
   server.on('close', () => { for (const call of calls.values()) void endGeminiVoiceCall(call.userId, call.id).catch(() => {}); wss.close() })
   return wss

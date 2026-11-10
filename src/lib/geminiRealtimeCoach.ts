@@ -1,6 +1,7 @@
 import { apiClient, publicApiUrl } from '@/lib/apiClient'
 import type { VoiceContext, VoiceOptions } from './realtimeCoach'
 import { openVoiceSession, releaseVoiceSession, maintainVoiceLease } from './voiceSessionLifecycle'
+import { VoiceStreamError, voiceSocketClosed } from './voiceStreamError'
 
 type Session = { id: string; ticket: string; expiresAt: string; streamPath: string; model: string }
 
@@ -66,7 +67,7 @@ export class GeminiRealtimeCoach {
       this.stream = stream
       stream.getAudioTracks().forEach(track => { track.enabled = !this.muted; track.onended = () => this.fail(new Error('The microphone disconnected. Please reconnect it.')) })
       this.options.performance?.({ stage: 'microphone', durationMs: Math.round(performance.now() - this.started) })
-      await this.audio.audioWorklet.addModule('/audio/nova-pcm-capture.js')
+      await this.audio.audioWorklet.addModule('/audio/nova-pcm-capture.js?v=2')
       if (this.closed) return
       const initial = this.options.context
       const history = this.options.history.slice(-24).map(turn => ({ ...turn, content: turn.content.slice(0, 12000) }))
@@ -94,12 +95,12 @@ export class GeminiRealtimeCoach {
             else this.handle(message)
           } catch { this.fail(new Error('The live voice connection returned invalid audio. Please retry.')) }
         }
-        socket.onerror = () => reject(new Error('Could not connect live voice. Please retry.'))
-        socket.onclose = () => reject(new Error('The live voice connection closed. Please retry.'))
+        socket.onerror = () => reject(new VoiceStreamError('Could not connect live voice. Please retry.', 'VOICE_TRANSPORT_ERROR', true))
+        socket.onclose = event => reject(voiceSocketClosed(event))
       })
       if (this.closed) return
-      socket.onerror = () => this.fail(new Error('Voice lost its connection. Your chat is saved; retry to continue.'))
-      socket.onclose = () => this.fail(new Error('Voice ended. Retry to start another session.'))
+      socket.onerror = () => this.fail(new VoiceStreamError('The voice connection was interrupted. Your chat is saved.', 'VOICE_TRANSPORT_ERROR', true))
+      socket.onclose = event => this.fail(voiceSocketClosed(event))
       this.input = this.audio.createMediaStreamSource(stream)
       this.inputMeter = this.audio.createAnalyser(); this.inputMeter.fftSize = 512
       this.outputMeter = this.audio.createAnalyser(); this.outputMeter.fftSize = 512
@@ -110,7 +111,11 @@ export class GeminiRealtimeCoach {
       this.input.connect(this.capture); this.capture.connect(this.silent); this.silent.connect(this.audio.destination)
       this.capture.port.onmessage = event => {
         if (this.closed || this.muted) return
-        const bytes = new Uint8Array(event.data)
+        // Discard stale capture after a busy tab resumes; replaying a backlog
+        // floods the socket and makes live conversation lag behind the speaker.
+        const frame = event.data
+        if (frame?.pcm && this.audio && this.audio.currentTime - frame.capturedAt > .35) return
+        const bytes = new Uint8Array(frame?.pcm ?? frame)
         let text = ''
         for (const byte of bytes) text += String.fromCharCode(byte)
         this.send({ type: 'audio', data: btoa(text) })
@@ -190,12 +195,12 @@ export class GeminiRealtimeCoach {
 
   private handle(message: any) {
     if (this.closed) return
-    if (message.type === 'error') { this.fail(new Error(typeof message.message === 'string' ? message.message : 'Gemini Live could not connect.')); return }
+    if (message.type === 'error') { this.fail(new VoiceStreamError(typeof message.message === 'string' ? message.message : 'Gemini Live could not connect.', typeof message.code === 'string' ? message.code : 'VOICE_PROVIDER_ERROR', message.retryable === true)); return }
     if (message.type === 'coach' && message.result?.reply) { this.options.coachResult(message.result, message.id); return }
     const content = message.content
     if (message.type !== 'content' || !content) return
     if (content.interrupted) {
-      this.clearPlayback(); this.finishOutput(true); this.interrupted = true
+      this.clearPlayback(); this.finishOutput(true); this.interrupted = false
     }
     if (content.inputTranscription?.text) {
       this.inputText += content.inputTranscription.text

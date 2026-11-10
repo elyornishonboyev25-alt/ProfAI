@@ -4,6 +4,45 @@ import { AiGenerationError } from './aiProvider.service.js'
 const endpoint = 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent'
 type OpenSocket = (url: string, options: WebSocket.ClientOptions) => WebSocket
 
+/** Exercise generation and PCM input, not just the provider's setup acknowledgement. */
+export function verifyGeminiLiveAudio(socket: WebSocket, signal: AbortSignal) {
+  return new Promise<{ audioFrames: number; turns: number }>((resolve, reject) => {
+    let audioFrames = 0, turns = 0, done = false
+    const finish = (error?: Error) => {
+      if (done) return
+      done = true
+      clearInterval(pcm)
+      socket.off('message', message); socket.off('close', closed); socket.off('error', failed)
+      signal.removeEventListener('abort', aborted)
+      if (error) reject(error); else resolve({ audioFrames, turns })
+    }
+    const failed = () => finish(new Error('GEMINI_AUDIO_STREAM_ERROR'))
+    const closed = (code: number) => finish(Object.assign(new Error('GEMINI_AUDIO_STREAM_CLOSED'), { providerCloseCode: code }))
+    const aborted = () => finish(new Error('GEMINI_AUDIO_STREAM_TIMEOUT'))
+    const ask = (text: string) => socket.send(JSON.stringify({ clientContent: { turns: [{ role: 'user', parts: [{ text }] }], turnComplete: true } }))
+    const message = (raw: WebSocket.RawData) => {
+      try {
+        const event = JSON.parse(String(raw))
+        if (event.error) { finish(new Error('GEMINI_AUDIO_GENERATION_REJECTED')); return }
+        for (const part of event.serverContent?.modelTurn?.parts ?? []) if (part.inlineData?.mimeType?.startsWith('audio/pcm') && part.inlineData.data) audioFrames++
+        if (event.serverContent?.turnComplete) {
+          turns++
+          if (turns === 1) ask('For this connection check, say only: Ready. Do not use tools.')
+          else if (audioFrames) finish()
+          else finish(new Error('GEMINI_AUDIO_MISSING'))
+        }
+      } catch { finish(new Error('GEMINI_AUDIO_INVALID_RESPONSE')) }
+    }
+    const pcm = setInterval(() => {
+      if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ realtimeInput: { audio: { mimeType: 'audio/pcm;rate=16000', data: Buffer.alloc(3200).toString('base64') } } }))
+    }, 100)
+    socket.on('message', message); socket.once('close', closed); socket.once('error', failed)
+    signal.addEventListener('abort', aborted, { once: true })
+    if (signal.aborted) aborted()
+    else ask('For this connection check, say only: Hello. Do not use tools.')
+  })
+}
+
 /** Authenticate server-side and require an accepted model setup before streaming. */
 export async function openGeminiLive(setup: unknown, keys: string[], signal?: AbortSignal,
   openSocket: OpenSocket = (url, options) => new WebSocket(url, options)) {

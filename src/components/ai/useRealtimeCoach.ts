@@ -10,6 +10,7 @@ import { composeScreenContext } from '@/services/ai/screenCapture'
 import { describeRelevantSiteKnowledge } from '@/services/ai/siteKnowledge'
 import type { AiTutorController } from './useAiTutor'
 import { useCopy } from '@/i18n/interface'
+import { VoiceStreamError } from '@/lib/voiceStreamError'
 
 export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mode: 'coach' | 'examiner', provider: 'gemini' | 'openai' = 'openai') {
   const location = useLocation()
@@ -21,6 +22,8 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
   const [caption, setCaption] = useState('')
   const [muted, setMuted] = useState(false)
   const [retry, setRetry] = useState(0)
+  const [reconnecting, setReconnecting] = useState(false)
+  const recovery = useRef({ attempts: 0, since: 0, timer: 0 })
   const [speechSpeed, setSpeechSpeedState] = useState(1.1)
   const speedRef = useRef(speechSpeed); speedRef.current = speechSpeed
   const currentPath = useRef(location.pathname); currentPath.current = location.pathname
@@ -30,7 +33,7 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
   const conversationKey = tutor.activeThread?.clientId ?? tutor.activeThreadId
 
   useEffect(() => {
-    if (!enabled) { setError(null); return }
+    if (!enabled) { setError(null); setReconnecting(false); recovery.current.attempts = 0; return }
     if (!enabled || !supported || !tutor.hasPremium || !tutor.user || !tutor.threadsLoaded) return
     let disposed = false
     const userId = tutor.user.id
@@ -39,6 +42,17 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
     const previews = new Map<string, AiAssistantMessage>()
     const drafts = new Set<string>()
     let previewTimer = 0
+    const reportError = (issue: Error) => {
+      if (disposed) return
+      const now = Date.now(), current = recovery.current
+      if (now - current.since > 60000) { current.attempts = 0; current.since = now }
+      if (issue instanceof VoiceStreamError && issue.retryable && current.attempts < 2) {
+        current.attempts++
+        setError(null); setReconnecting(true)
+        window.clearTimeout(current.timer)
+        current.timer = window.setTimeout(() => { if (!disposed) setRetry(value => value + 1) }, current.attempts * 1000)
+      } else { setReconnecting(false); setError(issue.message) }
+    }
     const writeMessage = (threadId: string, message: AiAssistantMessage) => {
       const state = useAiAssistantStore.getState()
       const existing = state.threadsByOwner[ownerKey]?.find(thread => thread.id === threadId)?.messages.find(item => item.id === message.id)
@@ -94,7 +108,10 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
           screenContext: composeScreenContext('Explain this page', location.pathname).slice(0, 12000),
           siteKnowledge: describeRelevantSiteKnowledge('IELTS SAT English admissions tests').slice(0, 16000) },
         history: (thread?.messages ?? []).filter((message) => !message.status).slice(-24).map(({ role, content }) => ({ role, content })),
-        state: (state) => useAiAssistantStore.getState().setVoiceState(state),
+        state: (state) => {
+          useAiAssistantStore.getState().setVoiceState(state)
+          if (!disposed && (state === 'speaking' || state === 'listening')) setReconnecting(false)
+        },
         level: (level) => useAiAssistantStore.getState().setVoiceLevel(level), caption: setCaption, message: record,
         preview: (role, text, id) => {
           if (disposed || useAuthStore.getState().user?.id !== userId || !text.trim()) return
@@ -113,14 +130,15 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
           record('assistant', result.reply, `coach-${id}`)
           latest.current.acceptCoachResult(result)
         },
-        error: (issue) => { if (!disposed) setError(issue.message) },
+        error: reportError,
       })
       connection.current = voice
       await voice.start()
     }
-    void connect().catch((issue) => { if (!disposed) setError(issue instanceof Error ? issue.message : 'Voice could not connect.') })
+    void connect().catch((issue) => reportError(issue instanceof Error ? issue : new Error('Voice could not connect.')))
     return () => {
       disposed = true
+      window.clearTimeout(recovery.current.timer)
       window.clearTimeout(previewTimer)
       connection.current?.stop(); connection.current = null
       // Unfinalized input captions are previews, not saved candidate answers.
@@ -145,8 +163,8 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
 
   const toggleMute = useCallback(() => setMuted((current) => { connection.current?.mute(!current); return !current }), [])
   const interrupt = useCallback(() => connection.current?.interrupt(), [])
-  const reconnect = useCallback(() => setRetry((current) => current + 1), [])
-  const stop = useCallback(() => connection.current?.stop(), [])
+  const reconnect = useCallback(() => { recovery.current.attempts = 0; window.clearTimeout(recovery.current.timer); setReconnecting(true); setRetry(current => current + 1) }, [])
+  const stop = useCallback(() => { window.clearTimeout(recovery.current.timer); setReconnecting(false); connection.current?.stop() }, [])
   const requestFeedback = useCallback(() => connection.current?.requestFeedback(), [])
   const setSpeechSpeed = useCallback((speed: number) => {
     const bounded = Math.max(0.75, Math.min(1.35, speed))
@@ -154,5 +172,5 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
     setSpeechSpeedState(bounded)
     connection.current?.setSpeechSpeed(bounded)
   }, [])
-  return { error, caption, muted, supported, toggleMute, interrupt, reconnect, stop, requestFeedback, speechSpeed, setSpeechSpeed }
+  return { error, reconnecting, caption, muted, supported, toggleMute, interrupt, reconnect, stop, requestFeedback, speechSpeed, setSpeechSpeed }
 }

@@ -28,7 +28,7 @@ class NovaPcmCapture extends AudioWorkletProcessor {
           this.weight = 0
           this.total = 0
           if (this.index === 1600) {
-            this.port.postMessage(this.bytes, [this.bytes])
+            this.port.postMessage({ pcm: this.bytes, capturedAt: currentTime }, [this.bytes])
             this.bytes = new ArrayBuffer(3200)
             this.view = new DataView(this.bytes)
             this.index = 0

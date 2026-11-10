@@ -8,7 +8,7 @@ test('microphone resampling preserves PCM duration, clipping, stereo downmix and
   for (const sampleRate of [16000, 44100, 48000]) {
     let Capture
     const frames = []
-    runInNewContext(source, { sampleRate, AudioWorkletProcessor: class { port = { postMessage(bytes) { frames.push(bytes) } } }, registerProcessor: (_name, processor) => { Capture = processor } })
+    runInNewContext(source, { sampleRate, currentTime: 1, AudioWorkletProcessor: class { port = { postMessage(frame) { assert.equal(frame.capturedAt, 1); frames.push(frame.pcm) } } }, registerProcessor: (_name, processor) => { Capture = processor } })
     const capture = new Capture()
     for (let index = 0; index < sampleRate; index += 128) {
       const length = Math.min(128, sampleRate - index)

@@ -132,6 +132,8 @@ export function createWebServer({ dist = resolve('dist'), upstream = process.env
     if (!req.url?.startsWith('/ws/')) { socket.destroy(); return }
     const proxy = transport.request(target, { method: 'GET', path: req.url, headers: proxyHeaders(req, target) })
     proxy.on('upgrade', (response, upstreamSocket, upstreamHead) => {
+      socket.setTimeout(0); upstreamSocket.setTimeout(0)
+      socket.setNoDelay(true); upstreamSocket.setNoDelay(true)
       socket.write(`HTTP/1.1 ${response.statusCode} ${response.statusMessage}\r\n`)
       for (const [name, value] of Object.entries(response.headers)) {
         for (const item of Array.isArray(value) ? value : [value]) socket.write(`${name}: ${item}\r\n`)

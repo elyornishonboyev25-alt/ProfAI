@@ -14,7 +14,7 @@ const { prisma } = await import('../dist/lib/prisma.js')
 const { assistantContextSchema } = await import('../dist/services/assistantPolicy.js')
 const { geminiLiveKeys, naturalVoiceProvider } = await import('../dist/services/voiceProvider.js')
 const { geminiLiveSetup, geminiVoiceFrame, attachGeminiVoice, startGeminiVoiceCall, endGeminiVoiceCall, updateGeminiVoiceContext } = await import('../dist/services/geminiLive.service.js')
-const { openGeminiLive } = await import('../dist/services/geminiLiveTransport.js')
+const { openGeminiLive, verifyGeminiLiveAudio } = await import('../dist/services/geminiLiveTransport.js')
 const { attachSpeakingSignaling } = await import('../dist/realtime/speakingSignaling.js')
 
 const reservations = new Map()
@@ -122,6 +122,10 @@ test('the authenticated ticket owns PCM streaming, transcripts, expiry and settl
   client.send(JSON.stringify({ type: 'audio', data: Buffer.alloc(3200).toString('base64') }))
   await waitFor(() => frames.some(frame => frame.realtimeInput?.audio))
   assert.equal(frames.find(frame => frame.realtimeInput?.audio).realtimeInput.audio.mimeType, 'audio/pcm;rate=16000')
+  const beforeBurst = frames.filter(frame => frame.realtimeInput?.audio).length
+  for (let index = 0; index < 30; index++) client.send(JSON.stringify({ type: 'audio', data: Buffer.alloc(3200).toString('base64') }))
+  await waitFor(() => frames.filter(frame => frame.realtimeInput?.audio).length === beforeBurst + 30)
+  assert.equal(client.readyState, WebSocket.OPEN, 'Brief delivery bursts do not terminate a normal live conversation')
   assert.match(JSON.stringify(frames.find(frame => frame.clientContent)), /My name is Elyor/)
   providerSockets[0].send(JSON.stringify({ serverContent: { inputTranscription: { text: 'Hello Nova.', finished: true }, outputTranscription: { text: 'Hello Elyor.' }, modelTurn: { parts: [{ inlineData: { mimeType: 'audio/pcm;rate=24000', data: Buffer.alloc(4800).toString('base64') } }] }, turnComplete: true } }))
   await waitFor(() => events.some(event => event.content?.inputTranscription?.text === 'Hello Nova.'))
@@ -141,6 +145,29 @@ test('the authenticated ticket owns PCM streaming, transcripts, expiry and settl
   fixtureWindowMs = null
   await assert.rejects(startGeminiVoiceCall('learner', assistantContextSchema.parse({}), [], undefined, async () => { throw new Error('Fixture rejected setup') }), /Fixture rejected/)
   assert.ok([...reservations.values()].every(row => row.endedAt), 'A provider failure releases the reservation')
+})
+
+test('readiness requires two generated audio turns with PCM input and reports a post-setup provider rejection', async t => {
+  const provider = new WebSocketServer({ port: 0 })
+  await once(provider, 'listening')
+  t.after(() => { for (const socket of provider.clients) socket.terminate(); provider.close() })
+  let audioIn = 0
+  provider.on('connection', (socket, request) => socket.on('message', raw => {
+    const event = JSON.parse(String(raw))
+    if (event.setup) socket.send(JSON.stringify({ setupComplete: {} }))
+    if (event.realtimeInput?.audio) audioIn++
+    if (event.clientContent) {
+      if (request.headers['x-goog-api-key'] === 'reject-generation') { socket.close(1008, 'Fixture rejects generation after setup'); return }
+      setTimeout(() => socket.send(JSON.stringify({ serverContent: { modelTurn: { parts: [{ inlineData: { mimeType: 'audio/pcm;rate=24000', data: Buffer.alloc(4800).toString('base64') } }] }, turnComplete: true } })), 160)
+    }
+  }))
+  const factory = (_url, options) => new WebSocket(`ws://127.0.0.1:${provider.address().port}`, options)
+  const socket = await openGeminiLive({ setup: {} }, ['audio-generation'], undefined, factory)
+  const result = await verifyGeminiLiveAudio(socket, AbortSignal.timeout(2000))
+  assert.equal(result.turns, 2); assert.equal(result.audioFrames, 2); assert.ok(audioIn >= 2)
+  socket.close()
+  const rejected = await openGeminiLive({ setup: {} }, ['reject-generation'], undefined, factory)
+  await assert.rejects(verifyGeminiLiveAudio(rejected, AbortSignal.timeout(2000)), error => error.providerCloseCode === 1008)
 })
 
 async function waitFor(check) {

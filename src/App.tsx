@@ -20,6 +20,7 @@ import SATBrowserExitGuard from '@/components/sat/SATBrowserExitGuard'
 import BillingBoundary from '@/features/billing/BillingBoundary'
 import BillingNotice from '@/features/billing/BillingNotice'
 import LaunchGift from '@/features/launchGift/LaunchGift'
+import NovaReleaseAnnouncement from '@/features/productRelease/NovaReleaseAnnouncement'
 import CompanionPrompts from '@/features/companion/CompanionPrompts'
 import { useTelegramApp } from '@/hooks/useTelegramApp'
 import { telegramLaunch } from '@/lib/telegramWebApp'
@@ -427,6 +428,7 @@ function App() {
       <XpNotification deferActivityRewards={isTestMode || isExamModeActive} />
       <BillingNotice />
       <LaunchGift enabled={!telegramLaunch && !isTestMode && !isExamModeActive && !isAuthPage && !isLearningCenterMode && pathname !== '/onboarding' && pathname !== '/focus'} />
+      <NovaReleaseAnnouncement enabled={accountData.ready && !isTestMode && !isExamModeActive && !isAuthPage && !isLearningCenterMode && pathname !== '/onboarding' && pathname !== '/focus' && !pathname.startsWith('/shared/')} />
       <CompanionPrompts enabled={!isAuthPage && !isTestMode && !isExamModeActive && !isGuestDiagnostic && !isLearningCenterMode && pathname !== '/onboarding' && pathname !== '/focus' && pathname !== '/spin' && !pathname.startsWith('/shared/')} />
       <ClassAssignmentContext />
       {isAuthPage && <div className="liquid-auth-language glass-control"><LanguageSelector /></div>}

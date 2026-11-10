@@ -35,6 +35,7 @@ import learningCentersRoutes from './routes/learningCenters.routes.js'
 import supportRoutes from './routes/support.routes.js'
 import billingRoutes from './routes/billing.routes.js'
 import launchGiftRoutes from './routes/launchGift.routes.js'
+import productReleaseRoutes from './routes/productRelease.routes.js'
 import { promoRoutes, referralRoutes, telegramRoutes, telegramWebhookRoutes, wheelRoutes } from './routes/telegram.routes.js'
 import { paymentCallbacks, stripeCallback } from './routes/paymentCallbacks.routes.js'
 
@@ -111,6 +112,7 @@ app.use('/api/v1/learning-centers', learningCentersRoutes)
 app.use('/api/v1/support', supportRoutes)
 app.use('/api/v1/billing', billingRoutes)
 app.use('/api/v1/launch-gift', launchGiftRoutes)
+app.use('/api/v1/releases', productReleaseRoutes)
 app.use('/api/v1/billing/callbacks', paymentCallbacks)
 app.use('/api/v1/telegram', telegramRoutes)
 app.use('/api/v1/referrals', referralRoutes)

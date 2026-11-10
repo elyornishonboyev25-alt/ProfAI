@@ -248,6 +248,7 @@ export default function Dashboard() {
           </div>
         </header>
 
+        <div className="dashboard-glass-stage">
         <section className="dashboard-entrance-grid grid gap-4">
           <DashboardExamOverview owner={user?.id ?? 'guest'} ielts={ieltsCurrent} sat={satCurrent} ieltsTarget={ieltsTarget} satTarget={satTarget} />
           <article className="dashboard-target-card dashboard-card-sheen">
@@ -480,6 +481,7 @@ export default function Dashboard() {
             })}
           </div>
         </section>
+        </div>
       </div>
     </div>
   )

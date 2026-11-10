@@ -4,17 +4,23 @@
   --dash-red: #c41f3d;
   --dash-ink: #161c2a;
   --dash-muted: #53637a;
-  --dash-glass: linear-gradient(118deg, #ffffff9e, #ffffff12 45%, #ffffff80 46%, transparent 78%), linear-gradient(145deg, #fffffff0, #edf1f7b8 58%, #dce3eed1);
-  --dash-depth: 0 14px 28px -19px #24364e70, 0 3px 7px #31405a12, inset 0 2px 0 #fff, inset 0 -1px 0 #9daac04d;
+  --dash-glass: radial-gradient(ellipse at 0% 0%, #fffffff2, transparent 60%), linear-gradient(132deg, #ffffff52 0%, #ffffff0a 37%, #ffffff70 37.3%, #ffffff0d 59%, transparent 59.3%), linear-gradient(155deg, #f9fbffad, #e5ebf580 58%, #bbcbe17d);
+  --dash-depth: 0 12px 19px -12px #263b6094, 0 3px 5px #32466026, inset 0 2px 2px #fff, inset 1px 0 1px #ffffffc9, inset 0 -2px 2px #8ea3be4d;
 }
 .dashboard-material .dashboard-main-shell { container: learning-dashboard / inline-size; }
+.dashboard-material .dashboard-glass-stage {
+  padding: clamp(10px, 1.1cqw, 18px); border: 1px solid #fffffff5; border-radius: 30px;
+  background: radial-gradient(ellipse at 0% 0%, #ffffffa6, transparent 52%), linear-gradient(135deg, #eaf0f9a6, #c4d0e175 56%, #e4eaf582);
+  box-shadow: 0 19px 35px -21px #233b627d, 0 3px 7px #354c6a24, inset 0 2px 1px #fff, inset 2px 0 1px #ffffffa6, inset 0 -2px 1px #9babc666;
+  -webkit-backdrop-filter: blur(20px) saturate(125%); backdrop-filter: blur(20px) saturate(125%);
+}
 html .app-shell .profai-dashboard.dashboard-material .dashboard-entrance-grid {
   display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; align-items: stretch;
 }
 .dashboard-material :is(.dashboard-exam-overviews, .dashboard-target-card, .dashboard-study-main, .dashboard-insights) { min-width: 0; }
 .dashboard-material .dashboard-exam-overviews { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; grid-column: 1 / -1; }
 html .app-shell .profai-dashboard.dashboard-material :is(.dashboard-exam-overview, .dashboard-glass-card, .dashboard-stat-card, .dashboard-learning-card) {
-  position: relative; border: 1px solid #fffffff5; border-bottom-color: #b7c2d7a6; border-radius: 23px;
+  position: relative; border: 1px solid #fffffff5; border-bottom-color: #a3b4cc80; border-radius: 23px; outline: 1px solid #ffffff52; outline-offset: 1px;
   background: var(--dash-glass); box-shadow: var(--dash-depth);
   -webkit-backdrop-filter: blur(16px) saturate(125%); backdrop-filter: blur(16px) saturate(125%);
 }
@@ -30,9 +36,9 @@ html .app-shell .profai-dashboard.dashboard-material :is(.dashboard-exam-overvie
 .dashboard-exam-ring .ring-track { stroke: #dce2ec; }
 .dashboard-exam-ring .ring-value { stroke: var(--dash-red); stroke-linecap: round; }
 .dashboard-exam-ring > span { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; }
-.dashboard-exam-ring strong { font-size: clamp(23px, 2.6cqw, 34px); font-weight: 850; line-height: 1; letter-spacing: -.06em; }
+.dashboard-exam-ring strong { color: #b20c2d; text-shadow: 0 1px 0 #ffffffc9; font-size: clamp(23px, 2.6cqw, 34px); font-weight: 850; line-height: 1; letter-spacing: -.06em; }
 .dashboard-exam-ring small { color: var(--dash-muted); font-size: 11px; }
-.dashboard-exam-details { flex: 1; min-width: 0; }
+.dashboard-exam-details { flex: 1; min-width: 0; padding-left: 13px; border-left: 1px solid #ffffffa6; }
 .dashboard-exam-current { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 5px 12px; margin-bottom: 11px; font-size: 11px; color: var(--dash-muted); }
 .dashboard-exam-current strong { color: var(--dash-ink); font-size: 13px; }
 .dashboard-exam-current small { font-size: 10px; }
@@ -73,9 +79,14 @@ html .app-shell .profai-dashboard.dashboard-material .dashboard-learning-card { 
 html .app-shell .profai-dashboard.dashboard-material .dashboard-target-card {
   position: relative; isolation: isolate; display: flex; flex-direction: column; min-height: 340px; padding: 22px; overflow: hidden;
   border: 1px solid #fff7; border-radius: 24px; color: #fff;
-  background: radial-gradient(ellipse at 12% 0%, #ffffff50, transparent 48%), linear-gradient(125deg, transparent 25%, #ffffff24 25.3%, #ffffff09 44%, transparent 44.3%, transparent 60%, #ffffff21 60.3%, transparent 83%), linear-gradient(145deg, #f34c65, #ca203c 47%, #a81432);
-  box-shadow: 0 16px 35px -14px #a21a4c70, inset 0 2px 0 #fffc, inset 2px 0 0 #ffffff5c, inset 0 -2px 0 #720a2859;
+  background: radial-gradient(ellipse at 0% 0%, #ffffff80, transparent 42%), radial-gradient(ellipse at 100% 100%, #7d00295c, transparent 62%), linear-gradient(135deg, #ffffff08 16%, #ffffff03 16.3%, #ffffff36 34%, #ffffff0a 34.4%, transparent 62%, #ffffff36 62.4%, #ffffff0a 80%, transparent 80.4%), linear-gradient(145deg, #ff3a59e8, #e20c32f0 50%, #b6072ee8);
+  box-shadow: 0 15px 26px -12px #a50b3d8c, 0 0 0 1px #fff9, 0 0 14px #f32a5824, inset 0 3px 3px #fffffff2, inset 2px 0 2px #ffffffa6, inset 0 -2px 2px #7b002a66;
   -webkit-backdrop-filter: blur(16px) saturate(125%); backdrop-filter: blur(16px) saturate(125%);
+}
+html .app-shell .profai-dashboard.dashboard-material .dashboard-target-card::after {
+  content: ''; position: absolute; inset: 3px; z-index: 0; border: 1px solid #ffffff66; border-radius: 20px; pointer-events: none;
+  background: linear-gradient(135deg, transparent 0 12%, #ffffff24 12.3%, transparent 31%, transparent 66%, #ffffff17 66.3%, transparent 83%);
+  box-shadow: inset 0 1px 3px #ffffffa6;
 }
 .dashboard-material .dashboard-target-heading { color: #fff; }
 .dashboard-material .dashboard-target-ribbon { display: none; }
@@ -114,9 +125,11 @@ html .app-shell .profai-dashboard.dashboard-material .dashboard-progress-orbit {
   html .app-shell .dashboard-material .dashboard-exam-skills > button { grid-template-columns: 16px minmax(75px, 1fr) auto minmax(65px, 1fr); }
 }
 @media (max-width: 480px) {
+  .dashboard-material .dashboard-glass-stage { padding: 9px; border-radius: 25px; }
+  .dashboard-material .dashboard-exam-details { padding-left: 8px; }
   .dashboard-material .dashboard-exam-body { gap: 12px; }
   .dashboard-material .dashboard-exam-ring { flex-basis: 76px; }
-  .dashboard-material .dashboard-exam-ring strong { font-size: 23px; }
+  .dashboard-material .dashboard-exam-ring strong { color: #b20c2d; text-shadow: 0 1px 0 #ffffffc9; font-size: 23px; }
   html .app-shell .dashboard-material .dashboard-exam-skills > button { grid-template-columns: 14px minmax(0, 1fr) auto; gap: 5px; min-height: 44px; }
   .dashboard-material .dashboard-skill-track { grid-column: 2 / -1; height: 4px; margin-top: -2px; }
   .dashboard-material .dashboard-exam-date-form { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }

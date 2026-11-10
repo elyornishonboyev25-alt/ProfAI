@@ -23,9 +23,9 @@
 .app-shell .exam-catalog .exam-catalog-heading :is(h1, h2),
 .app-shell .exam-catalog .ielts-catalog-header h2 { font-size: clamp(21px, 2vw, 28px); letter-spacing: -.04em; }
 .app-shell .exam-catalog .exam-catalog-search { height: 44px; border-radius: 13px; }
-.app-shell .exam-catalog .ielts-catalog-filters { margin-top: 20px; gap: 4px; padding: 5px; border-radius: 14px; background: #d0d9e84d; }
-.app-shell .exam-catalog .ielts-catalog-filters button { min-height: 38px; padding: 7px 16px; }
-.app-shell .exam-catalog .ielts-catalog-filters button[aria-pressed='true'] { color: #ba1833; background: linear-gradient(145deg, #fff, #fff0f4); }
+.app-shell .exam-catalog :is(.ielts-catalog-filters, .exam-catalog-filters) { margin-top: 20px; gap: 4px; padding: 5px; border-radius: 14px; background: #d0d9e84d; }
+.app-shell .exam-catalog :is(.ielts-catalog-filters, .exam-catalog-filters) button { min-height: 38px; padding: 7px 16px; }
+.app-shell .exam-catalog :is(.ielts-catalog-filters, .exam-catalog-filters) button[aria-pressed='true'] { color: #ba1833; background: linear-gradient(145deg, #fff, #fff0f4); }
 .app-shell .exam-catalog .exam-catalog-grid,
 .app-shell .exam-catalog .ielts-catalog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); align-items: stretch; gap: 18px; margin-top: 21px; }
 .app-shell .exam-catalog.exam-catalog .exam-catalog-card {
@@ -74,12 +74,27 @@
 .app-shell .mock-ielts-skill { font-size: 10.5px; padding: 8px 4px; }
 .app-shell .mock-ielts-card-actions button { min-height: 42px; border-radius: 11px; }
 .app-shell .mock-ielts-glass-open.is-primary { color: #fff; background: var(--catalog-crimson); }
+/* Current catalogs retain their compact, content-first card structure. */
+.app-shell :is(.exam-catalog, .mock-ielts-glass) .test-card {
+  border: 1px solid #fffffff2; border-bottom-color: #a3b4cc80; border-radius: 23px;
+  background: radial-gradient(ellipse at 0% 0%, #fffffff2, transparent 62%), linear-gradient(132deg, #ffffff52 0%, #ffffff0a 37%, #ffffff70 37.3%, #ffffff0d 59%, transparent 59.3%), linear-gradient(155deg, #f9fbffad, #e5ebf580 58%, #bbcbe17d);
+  box-shadow: 0 12px 19px -12px #263b6094, 0 3px 5px #32466026, inset 0 2px 2px #fff, inset 1px 0 1px #ffffffc9, inset 0 -2px 2px #8ea3be4d;
+  -webkit-backdrop-filter: blur(18px) saturate(125%); backdrop-filter: blur(18px) saturate(125%);
+}
+.app-shell :is(.exam-catalog, .mock-ielts-glass) .test-card-icon { color: #ce2037; }
+.app-shell :is(.exam-catalog, .mock-ielts-glass) .test-card-action { border-color: #cf1e3d; border-radius: 12px; color: #fff; background: var(--catalog-crimson); box-shadow: 0 5px 12px #b1243e26, inset 0 1px #ffffffa6; }
+.app-shell :is(.exam-catalog, .mock-ielts-glass) :is(.test-card-action.is-secondary, .test-card:disabled .test-card-action) { color: #a71c35; border-color: #e3bac4; background: linear-gradient(145deg, #fff, #fff0f4); box-shadow: inset 0 1px #fff; }
+.app-shell :is(.exam-catalog, .mock-ielts-glass) .test-card-progress progress::-webkit-progress-value { background: #ce2037; }
+.app-shell :is(.exam-catalog, .mock-ielts-glass) .test-card-progress progress::-moz-progress-bar { background: #ce2037; }
 @media (hover: hover) and (pointer: fine) {
+  .app-shell :is(.exam-catalog, .mock-ielts-glass) button.test-card:hover:not(:disabled) .test-card-action,
+  .app-shell :is(.exam-catalog, .mock-ielts-glass) .test-card-action:hover:not(.is-secondary) { background: linear-gradient(135deg, #fb3759, #ae1230); }
   .app-shell .exam-catalog.exam-catalog .exam-catalog-card:hover,
   .app-shell .exam-catalog.mock-ielts-glass .mock-ielts-row:hover { border-color: #e9abb9; box-shadow: 0 20px 35px -22px #a3244666, inset 0 2px #fff, inset 0 -1px #b5c1d566; }
 }
 @media (max-width: 640px) {
-  .app-shell #ielts-skill-tabs .exam-section-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; overflow: visible; }
+  .app-shell #ielts-skill-tabs .exam-section-tabs[role='tablist'] { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; overflow: visible; }
+  .app-shell #ielts-skill-tabs .exam-section-tabs > button[role='tab'] strong { font-size: 11px; line-height: 1.25; white-space: normal; }
   .app-shell #ielts-skill-tabs .exam-section-tabs > button { min-width: 0; min-height: 52px; padding: 8px 4px; display: flex; flex-direction: column; gap: 5px; }
   .app-shell .exam-library-nav .exam-section-tabs[aria-label]:has(#sat-tab-mocks) { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; overflow: visible; }
   .app-shell .exam-library-nav .exam-section-tabs > [id^='sat-tab-'] { min-width: 0; min-height: 54px; padding: 7px 3px; display: flex; flex-direction: column; gap: 5px; white-space: normal; text-align: center; }
@@ -89,8 +104,8 @@
   .app-shell .exam-catalog.exam-catalog .exam-catalog-card, .app-shell .exam-catalog.exam-catalog .exam-catalog-card.ielts-catalog-card { min-height: 190px; padding: 20px; border-radius: 21px; }
   .app-shell .exam-catalog .exam-catalog-card.is-split { padding: 0; }
   .app-shell .exam-catalog .exam-card-main { padding: 20px; }
-  .app-shell .exam-catalog .ielts-catalog-filters { display: flex; flex-wrap: wrap; width: 100%; gap: 4px; }
-  .app-shell .exam-catalog .ielts-catalog-filters button { flex: 1 1 auto; min-height: 40px; padding: 7px 10px; }
+  .app-shell .exam-catalog :is(.ielts-catalog-filters, .exam-catalog-filters) { display: flex; flex-wrap: wrap; width: 100%; gap: 4px; }
+  .app-shell .exam-catalog :is(.ielts-catalog-filters, .exam-catalog-filters) button { flex: 1 1 auto; min-height: 40px; padding: 7px 10px; }
   .app-shell .exam-catalog .exam-catalog-tools, .app-shell .exam-catalog .exam-catalog-search-field { width: 100%; }
   .app-shell .exam-catalog.mock-ielts-glass .mock-ielts-rows { grid-template-columns: minmax(0, 1fr); }
   .app-shell .exam-library-nav .exam-section-tabs > button { min-height: 46px; padding: 8px 10px; }

@@ -48,9 +48,9 @@ export async function run() {
     const open = container.querySelector<HTMLButtonElement>('[aria-label="Start Full Mock 1"]')!
     assert.ok(open)
     await act(async () => open.click())
-    assert.ok(container.querySelector('.mock-run-readiness'), 'Catalog opens readiness, without launching Listening')
+    assert.ok(container.querySelector('.mrp-header .mock-run-start'), 'Catalog opens readiness, without launching Listening')
     assert.doesNotMatch(container.textContent!, /Listening has started/)
-    const back = container.querySelector<HTMLButtonElement>('.mock-run-back')!
+    const back = [...container.querySelectorAll<HTMLButtonElement>('button')].find(button => button.textContent?.trim() === 'All mocks')!
     await act(async () => back.click())
     assert.match(container.textContent!, /Back in library/)
     assert.equal(document.querySelector('[role="alertdialog"]'), null, 'Unstarted mock has no exit warning')

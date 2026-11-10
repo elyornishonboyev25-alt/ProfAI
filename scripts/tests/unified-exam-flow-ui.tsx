@@ -99,7 +99,7 @@ export async function run() {
     await act(async () => saveSATAttempt(saved))
     await mount(<InProcessPanel exam="SAT" />)
     const resume = element.querySelector<HTMLAnchorElement>('.in-process-card a')!
-    assert.equal(resume.getAttribute('href'), '/sat/mock/3/run')
+    assert.equal(resume.getAttribute('href'), `/sat/mock/3/run?testId=${encodeURIComponent(sat.id)}`)
     await act(async () => element.querySelector<HTMLButtonElement>('[aria-label^="Delete unfinished test:"]')!.click())
     await click('Keep test'); assert.equal(loadSATAttempt(sat.id)?.answers[sat.modules[0].questions[0].id], 'A')
     await act(async () => useAuthStore.setState({ user: { id: 'other-owner' } as never }))

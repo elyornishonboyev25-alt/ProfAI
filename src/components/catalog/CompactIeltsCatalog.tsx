@@ -10,10 +10,10 @@ import {
   ArrowLeft,
   ArrowRight,
   BookOpenText,
+  Check,
   CheckCircle2,
   Clock3,
   Headphones,
-  Lock,
   Mic2,
   PenLine,
   Search,
@@ -29,7 +29,7 @@ export type CompactIeltsTestRow = IeltsCatalogResult & {
   subtitle: string
   badge: string
   durationMinutes?: number
-  detail: string
+  detail?: string
   available: boolean
   result?: CatalogResult
 }
@@ -97,8 +97,7 @@ export default function CompactIeltsCatalog({
 
   return (
     <div id={embedded ? section : undefined} className={`${embedded ? 'scroll-mt-24' : 'mx-auto w-full max-w-[1480px] px-4 py-5 sm:px-6 lg:px-8 lg:py-7'}`}>
-      {!embedded ? <section className="relative isolate overflow-hidden rounded-[2.25rem] border border-white/90 bg-[linear-gradient(125deg,rgba(255,255,255,.92),rgba(255,247,247,.72)_46%,rgba(232,241,255,.76))] px-5 py-5 shadow-[0_28px_70px_rgba(30,64,175,.1),inset_0_1px_0_white] sm:px-8 sm:py-7 lg:px-10">
-        <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_0%_0%,rgba(248,113,113,.2),transparent_34%),radial-gradient(circle_at_100%_0%,rgba(96,165,250,.22),transparent_38%)]" />
+      {!embedded ? <section className="relative isolate overflow-hidden rounded-3xl border border-white/90 bg-gradient-to-br from-white/90 to-slate-200/80 px-5 py-5 shadow-[0_28px_70px_rgba(30,64,175,.1),inset_0_1px_0_white] sm:px-8 sm:py-7 lg:px-10">
         <div className="pointer-events-none absolute inset-x-[12%] top-0 -z-10 h-px bg-gradient-to-r from-transparent via-white to-transparent" />
 
         <div className="grid min-h-[15rem] items-center gap-8 lg:grid-cols-[minmax(0,1fr)_24rem]">
@@ -106,37 +105,36 @@ export default function CompactIeltsCatalog({
             <button
               type="button"
               onClick={onBack}
-              className="route-back-button"
+              className="exam-catalog-back"
             >
               <ArrowLeft className="h-4 w-4" />  <UiText text={"Back"} /> </button>
 
-            <p className="mt-7 inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-red-600">
+            <p className="mt-7 inline-flex items-center gap-2 text-xs font-semibold text-slate-600">
               <Sparkles className="h-3.5 w-3.5" /> IELTS Academic
             </p>
             <h1 className="mt-2 text-[2.7rem] font-black leading-none tracking-[-0.065em] text-slate-950 sm:text-6xl lg:text-[4.8rem]">
-              IELTS <span className="bg-gradient-to-r from-red-700 via-red-600 to-rose-500 bg-clip-text text-transparent"><UiText text={meta.label} /></span>
+              IELTS <UiText text={meta.label} />
             </h1>
             <p className="mt-4 max-w-2xl text-sm font-semibold leading-6 text-slate-600 sm:text-base"><UiText text={meta.summary} /></p>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <span className="rounded-full border border-red-100 bg-white/72 px-3 py-1.5 text-[11px] font-black text-red-700">{rows.length}  <UiText text={"tests"} /> </span>
-              <span className="rounded-full border border-slate-200/80 bg-white/72 px-3 py-1.5 text-[11px] font-black text-slate-600"><UiText text={meta.detail} /></span>
-              <span className="rounded-full border border-emerald-100 bg-emerald-50/80 px-3 py-1.5 text-[11px] font-black text-emerald-700"><UiText text={"Progress saved"} /></span>
+            <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-xs font-semibold text-slate-600">
+              <span>{rows.length} <UiText text="tests" /></span>
+              <span><UiText text={meta.detail} /></span>
             </div>
           </div>
 
           <div className="relative hidden h-[13rem] overflow-hidden rounded-[2rem] border border-white/90 bg-white/48 p-6 shadow-[0_20px_50px_rgba(30,64,175,.09),inset_0_1px_0_white] lg:block" aria-hidden="true">
             <div className="absolute -right-10 -top-12 h-44 w-44 rounded-full border border-blue-200/60" />
-            <div className="absolute -right-2 -top-2 h-24 w-24 rounded-full border border-red-200/70" />
-            <div className="absolute bottom-5 left-5 right-5 h-px bg-gradient-to-r from-red-400/70 via-blue-400/60 to-transparent" />
+            <div className="absolute -right-2 -top-2 h-24 w-24 rounded-full border border-slate-300/70" />
+            <div className="absolute bottom-5 left-5 right-5 h-px bg-gradient-to-r from-slate-400/70 to-transparent" />
             <div className="relative flex h-full items-center gap-5">
-              <span className="grid h-24 w-24 shrink-0 place-items-center rounded-[1.75rem] border border-white bg-gradient-to-br from-red-50 to-blue-50 text-red-600 shadow-[0_18px_38px_rgba(185,28,28,.12)]">
+              <span className="grid h-24 w-24 shrink-0 place-items-center text-slate-700">
                 <HeroIcon className="h-11 w-11" strokeWidth={1.55} />
               </span>
               <div className="min-w-0 flex-1">
                 <p className="text-[10px] font-black uppercase tracking-[0.17em] text-slate-400"><UiText text={"Test library"} /></p>
                 <p className="mt-1 text-3xl font-black tracking-[-0.05em] text-slate-950">{availableCount}</p>
                 <p className="text-xs font-bold text-slate-500"><UiText text={"available now"} /></p>
-                <div className="mt-4 flex items-center gap-2 text-xs font-black text-emerald-700">
+                <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-slate-700">
                   <CheckCircle2 className="h-4 w-4" /> {completedCount} <UiText text={"completed"} />
                 </div>
               </div>
@@ -162,7 +160,7 @@ export default function CompactIeltsCatalog({
                 onChange={(event) => onSearchChange(event.target.value)}
                 placeholder={uiCopy("Search test...")}
                 aria-label={uiCopy("Search test...")}
-                className="exam-catalog-search h-11 w-full rounded-full border border-white/90 bg-white/86 pl-10 pr-4 text-sm text-slate-900 shadow-[0_8px_22px_rgba(30,64,175,.06)] outline-none transition placeholder:text-slate-400 focus:border-red-300 focus:bg-white focus:ring-4 focus:ring-red-100"
+                className="exam-catalog-search h-11 w-full pl-10 pr-4 text-sm text-slate-900 placeholder:text-slate-500"
               />
             </label>
           </div>
@@ -170,14 +168,13 @@ export default function CompactIeltsCatalog({
 
         <div className="exam-catalog-toolbar">
           {filters && activeFilter && onFilterChange ? (
-          <div className="ielts-catalog-filters relative flex flex-wrap gap-2" role="group" aria-label={uiCopy("{{value1}} test type", { value1: String(meta.label) })}>
+          <div className="exam-catalog-filters" role="group" aria-label={uiCopy("{{value1}} test type", { value1: String(meta.label) })}>
             {filters.map((filter) => (
               <button
                 key={filter.value}
                 type="button"
                 aria-pressed={activeFilter === filter.value}
                 onClick={() => onFilterChange(filter.value)}
-                className={`rounded-full border px-5 py-2.5 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100 ${activeFilter === filter.value ? 'border-red-200 bg-red-50 text-red-700 shadow-[0_6px_16px_rgba(185,28,28,.08)]' : 'border-slate-200 bg-white/80 text-slate-700 hover:border-red-200 hover:bg-white hover:text-red-700'}`}
               >
                 <UiText text={filter.label} />
               </button>
@@ -192,51 +189,48 @@ export default function CompactIeltsCatalog({
             <UiText text={"No tests found."} />
           </div>
         ) : (
-          <div className="ielts-catalog-grid relative mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {rows.map((row) => (
-              <button
-                key={row.id}
-                type="button"
-                disabled={!row.available}
-                onClick={() => { if (studyAccess.open(`test:${section}:${row.id}`)) onLaunch(row) }}
-                className={`exam-catalog-card ielts-catalog-card group ${row.completed ? 'is-completed' : ''}`}
-              >
-                <div className="exam-catalog-card-top">
-                  <span className="exam-catalog-icon" aria-hidden="true"><HeroIcon size={21} strokeWidth={1.7} /></span>
-                  <span className="exam-catalog-number">{String(row.number).padStart(2, '0')}</span>
-                  <StudyAccessChip resource={`test:${section}:${row.id}`} />
-                </div>
-                <div className="exam-catalog-card-state">
-                  {row.completed ? (
-                    <span className="exam-catalog-status is-completed">
-                      <CheckCircle2 className="h-3.5 w-3.5" />
-                      {row.band !== undefined && <strong><UiText text={"Band"} /> {row.band.toFixed(1)} ·</strong>}
-                      <UiText text={"Completed"} /> </span>
-                  ) : row.progressLabel ? (
-                    <span className="exam-catalog-status is-progress"><UiText text={row.progressLabel} /></span>
-                  ) : !row.available ? (
-                    <Lock className="h-5 w-5 shrink-0 text-slate-400" />
-                  ) : null}
-                </div>
-                <h3 className="exam-catalog-title mt-3 font-black tracking-[-0.04em] text-slate-950">{row.title}</h3>
-                <p className="mt-2 line-clamp-2 text-sm font-medium leading-6 text-slate-500">{row.subtitle}</p>
-                {row.result ? <CatalogScore {...row.result} /> : row.band !== undefined ? <CatalogScore score={row.band} maximum={9} label={uiCopy("Band score")} detail={row.scoreLabel} /> : row.scoreLabel ? (() => {
-                  const count = /^(\d+)\/(\d+) correct$/.exec(row.scoreLabel)
-                  return count && Number(count[2]) > 0 ? <CatalogScore score={Number(count[1])} maximum={Number(count[2])} label={uiCopy("Correct answers")} detail={row.scoreLabel} completed={!!row.completed} /> : <p className="mt-2 text-sm font-bold text-slate-600"><UiText text={row.scoreLabel} /></p>
-                })() : null}
-
-                <div className="exam-catalog-card-footer mt-auto flex flex-wrap items-end justify-between gap-4 pt-7">
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-bold text-slate-500">
-                    {row.durationMinutes ? <span className="inline-flex items-center gap-1.5"><Clock3 className="h-4 w-4" />{row.durationMinutes}  <UiText text={"min"} /> </span> : null}
-                    <span><UiText text={row.detail} /></span>
+          <div className="test-card-grid mt-5">
+            {rows.map((row) => {
+              const correct = row.band === undefined && row.scoreLabel ? /^(\d+)\/(\d+) correct$/.exec(row.scoreLabel) : null
+              const topic = row.badge !== 'Full test' && (section === 'writing' || section === 'speaking')
+                ? row.subtitle.replace(/^(?:Task [12]|Part [123]) · /, '')
+                : null
+              return (
+                <button
+                  key={row.id}
+                  type="button"
+                  disabled={!row.available}
+                  onClick={() => { if (studyAccess.open(`test:${section}:${row.id}`)) onLaunch(row) }}
+                  className="test-card ielts-catalog-card"
+                >
+                  <div className="test-card-heading">
+                    <span className="test-card-icon"><HeroIcon size={21} strokeWidth={1.7} aria-hidden="true" /></span>
+                    <h3 className="test-card-title">{row.title}</h3>
                   </div>
-                  <span className={`exam-catalog-action inline-flex items-center gap-1.5 text-sm font-black ${row.available ? 'text-red-700' : 'text-amber-600'}`}>
-                    {row.available ? row.completed ? <UiText text={"Retake"} /> : <UiText text={"Open"} /> : <UiText text={"Coming soon"} />}
-                    {row.available ? <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /> : null}
+                  <div className="test-card-info">
+                    <StudyAccessChip resource={`test:${section}:${row.id}`} />
+                    {row.completed ? (
+                      <span><Check size={14} aria-hidden="true" /><UiText text="Completed" /></span>
+                    ) : row.progressLabel ? (
+                      <span><UiText text={row.progressLabel} /></span>
+                    ) : null}
+                  </div>
+                  {topic && <p className="test-card-note"><UiText text={topic} /></p>}
+                  {(row.durationMinutes || row.detail) && <div className="test-card-meta">
+                    {row.durationMinutes ? <span><Clock3 size={15} aria-hidden="true" />{row.durationMinutes} <UiText text="min" /></span> : null}
+                    {row.detail && <span><UiText text={row.detail} /></span>}
+                  </div>}
+                  {row.result ? <CatalogScore {...row.result} /> : row.band !== undefined ? <CatalogScore score={row.band} maximum={9} label={uiCopy('Band')} detail={row.scoreLabel} /> : correct && Number(correct[2]) > 0 ? (
+                    <CatalogScore score={Number(correct[1])} maximum={Number(correct[2])} label={uiCopy('Correct answers')} band={false} />
+                  ) : row.scoreLabel ? <span className="test-card-note"><UiText text={row.scoreLabel} /></span> : null}
+
+                  <span className="test-card-action">
+                    <UiText text={row.available ? row.completed ? 'Retake' : 'Open' : 'Coming soon'} />
+                    {row.available && <ArrowRight size={16} aria-hidden="true" />}
                   </span>
-                </div>
-              </button>
-            ))}
+                </button>
+              )
+            })}
           </div>
         )}
       </section>

@@ -82,12 +82,12 @@ export default function IELTSTestLibrary() {
           <div><span>IELTS Academic</span><h1><UiText text="Test library" /></h1></div>
           <Link to="/profile" className="exam-library-results"><ChartNoAxesCombined size={17} /><UiText text="My Results" /><ArrowUpRight size={15} /></Link>
         </header>
-        <div id="ielts-skill-tabs" className="exam-library-nav sticky top-2 z-20 rounded-2xl border border-white bg-white/95 p-2 shadow-[0_12px_35px_rgba(15,23,42,.09)]">
+        <div id="ielts-skill-tabs" className="exam-library-nav sticky top-2 z-20">
           <div ref={tabList} role="tablist" aria-label={uiCopy("IELTS skills")} className="exam-section-tabs">
-            {skills.map(({ id, label, icon: Icon, detail }) => <button key={id} id={`ielts-tab-${id}`} type="button" role="tab" tabIndex={activeSkill === id ? 0 : -1} aria-selected={activeSkill === id} aria-controls="ielts-test-panel" onKeyDown={(event) => handleTabKeyDown(event, id)} onClick={() => selectTab(id)} className={`flex min-w-0 flex-1 items-center gap-3 rounded-xl border px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 ${activeSkill === id ? 'border-red-200 bg-gradient-to-br from-white to-red-50 text-red-700 shadow-[0_6px_18px_rgba(185,28,28,.08)]' : 'border-transparent text-slate-800 hover:bg-red-50/70'}`}><Icon className="h-5 w-5 shrink-0 text-red-600" /><span><strong className="block text-sm"><UiText text={label} /></strong><small className="block text-[11px] font-semibold text-slate-500"><UiText text={detail} /></small></span></button>)}
+            {skills.map(({ id, label, icon: Icon, detail }) => <button key={id} id={`ielts-tab-${id}`} type="button" role="tab" tabIndex={activeSkill === id ? 0 : -1} aria-selected={activeSkill === id} aria-controls="ielts-test-panel" onKeyDown={(event) => handleTabKeyDown(event, id)} onClick={() => selectTab(id)}><Icon className="h-5 w-5" aria-hidden="true" /><span><strong><UiText text={label} /></strong><small><UiText text={detail} /></small></span></button>)}
           </div>
         </div>
-        <div id="ielts-test-panel" role="tabpanel" tabIndex={0} aria-labelledby={`ielts-tab-${activeSkill}`} className="mt-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300">
+        <div id="ielts-test-panel" role="tabpanel" tabIndex={0} aria-labelledby={`ielts-tab-${activeSkill}`} className="mt-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500">
           <Suspense fallback={<BrandPageLoader compact label={uiCopy("Opening page")} />}>
             {activeSkill === 'listening' && <IELTSSectionTests sectionOverride="listening" embedded />}
             {activeSkill === 'reading' && <IELTSSectionTests sectionOverride="reading" embedded />}

@@ -1,4 +1,5 @@
 import { useCopy } from '@/i18n/interface'
+import '@/styles/catalog-glass-finish.css'
 import { useAccountDataSync } from '@/hooks/useAccountDataSync'
 import { Suspense, useEffect, useState, type ReactNode } from 'react'
 import { Navigate, Routes, Route, useLocation, useNavigate } from 'react-router-dom'

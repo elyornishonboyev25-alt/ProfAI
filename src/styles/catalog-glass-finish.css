@@ -1,0 +1,103 @@
+/* A common material for IELTS skills, full mocks and SAT. Never selects exam papers. */
+.app-shell :is(.exam-catalog, .exam-library-page, .exam-library-nav, .mock-ielts-glass, .hard-page:not(.hard-page-active), .sat-bank-page) {
+  --catalog-red: #ce2037; --catalog-red-deep: #a71830; --catalog-ink: #182131; --catalog-muted: #58677d;
+  --catalog-edge: #fffffff5; --catalog-line: #b8c4d947;
+  --catalog-glass: linear-gradient(118deg, #ffffffa6, #ffffff12 44%, #ffffff70 44.3%, transparent 74%), linear-gradient(145deg, #fffffff2, #eef2f8b8 58%, #dce4efd1);
+  --catalog-panel: linear-gradient(135deg, #ffffff82, #eaf0f88f 55%, #dce5f08f);
+  --catalog-crimson: linear-gradient(115deg, #ffffff38, transparent 52%), linear-gradient(135deg, #ed3049, #bd1836);
+  --catalog-shadow: 0 14px 28px -18px #26395370, 0 2px 5px #2c3e5812, inset 0 2px 0 #fff, inset 0 -1px 0 #a5b2c64d;
+}
+.app-shell .hard-page:not(.hard-page-active) { --hq-glass: var(--catalog-glass); --hq-shadow: var(--catalog-shadow); --hq-red: #ce2037; --hq-red-grad: var(--catalog-crimson); }
+.app-shell .sat-bank-page { --qb-glass: var(--catalog-glass); --qb-shadow: var(--catalog-shadow); --qb-red: #ce2037; --qb-red-grad: var(--catalog-crimson); }
+.app-shell .sat-bank-wrap > .exam-library-nav { margin-bottom: 20px; }
+.sat-catalog-results { display: flex; justify-content: flex-end; margin: 0 0 12px; }
+.app-shell .sat-catalog-header .route-back-button,
+.app-shell .sat-catalog-header .exam-catalog-back,
+.app-shell .sat-catalog-panel .exam-catalog-back { display: none !important; }
+.app-shell .exam-library-nav.exam-library-nav { padding: 7px; border-radius: 21px; border: 1px solid #fffffff2; background: var(--catalog-panel); box-shadow: var(--catalog-shadow); }
+.app-shell .exam-library-nav .exam-section-tabs > button { min-height: 52px; padding: 9px 14px; border-radius: 14px; }
+.app-shell .exam-library-nav.exam-library-nav .exam-section-tabs > button[aria-selected='true'] { color: #b81731; border-color: #fff; background: linear-gradient(145deg, #fff, #ffeef1a6); box-shadow: inset 0 1px #fff, 0 5px 14px #b5243d14; }
+.app-shell .exam-library-nav.exam-library-nav .exam-section-tabs > button[aria-selected='true'] > svg { color: #dc2138; border-color: #fff; background: linear-gradient(145deg, #fff, #ffe9ee); box-shadow: inset 0 1px #fff, 0 3px 8px #b5243d12; }
+.app-shell .exam-catalog.ielts-catalog-panel,
+.app-shell .exam-catalog.mock-ielts-glass { padding: clamp(18px, 2.2vw, 30px); border-radius: 27px; border: 1px solid #fffffff2; background: var(--catalog-panel); box-shadow: var(--catalog-shadow); }
+.app-shell .exam-catalog .exam-catalog-heading :is(h1, h2),
+.app-shell .exam-catalog .ielts-catalog-header h2 { font-size: clamp(21px, 2vw, 28px); letter-spacing: -.04em; }
+.app-shell .exam-catalog .exam-catalog-search { height: 44px; border-radius: 13px; }
+.app-shell .exam-catalog .ielts-catalog-filters { margin-top: 20px; gap: 4px; padding: 5px; border-radius: 14px; background: #d0d9e84d; }
+.app-shell .exam-catalog .ielts-catalog-filters button { min-height: 38px; padding: 7px 16px; }
+.app-shell .exam-catalog .ielts-catalog-filters button[aria-pressed='true'] { color: #ba1833; background: linear-gradient(145deg, #fff, #fff0f4); }
+.app-shell .exam-catalog .exam-catalog-grid,
+.app-shell .exam-catalog .ielts-catalog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); align-items: stretch; gap: 18px; margin-top: 21px; }
+.app-shell .exam-catalog.exam-catalog .exam-catalog-card {
+  display: flex; flex-direction: column; min-width: 0; min-height: 205px; padding: 23px; border: 1px solid #fff; border-bottom-color: #b5c1d599; border-radius: 24px;
+  background: var(--catalog-glass); box-shadow: var(--catalog-shadow); contain-intrinsic-size: auto 220px;
+  -webkit-backdrop-filter: blur(16px) saturate(120%); backdrop-filter: blur(16px) saturate(120%);
+}
+.app-shell .exam-catalog.exam-catalog .exam-catalog-card.ielts-catalog-card { min-height: 205px; padding: 23px; border-radius: 24px; background: var(--catalog-glass); box-shadow: var(--catalog-shadow); }
+.app-shell .exam-catalog .exam-catalog-card::before { display: none; }
+.app-shell .exam-catalog .exam-card-head { gap: 10px; }
+.app-shell .exam-catalog .exam-card-number { display: inline; width: auto; min-width: 0; height: auto; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; color: #d52037; font-size: 10px; font-weight: 850; letter-spacing: .14em; }
+.app-shell .ielts-catalog-card .exam-card-number::before { content: 'IELTS '; }
+.app-shell #listening .exam-card-number::before { content: 'IELTS LISTENING '; }
+.app-shell #reading .exam-card-number::before { content: 'IELTS READING '; }
+.app-shell #writing .exam-card-number::before { content: 'IELTS WRITING '; }
+.app-shell #speaking .exam-card-number::before { content: 'IELTS SPEAKING '; }
+.app-shell .exam-catalog .exam-card-head .study-access-chip { padding: 3px 7px; border-color: #eabcc65c; background: #fff9fba6; color: #ae1e37; }
+.app-shell .exam-catalog .exam-catalog-title { margin-top: 16px; font-size: clamp(19px, 1.5vw, 23px); font-weight: 800; letter-spacing: -.04em; line-height: 1.28; color: #172030; }
+/* Titles carry the meaning; repeated promotional descriptions have no place in cards. */
+.app-shell .exam-catalog :is(.exam-card-subtitle, .exam-catalog-title + p) { display: none; }
+.app-shell .exam-catalog .exam-card-meta { gap: 6px 12px; margin-top: 17px; color: #5b6b80; font-size: 12px; }
+.app-shell .exam-catalog .exam-card-foot { padding-top: 17px; margin-top: auto; border-top: 1px solid var(--catalog-line); }
+.app-shell .exam-catalog .exam-card-score { font-size: 11px; gap: 4px 6px; }
+.app-shell .exam-catalog .exam-card-score strong { color: #a81a35; font-size: 17px; }
+.app-shell .exam-catalog .exam-catalog-action { min-height: 38px; padding: 8px 13px; border: 1px solid #c6214080; border-radius: 11px; color: #fff; background: var(--catalog-crimson); box-shadow: 0 5px 12px #b1243e26, inset 0 1px #ffffff70; font-size: 12px; }
+.app-shell .exam-catalog .exam-catalog-card.is-completed .exam-catalog-action { color: #b51c35; border-color: #e3b7c1; background: linear-gradient(145deg, #fff, #fff0f3); }
+.app-shell .exam-catalog .exam-catalog-card.is-split { padding: 0; }
+.app-shell .exam-catalog .exam-card-main { padding: 23px; }
+.app-shell .exam-catalog .exam-card-links { background: #ffffff52; }
+.app-shell .exam-catalog .exam-card-links > button { min-height: 42px; padding-inline: 23px; }
+.app-shell .exam-catalog .exam-catalog-card:not(.is-split) > :nth-last-child(2),
+.app-shell .exam-catalog .exam-card-main > :nth-last-child(2) { margin-bottom: 18px; }
+/* The committed catalog markup also uses the original card/footer class names. */
+.app-shell .exam-catalog .exam-catalog-card-top { min-height: 36px; }
+.app-shell .exam-catalog .exam-catalog-icon { width: 36px; height: 36px; border-radius: 11px; color: #ce2037; }
+.app-shell .exam-catalog .exam-catalog-card-footer { padding-top: 20px; }
+/* Full mocks share the material and density, retaining every real section state and action. */
+.app-shell .exam-catalog.mock-ielts-glass .mock-ielts-rows { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 18px; }
+.app-shell .exam-catalog.mock-ielts-glass .mock-ielts-rows .mock-ielts-row {
+  display: grid; min-width: 0; padding: 22px; gap: 16px 12px; border: 1px solid #fffffff2; border-bottom-color: #b5c1d599; border-radius: 24px;
+  background: var(--catalog-glass); box-shadow: var(--catalog-shadow);
+}
+.app-shell .mock-ielts-row-title h2 { font-size: 21px; letter-spacing: -.04em; }
+.app-shell .mock-ielts-row-index { color: #bd1936; background: linear-gradient(145deg, #fff, #edf1f7); border-color: #fff; box-shadow: inset 0 1px #fff; }
+.app-shell .mock-ielts-row-skills { gap: 5px; }
+.app-shell .mock-ielts-skill { font-size: 10.5px; padding: 8px 4px; }
+.app-shell .mock-ielts-card-actions button { min-height: 42px; border-radius: 11px; }
+.app-shell .mock-ielts-glass-open.is-primary { color: #fff; background: var(--catalog-crimson); }
+@media (hover: hover) and (pointer: fine) {
+  .app-shell .exam-catalog.exam-catalog .exam-catalog-card:hover,
+  .app-shell .exam-catalog.mock-ielts-glass .mock-ielts-row:hover { border-color: #e9abb9; box-shadow: 0 20px 35px -22px #a3244666, inset 0 2px #fff, inset 0 -1px #b5c1d566; }
+}
+@media (max-width: 640px) {
+  .app-shell #ielts-skill-tabs .exam-section-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; overflow: visible; }
+  .app-shell #ielts-skill-tabs .exam-section-tabs > button { min-width: 0; min-height: 52px; padding: 8px 4px; display: flex; flex-direction: column; gap: 5px; }
+  .app-shell .exam-library-nav .exam-section-tabs[aria-label]:has(#sat-tab-mocks) { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; overflow: visible; }
+  .app-shell .exam-library-nav .exam-section-tabs > [id^='sat-tab-'] { min-width: 0; min-height: 54px; padding: 7px 3px; display: flex; flex-direction: column; gap: 5px; white-space: normal; text-align: center; }
+  .app-shell .exam-library-nav .exam-section-tabs > [id^='sat-tab-'] strong { font-size: 11px; line-height: 1.25; }
+  .app-shell .exam-catalog.ielts-catalog-panel, .app-shell .exam-catalog.mock-ielts-glass { padding: 15px; border-radius: 22px; }
+  .app-shell .exam-catalog .exam-catalog-grid, .app-shell .exam-catalog .ielts-catalog-grid { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .app-shell .exam-catalog.exam-catalog .exam-catalog-card, .app-shell .exam-catalog.exam-catalog .exam-catalog-card.ielts-catalog-card { min-height: 190px; padding: 20px; border-radius: 21px; }
+  .app-shell .exam-catalog .exam-catalog-card.is-split { padding: 0; }
+  .app-shell .exam-catalog .exam-card-main { padding: 20px; }
+  .app-shell .exam-catalog .ielts-catalog-filters { display: flex; flex-wrap: wrap; width: 100%; gap: 4px; }
+  .app-shell .exam-catalog .ielts-catalog-filters button { flex: 1 1 auto; min-height: 40px; padding: 7px 10px; }
+  .app-shell .exam-catalog .exam-catalog-tools, .app-shell .exam-catalog .exam-catalog-search-field { width: 100%; }
+  .app-shell .exam-catalog.mock-ielts-glass .mock-ielts-rows { grid-template-columns: minmax(0, 1fr); }
+  .app-shell .exam-library-nav .exam-section-tabs > button { min-height: 46px; padding: 8px 10px; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .app-shell .exam-catalog.exam-catalog .exam-catalog-card, .app-shell .exam-catalog.mock-ielts-glass .mock-ielts-row { background: #f4f7fc; backdrop-filter: none; }
+}
+@media (forced-colors: active) {
+  .app-shell .exam-catalog.exam-catalog .exam-catalog-card, .app-shell .exam-library-nav, .app-shell .exam-catalog.mock-ielts-glass .mock-ielts-row { background: Canvas; border: 1px solid CanvasText; box-shadow: none; }
+}

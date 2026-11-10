@@ -45,8 +45,8 @@ export function TopNavigation({ withSidebar = false }: { withSidebar?: boolean }
   // The exam tracks live behind a "Prep" dropdown so the bar stays clean while
   // still giving one-click access to every prep path from the dashboard.
   const prepItems = [
-    { label: 'IELTS Prep', path: '/ielts', icon: BookOpen },
-    { label: 'SAT Prep', path: '/sat', icon: GraduationCap },
+    { label: 'IELTS Prep', path: '/ielts/tests', icon: BookOpen },
+    { label: 'SAT Prep', path: '/sat/mocks', icon: GraduationCap },
     { label: 'Test Library', path: '/ielts/tests', icon: Library },
   ] as const
   const prepActive = ['/ielts', '/sat', '/tests'].some((p) => location.pathname.startsWith(p))

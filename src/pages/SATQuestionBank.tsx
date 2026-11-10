@@ -1,9 +1,9 @@
 import { useCopy } from '@/i18n/interface'
+import SATSectionTabs from '@/components/sat/SATSectionTabs'
 import UiText from '@/components/common/UiText'
 import ConfirmDialog from '@/components/common/ConfirmDialog'
 import { useEffect, useMemo, useState } from 'react'
 import {
-  ArrowLeft,
   ArrowRight,
   BarChart3,
   BookOpenCheck,
@@ -307,9 +307,8 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
     <main className="workspace-page sat-bank-page">
       <ConfirmDialog open={replaceSetOpen} title={uiCopy("Replace your unfinished practice set?")} description={uiCopy("Starting a new set deletes the answers and notes from your unfinished set. Your completed practice results are kept.")} confirmLabel={uiCopy("Replace & start again")} cancelLabel="Keep saved set" destructive onClose={() => setReplaceSetOpen(false)} onConfirm={() => { setReplaceSetOpen(false); start(true) }} />
       <div className="sat-bank-wrap">
-        <button type="button" className="sat-bank-back" onClick={() => navigate('/sat')}>
-          <ArrowLeft size={16} /> <UiText text={"SAT Arena"} />
-        </button>
+        <SATSectionTabs section="question-bank" />
+        <div id="sat-test-panel" role="tabpanel" aria-labelledby="sat-tab-question-bank" tabIndex={0}>
         <header className="sat-bank-hero">
           <div className="sat-bank-hero-copy">
             <span className="sat-bank-eyebrow-pill"><Filter size={14} /> <UiText text={"TARGETED SAT PRACTICE"} /></span>
@@ -587,6 +586,7 @@ function QuestionBankWorkspace({ userId }: { userId: string }) {
             </aside>
           </div>
         )}
+        </div>
       </div>
     </main>
   )

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { MemoryRouter } from 'react-router-dom'
-import IELTS from '@/pages/IELTS'
+import DashboardExamOverview from '@/components/dashboard/DashboardExamOverview'
 import { useAuthStore } from '@/store/authStore'
 import { useSpeakingStore, type SpeakingSessionRecord } from '@/store/speakingStore'
 import type { AuthUser } from '@/types/platform'
@@ -19,26 +19,31 @@ export async function run() {
   const element = document.getElementById('root')!
   const root = createRoot(element)
   const storage = accountStorageFor(owner)
-  const bands = () => [...element.querySelectorAll('h2')]
-    .filter((node) => node.textContent?.startsWith('IELTS '))
-    .map((node) => node.closest('button')?.querySelector('[aria-label^="Band "] strong')?.textContent ?? null)
-  const assertFirstTests = (skills: string[]) => {
-    for (const skill of ['Listening', 'Reading', 'Writing', 'Speaking']) {
-      assert.equal(element.textContent?.includes(`Start your first ${skill} test`), skills.includes(skill))
+  function Overview() {
+    const user = useAuthStore(state => state.user)
+    return <DashboardExamOverview owner={user?.id ?? 'guest'} ielts={0} sat={0} />
+  }
+  const bands = () => [...element.querySelectorAll('.dashboard-exam-overview:first-child .dashboard-exam-skills strong')]
+    .map(node => node.textContent === '—' ? null : node.textContent)
+  const assertUnscored = (skills: string[]) => {
+    const rows = [...element.querySelectorAll('.dashboard-exam-overview:first-child .dashboard-exam-skills button')]
+    for (const row of rows) {
+      const name = row.querySelector('span')?.textContent ?? ''
+      assert.equal(row.querySelector('strong')?.textContent === '—', skills.includes(name))
     }
   }
   try {
-    await act(async () => root.render(<MemoryRouter><IELTS /></MemoryRouter>))
+    await act(async () => root.render(<MemoryRouter><Overview /></MemoryRouter>))
     assert.deepEqual(bands(), [null, null, null, null], 'missing results stay unscored')
-    assertFirstTests(['Listening', 'Reading', 'Writing', 'Speaking'])
+    assertUnscored(['Listening', 'Reading', 'Writing', 'Speaking'])
     await act(async () => {
       saveFullMockSectionResult('full-mock-1', 'listening', { band: 7.5, completedAt: '2026-10-20T10:00:00Z', testId: 'listening-test' })
       saveFullMockSectionResult('full-mock-1', 'reading', { band: 6.5, completedAt: '2026-10-20T11:00:00Z', testId: 'reading-test' })
     })
     assert.deepEqual(bands(), ['7.5', '6.5', null, null], 'mock sections appear without visiting Results or reloading')
-    assertFirstTests(['Writing', 'Speaking'])
-    assert.ok(element.textContent?.includes('2/4 skills scored'))
-    assert.ok(element.querySelector('[aria-label="Overall 7.0"]'), 'unplayed skills are excluded from the average')
+    assertUnscored(['Writing', 'Speaking'])
+    assert.equal(bands().filter(value => value !== null).length, 2)
+    assert.ok(element.querySelector('[aria-label="IELTS 7.0 / 9"]'), 'unplayed skills are excluded from the average')
     await act(async () => {
       // The best score wins regardless of date or storage order.
       storage.setItem(`smarttest-reading-analysis-history-v1:${owner}`, JSON.stringify([
@@ -57,8 +62,8 @@ export async function run() {
       ] as SpeakingSessionRecord[] })
     })
     assert.deepEqual(bands(), ['8.0', '8.0', '7.0', '8.0'], 'all four skills use their highest band and full Writing uses its combined band')
-    assertFirstTests([])
-    assert.ok(element.querySelector('[aria-label="Overall 8.0"]'), 'overall rounds the average of the four personal bests')
+    assertUnscored([])
+    assert.ok(element.querySelector('[aria-label="IELTS 8.0 / 9"]'), 'overall rounds the average of the four personal bests')
     await act(async () => saveFullMockSectionResult('full-mock-2', 'listening', { band: 0, completedAt: '2026-10-22T10:00:00Z', testId: 'blank-listening' }))
     assert.deepEqual(bands(), ['8.0', '8.0', '7.0', '8.0'], 'a newer low mock score cannot replace a personal best')
     await act(async () => storage.setItem('smarttest:full-mock-history:v1:full-mock-1', JSON.stringify([
@@ -68,13 +73,13 @@ export async function run() {
     assert.deepEqual(getIeltsHubScores('another-account', []), { listening: null, reading: null, writing: null, speaking: null }, 'results belong only to their account')
     await act(async () => useAuthStore.setState({ user: { id: 'another-account' } as AuthUser }))
     assert.deepEqual(bands(), [null, null, null, null], 'switching accounts clears all displayed bands')
-    assertFirstTests(['Listening', 'Reading', 'Writing', 'Speaking'])
+    assertUnscored(['Listening', 'Reading', 'Writing', 'Speaking'])
     await act(async () => saveFullMockSectionResult('full-mock-1', 'reading', { band: 0, completedAt: '2026-10-23T10:00:00Z', testId: 'blank-reading' }))
     assert.deepEqual(bands(), [null, '0.0', null, null], 'a completed zero-band test is different from an unplayed test')
-    assertFirstTests(['Listening', 'Writing', 'Speaking'])
-    assert.ok(element.textContent?.includes('1/4 skills scored'))
-    assert.ok(element.querySelector('[aria-label="Overall 0.0"]'))
-    console.log('PASS: best bands across all four skills, mock archives, combined Writing, first-test prompts, overall average, zero scores and account isolation')
+    assertUnscored(['Listening', 'Writing', 'Speaking'])
+    assert.equal(bands().filter(value => value !== null).length, 1)
+    assert.ok(element.querySelector('[aria-label="IELTS 0.0 / 9"]'))
+    console.log('PASS: best bands across all four skills, mock archives, combined Writing, unscored states, dashboard overall average, zero scores and account isolation')
   } finally {
     await act(async () => root.unmount())
     useAuthStore.setState({ user: null })

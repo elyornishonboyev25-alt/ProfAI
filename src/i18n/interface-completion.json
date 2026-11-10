@@ -1,4 +1,6 @@
 {
+  "days to go": { "uz": "kun qoldi", "ru": "дней осталось" },
+  "Current": { "uz": "Hozirgi", "ru": "Текущий" },
   "Preparing your improved answer...": { "uz": "Javobingizning yaxshilangan varianti tayyorlanmoqda...", "ru": "Готовим улучшенный вариант вашего ответа..." },
   "Could not load this profile.": { "uz": "Profil ma’lumotlarini yuklab bo‘lmadi.", "ru": "Не удалось загрузить профиль." },
   "All matches": { "uz": "Barcha natijalar", "ru": "Все результаты" },

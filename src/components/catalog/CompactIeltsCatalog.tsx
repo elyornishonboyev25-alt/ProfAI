@@ -13,7 +13,6 @@ import {
   CheckCircle2,
   Clock3,
   Headphones,
-  Lock,
   Mic2,
   PenLine,
   Search,
@@ -29,7 +28,7 @@ export type CompactIeltsTestRow = IeltsCatalogResult & {
   subtitle: string
   badge: string
   durationMinutes?: number
-  detail: string
+  detail?: string
   available: boolean
   result?: CatalogResult
 }
@@ -192,51 +191,48 @@ export default function CompactIeltsCatalog({
             <UiText text={"No tests found."} />
           </div>
         ) : (
-          <div className="ielts-catalog-grid relative mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {rows.map((row) => (
-              <button
-                key={row.id}
-                type="button"
-                disabled={!row.available}
-                onClick={() => { if (studyAccess.open(`test:${section}:${row.id}`)) onLaunch(row) }}
-                className={`exam-catalog-card ielts-catalog-card group ${row.completed ? 'is-completed' : ''}`}
-              >
-                <div className="exam-catalog-card-top">
-                  <span className="exam-catalog-icon" aria-hidden="true"><HeroIcon size={21} strokeWidth={1.7} /></span>
-                  <span className="exam-catalog-number">{String(row.number).padStart(2, '0')}</span>
-                  <StudyAccessChip resource={`test:${section}:${row.id}`} />
-                </div>
-                <div className="exam-catalog-card-state">
-                  {row.completed ? (
-                    <span className="exam-catalog-status is-completed">
-                      <CheckCircle2 className="h-3.5 w-3.5" />
-                      {row.band !== undefined && <strong><UiText text={"Band"} /> {row.band.toFixed(1)} ·</strong>}
-                      <UiText text={"Completed"} /> </span>
-                  ) : row.progressLabel ? (
-                    <span className="exam-catalog-status is-progress"><UiText text={row.progressLabel} /></span>
-                  ) : !row.available ? (
-                    <Lock className="h-5 w-5 shrink-0 text-slate-400" />
-                  ) : null}
-                </div>
-                <h3 className="exam-catalog-title mt-3 font-black tracking-[-0.04em] text-slate-950">{row.title}</h3>
-                <p className="mt-2 line-clamp-2 text-sm font-medium leading-6 text-slate-500">{row.subtitle}</p>
-                {row.result ? <CatalogScore {...row.result} /> : row.band !== undefined ? <CatalogScore score={row.band} maximum={9} label={uiCopy("Band score")} detail={row.scoreLabel} /> : row.scoreLabel ? (() => {
-                  const count = /^(\d+)\/(\d+) correct$/.exec(row.scoreLabel)
-                  return count && Number(count[2]) > 0 ? <CatalogScore score={Number(count[1])} maximum={Number(count[2])} label={uiCopy("Correct answers")} detail={row.scoreLabel} completed={!!row.completed} /> : <p className="mt-2 text-sm font-bold text-slate-600"><UiText text={row.scoreLabel} /></p>
-                })() : null}
-
-                <div className="exam-catalog-card-footer mt-auto flex flex-wrap items-end justify-between gap-4 pt-7">
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-bold text-slate-500">
-                    {row.durationMinutes ? <span className="inline-flex items-center gap-1.5"><Clock3 className="h-4 w-4" />{row.durationMinutes}  <UiText text={"min"} /> </span> : null}
-                    <span><UiText text={row.detail} /></span>
+          <div className="test-card-grid mt-5">
+            {rows.map((row) => {
+              const correct = row.band === undefined && row.scoreLabel ? /^(\d+)\/(\d+) correct$/.exec(row.scoreLabel) : null
+              const topic = row.badge !== 'Full test' && (section === 'writing' || section === 'speaking')
+                ? row.subtitle.replace(/^(?:Task [12]|Part [123]) · /, '')
+                : null
+              return (
+                <button
+                  key={row.id}
+                  type="button"
+                  disabled={!row.available}
+                  onClick={() => { if (studyAccess.open(`test:${section}:${row.id}`)) onLaunch(row) }}
+                  className="test-card ielts-catalog-card"
+                >
+                  <div className="test-card-heading">
+                    <span className="test-card-icon"><HeroIcon size={21} strokeWidth={1.7} aria-hidden="true" /></span>
+                    <h3 className="test-card-title">{row.title}</h3>
                   </div>
-                  <span className={`exam-catalog-action inline-flex items-center gap-1.5 text-sm font-black ${row.available ? 'text-red-700' : 'text-amber-600'}`}>
-                    {row.available ? row.completed ? <UiText text={"Retake"} /> : <UiText text={"Open"} /> : <UiText text={"Coming soon"} />}
-                    {row.available ? <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /> : null}
+                  <div className="test-card-tags">
+                    <StudyAccessChip resource={`test:${section}:${row.id}`} />
+                    {row.completed ? (
+                      <span className="test-card-chip is-done"><CheckCircle2 size={14} aria-hidden="true" /><UiText text="Completed" /></span>
+                    ) : row.progressLabel ? (
+                      <span className="test-card-chip is-progress"><UiText text={row.progressLabel} /></span>
+                    ) : null}
+                  </div>
+                  {topic && <p className="test-card-note"><UiText text={topic} /></p>}
+                  {(row.durationMinutes || row.detail) && <div className="test-card-meta">
+                    {row.durationMinutes ? <span><Clock3 size={15} aria-hidden="true" />{row.durationMinutes} <UiText text="min" /></span> : null}
+                    {row.detail && <span><UiText text={row.detail} /></span>}
+                  </div>}
+                  {row.result ? <CatalogScore {...row.result} /> : row.band !== undefined ? <CatalogScore score={row.band} maximum={9} label={uiCopy('Band')} detail={row.scoreLabel} /> : correct && Number(correct[2]) > 0 ? (
+                    <CatalogScore score={Number(correct[1])} maximum={Number(correct[2])} label={uiCopy('Correct answers')} band={false} />
+                  ) : row.scoreLabel ? <span className="test-card-note"><UiText text={row.scoreLabel} /></span> : null}
+
+                  <span className="test-card-action">
+                    <UiText text={row.available ? row.completed ? 'Retake' : 'Open' : 'Coming soon'} />
+                    {row.available && <ArrowRight size={16} aria-hidden="true" />}
                   </span>
-                </div>
-              </button>
-            ))}
+                </button>
+              )
+            })}
           </div>
         )}
       </section>

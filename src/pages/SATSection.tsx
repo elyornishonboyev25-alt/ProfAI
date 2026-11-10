@@ -35,12 +35,13 @@ export default function SATSection() {
 
   const activeTab = tabs.find((tab) => tab.id === section)!
   const isFullMock = section === 'mocks'
+  const testLabel = isFullMock ? 'Full Mock' : 'Practice Test'
   const tests = Object.values(SAT_TEST_CATALOG)
     .sort((a, b) => a.mockId - b.mockId)
     .map((test) => getSATSessionTest(test.mockId, isFullMock ? null : section))
   const query = search.trim().toLowerCase()
   const visibleTests = tests.filter((test) =>
-    `${test.mockId} ${isFullMock ? 'Full Mock' : 'Practice Test'} ${test.title} ${test.badge} ${test.subtitle}`.toLowerCase().includes(query),
+    `${testLabel} ${test.mockId} ${uiCopy(testLabel)} ${test.mockId} ${test.title} ${test.badge} ${test.subtitle} ${uiCopy(test.difficulty)}`.toLowerCase().includes(query),
   )
   const testAttempts = tests.map((test) => ({ test, attempt: loadSATAttempt(test.id) }))
   const attemptsByTestId = new Map(testAttempts.map(({ test, attempt }) => [test.id, attempt]))
@@ -79,7 +80,7 @@ export default function SATSection() {
             {visibleTests.length === 0 ? (
               <div className="relative mt-5 rounded-[1.75rem] border border-dashed border-blue-200 bg-white/64 px-4 py-12 text-center text-sm font-semibold text-slate-500"><UiText text={"No tests found."} /></div>
             ) : (
-              <div className="exam-catalog-grid relative mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              <div className="test-card-grid mt-5">
                 {visibleTests.map((test) => {
                   const attempt = attemptsByTestId.get(test.id)
                   const completed = attempt?.status === 'submitted' || completedTestIds.has(test.id)
@@ -93,54 +94,39 @@ export default function SATSection() {
                   const score = report ? isFullMock ? report.midpoint : Math.round((scoreRange![0] + scoreRange![1]) / 20) * 10 : null
                   const answered = Object.values(attempt?.answers ?? {}).filter((answer) => answer.trim()).length
                   const note = satAvailabilityNote(test)
-                  const expectedModules = isFullMock ? 4 : 2
-                  const readyModules = test.modules.length
                   const durationMinutes = Math.round(test.totalDurationSeconds / 60)
                   const duration = durationMinutes >= 60
                     ? `${Math.floor(durationMinutes / 60)}h${durationMinutes % 60 ? ` ${durationMinutes % 60}m` : ''}`
-                    : `${durationMinutes}m`
-                  const cardSections = tabs.filter((tab) => (tab.id === 'math' || tab.id === 'reading-writing') && (isFullMock || tab.id === section))
+                    : `${durationMinutes} ${uiCopy('min')}`
+                  const version = test.badge.replace(/^Free Test · /, '').replace(/ · (Math|Reading & Writing)$/, '')
                   const destination = `/mock/sat/${test.mockId}${isFullMock ? '' : `?section=${section}`}`
-                  const action = attempt?.status === 'active' ? 'Continue' : attempt?.status === 'submitted' ? 'Review' : 'Open'
+                  const active = attempt?.status === 'active'
+                  const action = active ? 'Continue' : attempt?.status === 'submitted' ? 'Review' : 'Open'
 
                   return (
                     <button key={test.id} type="button" onClick={() => { if (attempt?.status === 'submitted' || studyAccess.open(`mock:sat:${test.mockId}`)) navigate(destination, { state: { from: `/sat/${section}` } }) }}
-                      className="exam-catalog-card ielts-catalog-card mock-ielts-glass-card group relative flex min-h-[14.5rem] w-full flex-col overflow-hidden p-5 text-left transition-[border-color,box-shadow,transform] duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-100 sm:p-6">
-                      <div className="exam-catalog-card-top">
-                        <span className="exam-catalog-icon" aria-hidden="true"><activeTab.icon size={21} strokeWidth={1.7} /></span>
-                        <span className="exam-catalog-number">{String(test.mockId).padStart(2, '0')}</span>
+                      className="test-card">
+                      <div className="test-card-heading">
+                        <span className="test-card-icon"><activeTab.icon size={21} strokeWidth={1.7} aria-hidden="true" /></span>
+                        <h2 className="test-card-title"><UiText text={testLabel} /> {test.mockId}</h2>
+                      </div>
+                      <div className="test-card-tags">
                         <StudyAccessChip resource={`mock:sat:${test.mockId}`} />
+                        <span className="test-card-chip"><UiText text={test.difficulty} /></span>
+                        {completed && <span className="test-card-chip is-done" data-sat-completed><CheckCircle2 size={14} aria-hidden="true" /><UiText text="Completed" /></span>}
                       </div>
-                      <div className="exam-catalog-card-state">
-                        <div className="flex flex-wrap items-center gap-2">
-                          {completed ? <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-300 bg-emerald-100 px-2.5 py-1 text-[10px] font-black text-emerald-800" data-sat-completed>
-                            <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" /><UiText text="Completed" />
-                          </span> : null}
-                          <span className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-black ${note ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
-                            <CheckCircle2 className="h-3.5 w-3.5" /> {readyModules}/{expectedModules} <UiText text={"ready"} />
-                          </span>
-                        </div>
+                      <p className="test-card-note"><UiText text={version} /></p>
+                      <div className="test-card-meta">
+                        <span><Clock3 size={15} aria-hidden="true" />{duration}</span>
+                        <span>{test.questionCount} <UiText text="questions" /></span>
                       </div>
-                      <h2 className="exam-catalog-title mt-3 text-2xl font-black tracking-[-0.04em] text-slate-950">{isFullMock ? <UiText text={"Full Mock"} /> : <UiText text={"Practice Test"} />} {test.mockId}</h2>
-                      <p className="mt-2 line-clamp-2 text-sm font-medium leading-6 text-slate-500">{test.badge}</p>
+                      {note && <p className="test-card-note is-warning"><UiText text={note} /></p>}
                       {report && score !== null ? <CatalogScore score={score} maximum={isFullMock ? 1600 : 800} label={scoredTest?.id === test.id ? uiCopy("Estimated score") : uiCopy("Previous version score")} detail={`${report.correct}/${scoredTest?.questionCount ?? test.questionCount} correct`} /> : null}
-                      <div className="mt-4 flex flex-wrap gap-1.5" aria-label={uiCopy("SAT sections")}>
-                        {cardSections.map(({ id, label, icon: Icon }) => (
-                          <span key={id} title={label} className="inline-flex items-center gap-1 rounded-lg border border-red-100 bg-white/90 px-2 py-1 text-[11px] font-bold text-red-700">
-                            <Icon className="h-3.5 w-3.5" /> {id === 'math' ? <UiText text={"Math"} /> : <UiText text={"R&W"} />}
-                          </span>
-                        ))}
-                        <span className="self-center text-[11px] font-bold text-slate-500">{test.modules.length} <UiText text={"modules ·"} /> {test.questionCount} <UiText text={"questions"} /></span>
-                      </div>
-                      {note ? <p className="mt-2 text-xs font-semibold text-amber-700"><UiText text={note} /></p> : null}
-                      {attempt ? <div className="mt-4" aria-label={uiCopy("{{value1}} of {{value2}} questions answered", { value1: String(answered), value2: String(test.questionCount) })}>
-                        <div className="flex justify-between text-[11px] font-bold text-slate-500"><span>{attempt.status === 'submitted' ? <UiText text={"Completed"} /> : <UiText text={"Saved progress"} />}</span><span>{answered}/{test.questionCount}</span></div>
-                        <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-200"><div className="h-full rounded-full bg-gradient-to-r from-red-700 to-red-400" style={{ width: `${Math.min(100, (answered / Math.max(1, test.questionCount)) * 100)}%` }} /></div>
-                      </div> : null}
-                      <div className="exam-catalog-card-footer mt-auto flex flex-wrap items-end justify-between gap-3 pt-6">
-                        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500"><Clock3 className="h-4 w-4" /> {duration} <UiText text={"session"} /></span>
-                        <span className="exam-catalog-action inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-black"><UiText text={action} /><ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1 motion-reduce:transform-none" /></span>
-                      </div>
+                      {active && <div className="test-card-progress">
+                        <span><UiText text="Saved progress" /></span><span>{answered}/{test.questionCount}</span>
+                        <progress value={answered} max={Math.max(1, test.questionCount)} aria-label={uiCopy('Saved progress')} />
+                      </div>}
+                      <span className="test-card-action"><UiText text={action} /><ArrowRight size={16} aria-hidden="true" /></span>
                     </button>
                   )
                 })}

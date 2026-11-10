@@ -83,7 +83,7 @@ export default function IELTSSectionTests({ sectionOverride, embedded = false }:
           scoreLabel: undefined,
           ...objectiveCatalogResult(history, row.id, track === 'listening' ? 4 : 3, partNumber, mockResults),
           durationMinutes: track === 'reading' ? 20 : undefined,
-          detail: `Part ${partNumber} · focused practice`,
+          detail: undefined,
         }))
       : rows
     const query = deferredSearchTerm.trim().toLowerCase()

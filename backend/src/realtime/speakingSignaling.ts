@@ -344,7 +344,11 @@ async function changeDiscussion(client: Client, roomId: string, messageId: strin
 }
 
 function attach(server: Server, authenticate?: CommunityAuthenticator, blockStore?: CommunityBlockStore) {
-  const wss = new WebSocketServer({ server, path: '/ws/speaking', maxPayload: 1_000_000 })
+  const wss = new WebSocketServer({ noServer: true, maxPayload: 1_000_000 })
+  server.on('upgrade', (request, socket, head) => {
+    if (request.url?.split('?')[0] !== '/ws/speaking') return
+    wss.handleUpgrade(request, socket, head, client => wss.emit('connection', client, request))
+  })
   attachCommunitySignaling(wss, authenticate, blockStore)
   const alive = new WeakSet<WebSocket>()
   const heartbeat = setInterval(() => {

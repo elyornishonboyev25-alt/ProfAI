@@ -7,11 +7,13 @@ import { attachSpeakingSignaling } from './realtime/speakingSignaling.js'
 import { startTelegramBot } from './services/telegram.service.js'
 import { verifyAccessToken } from './utils/jwt.js'
 import { acquireSessionUsage } from './services/authActivity.service.js'
+import { attachGeminiVoice, probeGeminiLive } from './services/geminiLive.service.js'
 
 async function bootstrap() {
   await runStartupHealthChecks()
 
   const httpServer = http.createServer(app)
+  attachGeminiVoice(httpServer)
   // Live-partner speaking matchmaking + WebRTC signaling at ws://<host>/ws/speaking
   attachSpeakingSignaling(httpServer, async token => {
     const payload = verifyAccessToken(token)
@@ -34,6 +36,7 @@ async function bootstrap() {
   const server = httpServer.listen(env.PORT, () => {
     console.log(`Ivygoo API running on http://localhost:${env.PORT}`)
     console.log('Speaking signaling WebSocket ready at /ws/speaking')
+    void probeGeminiLive()
     void startTelegramBot().catch(error => console.error('Telegram bot failed to start:', error instanceof Error ? error.message : error))
   })
 

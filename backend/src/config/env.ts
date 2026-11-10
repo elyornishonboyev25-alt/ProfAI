@@ -47,6 +47,8 @@ const envSchema = z.object({
   GEMINI_MODELS: z.string().default('gemini-2.5-flash,gemini-2.5-flash-lite'),
   GEMINI_ASSESSMENT_MODEL: z.string().trim().min(1).default('gemini-3.1-pro-preview'),
   GEMINI_TTS_MODEL: z.string().default('gemini-3.8-flash-tts'),
+  GEMINI_LIVE_MODEL: z.string().trim().min(1).default('gemini-3.8-live'),
+  AI_VOICE_PROVIDER: z.enum(['auto', 'gemini', 'openai']).default('auto'),
   AI_PROVIDER_TIMEOUT_MS: z.coerce.number().int().positive().max(120_000).default(30_000),
   AI_RATE_LIMIT_MAX: z.coerce.number().int().positive().max(300).default(30),
   HF_ACCESS_TOKEN: z.string().default(''),

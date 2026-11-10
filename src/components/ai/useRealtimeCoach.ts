@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { RealtimeCoach } from '@/lib/realtimeCoach'
+import { GeminiRealtimeCoach } from '@/lib/geminiRealtimeCoach'
 import { useAiAssistantStore, type AiAssistantMessage } from '@/store/aiAssistantStore'
 import { useAuthStore } from '@/store/authStore'
 import { createAiThread, persistAiMessage } from '@/services/aiWorkspacePersistence'
@@ -9,9 +10,9 @@ import { composeScreenContext } from '@/services/ai/screenCapture'
 import { describeRelevantSiteKnowledge } from '@/services/ai/siteKnowledge'
 import type { AiTutorController } from './useAiTutor'
 
-export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mode: 'coach' | 'examiner') {
+export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mode: 'coach' | 'examiner', provider: 'gemini' | 'openai' = 'openai') {
   const location = useLocation()
-  const connection = useRef<RealtimeCoach | null>(null)
+  const connection = useRef<RealtimeCoach | GeminiRealtimeCoach | null>(null)
   const latest = useRef(tutor); latest.current = tutor
   const [error, setError] = useState<string | null>(null)
   const [caption, setCaption] = useState('')
@@ -20,7 +21,9 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
   const [speechSpeed, setSpeechSpeedState] = useState(1.1)
   const speedRef = useRef(speechSpeed); speedRef.current = speechSpeed
   const currentPath = useRef(location.pathname); currentPath.current = location.pathname
-  const supported = typeof RTCPeerConnection !== 'undefined' && Boolean(navigator.mediaDevices?.getUserMedia)
+  const supported = Boolean(navigator.mediaDevices?.getUserMedia) && (provider === 'gemini'
+    ? typeof AudioContext !== 'undefined' && typeof AudioWorkletNode !== 'undefined' && typeof WebSocket !== 'undefined'
+    : typeof RTCPeerConnection !== 'undefined')
   const conversationKey = tutor.activeThread?.clientId ?? tutor.activeThreadId
 
   useEffect(() => {
@@ -48,6 +51,11 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
       let savingMessages = Promise.resolve()
       const record = (role: 'user' | 'assistant', text: string, id: string, interrupted = false) => {
         if (useAuthStore.getState().user?.id !== userId) return
+        if (!text.trim()) {
+          previews.delete(`voice-${id}`); drafts.delete(`voice-${id}`)
+          useAiAssistantStore.getState().removeMessage(ownerKey, threadId, `voice-${id}`)
+          return
+        }
         const message: AiAssistantMessage = { id: `voice-${id}`, role, content: text, createdAt: new Date().toISOString(), delivery: 'voice', ...(interrupted ? { status: 'interrupted' } : {}) }
         previews.delete(message.id); drafts.delete(message.id)
         // Replace a live draft in place and explicitly clear its streaming flag.
@@ -73,7 +81,8 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
         }).catch(() => {})
       }
       const thread = useAiAssistantStore.getState().threadsByOwner[ownerKey]?.find((item) => item.id === threadId)
-      const voice = new RealtimeCoach({
+      const VoiceConnection = provider === 'gemini' ? GeminiRealtimeCoach : RealtimeCoach
+      const voice = new VoiceConnection({
         speechSpeed: speedRef.current,
         context: { pathname: currentPath.current, workspace: tutor.activeWorkspace, language: locale, mode,
           coachPreferences: tutor.coachPreferences,
@@ -119,7 +128,7 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
     }
     // The session survives route changes and docking. Language, mode and account
     // changes deliberately create a new session with matching instructions.
-  }, [enabled, supported, tutor.hasPremium, tutor.user?.id, tutor.voiceLang, conversationKey, tutor.threadsLoaded, mode, retry])
+  }, [enabled, supported, tutor.hasPremium, tutor.user?.id, tutor.voiceLang, conversationKey, tutor.threadsLoaded, mode, provider, retry])
 
   useEffect(() => {
     if (!enabled || !tutor.user) return

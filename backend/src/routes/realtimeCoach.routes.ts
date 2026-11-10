@@ -5,8 +5,29 @@ import { assistantContextSchema, endVoiceCall, startVoiceCall, updateVoiceContex
 import { AiGenerationError } from '../services/aiProvider.service.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { reserveVoiceTime, voiceUsageSnapshot } from '../services/voiceAllowance.service.js'
+import { naturalVoiceProvider } from '../services/voiceProvider.js'
+import { startGeminiVoiceCall } from '../services/geminiLive.service.js'
 const router = Router()
-router.get('/capabilities', (_req, res) => res.json({ textChat: Boolean(env.OPENAI_API_KEY || env.HF_ACCESS_TOKEN || env.GEMINI_API_KEY || env.GEMINI_API_KEY_2 || env.GEMINI_API_KEY_3 || env.GEMINI_API_KEY_4 || env.GEMINI_API_KEY_5), naturalVoice: Boolean(env.OPENAI_API_KEY), spokenReplies: Boolean(env.OPENAI_API_KEY || env.GEMINI_API_KEY || env.GEMINI_API_KEY_2 || env.GEMINI_API_KEY_3 || env.GEMINI_API_KEY_4 || env.GEMINI_API_KEY_5), currentResearch: Boolean(env.OPENAI_API_KEY && env.AI_WEB_SEARCH_ENABLED), audioAssessment: Boolean(env.GEMINI_API_KEY || env.GEMINI_API_KEY_2 || env.GEMINI_API_KEY_3 || env.GEMINI_API_KEY_4 || env.GEMINI_API_KEY_5), maxMinutes: env.AI_VOICE_MAX_MINUTES }))
+router.use((_req, res, next) => { res.set('Cache-Control', 'no-store'); next() })
+router.get('/capabilities', (_req, res) => {
+  const provider = naturalVoiceProvider()
+  res.json({ textChat: Boolean(env.OPENAI_API_KEY || env.HF_ACCESS_TOKEN || env.GEMINI_API_KEY || env.GEMINI_API_KEY_2 || env.GEMINI_API_KEY_3 || env.GEMINI_API_KEY_4 || env.GEMINI_API_KEY_5), naturalVoice: Boolean(provider), voiceProvider: provider, voiceModel: provider === 'gemini' ? env.GEMINI_LIVE_MODEL : provider === 'openai' ? env.AI_VOICE_MODEL : null, spokenReplies: Boolean(env.OPENAI_API_KEY || env.GEMINI_API_KEY || env.GEMINI_API_KEY_2 || env.GEMINI_API_KEY_3 || env.GEMINI_API_KEY_4 || env.GEMINI_API_KEY_5), currentResearch: Boolean(env.OPENAI_API_KEY && env.AI_WEB_SEARCH_ENABLED), audioAssessment: Boolean(env.GEMINI_API_KEY || env.GEMINI_API_KEY_2 || env.GEMINI_API_KEY_3 || env.GEMINI_API_KEY_4 || env.GEMINI_API_KEY_5), maxMinutes: env.AI_VOICE_MAX_MINUTES })
+})
+router.post('/gemini/connect', asyncHandler(async (req, res) => {
+  const payload = z.object({ context: assistantContextSchema,
+    history: z.array(z.object({ role: z.enum(['user', 'assistant']), content: z.string().max(12000) })).max(24).default([]) }).strict().parse(req.body)
+  const controller = new AbortController()
+  res.on('close', () => { if (!res.writableEnded) controller.abort() })
+  try {
+    const call = await startGeminiVoiceCall(req.user!.id, payload.context, payload.history, controller.signal)
+    if (controller.signal.aborted) { await endVoiceCall(req.user!.id, call.id); return }
+    res.status(201).json(call)
+  } catch (error) {
+    if (controller.signal.aborted) return
+    if (error instanceof AiGenerationError) return res.status(error.statusCode).json({ message: error.message, code: error.code })
+    throw error
+  }
+}))
 router.post('/connect', asyncHandler(async (req, res) => {
   const payload = z.object({ sdp: z.string().min(20).max(40000).startsWith('v='), context: assistantContextSchema,
     history: z.array(z.object({ role: z.enum(['user', 'assistant']), content: z.string().max(12000) })).max(24).default([]) }).strict().parse(req.body)

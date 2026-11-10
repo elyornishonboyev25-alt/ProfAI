@@ -8,7 +8,7 @@ export type VoiceContext = {
   coachPreferences?: import('@/services/ai/coachPreferences').CoachPreferences
 }
 export type VoicePerformance = { stage: 'microphone' | 'negotiation' | 'connection' | 'first_audio' | 'reply'; durationMs: number }
-type VoiceOptions = {
+export type VoiceOptions = {
   speechSpeed?: number
   context: VoiceContext
   history: Array<{ role: 'user' | 'assistant'; content: string }>

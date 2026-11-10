@@ -1382,6 +1382,8 @@ model VoiceAllowanceSession {
   id              String    @id
   userId          String
   providerCallId  String?
+  clientId        String?
+  leaseExpiresAt  DateTime?
   startedAt       DateTime  @default(now())
   expiresAt       DateTime
   endedAt         DateTime?

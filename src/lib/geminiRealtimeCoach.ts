@@ -1,5 +1,6 @@
 import { apiClient, publicApiUrl } from '@/lib/apiClient'
 import type { VoiceContext, VoiceOptions } from './realtimeCoach'
+import { openVoiceSession, releaseVoiceSession, maintainVoiceLease } from './voiceSessionLifecycle'
 
 type Session = { id: string; ticket: string; expiresAt: string; streamPath: string; model: string }
 
@@ -17,6 +18,7 @@ export class GeminiRealtimeCoach {
   private controller = new AbortController()
   private sources = new Set<AudioBufferSourceNode>()
   private session: Session | null = null
+  private releaseLease: (() => void) | null = null
   private closed = false
   private muted = false
   private frame = 0
@@ -70,9 +72,10 @@ export class GeminiRealtimeCoach {
       const history = this.options.history.slice(-24).map(turn => ({ ...turn, content: turn.content.slice(0, 12000) }))
       let length = history.reduce((sum, turn) => sum + turn.content.length, 0)
       while (length > 26000 && history.length) length -= history.shift()!.content.length
-      const session = await apiClient.post<Session>('/ai/voice/gemini/connect', { context: initial, history }, { signal: this.controller.signal })
-      if (this.closed) { void apiClient.post('/ai/voice/end', { id: session.id }, { keepalive: true }).catch(() => {}); return }
+      const session = await openVoiceSession<Session>('/ai/voice/gemini/connect', { context: initial, history }, this.controller.signal)
+      if (this.closed) { void releaseVoiceSession(session.id); return }
       this.session = session; this.lastContext = JSON.stringify(initial)
+      this.releaseLease = maintainVoiceLease(session.id, () => this.fail(new Error('This voice session ended. Reconnect to continue.')))
       if (session.streamPath !== '/ws/ai-coach') throw new Error('The voice server returned an invalid connection.')
       const url = new URL(publicApiUrl(session.streamPath), window.location.href)
       // API origins may include /api/v1; signaling lives at the origin's /ws path.
@@ -247,12 +250,13 @@ export class GeminiRealtimeCoach {
     const safely = (callback: () => unknown) => { try { callback() } catch { /* Continue releasing hardware. */ } }
     this.stream?.getTracks().forEach(track => { track.onended = null; safely(() => track.stop()) }); this.stream = null
     this.controller.abort(); window.clearTimeout(this.deadline); window.clearTimeout(this.replyTimer); window.clearTimeout(this.readyTimer); cancelAnimationFrame(this.frame)
+    this.releaseLease?.(); this.releaseLease = null
     this.clearPlayback(); safely(() => this.finishOutput(true)); safely(() => this.commitInput())
     if (this.socket) { this.socket.onclose = null; this.socket.onerror = null; this.socket.onmessage = null; safely(() => this.socket?.close()) }
     if (this.capture) { this.capture.port.onmessage = null; safely(() => this.capture?.disconnect()) }
     safely(() => this.input?.disconnect()); safely(() => this.silent?.disconnect()); safely(() => this.inputMeter?.disconnect()); safely(() => this.outputMeter?.disconnect())
     safely(() => this.audio?.close().catch(() => {}))
-    if (this.session) void apiClient.post('/ai/voice/end', { id: this.session.id }, { keepalive: true }).catch(() => {})
+    if (this.session) void releaseVoiceSession(this.session.id)
     safely(() => this.options.state('idle')); safely(() => this.options.level(0))
   }
 }

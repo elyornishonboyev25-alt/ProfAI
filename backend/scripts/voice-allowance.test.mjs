@@ -4,7 +4,7 @@ process.env.DATABASE_URL ||= 'postgresql://test:test@localhost:5432/test'
 process.env.ACCESS_TOKEN_SECRET ||= 'voice-test-access-secret-only'
 process.env.REFRESH_TOKEN_SECRET ||= 'voice-test-refresh-secret-only'
 const { prisma } = await import('../dist/lib/prisma.js')
-const { reserveVoiceTime, settleVoiceTime, voiceUsageSnapshot, voiceWindow, requireLiveSession } = await import('../dist/services/voiceAllowance.service.js')
+const { reserveVoiceTime, settleVoiceTime, voiceUsageSnapshot, voiceWindow, requireLiveSession, heartbeatVoiceSession, requireVoiceReservation } = await import('../dist/services/voiceAllowance.service.js')
 const { PLAN_QUOTAS } = await import('../dist/utils/billingCatalog.js')
 const { remainingPercent } = await import('../dist/utils/studyAccess.js')
 let state
@@ -13,6 +13,8 @@ reset()
 const key = value => `${value.feature}:${value.period}`
 const matches = (row, where) => row.userId === where.userId && (!where.id || row.id === where.id) && (where.endedAt !== null || row.endedAt === null)
   && (!where.expiresAt?.gt || row.expiresAt > where.expiresAt.gt)
+  && (!where.clientId || row.clientId === where.clientId)
+  && (!where.leaseExpiresAt?.gt || row.leaseExpiresAt > where.leaseExpiresAt.gt)
 const tx = {
   $queryRaw: async () => [],
   user: { findUniqueOrThrow: async () => ({ role: 'USER', email: 'voice@example.com' }) },
@@ -30,6 +32,7 @@ const tx = {
     findMany: async ({ where }) => state.sessions.filter(row => matches(row, where)),
     create: async ({ data }) => { const row = { ...data, endedAt: null }; state.sessions.push(row); return { ...row } },
     update: async ({ where, data }) => Object.assign(state.sessions.find(row => row.id === where.id), data),
+    updateMany: async ({ where, data }) => { const rows = state.sessions.filter(row => matches(row, where)); rows.forEach(row => Object.assign(row, data)); return { count: rows.length } },
   },
 }
 for (const name of ['user', 'premiumGrant', 'billingSubscription', 'featureUsage', 'voiceAllowanceSession']) Object.assign(prisma[name], tx[name])
@@ -112,4 +115,44 @@ test('month rollover and plan expiry do not allow time beyond their deadlines', 
 test('standard voice cannot bypass admission by posting directly without a live session', async () => {
   reset('FREE')
   await assert.rejects(requireLiveSession('u'), error => error.code === 'PREMIUM_REQUIRED')
+})
+
+test('a missed end request never blocks reconnecting the same browser and refunds the old reservation', async () => {
+  reset()
+  const first = await reserveVoiceTime('u', 1200, at, 'browser-a')
+  const second = await reserveVoiceTime('u', 1200, new Date(at.getTime() + 5000), 'browser-a')
+  assert.ok(state.sessions.find(row => row.id === first.id).endedAt)
+  assert.equal(state.sessions.filter(row => row.endedAt === null).length, 1)
+  assert.equal(state.usage.get('voice:2026-10'), 1205)
+  await settleVoiceTime('u', first.id, false, new Date(at.getTime() + 6000))
+  assert.equal(state.sessions.find(row => row.id === second.id).endedAt, null, 'A late old cleanup cannot close its successor')
+  assert.equal(state.usage.get('voice:2026-10'), 1205, 'Late cleanup cannot refund a second time')
+})
+
+test('a heartbeat belongs to its account and browser; expired leases recover without charging abandoned time', async () => {
+  reset()
+  const first = await reserveVoiceTime('u', 1200, at, 'browser-a')
+  const beatAt = new Date(at.getTime() + 10000)
+  assert.equal(await heartbeatVoiceSession('other', first.id, 'browser-a', beatAt), false)
+  assert.equal(await heartbeatVoiceSession('u', first.id, 'browser-b', beatAt), false)
+  assert.equal(await heartbeatVoiceSession('u', first.id, 'browser-a', beatAt), true)
+  await assert.rejects(reserveVoiceTime('u', 1200, new Date(at.getTime() + 11000), 'browser-b'), error => error.code === 'VOICE_ALREADY_ACTIVE')
+  await reserveVoiceTime('u', 1200, new Date(at.getTime() + 56000), 'browser-b')
+  assert.equal(state.usage.get('voice:2026-10'), 1255, 'Charges stop at the last live lease deadline')
+  assert.equal(await heartbeatVoiceSession('u', first.id, 'browser-a', new Date(at.getTime() + 57000)), false, 'Old calls cannot renew after replacement')
+})
+
+test('legacy orphan reservations recover after a deployment and parallel reconnects keep one active reservation', async () => {
+  reset()
+  const old = await reserveVoiceTime('u', 1200, at)
+  state.sessions.find(row => row.id === old.id).leaseExpiresAt = null
+  await reserveVoiceTime('u', 1200, new Date(at.getTime() + 1000), 'browser-a')
+  assert.ok(state.sessions.find(row => row.id === old.id).endedAt)
+  reset()
+  const now = new Date()
+  const results = await Promise.all([reserveVoiceTime('u', 1200, now, 'browser-a'), reserveVoiceTime('u', 1200, now, 'browser-a')])
+  assert.equal(state.sessions.filter(row => row.endedAt === null).length, 1)
+  assert.equal(state.usage.get(`voice:${now.toISOString().slice(0, 7)}`), 1200)
+  await assert.rejects(requireVoiceReservation('u', results[0].id), error => error.code === 'VOICE_SESSION_REPLACED')
+  assert.equal((await requireVoiceReservation('u', results[1].id)).id, results[1].id)
 })

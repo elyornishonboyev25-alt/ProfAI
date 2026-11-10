@@ -81,7 +81,10 @@ app.use('/api/v1/ai/speaking-audio', requireAuth, enforceStudyAccess,
   (req, res, next) => (['/voice', '/transcribe'].includes(req.path) ? speakingMediaRateLimit : speakingAssessmentRateLimit)(req, res, next),
   express.json({ limit: '12mb' }), speakingAudioRoutes)
 app.use('/api/v1/ai/assistant', requireAuth, enforceStudyAccess, aiRateLimit, express.json({ limit: '6mb' }), assistantRoutes)
-app.use('/api/v1/ai/voice', requireAuth, enforceStudyAccess, aiRateLimit, express.json({ limit: '384kb' }), realtimeCoachRoutes)
+app.use('/api/v1/ai/voice', requireAuth,
+  (req, res, next) => ['/end', '/heartbeat'].includes(req.path) ? next() : enforceStudyAccess(req, res, next),
+  (req, res, next) => (['/end', '/heartbeat'].includes(req.path) ? apiRateLimit : aiRateLimit)(req, res, next),
+  express.json({ limit: '384kb' }), realtimeCoachRoutes)
 
 // Authenticate and bound voice uploads before accepting the larger JSON body.
 app.post('/api/v1/shadowing-recordings', requireAuth, shadowingUploadLimit, express.json({ limit: '5mb' }))

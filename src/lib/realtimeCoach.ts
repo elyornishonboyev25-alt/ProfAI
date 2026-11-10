@@ -1,9 +1,10 @@
 import { apiClient } from '@/lib/apiClient'
 import type { AiVoiceState } from '@/store/aiAssistantStore'
 import type { GeminiChatResponse } from '@/services/geminiAI'
+import { openVoiceSession, releaseVoiceSession, maintainVoiceLease } from './voiceSessionLifecycle'
 
 export type VoiceContext = {
-  pathname: string; workspace: 'general' | 'ielts' | 'sat' | 'english' | 'admission'; language: 'en' | 'uz' | 'ru'
+  pathname: string; workspace: 'general' | 'ielts' | 'sat' | 'english' | 'admission'; language: 'auto' | 'en' | 'uz' | 'ru'
   mode: 'coach' | 'examiner'; threadId?: string; studyContext: string; screenContext: string; siteKnowledge: string
   coachPreferences?: import('@/services/ai/coachPreferences').CoachPreferences
 }
@@ -46,6 +47,7 @@ export class RealtimeCoach {
   private connectionTimer = 0
   private responseTimer = 0
   private sessionId: string | null = null
+  private releaseLease: (() => void) | null = null
   private sentContext = ''
   private contextSync = Promise.resolve()
   private firstReplyStarted = 0
@@ -144,12 +146,13 @@ export class RealtimeCoach {
       if (this.closed) return
       const initialContext = this.options.context
       const negotiating = performance.now()
-      const session = await apiClient.post<{ id: string; sdp: string; maxMinutes: number; expiresAt?: string }>('/ai/voice/connect', {
+      const session = await openVoiceSession<{ id: string; sdp: string; maxMinutes: number; expiresAt?: string }>('/ai/voice/connect', {
         sdp: peer.localDescription?.sdp, context: initialContext, history,
-      }, { signal: this.controller.signal })
-      if (this.closed) { void apiClient.post('/ai/voice/end', { id: session.id }).catch(() => {}); return }
+      }, this.controller.signal)
+      if (this.closed) { void releaseVoiceSession(session.id); return }
       this.measure('negotiation', negotiating)
       this.sessionId = session.id
+      this.releaseLease = maintainVoiceLease(session.id, () => this.fail(new Error('This voice session ended. Reconnect to continue.')))
       this.sentContext = contextSignature(initialContext)
       await peer.setRemoteDescription({ type: 'answer', sdp: session.sdp })
       await opened
@@ -362,6 +365,7 @@ export class RealtimeCoach {
     this.stream?.getTracks().forEach((track) => { track.onended = null; release(() => track.stop()) })
     this.stream = null
     this.controller.abort()
+    this.releaseLease?.(); this.releaseLease = null
     window.clearTimeout(this.timer); cancelAnimationFrame(this.raf)
     window.clearTimeout(this.connectionTimer); window.clearTimeout(this.responseTimer)
     release(() => this.channel?.close()); release(() => this.peer?.close())
@@ -369,7 +373,7 @@ export class RealtimeCoach {
     this.meterSources.forEach((source) => release(() => source.disconnect())); this.meterSources = []
     release(() => this.inputAnalyser?.disconnect()); release(() => this.outputAnalyser?.disconnect())
     release(() => this.audioContext?.close().catch(() => {}))
-    if (this.sessionId) void apiClient.post('/ai/voice/end', { id: this.sessionId }, { keepalive: true }).catch(() => {})
+    if (this.sessionId) void releaseVoiceSession(this.sessionId)
     release(() => this.flush('', true))
     release(() => this.options.state('idle')); release(() => this.options.level(0))
   }

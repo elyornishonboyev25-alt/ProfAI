@@ -51,17 +51,17 @@ export async function run() {
     return { getTracks: () => [track], getAudioTracks: () => [track] }
   } }, configurable: true })
   apiClient.post = (async (path: string, body: any) => {
-    if (path === '/ai/voice/connect') return { id: 'stream-session', sdp: 'v=0\r\ns=answer\r\n', maxMinutes: 20 }
+    if (path === '/ai/voice/connect') { assert.equal(body.context.language, 'auto'); return { id: 'stream-session', sdp: 'v=0\r\ns=answer\r\n', maxMinutes: 20 } }
     if (path === '/ai/voice/end') { ended++; return {} }
     if (path === '/ai/voice/context') { contexts.push(body.context); return {} }
     if (path.endsWith('/messages')) { saved.push(body); return {} }
     throw new Error(`Unexpected request: ${path}`)
   }) as typeof apiClient.post
   let controls: ReturnType<typeof useRealtimeCoach>
-  function Harness({ workspace = 'general' }: { workspace?: 'general' | 'ielts' }) {
+  function Harness({ workspace = 'general', voiceLang = 'uz' }: { workspace?: 'general' | 'ielts'; voiceLang?: 'uz' | 'en' }) {
     const thread = useAiAssistantStore(state => state.threadsByOwner[owner][0])
     controls = useRealtimeCoach({ user, hasPremium: true, threadsLoaded: true, activeThread: thread, activeThreadId: thread.id,
-      activeWorkspace: workspace, voiceLang: 'uz', cancelVoice() {}, cancelSend() {}, acceptCoachResult() {} } as unknown as AiTutorController, true, 'coach')
+      activeWorkspace: workspace, voiceLang, cancelVoice() {}, cancelSend() {}, acceptCoachResult() {} } as unknown as AiTutorController, true, 'coach')
     return <LiveVoiceTranscript messages={thread.messages} caption={controls.caption} language="uz" />
   }
   const wait = (ms = 110) => act(async () => { await new Promise(resolve => setTimeout(resolve, ms)) })
@@ -99,6 +99,10 @@ export async function run() {
     assert.equal(peers, 1, 'Changing the study workspace updates context without ending a live call')
     assert.equal(contexts.length, 1, 'A workspace change sends exactly one changed context')
     assert.equal(contexts[0].threadId, initial.id, 'Page updates retain the chat bound at connection time')
+    assert.equal(contexts[0].language, 'auto')
+    await act(async () => root.render(<MemoryRouter><Harness workspace="ielts" voiceLang="en" /></MemoryRouter>))
+    await wait()
+    assert.equal(peers, 1, 'A legacy spoken-language preference never reconnects automatic voice')
     await emit({ type: 'conversation.item.input_audio_transcription.delta', item_id: 'unfinished', delta: 'Partial input' })
     await act(async () => root.unmount())
     assert.equal(messages().some(message => message.id === 'voice-unfinished'), false, 'Closing the call removes unfinished input previews')

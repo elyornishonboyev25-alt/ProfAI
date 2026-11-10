@@ -9,9 +9,12 @@ import { buildStudySnapshot, describeStudySnapshot } from '@/services/ai/studyCo
 import { composeScreenContext } from '@/services/ai/screenCapture'
 import { describeRelevantSiteKnowledge } from '@/services/ai/siteKnowledge'
 import type { AiTutorController } from './useAiTutor'
+import { useCopy } from '@/i18n/interface'
 
 export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mode: 'coach' | 'examiner', provider: 'gemini' | 'openai' = 'openai') {
   const location = useLocation()
+  const { language: interfaceLanguage } = useCopy()
+  const metadataLocale = interfaceLanguage === 'uz' ? 'uz' : interfaceLanguage === 'ru' ? 'ru' : 'en'
   const connection = useRef<RealtimeCoach | GeminiRealtimeCoach | null>(null)
   const latest = useRef(tutor); latest.current = tutor
   const [error, setError] = useState<string | null>(null)
@@ -32,7 +35,7 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
     let disposed = false
     const userId = tutor.user.id
     const ownerKey = `user:${userId}`
-    const locale = tutor.voiceLang
+    const locale = metadataLocale
     const previews = new Map<string, AiAssistantMessage>()
     const drafts = new Set<string>()
     let previewTimer = 0
@@ -68,7 +71,7 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
             if (useAuthStore.getState().user?.id !== userId) return false
             threadId = saved.id
             useAiAssistantStore.getState().syncThread(ownerKey, draftId, saved)
-            if (!disposed) void connection.current?.updateContext({ pathname: currentPath.current, workspace: latest.current.activeWorkspace, language: locale, mode,
+            if (!disposed) void connection.current?.updateContext({ pathname: currentPath.current, workspace: latest.current.activeWorkspace, language: mode === 'examiner' ? 'en' : 'auto', mode,
               threadId: saved.id, coachPreferences: latest.current.coachPreferences,
               studyContext: describeStudySnapshot(buildStudySnapshot(userId)).slice(0, 16000), screenContext: composeScreenContext('Explain this page', currentPath.current).slice(0, 12000), siteKnowledge: describeRelevantSiteKnowledge('IELTS SAT English admissions tests').slice(0, 16000) }).catch(() => {})
             return true
@@ -84,7 +87,7 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
       const VoiceConnection = provider === 'gemini' ? GeminiRealtimeCoach : RealtimeCoach
       const voice = new VoiceConnection({
         speechSpeed: speedRef.current,
-        context: { pathname: currentPath.current, workspace: tutor.activeWorkspace, language: locale, mode,
+        context: { pathname: currentPath.current, workspace: tutor.activeWorkspace, language: mode === 'examiner' ? 'en' : 'auto', mode,
           coachPreferences: tutor.coachPreferences,
           threadId: threadId.startsWith('local-') ? undefined : threadId,
           studyContext: describeStudySnapshot(buildStudySnapshot(userId)).slice(0, 16000),
@@ -126,19 +129,19 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
         for (const thread of state.threadsByOwner[ownerKey] ?? []) state.removeMessage(ownerKey, thread.id, id)
       }
     }
-    // The session survives route changes and docking. Language, mode and account
+    // The session survives route and spoken-language changes. Mode and account
     // changes deliberately create a new session with matching instructions.
-  }, [enabled, supported, tutor.hasPremium, tutor.user?.id, tutor.voiceLang, conversationKey, tutor.threadsLoaded, mode, provider, retry])
+  }, [enabled, supported, tutor.hasPremium, tutor.user?.id, conversationKey, tutor.threadsLoaded, mode, provider, retry])
 
   useEffect(() => {
     if (!enabled || !tutor.user) return
     const timer = window.setTimeout(() => {
-      void connection.current?.updateContext({ pathname: location.pathname, workspace: tutor.activeWorkspace, language: tutor.voiceLang, mode,
+      void connection.current?.updateContext({ pathname: location.pathname, workspace: tutor.activeWorkspace, language: mode === 'examiner' ? 'en' : 'auto', mode,
         coachPreferences: tutor.coachPreferences,
         studyContext: describeStudySnapshot(buildStudySnapshot(tutor.user!.id)).slice(0, 16000), screenContext: composeScreenContext('Explain this page', location.pathname).slice(0, 12000), siteKnowledge: describeRelevantSiteKnowledge('IELTS SAT English admissions tests').slice(0, 16000) }).catch(() => {})
     }, 600)
     return () => window.clearTimeout(timer)
-  }, [enabled, location.pathname, tutor.user?.id, tutor.activeWorkspace, tutor.voiceLang, tutor.coachPreferences, mode])
+  }, [enabled, location.pathname, tutor.user?.id, tutor.activeWorkspace, tutor.coachPreferences, mode])
 
   const toggleMute = useCallback(() => setMuted((current) => { connection.current?.mute(!current); return !current }), [])
   const interrupt = useCallback(() => connection.current?.interrupt(), [])

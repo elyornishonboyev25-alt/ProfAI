@@ -7,7 +7,7 @@ import { prisma } from '../lib/prisma.js'
 import { AiGenerationError } from './aiProvider.service.js'
 import { assistantContextSchema, assistantRequestSchema, boundedHistory, type AssistantContext } from './assistantPolicy.js'
 import { answerAssistant, assistantData, loadAssistantRecords } from './assistant.service.js'
-import { reserveVoiceTime, settleVoiceTime } from './voiceAllowance.service.js'
+import { reserveVoiceTime, settleVoiceTime, requireVoiceReservation, onVoiceReservationReplaced } from './voiceAllowance.service.js'
 import { BillingError } from './billing.service.js'
 import { endGeminiVoiceCall, updateGeminiVoiceContext } from './geminiLive.service.js'
 
@@ -64,13 +64,13 @@ export async function updateVoiceContext(userId: string, id: string, context: As
   return true
 }
 
-export async function startVoiceCall(userId: string, sdp: string, context: AssistantContext, history: VoiceCall['history'], signal?: AbortSignal) {
+export async function startVoiceCall(userId: string, sdp: string, context: AssistantContext, history: VoiceCall['history'], signal?: AbortSignal, clientId?: string) {
   if (!env.OPENAI_API_KEY) throw new AiGenerationError(503, 'VOICE_NOT_CONFIGURED', 'Natural voice is not connected yet. You can use standard voice or type in chat.')
   const started = performance.now()
   // Read only this authenticated learner's records while reserving allowance.
   // No provider connection starts until both checks have succeeded.
   const [reserved, loaded] = await Promise.allSettled([
-    reserveVoiceTime(userId, env.AI_VOICE_MAX_MINUTES * 60),
+    reserveVoiceTime(userId, env.AI_VOICE_MAX_MINUTES * 60, new Date(), clientId),
     loadAssistantRecords(userId, context.threadId),
   ])
   if (reserved.status === 'rejected') throw reserved.reason
@@ -78,6 +78,7 @@ export async function startVoiceCall(userId: string, sdp: string, context: Assis
   try {
     if (loaded.status === 'rejected') throw loaded.reason
     signal?.throwIfAborted()
+    await requireVoiceReservation(userId, reservation.id)
     return await startReservedVoiceCall(userId, sdp, context, history, reservation.id, reservation.expiresAt, loaded.value, started, signal)
   } catch (error) {
     const saved = await prisma.voiceAllowanceSession.findFirst({ where: { id: reservation.id, userId } })
@@ -181,6 +182,7 @@ async function startReservedVoiceCall(userId: string, sdp: string, context: Assi
     })
     signal?.throwIfAborted()
     if (expiresAt.getTime() <= Date.now()) throw new BillingError('PREMIUM_REQUIRED', 'The Live AI time window ended. Your unused reservation will be returned; try again after your allowance renews.')
+    await requireVoiceReservation(userId, id)
     for (const previous of calls.values()) if (previous.userId === userId) await endVoiceCall(userId, previous.id)
     calls.set(id, call)
     const timings = { preparationMs: Math.round(prepared - started), providerMs: Math.round(negotiated - prepared), controlMs: Math.round(performance.now() - negotiated), totalMs: Math.round(performance.now() - started) }
@@ -192,10 +194,11 @@ async function startReservedVoiceCall(userId: string, sdp: string, context: Assi
   }
 }
 export { assistantContextSchema }
+onVoiceReservationReplaced(async (userId, id) => { if (calls.get(id)?.userId === userId) await endVoiceCall(userId, id) })
 
 // Reclaim provider calls after a process restart or a missed browser disconnect.
 const allowanceCleanup = setInterval(() => {
-  void prisma.voiceAllowanceSession.findMany({ where: { endedAt: null, expiresAt: { lte: new Date() } }, take: 50 })
+  void prisma.voiceAllowanceSession.findMany({ where: { endedAt: null, OR: [{ expiresAt: { lte: new Date() } }, { leaseExpiresAt: { lte: new Date() } }, { leaseExpiresAt: null }] }, take: 50 })
     .then(rows => Promise.allSettled(rows.map(row => endVoiceCall(row.userId, row.id)))).catch(() => {})
 }, 15000)
 allowanceCleanup.unref()

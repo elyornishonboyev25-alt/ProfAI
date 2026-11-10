@@ -7,7 +7,7 @@ import { prisma } from '../lib/prisma.js'
 import { AiGenerationError } from './aiProvider.service.js'
 import { assistantContextSchema, assistantRequestSchema, boundedHistory, type AssistantContext } from './assistantPolicy.js'
 import { answerAssistant, assistantData, loadAssistantRecords } from './assistant.service.js'
-import { reserveVoiceTime, settleVoiceTime } from './voiceAllowance.service.js'
+import { reserveVoiceTime, settleVoiceTime, requireVoiceReservation, onVoiceReservationReplaced } from './voiceAllowance.service.js'
 import { voiceInstructions } from './voiceInstructions.js'
 import { geminiLiveKeys, naturalVoiceProvider } from './voiceProvider.js'
 import { onAccountDeleted } from './accountLifecycle.js'
@@ -109,12 +109,12 @@ async function runTool(call: Call, tool: { id?: string; name?: string; args?: { 
   } catch { respond({ error: 'The written coach could not finish. Ask the learner to retry; do not invent results.' }) }
 }
 
-export async function startGeminiVoiceCall(userId: string, context: AssistantContext, history: History, signal?: AbortSignal, connectProvider = openGeminiLive) {
+export async function startGeminiVoiceCall(userId: string, context: AssistantContext, history: History, signal?: AbortSignal, connectProvider = openGeminiLive, clientId?: string) {
   const keys = geminiLiveKeys()
   if (!keys.length) throw new AiGenerationError(503, 'VOICE_NOT_CONFIGURED', 'Gemini Live is not configured on this server.')
   const records = await loadAssistantRecords(userId, context.threadId)
   signal?.throwIfAborted()
-  const reservation = await reserveVoiceTime(userId, env.AI_VOICE_MAX_MINUTES * 60)
+  const reservation = await reserveVoiceTime(userId, env.AI_VOICE_MAX_MINUTES * 60, new Date(), clientId)
   const startedAt = Date.now()
   let provider: WebSocket | undefined
   try {
@@ -122,6 +122,7 @@ export async function startGeminiVoiceCall(userId: string, context: AssistantCon
     // A setup acknowledgement is required before returning a browser ticket.
     provider = await connectProvider(geminiLiveSetup(context, assistantData(context, records)), keys, signal)
     signal?.throwIfAborted()
+    await requireVoiceReservation(userId, reservation.id)
     const ticket = randomBytes(32).toString('base64url')
     const call: Call = { id: reservation.id, userId, provider, client: null, ticketHash: digest(ticket), context, history: boundedHistory(history), expiresAt: reservation.expiresAt, abort: new AbortController(), input: '', output: '', tools: new Set(), cancelledTools: new Set(), greeted: false,
       timer: setTimeout(() => { void endGeminiVoiceCall(userId, reservation.id, true).catch(() => {}) }, 25000) }
@@ -212,4 +213,5 @@ export function attachGeminiVoice(server: Server) {
 }
 
 onAccountDeleted(async userId => { await Promise.all([...calls.values()].filter(call => call.userId === userId).map(call => endGeminiVoiceCall(userId, call.id))) })
+onVoiceReservationReplaced((userId, id) => endGeminiVoiceCall(userId, id))
 export { assistantContextSchema }

@@ -7,6 +7,7 @@ type Callbacks = {
   started: (source: 'neural' | 'device') => void
   ended: () => void
   failed: (message: string) => void
+  audioReady?: (blob: Blob) => void
 }
 type PlaybackOptions = { language?: 'en' | 'uz' | 'ru'; deviceFallback?: boolean; audio?: Promise<string> }
 
@@ -95,6 +96,7 @@ export class ExaminerPlayback {
       if (!current() || usingDevice || completed) { URL.revokeObjectURL(url); return }
       clearTimeout(this.timer)
       this.url = url
+      const savedAudio = callbacks.audioReady ? fetch(url).then(response => response.blob()).catch(() => null) : null
       this.player.src = url
       let switchingToDevice = false
       let heardAudio = false
@@ -147,7 +149,10 @@ export class ExaminerPlayback {
       }
       this.player.onended = () => {
         if (!current() || completed || failed || switchingToDevice) return
-        if (heardAudio) finish()
+        if (heardAudio) {
+          if (savedAudio) void savedAudio.then(blob => { if (blob?.size) callbacks.audioReady?.(blob) })
+          finish()
+        }
         else fail('Examiner audio did not start. Tap Play examiner to hear the question.')
       }
       this.player.onerror = fallback

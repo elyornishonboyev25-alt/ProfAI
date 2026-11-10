@@ -1,4 +1,4 @@
-export type CoachStyle = 'adaptive' | 'gentle' | 'strict' | 'playful'
+export type CoachStyle = 'adaptive' | 'gentle' | 'strict' | 'playful' | 'affectionate'
 export type LessonMode = 'teach' | 'practice' | 'review' | 'plan'
 export type CoachPreferences = { style: CoachStyle; lessonMode: LessonMode; playfulLanguage: boolean }
 export const DEFAULT_COACH_PREFERENCES: CoachPreferences = { style: 'adaptive', lessonMode: 'teach', playfulLanguage: false }
@@ -9,7 +9,8 @@ const copy = {
     subtitle: 'Learn with a coach that adapts to you.', voice: 'Talk with Nova', focus: 'Choose your focus',
     companion: 'Meet Nova', companionDetail: 'Your curious little study companion. A warm welcome, an honest correction, and one more try.',
     ready: 'Ready when you are', listening: 'All ears', thinking: 'Connecting the dots', speaking: 'Let’s work through it',
-    style: 'Your coach, your style', adaptive: 'Adaptive', gentle: 'Gentle', strict: 'Focused', playful: 'Playful',
+    style: 'Your coach, your style', adaptive: 'Friendly', gentle: 'Gentle', strict: 'Focused', playful: 'Playful',
+    affectionate: 'Affectionate', affectionateDetail: 'Warm pet names, light humour and patient teaching. Change the tone anytime.',
     adaptiveDetail: 'Warm when you need support. Direct when you need a push.', gentleDetail: 'Patient explanations and encouragement, one step at a time.',
     strictDetail: 'Clear standards, honest feedback, and a concrete next step.', playfulDetail: 'A little wit, memorable examples, and serious learning.',
     playfulLanguage: 'Allow mild banter', banterDetail: 'Occasional mild swearing about the task. Never personal insults. Off in exam mode.',
@@ -27,7 +28,8 @@ const copy = {
     voice: 'Nova bilan gaplashing', focus: 'Yo‘nalishni tanlang', companion: 'Bu — Nova',
     companionDetail: 'Qiziquvchan o‘quv hamrohingiz. Iliq qo‘llab-quvvatlash, aniq tuzatish va yana bir urinish.',
     ready: 'Boshlashga tayyorman', listening: 'Diqqat bilan tinglayapman', thinking: 'Yechimni o‘ylayapman', speaking: 'Birga tushunib olamiz',
-    style: 'Murabbiy uslubini tanlang', adaptive: 'Moslashuvchan', gentle: 'Mehribon', strict: 'Talabchan', playful: 'Hazilkash',
+    style: 'Murabbiy uslubini tanlang', adaptive: 'Do‘stona', gentle: 'Mehribon', strict: 'Talabchan', playful: 'Hazilkash',
+    affectionate: 'Romantik', affectionateDetail: 'Asalim, jonim kabi iliq murojaat, yengil hazil va sabrli tushuntirish. Istalgan payt o‘zgartiring.',
     adaptiveDetail: 'Kerak bo‘lsa dalda, kerak bo‘lsa qat’iy turtki.', gentleDetail: 'Sabrli tushuntirish va dalda, qadamma-qadam.',
     strictDetail: 'Aniq talab, rost fikr va bajariladigan keyingi qadam.', playfulDetail: 'O‘rnida hazil, esda qoladigan misol va jiddiy o‘rganish.',
     playfulLanguage: 'Yengil achchiq hazilga ruxsat', banterDetail: 'Topshiriq haqida ba’zan yengil so‘kinish. Shaxsiy haqorat yo‘q. Imtihonda o‘chadi.',
@@ -44,7 +46,8 @@ const copy = {
     voice: 'Поговорить с Новой', focus: 'Выберите направление', companion: 'Знакомьтесь: Нова',
     companionDetail: 'Ваш любознательный учебный спутник. Поддержка, честное исправление и ещё одна попытка.',
     ready: 'Готова начать', listening: 'Внимательно слушаю', thinking: 'Ищу решение', speaking: 'Разберёмся вместе',
-    style: 'Ваш наставник, ваш стиль', adaptive: 'Гибкий', gentle: 'Мягкий', strict: 'Требовательный', playful: 'С юмором',
+    style: 'Ваш наставник, ваш стиль', adaptive: 'Дружелюбный', gentle: 'Мягкий', strict: 'Требовательный', playful: 'С юмором',
+    affectionate: 'Ласковый', affectionateDetail: 'Тёплые обращения, лёгкий юмор и терпеливое обучение. Стиль можно менять.',
     adaptiveDetail: 'Поддержка, когда она нужна. Прямота, когда пора действовать.', gentleDetail: 'Терпеливые объяснения и поддержка, шаг за шагом.',
     strictDetail: 'Чёткие требования, честная обратная связь и следующий шаг.', playfulDetail: 'Уместный юмор, яркие примеры и серьёзная учёба.',
     playfulLanguage: 'Разрешить лёгкое подшучивание', banterDetail: 'Иногда мягкая брань о задаче. Без личных оскорблений. Выключено на экзамене.',

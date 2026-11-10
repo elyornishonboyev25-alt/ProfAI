@@ -5,10 +5,24 @@ import { asyncHandler } from '../utils/asyncHandler.js'
 import { assessSpeakingAudio, assessSpeakingTranscript, generateSpeakingRewrites, speakingAssessmentSchema, speakingTranscriptSchema } from '../services/speakingAssessment.service.js'
 import { AiGenerationError } from '../services/aiProvider.service.js'
 import { withStudyAccess } from '../services/billing.service.js'
+import { assessPronunciationPractice, pronunciationPracticeSchema } from '../services/pronunciationPractice.service.js'
 
 const router = Router()
 const voiceCache = new Map<string, { audio: VoiceAudio; expires: number }>()
 const voiceInFlight = new Map<string, Promise<VoiceAudio | null>>()
+
+router.post('/pronunciation', asyncHandler(async (req, res) => {
+  const input = pronunciationPracticeSchema.parse(req.body)
+  const controller = new AbortController()
+  const close = () => { if (!res.writableEnded) controller.abort() }
+  res.on('close', close)
+  try { return res.json(await withStudyAccess(req.user!.id, 'speaking', () => assessPronunciationPractice(req.user!.id, input, controller.signal))) }
+  catch (error) {
+    if (controller.signal.aborted) return
+    if (error instanceof AiGenerationError) return res.status(error.statusCode).json({ message: error.message, code: error.code })
+    throw error
+  } finally { res.off('close', close) }
+}))
 
 router.post('/rewrites', asyncHandler(async (req, res) => {
   const { history } = speakingTranscriptSchema.pick({ history: true }).strict().parse(req.body)

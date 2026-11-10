@@ -27,6 +27,8 @@ export interface WritingAnalysisEntry {
   errors: WritingError[]
   correctedVersion: string
   improvedVersion?: string
+  correctedAssessment?: WritingEvaluation['correctedAssessment']
+  assessment?: WritingEvaluation['assessment']
   xpAwarded: number
   fullTest?: { id: string; overallBand: number }
   taskSnapshot?: WritingTask
@@ -94,6 +96,8 @@ export function saveWritingAnalysis(
     errors: evaluation.errors,
     correctedVersion: evaluation.correctedVersion,
     improvedVersion: evaluation.improvedVersion,
+    correctedAssessment: evaluation.correctedAssessment,
+    assessment: evaluation.assessment,
     xpAwarded: evaluation.xpAwarded,
     fullTest,
     taskSnapshot,

@@ -21,6 +21,8 @@ const writing = {
 const history = Array.from({ length: 6 }, () => [{ role: 'examiner', text: 'How do you prefer to study?' }, { role: 'candidate', text: answer }]).flat()
 const audio = history.filter(turn => turn.role === 'candidate').map((_, answerIndex) => ({ answerIndex, data: Buffer.from(`sample-${answerIndex}`.repeat(20)).toString('base64'), mimeType: 'audio/webm' }))
 const speaking = {
+  answerFeedback: history.filter(turn => turn.role === 'candidate').map((turn, answerIndex) => ({ answerIndex, summary: 'Coherent explanation of the preference with relevant supporting detail.', corrections: [] })),
+  pronunciationTargets: [],
   fluencyBand: 8, lexicalBand: 8, grammarBand: 9, pronunciationBand: 8,
   summary: 'Strong coherent answers with mostly accurate language.', strengths: ['Clear development.'], weaknesses: [], improvementPriorities: [],
   evidence: ['fluency', 'lexical', 'grammar', 'pronunciation'].map(criterion => ({ criterion, answerIndex: 0, quote: criterion === 'pronunciation' ? '' : 'working with my classmates', explanation: criterion === 'pronunciation' ? 'Clear word stress and intelligible connected speech in the recording.' : 'This phrase supports the assessed language level.', exercise: 'Practise another topic.' })),
@@ -124,8 +126,8 @@ test('coaching failure keeps the audio band and every previously completed rewri
     const body = JSON.parse(options.body)
     const submitted = JSON.parse(body.contents[0].parts[0].text)
     if (submitted.recordingOrder) {
-      assert.ok(body.generationConfig.maxOutputTokens <= 6144, 'Scoring is bounded independently of transcript length')
-      assert.deepEqual(body.generationConfig.thinkingConfig, { thinkingBudget: 1024 }, 'Internal reasoning cannot consume the entire scoring response budget')
+      assert.ok(body.generationConfig.maxOutputTokens <= 24576, 'Scoring is bounded independently of transcript length')
+      assert.deepEqual(body.generationConfig.thinkingConfig, { thinkingLevel: 'high' }, 'Gemini Pro receives deliberate assessment reasoning')
       assert.match(body.systemInstruction.parts[0].text, /Do not generate improvedAnswers/)
       assert.equal(body.contents[0].parts[1].inlineData.mimeType, 'audio/m4a', 'Safari recordings use Gemini’s accepted M4A MIME type without changing their audio bytes')
       return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({ ...speaking, improvedAnswers: [] }) }] } }] })
@@ -192,7 +194,7 @@ test('an exhausted provider deadline returns a retriable timeout instead of an i
   const nativeFetch = globalThis.fetch, nativeTimeout = AbortSignal.timeout, originalUsage = prisma.aiUsageEvent.create
   env.GEMINI_API_KEY = 'fake-timeout-key'; env.GEMINI_MODELS = 'gemini-2.5-flash'
   prisma.aiUsageEvent.create = async ({ data }) => data
-  AbortSignal.timeout = milliseconds => nativeTimeout(milliseconds === 60_000 ? 5 : milliseconds)
+  AbortSignal.timeout = milliseconds => nativeTimeout(milliseconds === 70_000 ? 5 : milliseconds)
   globalThis.fetch = async (_url, { signal }) => new Promise((_resolve, reject) => {
     signal.addEventListener('abort', () => reject(signal.reason), { once: true })
   })

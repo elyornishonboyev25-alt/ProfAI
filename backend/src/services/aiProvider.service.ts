@@ -85,9 +85,19 @@ function getGeminiKeys() {
 }
 
 function getGeminiModels(purpose: AiGenerationPurpose) {
-  const models = [env.GEMINI_MODELS]
-  if (purpose === 'writing_evaluation') models.push('gemini-3.5-flash-lite')
-  return splitConfiguredValues(models)
+  if (isAssessmentPurpose(purpose)) return [env.GEMINI_ASSESSMENT_MODEL]
+  return splitConfiguredValues([env.GEMINI_MODELS])
+}
+
+export function isAssessmentPurpose(purpose: AiGenerationPurpose) {
+  return purpose === 'writing_evaluation' || purpose === 'speaking_evaluation'
+}
+
+export function assessmentThinkingConfig(model: string, purpose: AiGenerationPurpose) {
+  if (!isAssessmentPurpose(purpose)) return {}
+  if (/^gemini-[34](?:\.|-)/.test(model)) return { thinkingConfig: { thinkingLevel: 'high' } }
+  if (/^gemini-2\.5-pro(?:-|$)/.test(model)) return { thinkingConfig: { thinkingBudget: 8192 } }
+  return {}
 }
 
 export function buildAiProviderOrder(availability: ProviderAvailability): AiProviderName[] {
@@ -106,9 +116,9 @@ function parseDataUrl(dataUrl: string) {
   return { mimeType: match[1], data: match[2] }
 }
 
-async function fetchWithTimeout(url: string, init: RequestInit) {
+async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs = env.AI_PROVIDER_TIMEOUT_MS) {
   const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), env.AI_PROVIDER_TIMEOUT_MS)
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
   try {
     return await fetch(url, { ...init, signal: init.signal ? AbortSignal.any([init.signal, controller.signal]) : controller.signal })
   } catch (error) {
@@ -155,14 +165,13 @@ async function requestGemini(input: GenerateAiTextInput): Promise<ProviderResult
             generationConfig: {
               temperature: 0.45,
               maxOutputTokens: input.maxOutputTokens,
-              // Reserve output capacity for complete Speaking JSON instead of
-              // allowing dynamic reasoning to consume the response budget.
-              ...(input.purpose === 'speaking_evaluation' && /^gemini-2\.5-(?:flash|pro)(?:-|$)/.test(model) ? { thinkingConfig: { thinkingBudget: 1024 } } : {}),
+              // Scoring receives deliberate reasoning; chat keeps its latency profile.
+              ...assessmentThinkingConfig(model, input.purpose),
               ...(input.jsonMode === false ? {} : { responseMimeType: 'application/json' }),
               ...(responseSchema ? { responseSchema } : {}),
             },
           }),
-        })
+        }, isAssessmentPurpose(input.purpose) ? Math.max(env.AI_PROVIDER_TIMEOUT_MS, 65_000) : env.AI_PROVIDER_TIMEOUT_MS)
         response = await request(input.geminiResponseSchema)
         if (response.status === 400 && input.geminiResponseSchema) {
           console.warn('Gemini rejected the structured response request', { model })
@@ -346,7 +355,7 @@ async function recordUsage(data: {
 }
 
 export async function generateAiText(input: GenerateAiTextInput): Promise<AiGenerationResult> {
-  input = { ...input, signal: AbortSignal.any([AbortSignal.timeout(Math.max(60000, env.AI_PROVIDER_TIMEOUT_MS)), ...(input.signal ? [input.signal] : [])]) }
+  input = { ...input, signal: AbortSignal.any([AbortSignal.timeout(Math.max(isAssessmentPurpose(input.purpose) ? 70_000 : 60_000, env.AI_PROVIDER_TIMEOUT_MS)), ...(input.signal ? [input.signal] : [])]) }
   const startedAt = Date.now()
   const requestChars = input.systemPrompt.length + input.userMessage.length
   let order = buildAiProviderOrder({
@@ -356,6 +365,7 @@ export async function generateAiText(input: GenerateAiTextInput): Promise<AiGene
     hasImages: Boolean(input.images?.length),
   })
   if (input.audio?.length) order = order.filter((provider) => provider === 'gemini')
+  if (isAssessmentPurpose(input.purpose)) order = order.filter((provider) => provider === 'gemini')
   if (input.purpose === 'assistant_chat' && env.AI_CHAT_PROVIDER !== 'auto') {
     const preferred = env.AI_CHAT_PROVIDER
     order = [preferred, ...order.filter((provider) => provider !== preferred)].filter((provider) => order.includes(provider))

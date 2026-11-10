@@ -7,7 +7,6 @@ import { useRealtimeCoach } from './useRealtimeCoach'
 import LiveVoiceTranscript from './LiveVoiceTranscript'
 import { apiClient } from '@/lib/apiClient'
 import CoachMascot from '@/components/ai/CoachMascot'
-import CoachControls from './CoachControls'
 import { useCopy } from '@/i18n/interface'
 import { useAccountAccess } from '@/features/billing/useAccountAccess'
 import UpgradePrompt from '@/features/billing/UpgradePrompt'
@@ -328,7 +327,7 @@ export function TalkOverlay() {
     : t('Listening', 'Tinglayapti', 'Слушает')
 
   if (docked) return <div className="fixed bottom-5 right-5 z-[200] flex items-center rounded-full border border-red-200 bg-white p-2 shadow-xl">
-    <button onClick={() => setDocked(false)} className="flex items-center gap-2 pr-3" aria-label={t('Expand voice', 'Ovozni kengaytirish', 'Развернуть голосовой чат')}><CoachMascot state={tutor.voiceState} level={tutor.voiceLevel} size={44} /><span className="text-left text-xs font-bold">Nova · Ivygoo<span className="block text-[10px] font-medium text-slate-500">{status}</span></span></button>
+    <button onClick={() => setDocked(false)} className="flex items-center gap-2 pr-3" aria-label={t('Expand voice', 'Ovozni kengaytirish', 'Развернуть голосовой чат')}><CoachMascot expression={mode === 'examiner' ? 'focused' : undefined} state={tutor.voiceState} level={tutor.voiceLevel} size={44} /><span className="text-left text-xs font-bold">Nova · Ivygoo<span className="block text-[10px] font-medium text-slate-500">{status}</span></span></button>
     <button onClick={end} className="flex h-10 w-10 items-center justify-center rounded-full text-slate-500 hover:bg-red-50" aria-label={t('End voice', 'Suhbatni tugatish', 'Завершить разговор')}><X size={18} /></button>
   </div>
 
@@ -347,8 +346,7 @@ export function TalkOverlay() {
         <span>{t('Speech speed', 'Gapirish tezligi', 'Скорость речи')}</span>
         {[0.9, 1.1, 1.25].map(speed => <button key={speed} type="button" aria-pressed={live.speechSpeed === speed} onClick={() => live.setSpeechSpeed(speed)} className={`min-h-9 rounded-full border px-3 font-semibold ${live.speechSpeed === speed ? 'border-white bg-white text-slate-950' : 'border-white/20 text-slate-300'}`}>{speed}×</button>)}
       </div>
-      <CoachMascot state={tutor.voiceState} level={tutor.voiceLevel} size={240} />
-      {mode === 'coach' ? <CoachControls compact /> : null}
+      <CoachMascot expression={mode === 'examiner' ? 'focused' : undefined} state={tutor.voiceState} level={tutor.voiceLevel} size={240} />
       <h2 className="mt-6 text-2xl font-bold" aria-live="polite">{status}</h2>
       <p className="mt-2 max-w-lg text-sm leading-6 text-slate-400">{mode === 'coach' ? t('Speak naturally. You can interrupt me. Your conversation stays in your chat.', 'Bemalol gapiring. Gapimni bo‘lishingiz mumkin. Suhbat chat tarixida saqlanadi.', 'Говорите свободно. Вы можете перебить меня. Разговор сохраняется в чате.') : t('English speaking practice with feedback at the end. Open Speaking tests for a timed full mock.', 'Inglizcha Speaking mashqi; fikr-mulohaza yakunda beriladi. Vaqtli to‘liq mock uchun Speaking testlarini oching.', 'Практика Speaking на английском с обратной связью в конце. Полный тест с таймером доступен в Speaking tests.')}</p>
       <div className="mt-5 min-h-20 w-full max-w-xl">

@@ -30,6 +30,8 @@ export interface WritingEvaluation {
   errors: WritingError[]
   correctedVersion: string
   improvedVersion?: string
+  correctedAssessment?: { overallBand: number; taskAchievement: number; coherenceCohesion: number; lexicalResource: number; grammaticalRange: number; criterionFeedback: NonNullable<WritingEvaluation['criterionFeedback']>; summary: string }
+  assessment?: { provider: string; model: string; correctedModel?: string; assessedAt: string; rubricVersion: string }
   xpAwarded: number
 }
 
@@ -59,6 +61,7 @@ export interface GeminiChatAction {
 
 export interface GeminiChatResponse {
   reply: string
+  expression?: 'warm' | 'delighted' | 'focused' | 'affectionate' | 'unimpressed'
   replyLanguage?: 'en' | 'uz' | 'ru'
   actions: GeminiChatAction[]
   title: string | null
@@ -121,7 +124,7 @@ export async function evaluateWriting(
   // The backend owns the rubric, word count, score calculation and evidence checks.
   const result = await withAssessmentDeadline(signal => apiClient.post<WritingEvaluation>(
     '/ai/generate/writing/evaluate', { taskType, prompt, response: studentResponse, visualContext }, { signal },
-  ))
+  ), 140_000)
   const criteria = [result.taskAchievement, result.coherenceCohesion, result.lexicalResource, result.grammaticalRange]
   if (!criteria.every(band => typeof band === 'number' && Number.isFinite(band) && band >= 0 && band <= 9)
     || typeof result.summary !== 'string' || !result.summary.trim()) {

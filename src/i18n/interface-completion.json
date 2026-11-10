@@ -9951,6 +9951,10 @@
     "uz": "Sanani o‘zgartirish",
     "ru": "Изменить дату"
   },
+  "Open discussion for {{value1}}": {
+    "uz": "{{value1}} muhokamasini ochish",
+    "ru": "Открыть обсуждение: {{value1}}"
+  },
   "Set exam date": {
     "uz": "Imtihon sanasini belgilash",
     "ru": "Указать дату экзамена"

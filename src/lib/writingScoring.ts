@@ -1,13 +1,15 @@
 import type { WritingEvaluation } from '@/services/geminiAI'
 import type { WritingTask } from '@/data/writingTestData'
 
-export function writingTaskMean(evaluation?: WritingEvaluation): number {
+type WritingBands = Pick<WritingEvaluation, 'taskAchievement' | 'coherenceCohesion' | 'lexicalResource' | 'grammaticalRange'>
+
+export function writingTaskMean(evaluation?: WritingBands): number {
   if (!evaluation) return 0
   return (evaluation.taskAchievement + evaluation.coherenceCohesion + evaluation.lexicalResource + evaluation.grammaticalRange) / 4
 }
 
 // Preserve criterion means until the final section band is rounded.
-export function writingSectionBand(task1?: WritingEvaluation, task2?: WritingEvaluation): number {
+export function writingSectionBand(task1?: WritingBands, task2?: WritingBands): number {
   return Math.round((writingTaskMean(task1) + 2 * writingTaskMean(task2)) / 3 * 2) / 2
 }
 

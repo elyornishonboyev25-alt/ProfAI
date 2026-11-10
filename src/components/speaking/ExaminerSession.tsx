@@ -33,6 +33,7 @@ import { AnswerRecording, canRecordAudio, canRecognizeWhileRecording, createAudi
 import { getIeltsSpeakingFullMockCatalog } from '@/utils/ieltsSpeakingCatalog'
 import MicVisualizer from './MicVisualizer'
 import SpeakingResult from './SpeakingResult'
+import { needsEnglishReminder } from '@/lib/speakingLanguage'
 
 export type SessionConfig = {
   mode: ExaminerMode
@@ -235,7 +236,7 @@ export default function ExaminerSession({
   onExit: () => void
   onSaved: (evaluation: SpeakingEvaluation, transcript: ExaminerTurn[]) => void
 }) {
-  const { c: uiCopy } = useCopy()
+  const { c: uiCopy, language } = useCopy()
   const recognition = useSpeechRecognition('en-US')
   const owner = useAuthStore(state => state.user?.id ?? 'guest')
   const legacySessionKey = `profai:speaking:examiner:${modeLabel}:${JSON.stringify(config)}`
@@ -291,6 +292,7 @@ export default function ExaminerSession({
   const [evaluation, setEvaluation] = useState<SpeakingEvaluation | null>(completedEvaluation)
   const [evalError, setEvalError] = useState<string | null>(null)
   const [answerError, setAnswerError] = useState<string | null>(null)
+  const [languageNotice, setLanguageNotice] = useState(false)
   const [stopping, setStopping] = useState(false)
   const [examinerLabel, setExaminerLabel] = useState('Examiner')
   const [logOffset, setLogOffset] = useState(0)
@@ -400,6 +402,7 @@ export default function ExaminerSession({
       setPhase('examiner_speaking')
       setCurrentPrompt(text)
       const lastTurn = historyRef.current[historyRef.current.length - 1]
+      const examinerIndex = historyRef.current.filter(turn => turn.role === 'examiner').length - (replay && lastTurn?.role === 'examiner' && lastTurn.text === text ? 1 : 0)
       let shown = replay && lastTurn?.role === 'examiner' && lastTurn.text === text
       const reveal = () => {
         if (shown) return
@@ -421,12 +424,13 @@ export default function ExaminerSession({
           },
           ended: () => { promptReplayRef.current = null; next() },
           failed: setVoiceError,
+          audioReady: blob => { void saveTestAudio(owner, `${audioKey}:examiner:${examinerIndex}`, blob) },
         }, device)
       }
       promptReplayRef.current = play
       play()
     },
-    [examiner, pushTurn],
+    [examiner, pushTurn, owner, audioKey],
   )
 
   const runEvaluation = useCallback(async () => {
@@ -447,6 +451,7 @@ export default function ExaminerSession({
       const audio = [...audioAnswersRef.current].sort((a, b) => a.answerIndex - b.answerIndex)
       const expectedAudioAnswers = historyRef.current.filter(turn => turn.role === 'candidate').flatMap((turn, index) => turn.text.trim() ? [index] : [])
       const result = await evaluateSpeaking({ modeLabel, history: historyRef.current, stats, audio, expectedAudioAnswers })
+      result.recording = { audioKey, layout: 'session', examinerVoice: examiner.voice }
       if (disposedRef.current || version !== sessionVersionRef.current) return
       setEvaluation(result)
       setPhase('result')
@@ -687,9 +692,13 @@ export default function ExaminerSession({
       longTurnDeadlineRef.current = 0
       longTurnFinishedRef.current = true
       setSpeakLeft(0)
-      advance()
+      const question = [...historyRef.current].reverse().find(turn => turn.role === 'examiner')?.text ?? ''
+      if (config.mode !== 'free_talk' && needsEnglishReminder(text, question)) {
+        setLanguageNotice(true)
+        speakExaminer('Please answer in English so I can assess your English. Responses in another language give less evidence of your English ability.', advance)
+      } else { setLanguageNotice(false); advance() }
     },
-    [advance, pushTurn],
+    [advance, pushTurn, config.mode, speakExaminer],
   )
 
   const stopAudioCapture = useCallback(async (): Promise<Blob | null> => {
@@ -1042,6 +1051,7 @@ export default function ExaminerSession({
         <span className="speaking-part-pill">{activePart > 0 ? isFullMock ? <UiText text={"Part {{value1}} of 3"} values={{ value1: String(activePart) }} /> : <UiText text={"Part {{value1}}"} values={{ value1: String(activePart) }} /> : <UiText text={"Interview"} />}</span>
       </header>
 
+      {languageNotice && <p role="status" className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-6 text-amber-800">{language.startsWith('uz') ? 'Javoblaringizni ingliz tilida bering. Boshqa tildagi javoblar ingliz tili darajangizni to‘liq baholashga imkon bermaydi.' : language.startsWith('ru') ? 'Отвечайте на английском. Ответы на другом языке ограничивают оценку вашего английского.' : 'Please answer in English. Answers in another language limit the evidence of your English ability.'}</p>}
       {isFullMock ? <nav className="speaking-journey" aria-label={uiCopy("Speaking test parts")}>
         {[1, 2, 3].map((part) => <div key={part} className={`speaking-journey-step ${activePart === part ? 'is-active' : activePart > part ? 'is-complete' : ''}`} aria-current={activePart === part ? 'step' : undefined}>
           <span className="speaking-journey-number">{activePart > part ? <CheckCircle2 className="h-4 w-4" /> : String(part).padStart(2, '0')}</span>

@@ -1,3 +1,5 @@
+import AssessmentPending from '@/components/ielts/AssessmentPending'
+import WritingReviewWorkbench from '@/components/writing/WritingReviewWorkbench'
 import { useCopy } from '@/i18n/interface'
 import UiText from '@/components/common/UiText'
 import { useActiveTest } from '@/hooks/useActiveTest'
@@ -8,36 +10,10 @@ import { useIeltsAttemptResume } from '@/hooks/useIeltsAttemptResume'
 import { accountStorageFor } from '@/utils/accountStorage'
 import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-  ArrowLeft,
-  Clock,
-  RotateCcw,
-  Send,
-  Timer,
-  TimerOff,
-  CheckCircle2,
-  PenLine,
-  Sparkles,
-  Target,
-  BookOpen,
-  Type,
-  Pen,
-  Trophy,
-  Zap,
-  ChevronDown,
-  ChevronUp,
-  Copy,
-  Check,
-  AlertCircle,
-  TrendingUp,
-  Loader2,
-  Crown,
-  Lock,
-} from 'lucide-react'
-import { evaluateWriting, type WritingEvaluation, type WritingError } from '@/services/geminiAI'
+import { ArrowLeft, Clock, RotateCcw, Send, Timer, TimerOff, Sparkles, Target, Type, Pen, Trophy, Zap, AlertCircle, Crown, Lock } from 'lucide-react'
+import { evaluateWriting, type WritingEvaluation } from '@/services/geminiAI'
 import { writingVisualContext } from '@/lib/writingScoring'
 import WritingScoreExplanation from '@/components/writing/WritingScoreExplanation'
-import ImprovedResponse from '@/components/ielts/ImprovedResponse'
 import { saveWritingAnalysis, getWritingXP } from '@/utils/writingAnalysisStorage'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { useFeatureTrial } from '@/hooks/useFeatureTrial'
@@ -210,15 +186,6 @@ function bandLabel(band: number): string {
   return 'Intermittent User'
 }
 
-const ERROR_CATEGORY_META: Record<string, { label: string; color: string }> = {
-  grammar: { label: 'Grammar', color: 'bg-red-100 text-red-700 border-red-200' },
-  vocabulary: { label: 'Vocabulary', color: 'bg-violet-100 text-violet-700 border-violet-200' },
-  spelling: { label: 'Spelling', color: 'bg-orange-100 text-orange-700 border-orange-200' },
-  punctuation: { label: 'Punctuation', color: 'bg-amber-100 text-amber-700 border-amber-200' },
-  coherence: { label: 'Coherence', color: 'bg-blue-100 text-blue-700 border-blue-200' },
-  task: { label: 'Task', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
-}
-
 function BandScoreRing({ score, label, size = 'md' }: { score: number; label: string; size?: 'lg' | 'md' }) {
   const isLg = size === 'lg'
   const r = isLg ? 42 : 28
@@ -255,50 +222,6 @@ function BandScoreRing({ score, label, size = 'md' }: { score: number; label: st
   )
 }
 
-function ErrorCard({ error, index }: { error: WritingError; index: number }) {
-  const [expanded, setExpanded] = useState(false)
-  const categoryColors: Record<string, string> = {
-    grammar: 'border-red-200 bg-red-50 text-red-700',
-    vocabulary: 'border-violet-200 bg-violet-50 text-violet-700',
-    spelling: 'border-orange-200 bg-orange-50 text-orange-700',
-    punctuation: 'border-amber-200 bg-amber-50 text-amber-700',
-    coherence: 'border-blue-200 bg-blue-50 text-blue-700',
-    task: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-  }
-
-  return (
-    <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-      <button
-        type="button"
-        onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50/50 transition"
-      >
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-red-100 text-[10px] font-bold text-red-700">
-          {index + 1}
-        </span>
-        <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold capitalize ${categoryColors[error.category] || categoryColors.grammar}`}>
-          {error.category}
-        </span>
-        <span className="flex-1 truncate text-sm text-slate-700">{error.original}</span>
-        {expanded ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
-      </button>
-      {expanded && (
-        <div className="border-t border-slate-100 px-4 py-3 space-y-2">
-          <div className="rounded-lg bg-red-50/70 px-3 py-2">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-red-500 mb-1"><UiText text={"Original"} /></p>
-            <p className="text-sm text-red-800 line-through">{error.original}</p>
-          </div>
-          <div className="rounded-lg bg-emerald-50/70 px-3 py-2">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-500 mb-1"><UiText text={"Corrected"} /></p>
-            <p className="text-sm text-emerald-800 font-medium">{error.corrected}</p>
-          </div>
-          <p className="text-xs text-slate-600 leading-relaxed">{error.explanation}</p>
-        </div>
-      )}
-    </div>
-  )
-}
-
 export default function IELTSWritingTestInterface({
   task,
   onExit,
@@ -319,8 +242,6 @@ export default function IELTSWritingTestInterface({
   const [aiEvaluation, setAiEvaluation] = useState<WritingEvaluation | null>(null)
   const [evaluating, setEvaluating] = useState(false)
   const [evalError, setEvalError] = useState<string | null>(null)
-  const [showCorrected, setShowCorrected] = useState(false)
-  const [copiedCorrected, setCopiedCorrected] = useState(false)
   const autoStartHandled = useRef(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [isLaunching, setIsLaunching] = useState(false)
@@ -519,14 +440,6 @@ export default function IELTSWritingTestInterface({
     }
   }, [handleSubmit, phase, timeRemaining, timerEnabled])
 
-
-  const handleCopyCorrected = useCallback(() => {
-    if (!aiEvaluation?.correctedVersion) return
-    navigator.clipboard.writeText(aiEvaluation.correctedVersion)
-    setCopiedCorrected(true)
-    setTimeout(() => setCopiedCorrected(false), 2000)
-  }, [aiEvaluation])
-
   if (phase === 'landing') {
     return (
       <div className="min-h-screen bg-[linear-gradient(160deg,#fff7f7_0%,#fee2e2_52%,#fff_100%)] flex items-center justify-center p-6 relative overflow-hidden">
@@ -665,38 +578,8 @@ export default function IELTSWritingTestInterface({
     const timeSpentDisplay = timerEnabled ? formatTime(effectiveDuration * 60 - timeRemaining) : null
 
     // ── Loading state while AI evaluates ──
-    if (evaluating) {
-      return (
-        <div className="min-h-screen bg-[linear-gradient(160deg,#fff7f7_0%,#fee2e2_52%,#fff_100%)] flex items-center justify-center p-6 relative overflow-hidden">
-          <div className="pointer-events-none absolute inset-0">
-            <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-rose-200/40 blur-3xl animate-pulse" />
-            <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-orange-200/30 blur-3xl animate-pulse" />
-          </div>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="relative z-10 w-full max-w-md rounded-3xl border border-red-100 bg-white/95 p-10 text-center shadow-[0_30px_70px_rgba(220,38,38,0.18)] backdrop-blur-xl"
-          >
-            <div className="relative mx-auto flex h-20 w-20 items-center justify-center">
-              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-red-500 to-rose-500 opacity-20 animate-ping" />
-              <div className="relative flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 text-white shadow-lg shadow-red-500/30">
-                <Sparkles className="h-9 w-9 animate-pulse" />
-              </div>
-            </div>
-            <h2 className="mt-6 text-2xl font-black text-slate-900"><UiText text={"AI is analyzing your writing"} /></h2>
-            <p className="mt-2 text-sm text-slate-500">
-              <UiText text={"Our examiner is scoring your response against official IELTS band descriptors, finding every mistake, and preparing a corrected version..."} />
-            </p>
-            <div className="mt-6 flex items-center justify-center gap-2 text-xs font-semibold text-red-600">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <UiText text={"Assessment can take up to 90 seconds. Your response is saved."} />
-            </div>
-          </motion.div>
-        </div>
-      )
-    }
+    if (evaluating) return <AssessmentPending />
 
-    // ── Error state ──
     if (evalError) {
       return (
         <div className="min-h-screen bg-[linear-gradient(160deg,#fff7f7_0%,#fee2e2_52%,#fff_100%)] flex items-center justify-center p-6">
@@ -874,130 +757,7 @@ export default function IELTSWritingTestInterface({
                   <WritingTaskImage task={task} className="mx-auto mt-4 h-auto max-w-full" />
                 </details>
               ) : null}
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-3xl border border-emerald-200 bg-emerald-50/40 p-6">
-                  <h3 className="flex items-center gap-2 text-base font-bold text-emerald-800 mb-3">
-                    <CheckCircle2 className="h-5 w-5" />
-                    <UiText text={"Strengths"} />
-                  </h3>
-                  <ul className="space-y-2">
-                    {ev.strengths.map((s, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
-                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
-                        {s}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="rounded-3xl border border-amber-200 bg-amber-50/40 p-6">
-                  <h3 className="flex items-center gap-2 text-base font-bold text-amber-800 mb-3">
-                    <TrendingUp className="h-5 w-5" />
-                    <UiText text={"How to Improve"} />
-                  </h3>
-                  <ul className="space-y-2">
-                    {ev.improvements.map((s, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
-                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
-                        {s}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-
-              {/* Error analysis */}
-              {ev.errors.length > 0 && (
-                <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                  <h3 className="flex items-center gap-2 text-base font-bold text-slate-900 mb-1">
-                    <AlertCircle className="h-5 w-5 text-red-500" />
-                    <UiText text={"Mistake Analysis"} />
-                  </h3>
-                  <p className="text-xs text-slate-500 mb-3">
-                    <UiText text={"Tap each item to see the correction and explanation."} /> {ev.errors.length} <UiText text={"issues found."} />
-                  </p>
-                  <div className="mb-4 flex flex-wrap gap-1.5">
-                    {Object.entries(
-                      ev.errors.reduce<Record<string, number>>((acc, e) => {
-                        acc[e.category] = (acc[e.category] || 0) + 1
-                        return acc
-                      }, {}),
-                    ).map(([cat, count]) => {
-                      const meta = ERROR_CATEGORY_META[cat] || ERROR_CATEGORY_META.grammar
-                      return (
-                        <span
-                          key={cat}
-                          className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${meta.color}`}
-                        >
-                          <UiText text={meta.label} /> · {count}
-                        </span>
-                      )
-                    })}
-                  </div>
-                  <div className="space-y-2">
-                    {ev.errors.map((error, i) => (
-                      <ErrorCard key={i} error={error} index={i} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Corrected version */}
-              {answer.trim() ? <ImprovedResponse text={ev.improvedVersion} /> : null}
-              {ev.correctedVersion && (
-                <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="flex items-center gap-2 text-base font-bold text-slate-900">
-                      <BookOpen className="h-5 w-5 text-emerald-500" />
-                      <UiText text={"Corrected Version"} />
-                    </h3>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={handleCopyCorrected}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"
-                      >
-                        {copiedCorrected ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
-                        {copiedCorrected ? <UiText text={"Copied"} /> : <UiText text={"Copy"} />}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowCorrected(!showCorrected)}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition"
-                      >
-                        {showCorrected ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                        {showCorrected ? <UiText text={"Hide"} /> : <UiText text={"Show"} />}
-                      </button>
-                    </div>
-                  </div>
-                  <AnimatePresence>
-                    {showCorrected && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="rounded-2xl border border-emerald-100 bg-emerald-50/30 p-5">
-                          <p className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
-                            {ev.correctedVersion}
-                          </p>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              )}
-
-              {/* Your original response */}
-              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-slate-500 mb-3">
-                  <PenLine className="h-4 w-4" />
-                  <UiText text={"Your Original Response"} />
-                </h3>
-                <p className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
-                  {answer || '(empty)'}
-                </p>
-              </div>
+              <WritingReviewWorkbench evaluation={ev} original={answer} />
 
               <div className="rounded-2xl border border-blue-100 bg-blue-50/40 p-4 text-center text-xs text-blue-700">
                 <Sparkles className="inline h-3.5 w-3.5 mr-1" />

@@ -1,30 +1,17 @@
+import WritingReviewWorkbench from '@/components/writing/WritingReviewWorkbench'
 import { useCopy } from '@/i18n/interface'
 import UiText from '@/components/common/UiText'
 import TestLeaderboard from '@/components/results/TestLeaderboard'
-import { useState } from 'react'
+
 import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
-import {
-  X,
-  Sparkles,
-  Target,
-  Trophy,
-  CheckCircle2,
-  TrendingUp,
-  AlertCircle,
-  BookOpen,
-  ChevronDown,
-  ChevronUp,
-  PenLine,
-} from 'lucide-react'
+import { X, Sparkles, Target, Trophy, PenLine } from 'lucide-react'
 import type { WritingAnalysisEntry } from '@/utils/writingAnalysisStorage'
-import type { WritingError } from '@/services/geminiAI'
 import { getWritingTaskById } from '@/data/writingTestData'
 import WritingTaskDiagram from '@/components/writing/WritingTaskDiagram'
 import WritingScoreExplanation from '@/components/writing/WritingScoreExplanation'
 import WritingDataVisual from '@/components/writing/WritingDataVisual'
 import WritingTaskImage from '@/components/writing/WritingTaskImage'
-import ImprovedResponse from '@/components/ielts/ImprovedResponse'
 
 function MiniRing({ score, label }: { score: number; label: string }) {
   const r = 26
@@ -58,50 +45,6 @@ function MiniRing({ score, label }: { score: number; label: string }) {
   )
 }
 
-function ErrorRow({ error, index }: { error: WritingError; index: number }) {
-  const [expanded, setExpanded] = useState(false)
-  const categoryColors: Record<string, string> = {
-    grammar: 'border-red-200 bg-red-50 text-red-700',
-    vocabulary: 'border-violet-200 bg-violet-50 text-violet-700',
-    spelling: 'border-orange-200 bg-orange-50 text-orange-700',
-    punctuation: 'border-amber-200 bg-amber-50 text-amber-700',
-    coherence: 'border-blue-200 bg-blue-50 text-blue-700',
-    task: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-  }
-
-  return (
-    <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-      <button
-        type="button"
-        onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left hover:bg-slate-50/50 transition"
-      >
-        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-red-100 text-[9px] font-bold text-red-700">
-          {index + 1}
-        </span>
-        <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-bold capitalize ${categoryColors[error.category] || categoryColors.grammar}`}>
-          {error.category}
-        </span>
-        <span className="flex-1 truncate text-xs text-slate-700">{error.original}</span>
-        {expanded ? <ChevronUp className="h-3.5 w-3.5 text-slate-400" /> : <ChevronDown className="h-3.5 w-3.5 text-slate-400" />}
-      </button>
-      {expanded && (
-        <div className="border-t border-slate-100 px-3 py-2.5 space-y-2">
-          <div className="rounded-lg bg-red-50/70 px-2.5 py-1.5">
-            <p className="text-[9px] font-bold uppercase tracking-widest text-red-500 mb-0.5"><UiText text={"Original"} /></p>
-            <p className="text-xs text-red-800 line-through">{error.original}</p>
-          </div>
-          <div className="rounded-lg bg-emerald-50/70 px-2.5 py-1.5">
-            <p className="text-[9px] font-bold uppercase tracking-widest text-emerald-500 mb-0.5"><UiText text={"Corrected"} /></p>
-            <p className="text-xs text-emerald-800 font-medium">{error.corrected}</p>
-          </div>
-          <p className="text-[11px] text-slate-600 leading-relaxed">{error.explanation}</p>
-        </div>
-      )}
-    </div>
-  )
-}
-
 export default function WritingResultModal({
   entry,
   onClose,
@@ -110,7 +53,6 @@ export default function WritingResultModal({
   onClose: () => void
 }) {
   const { c: uiCopy } = useCopy()
-  const [showCorrected, setShowCorrected] = useState(false)
   const task = entry.taskSnapshot ?? getWritingTaskById(entry.testId)
   const bandColor = (b: number) =>
     b >= 7 ? 'from-emerald-500 to-green-600' : b >= 5.5 ? 'from-amber-500 to-orange-500' : 'from-red-500 to-rose-600'
@@ -222,72 +164,7 @@ export default function WritingResultModal({
               <WritingScoreExplanation feedback={entry.criterionFeedback} taskType={entry.taskType} />
             </div>
 
-            {/* Strengths + improvements */}
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4">
-                <h4 className="flex items-center gap-1.5 text-sm font-bold text-emerald-800 mb-2">
-                  <CheckCircle2 className="h-4 w-4" /> <UiText text={"Strengths"} />
-                </h4>
-                <ul className="space-y-1.5">
-                  {entry.strengths.map((s, i) => (
-                    <li key={i} className="flex items-start gap-2 text-xs text-slate-700">
-                      <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-emerald-500" />{s}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="rounded-2xl border border-amber-200 bg-amber-50/40 p-4">
-                <h4 className="flex items-center gap-1.5 text-sm font-bold text-amber-800 mb-2">
-                  <TrendingUp className="h-4 w-4" /> <UiText text={"Improve"} />
-                </h4>
-                <ul className="space-y-1.5">
-                  {entry.improvements.map((s, i) => (
-                    <li key={i} className="flex items-start gap-2 text-xs text-slate-700">
-                      <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-amber-500" />{s}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            {/* Errors */}
-            {entry.errors.length > 0 && (
-              <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                <h4 className="flex items-center gap-1.5 text-sm font-bold text-slate-900 mb-3">
-                  <AlertCircle className="h-4 w-4 text-red-500" /> <UiText text={"Mistake Analysis ("} />{entry.errors.length})
-                </h4>
-                <div className="space-y-2">
-                  {entry.errors.map((error, i) => (
-                    <ErrorRow key={i} error={error} index={i} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Corrected version */}
-            {entry.studentResponse.trim() ? <ImprovedResponse text={entry.improvedVersion} /> : null}
-            {entry.correctedVersion && (
-              <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="flex items-center gap-1.5 text-sm font-bold text-slate-900">
-                    <BookOpen className="h-4 w-4 text-emerald-500" /> <UiText text={"Corrected Version"} />
-                  </h4>
-                  <button
-                    type="button"
-                    onClick={() => setShowCorrected(!showCorrected)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition"
-                  >
-                    {showCorrected ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                    {showCorrected ? <UiText text={"Hide"} /> : <UiText text={"Show"} />}
-                  </button>
-                </div>
-                {showCorrected && (
-                  <div className="rounded-xl border border-emerald-100 bg-emerald-50/30 p-4">
-                    <p className="text-xs leading-relaxed text-slate-700 whitespace-pre-wrap">{entry.correctedVersion}</p>
-                  </div>
-                )}
-              </div>
-            )}
+            <WritingReviewWorkbench evaluation={entry} original={entry.studentResponse} />
 
             <details className="ir-glass p-5"><summary className="cursor-pointer font-bold"><UiText text={"Test leaderboard"} /></summary><div className="mt-5"><TestLeaderboard testId={entry.testId} title={entry.testTitle} /></div></details>
             {/* Original */}

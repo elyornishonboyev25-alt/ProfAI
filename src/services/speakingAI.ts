@@ -170,6 +170,10 @@ function fallbackExaminerLine(params: ExaminerReplyParams): string {
 export type SpeakingEvaluation = {
   improvedAnswers?: Array<{ answerIndex: number; original: string; improved: string }>
   assessmentMode?: 'audio' | 'transcript' | 'offline'
+  recording?: { audioKey: string; layout: 'session' | 'day'; examinerVoice?: 'marin' | 'cedar' }
+  assessment?: { provider: string; model: string; assessedAt: string; rubricVersion: string }
+  pronunciationTargets?: Array<{ answerIndex: number; word: string; ipa: string; heard: string; tip: string; example: string; confidence: number }>
+  answerFeedback?: Array<{ answerIndex: number; summary: string; corrections: Array<{ original: string; corrected: string; explanation: string }> }>
   evidence?: Array<{ criterion: 'fluency' | 'lexical' | 'grammar' | 'pronunciation'; answerIndex: number; quote: string; explanation: string; exercise: string }>
   overallBand: number
   fluencyBand: number

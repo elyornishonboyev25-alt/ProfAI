@@ -6,7 +6,7 @@ process.env.ACCESS_TOKEN_SECRET = 'writing-test-access-secret-000'
 process.env.REFRESH_TOKEN_SECRET = 'writing-test-refresh-secret-000'
 for (const key of ['GEMINI_API_KEY', 'GEMINI_API_KEY_2', 'GEMINI_API_KEY_3', 'GEMINI_API_KEY_4', 'GEMINI_API_KEY_5', 'OPENAI_API_KEY', 'HF_ACCESS_TOKEN']) process.env[key] = ''
 const { validateWritingAssessment, writingRequestSchema, assessWriting } = await import('../dist/services/writingAssessment.service.js')
-const { coachPreferencesSchema, assistantContextSchema, buildCoachPrompt, coachPersonality } = await import('../dist/services/assistantPolicy.js')
+const { coachPreferencesSchema, assistantContextSchema, buildCoachPrompt, coachPersonality, parseAssistantReply } = await import('../dist/services/assistantPolicy.js')
 const { voiceInstructions } = await import('../dist/services/realtimeCoach.service.js')
 const { env } = await import('../dist/config/env.js')
 const { prisma } = await import('../dist/lib/prisma.js')
@@ -53,78 +53,105 @@ test('the same personality and teaching approach reach text and voice; examinati
   assert.doesNotMatch(coachPersonality(exam), /opted into mild banter/)
 })
 
-test('Writing generation uses the trusted rubric and server word count, preserving visual context', async (t) => {
-  const nativeFetch = globalThis.fetch, originalUsage = prisma.aiUsageEvent.create
-  env.OPENAI_API_KEY = 'fake-writing-test-key'
+test('Writing uses Gemini Pro, deep reasoning and an independent blind corrected-text assessment', async (t) => {
+  const originalUsage = prisma.aiUsageEvent.create
+  env.GEMINI_API_KEY = 'fake-writing-key'
   prisma.aiUsageEvent.create = async ({ data }) => data
-  globalThis.fetch = async (_url, options) => {
+  t.after(() => { env.GEMINI_API_KEY = ''; prisma.aiUsageEvent.create = originalUsage })
+  const requests = []
+  t.mock.method(globalThis, 'fetch', async (url, options) => {
+    assert.match(String(url), /gemini-3\.1-pro-preview:generateContent/)
     const body = JSON.parse(options.body)
-    assert.match(body.messages[0].content, /public IELTS band descriptors/)
-    assert.match(body.messages[0].content, /preserving their position, meaning, arguments, examples, personal details and supplied figures/)
-    assert.match(body.messages[0].content, /Score the original response only/)
-    const submitted = JSON.parse(body.messages[1].content)
-    assert.equal(submitted.wordCount, response.split(/\s+/).length)
+    requests.push(body)
+    assert.deepEqual(body.generationConfig.thinkingConfig, { thinkingLevel: 'high' })
+    const submitted = JSON.parse(body.contents[0].parts[0].text)
     assert.equal(submitted.visualContext, '2000: 10; 2010: 20')
-    return new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify(result) } }] }))
-  }
-  t.after(() => { globalThis.fetch = nativeFetch; prisma.aiUsageEvent.create = originalUsage; env.OPENAI_API_KEY = '' })
-  const checked = await assessWriting('writing-test-user', { taskType: 'task1', prompt: 'Describe the chart.', response, visualContext: '2000: 10; 2010: 20' })
-  assert.equal(checked.overallBand, 6)
-})
-
-test('Writing retries invalid feedback and falls back to JSON mode when Gemini rejects the schema', async (t) => {
-  const originalKey = env.GEMINI_API_KEY
-  const originalUsage = prisma.aiUsageEvent.create
-  env.GEMINI_API_KEY = 'fake-writing-test-key'
-  prisma.aiUsageEvent.create = async ({ data }) => data
-  t.after(() => { env.GEMINI_API_KEY = originalKey; prisma.aiUsageEvent.create = originalUsage })
-  t.mock.method(console, 'warn', () => {})
-
-  const fetchMock = t.mock.method(globalThis, 'fetch', async (_url, options) => {
-    const { generationConfig } = JSON.parse(options.body)
-    assert.equal(generationConfig.responseMimeType, 'application/json')
-    const call = fetchMock.mock.callCount()
-    const schema = generationConfig.responseSchema
-    if (call === 1) {
-      assert.equal(schema, undefined)
+    assert.equal(submitted.prompt, 'Describe the chart.')
+    if (requests.length === 1) {
+      assert.equal(submitted.response, response)
+      assert.equal(submitted.wordCount, response.split(/\s+/).length)
+      assert.match(body.systemInstruction.parts[0].text, /public IELTS band descriptors/)
     } else {
-      assert.equal(schema.type, 'OBJECT')
-      assert.ok(schema.required.includes('improvedVersion'))
-      assert.ok(schema.properties.criterionFeedback.required.includes('grammaticalRange'))
+      assert.equal(submitted.response, response.replace('These student learns', 'These students learn'))
+      assert.equal(submitted.overallBand, undefined)
+      assert.equal(submitted.correctedAssessment, undefined)
     }
-    if (call === 0) return Response.json({ error: { status: 'INVALID_ARGUMENT' } }, { status: 400 })
-    const feedback = call === 1 ? { ...result, improvedVersion: undefined } : result
-    return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify(feedback) }] } }] })
+    const output = requests.length === 1 ? result : { ...result, taskAchievement: 6, coherenceCohesion: 7, lexicalResource: 6, grammaticalRange: 7 }
+    return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify(output) }] } }] })
   })
-
-  const checked = await assessWriting('writing-test-user', { taskType: 'task2', prompt: 'Discuss regular practice.', response })
-  assert.equal(fetchMock.mock.callCount(), 3)
+  const checked = await assessWriting('test-user', { taskType: 'task1', prompt: 'Describe the chart.', response, visualContext: '2000: 10; 2010: 20' })
+  assert.equal(requests.length, 2)
   assert.equal(checked.overallBand, 6)
-  assert.equal(checked.improvedVersion, result.improvedVersion)
+  assert.equal(checked.correctedAssessment.overallBand, 6.5)
+  assert.equal(checked.correctedVersion, response.replace('These student learns', 'These students learn'), 'Model rewrites cannot silently replace the corrected original')
+  assert.equal(checked.xpAwarded, 60, 'Corrected potential never inflates original rewards')
+  assert.equal(checked.assessment.model, 'gemini-3.1-pro-preview')
 })
 
-test('Writing tries a model with separate limits when the configured Gemini models are rate-limited', async (t) => {
-  const originalKey = env.GEMINI_API_KEY
-  const originalModels = env.GEMINI_MODELS
+test('Writing retries incomplete originals and tolerates a provider rejecting the response schema', async (t) => {
   const originalUsage = prisma.aiUsageEvent.create
-  env.GEMINI_API_KEY = 'fake-writing-test-key'
-  env.GEMINI_MODELS = 'gemini-2.5-flash,gemini-2.5-flash-lite'
+  env.GEMINI_API_KEY = 'fake-writing-key'
   prisma.aiUsageEvent.create = async ({ data }) => data
-  t.after(() => {
-    env.GEMINI_API_KEY = originalKey
-    env.GEMINI_MODELS = originalModels
-    prisma.aiUsageEvent.create = originalUsage
+  t.after(() => { env.GEMINI_API_KEY = ''; prisma.aiUsageEvent.create = originalUsage })
+  t.mock.method(console, 'warn', () => {})
+  let calls = 0
+  t.mock.method(globalThis, 'fetch', async (_url, options) => {
+    calls++
+    const body = JSON.parse(options.body)
+    assert.equal(body.generationConfig.responseMimeType, 'application/json')
+    if (calls === 1) return Response.json({ error: {} }, { status: 400 })
+    if (calls === 2) { assert.equal(body.generationConfig.responseSchema, undefined); return Response.json({ candidates: [{ content: { parts: [{ text: '{}' }] } }] }) }
+    const output = calls === 3 ? result : { ...result, grammaticalRange: 7 }
+    return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify(output) }] } }] })
   })
+  assert.equal((await assessWriting('test-user', { taskType: 'task2', prompt: 'Discuss practice.', response })).overallBand, 6)
+  assert.equal(calls, 4)
+})
 
-  const models = []
-  t.mock.method(globalThis, 'fetch', async (url) => {
-    const model = new URL(url).pathname.split('/').at(-1).split(':')[0]
-    models.push(model)
-    if (model !== 'gemini-3.5-flash-lite') return new Response(null, { status: 429 })
-    return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify(result) }] } }] })
+test('assessment failures never silently downgrade to Flash, OpenAI or a fabricated potential band', async (t) => {
+  const originalUsage = prisma.aiUsageEvent.create
+  env.GEMINI_API_KEY = 'fake-key'; env.OPENAI_API_KEY = 'fake-alternative-key'
+  prisma.aiUsageEvent.create = async ({ data }) => data
+  t.after(() => { env.GEMINI_API_KEY = ''; env.OPENAI_API_KEY = ''; prisma.aiUsageEvent.create = originalUsage })
+  t.mock.method(console, 'warn', () => {})
+  const urls = []
+  t.mock.method(globalThis, 'fetch', async url => { urls.push(String(url)); return Response.json({ error: {} }, { status: 429 }) })
+  await assert.rejects(assessWriting('test-user', { taskType: 'task2', prompt: 'Discuss practice.', response }), { code: 'GEMINI_429' })
+  assert.equal(urls.length, 1)
+  assert.match(urls[0], /gemini-3\.1-pro-preview/)
+})
+
+test('automatic adaptation reaches text and voice, ignores legacy manual settings and stays neutral in exams', () => {
+  const context = assistantContextSchema.parse({ language: 'uz', coachPreferences: { style: 'affectionate' } })
+  assert.match(buildCoachPrompt(context), /AUTOMATIC ADAPTATION/)
+  assert.match(buildCoachPrompt(context), /No manual style/)
+  assert.equal(coachPersonality(context), coachPersonality(assistantContextSchema.parse({ coachPreferences: { style: 'strict', lessonMode: 'plan' } })))
+  assert.match(buildCoachPrompt(context), /asalim/)
+  assert.match(voiceInstructions(context, {}), /asalim/)
+  assert.match(coachPersonality(assistantContextSchema.parse({ ...context, mode: 'examiner' })), /No jokes/)
+})
+
+test('the assistant chooses an illustrative expression with its reply without a manual mode', () => {
+  const reply = parseAssistantReply(JSON.stringify({ reply: 'Try that again using a clear example.', expression: 'focused', language: 'en', actions: [], memoryUpdates: [] }))
+  assert.equal(reply.expression, 'focused')
+  assert.equal(reply.reply, 'Try that again using a clear example.')
+  const prompt = buildCoachPrompt(assistantContextSchema.parse({}))
+  assert.match(prompt, /Never ask the learner to choose a mode/)
+  assert.match(prompt, /new request takes priority over an earlier tone/)
+})
+
+test('an unchanged corrected text retains the same band without a redundant model request', async (t) => {
+  const originalUsage = prisma.aiUsageEvent.create
+  env.GEMINI_API_KEY = 'fake-unchanged-key'
+  prisma.aiUsageEvent.create = async ({ data }) => data
+  t.after(() => { env.GEMINI_API_KEY = ''; prisma.aiUsageEvent.create = originalUsage })
+  let calls = 0
+  t.mock.method(globalThis, 'fetch', async () => {
+    calls++
+    return Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({ ...result, errors: [] }) }] } }] })
   })
-
-  const checked = await assessWriting('writing-test-user', { taskType: 'task2', prompt: 'Discuss regular practice.', response })
-  assert.deepEqual(models, ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-3.5-flash-lite'])
-  assert.equal(checked.overallBand, 6)
+  const checked = await assessWriting('test-user', { taskType: 'task2', prompt: 'Discuss practice.', response })
+  assert.equal(checked.correctedVersion, response)
+  assert.equal(checked.correctedAssessment.overallBand, checked.overallBand)
+  assert.equal(calls, 1)
 })

@@ -110,7 +110,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
   // Every registered learner has a text balance; Live AI checks its own plan.
   const hasPremium = Boolean(user)
   const ownerKey = user?.id ? `user:${user.id}` : 'guest'
-  const coachPreferences = useAiAssistantStore((state) => state.coachPreferencesByOwner[ownerKey] ?? DEFAULT_COACH_PREFERENCES)
+  const coachPreferences = DEFAULT_COACH_PREFERENCES
 
   const chatThreads = useAiAssistantStore((s) => s.threadsByOwner[ownerKey] ?? EMPTY_THREADS)
   const activeThreadId = useAiAssistantStore((s) => s.activeThreadIds[ownerKey] ?? null)
@@ -432,7 +432,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
 
       try {
         const response = await chatWithAssistant(text, history, location.pathname, {
-          coachPreferences: useAiAssistantStore.getState().coachPreferencesByOwner[ownerKey] ?? DEFAULT_COACH_PREFERENCES,
+          coachPreferences: DEFAULT_COACH_PREFERENCES,
           studyContext: describeStudySnapshot(snapshot),
           learnerName: preferredName,
           screenContext,
@@ -451,7 +451,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
           },
         })
         if (controller.signal.aborted || useAuthStore.getState().user?.id !== user?.id) return
-        updateStoredMessage(ownerKey, threadId, assistantMessage.id, { content: response.reply, status: undefined })
+        updateStoredMessage(ownerKey, threadId, assistantMessage.id, { content: response.reply, expression: response.expression, status: undefined })
         if (!threadId.startsWith('local-')) {
           // Preserve message order without holding up audio or the next turn.
           void userPersistPromise.then(() => persistAiMessage(threadId, { ...assistantMessage, content: response.reply, status: undefined }, response.replyLanguage ?? voiceLang)).catch(() => null)

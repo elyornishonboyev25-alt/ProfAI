@@ -1,5 +1,5 @@
 import { apiClient } from '@/lib/apiClient'
-import { withAssessmentDeadline } from '@/utils/assessmentDeadline'
+import { waitForWritingAssessment, type WritingSubmissionOptions } from '@/services/writingSubmissionClient'
 
 export type AiGenerationPurpose =
   | 'assistant_chat'
@@ -115,6 +115,7 @@ export function extractJSON(raw: string): string {
 
 export async function evaluateWriting(
   taskType: 'task1' | 'task2', prompt: string, studentResponse: string, _wordCount: number, visualContext?: string,
+  options: WritingSubmissionOptions = {},
 ): Promise<WritingEvaluation> {
   if (!studentResponse.trim()) return {
     overallBand: 0, taskAchievement: 0, coherenceCohesion: 0, lexicalResource: 0, grammaticalRange: 0,
@@ -122,9 +123,7 @@ export async function evaluateWriting(
     improvements: ['Write a response that addresses every part of the task prompt.'], errors: [], correctedVersion: '', xpAwarded: 0,
   }
   // The backend owns the rubric, word count, score calculation and evidence checks.
-  const result = await withAssessmentDeadline(signal => apiClient.post<WritingEvaluation>(
-    '/ai/generate/writing/evaluate', { taskType, prompt, response: studentResponse, visualContext }, { signal },
-  ), 140_000)
+  const result = await waitForWritingAssessment({ taskType, prompt, response: studentResponse, visualContext }, options)
   const criteria = [result.taskAchievement, result.coherenceCohesion, result.lexicalResource, result.grammaticalRange]
   if (!criteria.every(band => typeof band === 'number' && Number.isFinite(band) && band >= 0 && band <= 9)
     || typeof result.summary !== 'string' || !result.summary.trim()) {

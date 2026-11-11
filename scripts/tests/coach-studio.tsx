@@ -34,10 +34,10 @@ export async function run() {
         assert.deepEqual(body.coachPreferences, preferences); calledChat = true
         return new Response(JSON.stringify({ reply: 'Let’s practise.', actions: [], memoryUpdates: [], title: null }))
       }
-      assert.ok(String(url).endsWith('/ai/generate/writing/evaluate'))
+      assert.ok(String(url).endsWith('/ai/generate/writing/submissions'))
       assert.equal(body.systemPrompt, undefined); assert.equal(body.wordCount, undefined)
       assert.equal(body.visualContext, 'The chart shows 10 then 20.'); calledWriting = true
-      return new Response(JSON.stringify({ overallBand: 6, taskAchievement: 6, coherenceCohesion: 6, lexicalResource: 6, grammaticalRange: 6, summary: 'Practice assessment.', errors: [] }))
+      return new Response(JSON.stringify({ id: 'writing-job', status: 'COMPLETED', result: { overallBand: 6, taskAchievement: 6, coherenceCohesion: 6, lexicalResource: 6, grammaticalRange: 6, summary: 'Practice assessment.', errors: [] } }))
     }
     await chatWithAssistant('Give me a challenge.', [], '/ai-tutor', { coachPreferences: preferences })
     await evaluateWriting('task1', 'Describe the chart.', 'A sample essay.', 999999, 'The chart shows 10 then 20.')

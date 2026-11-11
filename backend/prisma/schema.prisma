@@ -145,6 +145,7 @@ model User {
   aiMemories                          AiMemory[]
   aiConversationThreads               AiConversationThread[]
   aiUsageEvents                       AiUsageEvent[]
+  writingSubmissions                  WritingSubmission[]
   vocabularyNotebooks                 VocabularyNotebook[]
   speakingEvaluations                 SpeakingEvaluation[]
   speakingSessions                    SpeakingSession[]
@@ -1288,6 +1289,30 @@ model Review {
   createdAt  DateTime @default(now())
 
   @@index([approved, createdAt])
+}
+
+// Durable, account-owned assessment work. A browser disconnect never cancels it.
+model WritingSubmission {
+  id             String   @id @default(cuid())
+  userId         String
+  fingerprint    String
+  input          Json
+  status         String   @default("QUEUED")
+  result         Json?
+  checkpoint     Json?
+  attempts       Int      @default(0)
+  nextAttemptAt  DateTime @default(now())
+  leaseUntil     DateTime?
+  lockToken      String?
+  lastErrorCode  String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  completedAt    DateTime?
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, fingerprint])
+  @@index([status, nextAttemptAt])
+  @@index([leaseUntil])
 }
 
 model AccountLearningData {

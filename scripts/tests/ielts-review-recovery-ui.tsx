@@ -53,24 +53,20 @@ export async function run() {
     assert.equal(calculateFullMockOverallBand({ ...sections, speaking: { ...sections.speaking!, band: NaN } }), null)
 
     let requests = 0
-    apiClient.post = (async () => { requests++; return { ...evaluation, overallBand: 9, errors: null, strengths: null, improvements: null } }) as typeof apiClient.post
+    apiClient.post = (async () => { requests++; return { id: 'writing-job', status: 'COMPLETED', result: { ...evaluation, overallBand: 9, errors: null, strengths: null, improvements: null } } }) as typeof apiClient.post
     const normalized = await evaluateWriting('task2', 'Prompt', 'Original response', 2)
     assert.equal(normalized.overallBand, 6.5, 'Criterion average determines the band')
     assert.deepEqual(normalized.errors, [])
-    apiClient.post = (async () => ({ ...evaluation, grammaticalRange: NaN })) as typeof apiClient.post
+    apiClient.post = (async () => ({ id: 'writing-job', status: 'COMPLETED', result: { ...evaluation, grammaticalRange: NaN } })) as typeof apiClient.post
     await assert.rejects(evaluateWriting('task2', 'Prompt', 'Original response', 2), /incomplete/)
 
     const sessionKey = `profai:writing:draft:guest:${writing.id}:session`
     storage.setItem(sessionKey, JSON.stringify({ phase: 'submitted', answers: responses, evaluations: { [writing.tasks[0].id]: evaluation }, timeRemaining: 1200, timerEnabled: true, deadline: Date.now() - 1000 }))
     saveIeltsAttemptResume('guest', { sessionKey, title: writing.title, pathname: `/ielts/writing/test/${writing.id}`, search: '', state: null })
     requests = 0
-    apiClient.post = (async (_path: string, body: { response: string }) => { requests++; assert.equal(body.response, responses[writing.tasks[1].id], 'A successful task is not billed or assessed again'); return evaluation }) as typeof apiClient.post
+    apiClient.post = (async (_path: string, body: { response: string }) => { requests++; assert.equal(body.response, responses[writing.tasks[1].id], 'A successful task is not billed or assessed again'); return { id: 'writing-job', status: 'COMPLETED', result: evaluation } }) as typeof apiClient.post
     await mount(<IELTSWritingFullTestInterface fullTest={writing} onExit={() => {}} />)
-    assert.ok(container.querySelector('[role="alert"]'))
-    for (const response of Object.values(responses)) assert.ok(container.textContent?.includes(response), 'Saved essays remain visible while assessment is unavailable')
-    assert.equal(requests, 0, 'Restoring submitted answers does not start a paid request')
-    await click('Retry')
-    assert.equal(requests, 1)
+    assert.equal(requests, 1, 'A submitted pending task resumes automatically and reuses its durable server identity')
     assert.ok(container.textContent?.includes('Estimated Overall Band 6.5'))
     assert.equal(JSON.parse(storage.getItem(sessionKey)!).phase, 'submitted')
     assert.equal(getIeltsAttemptResumes('guest').some(item => item.sessionKey === sessionKey), false, 'Completed reviews are not advertised as unfinished tests')

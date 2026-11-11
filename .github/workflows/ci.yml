@@ -50,6 +50,14 @@ jobs:
       - name: Check live voice controls and automatic recovery
         run: node scripts/test-listening-parts-ui.mjs scripts/tests/voice-controls-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/voice-recovery-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/realtime-coach-streaming.tsx
 
+      - name: Check durable Writing recovery
+        run: |
+          node scripts/test-listening-parts-ui.mjs scripts/tests/writing-submission-ui.tsx
+          node scripts/test-listening-parts-ui.mjs scripts/tests/ielts-review-recovery-ui.tsx
+          node scripts/test-listening-parts-ui.mjs scripts/tests/ielts-review-improvements-ui.tsx
+          node scripts/test-listening-parts-ui.mjs scripts/tests/coach-studio.tsx
+          node scripts/test-listening-parts-ui.mjs scripts/tests/full-mock-flow-ui.tsx
+
       - name: Build frontend
         run: npm run build
 
@@ -84,4 +92,8 @@ jobs:
 
       - name: Check live voice protocol, generation readiness and session recovery
         run: node --test scripts/gemini-live.test.mjs scripts/voice-allowance.test.mjs ../scripts/tests/nova-pcm-capture.test.mjs
+        working-directory: backend
+
+      - name: Check durable Writing assessment jobs
+        run: node --test scripts/writing-assessment.test.mjs scripts/writing-submission.test.mjs
         working-directory: backend

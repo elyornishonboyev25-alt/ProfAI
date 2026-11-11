@@ -1,4 +1,5 @@
-import AssessmentPending from '@/components/ielts/AssessmentPending'
+import WritingSubmissionPending from '@/components/writing/WritingSubmissionPending'
+import type { WritingProgress } from '@/services/writingSubmissionClient'
 import WritingReviewWorkbench from '@/components/writing/WritingReviewWorkbench'
 import { useCopy } from '@/i18n/interface'
 import UiText from '@/components/common/UiText'
@@ -88,6 +89,9 @@ export default function IELTSWritingFullTestInterface({
   const [showWritingGate, setShowWritingGate] = useState(false)
   const [isLaunching, setIsLaunching] = useState(false)
   const [evaluating, setEvaluating] = useState(false)
+  const [submissionProgress, setSubmissionProgress] = useState<WritingProgress>({ stage: 'saving', saved: false })
+  const submissionController = useRef<AbortController | null>(null)
+  const resumePending = useRef(false)
   const [evalError, setEvalError] = useState<string | null>(null)
   const [evaluations, setEvaluations] = useState<Record<string, WritingEvaluation>>({})
   const assessmentCache = useRef<Record<string, { answer: string; evaluation: WritingEvaluation }>>({})
@@ -106,11 +110,12 @@ export default function IELTSWritingFullTestInterface({
   )
   const totalWordCount = tasks.reduce((total, task) => total + wordCounts[task.id], 0)
   const user = useAuthStore((state: AuthState) => state.user)
+  useEffect(() => () => submissionController.current?.abort(), [user?.id])
   const draftKey = `profai:writing:draft:${user?.id ?? 'guest'}:${fullTest.id}${fullMockId ? `:mock:${fullMockId}` : ''}`
   const sessionKey = `${draftKey}:session`
   const submittedTimeRemaining = phase === 'submitted' ? timeRemaining : undefined
   useIeltsAttemptResume(phase === 'writing' || evaluating, sessionKey, fullTest.title)
-  useActiveTest(phase === 'writing' || evaluating)
+  useActiveTest(phase === 'writing' || (evaluating && !submissionProgress.saved))
   const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
   const awardBadge = useBadgeStore((state) => state.awardIfEligible)
   const writingTrial = useFeatureTrial('writing')
@@ -158,7 +163,7 @@ export default function IELTSWritingFullTestInterface({
           assessmentCache.current = Object.fromEntries(tasks.filter(task => restored[task.id]).map(task => [task.id, { answer: parsed.answers?.[task.id] ?? '', evaluation: restored[task.id] }]))
           setIsTimerRunning(false)
           setTimeRemaining(parsed.timeRemaining ?? 0)
-          if (!tasks.every(task => restored[task.id])) setEvalError('Your submitted responses are saved. Retry to finish the assessment.')
+          if (!tasks.every(task => restored[task.id])) resumePending.current = true
           setPhase('submitted')
         } else setPhase('writing')
       }
@@ -247,6 +252,9 @@ export default function IELTSWritingFullTestInterface({
       return
     }
 
+    const controller = new AbortController()
+    submissionController.current?.abort()
+    submissionController.current = controller
     submittingRef.current = true
     setShowSubmitConfirm(false)
     setIsTimerRunning(false)
@@ -259,19 +267,23 @@ export default function IELTSWritingFullTestInterface({
     })))
 
     try {
-      const results: WritingEvaluation[] = []
-      for (const task of tasks) {
+      const progressByTask = new Map<string, WritingProgress>()
+      const results = await Promise.all(tasks.map(async task => {
         const answer = answers[task.id] ?? ''
         const cached = assessmentCache.current[task.id]
-        const evaluation = cached?.answer === answer ? cached.evaluation : await evaluateWriting(task.taskType, task.prompt, answer, wordCounts[task.id], writingVisualContext(task))
-        if ((useAuthStore.getState().user?.id ?? 'guest') !== (user?.id ?? 'guest')) return
+        const evaluation = cached?.answer === answer ? cached.evaluation : await evaluateWriting(task.taskType, task.prompt, answer, wordCounts[task.id], writingVisualContext(task), { signal: controller.signal, onProgress: progress => {
+          progressByTask.set(task.id, progress)
+          const saved = tasks.filter(item => (answers[item.id] ?? '').trim()).every(item => assessmentCache.current[item.id]?.answer === answers[item.id] || progressByTask.get(item.id)?.saved)
+          setSubmissionProgress({ ...progress, saved })
+        } })
+        if ((useAuthStore.getState().user?.id ?? 'guest') !== (user?.id ?? 'guest')) throw new DOMException('Account changed', 'AbortError')
         assessmentCache.current[task.id] = { answer, evaluation }
-        results.push(evaluation)
         setEvaluations(Object.fromEntries(tasks.flatMap(item => {
           const entry = assessmentCache.current[item.id]
           return entry?.answer === (answers[item.id] ?? '') ? [[item.id, entry.evaluation]] : []
         })))
-      }
+        return evaluation
+      }))
       const resultMap = Object.fromEntries(tasks.map((task, index) => [task.id, results[index]]))
       setEvaluations(resultMap)
       if (totalWordCount > 0 && !inFullMock) writingTrial.consume()
@@ -363,9 +375,11 @@ export default function IELTSWritingFullTestInterface({
         clearActiveTestPaper(sessionKey, user?.id ?? 'guest')
       }
     } catch (error) {
+      if (controller.signal.aborted) return
       setEvalError(error instanceof Error ? error.message : 'AI evaluation failed. Please try again.')
     } finally {
       submittingRef.current = false
+      controller.abort()
       setEvaluating(false)
     }
   }, [
@@ -388,6 +402,13 @@ export default function IELTSWritingFullTestInterface({
     wordCounts,
     writingTrial,
   ])
+
+  useEffect(() => {
+    if (phase === 'submitted' && resumePending.current && !submittingRef.current) {
+      resumePending.current = false
+      void handleSubmit()
+    }
+  }, [phase, handleSubmit])
 
   useEffect(() => {
     if (phase === 'writing' && timerEnabled && timeRemaining === 0 && !autoSubmittedRef.current) {
@@ -452,7 +473,7 @@ export default function IELTSWritingFullTestInterface({
   }
 
   if (phase === 'submitted') {
-    if (evaluating) return <AssessmentPending />
+    if (evaluating || resumePending.current) return <WritingSubmissionPending progress={submissionProgress} onLeave={onExit} />
 
     if (evalError) {
       return (

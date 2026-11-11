@@ -4,8 +4,21 @@ import { AiGenerationError, generateAiText } from '../services/aiProvider.servic
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { withStudyAccess } from '../services/billing.service.js'
 import { assessWriting, writingRequestSchema } from '../services/writingAssessment.service.js'
+import { getWritingSubmission, submitWriting } from '../services/writingSubmission.service.js'
 
 const router = Router()
+
+router.post('/writing/submissions', asyncHandler(async (req, res) => {
+  const payload = writingRequestSchema.parse(req.body)
+  const submission = await withStudyAccess(req.user!.id, 'writing', () => submitWriting(req.user!.id, payload))
+  res.set('Cache-Control', 'no-store').status(submission.status === 'COMPLETED' ? 200 : 202).json(submission)
+}))
+
+router.get('/writing/submissions/:id', asyncHandler(async (req, res) => {
+  const submission = await getWritingSubmission(req.user!.id, z.string().max(100).parse(req.params.id))
+  if (!submission) return res.status(404).json({ code: 'WRITING_SUBMISSION_NOT_FOUND', message: 'Writing submission not found.' })
+  return res.set('Cache-Control', 'no-store').json(submission)
+}))
 
 router.post('/writing/evaluate', asyncHandler(async (req, res) => {
   const payload = writingRequestSchema.parse(req.body)

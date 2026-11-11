@@ -73,7 +73,7 @@ app.use(
   '/api/v1/ai/generate',
   requireAuth,
   enforceStudyAccess,
-  aiRateLimit,
+  (req, res, next) => req.method === 'GET' && /^\/writing\/submissions\/[^/]+$/.test(req.path) ? next() : aiRateLimit(req, res, next),
   express.json({ limit: '6mb' }),
   aiGenerationRoutes,
 )

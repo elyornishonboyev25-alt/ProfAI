@@ -105,9 +105,9 @@ export async function run() {
     accountStorageFor('guest').setItem(`${draftKey}:session`, JSON.stringify({ timerEnabled: false, deadline: null }))
     const submitted: string[] = []
     apiClient.post = (async (path: string, body: { response: string }) => {
-      assert.equal(path, '/ai/generate/writing/evaluate')
+      assert.equal(path, '/ai/generate/writing/submissions')
       submitted.push(body.response)
-      return { overallBand: 6, taskAchievement: 6, coherenceCohesion: 6, lexicalResource: 6, grammaticalRange: 6, summary: 'Original response feedback', strengths: [], improvements: [], errors: [], correctedVersion: body.response, improvedVersion: `Improved: ${body.response}`, xpAwarded: 0 }
+      return { id: 'writing-'+submitted.length, status: 'COMPLETED', result: { overallBand: 6, taskAchievement: 6, coherenceCohesion: 6, lexicalResource: 6, grammaticalRange: 6, summary: 'Original response feedback', strengths: [], improvements: [], errors: [], correctedVersion: body.response, improvedVersion: `Improved: ${body.response}`, xpAwarded: 0 } }
     }) as typeof apiClient.post
     let completed: Array<{ response: string; improvedVersion?: string }> = []
     await render(<IELTSWritingFullTestInterface fullTest={fullTest} inFullMock fullMockId="review-test" onExit={() => {}} onComplete={(_band, _summary, review) => { completed = review }} />)

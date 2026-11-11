@@ -1,6 +1,7 @@
 import { env } from '../config/env.js'
 import { prisma } from '../lib/prisma.js'
 import { readEventStream } from '../utils/eventStream.js'
+import { setTimeout as delay } from 'node:timers/promises'
 
 export type AiProviderName = 'gemini' | 'openai' | 'hf'
 
@@ -51,7 +52,7 @@ type ProviderAvailability = {
 class ProviderRequestError extends Error {
   code: string
 
-  constructor(code: string, message: string) {
+  constructor(code: string, message: string, public retryAfterMs = 0) {
     super(message)
     this.name = 'ProviderRequestError'
     this.code = code
@@ -62,7 +63,7 @@ export class AiGenerationError extends Error {
   statusCode: number
   code: string
 
-  constructor(statusCode: number, code: string, message: string) {
+  constructor(statusCode: number, code: string, message: string, public retryAfterMs = 0) {
     super(message)
     this.name = 'AiGenerationError'
     this.statusCode = statusCode
@@ -85,8 +86,23 @@ function getGeminiKeys() {
 }
 
 function getGeminiModels(purpose: AiGenerationPurpose) {
-  if (isAssessmentPurpose(purpose)) return [env.GEMINI_ASSESSMENT_MODEL]
+  if (isAssessmentPurpose(purpose)) return splitConfiguredValues([env.GEMINI_ASSESSMENT_MODEL, env.GEMINI_ASSESSMENT_FALLBACK_MODELS])
   return splitConfiguredValues([env.GEMINI_MODELS])
+}
+
+// Keep only allowlisted diagnostics. Provider bodies may contain request data;
+// never return them to clients or write them to logs.
+export async function geminiFailure(response: Response) {
+  const payload = await response.json().catch(() => null)
+  const details = Array.isArray(payload?.error?.details) ? payload.error.details : []
+  const retry = details.find((entry: { retryDelay?: unknown }) => typeof entry.retryDelay === 'string')?.retryDelay
+  const seconds = typeof retry === 'string' && /^\d+(?:\.\d+)?s$/.test(retry) ? parseFloat(retry) : 0
+  const header = response.headers.get('retry-after')
+  const headerMs = header ? (/^\d+(?:\.\d+)?$/.test(header) ? Number(header) * 1000 : Math.max(0, Date.parse(header) - Date.now())) : 0
+  const retryAfterMs = Math.min(3_600_000, Math.max(seconds * 1000, Number.isFinite(headerMs) ? headerMs : 0))
+  const zeroQuota = response.status === 429 && typeof payload?.error?.message === 'string' && /limit:\s*0(?:\D|$)/i.test(payload.error.message)
+  return new ProviderRequestError(zeroQuota ? 'GEMINI_QUOTA_UNAVAILABLE' : `GEMINI_${response.status}`,
+    zeroQuota ? 'The configured Gemini project has no assessment quota.' : 'Gemini rejected the request.', retryAfterMs)
 }
 
 export function isAssessmentPurpose(purpose: AiGenerationPurpose) {
@@ -151,8 +167,8 @@ async function requestGemini(input: GenerateAiTextInput): Promise<ProviderResult
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:${operation}`
 
       let response: Response
-      try {
-        const request = (responseSchema?: Record<string, unknown>) => fetchWithTimeout(url, {
+      let schema = input.geminiResponseSchema
+      const request = (responseSchema?: Record<string, unknown>) => fetchWithTimeout(url, {
           signal: input.signal,
           method: 'POST',
           headers: {
@@ -172,22 +188,26 @@ async function requestGemini(input: GenerateAiTextInput): Promise<ProviderResult
             },
           }),
         }, isAssessmentPurpose(input.purpose) ? Math.max(env.AI_PROVIDER_TIMEOUT_MS, 65_000) : env.AI_PROVIDER_TIMEOUT_MS)
-        response = await request(input.geminiResponseSchema)
-        if (response.status === 400 && input.geminiResponseSchema) {
+      try {
+        response = await request(schema)
+        if (response.status === 400 && schema) {
           console.warn('Gemini rejected the structured response request', { model })
           await response.body?.cancel().catch(() => {})
-          response = await request()
+          schema = undefined
+          response = await request(schema)
+        }
+        if (!response.ok) {
+          lastError = await geminiFailure(response)
+          // Configuration and zero quota require an operator action. Retry only
+          // short transient overloads, honoring the provider's waiting period.
+          if (!['GEMINI_429', 'GEMINI_503', 'GEMINI_502', 'GEMINI_500'].includes(lastError.code) || lastError.retryAfterMs > 3000) continue
+          await delay(Math.max(1000, lastError.retryAfterMs) + Math.random() * 250, undefined, { signal: input.signal })
+          response = await request(schema)
+          if (!response.ok) { lastError = await geminiFailure(response); continue }
         }
       } catch (error) {
         if (input.signal?.aborted) throw error
-        lastError = error instanceof ProviderRequestError
-          ? error
-          : new ProviderRequestError('GEMINI_NETWORK', 'Gemini request failed.')
-        continue
-      }
-
-      if (!response.ok) {
-        lastError = new ProviderRequestError(`GEMINI_${response.status}`, 'Gemini rejected the request.')
+        lastError = error instanceof ProviderRequestError ? error : new ProviderRequestError('GEMINI_NETWORK', 'Gemini request failed.')
         continue
       }
 
@@ -256,7 +276,7 @@ function parseOpenAiCompatiblePayload(payload: unknown) {
 }
 
 async function requestOpenAi(input: GenerateAiTextInput): Promise<ProviderResult> {
-  const model = input.purpose === 'assistant_chat' && env.AI_CHAT_MODEL && env.AI_CHAT_PROVIDER === 'openai'
+  const model = isAssessmentPurpose(input.purpose) && env.OPENAI_ASSESSMENT_MODEL ? env.OPENAI_ASSESSMENT_MODEL : input.purpose === 'assistant_chat' && env.AI_CHAT_MODEL && env.AI_CHAT_PROVIDER === 'openai'
     ? env.AI_CHAT_MODEL : env.OPENAI_MODEL
   const userContent = input.images?.length
     ? [
@@ -308,6 +328,7 @@ async function requestOpenAi(input: GenerateAiTextInput): Promise<ProviderResult
 }
 
 async function requestHuggingFace(input: GenerateAiTextInput): Promise<ProviderResult> {
+  const model = isAssessmentPurpose(input.purpose) && env.HF_ASSESSMENT_MODEL ? env.HF_ASSESSMENT_MODEL : env.HF_MODEL
   const response = await fetchWithTimeout(`${env.HF_API_BASE.replace(/\/$/, '')}/chat/completions`, {
     signal: input.signal,
     method: 'POST',
@@ -316,7 +337,7 @@ async function requestHuggingFace(input: GenerateAiTextInput): Promise<ProviderR
       Authorization: `Bearer ${env.HF_ACCESS_TOKEN}`,
     },
     body: JSON.stringify({
-      model: env.HF_MODEL,
+      model,
       temperature: 0.35,
       max_tokens: input.maxOutputTokens,
       messages: [
@@ -331,7 +352,7 @@ async function requestHuggingFace(input: GenerateAiTextInput): Promise<ProviderR
   }
   const parsed = parseOpenAiCompatiblePayload(await response.json().catch(() => null))
   if (!parsed.text) throw new ProviderRequestError('HF_EMPTY', 'Hugging Face returned an empty response.')
-  return { ...parsed, model: env.HF_MODEL }
+  return { ...parsed, model }
 }
 
 async function recordUsage(data: {
@@ -355,7 +376,7 @@ async function recordUsage(data: {
 }
 
 export async function generateAiText(input: GenerateAiTextInput): Promise<AiGenerationResult> {
-  input = { ...input, signal: AbortSignal.any([AbortSignal.timeout(Math.max(isAssessmentPurpose(input.purpose) ? 70_000 : 60_000, env.AI_PROVIDER_TIMEOUT_MS)), ...(input.signal ? [input.signal] : [])]) }
+  input = { ...input, signal: AbortSignal.any([AbortSignal.timeout(Math.max(isAssessmentPurpose(input.purpose) ? 110_000 : 60_000, env.AI_PROVIDER_TIMEOUT_MS)), ...(input.signal ? [input.signal] : [])]) }
   const startedAt = Date.now()
   const requestChars = input.systemPrompt.length + input.userMessage.length
   let order = buildAiProviderOrder({
@@ -365,7 +386,8 @@ export async function generateAiText(input: GenerateAiTextInput): Promise<AiGene
     hasImages: Boolean(input.images?.length),
   })
   if (input.audio?.length) order = order.filter((provider) => provider === 'gemini')
-  if (isAssessmentPurpose(input.purpose)) order = order.filter((provider) => provider === 'gemini')
+  if (isAssessmentPurpose(input.purpose)) order = order.filter((provider) => provider === 'gemini'
+    || (provider === 'openai' && Boolean(env.OPENAI_ASSESSMENT_MODEL)) || (provider === 'hf' && Boolean(env.HF_ASSESSMENT_MODEL)))
   if (input.purpose === 'assistant_chat' && env.AI_CHAT_PROVIDER !== 'auto') {
     const preferred = env.AI_CHAT_PROVIDER
     order = [preferred, ...order.filter((provider) => provider !== preferred)].filter((provider) => order.includes(provider))
@@ -443,5 +465,5 @@ export async function generateAiText(input: GenerateAiTextInput): Promise<AiGene
     fallbackUsed: attemptedIndex > 0,
     errorCode: lastError.code,
   })
-  throw new AiGenerationError(502, lastError.code, 'AI providers are temporarily unavailable. Please try again.')
+  throw new AiGenerationError(503, lastError.code, 'Assessment capacity is temporarily unavailable.', lastError.retryAfterMs)
 }

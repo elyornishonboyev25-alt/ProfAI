@@ -27,9 +27,9 @@ export async function run() {
   globalThis.setTimeout = ((fn: (...args: unknown[]) => void, ms?: number, ...args: unknown[]) => originalTimeout(fn, fast(ms), ...args)) as typeof setTimeout
   window.setTimeout = ((fn: () => void, ms?: number, ...args: unknown[]) => originalWindowTimeout(fn, fast(ms), ...args)) as typeof window.setTimeout
   let failWriting = false
-  globalThis.fetch = async (input) => new Response(JSON.stringify(String(input).includes('/writing/evaluate')
-    ? failWriting ? { message: 'Temporary evaluation outage' } : { overallBand: 7, taskAchievement: 7, coherenceCohesion: 7, lexicalResource: 7, grammaticalRange: 7, summary: 'QA evaluation', strengths: [], improvements: [], errors: [], correctedVersion: '', xpAwarded: 0 }
-    : { totalXp: 0, level: 1 }), { status: failWriting && String(input).includes('/writing/evaluate') ? 503 : 200, headers: { 'Content-Type': 'application/json' } })
+  globalThis.fetch = async (input) => new Response(JSON.stringify(String(input).includes('/writing/submissions')
+    ? failWriting ? { id: 'qa-writing', status: 'WAITING_CONFIGURATION', retryAfterMs: 1 } : { id: 'qa-writing', status: 'COMPLETED', result: { overallBand: 7, taskAchievement: 7, coherenceCohesion: 7, lexicalResource: 7, grammaticalRange: 7, summary: 'QA evaluation', strengths: [], improvements: [], errors: [], correctedVersion: '', xpAwarded: 0 } }
+    : { totalXp: 0, level: 1, rows: [], me: null, totalParticipants: 0 }), { status: 200, headers: { 'Content-Type': 'application/json' } })
   const element = document.getElementById('root')!
   let root: ReturnType<typeof createRoot> | undefined
   let path = ''
@@ -118,7 +118,7 @@ export async function run() {
         assert.equal(getFullMockResults(mock.id).writing, undefined)
         assert.ok(accountStorage.getItem(`${practiceKey}:mock:${mock.id}`)?.includes('Task one response'))
         failWriting = false
-        await click('Retry')
+        await act(async () => { await new Promise(resolve => originalTimeout(resolve, 1100)) })
       }
       await confirmNext(mock.id, 'Speaking')
       assert.equal(path, mock.sections[3].launchPath, `${mock.id}: Writing → Speaking`)

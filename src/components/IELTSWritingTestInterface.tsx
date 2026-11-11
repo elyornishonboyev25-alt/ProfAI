@@ -1,4 +1,5 @@
-import AssessmentPending from '@/components/ielts/AssessmentPending'
+import WritingSubmissionPending from '@/components/writing/WritingSubmissionPending'
+import type { WritingProgress } from '@/services/writingSubmissionClient'
 import WritingReviewWorkbench from '@/components/writing/WritingReviewWorkbench'
 import { useCopy } from '@/i18n/interface'
 import UiText from '@/components/common/UiText'
@@ -241,6 +242,9 @@ export default function IELTSWritingTestInterface({
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false)
   const [aiEvaluation, setAiEvaluation] = useState<WritingEvaluation | null>(null)
   const [evaluating, setEvaluating] = useState(false)
+  const [submissionProgress, setSubmissionProgress] = useState<WritingProgress>({ stage: 'saving', saved: false })
+  const submissionController = useRef<AbortController | null>(null)
+  const resumePending = useRef(false)
   const [evalError, setEvalError] = useState<string | null>(null)
   const autoStartHandled = useRef(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -251,11 +255,12 @@ export default function IELTSWritingTestInterface({
   const deadlineRef = useRef<number | null>(null)
 
   const user = useAuthStore((state: AuthState) => state.user)
+  useEffect(() => () => submissionController.current?.abort(), [user?.id])
   const draftKey = `profai:writing:draft:${user?.id ?? 'guest'}:${task.id}`
   const sessionKey = `${draftKey}:session`
   const submittedTimeRemaining = phase === 'submitted' ? timeRemaining : undefined
   useIeltsAttemptResume(phase === 'writing' || evaluating, sessionKey, task.title)
-  useActiveTest(phase === 'writing' || evaluating)
+  useActiveTest(phase === 'writing' || (evaluating && !submissionProgress.saved))
   const updateUserProgress = useAuthStore((state: AuthState) => state.updateUserProgress)
   const writingTrial = useFeatureTrial('writing')
   const [showWritingGate, setShowWritingGate] = useState(false)
@@ -284,7 +289,7 @@ export default function IELTSWritingTestInterface({
           setAiEvaluation(parsed.evaluation ?? null)
           setIsTimerRunning(false)
           setTimeRemaining(parsed.timeRemaining ?? 0)
-          if (!parsed.evaluation) setEvalError('Your submitted response is saved. Retry to finish the assessment.')
+          if (!parsed.evaluation) resumePending.current = true
           setPhase('submitted')
         } else setPhase('writing')
       }
@@ -356,6 +361,9 @@ export default function IELTSWritingTestInterface({
       return
     }
 
+    const controller = new AbortController()
+    submissionController.current?.abort()
+    submissionController.current = controller
     submittingRef.current = true
     setIsTimerRunning(false)
     setPhase('submitted')
@@ -365,7 +373,7 @@ export default function IELTSWritingTestInterface({
     setAiEvaluation(null)
 
     try {
-      const result = await evaluateWriting(task.taskType, task.prompt, answer, wordCount, writingVisualContext(task))
+      const result = await evaluateWriting(task.taskType, task.prompt, answer, wordCount, writingVisualContext(task), { signal: controller.signal, onProgress: setSubmissionProgress })
       if ((useAuthStore.getState().user?.id ?? 'guest') !== (user?.id ?? 'guest')) return
       setAiEvaluation(result)
       if (answer.trim()) writingTrial.consume()
@@ -426,12 +434,21 @@ export default function IELTSWritingTestInterface({
         }).catch(() => {})
       }
     } catch (err) {
+      if (controller.signal.aborted) return
       setEvalError(err instanceof Error ? err.message : 'AI evaluation failed. Please try again.')
     } finally {
       submittingRef.current = false
+      controller.abort()
       setEvaluating(false)
     }
   }, [answer, task, timerEnabled, timeRemaining, wordCount, user, updateUserProgress, effectiveDuration, searchParams, writingTrial.locked, writingTrial.consume, draftKey, sessionKey])
+
+  useEffect(() => {
+    if (phase === 'submitted' && resumePending.current && !submittingRef.current) {
+      resumePending.current = false
+      void handleSubmit()
+    }
+  }, [phase, handleSubmit])
 
   useEffect(() => {
     if (phase === 'writing' && timerEnabled && timeRemaining === 0 && !autoSubmittedRef.current) {
@@ -578,7 +595,7 @@ export default function IELTSWritingTestInterface({
     const timeSpentDisplay = timerEnabled ? formatTime(effectiveDuration * 60 - timeRemaining) : null
 
     // ── Loading state while AI evaluates ──
-    if (evaluating) return <AssessmentPending />
+    if (evaluating || resumePending.current) return <WritingSubmissionPending progress={submissionProgress} onLeave={onExit} />
 
     if (evalError) {
       return (

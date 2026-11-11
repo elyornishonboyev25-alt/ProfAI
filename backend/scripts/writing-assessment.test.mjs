@@ -115,8 +115,8 @@ test('assessment failures never silently downgrade to Flash, OpenAI or a fabrica
   t.after(() => { env.GEMINI_API_KEY = ''; env.OPENAI_API_KEY = ''; prisma.aiUsageEvent.create = originalUsage })
   t.mock.method(console, 'warn', () => {})
   const urls = []
-  t.mock.method(globalThis, 'fetch', async url => { urls.push(String(url)); return Response.json({ error: {} }, { status: 429 }) })
-  await assert.rejects(assessWriting('test-user', { taskType: 'task2', prompt: 'Discuss practice.', response }), { code: 'GEMINI_429' })
+  t.mock.method(globalThis, 'fetch', async url => { urls.push(String(url)); return Response.json({ error: { message: 'Quota exceeded, limit: 0' } }, { status: 429 }) })
+  await assert.rejects(assessWriting('test-user', { taskType: 'task2', prompt: 'Discuss practice.', response }), { code: 'GEMINI_QUOTA_UNAVAILABLE' })
   assert.equal(urls.length, 1)
   assert.match(urls[0], /gemini-3\.1-pro-preview/)
 })
@@ -154,4 +154,43 @@ test('an unchanged corrected text retains the same band without a redundant mode
   assert.equal(checked.correctedVersion, response)
   assert.equal(checked.correctedAssessment.overallBand, checked.overallBand)
   assert.equal(calls, 1)
+})
+
+test('a transient Gemini overload retries once and then returns a validated assessment', async t => {
+  const originalUsage = prisma.aiUsageEvent.create
+  env.GEMINI_API_KEY = 'transient-writing-key'
+  prisma.aiUsageEvent.create = async ({ data }) => data
+  t.after(() => { env.GEMINI_API_KEY = ''; prisma.aiUsageEvent.create = originalUsage })
+  let calls = 0
+  t.mock.method(globalThis, 'fetch', async () => {
+    calls++
+    return calls === 1 ? Response.json({ error: { message: 'Temporary overload' } }, { status: 503 })
+      : Response.json({ candidates: [{ content: { parts: [{ text: JSON.stringify({ ...result, errors: [] }) }] } }] })
+  })
+  assert.equal((await assessWriting('test-user', { taskType: 'task2', prompt: 'Discuss practice.', response })).overallBand, 6)
+  assert.equal(calls, 2)
+})
+
+test('only an explicitly configured assessment backup can recover from a primary quota failure', async t => {
+  const originalUsage = prisma.aiUsageEvent.create
+  env.GEMINI_API_KEY = 'unavailable-primary-key'
+  env.OPENAI_API_KEY = 'configured-backup-key'
+  env.OPENAI_ASSESSMENT_MODEL = 'dedicated-assessment-model'
+  prisma.aiUsageEvent.create = async ({ data }) => data
+  t.after(() => { env.GEMINI_API_KEY = ''; env.OPENAI_API_KEY = ''; env.OPENAI_ASSESSMENT_MODEL = ''; prisma.aiUsageEvent.create = originalUsage })
+  t.mock.method(console, 'warn', () => {})
+  let backups = 0
+  t.mock.method(globalThis, 'fetch', async (url, options) => {
+    if (String(url).includes('generativelanguage.googleapis.com')) return Response.json({ error: { message: 'Quota exceeded, limit: 0' } }, { status: 429 })
+    const body = JSON.parse(options.body)
+    assert.equal(body.model, 'dedicated-assessment-model', 'The ordinary mini chat default is not an examiner fallback')
+    assert.match(body.messages[0].content, /public IELTS band descriptors/)
+    backups++
+    return Response.json({ choices: [{ message: { content: JSON.stringify({ ...result, errors: [] }) } }] })
+  })
+  const checked = await assessWriting('test-user', { taskType: 'task2', prompt: 'Discuss practice.', response })
+  assert.equal(checked.overallBand, 6)
+  assert.equal(checked.assessment.provider, 'openai')
+  assert.equal(checked.assessment.model, 'dedicated-assessment-model')
+  assert.equal(backups, 1)
 })

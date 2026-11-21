@@ -86,7 +86,7 @@ export async function generateExaminerAudio(text: string, voice: 'marin' | 'ceda
 }
 
 export async function transcribeSpeakingAudio(audioBase64: string, mimeType: string, nova?: { language: NovaLanguage | 'auto'; lastReliableLanguage?: NovaLanguage }): Promise<string | null> {
-  const prompt = nova ? `Transcribe verbatim, never translate or answer. Allowed conversation languages: Uzbek, English, Russian. Expected language: ${nova.language === 'auto' ? nova.lastReliableLanguage ?? 'uz' : nova.language}. Uzbek is NOT Turkish or Arabic. Preserve Uzbek names and apostrophes in Latin script. Mixed English study terminology is not a language switch. Vocabulary: ${novaVocabulary.join(', ')}. Silence, noise or unintelligible speech: empty text. Never invent words.` : transcriptionPrompt
+  const prompt = nova ? `Transcribe verbatim, never translate or answer. Allowed conversation languages: Uzbek and English. Expected language: ${nova.language === 'auto' ? nova.lastReliableLanguage ?? 'uz' : nova.language}. Uzbek is NOT Turkish or Arabic. Preserve Uzbek names and apostrophes in Latin script. Mixed English study terminology is not a language switch. Vocabulary: ${novaVocabulary.join(', ')}. Silence, noise or unintelligible speech: empty text. Never invent words.` : transcriptionPrompt
   const budget = AbortSignal.timeout(65_000)
   const bytes = Buffer.from(audioBase64, 'base64')
   if (env.OPENAI_API_KEY.trim()) {

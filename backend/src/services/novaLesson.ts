@@ -3,7 +3,7 @@ import { novaLanguageSchema, languageViolation } from './novaLanguage.js'
 
 const id = z.string().regex(/^[a-zA-Z][\w-]{0,63}$/)
 const text = z.string().trim().min(1).max(1800)
-const base = { id, title: z.string().max(120), narration: z.string().max(1600).default('') }
+const base = { id, title: z.string().max(120), narration: z.string().max(1600).default(''), source: z.object({ testId: z.string().max(240), questionId: z.string().max(240).optional(), attemptId: z.string().max(240).optional() }).strict().optional() }
 const point = z.object({ x: z.number().finite().min(-10000).max(10000), y: z.number().finite().min(-10000).max(10000), label: z.string().max(60).optional() }).strict()
 export const lessonBlockSchema = z.discriminatedUnion('type', [
   z.object({ ...base, type: z.literal('explanation'), text, highlights: z.array(z.string().min(1).max(160)).max(6).default([]) }).strict(),

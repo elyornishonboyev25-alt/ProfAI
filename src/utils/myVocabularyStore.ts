@@ -59,6 +59,8 @@ export function countSavedWords(context: VocabContext, source?: VocabSource): nu
 }
 
 type AddInput = {
+  /** Nova keeps contextual senses separate while existing manual updates retain their behavior. */
+  preserveSense?: boolean
   term: string
   definition: string
   example: string
@@ -79,7 +81,7 @@ export function addSavedWord(input: AddInput): SavedWord {
   const words = read()
   const key = normalizeTerm(input.term)
   const existingIndex = words.findIndex(
-    (word) => word.context === input.context && normalizeTerm(word.term) === key,
+    (word) => word.context === input.context && normalizeTerm(word.term) === key && (!input.preserveSense || normalizeTerm(word.definition) === normalizeTerm(input.definition)),
   )
 
   const existing = words[existingIndex]

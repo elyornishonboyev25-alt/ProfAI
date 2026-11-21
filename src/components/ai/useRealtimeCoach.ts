@@ -1,3 +1,4 @@
+import { currentNovaStudy, useNovaStudySession, observeNovaStudyPermission } from '@/services/ai/novaStudySession'
 import {describeLessonContext} from '@/lib/novaLesson'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
@@ -29,6 +30,8 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
   const [error, setError] = useState<string | null>(null)
   const [caption, setCaption] = useState('')
   const [muted, setMuted] = useState(false)
+  const studyReference = useNovaStudySession(state => state.progress?.reference)
+  const autoVocabulary = useNovaStudySession(state => state.autoWords)
   const [retry, setRetry] = useState(0)
   const [reconnecting, setReconnecting] = useState(false)
   const recovery = useRef({ attempts: 0, since: 0, timer: 0 })
@@ -79,7 +82,7 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
       let savingMessages = Promise.resolve()
       const record = (role: 'user' | 'assistant', text: string, id: string, interrupted = false, performance?: NovaPerformance, timeline?: PerformanceCue[], lesson?: import('@/lib/novaLesson').NovaLesson) => {
         if (useAuthStore.getState().user?.id !== userId) return
-        if (role === 'user') latest.current.conversationLanguage?.observe(text)
+        if (role === 'user') { latest.current.conversationLanguage?.observe(text); observeNovaStudyPermission(text) }
         if (!text.trim()) {
           previews.delete(`voice-${id}`); drafts.delete(`voice-${id}`)
           useAiAssistantStore.getState().removeMessage(ownerKey, threadId, `voice-${id}`)
@@ -97,7 +100,7 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
             if (useAuthStore.getState().user?.id !== userId) return false
             threadId = saved.id
             useAiAssistantStore.getState().syncThread(ownerKey, draftId, saved)
-            if (!disposed) void connection.current?.updateContext({ pathname: currentPath.current, workspace: latest.current.activeWorkspace, language: mode === 'examiner' ? 'en' : language.selection, lastReliableLanguage: language.lastReliable, interfaceLanguage: metadataLocale, inputControl: 'hybrid', lessonContext: describeLessonContext(latest.current.messages), mode,
+            if (!disposed) void connection.current?.updateContext({ ...currentNovaStudy(), pathname: currentPath.current, workspace: latest.current.activeWorkspace, language: mode === 'examiner' ? 'en' : language.selection, lastReliableLanguage: language.lastReliable, interfaceLanguage: metadataLocale, inputControl: 'hybrid', lessonContext: describeLessonContext(latest.current.messages), mode,
               threadId: saved.id, coachPreferences: latest.current.coachPreferences, memoryRevision: memoryRevision(latest.current.memories),
               studyContext: describeStudySnapshot(buildStudySnapshot(userId)).slice(0, 16000), screenContext: composeScreenContext('Explain this page', currentPath.current).slice(0, 12000), siteKnowledge: describeRelevantSiteKnowledge('IELTS SAT English admissions tests').slice(0, 16000) }).catch(() => {})
             return true
@@ -121,7 +124,7 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
         diagnostics: report => {
           if (useAuthStore.getState().user?.id === userId) void apiClient.post('/ai/voice/diagnostics', report).catch(() => {})
         },
-        context: { pathname: currentPath.current, workspace: tutor.activeWorkspace, language: mode === 'examiner' ? 'en' : language.selection, lastReliableLanguage: language.lastReliable, interfaceLanguage: metadataLocale, inputControl: 'hybrid', lessonContext, mode,
+        context: { ...currentNovaStudy(), pathname: currentPath.current, workspace: tutor.activeWorkspace, language: mode === 'examiner' ? 'en' : language.selection, lastReliableLanguage: language.lastReliable, interfaceLanguage: metadataLocale, inputControl: 'hybrid', lessonContext, mode,
           coachPreferences: tutor.coachPreferences, memoryRevision: memoryRevision(tutor.memories),
           threadId: threadId.startsWith('local-') ? undefined : threadId,
           studyContext: describeStudySnapshot(buildStudySnapshot(userId)).slice(0, 16000),
@@ -184,14 +187,25 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
   useEffect(() => {
     if (!enabled || !tutor.user) return
     const timer = window.setTimeout(() => {
-      void connection.current?.updateContext({ pathname: location.pathname, workspace: tutor.activeWorkspace, language: mode === 'examiner' ? 'en' : language.selection, lastReliableLanguage: language.lastReliable, interfaceLanguage: metadataLocale, inputControl: 'hybrid', lessonContext, mode,
+      void connection.current?.updateContext({ ...currentNovaStudy(), pathname: location.pathname, workspace: tutor.activeWorkspace, language: mode === 'examiner' ? 'en' : language.selection, lastReliableLanguage: language.lastReliable, interfaceLanguage: metadataLocale, inputControl: 'hybrid', lessonContext, mode,
         coachPreferences: tutor.coachPreferences, memoryRevision: memoryRevision(tutor.memories),
         studyContext: describeStudySnapshot(buildStudySnapshot(tutor.user!.id)).slice(0, 16000), screenContext: composeScreenContext('Explain this page', location.pathname).slice(0, 12000), siteKnowledge: describeRelevantSiteKnowledge('IELTS SAT English admissions tests').slice(0, 16000) }).catch(() => {})
     }, 600)
     return () => window.clearTimeout(timer)
-  }, [enabled, location.pathname, tutor.user?.id, tutor.activeWorkspace, tutor.coachPreferences, tutor.memories, language.selection, language.lastReliable, lessonContext, mode])
+  }, [enabled, location.pathname, tutor.user?.id, tutor.activeWorkspace, tutor.coachPreferences, tutor.memories, language.selection, language.lastReliable, lessonContext, mode, studyReference, autoVocabulary])
 
   const toggleMute = useCallback(() => setMuted((current) => { connection.current?.mute(!current); return !current }), [])
+  useEffect(() => {
+    let sourceOwns = false
+    const interrupt = () => connection.current?.interrupt()
+    const ownership = (event: Event) => {
+      const value = (event as CustomEvent).detail
+      if (value === 'original') { sourceOwns = true; connection.current?.interrupt(); connection.current?.mute(true) }
+      else if (sourceOwns) { sourceOwns = false; connection.current?.mute(muted) }
+    }
+    window.addEventListener('nova:interrupt', interrupt); window.addEventListener('nova:audio-owner', ownership)
+    return () => { window.removeEventListener('nova:interrupt', interrupt); window.removeEventListener('nova:audio-owner', ownership); if (sourceOwns) connection.current?.mute(muted) }
+  }, [muted])
   const interrupt = useCallback(() => connection.current?.interrupt(), [])
   const beginPushToTalk = useCallback(() => connection.current?.beginPushToTalk(), [])
   const endPushToTalk = useCallback((cancel = false) => connection.current?.endPushToTalk(cancel), [])

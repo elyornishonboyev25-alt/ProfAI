@@ -40,7 +40,7 @@ export async function run() {
     const after = useAiAssistantStore.getState().threadsByOwner[owner][0].messages
     console.log(JSON.stringify({ initialSessions, afterPreviewSessions: sessions.length, contextUpdatesDuringPreview: contexts.length - initialContexts, restoredSelection: document.getElementById('root')!.textContent }))
     assert.equal(sessions.length, initialSessions, 'A transcript without language metadata cannot restart the live session')
-    assert.equal(document.getElementById('root')!.textContent, 'ru', 'Saved conversation language survives streaming previews')
+    assert.equal(document.getElementById('root')!.textContent, 'uz', 'Legacy Russian preference migrates to Uzbek and survives streaming previews')
     assert.equal(contexts.length, initialContexts, 'Transcript tokens must not trigger provider context updates')
     assert.equal(after[after.length - 1].content, 'Partial 2')
     await act(async () => useAiAssistantStore.getState().updateMessage(owner, threadId, 'preview', { lesson: {

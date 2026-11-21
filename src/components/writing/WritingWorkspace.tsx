@@ -4,6 +4,8 @@ import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode,
 import { ArrowLeft, Bookmark, Check, Clock3, Eye, EyeOff, GripVertical, Maximize2, Minimize2, Minus, Plus, PenLine } from 'lucide-react'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import './writing-workspace.css'
+import NovaAnnotatedEditor from '@/components/ai/NovaAnnotatedEditor'
+import '@/components/ai/nova-study.css'
 
 type Task = { id: string; label: string; minutes: number; minimum: number; words: number; marked: boolean }
 type Props = {
@@ -84,7 +86,7 @@ export default function WritingWorkspace({ title, tasks, activeIndex, onTaskChan
           <div className="writing-response-toolbar"><label htmlFor={`${id}-answer`}><span className="writing-editor-icon"><PenLine size={17} /></span><span className="writing-editor-title"><UiText text={"Your response"} /><small><UiText text={task.label} /> <UiText text={"answer"} /></small></span></label>
             <div className="writing-font-controls" role="group" aria-label={uiCopy("Response text size")}><button type="button" disabled={fontSize <= 14} aria-label={uiCopy("Decrease response text size")} onClick={() => setFontSize(value => Math.max(14, value - 2))}><Minus size={14} /></button><span>{fontSize}</span><button type="button" disabled={fontSize >= 22} aria-label={uiCopy("Increase response text size")} onClick={() => setFontSize(value => Math.min(22, value + 2))}><Plus size={14} /></button></div>
           </div>
-          <textarea id={`${id}-answer`} ref={textareaRef} value={answer} onChange={event => onAnswerChange(event.target.value)} placeholder={uiCopy("Start writing your {{value1}} response…", { value1: String(task.label) })} aria-describedby={`${id}-minimum`} spellCheck={false} autoCorrect="off" autoCapitalize="off" style={{ fontSize }} />
+          <NovaAnnotatedEditor id={`${id}-answer`} value={answer} onChange={onAnswerChange} textareaRef={textareaRef} placeholder={uiCopy("Start writing your {{value1}} response…", { value1: String(task.label) })} describedBy={`${id}-minimum`} fontSize={fontSize}/>
           <div className="writing-response-status"><span id={`${id}-minimum`}><UiText text={"Write at least"} /> <strong>{task.minimum} <UiText text={"words"} /></strong></span><span className="writing-word-total" data-reached={reached}>{reached && <Check size={14} />}<strong>{task.words}</strong> <UiText text={"words"} /></span></div>
           <div className="writing-word-progress" role="progressbar" aria-label={uiCopy("{{value1}} minimum word count", { value1: String(task.label) })} aria-valuemin={0} aria-valuemax={task.minimum} aria-valuenow={Math.min(task.words, task.minimum)}><span style={{ width: `${Math.min(100, task.words / task.minimum * 100)}%` }} data-reached={reached} /></div>
         </section>

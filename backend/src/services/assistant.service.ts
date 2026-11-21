@@ -11,6 +11,9 @@ import { arithmeticFacts } from './novaArithmetic.js'
 import { resolveNovaLanguage, languageViolation, languageClarification, novaLanguageInstructions } from './novaLanguage.js'
 import { readNovaLesson } from './novaLesson.js'
 import { banterOpening, isBanterBoundary, roastOpenings } from './novaBanter.js'
+import { getStudyContext, publicStudyContext, novaAccountRows, hasActiveExam } from './novaStudy.service.js'
+import { runNovaTool } from './novaTools.service.js'
+import { writingVersion, type NovaToolResult } from './novaStudy.js'
 
 export async function loadAssistantRecords(userId: string, threadId?: string) {
   const [user, memories, owned, evidence] = await Promise.all([
@@ -34,6 +37,14 @@ export function assistantData(context: AssistantContext, records: Pick<Awaited<R
 
 export async function answerAssistant(userId: string, request: AssistantRequest, signal?: AbortSignal, onReply?: (reply: string) => void, diagnostics?: NovaDiagnostics, learnerUtterance = request.message) {
   const records = await loadAssistantRecords(userId, request.threadId)
+  const examActive = hasActiveExam(await novaAccountRows(userId)) || request.studyReference?.mode === 'exam'
+  if (examActive && request.mode !== 'examiner') {
+    const reply = request.language === 'en' ? 'Finish your active timed attempt first. We can review the source evidence afterwards.' : 'Avval faol timed testni yakunlang. Keyin savollarni dalillari bilan birga tahlil qilamiz.'
+    const safe = parseAssistantReply(JSON.stringify({ reply }))
+    onReply?.(reply)
+    return { ...safe, toolResults: [], savedMemories: [], persistenceWarnings: [], sources: [], meta: { modelRequests: 0, provider: 'none', model: 'exam_guard', fallbackUsed: false, research: 'not_requested' } }
+  }
+  const study = request.studyReference && !examActive ? publicStudyContext(await getStudyContext(userId, request.studyReference, request.pathname)) : null
   const resolved = resolveNovaLanguage(request.message, request.mode === 'examiner' ? 'en' : request.language, request.lastReliableLanguage ?? request.interfaceLanguage ?? 'en', request.history)
   const language = request.mode === 'examiner' ? 'en' : resolved.language
   request = { ...request, language, lastReliableLanguage: language }
@@ -48,12 +59,19 @@ export async function answerAssistant(userId: string, request: AssistantRequest,
     systemPrompt: buildCoachPrompt(request, request.delivery),
     userMessage: JSON.stringify({ request: request.message || 'Explain the attached image.', generateTitle: request.generateTitle,
       history: boundedHistory(request.history), context: assistantData(request, records, request.message), research,
-      learnerUtterance, verifiedArithmetic: arithmeticFacts(request.message) }),
+      learnerUtterance, study, writingDraft: request.writingDraft ? { text: request.writingDraft, version: writingVersion(request.writingDraft), provenance: 'client_draft' } : null, verifiedArithmetic: arithmeticFacts(request.message) }),
     images: request.images, maxOutputTokens: 6000,
     onText: onReply ? () => {} : undefined,
   }
   let generated = await generateAiText(generationInput)
   let answer = parseAssistantReply(generated.text, learnerUtterance)
+  const toolResults: NovaToolResult[] = []
+  for (let round = 0; round < 3 && answer.toolCalls.length; round++) {
+    for (const call of answer.toolCalls) toolResults.push(await runNovaTool(userId, { ...call, id: `${request.turnId ?? Date.now()}:${round}:${call.id}`.slice(0, 240) }, { reference: request.studyReference, pathname: request.pathname, writingDraft: request.writingDraft, learnerMessage: learnerUtterance, vocabularyAutoSave: request.vocabularyAutoSave }, signal))
+    generated = await generateAiText({ ...generationInput, userMessage: JSON.stringify({ original: JSON.parse(generationInput.userMessage), toolResults }), systemPrompt: generationInput.systemPrompt + (round === 2 ? '\nTool budget exhausted. Return the final supported answer now, without toolCalls.' : '') })
+    answer = parseAssistantReply(generated.text, learnerUtterance)
+  }
+  if (!answer.reply) answer.reply = language === 'en' ? 'The source lookup could not finish. Please retry with a selected question.' : 'Manbani olish tugamadi. Savolni tanlab, qayta urinib ko‘ring.'
   let languageRepaired = false
   // Buffer visible text until validation. One bounded repair; no per-phrase classifier.
   if (languageViolation(answer.reply, language)) {
@@ -87,5 +105,5 @@ export async function answerAssistant(userId: string, request: AssistantRequest,
   const persistenceWarnings = saved.flatMap((result, index) => result.status === 'rejected' ? [index === 0 ? 'memory' : 'learning'] : [])
   if (saved[0].status === 'fulfilled' && savedMemories.length < answer.memoryUpdates.length) persistenceWarnings.push('memory_changed')
 
-  return { ...answer, languageState: resolved, savedMemories, persistenceWarnings, sources: research.sources, meta: { modelRequests, languageRepaired, provider: generated.provider, model: generated.model, fallbackUsed: generated.fallbackUsed, research: research.status } }
+  return { ...answer, toolResults, languageState: resolved, savedMemories, persistenceWarnings, sources: research.sources, meta: { modelRequests, languageRepaired, provider: generated.provider, model: generated.model, fallbackUsed: generated.fallbackUsed, research: research.status } }
 }

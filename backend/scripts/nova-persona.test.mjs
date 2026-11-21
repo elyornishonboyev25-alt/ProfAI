@@ -11,6 +11,7 @@ const { parseAssistantReply, assistantContextSchema, assistantRequestSchema } = 
 const { messageMetadataSchema } = await import('../dist/routes/aiWorkspace.routes.js')
 const { assistantData, answerAssistant } = await import('../dist/services/assistant.service.js')
 const { prisma } = await import('../dist/lib/prisma.js')
+prisma.accountLearningData.findMany = async () => []
 prisma.novaSkillEvidence.findMany = async () => []
 prisma.novaSessionDiagnostics.upsert = async () => ({})
 const { env } = await import('../dist/config/env.js')

@@ -1,4 +1,8 @@
 import { Router } from 'express'
+import { z } from 'zod'
+import { novaCatalog, novaAccountRows, attemptsFromRows, getStudyContext, publicStudyContext } from '../services/novaStudy.service.js'
+import { studyReferenceSchema, toolCallSchema } from '../services/novaStudy.js'
+import { runNovaTool } from '../services/novaTools.service.js'
 import { assistantRequestSchema } from '../services/assistantPolicy.js'
 import { answerAssistant } from '../services/assistant.service.js'
 import { AiGenerationError } from '../services/aiProvider.service.js'
@@ -10,6 +14,25 @@ async function withAssistantAccess<T>(userId: string, delivery: string | undefin
   return withStudyAccess(userId, 'ai', operation)
 }
 const router = Router()
+router.get('/study/catalog', asyncHandler(async (_req, res) => {
+  const tests = await novaCatalog()
+  res.set('Cache-Control', 'private, no-store').json({ items: tests.map(({ questions, ...test }) => ({ ...test, questionCount: questions.length })) })
+}))
+router.get('/study/attempts', asyncHandler(async (req, res) => {
+  const items = attemptsFromRows(await novaAccountRows(req.user!.id), req.user!.id).map(({ answers, writing, transcript, speakingEvaluation, ...summary }) => summary)
+  res.set('Cache-Control', 'private, no-store').json({ items })
+}))
+router.post('/study/context', asyncHandler(async (req, res) => {
+  const input = z.object({ reference: studyReferenceSchema, reveal: z.boolean().default(false), pathname: z.string().max(240).default('') }).strict().parse(req.body)
+  const context = await getStudyContext(req.user!.id, input.reference, input.pathname)
+  res.set('Cache-Control', 'private, no-store').json(input.reveal ? context : publicStudyContext(context))
+}))
+router.post('/study/tool', asyncHandler(async (req, res) => {
+  const input = z.object({ call: toolCallSchema, reference: studyReferenceSchema.optional(), pathname: z.string().max(240).optional(), writingDraft: z.string().max(16000).optional() }).strict().parse(req.body)
+  const controller = new AbortController()
+  res.on('close', () => { if (!res.writableEnded) controller.abort() })
+  res.json(await runNovaTool(req.user!.id, input.call, input, controller.signal))
+}))
 
 router.post('/chat', asyncHandler(async (req, res) => {
   const payload = assistantRequestSchema.parse(req.body)

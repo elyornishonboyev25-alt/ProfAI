@@ -1,4 +1,5 @@
 import { NovaDiagnostics } from './novaDiagnostics.js'
+import { assertNovaVoiceStudyAllowed } from './novaStudy.service.js'
 import { novaVocabulary, novaLanguageSchema, novaLanguageInstructions, inspectLanguage } from './novaLanguage.js'
 import { banterOpening } from './novaBanter.js'
 import { lessonControlParameters, lessonControlSchema } from './novaLesson.js'
@@ -80,7 +81,7 @@ export function geminiLiveSetup(context: AssistantContext, data: unknown) {
       speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } } } },
     ...(geminiUsesInitialHistory() ? { historyConfig: { initialHistoryInClientContent: true } } : {}),
     systemInstruction: { parts: [{ text: voiceInstructions(context, data) }] },
-    inputAudioTranscription: /^gemini-3\.8-/.test(env.GEMINI_LIVE_MODEL) ? { languageCodes: context.language === 'auto' ? ['uz', 'en', 'ru'] : [context.language], customVocabulary: novaVocabulary } : {}, outputAudioTranscription: {},
+    inputAudioTranscription: /^gemini-3\.8-/.test(env.GEMINI_LIVE_MODEL) ? { languageCodes: context.language === 'auto' ? ['uz', 'en'] : [context.language], customVocabulary: novaVocabulary } : {}, outputAudioTranscription: {},
     realtimeInputConfig: { automaticActivityDetection: context.inputControl === 'hybrid' ? { disabled: true } : { disabled: false, silenceDurationMs: context.mode === 'examiner' ? 1400 : 1100, endOfSpeechSensitivity: 'END_SENSITIVITY_LOW', prefixPaddingMs: 300 }, activityHandling: 'START_OF_ACTIVITY_INTERRUPTS' },
     contextWindowCompression: { slidingWindow: {} },
     tools: [{ functionDeclarations: [{name:'control_lesson',description:'Continue, restart or pause the existing lesson board when explicitly requested.',parametersJsonSchema:lessonControlParameters}, { name: 'observe_learning', description: 'Record a quoted actual learner attempt and your cautious assessment, without another model call. Not for ordinary questions.', parametersJsonSchema: learningObservationParameters }, { name: 'set_expression', description: 'Set Nova avatar delivery for your upcoming speech; never say the metadata aloud.', parametersJsonSchema: novaPerformanceParameters }, { name: 'ask_coach', description: 'Get checked written coaching, practice feedback, a study plan, a saved preference or an app navigation proposal.',
@@ -113,6 +114,7 @@ export async function endGeminiVoiceCall(userId: string, id: string, failed = fa
 export async function updateGeminiVoiceContext(userId: string, id: string, context: AssistantContext) {
   const call = calls.get(id)
   if (!call || call.userId !== userId) return false
+  await assertNovaVoiceStudyAllowed(userId, context)
   const next = { ...context, threadId: call.context.threadId ?? context.threadId }
   // Validate account ownership before adopting a server-backed thread ID.
   const version = ++call.contextVersion
@@ -132,8 +134,9 @@ async function runTool(call: Call, tool: { id?: string; name?: string; args?: { 
   if (call.tools.size > 500) call.tools.delete(call.tools.values().next().value!)
   call.diagnostics.count('toolCalls')
   const speechVersion = call.speechVersion
+  const contextVersion = call.contextVersion
   const respond = (response: unknown) => {
-    if (!call.abort.signal.aborted && !call.cancelledTools.has(id) && call.speechVersion === speechVersion) send(call.provider, { toolResponse: { functionResponses: [{ id, name: tool.name, response }] } })
+    if (!call.abort.signal.aborted && !call.cancelledTools.has(id) && call.speechVersion === speechVersion && call.contextVersion === contextVersion) send(call.provider, { toolResponse: { functionResponses: [{ id, name: tool.name, response }] } })
   }
   if (tool.name === 'control_lesson') {
     const action = lessonControlSchema.safeParse(tool.args?.action)
@@ -162,7 +165,7 @@ async function runTool(call: Call, tool: { id?: string; name?: string; args?: { 
   try {
     const request = assistantRequestSchema.parse({ ...call.context, turnId: `voice:${call.id}:${call.responseTurn}`, message: tool.args.request, history: boundedHistory(call.history), delivery: 'voice' })
     const result = await answerAssistant(call.userId, request, AbortSignal.any([call.abort.signal, controller.signal]), undefined, call.diagnostics, call.input.trim() || call.history.filter(turn => turn.role === 'user').at(-1)?.content || '')
-    if (call.abort.signal.aborted || call.cancelledTools.has(id) || call.speechVersion !== speechVersion) return
+    if (call.abort.signal.aborted || call.cancelledTools.has(id) || call.speechVersion !== speechVersion || call.contextVersion !== contextVersion) return
     send(call.client, { type: 'coach', id, result })
     respond(result)
   } catch { respond({ error: 'The written coach could not finish. Ask the learner to retry; do not invent results.' }) }
@@ -170,6 +173,7 @@ async function runTool(call: Call, tool: { id?: string; name?: string; args?: { 
 }
 
 export async function startGeminiVoiceCall(userId: string, context: AssistantContext, history: History, signal?: AbortSignal, connectProvider = openGeminiLive, clientId?: string) {
+  await assertNovaVoiceStudyAllowed(userId, context)
   const keys = geminiLiveKeys()
   if (!keys.length) throw new AiGenerationError(503, 'VOICE_NOT_CONFIGURED', 'Gemini Live is not configured on this server.')
   const records = await loadAssistantRecords(userId, context.threadId)

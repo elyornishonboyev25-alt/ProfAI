@@ -1,4 +1,5 @@
 import {banterOpening} from './novaBanter.js'
+import { assertNovaVoiceStudyAllowed } from './novaStudy.service.js'
 import { lessonControlSchema, lessonControlParameters } from './novaLesson.js'
 import { NovaDiagnostics } from './novaDiagnostics.js'
 import { novaVocabulary } from './novaLanguage.js'
@@ -63,6 +64,7 @@ export async function updateVoiceContext(userId: string, id: string, context: As
   if (await updateGeminiVoiceContext(userId, id, context)) return true
   const call = calls.get(id)
   if (!call || call.userId !== userId) return false
+  await assertNovaVoiceStudyAllowed(userId, context)
   // The call remains attached to its original chat even when the learner navigates.
   const next = { ...context, threadId: call.context.threadId ?? context.threadId }
   const version = ++call.contextVersion
@@ -76,6 +78,7 @@ export async function updateVoiceContext(userId: string, id: string, context: As
 }
 
 export async function startVoiceCall(userId: string, sdp: string, context: AssistantContext, history: VoiceCall['history'], signal?: AbortSignal, clientId?: string) {
+  await assertNovaVoiceStudyAllowed(userId, context)
   if (!env.OPENAI_API_KEY) throw new AiGenerationError(503, 'VOICE_NOT_CONFIGURED', 'Natural voice is not connected yet. You can use standard voice or type in chat.')
   const started = performance.now()
   // Read only this authenticated learner's records while reserving allowance.
@@ -104,7 +107,7 @@ async function startReservedVoiceCall(userId: string, sdp: string, context: Assi
   const session = {
     type: 'realtime', model: env.AI_VOICE_MODEL, instructions: voiceInstructions(context, assistantData(context, records)),
     output_modalities: ['audio'], max_output_tokens: 2400,
-    audio: { input: { noise_reduction: { type: 'near_field' }, transcription: { model: 'gpt-4o-transcribe', ...(context.language !== 'auto' ? { language: context.language } : {}), prompt: `Transcribe verbatim. Conversation languages: Uzbek, English, Russian; current language ${context.language === 'auto' ? context.lastReliableLanguage ?? 'uz' : context.language}. Preserve mixed terminology and Uzbek Latin names: ${novaVocabulary.join(', ')}. Do not translate or invent speech. Uzbek is not Turkish or Arabic.` },
+    audio: { input: { noise_reduction: { type: 'near_field' }, transcription: { model: 'gpt-4o-transcribe', ...(context.language !== 'auto' ? { language: context.language } : {}), prompt: `Transcribe verbatim. Conversation languages: Uzbek and English; current language ${context.language === 'auto' ? context.lastReliableLanguage ?? 'uz' : context.language}. Preserve mixed terminology and Uzbek Latin names: ${novaVocabulary.join(', ')}. Do not translate or invent speech. Uzbek is not Turkish or Arabic.` },
       turn_detection: { type: 'semantic_vad', eagerness: context.mode === 'examiner' ? 'low' : 'medium', create_response: true, interrupt_response: true } }, output: { voice: 'marin', speed: context.mode === 'examiner' ? 1 : 1.1 } },
     tools: [{type:'function',name:'control_lesson',description:'Continue, restart or pause the existing lesson board on explicit request.',parameters:lessonControlParameters}, { type: 'function', name: 'observe_learning', description: 'Record a quoted actual learner attempt; never assess a mere question.', parameters: learningObservationParameters }, { type: 'function', name: 'set_expression', description: 'Choose the illustrative avatar delivery for your upcoming spoken reply.', parameters: novaPerformanceParameters }, { type: 'function', name: 'ask_coach', description: 'Ask the shared tutor for accurate detailed coaching, current official research, a saved memory or an app action proposal. Returns a written answer plus actions for the learner to approve.',
       parameters: { type: 'object', properties: { request: { type: 'string', description: 'The learner\'s actual request, including relevant wording.' } }, required: ['request'], additionalProperties: false } }],
@@ -211,20 +214,21 @@ async function startReservedVoiceCall(userId: string, sdp: string, context: Assi
     const controller = new AbortController(); call.toolAborts.set(event.call_id, controller)
     const toolStarted = performance.now()
     const toolSpeechVersion = speechVersion
+    const toolContextVersion = call.contextVersion
     void (async () => {
       try {
         const argumentsValue = JSON.parse(event.arguments)
         // Save complete written detail; the realtime model speaks a short summary.
         const request = assistantRequestSchema.parse({ ...call.context, turnId: `voice:${id}:${speechVersion}`, message: argumentsValue.request, history: call.history, delivery: 'text' })
         const result = await answerAssistant(userId, request, AbortSignal.any([abort.signal, controller.signal]), undefined, call.diagnostics, call.history.filter(turn => turn.role === 'user').at(-1)?.content ?? '')
-        if (abort.signal.aborted || toolSpeechVersion !== speechVersion) return
+        if (abort.signal.aborted || toolSpeechVersion !== speechVersion || toolContextVersion !== call.contextVersion) return
         send({ type: 'conversation.item.create', item: { type: 'function_call_output', call_id: event.call_id, output: JSON.stringify({ profai_coach_result: true, ...result }) } })
       } catch {
-        if (abort.signal.aborted || toolSpeechVersion !== speechVersion) return
+        if (abort.signal.aborted || toolSpeechVersion !== speechVersion || toolContextVersion !== call.contextVersion) return
         send({ type: 'conversation.item.create', item: { type: 'function_call_output', call_id: event.call_id, output: JSON.stringify({ error: 'The coach is temporarily unavailable. Do not invent a result; ask the learner to retry.' }) } })
       }
       finally { call.toolAborts.delete(event.call_id); call.diagnostics.sample('tool_wait', performance.now() - toolStarted, 'server_clock') }
-      if (!abort.signal.aborted && toolSpeechVersion === speechVersion) {
+      if (!abort.signal.aborted && toolSpeechVersion === speechVersion && toolContextVersion === call.contextVersion) {
         pendingToolVersion = toolSpeechVersion
         continueAfterTool()
       }

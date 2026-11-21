@@ -11,6 +11,7 @@ for (const key of ['GEMINI_API_KEY', 'GEMINI_API_KEY_2', 'GEMINI_API_KEY_3', 'GE
 const { app } = await import('../dist/app.js')
 const { env } = await import('../dist/config/env.js')
 const { prisma } = await import('../dist/lib/prisma.js')
+prisma.accountLearningData.findMany = async () => []
 prisma.novaSkillEvidence.findMany = async () => []
 prisma.novaSessionDiagnostics.upsert = async () => ({})
 const { fixtureAccessToken: signAccessToken, installSessionFixtures } = await import('./helpers/authSessions.mjs')

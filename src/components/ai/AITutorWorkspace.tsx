@@ -237,7 +237,7 @@ export default function AITutorWorkspace() {
   const {
     user, hasPremium, messages, isSending, error,
     draft, setDraft, images, addImages, removeImage,
-    send, cancelSend, preferredName,
+    send, cancelSend, preferredName, conversationLanguage,
     workspace, pendingActions, approveAction, dismissAction,
     voiceState, voiceLevel, voiceSupported, isListening, interimTranscript, startVoice, voiceError,
     chatThreads, activeThread, activeThreadId, threadsLoading, memories,
@@ -293,7 +293,7 @@ export default function AITutorWorkspace() {
   }, [railOpen, settingsOpen])
 
   // Dictation writes speech into the draft live; nothing is sent until the learner sends it.
-  const dictation = useSpeechRecognition(locale === 'uz' ? 'uz-UZ' : locale === 'ru' ? 'ru-RU' : 'en-US')
+  const dictation = useSpeechRecognition(conversationLanguage.language === 'en' ? 'en-US' : 'uz-UZ')
   const dictationBase = useRef<string | null>(null)
   const [dictationError, setDictationError] = useState('')
   const joinDraft = (base: string, spoken: string) => [base.trimEnd(), spoken].filter(Boolean).join(base.trim() && spoken ? ' ' : '')

@@ -14,6 +14,7 @@ const { NovaDiagnostics, summarizeSamples, configuredCostEstimate, diagnosticsSn
 const { parseAssistantReply } = await import('../dist/services/assistantPolicy.js')
 const { defaultNovaPerformance } = await import('../dist/services/novaPersona.js')
 const { prisma } = await import('../dist/lib/prisma.js')
+prisma.accountLearningData.findMany = async () => []
 const { env } = await import('../dist/config/env.js')
 const { answerAssistant } = await import('../dist/services/assistant.service.js')
 const { assistantRequestSchema } = await import('../dist/services/assistantPolicy.js')

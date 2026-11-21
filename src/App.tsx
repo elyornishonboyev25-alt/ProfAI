@@ -45,6 +45,7 @@ import '@/styles/responsive-workspace.css'
 
 const AchievementCelebration = lazy(() => import('@/components/achievements/AchievementCelebration'))
 const TalkOverlay = lazy(() => import('@/components/ai/TalkOverlay'))
+const NovaStudyDock = lazy(() => import('@/components/ai/NovaStudyDock'))
 const Landing = lazy(() => import('@/pages/Landing'))
 const SpinWheel = lazy(() => import('@/pages/SpinWheel'))
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
@@ -437,7 +438,7 @@ function App() {
       <DeferredAchievementCelebration />
       {!isTestMode ? (
         <>
-          {!isExamModeActive && !isAuthPage && !isGuestExperience && !isLearningCenterMode ? <DeferredTalkOverlay /> : null}
+          {!isExamModeActive && !isAuthPage && !isGuestExperience && !isLearningCenterMode ? <><DeferredTalkOverlay /><Suspense fallback={null}><NovaStudyDock /></Suspense></> : null}
           {!isLearningCenterMode ? <WordLookupLayer /> : null}
         </>
       ) : null}

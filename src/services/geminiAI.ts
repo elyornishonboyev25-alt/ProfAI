@@ -60,6 +60,7 @@ export interface GeminiChatAction {
 }
 
 export interface GeminiChatResponse {
+  toolResults?: import('@/lib/novaStudy').NovaToolResult[]
   lessonControl?: 'continue'|'restart'|'pause'
   lesson?: import('@/lib/novaLesson').NovaLesson
   languageState?: {language: 'uz'|'en'|'ru';selection: 'auto'|'uz'|'en'|'ru'}
@@ -148,6 +149,9 @@ export async function evaluateWriting(
   }
 }
 export type ChatAssistantOptions = {
+  studyReference?: import('@/lib/novaStudy').StudyReference
+  writingDraft?: string
+  vocabularyAutoSave?: boolean
   lastReliableLanguage?: 'uz'|'en'|'ru'
   interfaceLanguage?: 'uz'|'en'|'ru'
   lessonContext?: string
@@ -179,6 +183,7 @@ export async function chatWithAssistant(
   options: ChatAssistantOptions = {},
 ): Promise<GeminiChatResponse> {
   const payload = {
+    studyReference: options.studyReference, writingDraft: options.writingDraft, vocabularyAutoSave: options.vocabularyAutoSave,
     turnId: options.turnId, lastReliableLanguage: options.lastReliableLanguage, interfaceLanguage: options.interfaceLanguage, lessonContext: options.lessonContext, coachPreferences: options.coachPreferences,
     message, history: history.slice(-24), pathname, workspace: options.workspace ?? 'general',
     language: options.responseLanguage ?? 'auto', mode: options.mode ?? 'coach', threadId: options.threadId,

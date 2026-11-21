@@ -19,14 +19,14 @@ test('Uzbek terms, names, informal writing, Cyrillic and apostrophes retain the 
 })
 test('short acknowledgements and loanword banter never replace the last reliable language', () => {
   for (const message of ['ha', 'okay', 'davom et', 'E, sen tvar…', 'Elyor', 'IELTS', '2 + 2']) assert.equal(language.resolveNovaLanguage(message, 'auto', 'uz').language, 'uz', message)
-  assert.equal(language.resolveNovaLanguage('okay', 'auto', 'ru').language, 'ru')
+  assert.equal(language.resolveNovaLanguage('okay', 'auto', 'ru').language, 'uz')
 })
 test('explicit switches update selection but quoted study text is not a language switch', () => {
   assert.equal(language.resolveNovaLanguage('Endi inglizcha tushuntir.', 'uz', 'uz').selection, 'en')
-  assert.equal(language.resolveNovaLanguage('Теперь по-русски', 'uz', 'uz').language, 'ru')
+  assert.equal(language.resolveNovaLanguage('Теперь по-русски', 'uz', 'uz').observation.status, 'unsupported')
   assert.equal(language.resolveNovaLanguage('O‘zbekcha davom et', 'en', 'en').language, 'uz')
   assert.equal(language.resolveNovaLanguage('Menga "I love you" bilan misol ko‘rsat.', 'auto', 'uz').language, 'uz')
-  assert.equal(language.resolveNovaLanguage('Что значит имя Elyor? Объясни мне.', 'auto', 'uz').language, 'ru')
+  assert.equal(language.resolveNovaLanguage('Что значит имя Elyor? Объясни мне.', 'auto', 'uz').observation.status, 'unsupported')
 })
 test('unsupported script/Turkish triggers clarification without invented confidence', () => {
   for (const text of ['مرحبا كيف حالك اليوم', 'Merhaba, lütfen bana bunu anlat.']) assert.equal(language.inspectLanguage(text).status, 'unsupported')
@@ -75,6 +75,7 @@ test('ephemeral push-to-talk and speaking state never become long-term memory', 
 })
 test('text output is withheld until checked, repairs once and does not translate unsupported input', async t => {
   const { prisma } = await import('../dist/lib/prisma.js'), { env } = await import('../dist/config/env.js'), { answerAssistant } = await import('../dist/services/assistant.service.js')
+  prisma.accountLearningData.findMany = async () => []
   const original = { fetch: globalThis.fetch, user: prisma.user.findUnique, memory: prisma.aiMemory.findMany, evidence: prisma.novaSkillEvidence.findMany, usage: prisma.aiUsageEvent.create, key: env.OPENAI_API_KEY, provider: env.AI_CHAT_PROVIDER }
   t.after(() => { globalThis.fetch = original.fetch; prisma.user.findUnique = original.user; prisma.aiMemory.findMany = original.memory; prisma.novaSkillEvidence.findMany = original.evidence; prisma.aiUsageEvent.create = original.usage; env.OPENAI_API_KEY = original.key; env.AI_CHAT_PROVIDER = original.provider })
   prisma.user.findUnique = async () => ({ fullName: 'Fixture', assessmentResults: [] }); prisma.aiMemory.findMany = async () => []; prisma.novaSkillEvidence.findMany = async () => []; prisma.aiUsageEvent.create = async () => ({})

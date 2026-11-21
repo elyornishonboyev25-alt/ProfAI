@@ -37,9 +37,9 @@ export async function run() {
     let state: any
     function Language({ owner }: { owner: string }) { state = useNovaLanguage(owner, 'thread', 'uz'); return <span>{state.selection}:{state.lastReliable}</span> }
     await act(async () => root.render(<Language owner="a"/>)); await act(async () => state.choose('ru'))
-    assert.equal(state.language, 'ru'); await act(async () => state.observe('okay')); assert.equal(state.language, 'ru')
+    assert.equal(state.language, 'uz'); await act(async () => state.observe('okay')); assert.equal(state.language, 'uz')
     await act(async () => root.render(<Language owner="b"/>)); assert.equal(state.language, 'uz', 'Language settings are account scoped')
-    assert.equal(useAiAssistantStore.getState().conversationLanguages['a:thread'].selection, 'ru')
+    assert.equal(useAiAssistantStore.getState().conversationLanguages['a:thread'].selection, 'uz')
 
     const lesson: any = { version: 1, id: 'fixture', language: 'uz', title: 'Kasrlarni o‘rganamiz', blocks: [
       { id: 'f', title: 'Formula', type: 'formula', latex: '\\frac{1}{2}+\\frac{1}{2}=1', explanation: 'Bu yerda teng qismlarni qo‘shamiz.', symbols: [] },

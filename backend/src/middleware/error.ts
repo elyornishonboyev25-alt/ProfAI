@@ -2,12 +2,14 @@ import type { NextFunction, Request, Response } from 'express'
 import { ZodError } from 'zod'
 import { BillingError } from '../services/billing.service.js'
 import { AuthSessionError } from '../services/authActivity.service.js'
+import { AiGenerationError } from '../services/aiProvider.service.js'
 
 export function notFoundHandler(req: Request, res: Response) {
   res.status(404).json({ message: `Route not found: ${req.method} ${req.path}` })
 }
 
 export function errorHandler(error: unknown, _req: Request, res: Response, _next: NextFunction) {
+  if (error instanceof AiGenerationError) return res.status(error.statusCode).json({ message: error.message, code: error.code })
   if (error instanceof AuthSessionError) return res.status(error.statusCode).json({ message: error.message, code: error.code, ...(error.details ? { details: error.details } : {}) })
   if (error instanceof BillingError) return res.status(error.statusCode).json({ message: error.message, code: error.code })
   if (error instanceof ZodError) {

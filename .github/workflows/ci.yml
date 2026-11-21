@@ -103,3 +103,7 @@ jobs:
       - name: Check durable Writing assessment jobs
         run: node --test scripts/writing-assessment.test.mjs scripts/writing-submission.test.mjs
         working-directory: backend
+
+      - name: Check Nova source tools, account ownership and exam integrity
+        run: node --test scripts/nova-study.test.mjs
+        working-directory: backend

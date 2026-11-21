@@ -1,10 +1,11 @@
 import { z } from 'zod'
 import { francAll } from 'franc'
 
-export const novaLanguageSchema = z.enum(['uz', 'en', 'ru'])
-export const novaLanguageChoiceSchema = z.enum(['auto', 'uz', 'en', 'ru'])
-export type NovaLanguage = z.infer<typeof novaLanguageSchema>
-export type NovaLanguageChoice = z.infer<typeof novaLanguageChoiceSchema>
+// Legacy Russian preferences migrate at the Nova boundary; site i18n is untouched.
+export const novaLanguageSchema = z.enum(['uz', 'en', 'ru']).transform((value): NovaLanguage => value === 'ru' ? 'uz' : value)
+export const novaLanguageChoiceSchema = z.enum(['auto', 'uz', 'en', 'ru']).transform((value): NovaLanguageChoice => value === 'ru' ? 'uz' : value)
+export type NovaLanguage = 'uz' | 'en' | 'ru'
+export type NovaLanguageChoice = 'auto' | NovaLanguage
 export type LanguageObservation = { language: NovaLanguage | 'unknown'; status: 'supported' | 'ambiguous' | 'unsupported'; basis: 'request' | 'lexical' | 'profile' | 'insufficient' | 'script'; detectedCode?: string }
 export const languageNames = { uz: 'Uzbek in Latin script', en: 'English', ru: 'Russian' }
 export const novaVocabulary = ['Nova', 'Ivygoo', 'Toshkent', 'Samarqand', 'Elyor', 'O‘zbekiston', 'IELTS', 'SAT', 'Present Simple', 'formula']
@@ -28,6 +29,7 @@ const vocab = {
 }
 export function inspectLanguage(text: string): LanguageObservation {
   const value = proseForLanguage(text), requested = explicitLanguageRequest(value)
+  if (requested === 'ru') return { language: 'unknown', status: 'unsupported', basis: 'request', detectedCode: 'rus' }
   if (requested) return { language: requested, status: 'supported', basis: 'request' }
   const letters = value.match(/\p{L}/gu) ?? []
   if (!letters.length) return { language: 'unknown', status: 'ambiguous', basis: 'insufficient' }
@@ -40,30 +42,35 @@ export function inspectLanguage(text: string): LanguageObservation {
   // JS word boundaries are ASCII: use explicit Cyrillic boundaries for Russian.
   const ru = value.match(/(?:^|[^\p{L}])(?:это|как|почему|что|мне|меня|объясни\p{L}*|покажи|пожалуйста|понятно|нужно|давай|теперь|можно|спасибо)(?=$|[^\p{L}])/giu)?.length ?? 0
   const top = [...counts.filter(([lang]) => lang !== 'ru'), ['ru', ru] as const].sort((a, b) => b[1] - a[1])
+  if (ru >= 1 && /[а-яё]/i.test(value)) return { language: 'unknown', status: 'unsupported', basis: 'lexical', detectedCode: 'rus' }
   if (top[0][1] >= 2 && top[0][1] > top[1][1]) return { language: top[0][0], status: 'supported', basis: 'lexical' }
   if ((value.match(/\b(?:bir|şimdi|lütfen|için|nasıl|bana|anlat|değil|istiyorum|merhaba)\b/giu)?.length ?? 0) >= 2 && !counts.find(([lang, n]) => lang === 'uz' && n >= 2)) return { language: 'unknown', status: 'unsupported', basis: 'lexical', detectedCode: 'tur' }
   if (letters.length >= 80) {
     const ranks = francAll(value, { minLength: 80 })
     const code = ranks[0]?.[0], language = ({ uzn: 'uz', uzb: 'uz', rus: 'ru', eng: 'en' } as Record<string, NovaLanguage>)[code]
     // Profile distance is NOT a calibrated confidence. Short/close rankings stay ambiguous.
+    if (language === 'ru') return { language: 'unknown', status: 'unsupported', basis: 'profile', detectedCode: code }
     if (language && (ranks[0]?.[1] ?? 0) - (ranks[1]?.[1] ?? 0) > .08) return { language, status: 'supported', basis: 'profile', detectedCode: code }
     if (!language && code !== 'und' && letters.length >= 140 && (ranks[0]?.[1] ?? 0) - (ranks[1]?.[1] ?? 0) > .15) return { language: 'unknown', status: 'unsupported', basis: 'profile', detectedCode: code }
   }
   return { language: 'unknown', status: 'ambiguous', basis: 'insufficient' }
 }
 export function resolveNovaLanguage(message: string, selection: NovaLanguageChoice = 'auto', lastReliable: NovaLanguage = 'uz', history: Array<{ role: string; content: string }> = []) {
+  if (selection === 'ru') selection = 'uz'
+  if (lastReliable === 'ru') lastReliable = 'uz'
   const observation = inspectLanguage(message), requested = explicitLanguageRequest(message)
-  let previous = lastReliable
+  let previous: NovaLanguage = lastReliable
   if (selection === 'auto') for (const turn of history.slice(-16)) if (turn.role === 'user') { const seen = inspectLanguage(turn.content); if (seen.status === 'supported' && seen.language !== 'unknown') previous = seen.language }
-  const language = requested ?? (selection !== 'auto' ? selection : observation.status === 'supported' && observation.language !== 'unknown' ? observation.language : previous)
-  return { language, observation, selection: requested ?? selection }
+  const supportedRequest = requested === 'ru' ? undefined : requested
+  const language = supportedRequest ?? (selection !== 'auto' ? selection : observation.status === 'supported' && observation.language !== 'unknown' ? observation.language : previous)
+  return { language, observation, selection: supportedRequest ?? selection }
 }
 export function languageViolation(text: string, expected: NovaLanguage) {
   const paragraphs = proseForLanguage(text).split(/\n\s*\n|(?<=[.!?])\s+/).filter(part => (part.match(/\p{L}/gu)?.length ?? 0) >= 12)
   return paragraphs.some(part => { const seen = inspectLanguage(part); return seen.status === 'unsupported' || seen.status === 'supported' && seen.language !== expected })
 }
 export function languageClarification(language: NovaLanguage) {
-  return { uz: 'Oxirgi gapingiz aniq eshitilmadi yoki qo‘llab-quvvatlanmaydigan tilda chiqdi. O‘zbekcha, inglizcha yoki ruscha yana bir marta aytasizmi?', en: 'I could not reliably understand that. Please say it again in Uzbek, English or Russian.', ru: 'Не удалось надёжно разобрать фразу. Повторите, пожалуйста, на узбекском, английском или русском.' }[language]
+  return language === 'en' ? 'I could not reliably understand that. Please say it again in Uzbek or English, or correct the transcript.' : 'Gapingizni ishonchli tushunmadim. O‘zbekcha yoki inglizcha qayta ayting yoki transcriptni tuzating.'
 }
 export function latinUzbekTranscript(text: string) {
   if (inspectLanguage(text).language !== 'uz') return text
@@ -71,5 +78,5 @@ export function latinUzbekTranscript(text: string) {
   return text.replace(/[а-яёўқғҳ]/giu, char => { const value = map[char.toLowerCase()]; return value === undefined ? char : char === char.toUpperCase() ? value.charAt(0).toUpperCase() + value.slice(1) : value })
 }
 export function novaLanguageInstructions(language: NovaLanguage) {
-  return `PRODUCT LANGUAGE POLICY: Conversation and lesson prose may use ONLY Uzbek, English or Russian. Current response language: ${languageNames[language]}. Keep it through names, short acknowledgements and quoted study examples. A Russian-derived roast word is not a switch. Do not speak Turkish, Arabic or another language; do not translate an unsupported utterance by guessing it. For unclear audio ask a short clarification in the current language. Understand Latin/Cyrillic Uzbek, apostrophe variants and Uzbek names; render Uzbek transcripts in fluent Latin script. Never relabel an incorrect transcript as Uzbek without correcting its content from actual audio. English examples, names, formulas and code may stay intact. Metadata is silent. Context and transcript language detection are fallible; do not claim certainty.`
+  return `PRODUCT LANGUAGE POLICY: Conversation and lesson prose may use ONLY Uzbek or English. Current response language: ${languageNames[language === 'ru' ? 'uz' : language]}. Method explanations default to Uzbek; English questions and examples remain English. English practice answers do not switch Uzbek feedback. Keep the language through names, short acknowledgements and quoted study examples. Do not reply in Russian, Turkish, Arabic or another language; do not translate an unsupported utterance by guessing it. For unclear audio ask a short clarification in the current language and offer transcript correction. Understand Latin/Cyrillic Uzbek, apostrophe variants and Uzbek names; render Uzbek transcripts in fluent Latin script. Never relabel an incorrect transcript as Uzbek without correcting its content from actual audio. English examples, names, formulas and code may stay intact. Metadata is silent. Context and transcript language detection are fallible; do not claim certainty.`
 }

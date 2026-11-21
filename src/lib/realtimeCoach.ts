@@ -8,6 +8,9 @@ import type { GeminiChatResponse } from '@/services/geminiAI'
 import { openVoiceSession, releaseVoiceSession, maintainVoiceLease } from './voiceSessionLifecycle'
 
 export type VoiceContext = {
+  studyReference?: import('@/lib/novaStudy').StudyReference
+  writingDraft?: string
+  vocabularyAutoSave?: boolean
   pathname: string; workspace: 'general' | 'ielts' | 'sat' | 'english' | 'admission'; language: 'auto' | 'en' | 'uz' | 'ru'
   mode: 'coach' | 'examiner'; threadId?: string; memoryRevision?: string; studyContext: string; screenContext: string; siteKnowledge: string
   lastReliableLanguage?: 'uz' | 'en' | 'ru'; interfaceLanguage?: 'uz' | 'en' | 'ru'; inputControl?: 'server_vad' | 'hybrid'; lessonContext?: string
@@ -51,7 +54,7 @@ export class RealtimeCoach {
     this.interrupt(); this.options.caption(languageClarification(this.expectedLanguage()))
     if (this.languageRecovery) return
     this.languageRecovery = true
-    this.send({ type: 'conversation.item.create', item: { type: 'message', role: 'user', content: [{ type: 'input_text', text: `Language control: use only ${this.expectedLanguage()}. Ask briefly to repeat unclear speech in Uzbek, English or Russian; do not translate or guess it.` }] } })
+    this.send({ type: 'conversation.item.create', item: { type: 'message', role: 'user', content: [{ type: 'input_text', text: `Language control: use only ${this.expectedLanguage()}. Ask briefly to repeat unclear speech in Uzbek or English; do not translate or guess it.` }] } })
     this.awaitingNewInput = false; this.send({ type: 'response.create' })
   }
   private diagnostics = new NovaDiagnostics()

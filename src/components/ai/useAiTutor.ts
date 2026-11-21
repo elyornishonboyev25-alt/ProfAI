@@ -1,3 +1,4 @@
+import { currentNovaStudy, receiveNovaToolResults, observeNovaStudyPermission } from '@/services/ai/novaStudySession'
 import {useNovaLanguage} from './useNovaLanguage'
 import {transcribeAnswer} from '@/lib/speakingAudio'
 import {inspectLanguage, languageClarification} from '@/lib/novaLanguage'
@@ -115,6 +116,11 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
   // Every registered learner has a text balance; Live AI checks its own plan.
   const hasPremium = Boolean(user)
   const ownerKey = user?.id ? `user:${user.id}` : 'guest'
+  useEffect(() => {
+    const changed = () => { if (activeChatRequest?.owner === ownerKey) activeChatRequest.controller.abort('study_changed') }
+    window.addEventListener('nova:study-changed', changed)
+    return () => window.removeEventListener('nova:study-changed', changed)
+  }, [ownerKey])
   const coachPreferences = useAiAssistantStore(state => state.coachPreferencesByOwner[ownerKey]) ?? DEFAULT_COACH_PREFERENCES
 
   const chatThreads = useAiAssistantStore((s) => s.threadsByOwner[ownerKey] ?? EMPTY_THREADS)
@@ -385,6 +391,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
   const send = useCallback(
     async (options: SendOptions = {}) => {
       const text = (options.text ?? draft).trim()
+      observeNovaStudyPermission(text)
       const outImages = options.images ?? images
       if ((!text && outImages.length === 0) || useAiAssistantStore.getState().isSending) return
       setSending(true)
@@ -436,6 +443,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
 
       try {
         const response = await chatWithAssistant(text, history, location.pathname, {
+          ...currentNovaStudy(),
           coachPreferences,
           studyContext: describeStudySnapshot(snapshot),
           learnerName: preferredName,
@@ -458,6 +466,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
           },
         })
         if (controller.signal.aborted || useAuthStore.getState().user?.id !== user?.id) return
+        receiveNovaToolResults(response.toolResults, navigate)
         updateStoredMessage(ownerKey, threadId, assistantMessage.id, { content: response.reply, lesson: readNovaLesson(response.lesson), language: { selection: response.languageState?.selection ?? conversationLanguage.selection, response: response.replyLanguage ?? voiceLang, lastReliable: response.replyLanguage ?? voiceLang }, expression: response.expression, performance: response.performance, understanding: response.understanding, deliverySegments: response.deliverySegments, status: undefined })
         if (!threadId.startsWith('local-')) {
           // Preserve message order without holding up audio or the next turn.
@@ -774,6 +783,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
   }, [])
 
   const acceptCoachResult = useCallback((response: import('@/services/geminiAI').GeminiChatResponse) => {
+    receiveNovaToolResults(response.toolResults, navigate)
     if (response.savedMemories?.length) upsertStoredMemories(ownerKey, response.savedMemories)
     if (response.persistenceWarnings?.length) setError(localized(uiLocale, 'Some notes were not saved. Review your memory before retrying.', 'Часть заметок не сохранена. Проверьте память перед повтором.', 'Ayrim qaydlar saqlanmadi. Qayta urinishdan oldin xotirani tekshiring.'))
     setPendingActions(response.actions.map((action) => ({ id: createId(), action, label: describeAction(action, uiLocale) })))

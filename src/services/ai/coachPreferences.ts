@@ -1,6 +1,6 @@
 export type CoachStyle = 'adaptive' | 'gentle' | 'strict' | 'playful' | 'affectionate'
 export type LessonMode = 'teach' | 'practice' | 'review' | 'plan'
-export type CoachPreferences = { style: CoachStyle; lessonMode: LessonMode; playfulLanguage: boolean; banter?: 'off' | 'light' | 'sharp'; adultConfirmed?: boolean; roastPhrase?: 'ahmoq' | 'tvar' | 'chumo' | 'dalbayop' }
+export type CoachPreferences = { style: CoachStyle; lessonMode: LessonMode; playfulLanguage: boolean; banter?: 'off' | 'light' | 'sharp'; adultConfirmed?: boolean; roastPhrase?: 'ahmoq' | 'tvar' | 'chumo' | 'dalbayop' | 'ahmoqcha' | 'sasiqcha' | 'dabba' }
 export const DEFAULT_COACH_PREFERENCES: CoachPreferences = { style: 'adaptive', lessonMode: 'teach', playfulLanguage: false }
 
 const copy = {

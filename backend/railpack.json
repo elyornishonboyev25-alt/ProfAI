@@ -1,0 +1,13 @@
+{
+  "$schema": "https://schema.railpack.com",
+  "steps": {
+    "install": { "commands": ["npm ci --prefix backend"] }
+  },
+  "deploy": {
+    "aptPackages": ["ffmpeg"],
+    "inputs": [
+      { "step": "packages:mise", "include": ["/mise/shims", "/mise/installs", "/usr/local/bin/mise", "/etc/mise/config.toml", "/root/.local/state/mise"] },
+      { "step": "build", "include": ["/app/backend/dist", "/app/backend/package.json", "/app/backend/prisma", "/app/backend/node_modules", "/app/public/audio"] }
+    ]
+  }
+}

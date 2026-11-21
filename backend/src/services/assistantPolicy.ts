@@ -1,7 +1,6 @@
 import { z } from 'zod'
-import { studyReferenceSchema } from './novaStudy.js'
+import { studyReferenceSchema, parseNovaToolCalls } from './novaStudy.js'
 import { novaStudyInstructions } from './novaMethodology.js'
-import { parseNovaToolCalls } from './novaTools.service.js'
 import { readNovaLesson, novaLessonInstructions, lessonControlSchema } from './novaLesson.js'
 import { novaLanguageSchema, novaLanguageChoiceSchema, novaLanguageInstructions } from './novaLanguage.js'
 import { novaLearningInstructions, turnUnderstandingSchema, groundedObservations, validateDeliverySegments } from './novaLearning.js'

@@ -36,6 +36,10 @@ export const toolCallSchema = z.object({
   args: z.record(z.unknown()).default({}),
 }).strict()
 export type NovaToolCall = z.infer<typeof toolCallSchema>
+export function parseNovaToolCalls(raw: unknown): NovaToolCall[] {
+  const parsed = z.array(toolCallSchema).max(4).safeParse(raw)
+  return parsed.success ? parsed.data : []
+}
 export type StudyQuestion = { id: string; number: number; text: string; type: string; sectionId: string; instruction?: string; options?: unknown[]; answer: unknown; explanation?: string; evidence?: Array<{ quote: string; paragraphLabel?: string }>; passage?: string; audioUrl?: string; transcript?: string; duration?: number; visual?: unknown; sourceRange?: { start: number; end: number; provenance: 'catalog_cue'; reference: string } }
 export type StudyTest = { id: string; title: string; skill: z.infer<typeof novaSkill>; route: string; questions: StudyQuestion[]; premium?: boolean }
 export type StudyAttempt = { id: string; testId: string; skill: StudyTest['skill']; title: string; completedAt: string; completed: boolean; answers: Record<string, unknown>; provenance: 'account_sync'; writing?: string; transcript?: unknown[]; recordingKey?: string; speakingEvaluation?: unknown }

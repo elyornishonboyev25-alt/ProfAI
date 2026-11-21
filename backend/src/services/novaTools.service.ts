@@ -104,7 +104,3 @@ export async function runNovaTool(userId: string, raw: unknown, environment: Env
   for (const [id, entry] of finished) if (entry.expires < Date.now() || finished.size > 2000) finished.delete(id)
   return result
 }
-export function parseNovaToolCalls(raw: unknown): NovaToolCall[] {
-  const parsed = z.array(toolCallSchema).max(4).safeParse(raw)
-  return parsed.success ? parsed.data : []
-}

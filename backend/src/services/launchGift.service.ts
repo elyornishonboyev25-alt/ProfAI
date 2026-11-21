@@ -5,12 +5,12 @@ import { accountOverview, lockBilling } from './billing.service.js'
 import { ensureReferralCode } from './referral.service.js'
 import { recordPremiumEvent } from './premiumHistory.service.js'
 
-/** The first 200 accounts receive one month of Pro ($6), $1,200 in total. */
-export const LAUNCH_GIFT_CAPACITY = 200
+/** The first 300 accounts receive one month of Pro ($6), $1,800 in total. */
+export const LAUNCH_GIFT_CAPACITY = 300
 export const LAUNCH_GIFT_MONTHS = 1
 export const LAUNCH_GIFT_VALUE_USD = 6
-// Resume the campaign at 180; the next new reservations use places 181..200.
-const LAUNCH_GIFT_ISSUED_BASELINE = 180
+// The first 200 places are issued; the next 100 reservations use places 201..300.
+const LAUNCH_GIFT_ISSUED_BASELINE = 200
 
 export async function launchGiftStats() {
   const [reserved, top] = await Promise.all([

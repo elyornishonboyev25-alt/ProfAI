@@ -6,7 +6,7 @@ process.env.ACCESS_TOKEN_SECRET ||= 'campaign-test-access-secret-only'
 process.env.REFRESH_TOKEN_SECRET ||= 'campaign-test-refresh-secret-only'
 const { prisma } = await import('../dist/lib/prisma.js')
 const { redeemCode } = await import('../dist/services/promo.service.js')
-const { claimLaunchGift } = await import('../dist/services/launchGift.service.js')
+const { claimLaunchGift, LAUNCH_GIFT_CAPACITY } = await import('../dist/services/launchGift.service.js')
 const { accountOverview } = await import('../dist/services/billing.service.js')
 
 const NOW = new Date('2026-10-31T10:00:00.000Z')
@@ -38,8 +38,8 @@ const tx = {
     findUnique: async () => state.gift,
     findUniqueOrThrow: async () => { assert.ok(state.gift); return state.gift },
     update: async ({ data }) => Object.assign(state.gift, data),
-    count: async () => 200,
-    aggregate: async () => ({ _max: { rank: 200 } }),
+    count: async () => LAUNCH_GIFT_CAPACITY,
+    aggregate: async () => ({ _max: { rank: LAUNCH_GIFT_CAPACITY } }),
   },
   campaignRedemption: {
     findUnique: async () => state.redemption,

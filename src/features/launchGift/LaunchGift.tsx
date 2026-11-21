@@ -56,7 +56,7 @@ function CountUp({ to, format, instant, delay = 0 }: { to: number; format: (valu
   return <span className="launch-gift-count"><span className="launch-gift-count-ghost" aria-hidden="true">{format(to)}</span><span ref={live} aria-hidden="true" /><span className="sr-only">{format(to)}</span></span>
 }
 
-/** Launch campaign: one month of IvyGoo Pro for the first 200 students, announced one second after the site opens. */
+/** Launch campaign: one free month of IvyGoo Pro while gifts remain, announced one second after the site opens. */
 export default function LaunchGift({ enabled }: { enabled: boolean }) {
   const user = useAuthStore(state => state.user)
   const accessToken = useAuthStore(state => state.accessToken)

@@ -34,7 +34,7 @@ async function generateValidatedAssessment(input: Parameters<typeof generateAiTe
     const generated = await generateAiText({ ...input,
       systemPrompt: input.systemPrompt + (attempt ? '\nYour previous response did not pass validation. Reassess the ORIGINAL answers and supplied recordings. Return complete, concise JSON with all required fields and grounded evidence for EVERY assessed criterion. Use zero-based candidate-only answer indices and exact transcript quotes. Do not fabricate missing evidence.' : ''),
     }).catch((error: unknown) => {
-      if (error instanceof Error && ['AbortError', 'TimeoutError'].includes(error.name)) {
+      if (error instanceof Error && (['AbortError', 'TimeoutError'].includes(error.name) || error instanceof AiGenerationError && error.code === 'PROVIDER_TIMEOUT')) {
         throw new AiGenerationError(504, 'SPEAKING_ASSESSMENT_TIMEOUT', 'Speaking assessment timed out. Your recordings are saved; please retry.')
       }
       throw error

@@ -266,7 +266,7 @@ export default function ExaminerSession({
           if (legacy && ['result', 'evaluating'].includes(JSON.parse(legacy).phase)) { raw = legacy; storage.setItem(sessionKey, raw); storage.removeItem(oldKey); break }
         }
       }
-      return JSON.parse(raw ?? 'null') as { evaluation?: SpeakingEvaluation; phase: Phase; chat: ChatTurn[]; prompt: string; activePart: 0 | 1 | 2 | 3; cueCard: CueCard | null; prepNotes: string; stages: Stage[]; stageIndex: number; moveIndex: number; answers: SpeechStats[]; history: ExaminerTurn[]; prepDeadline: number; speakDeadline: number; pendingDuration: number; audioCount: number; audioKey?: string; examiner: ReturnType<typeof chooseExaminer> } | null } catch { return null }
+      return JSON.parse(raw ?? 'null') as { evaluation?: SpeakingEvaluation; phase: Phase; chat: ChatTurn[]; prompt: string; activePart: 0 | 1 | 2 | 3; cueCard: CueCard | null; prepNotes: string; stages: Stage[]; stageIndex: number; moveIndex: number; answers: SpeechStats[]; history: ExaminerTurn[]; prepDeadline: number; prepFinished?: boolean; speakDeadline: number; pendingDuration: number; audioCount: number; audioKey?: string; examiner: ReturnType<typeof chooseExaminer> } | null } catch { return null }
   })
 
   const completedEvaluation = saved?.phase === 'result' && saved.evaluation?.source === 'ai' ? saved.evaluation : null
@@ -307,6 +307,9 @@ export default function ExaminerSession({
   const historyRef = useRef<ExaminerTurn[]>(saved?.history ?? [])
   const recordStartRef = useRef(0)
   const prepDeadlineRef = useRef(0)
+  const prepFinishedRef = useRef(false)
+  const conversationRef = useRef<HTMLDivElement | null>(null)
+  const followConversationRef = useRef(true)
   const longTurnDeadlineRef = useRef(0)
   const longTurnFinishedRef = useRef(false)
   const recorderRef = useRef<AnswerRecording | null>(null)
@@ -333,6 +336,11 @@ export default function ExaminerSession({
   const disposedRef = useRef(false)
   useActiveTest(started && phase !== 'result')
 
+  useLayoutEffect(() => {
+    const conversation = conversationRef.current
+    if (conversation && logOffset === 0 && followConversationRef.current) conversation.scrollTop = conversation.scrollHeight
+  }, [chat, recording, recognition.finalTranscript, recognition.interimTranscript, logOffset])
+
   useEffect(() => {
     if (!completedEvaluation || !sessionScope || restoredCompletionRef.current) return
     restoredCompletionRef.current = true
@@ -342,7 +350,7 @@ export default function ExaminerSession({
   useLayoutEffect(() => {
     if (!started) return
     const save = () => {
-      const data = { phase, evaluation, chat, prompt: currentPrompt, activePart, cueCard, prepNotes, stages: stagesRef.current, stageIndex: stageIdxRef.current, moveIndex: moveIdxRef.current, answers: answersRef.current, history: historyRef.current, prepDeadline: prepDeadlineRef.current, speakDeadline: longTurnDeadlineRef.current, pendingDuration: pendingAnswerRef.current?.duration ?? (recording ? Math.max(0.1, (Date.now() - recordStartRef.current) / 1000) : 0), audioCount: audioAnswersRef.current.length, audioKey, examiner }
+      const data = { phase, evaluation, chat, prompt: currentPrompt, activePart, cueCard, prepNotes, stages: stagesRef.current, stageIndex: stageIdxRef.current, moveIndex: moveIdxRef.current, answers: answersRef.current, history: historyRef.current, prepDeadline: prepDeadlineRef.current, prepFinished: prepFinishedRef.current, speakDeadline: longTurnDeadlineRef.current, pendingDuration: pendingAnswerRef.current?.duration ?? (recording ? Math.max(0.1, (Date.now() - recordStartRef.current) / 1000) : 0), audioCount: audioAnswersRef.current.length, audioKey, examiner }
       try { accountStorageFor(owner).setItem(sessionKey, JSON.stringify(data)) } catch { /* Session remains active in memory. */ }
     }
     save()
@@ -533,12 +541,26 @@ export default function ExaminerSession({
       setActivePart(2)
       const cardText = `I’m going to give you a topic, and I’d like you to talk about it for one to two minutes. You have one minute to prepare. Here is your topic: ${move.card.title}.`
       speakExaminer(cardText, () => {
+        prepFinishedRef.current = false
         prepDeadlineRef.current = Date.now() + 60_000
         setPhase('preparing')
         setPrepLeft(60)
       })
     }
   }, [runEvaluation, speakExaminer])
+
+  const finishPreparation = useCallback(() => {
+    // The button and deadline can fire in the same render. Advance only once.
+    if (phase !== 'preparing' || prepFinishedRef.current) return
+    prepFinishedRef.current = true
+    prepDeadlineRef.current = 0
+    setPrepLeft(0)
+    speakExaminer('All right. Please begin speaking now.', () => {
+      longTurnDeadlineRef.current = Date.now() + 120_000
+      setSpeakLeft(120)
+      setPhase('awaiting_answer')
+    })
+  }, [phase, speakExaminer])
 
   // Use wall-clock deadlines so a background tab cannot stretch either exam period.
   useEffect(() => {
@@ -548,17 +570,13 @@ export default function ExaminerSession({
       setPrepLeft(seconds)
       if (seconds === 0) {
         window.clearInterval(id)
-        speakExaminer('All right. Please begin speaking now.', () => {
-          longTurnDeadlineRef.current = Date.now() + 120_000
-          setSpeakLeft(120)
-          setPhase('awaiting_answer')
-        })
+        finishPreparation()
       }
     }
     const id = window.setInterval(tick, 250)
     tick()
     return () => window.clearInterval(id)
-  }, [phase, speakExaminer])
+  }, [phase, finishPreparation])
 
   const beginSession = useCallback(async () => {
     if (beginPendingRef.current) return
@@ -609,6 +627,7 @@ export default function ExaminerSession({
       setPrepNotes(saved.prepNotes)
       setExaminerLabel(examiner.name)
       prepDeadlineRef.current = saved.prepDeadline
+      prepFinishedRef.current = saved.prepFinished ?? false
       longTurnDeadlineRef.current = saved.speakDeadline
       const restoredAudio = await Promise.all(saved.answers.map(async (_, answerIndex) => {
         const blob = await readTestAudio(owner, `${audioKey}:answer:${answerIndex}`)
@@ -629,6 +648,7 @@ export default function ExaminerSession({
         setAnswerError('Your recording is restored. Listen to it and retry processing, or record again.')
         setPhase('awaiting_answer')
       } else if (saved.phase === 'preparing') {
+        prepFinishedRef.current = false
         setPrepLeft(Math.max(0, Math.ceil((saved.prepDeadline - Date.now()) / 1000)))
         setPhase('preparing')
       } else if (saved.phase === 'evaluating' || saved.phase === 'result') {
@@ -641,9 +661,16 @@ export default function ExaminerSession({
           if (saved.phase === 'examiner_speaking' && move?.type === 'seed' && move.text !== saved.prompt) advance()
           else if (saved.phase === 'examiner_speaking' && move?.type === 'cuecard' && !saved.cueCard) advance()
           else if (saved.phase === 'examiner_speaking' && move?.type === 'cuecard') {
-            prepDeadlineRef.current = saved.prepDeadline || Date.now() + 60_000
-            setPrepLeft(Math.max(0, Math.ceil((prepDeadlineRef.current - Date.now()) / 1000)))
-            setPhase('preparing')
+            if (saved.prepFinished) {
+              longTurnDeadlineRef.current = Date.now() + 120_000
+              setSpeakLeft(120)
+              setPhase('awaiting_answer')
+            } else {
+              prepFinishedRef.current = false
+              prepDeadlineRef.current = saved.prepDeadline || Date.now() + 60_000
+              setPrepLeft(Math.max(0, Math.ceil((prepDeadlineRef.current - Date.now()) / 1000)))
+              setPhase('preparing')
+            }
           } else if (move?.type === 'closing') { moveIdxRef.current += 1; advance() }
           else setPhase('awaiting_answer')
         }, true)
@@ -725,6 +752,8 @@ export default function ExaminerSession({
     setEvalError(null)
     setAnswerError(null)
     setRecordSeconds(0)
+    setLogOffset(0)
+    followConversationRef.current = true
     setSpeechDetected(false)
     microphoneInterruptedRef.current = false
     const stream = micStreamRef.current
@@ -936,6 +965,7 @@ export default function ExaminerSession({
     voiceContextRef.current = null
     void recorderRef.current?.stop()
     prepDeadlineRef.current = 0
+    prepFinishedRef.current = false
     longTurnDeadlineRef.current = 0
     longTurnFinishedRef.current = false
     captureStartedRef.current = false
@@ -1067,7 +1097,10 @@ export default function ExaminerSession({
           <div><h2><UiText text={"Session log"} /></h2><p><UiText text={"Questions and captured turns"} /></p></div>
           <span className="speaking-turn-count">{answeredCount} {answeredCount === 1 ? <UiText text={"answer"} /> : <UiText text={"answers"} />}</span>
         </div>
-        <div className="speaking-conversation" role="log" aria-live="polite" aria-relevant="additions text">
+        <div ref={conversationRef} className="speaking-conversation" role="log" aria-live="polite" aria-relevant="additions text" tabIndex={0} onScroll={(event) => {
+          const panel = event.currentTarget
+          followConversationRef.current = panel.scrollHeight - panel.clientHeight - panel.scrollTop < 48
+        }}>
         {visibleTurns.map((turn) => (
           <motion.div
             key={turn.id}
@@ -1084,7 +1117,15 @@ export default function ExaminerSession({
           </motion.div>
         ))}
 
-        {answeredCount === 0 ? <div className="speaking-transcript-empty"><span><Headphones className="h-5 w-5" /></span><strong><UiText text={"Stay with the conversation"} /></strong><p><UiText text={"Your spoken answers will appear here as captured turns. Keep your attention on the examiner’s question."} /></p></div> : null}
+        {recording && logOffset === 0 ? <div className="speaking-turn speaking-turn--candidate speaking-turn--live">
+          <span className="speaking-turn-avatar" aria-hidden><Mic className="h-4 w-4" /></span>
+          <div className="speaking-turn-bubble speaking-turn-bubble--draft">
+            <span className="speaking-turn-name"><UiText text={"Your response"} /> · {formatClock(recordSeconds)}</span>
+            <p>{recognition.finalTranscript} {recognition.interimTranscript ? <span className="speaking-interim-transcript">{recognition.interimTranscript}</span> : null}{!recognition.finalTranscript && !recognition.interimTranscript ? <UiText text={canRecognizeWhileRecording() && recognition.supported ? 'Listening for your voice' : 'Your audio is being recorded. The full transcript appears after you finish.'} /> : null}</p>
+          </div>
+        </div> : null}
+
+        {answeredCount === 0 && !recording ? <div className="speaking-transcript-empty"><span><Headphones className="h-5 w-5" /></span><strong><UiText text={"Stay with the conversation"} /></strong><p><UiText text={"Your spoken answers will appear here as captured turns. Keep your attention on the examiner’s question."} /></p></div> : null}
 
 
         {phase === 'thinking' ? (
@@ -1125,7 +1166,8 @@ export default function ExaminerSession({
               <h3>{cueCard.title}</h3>
               <p className="speaking-question-hint">You should say:</p>
               <ul className="speaking-cue-list">{cueCard.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>
-              {phase === 'preparing' || canRecord ? <><label className="speaking-notes-label" htmlFor="speaking-prep-notes"><UiText text={"Your notes"} /> <span><UiText text={"Keywords and ideas"} /></span></label><textarea id="speaking-prep-notes" className="speaking-prep-notes" value={prepNotes} onChange={(event) => setPrepNotes(event.target.value)} maxLength={1000} readOnly={phase !== 'preparing'} placeholder={uiCopy("Plan your answer here…")} /></> : null}
+              <label className="speaking-notes-label" htmlFor="speaking-prep-notes"><UiText text={"Your notes"} /> <span><UiText text={"Keywords and ideas"} /></span></label><textarea id="speaking-prep-notes" className="speaking-prep-notes" value={prepNotes} onChange={(event) => setPrepNotes(event.target.value)} maxLength={1000} readOnly={phase !== 'preparing'} placeholder={uiCopy("Plan your answer here…")} />
+              {phase === 'preparing' ? <button type="button" onClick={finishPreparation} className="speaking-record-button mt-3"><Mic className="h-4 w-4" /> <UiText text={"Start speaking now"} /></button> : null}
               {canRecord ? <p className="speaking-timer-help"><UiText text={"The examiner moves on when you finish speaking or the two-minute limit is reached."} /></p> : null}
             </div>
           ) : (

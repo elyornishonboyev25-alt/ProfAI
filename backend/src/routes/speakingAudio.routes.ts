@@ -55,7 +55,7 @@ router.post('/assess-transcript', asyncHandler(async (req, res) => {
   try { return res.json(await withStudyAccess(req.user!.id, 'speaking', () => assessSpeakingTranscript(req.user!.id, payload, controller.signal))) }
   catch (error) {
     if (controller.signal.aborted) return
-    if (error instanceof AiGenerationError) return res.status(error.statusCode).json({ message: error.message, code: error.code })
+    if (error instanceof AiGenerationError) return res.status(error.statusCode).json({ message: error.message, code: error.code, details: { retryAfterMs: error.retryAfterMs } })
     throw error
   } finally { res.off('close', close) }
 }))
@@ -68,7 +68,7 @@ router.post('/assess', asyncHandler(async (req, res) => {
   try { return res.json(await withStudyAccess(req.user!.id, 'speaking', () => assessSpeakingAudio(req.user!.id, payload, controller.signal))) }
   catch (error) {
     if (controller.signal.aborted) return
-    if (error instanceof AiGenerationError) return res.status(error.statusCode).json({ message: error.message, code: error.code })
+    if (error instanceof AiGenerationError) return res.status(error.statusCode).json({ message: error.message, code: error.code, details: { retryAfterMs: error.retryAfterMs } })
     throw error
   }
 }))

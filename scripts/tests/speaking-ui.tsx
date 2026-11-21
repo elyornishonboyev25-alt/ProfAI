@@ -293,12 +293,24 @@ export async function run() {
     await endAudio() // Part 2 transition
     await endAudio() // cue card instructions
     assert.match(container.textContent!, /Preparation time/)
-    const now = Date.now
-    Date.now = () => now() + 61_000
-    await wait(300)
-    Date.now = now
+    const notes = container.querySelector<HTMLTextAreaElement>('#speaking-prep-notes')!
+    const preparationNotes = 'Learning to cook\nMy grandmother taught me\nUseful every day'
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')!.set!.call(notes, preparationNotes)
+      notes.dispatchEvent(new Event('input', { bubbles: true }))
+    })
+    assert.equal(notes.value, preparationNotes)
+    const startsBeforePrep = recorderStarts
+    await act(async () => { button('Start speaking now').click(); button('Start speaking now')?.click() })
+    await wait()
+    assert.equal(recorderStarts, startsBeforePrep, 'Skipping prep waits for the examiner to finish')
+    assert.equal(container.querySelector<HTMLTextAreaElement>('#speaking-prep-notes')?.value, preparationNotes, 'Notes remain visible while the examiner introduces the long turn')
     await endAudio() // Please begin
     assert.ok(button('Finish answer'))
+    assert.equal(recorderStarts, startsBeforePrep + 1, 'Repeated start taps begin exactly one recording')
+    assert.equal(container.querySelector<HTMLTextAreaElement>('#speaking-prep-notes')?.value, preparationNotes, 'Preparation notes remain visible throughout the answer')
+    assert.equal(container.querySelector<HTMLTextAreaElement>('#speaking-prep-notes')?.readOnly, true)
+    assert.match(container.querySelector('.speaking-turn--live')!.textContent!, /Your audio is being recorded/, 'Safari explains that the full transcript follows the recording')
     await click('Finish answer')
     assert.match(container.textContent!, /Do you use this skill every day\?/, 'Part 2 follow-up must not be skipped')
     await endAudio()
@@ -454,6 +466,7 @@ export async function run() {
           recognizer.onerror?.({ error: 'network' })
           recognizer.onend?.()
         })
+        assert.ok(container.querySelector('.speaking-turn--live')?.textContent?.includes(browserTranscript), 'The full live transcript is displayed while recording')
         browserTranscript = '' // There will be no new final results on stop.
         transcriptionFails = true
       }
@@ -498,7 +511,7 @@ export async function run() {
         } else if (button('Finish answer')) {
           await act(async () => { button('Finish answer').click(); button('Finish answer')?.click() })
           await wait(40)
-        } else if (container.querySelector('#speaking-prep-notes')) {
+        } else if (button('Start speaking now')) {
           const originalNow = Date.now
           try { Date.now = () => originalNow() + 61_000; await wait(300) }
           finally { Date.now = originalNow }

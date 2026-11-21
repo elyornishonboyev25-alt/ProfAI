@@ -6,10 +6,10 @@
 import { callGeminiAPI, extractJSON } from './geminiAI'
 import type { SpeechStats } from '@/lib/speakingScoring'
 import { estimateBandsFromStats } from '@/lib/speakingScoring'
-import { apiClient, ApiError } from '@/lib/apiClient'
+import { apiClient } from '@/lib/apiClient'
 import { withAssessmentDeadline } from '@/utils/assessmentDeadline'
 import { prepareSpeakingAssessmentAudio } from '@/lib/speakingAssessmentAudio'
-import { waitForSpeakingRateLimit } from '@/lib/speakingRateLimit'
+import { waitForSpeakingAssessmentRetry } from '@/lib/speakingRateLimit'
 import { collectSpeakingRewrites, validateSpeakingRewrites } from '../../backend/src/services/speakingRewrites'
 import { FAIR_ASSESSMENT_POLICY, SPEAKING_CALIBRATION } from '../../backend/src/services/ieltsAssessmentPolicy'
 import { useAuthStore } from '@/store/authStore'
@@ -206,11 +206,8 @@ async function requestSpeakingAssessment(path: string, body: unknown, signal: Ab
   const request = () => apiClient.post<Omit<SpeakingEvaluation, 'stats'>>(path, body, { signal })
   try { return await request() }
   catch (error) {
-    // A short application throttle can expire without losing the completed test.
-    // Only our explicit throttle code is eligible for a timed retry.
     if (signal.aborted) throw error
-    const rateLimitReset = await waitForSpeakingRateLimit(error, 'SPEAKING_ASSESSMENT_RATE_LIMIT', signal)
-    if (!rateLimitReset && (!(error instanceof ApiError) || ![502, 503, 504].includes(error.status) || error.code === 'AI_NOT_CONFIGURED')) throw error
+    if (!await waitForSpeakingAssessmentRetry(error, signal)) throw error
     signal.throwIfAborted()
     return request()
   }
@@ -236,7 +233,9 @@ export async function evaluateSpeaking(params: EvaluateParams): Promise<Speaking
       }
       const response = await requestSpeakingAssessment('/ai/speaking-audio/assess-transcript', { modeLabel: params.modeLabel, history: params.history, durationSec: params.stats.durationSec }, signal)
       return { response, assessmentMode: 'transcript' as const }
-    }, params.audio?.length ? 120_000 : 90_000)
+    // The server allows 105s for audio and 80s for text. Leave enough time for
+    // one complete retry, provider backoff and preparing the saved recordings.
+    }, params.audio?.length ? 300_000 : 240_000)
     if (response.assessmentMode !== assessmentMode || response.source !== 'ai' ||
       ![response.fluencyBand, response.lexicalBand, response.grammarBand, response.pronunciationBand].every(band => typeof band === 'number' && Number.isFinite(band) && band >= 0 && band <= 9) ||
       !response.summary?.trim() || !Array.isArray(response.strengths) || !response.strengths.every(item => typeof item === 'string' && item.trim()) ||

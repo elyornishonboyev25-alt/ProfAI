@@ -19,7 +19,12 @@ async function main() {
     import {MemoryRouter} from 'react-router-dom';
     import ExaminerSession from './src/components/speaking/ExaminerSession';
     import {apiClient, ApiError} from './src/lib/apiClient';
-    window.webkitSpeechRecognition = undefined; window.SpeechRecognition = undefined;
+    import i18n from './src/i18n';
+    i18n.changeLanguage('en');
+    window.webkitSpeechRecognition = class {
+      start(){window.recognizer=this} stop(){this.onend?.()} abort(){}
+      words(text){this.onresult?.({resultIndex:0,results:[Object.assign([{transcript:text}],{isFinal:false})]})}
+    }; window.SpeechRecognition = undefined;
     const wav = new Uint8Array(4844), view = new DataView(wav.buffer);
     const write = (offset, text) => [...text].forEach((char, index) => wav[offset + index] = char.charCodeAt(0));
     write(0, 'RIFF'); view.setUint32(4, 4836, true); write(8, 'WAVEfmt ');
@@ -38,12 +43,15 @@ async function main() {
       if (path.endsWith('/transcribe')) {
         window.files.push(body);
         if (window.transcriptionFailures-- > 0) throw new ApiError('Temporary provider failure', 503);
-        return {text: 'I enjoy learning English because it helps me communicate with people around the world.'};
+        return {text: window.answerTranscript || 'I enjoy learning English because it helps me communicate with people around the world.'};
       }
       return {text: JSON.stringify({reply: 'Why is that important to you?'})};
     };
     const root = createRoot(document.getElementById('root'));
-    root.render(<MemoryRouter><div className="ielts-speaking-live-workspace"><ExaminerSession config={{mode:'full_mock', mockSeed:{
+    const showPart2 = () => root.render(<MemoryRouter><div className="ielts-speaking-live-workspace"><ExaminerSession key="part2" config={{mode:'part2'}} modeLabel="Part 2 regression" onExit={()=>{}} onSaved={()=>{}} /></div></MemoryRouter>);
+    window.showPart2 = () => { sessionStorage.setItem('part2Fixture', 'true'); window.failVoice=false; showPart2() };
+    if(sessionStorage.getItem('part2Fixture')) showPart2();
+    else root.render(<MemoryRouter><div className="ielts-speaking-live-workspace"><ExaminerSession config={{mode:'full_mock', mockSeed:{
       part1:['What do you study?'], part2:{title:'Describe a useful skill.',bullets:['What it is','How you learned it','When you use it','Why it is useful'],followUp:'Do you use it every day?'}, part3:['How do people learn new skills?']
     }}} modeLabel="Speaking Full Mock 1" onExit={()=>{}} onSaved={()=>{}} /></div></MemoryRouter>);
   `
@@ -111,6 +119,9 @@ async function main() {
     await click('Begin speaking test')
     await until(`document.body.innerText.includes('Finish answer')`)
     assert.equal(await evaluate(`window.voices.every(v=>v==='cedar')`), true)
+    await evaluate(`window.answerTranscript=Array.from({length:35},(_,i)=>'Sentence '+i+': I enjoy learning English because it helps me communicate with people around the world.').join(' '); window.recognizer.words(window.answerTranscript)`)
+    await until(`document.querySelector('.speaking-turn--live p')?.textContent.includes('Sentence 34:')`)
+    assert.equal(await evaluate(`getComputedStyle(document.querySelector('.speaking-turn--live p')).webkitLineClamp`), 'none', 'Live answers are never shortened with an ellipsis')
     await new Promise((resolve) => setTimeout(resolve, 1200))
     await click('Finish answer')
     await until('window.files.length === 2')
@@ -118,6 +129,8 @@ async function main() {
     const file = await evaluate(`({bytes:atob(window.files[0].audioBase64).length,mime:window.files[0].mimeType})`)
     assert.ok(file.bytes > 1000, 'Native MediaRecorder retains actual audio and final chunks')
     assert.equal(file.mime, 'audio/webm')
+    await until(`document.querySelector('.speaking-turn--candidate:not(.speaking-turn--live) p')?.textContent.includes('Sentence 34:')`)
+    assert.equal(await evaluate(`getComputedStyle(document.querySelector('.speaking-turn--candidate:not(.speaking-turn--live) p')).webkitLineClamp`), 'none', 'Saved answers remain fully readable')
     console.log('PASS: native Audio ends before recording; real MediaRecorder audio survives a temporary transcription failure')
 
     // Reproduce unavailable examiner audio and check the recovery controls at
@@ -143,8 +156,33 @@ async function main() {
       assert.equal(layout.reachable, true, `${width}×${height}: audio recovery is reachable ${JSON.stringify(layout)}`)
       assert.ok(layout.height >= 44, 'Recovery controls have a usable touch target')
       assert.match(layout.chip, /Audio paused/)
+      const transcript = await evaluate(`(() => {
+        const panel=document.querySelector('.speaking-conversation'); panel.scrollTop=panel.scrollHeight;
+        return {scrollable:panel.scrollHeight>panel.clientHeight, overflow:getComputedStyle(panel).overflowY, answer:panel.textContent.includes('Sentence 34:')};
+      })()`)
+      assert.equal(transcript.answer, true, 'The entire captured answer is retained')
+      assert.equal(transcript.overflow, 'auto', 'Long answers can be scrolled at every viewport')
       console.log(`PASS: ${width}×${height} layout, recovery controls and truthful audio status`)
     }
+    await evaluate('window.showPart2()')
+    await until(`document.body.innerText.includes('Begin speaking test')`)
+    await click('Begin speaking test')
+    await until(`document.body.innerText.includes('Start speaking now')`)
+    await evaluate(`(() => {const notes=document.querySelector('#speaking-prep-notes'); Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype,'value').set.call(notes,'Cooking with my grandmother\\nUseful every day'); notes.dispatchEvent(new Event('input',{bubbles:true}));})()`)
+    const deadline = await evaluate(`JSON.parse(localStorage.getItem(Object.keys(localStorage).find(key=>key.includes('Part 2 regression') && key.startsWith('profai:account-data:v1:guest:')))).prepDeadline`)
+    assert.ok(deadline > Date.now(), 'Preparation has a one-minute deadline')
+    await send('Page.reload')
+    await until(`document.body.innerText.includes('Resume speaking test')`)
+    await click('Resume speaking test')
+    await until(`document.body.innerText.includes('Start speaking now')`)
+    assert.equal(await evaluate(`document.querySelector('#speaking-prep-notes').value`), 'Cooking with my grandmother\nUseful every day', 'Notes survive reloading during preparation')
+    const restoredDeadline = await evaluate(`JSON.parse(localStorage.getItem(Object.keys(localStorage).find(key=>key.includes('Part 2 regression') && key.startsWith('profai:account-data:v1:guest:')))).prepDeadline`)
+    assert.equal(restoredDeadline, deadline, 'Reload does not restart the preparation minute')
+    await click('Start speaking now')
+    await until(`document.body.innerText.includes('Finish answer')`)
+    assert.equal(await evaluate(`document.querySelector('#speaking-prep-notes').value`), 'Cooking with my grandmother\nUseful every day', 'Notes stay visible during the recorded long turn')
+    assert.equal(await evaluate(`document.querySelector('#speaking-prep-notes').readOnly`), true)
+    console.log('PASS: early Part 2 start, persisted preparation deadline, and visible notes while answering')
     await send('Browser.close').catch(() => {})
   } finally {
     socket?.close(); browser.kill(); await exited

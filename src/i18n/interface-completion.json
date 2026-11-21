@@ -1,4 +1,12 @@
 {
+  "Start speaking now": {
+    "uz": "Hozir gapirishni boshlash",
+    "ru": "Начать говорить сейчас"
+  },
+  "Your audio is being recorded. The full transcript appears after you finish.": {
+    "uz": "Ovozingiz yozib olinmoqda. To‘liq matn javobni tugatganingizdan keyin ko‘rinadi.",
+    "ru": "Ваш голос записывается. Полный текст появится после завершения ответа."
+  },
   "days to go": { "uz": "kun qoldi", "ru": "дней осталось" },
   "Current": { "uz": "Hozirgi", "ru": "Текущий" },
   "Preparing your improved answer...": { "uz": "Javobingizning yaxshilangan varianti tayyorlanmoqda...", "ru": "Готовим улучшенный вариант вашего ответа..." },

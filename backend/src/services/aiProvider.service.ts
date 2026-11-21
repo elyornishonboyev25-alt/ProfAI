@@ -187,7 +187,7 @@ async function requestGemini(input: GenerateAiTextInput): Promise<ProviderResult
               ...(responseSchema ? { responseSchema } : {}),
             },
           }),
-        }, isAssessmentPurpose(input.purpose) ? Math.max(env.AI_PROVIDER_TIMEOUT_MS, 65_000) : env.AI_PROVIDER_TIMEOUT_MS)
+        }, isAssessmentPurpose(input.purpose) ? Math.max(env.AI_PROVIDER_TIMEOUT_MS, input.purpose === 'speaking_evaluation' ? 90_000 : 65_000) : env.AI_PROVIDER_TIMEOUT_MS)
       try {
         response = await request(schema)
         if (response.status === 400 && schema) {
@@ -446,8 +446,8 @@ export async function generateAiText(input: GenerateAiTextInput): Promise<AiGene
       lastError = error instanceof ProviderRequestError
         ? error
         : new ProviderRequestError('AI_PROVIDER_FAILED', 'AI provider request failed.')
-      if (input.purpose === 'writing_evaluation') {
-        console.warn('Writing provider failed', { provider, code: lastError.code })
+      if (isAssessmentPurpose(input.purpose)) {
+        console.warn('Assessment provider failed', { purpose: input.purpose, provider, code: lastError.code, retryAfterMs: lastError.retryAfterMs })
       }
       // Never splice a second model's answer into a partially delivered reply.
       if (emitted) break

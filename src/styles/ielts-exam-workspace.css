@@ -666,7 +666,7 @@
   .ielts-speaking-live-workspace:has(.speaking-session-grid) { height: calc(100dvh - var(--ielts-workspace-toolbar-height, 76px)); min-height: 0; overflow: hidden; padding-top: 12px; padding-bottom: 12px; }
   .ielts-speaking-live-workspace > .speaking-exam-v2:has(.speaking-session-grid) { display: flex; flex-direction: column; width: 100%; height: 100%; max-width: 1500px; padding-top: 0; padding-bottom: 0; }
   .speaking-exam-v2 .speaking-session-grid { flex: 1; height: auto; min-height: 0; gap: 16px; }
-  .speaking-exam-v2 .speaking-conversation { display: flex; flex-direction: column; gap: 10px; overflow: hidden; padding: 16px; }
+  .speaking-exam-v2 .speaking-conversation { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; overscroll-behavior: contain; padding: 16px; }
   .speaking-exam-v2 .speaking-focus-content { display: flex; flex-direction: column; gap: 12px; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; padding: 14px; }
   .speaking-exam-v2 .speaking-panel-heading { min-height: 57px; padding: 9px 16px; }
   .speaking-exam-v2 .speaking-focus-footer, .speaking-exam-v2 .speaking-transcript-footer { min-height: 32px; padding-top: 5px; padding-bottom: 5px; }
@@ -679,9 +679,10 @@
 .speaking-exam-v2 .speaking-journey-step.is-active::before { position: absolute; z-index: -1; inset: -6px -4px; border-radius: 20px; background: rgb(220 54 79 / 12%); filter: blur(14px); content: ''; }
 .speaking-exam-v2 .speaking-journey-step.is-active .speaking-journey-number { box-shadow: 0 7px 16px rgb(189 38 62 / 21%); }
 .speaking-exam-v2 .speaking-transcript-panel, .speaking-exam-v2 .speaking-focus-panel { border-radius: 22px; box-shadow: 0 14px 38px rgb(31 40 57 / 7%); }
-.speaking-exam-v2 .speaking-turn { margin-bottom: 0; }
+.speaking-exam-v2 .speaking-turn { flex-shrink: 0; margin-bottom: 0; }
 .speaking-exam-v2 .speaking-turn-bubble { padding: 9px 12px; }
-.speaking-exam-v2 .speaking-turn-bubble p { display: -webkit-box; overflow: hidden; -webkit-line-clamp: 3; -webkit-box-orient: vertical; font-size: 12px; line-height: 1.5; }
+.speaking-exam-v2 .speaking-turn-bubble p { white-space: pre-wrap; font-size: 12px; line-height: 1.5; }
+.speaking-interim-transcript { opacity: .7; }
 .speaking-log-nav { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; white-space: nowrap; }
 .speaking-log-nav button { display: grid; place-items: center; width: 24px; height: 24px; border: 1px solid #efdee2; border-radius: 8px; background: #fff; color: #a12c42; }
 .speaking-log-nav button:disabled { cursor: default; opacity: .35; }

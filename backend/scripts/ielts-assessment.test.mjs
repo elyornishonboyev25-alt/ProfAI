@@ -194,7 +194,7 @@ test('an exhausted provider deadline returns a retriable timeout instead of an i
   const nativeFetch = globalThis.fetch, nativeTimeout = AbortSignal.timeout, originalUsage = prisma.aiUsageEvent.create
   env.GEMINI_API_KEY = 'fake-timeout-key'; env.GEMINI_MODELS = 'gemini-2.5-flash'
   prisma.aiUsageEvent.create = async ({ data }) => data
-  AbortSignal.timeout = milliseconds => nativeTimeout(milliseconds === 70_000 ? 5 : milliseconds)
+  AbortSignal.timeout = milliseconds => nativeTimeout(milliseconds === 105_000 ? 5 : milliseconds)
   globalThis.fetch = async (_url, { signal }) => new Promise((_resolve, reject) => {
     signal.addEventListener('abort', () => reject(signal.reason), { once: true })
   })
@@ -202,4 +202,14 @@ test('an exhausted provider deadline returns a retriable timeout instead of an i
   const keepAlive = setTimeout(() => {}, 1000)
   t.after(() => { clearTimeout(keepAlive); globalThis.fetch = nativeFetch; AbortSignal.timeout = nativeTimeout; prisma.aiUsageEvent.create = originalUsage; env.GEMINI_API_KEY = '' })
   await assert.rejects(assessSpeakingAudio('timeout-user', { modeLabel: 'Full Mock', history, durationSec: 200, audio }), { statusCode: 504, code: 'SPEAKING_ASSESSMENT_TIMEOUT' })
+})
+
+test('a provider request timeout is reported as a Speaking timeout, with recordings still eligible for retry', async (t) => {
+  const originalUsage = prisma.aiUsageEvent.create
+  env.GEMINI_API_KEY = 'fake-provider-timeout-key'
+  prisma.aiUsageEvent.create = async ({ data }) => data
+  t.after(() => { env.GEMINI_API_KEY = ''; prisma.aiUsageEvent.create = originalUsage })
+  t.mock.method(globalThis, 'fetch', async () => { throw new DOMException('Request timed out', 'AbortError') })
+  t.mock.method(console, 'warn', () => {})
+  await assert.rejects(assessSpeakingAudio('provider-timeout-user', { modeLabel: 'Full Mock', history, durationSec: 200, audio }), { statusCode: 504, code: 'SPEAKING_ASSESSMENT_TIMEOUT' })
 })

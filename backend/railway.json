@@ -2,10 +2,12 @@
   "$schema": "https://railway.com/railway.schema.json",
   "build": {
     "builder": "RAILPACK",
-    "buildCommand": "npm run build"
+    "buildCommand": "npm ci --prefix backend && npm --prefix backend run build",
+    "watchPatterns": ["/backend/**", "/scripts/build-nova-catalog.mjs", "/scripts/lib/novaCatalogSource.ts", "/src/data/**", "/src/features/sat/**", "/tsconfig.json"]
   },
   "deploy": {
-    "startCommand": "npm start",
+    "startCommand": "npm --prefix backend start",
+    "preDeployCommand": ["npm --prefix backend run prisma:deploy"],
     "healthcheckPath": "/api/v1/health",
     "healthcheckTimeout": 120,
     "restartPolicyType": "ON_FAILURE",

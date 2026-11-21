@@ -38,54 +38,54 @@ prisma.$transaction = work => {
   return result
 }
 
-test('guest statistics resume at 200 issued and 100 remaining, including an empty catalog', async () => {
-  for (const count of [0, 75, 180, 200]) {
+test('guest statistics include the eight manual gifts and resume at 208 issued and 92 remaining', async () => {
+  for (const count of [0, 75, 180, 200, 207, 208]) {
     reset(count)
-    assert.deepEqual(await launchGiftStats(), { capacity: 300, issued: 200, remaining: 100, valueUsd: 6, months: 1 })
+    assert.deepEqual(await launchGiftStats(), { capacity: 300, issued: 208, remaining: 92, valueUsd: 6, months: 1 })
     assert.equal(gifts.size, count, 'reading the counter does not create gifts')
   }
 })
 
-test('new reservations continue after the original 200 and revisits keep their original place', async () => {
+test('new reservations start at 209 after the manual gifts and revisits keep their original place', async () => {
   reset(200)
   const first = await launchGiftFor('new-1')
-  assert.equal(first.rank, 201)
-  assert.equal(first.issued, 201)
-  assert.equal(first.remaining, 99)
+  assert.equal(first.rank, 209)
+  assert.equal(first.issued, 209)
+  assert.equal(first.remaining, 91)
   assert.equal(first.referralCode, 'FRIENDCODE')
   const second = await launchGiftFor('new-2')
-  assert.equal(second.rank, 202)
-  assert.equal(second.issued, 202)
-  assert.equal(second.remaining, 98)
+  assert.equal(second.rank, 210)
+  assert.equal(second.issued, 210)
+  assert.equal(second.remaining, 90)
   const revisit = await launchGiftFor('new-1')
-  assert.equal(revisit.rank, 201)
-  assert.equal(revisit.issued, 202)
-  assert.equal(revisit.remaining, 98)
+  assert.equal(revisit.rank, 209)
+  assert.equal(revisit.issued, 210)
+  assert.equal(revisit.remaining, 90)
   assert.equal((await launchGiftFor('existing-200')).rank, 200)
   assert.equal(gifts.size, 202)
 })
 
-test('the next signup starts at 201 even when earlier gift records are missing', async () => {
+test('the next signup starts at 209 even when earlier gift records are missing', async () => {
   reset()
   await reserveLaunchGiftAtSignup('new-signup')
-  assert.equal(gifts.get('new-signup').rank, 201)
-  assert.deepEqual(await launchGiftStats(), { capacity: 300, issued: 201, remaining: 99, valueUsd: 6, months: 1 })
+  assert.equal(gifts.get('new-signup').rank, 209)
+  assert.deepEqual(await launchGiftStats(), { capacity: 300, issued: 209, remaining: 91, valueUsd: 6, months: 1 })
 })
 
-test('only 100 further signup reservations fit and the counter stops at 300/0', async () => {
+test('only 92 further signup reservations fit and the counter stops at 300/0', async () => {
   reset(200)
-  await Promise.all(Array.from({ length: 105 }, (_, index) => reserveLaunchGiftAtSignup(`new-${index}`)))
-  assert.equal(gifts.size, 300)
-  assert.equal(gifts.get('new-0').rank, 201)
-  assert.equal(gifts.get('new-99').rank, 300)
-  assert.equal(gifts.has('new-100'), false)
+  await Promise.all(Array.from({ length: 97 }, (_, index) => reserveLaunchGiftAtSignup(`new-${index}`)))
+  assert.equal(gifts.size, 292)
+  assert.equal(gifts.get('new-0').rank, 209)
+  assert.equal(gifts.get('new-91').rank, 300)
+  assert.equal(gifts.has('new-92'), false)
   assert.deepEqual(await launchGiftStats(), { capacity: 300, issued: 300, remaining: 0, valueUsd: 6, months: 1 })
   const unavailable = await launchGiftFor('too-late')
   assert.equal(unavailable.eligible, false)
   assert.equal(unavailable.rank, null)
   assert.equal(unavailable.remaining, 0)
-  assert.equal(gifts.size, 300)
-  assert.equal((await launchGiftFor('new-0')).rank, 201)
+  assert.equal(gifts.size, 292)
+  assert.equal((await launchGiftFor('new-0')).rank, 209)
 })
 
 test('existing unclaimed gifts retain their eligibility and rank after all new places fill', async () => {
@@ -101,7 +101,7 @@ test('existing unclaimed gifts retain their eligibility and rank after all new p
 })
 
 test('existing progress above the baseline is preserved, including historical ranks beyond the cap', async () => {
-  for (const count of [201, 299, 300, 305]) {
+  for (const count of [209, 299, 300, 305]) {
     reset(count)
     assert.deepEqual(await launchGiftStats(), { capacity: Math.max(300, count), issued: count,
       remaining: Math.max(0, 300 - count), valueUsd: 6, months: 1 })

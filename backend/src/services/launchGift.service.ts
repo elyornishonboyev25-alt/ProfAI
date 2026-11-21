@@ -9,8 +9,8 @@ import { recordPremiumEvent } from './premiumHistory.service.js'
 export const LAUNCH_GIFT_CAPACITY = 300
 export const LAUNCH_GIFT_MONTHS = 1
 export const LAUNCH_GIFT_VALUE_USD = 6
-// The first 200 places are issued; the next 100 reservations use places 201..300.
-const LAUNCH_GIFT_ISSUED_BASELINE = 200
+// Includes eight manually granted gifts after the original 200; resume at 209.
+const LAUNCH_GIFT_ISSUED_BASELINE = 208
 
 export async function launchGiftStats() {
   const [reserved, top] = await Promise.all([

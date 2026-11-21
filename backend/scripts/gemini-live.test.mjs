@@ -11,6 +11,8 @@ process.env.REFRESH_TOKEN_SECRET = 'gemini-live-test-refresh-secret-only'
 for (const key of ['GEMINI_API_KEY', 'GEMINI_API_KEY_2', 'GEMINI_API_KEY_3', 'GEMINI_API_KEY_4', 'GEMINI_API_KEY_5', 'OPENAI_API_KEY']) process.env[key] = ''
 const { env } = await import('../dist/config/env.js')
 const { prisma } = await import('../dist/lib/prisma.js')
+prisma.novaSkillEvidence.findMany = async () => []
+prisma.novaSessionDiagnostics.upsert = async () => ({})
 const { assistantContextSchema } = await import('../dist/services/assistantPolicy.js')
 const { geminiLiveKeys, naturalVoiceProvider } = await import('../dist/services/voiceProvider.js')
 const { geminiInitialFrames, geminiLiveSetup, geminiVoiceFrame, attachGeminiVoice, startGeminiVoiceCall, endGeminiVoiceCall, updateGeminiVoiceContext } = await import('../dist/services/geminiLive.service.js')

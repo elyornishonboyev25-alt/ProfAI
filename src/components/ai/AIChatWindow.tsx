@@ -1,3 +1,6 @@
+import NovaLearningNotes from './NovaLearningNotes'
+import { retryPendingAiMessages } from '@/services/aiWorkspacePersistence'
+import NovaMemoryCard from './NovaMemoryCard'
 import UiText from '@/components/common/UiText'
 import { useEffect, useId, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -95,7 +98,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
     interimTranscript, startVoice,
     voiceError,
     chatThreads, activeThread, activeThreadId, threadsLoading, memories,
-    createNewChat, selectChat, renameChat, deleteChat, forgetMemory,
+    createNewChat, selectChat, renameChat, deleteChat, forgetMemory, editMemory,
   } = tutor
 
   const isPage = variant === 'page'
@@ -143,15 +146,6 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
         ? `Удалить чат «${title}» безвозвратно?`
         : `Permanently delete "${title}"?`
     if (window.confirm(prompt)) void deleteChat(threadId)
-  }
-
-  const confirmForgetMemory = (memoryId: string) => {
-    const prompt = uiLanguage === 'uz'
-      ? "Bu xotirani butunlay o'chirasizmi?"
-      : uiLanguage === 'ru'
-        ? 'Удалить эту запись из памяти?'
-        : 'Delete this memory?'
-    if (window.confirm(prompt)) void forgetMemory(memoryId)
   }
 
   const statusText = c(STATUS_TEXT[voiceState] ?? STATUS_TEXT.idle)
@@ -339,7 +333,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                   <VoiceOrb state={voiceState} level={voiceLevel} size={48}/>
                   <div>
                   <p className="text-sm font-black text-slate-950">
-                    Ivygoo
+                    Nova
                   </p>
                   <p className="text-[10px] font-semibold text-slate-500">
                     {studioText.studio}
@@ -423,10 +417,10 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                 <div className="flex-1 overflow-y-auto p-3">
                   <div className="mb-3 rounded-xl border border-red-100 bg-red-50/70 p-3 text-[11px] leading-5 text-red-900">
                     {uiLanguage === 'uz'
-                      ? '“Eslab qol…” deb ayting. Ivygoo muhim maqsad va afzalliklaringizni keyingi chatlarda ham eslaydi.'
+                      ? '“Eslab qol…” deb ayting. Nova muhim maqsad va afzalliklaringizni keyingi chatlarda ham eslaydi.'
                       : uiLanguage === 'ru'
-                        ? 'Скажите: «Запомни…» Ivygoo использует важные цели и предпочтения в следующих чатах.'
-                        : 'Say “Remember that…” and Ivygoo will use important goals and preferences in future chats.'}
+                        ? 'Скажите: «Запомни…» Nova использует важные цели и предпочтения в следующих чатах.'
+                        : 'Say “Remember that…” and Nova will use important goals and preferences in future chats.'}
                   </div>
                   {memories.length === 0 ? (
                     <p className="px-2 py-6 text-center text-xs text-slate-500">
@@ -435,20 +429,11 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                   ) : (
                     <div className="space-y-2">
                       {memories.map((memory) => (
-                        <div key={memory.id} className="group rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                          <div className="flex items-start gap-2">
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-[9px] font-black uppercase tracking-wide text-red-700">{memory.key.replace(/_/g, ' ')}</p>
-                              <p className="mt-1 text-xs leading-5 text-slate-700">{memory.value}</p>
-                            </div>
-                            <button type="button" onClick={() => confirmForgetMemory(memory.id)} className="rounded-lg p-1.5 text-slate-400 opacity-0 hover:bg-red-50 hover:text-red-600 group-hover:opacity-100" aria-label={c('Forget memory')}>
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        </div>
+                        <NovaMemoryCard key={memory.id} memory={memory} onSave={editMemory} onDelete={forgetMemory} />
                       ))}
                     </div>
                   )}
+                  {user && <NovaLearningNotes key={user.id} userId={user.id} onPractice={setDraft} />}
                 </div>
               ) : (
                 <div className="coach-drawer-settings min-h-0 flex-1 overflow-y-auto p-4">
@@ -490,7 +475,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
           <VoiceOrb state={voiceState} level={voiceLevel} size={isPage ? 48 : 40} />
           <div>
             <p className="flex items-center gap-1.5 text-sm font-black text-slate-900">
-              <UiText text={"Ivygoo Coach"} />
+              Nova
               <Sparkles className="h-3 w-3 text-red-500" />
             </p>
             <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500/80">
@@ -541,7 +526,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
             type="button"
             onClick={openTalk}
             className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-zinc-200 bg-white/80 px-2.5 text-[11px] font-bold text-slate-700 transition hover:border-red-200 hover:text-red-700"
-            aria-label={c('Talk to Ivygoo')}
+            aria-label={uiLanguage === 'uz' ? 'Nova bilan gaplashish' : uiLanguage === 'ru' ? 'Поговорить с Nova' : 'Talk to Nova'}
           >
             <AudioLines className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">{c('Talk')}</span>
@@ -625,6 +610,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                 ) : null}
                 {message.role === 'assistant' ? <><span className="coach-answer-author">Nova</span><AiMessageContent content={message.content} /></> : <p className="whitespace-pre-wrap">{message.content}</p>}
                 {message.role === 'assistant' && message.content ? <CopyButton text={message.content} /> : null}
+                {message.pendingSync && <p className="mt-2 text-xs opacity-80">{uiLanguage === 'uz' ? 'Shu qurilmada saqlangan.' : uiLanguage === 'ru' ? 'Сохранено на этом устройстве.' : 'Saved on this device.'} <button type="button" className="underline" onClick={() => void retryPendingAiMessages()}>{uiLanguage === 'uz' ? 'Qayta sinxronlash' : uiLanguage === 'ru' ? 'Синхронизировать' : 'Retry sync'}</button></p>}
                 {message.status === 'interrupted' ? <p className="mt-2 text-xs text-amber-700">{uiLanguage === 'uz' ? 'Javob to‘xtatildi' : uiLanguage === 'ru' ? 'Ответ остановлен' : <UiText text={"Response stopped"} />}</p> : null}
               </motion.article>
             ))}
@@ -777,7 +763,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
 
           <textarea
             ref={textareaRef}
-            aria-label={c('Ask Ivygoo...')}
+            aria-label={uiLanguage === 'uz' ? 'Novaga yozing...' : uiLanguage === 'ru' ? 'Спросите Nova...' : 'Ask Nova...'}
             value={draft}
             rows={1}
             onChange={(event) => {
@@ -787,7 +773,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
             onPaste={onPaste}
             placeholder={
               isPage
-                ? c('Ask Ivygoo...')
+                ? (uiLanguage === 'uz' ? 'Novaga yozing...' : uiLanguage === 'ru' ? 'Спросите Nova...' : 'Ask Nova...')
                 : c('Type, paste an image, or tap the mic…')
             }
             className={`${isPage ? 'coach-composer-input' : 'max-h-[140px]'} min-h-[44px] min-w-0 flex-1 resize-none rounded-xl border border-zinc-200 bg-white/90 px-3.5 py-2.5 text-sm leading-6 text-slate-900 outline-none placeholder:text-slate-400 focus:border-red-300 focus:ring-4 focus:ring-red-50`}

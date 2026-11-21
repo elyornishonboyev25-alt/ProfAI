@@ -11,6 +11,8 @@ for (const key of ['GEMINI_API_KEY', 'GEMINI_API_KEY_2', 'GEMINI_API_KEY_3', 'GE
 const { app } = await import('../dist/app.js')
 const { env } = await import('../dist/config/env.js')
 const { prisma } = await import('../dist/lib/prisma.js')
+prisma.novaSkillEvidence.findMany = async () => []
+prisma.novaSessionDiagnostics.upsert = async () => ({})
 const { fixtureAccessToken: signAccessToken, installSessionFixtures } = await import('./helpers/authSessions.mjs')
 const { parseAssistantReply, partialAssistantReply, boundedHistory, buildCoachPrompt, assistantContextSchema } = await import('../dist/services/assistantPolicy.js')
 const { validateAudioAssessment } = await import('../dist/services/speakingAssessment.service.js')
@@ -137,13 +139,46 @@ test('audio grades use equal weights and reject invented answer evidence', () =>
   assert.throws(() => validateAudioAssessment(JSON.stringify({ ...result, evidence: [{ ...result.evidence[0], quote: 'invented sentence' }] }), history, [0]))
 })
 
+test('memory editing, learning notes and diagnostics enforce owner boundaries and revision checks', async t => {
+  const { NovaDiagnostics } = await import('../dist/services/novaDiagnostics.js')
+  const original = { transaction: prisma.$transaction, evidence: prisma.novaSkillEvidence.findMany, sessions: prisma.voiceAllowanceSession.findFirst, metrics: prisma.novaSessionDiagnostics.findMany, saveMetrics: prisma.novaSessionDiagnostics.upsert }
+  let memory = { id: 'private-memory', userId: 'owner-a', key: 'address_preference', value: 'Use siz', revision: 1, origin: 'user', previousValues: [] }
+  const aiMemory = {
+    findFirst: async ({ where }) => where.id === memory.id && where.userId === memory.userId ? memory : null,
+    updateMany: async ({ where, data }) => { if (where.userId !== memory.userId || where.revision !== memory.revision) return { count: 0 }; memory = { ...memory, ...data, revision: memory.revision + 1 }; return { count: 1 } },
+  }
+  prisma.$transaction = async operation => original.transaction(tx => operation({ ...tx, aiMemory }))
+  prisma.novaSkillEvidence.findMany = async ({ where }) => where.userId === 'owner-a' ? [{ topicKey: 'fractions', topic: 'Fractions', sourceTurnId: 'attempt', quote: '2/4=1/2', outcome: 'correct', assistance: 'hinted', confidence: .7, observedAt: new Date() }] : []
+  const sessionId = '2ed49252-ce92-4368-829b-45bc32b3e527', metrics = []
+  prisma.voiceAllowanceSession.findFirst = async ({ where }) => where.id === sessionId && where.userId === 'owner-a' ? { id: sessionId, userId: 'owner-a', endedAt: new Date() } : null
+  prisma.novaSessionDiagnostics.upsert = async ({ create }) => { metrics.push(create); return create }
+  prisma.novaSessionDiagnostics.findMany = async ({ where }) => metrics.filter(row => row.userId === where.userId)
+  const server = app.listen(0), base = `http://127.0.0.1:${server.address().port}/api/v1`
+  const headers = owner => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${signAccessToken({ sub: owner, role: 'USER' })}` })
+  t.after(() => { prisma.$transaction = original.transaction; prisma.novaSkillEvidence.findMany = original.evidence; prisma.voiceAllowanceSession.findFirst = original.sessions; prisma.novaSessionDiagnostics.findMany = original.metrics; prisma.novaSessionDiagnostics.upsert = original.saveMetrics; server.closeAllConnections(); server.close() })
+  const patch = (owner, revision) => fetch(`${base}/ai-workspace/memories/private-memory`, { method: 'PATCH', headers: headers(owner), body: JSON.stringify({ value: 'Use sen', revision }) })
+  assert.equal((await patch('owner-b', 1)).status, 404)
+  assert.equal((await patch('owner-a', 1)).status, 200)
+  assert.equal((await patch('owner-a', 1)).status, 409)
+  assert.equal(memory.value, 'Use sen'); assert.equal(memory.revision, 2)
+  const notes = owner => fetch(`${base}/ai-workspace/skills`, { headers: headers(owner) }).then(response => response.json())
+  assert.equal((await notes('owner-a')).items[0].lastPractice.quote, '2/4=1/2')
+  assert.deepEqual((await notes('owner-b')).items, [])
+  const snapshot = new NovaDiagnostics().snapshot()
+  const post = owner => fetch(`${base}/ai/voice/diagnostics`, { method: 'POST', headers: headers(owner), body: JSON.stringify({ sessionId, provider: 'gemini', model: 'gemini-3.8-live', snapshot }) })
+  assert.equal((await post('owner-b')).status, 404); assert.equal(metrics.length, 0)
+  assert.equal((await post('owner-a')).status, 204)
+  const other = await fetch(`${base}/ai/voice/diagnostics`, { headers: headers('owner-b') }).then(response => response.json())
+  assert.deepEqual(other.items, [])
+})
+
 test('history API persists delivery metadata and scopes every read/write to its owner', async t => {
   const originals = { transaction: prisma.$transaction, owned: prisma.aiConversationThread.findFirst, list: prisma.aiConversationThread.findMany }
   const rows = []
   prisma.aiConversationThread.findFirst = async ({ where }) => where.id === 'nova-private' && where.userId === 'nova-owner' ? { id: where.id } : null
   prisma.aiConversationThread.findMany = async ({ where }) => where.userId === 'nova-owner' ? [{ id: 'nova-private', messages: rows }] : []
   prisma.$transaction = async work => originals.transaction(tx => work({ ...tx,
-    aiConversationMessage: { create: async ({ data }) => { rows.push(data); return data } },
+    aiConversationMessage: { findFirst: async ({ where }) => rows.find(row => row.id === where.id && row.threadId === where.threadId) ?? null, create: async ({ data }) => { rows.push(data); return data } },
     aiConversationThread: { update: async () => ({}) },
   }))
   const server = app.listen(0)
@@ -161,6 +196,8 @@ test('history API persists delivery metadata and scopes every read/write to its 
   assert.equal(rows.length, 0)
   assert.equal((await fetch(`${base}/threads/nova-private/messages`, { method: 'POST', headers: headers('nova-owner'), body })).status, 201)
   assert.deepEqual(rows[0].metadata, metadata)
+  assert.equal((await fetch(`${base}/threads/nova-private/messages`, { method: 'POST', headers: headers('nova-owner'), body })).status, 201)
+  assert.equal(rows.length, 1, 'A lost network acknowledgement can be retried without duplicating a finalized message')
   const loaded = await (await fetch(`${base}/threads`, { headers: headers('nova-owner') })).json()
   assert.deepEqual(loaded.items[0].messages[0].metadata, metadata)
   assert.deepEqual((await (await fetch(`${base}/threads`, { headers: headers('other-owner') })).json()).items, [])
@@ -298,7 +335,7 @@ test('voice uses protected SDP negotiation, executes shared coaching and hangs u
   for (const value of Object.values(call.timings)) assert.ok(Number.isFinite(value) && value >= 0)
   assert.equal(call.session, undefined); assert.equal(call.client_secret, undefined)
   assert.equal(sessionConfig.audio.input.turn_detection.type, 'semantic_vad')
-  assert.equal(sessionConfig.audio.input.turn_detection.eagerness, 'high', 'Live coaching responds promptly without using the examiner long-pause setting')
+  assert.equal(sessionConfig.audio.input.turn_detection.eagerness, 'medium', 'Live coaching responds promptly without using the examiner long-pause setting')
   assert.equal(sessionConfig.audio.output.speed, 1.1)
   assert.match(sessionConfig.instructions, /brisk, natural conversational pace/)
   assert.equal(sessionConfig.audio.input.turn_detection.interrupt_response, true)

@@ -1,3 +1,6 @@
+import { diagnosticsSnapshotSchema } from '../services/novaDiagnostics.js'
+import { saveVoiceDiagnostics, describeDiagnostics } from '../services/novaDiagnostics.service.js'
+import { prisma } from '../lib/prisma.js'
 import { Router } from 'express'
 import { z } from 'zod'
 import { env } from '../config/env.js'
@@ -73,5 +76,18 @@ router.post('/context', asyncHandler(async (req, res) => {
     if (error instanceof AiGenerationError) return res.status(error.statusCode).json({ message: error.message, code: error.code })
     throw error
   }
+}))
+router.post('/diagnostics', asyncHandler(async (req, res) => {
+  const { sessionId, provider, model, snapshot } = z.object({
+    sessionId: z.string().uuid(), provider: z.enum(['gemini', 'openai']), model: z.string().regex(/^[a-z0-9._/-]{1,120}$/i), snapshot: diagnosticsSnapshotSchema,
+  }).strict().parse(req.body)
+  const owned = await prisma.voiceAllowanceSession.findFirst({ where: { id: sessionId, userId: req.user!.id } })
+  if (!owned) return res.status(404).json({ message: 'Voice session not found.' })
+  await saveVoiceDiagnostics(req.user!.id, sessionId, 'client', provider, model, { ...snapshot, inputTokens: null, outputTokens: null, usageBasis: 'unknown' })
+  return res.status(204).send()
+}))
+router.get('/diagnostics', asyncHandler(async (req, res) => {
+  const rows = await prisma.novaSessionDiagnostics.findMany({ where: { userId: req.user!.id }, orderBy: { updatedAt: 'desc' }, take: 40 })
+  return res.json({ items: rows.map(row => ({ sessionId: row.sessionId, side: row.side, provider: row.provider, model: row.model, updatedAt: row.updatedAt, metrics: describeDiagnostics(row.model, row.snapshot) })) })
 }))
 export default router

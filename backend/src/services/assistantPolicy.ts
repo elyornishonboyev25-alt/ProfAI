@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { novaLearningInstructions, turnUnderstandingSchema, groundedObservations, validateDeliverySegments } from './novaLearning.js'
 import { novaIdentity, novaCharacter, novaExamples, novaExamCharacter, novaTeachingApproach, novaPerformanceInstructions, novaExpressionSchema, novaPerformanceSchema, defaultNovaPerformance } from './novaPersona.js'
 
 export const coachPreferencesSchema = z.object({
@@ -14,11 +15,13 @@ export const assistantContextSchema = z.object({
   mode: z.enum(['coach', 'examiner']).default('coach'),
   coachPreferences: coachPreferencesSchema.default({}),
   threadId: z.string().max(191).optional(),
+  memoryRevision: z.string().max(191).optional(),
   studyContext: z.string().max(16000).default(''),
   screenContext: z.string().max(12000).default(''),
   siteKnowledge: z.string().max(16000).default(''),
 })
 export const assistantRequestSchema = assistantContextSchema.extend({
+  turnId: z.string().min(1).max(191).optional(),
   message: z.string().trim().max(12000).default(''),
   history: z.array(z.object({ role: z.enum(['user', 'assistant']), content: z.string().max(12000) })).max(100).default([]),
   images: z.array(z.string().max(1300000).regex(/^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/)).max(4).default([]),
@@ -45,6 +48,9 @@ const actionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('save_word'), payload: z.object({ term: z.string().trim().min(1).max(100), definition: z.string().trim().min(1).max(800), example: z.string().max(800).default(''), synonym: z.string().max(200).default(''), context: z.enum(['reading', 'listening', 'writing', 'speaking', 'article', 'sat']).default('speaking') }) }),
 ])
 export const assistantReplySchema = z.object({
+  understanding: turnUnderstandingSchema.optional().catch(undefined),
+  learningObservations: z.array(z.unknown()).max(4).default([]).catch([]),
+  deliverySegments: z.array(z.unknown()).max(4).default([]).catch([]),
   reply: z.string().trim().min(1).max(12000),
   expression: novaExpressionSchema.optional().catch(undefined),
   performance: novaPerformanceSchema.optional().catch(undefined),
@@ -55,7 +61,7 @@ export const assistantReplySchema = z.object({
 })
 const memorySchema = z.object({ key: z.string().regex(/^[a-z][a-z0-9_]{1,63}$/), value: z.string().trim().min(1).max(600) })
 
-export function parseAssistantReply(raw: string) {
+export function parseAssistantReply(raw: string, learnerMessage = '') {
   const cleaned = raw.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '')
   const parsed = assistantReplySchema.parse(JSON.parse(cleaned))
   const actions = parsed.actions.flatMap((action) => {
@@ -74,7 +80,7 @@ export function parseAssistantReply(raw: string) {
     return [validated.data]
   }).slice(0, 8)
   const performance = parsed.performance ?? defaultNovaPerformance(parsed.expression)
-  return { reply: parsed.reply, expression: performance.expression, performance, ...(parsed.language ? { replyLanguage: parsed.language } : {}), title: parsed.title ?? null, actions, memoryUpdates }
+  return { understanding: parsed.understanding, learningObservations: groundedObservations(parsed.learningObservations, learnerMessage), deliverySegments: validateDeliverySegments(parsed.reply, parsed.deliverySegments), reply: parsed.reply, expression: performance.expression, performance, ...(parsed.language ? { replyLanguage: parsed.language } : {}), title: parsed.title ?? null, actions, memoryUpdates }
 }
 
 // Decode only a JSON reply string as it arrives; incomplete escapes are withheld.
@@ -147,6 +153,7 @@ Memory: save a useful lasting goal, preference or fact only when the learner exp
 Return ONE complete JSON object, no fences. Put reply first:
 {"reply":"the answer","language":"en","expression":"warm","title":null,"memoryUpdates":[],"actions":[]}
 ${novaPerformanceInstructions}
+${novaLearningInstructions}
 Return performance alongside expression; expression must equal performance.expression.
 This drives an illustrative avatar; never claim actual emotions or emotion recognition.
 Set language to the actual reply language: en, uz or ru. When a title is requested, use 2-6 words in the reply language. memoryUpdates entries: {"key":"target_score","value":"..."}.

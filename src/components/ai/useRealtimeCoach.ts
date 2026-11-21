@@ -10,8 +10,12 @@ import { composeScreenContext } from '@/services/ai/screenCapture'
 import { describeRelevantSiteKnowledge } from '@/services/ai/siteKnowledge'
 import type { AiTutorController } from './useAiTutor'
 import { useCopy } from '@/i18n/interface'
+import type { PerformanceCue } from '@/lib/novaLearning'
+import { apiClient } from '@/lib/apiClient'
 import { readNovaPerformance, type NovaPerformance } from '@/lib/novaPersona'
 import { VoiceStreamError } from '@/lib/voiceStreamError'
+
+const memoryRevision = (memories: Array<{ updatedAt: string }> = []) => `${memories.length}:${memories.map(memory => memory.updatedAt).sort().slice(-1)[0] ?? ''}`
 
 export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mode: 'coach' | 'examiner', provider: 'gemini' | 'openai' = 'openai') {
   const location = useLocation()
@@ -67,14 +71,14 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
       if (disposed) return
       let savingThread: Promise<boolean> | null = null
       let savingMessages = Promise.resolve()
-      const record = (role: 'user' | 'assistant', text: string, id: string, interrupted = false, performance?: NovaPerformance) => {
+      const record = (role: 'user' | 'assistant', text: string, id: string, interrupted = false, performance?: NovaPerformance, timeline?: PerformanceCue[]) => {
         if (useAuthStore.getState().user?.id !== userId) return
         if (!text.trim()) {
           previews.delete(`voice-${id}`); drafts.delete(`voice-${id}`)
           useAiAssistantStore.getState().removeMessage(ownerKey, threadId, `voice-${id}`)
           return
         }
-        const message: AiAssistantMessage = { id: `voice-${id}`, role, content: text, createdAt: new Date().toISOString(), delivery: 'voice', ...(performance ? { performance, expression: performance.expression } : {}), ...(interrupted ? { status: 'interrupted' } : {}) }
+        const message: AiAssistantMessage = { id: `voice-${id}`, role, content: text, createdAt: new Date().toISOString(), delivery: 'voice', ...(timeline?.length ? { performanceTimeline: timeline } : {}), ...(performance ? { performance, expression: performance.expression } : {}), ...(interrupted ? { status: 'interrupted' } : {}) }
         previews.delete(message.id); drafts.delete(message.id)
         // Replace a live draft in place and explicitly clear its streaming flag.
         writeMessage(threadId, { ...message, status: interrupted ? 'interrupted' : undefined })
@@ -87,7 +91,7 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
             threadId = saved.id
             useAiAssistantStore.getState().syncThread(ownerKey, draftId, saved)
             if (!disposed) void connection.current?.updateContext({ pathname: currentPath.current, workspace: latest.current.activeWorkspace, language: mode === 'examiner' ? 'en' : 'auto', mode,
-              threadId: saved.id, coachPreferences: latest.current.coachPreferences,
+              threadId: saved.id, coachPreferences: latest.current.coachPreferences, memoryRevision: memoryRevision(latest.current.memories),
               studyContext: describeStudySnapshot(buildStudySnapshot(userId)).slice(0, 16000), screenContext: composeScreenContext('Explain this page', currentPath.current).slice(0, 12000), siteKnowledge: describeRelevantSiteKnowledge('IELTS SAT English admissions tests').slice(0, 16000) }).catch(() => {})
             return true
           }).catch(() => { savingThread = null; return false })
@@ -95,15 +99,18 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
         savingMessages = savingMessages.then(async () => {
           if (savingThread && !await savingThread) return
           if (useAuthStore.getState().user?.id !== userId || threadId.startsWith('local-')) return
-          await persistAiMessage(threadId, message, locale)
+          await persistAiMessage(threadId, message, locale, userId)
         }).catch(() => {})
       }
       const thread = useAiAssistantStore.getState().threadsByOwner[ownerKey]?.find((item) => item.id === threadId)
       const VoiceConnection = provider === 'gemini' ? GeminiRealtimeCoach : RealtimeCoach
       const voice = new VoiceConnection({
-        speechSpeed: speedRef.current,
+        speechSpeed: speedRef.current, reconnectAttempt: reconnecting || recovery.current.attempts > 0 ? 1 : 0,
+        diagnostics: report => {
+          if (useAuthStore.getState().user?.id === userId) void apiClient.post('/ai/voice/diagnostics', report).catch(() => {})
+        },
         context: { pathname: currentPath.current, workspace: tutor.activeWorkspace, language: mode === 'examiner' ? 'en' : 'auto', mode,
-          coachPreferences: tutor.coachPreferences,
+          coachPreferences: tutor.coachPreferences, memoryRevision: memoryRevision(tutor.memories),
           threadId: threadId.startsWith('local-') ? undefined : threadId,
           studyContext: describeStudySnapshot(buildStudySnapshot(userId)).slice(0, 16000),
           screenContext: composeScreenContext('Explain this page', location.pathname).slice(0, 12000),
@@ -165,11 +172,11 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
     if (!enabled || !tutor.user) return
     const timer = window.setTimeout(() => {
       void connection.current?.updateContext({ pathname: location.pathname, workspace: tutor.activeWorkspace, language: mode === 'examiner' ? 'en' : 'auto', mode,
-        coachPreferences: tutor.coachPreferences,
+        coachPreferences: tutor.coachPreferences, memoryRevision: memoryRevision(tutor.memories),
         studyContext: describeStudySnapshot(buildStudySnapshot(tutor.user!.id)).slice(0, 16000), screenContext: composeScreenContext('Explain this page', location.pathname).slice(0, 12000), siteKnowledge: describeRelevantSiteKnowledge('IELTS SAT English admissions tests').slice(0, 16000) }).catch(() => {})
     }, 600)
     return () => window.clearTimeout(timer)
-  }, [enabled, location.pathname, tutor.user?.id, tutor.activeWorkspace, tutor.coachPreferences, mode])
+  }, [enabled, location.pathname, tutor.user?.id, tutor.activeWorkspace, tutor.coachPreferences, tutor.memories, mode])
 
   const toggleMute = useCallback(() => setMuted((current) => { connection.current?.mute(!current); return !current }), [])
   const interrupt = useCallback(() => connection.current?.interrupt(), [])

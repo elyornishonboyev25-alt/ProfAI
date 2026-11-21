@@ -311,3 +311,13 @@
   .coach-mascot,.coach-mascot * { animation:none!important; transition:none!important; }
   .coach-mascot .nova-head,.coach-mascot .nova-eyes { transform:none!important; }
 }
+
+/* Keep attention on the lesson: a quiet body, occasional blinks, one short success gesture. */
+.coach-mascot .nova-body,.coach-mascot .nova-shadow { animation:none; }
+.coach-mascot .nova-blink { animation:nova-attentive-blink 8.7s linear infinite; }
+.coach-mascot[data-state=listening] .nova-blink { animation-duration:10.3s; }
+.nova-celebration { animation:nova-short-celebration 900ms ease-out both; transform-origin:200px 74px; }
+.coach-mascot[data-activity=error] .nova-brow { stroke:#eab197; }
+@keyframes nova-attentive-blink { 0%,31%,34%,78%,81%,100% { transform:scaleY(1); } 32.5%,79.5% { transform:scaleY(.08); } }
+@keyframes nova-short-celebration { 0% { opacity:0; transform:scale(.7); } 25%,60% { opacity:1; transform:scale(1); } 100% { opacity:0; transform:scale(.9); } }
+@media(prefers-reduced-motion:reduce) { .coach-mascot .nova-blink,.nova-celebration { animation:none!important; } }

@@ -1,3 +1,7 @@
+import { NovaDiagnostics } from './novaDiagnostics.js'
+import { saveVoiceDiagnostics } from './novaDiagnostics.service.js'
+import { saveLearningEvidence } from './novaLearning.service.js'
+import { learningObservationParameters } from './novaLearning.js'
 import { novaPerformanceParameters, readNovaPerformance, examPerformance } from './novaPersona.js'
 import { onAccountDeleted } from './accountLifecycle.js'
 import { createHash } from 'node:crypto'
@@ -12,7 +16,7 @@ import { reserveVoiceTime, settleVoiceTime, requireVoiceReservation, onVoiceRese
 import { BillingError } from './billing.service.js'
 import { endGeminiVoiceCall, updateGeminiVoiceContext } from './geminiLive.service.js'
 
-type VoiceCall = { id: string; userId: string; callId: string; socket: WebSocket; timer: NodeJS.Timeout; abort: AbortController; context: AssistantContext; contextVersion: number; history: Array<{ role: 'user' | 'assistant'; content: string }> }
+type VoiceCall = { diagnostics: NovaDiagnostics; toolAborts: Map<string, AbortController>; id: string; userId: string; callId: string; socket: WebSocket; timer: NodeJS.Timeout; abort: AbortController; context: AssistantContext; contextVersion: number; history: Array<{ role: 'user' | 'assistant'; content: string }> }
 const calls = new Map<string, VoiceCall>()
 function contextSignature(context: AssistantContext) {
   return JSON.stringify(context, (_key, value) => value && typeof value === 'object' && !Array.isArray(value)
@@ -43,6 +47,8 @@ export async function endVoiceCall(userId: string, id: string) {
   calls.delete(id)
   clearTimeout(call.timer)
   call.abort.abort()
+  for (const controller of call.toolAborts.values()) controller.abort()
+  void saveVoiceDiagnostics(userId, id, 'server', 'openai', env.AI_VOICE_MODEL, call.diagnostics.snapshot()).catch(() => {})
   call.socket.close()
   await hangup(call.callId)
   await settleVoiceTime(userId, id)
@@ -95,8 +101,8 @@ async function startReservedVoiceCall(userId: string, sdp: string, context: Assi
     type: 'realtime', model: env.AI_VOICE_MODEL, instructions: voiceInstructions(context, assistantData(context, records)),
     output_modalities: ['audio'], max_output_tokens: 900,
     audio: { input: { noise_reduction: { type: 'near_field' }, transcription: { model: 'gpt-4o-transcribe', prompt: 'Transcribe the speaker verbatim, preserving their original language, mixed-language words, fillers and errors. Do not translate or improve their speech.' },
-      turn_detection: { type: 'semantic_vad', eagerness: context.mode === 'examiner' ? 'low' : 'high', create_response: true, interrupt_response: true } }, output: { voice: 'marin', speed: context.mode === 'examiner' ? 1 : 1.1 } },
-    tools: [{ type: 'function', name: 'set_expression', description: 'Choose the illustrative avatar delivery for your upcoming spoken reply.', parameters: novaPerformanceParameters }, { type: 'function', name: 'ask_coach', description: 'Ask the shared tutor for accurate detailed coaching, current official research, a saved memory or an app action proposal. Returns a written answer plus actions for the learner to approve.',
+      turn_detection: { type: 'semantic_vad', eagerness: context.mode === 'examiner' ? 'low' : 'medium', create_response: true, interrupt_response: true } }, output: { voice: 'marin', speed: context.mode === 'examiner' ? 1 : 1.1 } },
+    tools: [{ type: 'function', name: 'observe_learning', description: 'Record a quoted actual learner attempt; never assess a mere question.', parameters: learningObservationParameters }, { type: 'function', name: 'set_expression', description: 'Choose the illustrative avatar delivery for your upcoming spoken reply.', parameters: novaPerformanceParameters }, { type: 'function', name: 'ask_coach', description: 'Ask the shared tutor for accurate detailed coaching, current official research, a saved memory or an app action proposal. Returns a written answer plus actions for the learner to approve.',
       parameters: { type: 'object', properties: { request: { type: 'string', description: 'The learner\'s actual request, including relevant wording.' } }, required: ['request'], additionalProperties: false } }],
     tool_choice: 'auto',
   }
@@ -118,7 +124,7 @@ async function startReservedVoiceCall(userId: string, sdp: string, context: Assi
   socketUrl.searchParams.set('call_id', callId)
   const socket = new WebSocket(socketUrl, { headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}` } })
   const abort = new AbortController()
-  const call: VoiceCall = { id, userId, callId, socket, abort, context, contextVersion: 0, history: boundedHistory(history), timer: setTimeout(() => { void endVoiceCall(userId, id).catch(() => {}) }, Math.max(0, expiresAt.getTime() - Date.now())) }
+  const call: VoiceCall = { id, userId, callId, socket, abort, diagnostics: new NovaDiagnostics(), toolAborts: new Map(), context, contextVersion: 0, history: boundedHistory(history), timer: setTimeout(() => { void endVoiceCall(userId, id).catch(() => {}) }, Math.max(0, expiresAt.getTime() - Date.now())) }
   call.timer.unref()
   const handledTools = new Set<string>()
   let speechVersion = 0
@@ -143,10 +149,11 @@ async function startReservedVoiceCall(userId: string, sdp: string, context: Assi
     const manualStop = ['conversation.item.created', 'conversation.item.added'].includes(event.type) && event.item?.role === 'user' && event.item?.content?.some((part: any) => part.type === 'input_text' && part.text === '[Nova control] Stop this reply and wait for my next question.')
     if (event.type === 'input_audio_buffer.speech_started' || manualStop) {
       speechVersion++; pendingToolVersion = null
+      for (const controller of call.toolAborts.values()) controller.abort()
       if (activeResponseId) cancelledResponses.add(activeResponseId)
     }
     if (event.type === 'response.function_call_arguments.done' && cancelledResponses.has(event.response_id)) return
-    if (event.type === 'response.created') { responding = true; activeResponseId = event.response?.id ?? ''; if (event.response?.id) responseStarts.set(event.response.id, Date.now()) }
+    if (event.type === 'response.created') { call.diagnostics.count('modelCalls'); responding = true; activeResponseId = event.response?.id ?? ''; if (event.response?.id) responseStarts.set(event.response.id, Date.now()) }
     if (event.type === 'conversation.item.input_audio_transcription.completed' && event.transcript?.trim()) {
       call.history.push({ role: 'user', content: event.transcript }); call.history = boundedHistory(call.history)
     }
@@ -162,10 +169,26 @@ async function startReservedVoiceCall(userId: string, sdp: string, context: Assi
       const usage = event.response?.usage
       const responseStarted = responseStarts.get(event.response?.id) ?? Date.now()
       responseStarts.delete(event.response?.id)
+      if (usage) call.diagnostics.tokens(usage.input_tokens, usage.output_tokens, 'response_totals')
       if (usage) void prisma.aiUsageEvent.create({ data: { userId, purpose: 'assistant_voice', provider: 'openai', model: env.AI_VOICE_MODEL, status: event.response?.status === 'failed' ? 'FAILED' : 'SUCCESS', requestChars: 0, responseChars: 0, inputTokens: usage.input_tokens, outputTokens: usage.output_tokens, latencyMs: Date.now() - responseStarted, fallbackUsed: false } }).catch(() => {})
     }
+    if (event.type === 'response.function_call_arguments.done' && event.name === 'observe_learning' && !handledTools.has(event.call_id)) {
+      handledTools.add(event.call_id); call.diagnostics.count('toolCalls')
+      const version = speechVersion
+      void (async () => {
+        let recorded = false
+        try {
+          const args = JSON.parse(event.arguments)
+          const source = call.history.filter(turn => turn.role === 'user').at(-1)?.content ?? ''
+          if (call.context.mode !== 'examiner') recorded = (await saveLearningEvidence(userId, source, [args], { threadId: call.context.threadId, turnId: `voice:${id}:${speechVersion}`, signal: abort.signal })).length > 0
+        } catch {}
+        if (abort.signal.aborted || version !== speechVersion) return
+        send({ type: 'conversation.item.create', item: { type: 'function_call_output', call_id: event.call_id, output: JSON.stringify({ recorded }) } })
+        pendingToolVersion = version; continueAfterTool()
+      })(); return
+    }
     if (event.type === 'response.function_call_arguments.done' && event.name === 'set_expression' && !handledTools.has(event.call_id)) {
-      handledTools.add(event.call_id)
+      handledTools.add(event.call_id); call.diagnostics.count('toolCalls')
       let performance
       try { performance = readNovaPerformance(JSON.parse(event.arguments)) } catch {}
       send({ type: 'conversation.item.create', item: { type: 'function_call_output', call_id: event.call_id, output: JSON.stringify(performance ? { nova_expression: true, responseId: event.response_id, performance: call.context.mode === 'examiner' ? examPerformance() : performance } : { error: 'Invalid performance metadata.' }) } })
@@ -173,19 +196,23 @@ async function startReservedVoiceCall(userId: string, sdp: string, context: Assi
     }
     if (event.type !== 'response.function_call_arguments.done' || event.name !== 'ask_coach' || handledTools.has(event.call_id)) return
     handledTools.add(event.call_id)
+    call.diagnostics.count('toolCalls')
+    const controller = new AbortController(); call.toolAborts.set(event.call_id, controller)
+    const toolStarted = performance.now()
     const toolSpeechVersion = speechVersion
     void (async () => {
       try {
         const argumentsValue = JSON.parse(event.arguments)
         // Save complete written detail; the realtime model speaks a short summary.
-        const request = assistantRequestSchema.parse({ ...call.context, message: argumentsValue.request, history: call.history, delivery: 'text' })
-        const result = await answerAssistant(userId, request, abort.signal)
+        const request = assistantRequestSchema.parse({ ...call.context, turnId: `voice:${id}:${speechVersion}`, message: argumentsValue.request, history: call.history, delivery: 'text' })
+        const result = await answerAssistant(userId, request, AbortSignal.any([abort.signal, controller.signal]), undefined, call.diagnostics, call.history.filter(turn => turn.role === 'user').at(-1)?.content ?? '')
         if (abort.signal.aborted || toolSpeechVersion !== speechVersion) return
         send({ type: 'conversation.item.create', item: { type: 'function_call_output', call_id: event.call_id, output: JSON.stringify({ profai_coach_result: true, ...result }) } })
       } catch {
         if (abort.signal.aborted || toolSpeechVersion !== speechVersion) return
         send({ type: 'conversation.item.create', item: { type: 'function_call_output', call_id: event.call_id, output: JSON.stringify({ error: 'The coach is temporarily unavailable. Do not invent a result; ask the learner to retry.' }) } })
       }
+      finally { call.toolAborts.delete(event.call_id); call.diagnostics.sample('tool_wait', performance.now() - toolStarted, 'server_clock') }
       if (!abort.signal.aborted && toolSpeechVersion === speechVersion) {
         pendingToolVersion = toolSpeechVersion
         continueAfterTool()
@@ -207,7 +234,7 @@ async function startReservedVoiceCall(userId: string, sdp: string, context: Assi
     calls.set(id, call)
     const timings = { preparationMs: Math.round(prepared - started), providerMs: Math.round(negotiated - prepared), controlMs: Math.round(performance.now() - negotiated), totalMs: Math.round(performance.now() - started) }
     console.info('voice.performance', { stage: 'setup', ...timings, model: env.AI_VOICE_MODEL })
-    return { id, sdp: answer, expiresAt: expiresAt.toISOString(), maxMinutes: Math.max(0, (expiresAt.getTime() - Date.now()) / 60000), timings }
+    return { id, model: env.AI_VOICE_MODEL, sdp: answer, expiresAt: expiresAt.toISOString(), maxMinutes: Math.max(0, (expiresAt.getTime() - Date.now()) / 60000), timings }
   } catch (error) {
     clearTimeout(call.timer); socket.close(); await hangup(callId)
     throw error

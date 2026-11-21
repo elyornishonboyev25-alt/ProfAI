@@ -36,6 +36,7 @@ import { premiumLanguage, type PremiumLanguage } from '@/i18n/premium'
 import {
   createAiThread,
   deleteAiMemory,
+  editAiMemory,
   deleteAiThread,
   fetchAiMemories,
   fetchAiThreads,
@@ -241,9 +242,13 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
   }, [chatThreads, createNewChat, ownerKey, removeStoredThread])
 
   const forgetMemory = useCallback(async (memoryId: string) => {
-    removeStoredMemory(ownerKey, memoryId)
-    await deleteAiMemory(memoryId).catch(() => null)
-  }, [ownerKey, removeStoredMemory])
+    await deleteAiMemory(memoryId)
+    if (useAuthStore.getState().user?.id === user?.id) removeStoredMemory(ownerKey, memoryId)
+  }, [ownerKey, removeStoredMemory, user?.id])
+  const editMemory = useCallback(async (memoryId: string, value: string, revision: number) => {
+    const saved = await editAiMemory(memoryId, value, revision)
+    if (useAuthStore.getState().user?.id === user?.id) upsertStoredMemories(ownerKey, [saved])
+  }, [ownerKey, user?.id, upsertStoredMemories])
 
   // Load the learner's preferred language + name once.
   useEffect(() => {
@@ -325,7 +330,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
   const dispatchAction = useCallback(
     (action: GeminiChatAction, snapshot?: StudySnapshot) => {
       if (action.type === 'save_word' && action.payload?.term && action.payload.definition) {
-        addSavedWord({ term: action.payload.term, definition: action.payload.definition, example: action.payload.example ?? '', synonym: action.payload.synonym ?? '', context: action.payload.context ?? 'speaking', source: 'ai', origin: 'Ivygoo Coach' })
+        addSavedWord({ term: action.payload.term, definition: action.payload.definition, example: action.payload.example ?? '', synonym: action.payload.synonym ?? '', context: action.payload.context ?? 'speaking', source: 'ai', origin: 'Nova' })
         return
       }
       if (action.type === 'navigate' && action.target) {
@@ -404,7 +409,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
       pushMessage(threadId, userMessage)
       const userPersistPromise = threadId.startsWith('local-')
         ? Promise.resolve(null)
-        : persistAiMessage(threadId, userMessage, voiceLang).catch(() => null)
+        : persistAiMessage(threadId, userMessage, voiceLang, user?.id).catch(() => null)
 
       const history = messages
         .filter((m) => !m.status && (m.role === 'user' || m.role === 'assistant'))
@@ -426,6 +431,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
           studyContext: describeStudySnapshot(snapshot),
           learnerName: preferredName,
           screenContext,
+          turnId: userMessage.id,
           workspaceContext: `${workspace.title}: ${workspace.prompt}`,
           siteKnowledge,
           images: outImages,
@@ -441,14 +447,15 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
           },
         })
         if (controller.signal.aborted || useAuthStore.getState().user?.id !== user?.id) return
-        updateStoredMessage(ownerKey, threadId, assistantMessage.id, { content: response.reply, expression: response.expression, performance: response.performance, status: undefined })
+        updateStoredMessage(ownerKey, threadId, assistantMessage.id, { content: response.reply, expression: response.expression, performance: response.performance, understanding: response.understanding, deliverySegments: response.deliverySegments, status: undefined })
         if (!threadId.startsWith('local-')) {
           // Preserve message order without holding up audio or the next turn.
-          void userPersistPromise.then(() => persistAiMessage(threadId, { ...assistantMessage, content: response.reply, expression: response.expression, performance: response.performance, status: undefined }, response.replyLanguage ?? voiceLang)).catch(() => null)
+          void userPersistPromise.then(() => persistAiMessage(threadId, { ...assistantMessage, content: response.reply, expression: response.expression, performance: response.performance, understanding: response.understanding, deliverySegments: response.deliverySegments, status: undefined }, response.replyLanguage ?? voiceLang, user?.id)).catch(() => null)
         }
 
         if (firstTurn && response.title) void renameChat(threadId, response.title)
-        if (response.savedMemories?.length) upsertStoredMemories(ownerKey, response.savedMemories)
+        if (response.persistenceWarnings?.length) setError(localized(uiLocale, 'The reply is ready, but some notes were not saved. Review your memory before retrying.', 'Ответ готов, но часть заметок не сохранена. Проверьте память перед повтором.', "Javob tayyor, lekin ayrim qaydlar saqlanmadi. Qayta urinishdan oldin xotirani tekshiring."))
+        if (Array.isArray(response.savedMemories)) { if (response.savedMemories.length) upsertStoredMemories(ownerKey, response.savedMemories) }
         else if (response.memoryUpdates.length > 0) {
           void persistAiMemories(response.memoryUpdates).then((saved) => {
             if (useAuthStore.getState().user?.id === user?.id) upsertStoredMemories(ownerKey, saved)
@@ -472,9 +479,9 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
           speakCoachAudio(cleanForSpeech(response.reply), response.replyLanguage ?? voiceLang, {
             loading: (loading) => { if (loading) { voiceOutputVersionRef.current = coachAudioVersion(); stopLevelPulse(); setVoiceState('thinking') } },
             level: setVoiceLevel,
-            started: () => {
+            started: (currentPerformance = response.performance) => {
               setVoiceError(null); setVoiceState('speaking')
-              if (response.performance) useAiAssistantStore.getState().setVoicePresentation({ owner: ownerKey, threadId, responseId: assistantMessage.id, performance: response.performance })
+              if (currentPerformance) useAiAssistantStore.getState().setVoicePresentation({ owner: ownerKey, threadId, responseId: assistantMessage.id, performance: currentPerformance })
             },
             ended: () => {
               useAiAssistantStore.getState().setVoicePresentation(null)
@@ -487,7 +494,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
               setVoiceState('idle')
               setVoiceError(localized(uiLocale, 'Nova’s natural voice could not play. Retry audio to continue.', 'Не удалось воспроизвести естественный голос Новы. Повторите аудио, чтобы продолжить.', 'Novaning tabiiy ovozini eshittirib bo‘lmadi. Davom etish uchun audioni qayta yoqing.'))
             },
-          }, response.performance)
+          }, response.performance, response.deliverySegments?.map(segment => ({ ...segment, text: cleanForSpeech(segment.text) })))
         } else if (!options.speak || replyVersion === coachAudioVersion()) {
           setVoiceState('idle')
         }
@@ -734,8 +741,9 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
 
   const acceptCoachResult = useCallback((response: import('@/services/geminiAI').GeminiChatResponse) => {
     if (response.savedMemories?.length) upsertStoredMemories(ownerKey, response.savedMemories)
+    if (response.persistenceWarnings?.length) setError(localized(uiLocale, 'Some notes were not saved. Review your memory before retrying.', 'Часть заметок не сохранена. Проверьте память перед повтором.', 'Ayrim qaydlar saqlanmadi. Qayta urinishdan oldin xotirani tekshiring.'))
     setPendingActions(response.actions.map((action) => ({ id: createId(), action, label: describeAction(action, uiLocale) })))
-  }, [ownerKey, setPendingActions, uiLocale, upsertStoredMemories])
+  }, [ownerKey, setPendingActions, setError, uiLocale, upsertStoredMemories])
 
   const cancelSend = useCallback(() => { if (activeChatRequest?.owner === ownerKey) activeChatRequest.controller.abort('user') }, [ownerKey])
   const previousOwnerRef = useRef(ownerKey)
@@ -779,6 +787,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
     renameChat,
     deleteChat,
     forgetMemory,
+    editMemory,
     preferredLocale,
     preferredName,
     activeWorkspace,

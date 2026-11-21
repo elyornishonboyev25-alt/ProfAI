@@ -1,3 +1,7 @@
+import { NovaDiagnostics } from './novaDiagnostics.js'
+import { saveVoiceDiagnostics } from './novaDiagnostics.service.js'
+import { saveLearningEvidence } from './novaLearning.service.js'
+import { learningObservationParameters } from './novaLearning.js'
 import { novaPerformanceParameters, readNovaPerformance, examPerformance } from './novaPersona.js'
 import { randomBytes, createHash } from 'node:crypto'
 import type { Server } from 'node:http'
@@ -19,6 +23,7 @@ type Call = {
   id: string; userId: string; provider: WebSocket; client: WebSocket | null; ticketHash: string | null
   context: AssistantContext; history: History; timer: NodeJS.Timeout; abort: AbortController
   expiresAt: Date
+  diagnostics: NovaDiagnostics; modelTurns: Set<number>; toolAborts: Map<string, AbortController>
   responseTurn: number; speechVersion: number; contextVersion: number
   input: string; output: string; tools: Set<string>; cancelledTools: Set<string>; greeted: boolean
   startedAt: number; audioIn: number; audioOut: number; turns: number
@@ -70,9 +75,9 @@ export function geminiLiveSetup(context: AssistantContext, data: unknown) {
     ...(geminiUsesInitialHistory() ? { historyConfig: { initialHistoryInClientContent: true } } : {}),
     systemInstruction: { parts: [{ text: voiceInstructions(context, data) }] },
     inputAudioTranscription: {}, outputAudioTranscription: {},
-    realtimeInputConfig: { automaticActivityDetection: { disabled: false, silenceDurationMs: context.mode === 'examiner' ? 1400 : 650, prefixPaddingMs: 300 }, activityHandling: 'START_OF_ACTIVITY_INTERRUPTS' },
+    realtimeInputConfig: { automaticActivityDetection: { disabled: false, silenceDurationMs: context.mode === 'examiner' ? 1400 : 1100, endOfSpeechSensitivity: 'END_SENSITIVITY_LOW', prefixPaddingMs: 300 }, activityHandling: 'START_OF_ACTIVITY_INTERRUPTS' },
     contextWindowCompression: { slidingWindow: {} },
-    tools: [{ functionDeclarations: [{ name: 'set_expression', description: 'Set Nova avatar delivery for your upcoming speech; never say the metadata aloud.', parametersJsonSchema: novaPerformanceParameters }, { name: 'ask_coach', description: 'Get checked written coaching, practice feedback, a study plan, a saved preference or an app navigation proposal.',
+    tools: [{ functionDeclarations: [{ name: 'observe_learning', description: 'Record a quoted actual learner attempt and your cautious assessment, without another model call. Not for ordinary questions.', parametersJsonSchema: learningObservationParameters }, { name: 'set_expression', description: 'Set Nova avatar delivery for your upcoming speech; never say the metadata aloud.', parametersJsonSchema: novaPerformanceParameters }, { name: 'ask_coach', description: 'Get checked written coaching, practice feedback, a study plan, a saved preference or an app navigation proposal.',
       parameters: { type: 'OBJECT', properties: { request: { type: 'STRING' } }, required: ['request'] } }] }],
   } }
 }
@@ -91,6 +96,8 @@ export async function endGeminiVoiceCall(userId: string, id: string, failed = fa
   const call = calls.get(id)
   if (!call || call.userId !== userId) return false
   calls.delete(id); clearTimeout(call.timer); call.abort.abort()
+  for (const controller of call.toolAborts.values()) controller.abort()
+  void saveVoiceDiagnostics(userId, id, 'server', 'gemini', env.GEMINI_LIVE_MODEL, call.diagnostics.snapshot()).catch(() => {})
   console.info('voice.gemini.ended', { id, source, durationMs: Date.now() - call.startedAt, audioIn: call.audioIn, audioOut: call.audioOut, turns: call.turns })
   call.provider.close(); call.client?.close(source === 'provider_close' ? 1011 : source === 'provider_rejected' ? 1008 : 1000, 'Session ended')
   await settleVoiceTime(userId, id, failed || !call.client)
@@ -117,9 +124,17 @@ async function runTool(call: Call, tool: { id?: string; name?: string; args?: { 
   if (!id || call.tools.has(id) || call.cancelledTools.has(id)) return
   call.tools.add(id)
   if (call.tools.size > 500) call.tools.delete(call.tools.values().next().value!)
+  call.diagnostics.count('toolCalls')
   const speechVersion = call.speechVersion
   const respond = (response: unknown) => {
     if (!call.abort.signal.aborted && !call.cancelledTools.has(id) && call.speechVersion === speechVersion) send(call.provider, { toolResponse: { functionResponses: [{ id, name: tool.name, response }] } })
+  }
+  if (tool.name === 'observe_learning') {
+    if (call.context.mode === 'examiner') { respond({ recorded: false }); return }
+    const source = call.input.trim() || call.history.filter(turn => turn.role === 'user').at(-1)?.content || ''
+    try { const saved = await saveLearningEvidence(call.userId, source, [tool.args], { threadId: call.context.threadId, turnId: `voice:${call.id}:${call.responseTurn}`, signal: call.abort.signal }); respond({ recorded: saved.length > 0 }) }
+    catch { respond({ recorded: false }) }
+    return
   }
   if (tool.name === 'set_expression') {
     const parsed = readNovaPerformance(tool.args)
@@ -129,13 +144,16 @@ async function runTool(call: Call, tool: { id?: string; name?: string; args?: { 
     respond({ applied: true }); return
   }
   if (tool.name !== 'ask_coach' || typeof tool.args?.request !== 'string' || !tool.args.request.trim()) { respond({ error: 'Unsupported request.' }); return }
+  const controller = new AbortController(); call.toolAborts.set(id, controller)
+  const started = performance.now()
   try {
-    const request = assistantRequestSchema.parse({ ...call.context, message: tool.args.request, history: boundedHistory(call.history), delivery: 'voice' })
-    const result = await answerAssistant(call.userId, request, call.abort.signal)
+    const request = assistantRequestSchema.parse({ ...call.context, turnId: `voice:${call.id}:${call.responseTurn}`, message: tool.args.request, history: boundedHistory(call.history), delivery: 'voice' })
+    const result = await answerAssistant(call.userId, request, AbortSignal.any([call.abort.signal, controller.signal]), undefined, call.diagnostics, call.input.trim() || call.history.filter(turn => turn.role === 'user').at(-1)?.content || '')
     if (call.abort.signal.aborted || call.cancelledTools.has(id) || call.speechVersion !== speechVersion) return
     send(call.client, { type: 'coach', id, result })
     respond(result)
   } catch { respond({ error: 'The written coach could not finish. Ask the learner to retry; do not invent results.' }) }
+  finally { call.toolAborts.delete(id); call.diagnostics.sample('tool_wait', performance.now() - started, 'server_clock') }
 }
 
 export async function startGeminiVoiceCall(userId: string, context: AssistantContext, history: History, signal?: AbortSignal, connectProvider = openGeminiLive, clientId?: string) {
@@ -153,19 +171,20 @@ export async function startGeminiVoiceCall(userId: string, context: AssistantCon
     signal?.throwIfAborted()
     await requireVoiceReservation(userId, reservation.id)
     const ticket = randomBytes(32).toString('base64url')
-    const call: Call = { id: reservation.id, userId, provider, client: null, ticketHash: digest(ticket), context, history: boundedHistory(history), expiresAt: reservation.expiresAt, abort: new AbortController(), input: '', output: '', tools: new Set(), cancelledTools: new Set(), greeted: false, startedAt, responseTurn: 0, speechVersion: 0, contextVersion: 0, audioIn: 0, audioOut: 0, turns: 0,
+    const call: Call = { id: reservation.id, userId, provider, client: null, ticketHash: digest(ticket), context, history: boundedHistory(history), expiresAt: reservation.expiresAt, abort: new AbortController(), input: '', output: '', tools: new Set(), cancelledTools: new Set(), greeted: false, startedAt, diagnostics: new NovaDiagnostics(), modelTurns: new Set(), toolAborts: new Map(), responseTurn: 0, speechVersion: 0, contextVersion: 0, audioIn: 0, audioOut: 0, turns: 0,
       timer: setTimeout(() => { void endGeminiVoiceCall(userId, reservation.id, true).catch(() => {}) }, 25000) }
     call.timer.unref(); calls.set(call.id, call)
     provider.on('message', raw => {
       let event: any
       try { event = JSON.parse(String(raw)) } catch { return }
-      if (event.error) { console.warn('voice.gemini.provider_error', { id: call.id, code: Number(event.error.code) || 0 }); send(call.client, { type: 'error', code: 'VOICE_PROVIDER_REJECTED', retryable: false, message: 'Gemini Live could not complete this turn. Please retry.' }); void endGeminiVoiceCall(userId, call.id, false, 'provider_error').catch(() => {}); return }
+      if (event.error) { call.diagnostics.count('errors'); console.warn('voice.gemini.provider_error', { id: call.id, code: Number(event.error.code) || 0 }); send(call.client, { type: 'error', code: 'VOICE_PROVIDER_REJECTED', retryable: false, message: 'Gemini Live could not complete this turn. Please retry.' }); void endGeminiVoiceCall(userId, call.id, false, 'provider_error').catch(() => {}); return }
       const content = event.serverContent
+      if ((content?.modelTurn || content?.outputTranscription || event.toolCall) && !call.modelTurns.has(call.responseTurn)) { call.modelTurns.add(call.responseTurn); call.diagnostics.count('modelCalls') }
       if (content) {
         call.audioOut += (content.modelTurn?.parts ?? []).filter((part: any) => part.inlineData?.mimeType?.startsWith('audio/pcm')).length
         const responseId = `${call.id}-${call.responseTurn}`
         if (content.turnComplete) call.turns++
-        if (content.interrupted) call.speechVersion++
+        if (content.interrupted) { call.speechVersion++; for (const controller of call.toolAborts.values()) controller.abort() }
         if (content.inputTranscription?.text) call.input = (call.input + content.inputTranscription.text).slice(-12000)
         if (content.outputTranscription?.text) call.output = (call.output + content.outputTranscription.text).slice(-12000)
         if (content.interrupted || content.turnComplete) {
@@ -178,7 +197,8 @@ export async function startGeminiVoiceCall(userId: string, context: AssistantCon
         send(call.client, { type: 'content', responseId, content })
         if (content.interrupted || content.turnComplete) call.responseTurn++
       }
-      if (event.toolCallCancellation?.ids) for (const id of event.toolCallCancellation.ids) call.cancelledTools.add(id)
+      if (event.toolCallCancellation?.ids) for (const id of event.toolCallCancellation.ids) { call.cancelledTools.add(id); call.toolAborts.get(id)?.abort() }
+      if (event.usageMetadata) call.diagnostics.tokens(event.usageMetadata.promptTokenCount, event.usageMetadata.responseTokenCount ?? event.usageMetadata.candidatesTokenCount, 'latest_provider_snapshot')
       if (event.toolCall?.functionCalls) for (const tool of event.toolCall.functionCalls) void runTool(call, tool)
       if (event.usageMetadata) void prisma.aiUsageEvent.create({ data: { userId, purpose: 'assistant_voice', provider: 'gemini', model: env.GEMINI_LIVE_MODEL, status: 'success', requestChars: 0, latencyMs: Math.max(0, Date.now() - startedAt), inputTokens: event.usageMetadata.promptTokenCount ?? null, outputTokens: event.usageMetadata.responseTokenCount ?? null } }).catch(() => {})
     })
@@ -243,7 +263,7 @@ export function attachGeminiVoice(server: Server) {
           active.greeted = true
           for (const frame of geminiInitialFrames(active.context, active.history)) send(active.provider, frame)
         } else if (frame.type === 'mute' && frame.muted) send(active.provider, { realtimeInput: { audioStreamEnd: true } })
-        else if (frame.type === 'interrupt') { active.speechVersion++; send(active.provider, { clientContent: { turns: [{ role: 'user', parts: [{ text: 'Please stop speaking and listen to my next question.' }] }], turnComplete: false } }) }
+        else if (frame.type === 'interrupt') { active.speechVersion++; for (const controller of active.toolAborts.values()) controller.abort(); send(active.provider, { clientContent: { turns: [{ role: 'user', parts: [{ text: 'Please stop speaking and listen to my next question.' }] }], turnComplete: false } }) }
         else if (frame.type === 'feedback') send(active.provider, { clientContent: { turns: [{ role: 'user', parts: [{ text: 'End this examiner practice and call ask_coach for written feedback on my actual answers. Do not invent a pronunciation score from a text transcript.' }] }], turnComplete: true } })
       } catch { console.warn('voice.gemini.client_rejected', { id: active?.id, reason: 'invalid_frame' }); client.close(1008, 'Invalid voice frame') }
     })

@@ -68,6 +68,7 @@ const envSchema = z.object({
   AI_CHAT_PROVIDER: z.enum(['auto', 'gemini', 'openai', 'hf']).default('auto'),
   AI_CHAT_MODEL: z.string().default(''),
   AI_VOICE_MODEL: z.string().default('gpt-realtime-2.1'),
+  NOVA_MODEL_PRICING_JSON: z.string().max(20000).default(''),
   AI_VOICE_MAX_MINUTES: z.coerce.number().int().min(1).max(60).default(20),
   AI_WEB_SEARCH_ENABLED: z.enum(['true', 'false']).default('false').transform((value) => value === 'true'),
   AI_WEB_SEARCH_MODEL: z.string().default('gpt-4.1-mini'),

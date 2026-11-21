@@ -304,7 +304,7 @@ export function TalkOverlay() {
     : t('Listening', 'Tinglayapti', 'Слушает')
 
   if (docked) return <div className="fixed bottom-5 right-5 z-[200] flex items-center rounded-full border border-red-200 bg-white p-2 shadow-xl">
-    <button onClick={() => setDocked(false)} className="flex items-center gap-2 pr-3" aria-label={t('Expand voice', 'Ovozni kengaytirish', 'Развернуть голосовой чат')}><CoachMascot expression={mode === 'examiner' ? 'focused' : undefined} state={tutor.voiceState} level={tutor.voiceLevel} size={44} /><span className="text-left text-xs font-bold">Nova · Ivygoo<span className="block text-[10px] font-medium text-slate-500">{status}</span></span></button>
+    <button onClick={() => setDocked(false)} className="flex items-center gap-2 pr-3" aria-label={t('Expand voice', 'Ovozni kengaytirish', 'Развернуть голосовой чат')}><CoachMascot activity={live.error ? 'error' : live.reconnecting ? 'reconnecting' : available !== true ? 'connecting' : 'ready'} expression={mode === 'examiner' ? 'focused' : undefined} state={tutor.voiceState} level={tutor.voiceLevel} size={44} /><span className="text-left text-xs font-bold">Nova · Ivygoo<span className="block text-[10px] font-medium text-slate-500">{status}</span></span></button>
     <button onClick={end} className="flex h-10 w-10 items-center justify-center rounded-full text-slate-500 hover:bg-red-50" aria-label={t('End voice', 'Suhbatni tugatish', 'Завершить разговор')}><X size={18} /></button>
   </div>
 

@@ -107,6 +107,17 @@ try {
   }))
   assert.ok(expressionTimes.second - expressionTimes.first > 450, 'Queued expression waits for its own audio rather than changing the face on receipt')
   assert.equal(expressionTimes.metadata.expression, 'supportive', 'The saved transcript carries the same delivery as playback')
+  const segmentedId = 'fixture-segmented'
+  const cue = expression => sockets[0].send(JSON.stringify({ type: 'expression', responseId: segmentedId, performance: { tone: expression === 'focused' ? 'serious' : 'playful', expression, intensity: .35, gesture: 'none', delivery: { pace: 'steady', warmth: 'medium', emphasis: 'light' } } }))
+  const chunk = (text, seconds) => sockets[0].send(JSON.stringify({ type: 'content', responseId: segmentedId, content: { outputTranscription: { text }, modelTurn: { parts: [{ inlineData: { mimeType: 'audio/pcm;rate=24000', data: audio(seconds) } }] } } }))
+  cue('playful_angry'); chunk('A quick joke. ', .65); cue('focused'); chunk('Here is the useful explanation.', .25)
+  sockets[0].send(JSON.stringify({ type: 'content', responseId: segmentedId, content: { turnComplete: true } }))
+  await page.waitForFunction(() => window.messages.some(message => message[1].includes('useful explanation')))
+  const segment = await page.evaluate(() => ({ cues: window.expressions.filter(entry => entry.id === 'fixture-segmented' && entry.value), timeline: window.messages.find(message => message[1].includes('useful explanation'))?.[5] }))
+  assert.deepEqual(segment.cues.map(entry => entry.value.expression), ['playful_angry', 'focused'])
+  assert.ok(segment.cues[1].at - segment.cues[0].at > 450, 'Within-reply delivery changes wait for the corresponding PCM boundary')
+  assert.equal(segment.timeline[1].alignment, 'audio_clock')
+  assert.ok(segment.timeline[1].atMs >= 580 && segment.timeline[1].atMs <= 610, 'Saved delivery timing uses audio time adjusted for playback speed, not message arrival time')
   const beforeStall = received.filter(event => event.type === 'audio').length
   await page.evaluate(() => { const until = performance.now() + 2800; while (performance.now() < until) { /* Simulate a busy tab, while the audio thread keeps capturing. */ } })
   await page.waitForTimeout(150)

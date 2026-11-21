@@ -1,3 +1,6 @@
+import { turnUnderstandingSchema, deliverySegmentSchema, performanceCueSchema } from '../services/novaLearning.js'
+import { editNovaMemory, MemoryConflict, InvalidMemory, saveNovaMemories } from '../services/novaMemory.service.js'
+import { loadSkillEvidence, summarizeSkillEvidence } from '../services/novaLearning.service.js'
 import { Router } from 'express'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma.js'
@@ -7,6 +10,9 @@ import { asyncHandler } from '../utils/asyncHandler.js'
 import { novaExpressionSchema, novaPerformanceSchema } from '../services/novaPersona.js'
 
 export const messageMetadataSchema = z.object({
+  understanding: turnUnderstandingSchema.optional(),
+  deliverySegments: z.array(deliverySegmentSchema).max(4).optional(),
+  performanceTimeline: z.array(performanceCueSchema).max(16).optional(),
   expression: novaExpressionSchema.optional(),
   performance: novaPerformanceSchema.optional(),
   delivery: z.enum(['text', 'voice']).optional(),
@@ -114,7 +120,8 @@ router.post(
     if (!owned) return res.status(404).json({ message: 'Chat not found.' })
 
     const message = await prisma.$transaction(async (tx) => {
-      const created = await tx.aiConversationMessage.create({
+      const existing = payload.id ? await tx.aiConversationMessage.findFirst({ where: { id: payload.id, threadId } }) : null
+      const created = existing ?? await tx.aiConversationMessage.create({
         data: {
           ...(payload.id ? { id: payload.id } : {}),
           threadId,
@@ -152,18 +159,28 @@ router.put(
   asyncHandler(async (req, res) => {
     const userId = req.user!.id
     const { memories } = saveMemoriesSchema.parse(req.body ?? {})
-    const saved = await prisma.$transaction(
-      memories.map((memory) =>
-        prisma.aiMemory.upsert({
-          where: { userId_key: { userId, key: memory.key } },
-          update: { value: memory.value },
-          create: { userId, key: memory.key, value: memory.value },
-        }),
-      ),
-    )
+    const saved = await saveNovaMemories(userId, memories)
     return res.json({ items: saved })
   }),
 )
+
+router.patch('/memories/:memoryId', asyncHandler(async (req, res) => {
+  const { memoryId } = memoryIdSchema.parse(req.params)
+  const { value, revision } = z.object({ value: z.string().trim().min(1).max(600), revision: z.number().int().positive() }).strict().parse(req.body)
+  try {
+    const memory = await editNovaMemory(req.user!.id, memoryId, value, revision)
+    if (!memory) return res.status(404).json({ message: 'Memory not found.' })
+    return res.json(memory)
+  } catch (error) {
+    if (error instanceof MemoryConflict) return res.status(409).json({ code: 'MEMORY_CHANGED', message: error.message })
+    if (error instanceof InvalidMemory) return res.status(400).json({ code: 'INVALID_MEMORY', message: error.message })
+    throw error
+  }
+}))
+router.get('/skills', asyncHandler(async (req, res) => {
+  const rows = await loadSkillEvidence(req.user!.id)
+  return res.json({ items: summarizeSkillEvidence(rows) })
+}))
 
 router.delete(
   '/memories/:memoryId',

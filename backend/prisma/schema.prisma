@@ -142,6 +142,8 @@ model User {
   focusDailyAnalytics                 FocusDailyAnalytics[]
   focusTaskLogs                       FocusTaskLog[]
   aiPreference                        UserAiPreference?
+  novaSkillEvidence                   NovaSkillEvidence[]
+  novaSessionDiagnostics              NovaSessionDiagnostics[]
   aiMemories                          AiMemory[]
   aiConversationThreads               AiConversationThread[]
   aiUsageEvents                       AiUsageEvent[]
@@ -768,6 +770,14 @@ model UserAiPreference {
 }
 
 model AiMemory {
+  category       String    @default("fact")
+  origin         String    @default("legacy")
+  sourceThreadId String?
+  sourceQuote    String?
+  revision       Int       @default(1)
+  expiresAt      DateTime?
+  supersededAt   DateTime?
+  previousValues Json?
   id        String   @id @default(cuid())
   userId    String
   key       String
@@ -1532,4 +1542,37 @@ model LaunchGift {
   extended  Boolean   @default(false)
   createdAt DateTime  @default(now())
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model NovaSkillEvidence {
+  id             String   @id @default(cuid())
+  userId         String
+  sourceTurnId   String
+  sourceThreadId String?
+  topicKey       String
+  topic          String
+  quote          String
+  outcome        String
+  assistance     String
+  misconception  String?
+  nextExercise   String?
+  confidence     Float
+  observedAt     DateTime @default(now())
+  user           User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, sourceTurnId, topicKey])
+  @@index([userId, observedAt])
+}
+
+model NovaSessionDiagnostics {
+  id           String   @id @default(cuid())
+  sessionId    String
+  userId       String
+  side         String
+  provider     String
+  model        String
+  snapshot     Json
+  updatedAt    DateTime @updatedAt
+  user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([sessionId, side])
+  @@index([userId, updatedAt])
 }

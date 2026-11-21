@@ -1,3 +1,4 @@
+import { NovaDiagnostics } from './novaLearning'
 import { NovaPlayback } from './novaPlayback'
 import type { NovaPerformance } from './novaPersona'
 import { apiClient, publicApiUrl } from '@/lib/apiClient'
@@ -9,6 +10,7 @@ type Session = { id: string; ticket: string; expiresAt: string; streamPath: stri
 
 /** PCM over a server-owned Gemini Live connection; credentials never enter the browser. */
 export class GeminiRealtimeCoach {
+  private diagnostics = new NovaDiagnostics()
   private options: VoiceOptions
   private stream: MediaStream | null = null
   private audio: AudioContext | null = null
@@ -21,8 +23,7 @@ export class GeminiRealtimeCoach {
   private controller = new AbortController()
   private sources = new Map<AudioBufferSourceNode, string>()
   private expressions = new NovaPlayback((value, id) => this.options.expression?.(value, id))
-  private playbackTimers = new Set<number>()
-  private outputs = new Map<string, { text: string; parts: Array<{ text: string; at: number }>; done: boolean; started: boolean }>()
+  private outputs = new Map<string, { text: string; parts: Array<{ text: string; at: number }>; done: boolean; started: boolean; start?: number; end?: number; audible?: boolean; latencyStart?: number }>()
   private cancelledOutputs = new Set<string>()
   private responseId = ''
   private session: Session | null = null
@@ -39,7 +40,6 @@ export class GeminiRealtimeCoach {
   private inputId = 0
   private interrupted = false
   private speed: number
-  private outputStarted = 0
   private firstAudioReported = false
   private replyStarted: number | null = null
   private started = 0
@@ -53,7 +53,7 @@ export class GeminiRealtimeCoach {
     if (this.socket.bufferedAmount > 256000) { this.fail(new Error('Your connection is too slow for live voice. Please reconnect.')); return }
     this.socket.send(JSON.stringify(message))
   }
-  private fail(error: Error) { if (!this.closed) { this.options.error(error); this.stop() } }
+  private fail(error: Error) { if (!this.closed) { this.diagnostics.count('errors'); this.options.error(error); this.stop() } }
   private waitForReply() {
     window.clearTimeout(this.replyTimer)
     this.replyTimer = window.setTimeout(() => this.fail(new Error('Gemini Live did not reply in time. Please retry.')), 45000)
@@ -62,6 +62,7 @@ export class GeminiRealtimeCoach {
   async start() {
     if (this.closed) return
     this.started = performance.now()
+    if (this.options.reconnectAttempt) this.diagnostics.count('reconnects')
     window.addEventListener('pagehide', this.pageHide)
     this.options.state('thinking')
     try {
@@ -72,6 +73,7 @@ export class GeminiRealtimeCoach {
       if (this.closed) { stream.getTracks().forEach(track => track.stop()); return }
       this.stream = stream
       stream.getAudioTracks().forEach(track => { track.enabled = !this.muted; track.onended = () => this.fail(new Error('The microphone disconnected. Please reconnect it.')) })
+      this.diagnostics.sample('microphone', performance.now() - this.started, 'browser_clock')
       this.options.performance?.({ stage: 'microphone', durationMs: Math.round(performance.now() - this.started) })
       await this.audio.audioWorklet.addModule('/audio/nova-pcm-capture.js?v=2')
       if (this.closed) return
@@ -126,6 +128,7 @@ export class GeminiRealtimeCoach {
         for (const byte of bytes) text += String.fromCharCode(byte)
         this.send({ type: 'audio', data: btoa(text) })
       }
+      this.diagnostics.sample('connection', performance.now() - this.started, 'browser_clock')
       this.options.performance?.({ stage: 'connection', durationMs: Math.round(performance.now() - this.started) })
       this.send({ type: 'start' })
       this.deadline = window.setTimeout(() => this.fail(new Error('This voice session has finished. Start another session to continue.')), Math.max(0, Date.parse(session.expiresAt) - Date.now()))
@@ -139,7 +142,19 @@ export class GeminiRealtimeCoach {
     let smoothed = 0
     const tick = () => {
       if (this.closed) return
-      const speaking = this.sources.size > 0
+      if (this.audio) {
+        this.expressions.advance(this.audio.currentTime)
+        for (const [id, output] of this.outputs) if (output.start !== undefined && !output.audible && output.start <= this.audio.currentTime && !this.cancelledOutputs.has(id)) {
+          output.audible = true; this.options.state('speaking')
+          const now = performance.now()
+          if (!this.firstAudioReported) {
+            this.diagnostics.sample('first_audio', now - this.started, 'audio_clock'); this.options.performance?.({ stage: 'first_audio', durationMs: Math.round(now - this.started) }); this.firstAudioReported = true
+          } else if (output.latencyStart !== undefined) {
+            this.diagnostics.sample('reply', now - output.latencyStart, 'transcript_proxy'); this.options.performance?.({ stage: 'reply', durationMs: Math.round(now - output.latencyStart) })
+          }
+        }
+      }
+      const speaking = [...this.outputs.values()].some(output => output.audible && (!this.audio || (output.end ?? 0) > this.audio.currentTime))
       const analyser = speaking ? this.outputMeter : this.inputMeter
       if (!analyser || (!speaking && this.muted)) smoothed = 0
       else {
@@ -183,26 +198,16 @@ export class GeminiRealtimeCoach {
       this.sources.delete(source); source.disconnect()
       if (!this.closed && ![...this.sources.values()].includes(responseId) && this.outputs.get(responseId)?.done) this.finishOutput(false, responseId)
     }
-    if (!this.outputStarted) {
-      this.outputStarted = performance.now()
-      if (!this.firstAudioReported) {
-        this.options.performance?.({ stage: 'first_audio', durationMs: Math.round(this.outputStarted - this.started) })
-        this.firstAudioReported = true
-      } else if (this.replyStarted !== null) {
-        this.options.performance?.({ stage: 'reply', durationMs: Math.round(this.outputStarted - this.replyStarted) })
-      }
-      this.replyStarted = null
-    }
     window.clearTimeout(this.replyTimer)
     const output = this.output(responseId)
     if (!output.started) {
       output.started = true
-      const timer = window.setTimeout(() => {
-        this.playbackTimers.delete(timer)
-        if (!this.closed && !this.cancelledOutputs.has(responseId)) { this.expressions.start(responseId); this.options.state('speaking') }
-      }, Math.max(0, (start - audio.currentTime) * 1000))
-      this.playbackTimers.add(timer)
+      output.start = start
+      output.latencyStart = this.replyStarted ?? undefined; this.replyStarted = null
+      this.expressions.begin(responseId, start)
+
     }
+    output.end = this.nextPlayback
     source.start(start)
   }
 
@@ -220,12 +225,13 @@ export class GeminiRealtimeCoach {
       ? output.parts.filter(part => part.at <= this.audio!.currentTime + .08).map(part => part.text).join('')
       : output.text
     const performance = this.expressions.get(responseId)
-    if (text.trim()) this.options.message('assistant', text.trim(), responseId, interrupted, performance)
+    const timeline = this.expressions.timeline(responseId)
+    if (text.trim()) this.options.message('assistant', text.trim(), responseId, interrupted, performance, timeline)
     else if (interrupted && output.text) this.options.message('assistant', '', responseId, true)
     this.outputs.delete(responseId); this.cancelledOutputs.add(responseId)
     if (this.cancelledOutputs.size > 256) this.cancelledOutputs.delete(this.cancelledOutputs.values().next().value!)
     this.expressions.finish(responseId)
-    this.turn++; this.outputStarted = 0
+    this.turn++
     if (!this.sources.size) { this.options.caption(''); if (!this.closed) this.options.state('listening') }
   }
 
@@ -234,15 +240,10 @@ export class GeminiRealtimeCoach {
     if (message.type === 'error') { this.fail(new VoiceStreamError(typeof message.message === 'string' ? message.message : 'Gemini Live could not connect.', typeof message.code === 'string' ? message.code : 'VOICE_PROVIDER_ERROR', message.retryable === true)); return }
     if (message.type === 'coach' && message.result?.reply) { this.options.coachResult(message.result, message.id); return }
     if (message.type === 'expression' && typeof message.responseId === 'string') {
-      if (!this.interrupted && !this.cancelledOutputs.has(message.responseId)) {
+      if (!this.cancelledOutputs.has(message.responseId)) {
         const output = this.output(message.responseId)
-        if (output.started && this.expressions.get(message.responseId) && this.audio && this.nextPlayback > this.audio.currentTime) {
-          const timer = window.setTimeout(() => {
-            this.playbackTimers.delete(timer)
-            if (!this.closed && !this.cancelledOutputs.has(message.responseId)) this.expressions.cue(message.responseId, message.performance)
-          }, (this.nextPlayback - this.audio.currentTime) * 1000)
-          this.playbackTimers.add(timer)
-        } else this.expressions.cue(message.responseId, message.performance)
+        if (output.started && this.audio) this.expressions.schedule(message.responseId, message.performance, output.end ?? this.audio.currentTime)
+        else this.expressions.cue(message.responseId, message.performance)
       }
       return
     }
@@ -255,7 +256,6 @@ export class GeminiRealtimeCoach {
       this.clearPlayback(); for (const id of this.outputs.keys()) this.finishOutput(true, id)
       this.expressions.finish(responseId); this.cancelledOutputs.add(responseId); this.interrupted = false
       if (!message.responseId) this.turn++ // Older gateways do not supply response IDs.
-      return
     }
     if (content.inputTranscription?.text) {
       this.inputText += content.inputTranscription.text
@@ -287,13 +287,11 @@ export class GeminiRealtimeCoach {
   }
 
   private clearPlayback() {
-    for (const timer of this.playbackTimers) window.clearTimeout(timer)
-    this.playbackTimers.clear()
     for (const source of this.sources.keys()) { source.onended = null; try { source.stop(); source.disconnect() } catch { /* Already ended. */ } }
     this.sources.clear(); this.nextPlayback = this.audio?.currentTime ?? 0
   }
   mute(muted: boolean) { this.muted = muted; this.stream?.getAudioTracks().forEach(track => { track.enabled = !muted }); this.send({ type: 'mute', muted }) }
-  interrupt() { this.clearPlayback(); for (const id of this.outputs.keys()) this.finishOutput(true, id); this.expressions.finish(this.responseId); this.interrupted = true; this.replyStarted = null; window.clearTimeout(this.replyTimer); this.send({ type: 'interrupt' }) }
+  interrupt() { const started = performance.now(); this.clearPlayback(); for (const id of this.outputs.keys()) this.finishOutput(true, id); this.expressions.finish(this.responseId); this.interrupted = true; this.replyStarted = null; window.clearTimeout(this.replyTimer); this.send({ type: 'interrupt' }); this.diagnostics.sample('interruption_to_stop', performance.now() - started, 'browser_clock') }
   requestFeedback() { this.interrupt(); this.send({ type: 'feedback' }); this.options.state('thinking'); this.waitForReply() }
   setSpeechSpeed(speed: number) { if (Number.isFinite(speed)) this.speed = Math.max(.75, Math.min(1.35, speed)) }
   async updateContext(context: VoiceContext) {
@@ -320,7 +318,10 @@ export class GeminiRealtimeCoach {
     if (this.capture) { this.capture.port.onmessage = null; safely(() => this.capture?.disconnect()) }
     safely(() => this.input?.disconnect()); safely(() => this.silent?.disconnect()); safely(() => this.inputMeter?.disconnect()); safely(() => this.outputMeter?.disconnect())
     safely(() => this.audio?.close().catch(() => {}))
-    if (this.session) void releaseVoiceSession(this.session.id)
+    if (this.session) {
+      try { this.options.diagnostics?.({ sessionId: this.session.id, provider: 'gemini', model: this.session.model, snapshot: this.diagnostics.snapshot() }) } catch {}
+      void releaseVoiceSession(this.session.id)
+    }
     safely(() => this.options.state('idle')); safely(() => this.options.level(0))
   }
 }

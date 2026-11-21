@@ -16,10 +16,15 @@ export type AiAssistantMessage = {
   createdAt: string
   /** Optional image attachments remain local and are not uploaded to chat history. */
   images?: string[]
+  pendingSync?: boolean
+  locale?: 'en' | 'uz' | 'ru'
   status?: 'streaming' | 'interrupted'
   delivery?: 'text' | 'voice'
   expression?: import('@/lib/novaPersona').NovaExpression
   performance?: import('@/lib/novaPersona').NovaPerformance
+  understanding?: import('@/lib/novaLearning').TurnUnderstanding
+  deliverySegments?: import('@/lib/novaLearning').DeliverySegment[]
+  performanceTimeline?: import('@/lib/novaLearning').PerformanceCue[]
 }
 
 export type AiAssistantThread = {
@@ -40,6 +45,10 @@ export type AiMemoryItem = {
   value: string
   createdAt: string
   updatedAt: string
+  revision?: number
+  origin?: string
+  category?: string
+  sourceQuote?: string | null
 }
 
 // Drives the animated voice orb everywhere it appears.
@@ -217,9 +226,12 @@ export const useAiAssistantStore = create<AiAssistantState>()(
       setThreads: (ownerKey, serverThreads) =>
         set((state) => {
           const localOnly = (state.threadsByOwner[ownerKey] ?? []).filter(
-            (thread) => !thread.synced && (thread.messages.length > 0 || thread.id === state.activeThreadIds[ownerKey]) && !serverThreads.some((server) => server.id === thread.id),
+            (thread) => (!thread.synced || thread.messages.some(message => message.pendingSync)) && (thread.messages.length > 0 || thread.id === state.activeThreadIds[ownerKey]) && !serverThreads.some((server) => server.id === thread.id),
           )
-          const threads = sortThreads([...localOnly, ...serverThreads.filter((thread) => thread.messages.length > 0)])
+          const threads = sortThreads([...localOnly, ...serverThreads.filter((thread) => thread.messages.length > 0).map(thread => {
+            const local = state.threadsByOwner[ownerKey]?.find(item => item.id === thread.id)
+            return { ...thread, messages: [...thread.messages, ...(local?.messages.filter(message => message.pendingSync && !thread.messages.some(saved => saved.id === message.id)) ?? [])] }
+          })])
           const currentActive = state.activeThreadIds[ownerKey]
           const activeThreadId = threads.some((thread) => thread.id === currentActive)
             ? currentActive ?? null

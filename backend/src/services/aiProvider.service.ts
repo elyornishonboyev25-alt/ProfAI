@@ -30,6 +30,7 @@ type ProviderResult = Omit<AiGenerationResult, 'provider' | 'fallbackUsed'>
 
 export type GenerateAiTextInput = {
   userId: string
+  onModelRequest?: () => void
   purpose: AiGenerationPurpose
   systemPrompt: string
   userMessage: string
@@ -168,7 +169,7 @@ async function requestGemini(input: GenerateAiTextInput): Promise<ProviderResult
 
       let response: Response
       let schema = input.geminiResponseSchema
-      const request = (responseSchema?: Record<string, unknown>) => fetchWithTimeout(url, {
+      const request = (responseSchema?: Record<string, unknown>) => { input.onModelRequest?.(); return fetchWithTimeout(url, {
           signal: input.signal,
           method: 'POST',
           headers: {
@@ -187,7 +188,7 @@ async function requestGemini(input: GenerateAiTextInput): Promise<ProviderResult
               ...(responseSchema ? { responseSchema } : {}),
             },
           }),
-        }, isAssessmentPurpose(input.purpose) ? Math.max(env.AI_PROVIDER_TIMEOUT_MS, input.purpose === 'speaking_evaluation' ? 90_000 : 65_000) : env.AI_PROVIDER_TIMEOUT_MS)
+        }, isAssessmentPurpose(input.purpose) ? Math.max(env.AI_PROVIDER_TIMEOUT_MS, input.purpose === 'speaking_evaluation' ? 90_000 : 65_000) : env.AI_PROVIDER_TIMEOUT_MS) }
       try {
         response = await request(schema)
         if (response.status === 400 && schema) {
@@ -284,6 +285,7 @@ async function requestOpenAi(input: GenerateAiTextInput): Promise<ProviderResult
         ...input.images.map((image) => ({ type: 'image_url', image_url: { url: image } })),
       ]
     : input.userMessage
+  input.onModelRequest?.()
   const response = await fetchWithTimeout(`${env.OPENAI_API_BASE.replace(/\/$/, '')}/chat/completions`, {
     signal: input.signal,
     method: 'POST',
@@ -329,6 +331,7 @@ async function requestOpenAi(input: GenerateAiTextInput): Promise<ProviderResult
 
 async function requestHuggingFace(input: GenerateAiTextInput): Promise<ProviderResult> {
   const model = isAssessmentPurpose(input.purpose) && env.HF_ASSESSMENT_MODEL ? env.HF_ASSESSMENT_MODEL : env.HF_MODEL
+  input.onModelRequest?.()
   const response = await fetchWithTimeout(`${env.HF_API_BASE.replace(/\/$/, '')}/chat/completions`, {
     signal: input.signal,
     method: 'POST',

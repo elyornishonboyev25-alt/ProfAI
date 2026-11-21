@@ -1,3 +1,4 @@
+import { NovaDiagnostics, type NovaDiagnosticsSnapshot, type PerformanceCue } from './novaLearning'
 import { NovaPlayback } from './novaPlayback'
 import type { NovaPerformance } from './novaPersona'
 import { apiClient } from '@/lib/apiClient'
@@ -7,18 +8,20 @@ import { openVoiceSession, releaseVoiceSession, maintainVoiceLease } from './voi
 
 export type VoiceContext = {
   pathname: string; workspace: 'general' | 'ielts' | 'sat' | 'english' | 'admission'; language: 'auto' | 'en' | 'uz' | 'ru'
-  mode: 'coach' | 'examiner'; threadId?: string; studyContext: string; screenContext: string; siteKnowledge: string
+  mode: 'coach' | 'examiner'; threadId?: string; memoryRevision?: string; studyContext: string; screenContext: string; siteKnowledge: string
   coachPreferences?: import('@/services/ai/coachPreferences').CoachPreferences
 }
-export type VoicePerformance = { stage: 'microphone' | 'negotiation' | 'connection' | 'first_audio' | 'reply'; durationMs: number }
+export type VoicePerformance = { stage: 'microphone' | 'negotiation' | 'connection' | 'first_audio' | 'reply' | 'interruption_to_stop'; durationMs: number }
 export type VoiceOptions = {
+  diagnostics?: (report: { sessionId: string; provider: 'gemini' | 'openai'; model: string; snapshot: NovaDiagnosticsSnapshot }) => void
+  reconnectAttempt?: number
   speechSpeed?: number
   context: VoiceContext
   history: Array<{ role: 'user' | 'assistant'; content: string }>
   state: (state: AiVoiceState) => void
   level: (level: number) => void
   caption: (text: string) => void
-  message: (role: 'user' | 'assistant', text: string, id: string, interrupted?: boolean, performance?: NovaPerformance) => void
+  message: (role: 'user' | 'assistant', text: string, id: string, interrupted?: boolean, performance?: NovaPerformance, timeline?: PerformanceCue[]) => void
   /** Live display only; finalized messages are emitted separately after playback. */
   preview?: (role: 'user' | 'assistant', text: string, id: string) => void
   expression?: (performance: NovaPerformance | null, responseId: string) => void
@@ -36,6 +39,8 @@ function contextSignature(context: VoiceContext) {
 // One connection owns its microphone, playback, requests and event handlers.
 // No browser SpeechRecognition / speechSynthesis is involved in natural voice.
 export class RealtimeCoach {
+  private diagnostics = new NovaDiagnostics()
+  private model = 'unknown'
   private expressions = new NovaPlayback((value, id) => this.options.expression?.(value, id))
   private upcomingPerformance: NovaPerformance | undefined
   private expressionResponses = new Set<string>()
@@ -78,7 +83,7 @@ export class RealtimeCoach {
   private send(event: unknown) {
     if (this.channel?.readyState === 'open') this.channel.send(JSON.stringify(event))
   }
-  private fail(error: Error) { if (!this.closed) { this.options.error(error); this.stop() } }
+  private fail(error: Error) { if (!this.closed) { this.diagnostics.count('errors'); this.options.error(error); this.stop() } }
   private waitForResponse() {
     window.clearTimeout(this.responseTimer)
     this.responseTimer = window.setTimeout(() => this.fail(new Error('The voice reply timed out. Please retry.')), 45_000)
@@ -88,6 +93,7 @@ export class RealtimeCoach {
     const end = performance.now()
     // DevTools timings contain durations only, never transcripts or account data.
     try { performance.measure(`ivygoo.voice.${stage}`, { start, end }) } catch { /* Older browsers can still report through the callback. */ }
+    this.diagnostics.sample(stage, end - start, stage === 'reply' ? 'provider_speech_event' : 'browser_clock')
     try { this.options.performance?.({ stage, durationMs: Math.round(end - start) }) } catch { /* Diagnostics must never interrupt a call. */ }
   }
 
@@ -96,6 +102,7 @@ export class RealtimeCoach {
     window.addEventListener('pagehide', this.onPageHide)
     const started = performance.now()
     this.options.state('thinking')
+    if (this.options.reconnectAttempt) this.diagnostics.count('reconnects')
     try {
       const history: VoiceOptions['history'] = []
       let historyChars = 0
@@ -153,12 +160,13 @@ export class RealtimeCoach {
       if (this.closed) return
       const initialContext = this.options.context
       const negotiating = performance.now()
-      const session = await openVoiceSession<{ id: string; sdp: string; maxMinutes: number; expiresAt?: string }>('/ai/voice/connect', {
+      const session = await openVoiceSession<{ id: string; model?: string; sdp: string; maxMinutes: number; expiresAt?: string }>('/ai/voice/connect', {
         sdp: peer.localDescription?.sdp, context: initialContext, history,
       }, this.controller.signal)
       if (this.closed) { void releaseVoiceSession(session.id); return }
       this.measure('negotiation', negotiating)
       this.sessionId = session.id
+      this.model = session.model ?? 'unknown'
       this.releaseLease = maintainVoiceLease(session.id, () => this.fail(new Error('This voice session ended. Reconnect to continue.')))
       this.sentContext = contextSignature(initialContext)
       await peer.setRemoteDescription({ type: 'answer', sdp: session.sdp })
@@ -375,6 +383,7 @@ export class RealtimeCoach {
     await this.contextSync
   }
   interrupt() {
+    const interruptStarted = performance.now()
     this.awaitingNewInput = true
     // Standard conversation input also informs the server-side tool owner.
     this.send({ type: 'conversation.item.create', item: { type: 'message', role: 'user', content: [{ type: 'input_text', text: '[Nova control] Stop this reply and wait for my next question.' }] } })
@@ -387,6 +396,7 @@ export class RealtimeCoach {
     if (this.responding) this.send({ type: 'response.cancel' })
     if (this.speaking) this.send({ type: 'output_audio_buffer.clear' })
     this.flush('', true); this.expressions.finish(this.activeResponseId); this.speaking = false; this.options.caption(''); this.options.state('listening')
+    this.measure('interruption_to_stop', interruptStarted)
   }
   requestFeedback() {
     this.interrupt()
@@ -411,7 +421,10 @@ export class RealtimeCoach {
     this.meterSources.forEach((source) => release(() => source.disconnect())); this.meterSources = []
     release(() => this.inputAnalyser?.disconnect()); release(() => this.outputAnalyser?.disconnect())
     release(() => this.audioContext?.close().catch(() => {}))
-    if (this.sessionId) void releaseVoiceSession(this.sessionId)
+    if (this.sessionId) {
+      try { this.options.diagnostics?.({ sessionId: this.sessionId, provider: 'openai', model: this.model, snapshot: this.diagnostics.snapshot() }) } catch {}
+      void releaseVoiceSession(this.sessionId)
+    }
     release(() => this.flush('', true))
     this.expressions.reset()
     release(() => this.options.state('idle')); release(() => this.options.level(0))

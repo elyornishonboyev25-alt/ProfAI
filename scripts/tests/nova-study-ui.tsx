@@ -3,8 +3,20 @@ import { useAuthStore } from '@/store/authStore'
 import { getAllSavedWords } from '@/utils/myVocabularyStore'
 import { useNovaStudySession, restoreNovaStudy, openNovaStudy, receiveNovaToolResults, acceptNovaPending, observeNovaStudyPermission, currentNovaStudy } from '@/services/ai/novaStudySession'
 import type { NovaToolResult } from '@/lib/novaStudy'
+import { acquireNovaAudio, novaAudioOwner, interruptNovaAudio, subscribeNovaAudio } from '@/lib/novaAudioOwnership'
 
 export async function run() {
+  const owners: Array<string | null> = [], events: string[] = []
+  const unsubscribe = subscribeNovaAudio(() => owners.push(novaAudioOwner()))
+  const releaseOld = acquireNovaAudio('coach', () => events.push('coach cancelled'))
+  const releaseNew = acquireNovaAudio('original', () => events.push('source cancelled'))
+  releaseOld()
+  assert.equal(novaAudioOwner(), 'original', 'Late completion cannot unmute the microphone under a successor')
+  assert.deepEqual(events, ['coach cancelled'])
+  releaseNew(); assert.equal(novaAudioOwner(), null)
+  acquireNovaAudio('replay', () => events.push('replay cancelled')); interruptNovaAudio()
+  assert.equal(novaAudioOwner(), null); assert.ok(events.includes('replay cancelled'))
+  assert.deepEqual(owners.slice(0, 3), ['coach', 'original', null]); unsubscribe()
   const navigate = () => {}, owner = 'study-ui-learner'
   useAuthStore.setState({ user: { id: owner } as any }); restoreNovaStudy()
   const word = { term: 'bank', definition: 'The land beside a river', uzbek: 'Daryo qirg‘og‘i', example: 'We walked along the bank.', synonym: 'riverside', context: 'reading' as const, origin: 'Reading question', sourceQuestionId: 'source-q1' }

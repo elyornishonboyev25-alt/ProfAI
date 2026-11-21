@@ -6,6 +6,7 @@ import { apiClient } from '@/lib/apiClient'
 import { examinerAudio } from '@/lib/speakingAudio'
 import { AnswerRecording, microphoneError, requestSpeakingMicrophone } from '@/lib/speakingMedia'
 import { withAssessmentDeadline } from '@/utils/assessmentDeadline'
+import { acquireNovaAudio, ownNovaMedia } from '@/lib/novaAudioOwnership'
 
 type Feedback = { accuracyPercent: number | null; needsWorkPercent: number | null; heard: string; feedback: string; nextTry: string }
 export default function PronunciationArena({ targets }: { targets: NonNullable<SpeakingEvaluation['pronunciationTargets']> }) {
@@ -24,11 +25,12 @@ export default function PronunciationArena({ targets }: { targets: NonNullable<S
   const request = useRef<AbortController | null>(null)
   const guard = useRef(false)
   const alive = useRef(true)
+  const release = useRef<(() => void) | null>(null)
   const stopTimer = useRef<ReturnType<typeof setTimeout>>()
   const finishRef = useRef<() => void>(() => {})
   const target = targets[Math.min(index, Math.max(0, targets.length - 1))]
   useEffect(() => { alive.current = true; return () => {
-    alive.current = false; request.current?.abort(); clearTimeout(stopTimer.current); void recorder.current?.stop(); stream.current?.getTracks().forEach(track => track.stop()); player.current?.pause()
+    alive.current = false; release.current?.(); request.current?.abort(); clearTimeout(stopTimer.current); void recorder.current?.stop(); stream.current?.getTracks().forEach(track => track.stop()); player.current?.pause()
     if (player.current?.src.startsWith('blob:')) URL.revokeObjectURL(player.current.src)
   } }, [])
   useEffect(() => () => { if (attemptUrl) URL.revokeObjectURL(attemptUrl) }, [attemptUrl])
@@ -36,18 +38,20 @@ export default function PronunciationArena({ targets }: { targets: NonNullable<S
     if (!target || guard.current) return
     guard.current = true; setListening(true); setError('')
     const controller = new AbortController(); request.current = controller
+    const releasePlayback = acquireNovaAudio('pronunciation', () => { controller.abort(); player.current?.pause(); guard.current = false; if (alive.current) setListening(false) })
+    release.current = releasePlayback
     try {
       player.current ??= new Audio()
       const audio = player.current
       audio.pause()
       if (audio.src.startsWith('blob:')) URL.revokeObjectURL(audio.src)
       const url = await examinerAudio(target.example, 'marin', controller.signal)
-      if (!alive.current) { URL.revokeObjectURL(url); return }
+      if (!alive.current || controller.signal.aborted) { URL.revokeObjectURL(url); return }
       audio.src = url
-      audio.onended = () => { guard.current = false; if (alive.current) setListening(false) }
-      audio.onerror = () => { guard.current = false; if (alive.current) { setListening(false); setError(t('Audio could not play. Try again.', 'Audio ijro bo‘lmadi. Qayta urining.', 'Не удалось воспроизвести аудио. Повторите.')) } }
+      audio.onended = () => { releasePlayback(); guard.current = false; if (alive.current) setListening(false) }
+      audio.onerror = () => { releasePlayback(); guard.current = false; if (alive.current) { setListening(false); setError(t('Audio could not play. Try again.', 'Audio ijro bo‘lmadi. Qayta urining.', 'Не удалось воспроизвести аудио. Повторите.')) } }
       await audio.play()
-    } catch (err) { if (alive.current) { setError(err instanceof Error ? err.message : t('Could not play the model audio.', 'Namuna audiosi ochilmadi.', 'Не удалось воспроизвести образец.')); setListening(false) }; guard.current = false }
+    } catch (err) { releasePlayback(); if (controller.signal.aborted) return; if (alive.current) { setError(err instanceof Error ? err.message : t('Could not play the model audio.', 'Namuna audiosi ochilmadi.', 'Не удалось воспроизвести образец.')); setListening(false) }; guard.current = false }
   }
   const finish = async () => {
     const capture = recorder.current
@@ -55,6 +59,7 @@ export default function PronunciationArena({ targets }: { targets: NonNullable<S
     recorder.current = null; clearTimeout(stopTimer.current); setRecording(false); setBusy(true)
     try {
       const blob = await capture.stop()
+      release.current?.()
       stream.current?.getTracks().forEach(track => track.stop()); stream.current = null
       if (!alive.current) return
       setAttemptUrl(URL.createObjectURL(blob))
@@ -74,6 +79,7 @@ export default function PronunciationArena({ targets }: { targets: NonNullable<S
       const mic = await requestSpeakingMicrophone()
       if (!alive.current) { mic.getTracks().forEach(track => track.stop()); return }
       stream.current = mic; recorder.current = new AnswerRecording(mic); setRecording(true); setBusy(false)
+      release.current = acquireNovaAudio('recording', () => finishRef.current())
       stopTimer.current = setTimeout(() => finishRef.current(), 15_000)
     } catch (err) { guard.current = false; stream.current?.getTracks().forEach(track => track.stop()); stream.current = null; if (alive.current) { setBusy(false); setError(microphoneError(err)) } }
   }
@@ -83,7 +89,7 @@ export default function PronunciationArena({ targets }: { targets: NonNullable<S
     <h3 className="pronunciation-word">{target.word}</h3><p className="pronunciation-ipa">{target.ipa}</p>
     <p className="assessment-note">{target.heard}</p><p className="assessment-annotated">{target.tip}</p><p className="assessment-note mt-3">“{target.example}”</p>
     <div className="pronunciation-actions"><button type="button" className="assessment-secondary" disabled={recording || busy || listening} onClick={() => void listen()}>{listening ? <Loader2 size={15} className="animate-spin" /> : <Headphones size={15} />}{t('Hear the example', 'Namunani tinglash', 'Слушать образец')}</button><button type="button" className="assessment-primary" disabled={busy || listening} onClick={() => recording ? void finish() : void record()}>{busy ? <Loader2 size={15} className="animate-spin" /> : recording ? <Square size={15} /> : <Mic size={15} />}{recording ? t('Finish attempt', 'Urinishni tugatish', 'Завершить попытку') : busy ? t('Listening closely…', 'Diqqat bilan tekshiryapman…', 'Анализируем…') : t('Try saying it', 'Aytib ko‘rish', 'Произнесите сами')}</button></div>
-    {attemptUrl && <audio controls preload="metadata" src={attemptUrl} className="mt-4 h-9 w-full" aria-label={t('Your pronunciation attempt', 'Sizning talaffuz urinishingiz', 'Ваша попытка')} />}
+    {attemptUrl && <audio controls preload="metadata" src={attemptUrl} className="mt-4 h-9 w-full" onPlay={event => ownNovaMedia(event.currentTarget, 'pronunciation')} aria-label={t('Your pronunciation attempt', 'Sizning talaffuz urinishingiz', 'Ваша попытка')} />}
     {error && <p role="alert" className="assessment-note mt-4 text-red-700">{error}</p>}
     {feedback && <div className="pronunciation-feedback" role="status">{feedback.accuracyPercent !== null && <><strong>{feedback.accuracyPercent}%</strong><span className="ml-2 text-xs">{t('practice match', 'taxminiy moslik', 'учебное совпадение')} · {feedback.needsWorkPercent}% {t('to refine', 'ustida ishlash kerak', 'требует работы')}</span></>}<p>{feedback.heard && `“${feedback.heard}” · `}{feedback.feedback}</p><p>{feedback.nextTry}</p></div>}
     <p className="assessment-note mt-4">{t('AI coaching estimate from your recording. This percentage is approximate and is separate from your IELTS band.', 'Yozuvingiz asosidagi AI mashq bahosi. Foiz taxminiy bo‘lib, IELTS ballingizdan alohida hisoblanadi.', 'Учебная оценка ИИ по вашей записи. Процент приблизительный и не является баллом IELTS.')}</p>

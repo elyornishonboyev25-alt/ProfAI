@@ -14,6 +14,19 @@ export const writingAnchorSchema = z.object({
   message: z.string().min(1).max(1000), hint: z.string().max(500).default(''),
 }).strict()
 export type WritingAnchor = z.infer<typeof writingAnchorSchema>
+export const studyControlSchema = z.enum(['replay', 'previous_segment', 'next_segment', 'slower', 'normal_speed', 'pause', 'resume', 'next_question', 'previous_question', 'continue'])
+export type StudyControl = z.infer<typeof studyControlSchema>
+export function readStudyCommand(text: string): StudyControl | null {
+  const value = text.toLowerCase().replace(/[‘’ʻ`]/g, "'").replace(/[.!?,]+$/g, '').trim().replace(/\s+/g, ' ')
+  const commands: Record<string, StudyControl> = {
+    'yana eshittir': 'replay', 'qayta eshittir': 'replay', 'yana eshitay': 'replay', 'replay': 'replay', 'play again': 'replay',
+    'keyingi gap': 'next_segment', 'next sentence': 'next_segment', 'oldingi gap': 'previous_segment', 'previous sentence': 'previous_segment',
+    'sekinroq': 'slower', 'slower': 'slower', 'oddiy tezlik': 'normal_speed', 'normal speed': 'normal_speed',
+    'pauza': 'pause', 'pause': 'pause', "to'xtat": 'pause', 'resume': 'resume', 'davom et': 'continue', 'continue': 'continue',
+    'keyingi savol': 'next_question', 'next question': 'next_question', 'oldingi savol': 'previous_question', 'previous question': 'previous_question',
+  }
+  return commands[value] ?? null
+}
 /** UTF-16 offsets deliberately match browser selection APIs, including emoji. */
 export function writingVersion(text: string) {
   let hash = 2166136261
@@ -32,7 +45,7 @@ export function validWritingAnchors(text: string, values: unknown): WritingAncho
 
 export const toolCallSchema = z.object({
   id: resourceId,
-  name: z.enum(['get_page_context', 'list_available_tests', 'list_user_attempts', 'open_page', 'open_attempt_analysis', 'start_practice', 'get_question_context', 'get_answer_evidence', 'get_listening_segment', 'play_listening_segment', 'get_speaking_question_set', 'get_speaking_recording', 'save_vocabulary', 'start_vocabulary_review', 'annotate_writing', 'show_whiteboard', 'update_whiteboard']),
+  name: z.enum(['control_study', 'get_page_context', 'list_available_tests', 'list_user_attempts', 'open_page', 'open_attempt_analysis', 'start_practice', 'get_question_context', 'get_answer_evidence', 'get_listening_segment', 'play_listening_segment', 'get_speaking_question_set', 'get_speaking_recording', 'save_vocabulary', 'start_vocabulary_review', 'annotate_writing', 'show_whiteboard', 'update_whiteboard']),
   args: z.record(z.unknown()).default({}),
 }).strict()
 export type NovaToolCall = z.infer<typeof toolCallSchema>
@@ -44,11 +57,12 @@ export type StudyQuestion = { id: string; number: number; text: string; type: st
 export type StudyTest = { id: string; title: string; skill: z.infer<typeof novaSkill>; route: string; questions: StudyQuestion[]; premium?: boolean }
 export type StudyAttempt = { id: string; testId: string; skill: StudyTest['skill']; title: string; completedAt: string; completed: boolean; answers: Record<string, unknown>; provenance: 'account_sync'; writing?: string; transcript?: unknown[]; recordingKey?: string; speakingEvaluation?: unknown }
 export type NovaEffect =
+  | { type: 'study_control'; action: StudyControl; reference: StudyReference }
   | { type: 'navigate'; path: string; state?: Record<string, unknown>; confirmation: boolean }
   | { type: 'study'; reference: StudyReference }
   | { type: 'vocabulary'; word: { term: string; definition: string; uzbek: string; example: string; synonym: string; context: 'reading' | 'listening' | 'writing' | 'speaking' | 'sat'; origin: string; sourceQuestionId?: string }; confirmation: boolean }
   | { type: 'annotations'; text: string; anchors: WritingAnchor[] }
-  | { type: 'play_segment'; audioUrl: string; start: number; end?: number; label: string }
+  | { type: 'play_segment'; reference?: StudyReference; audioUrl: string; start: number; end?: number; label: string }
 export type NovaToolResult = { id: string; name: NovaToolCall['name']; ok: true; data: unknown; effect?: NovaEffect } | { id: string; name: NovaToolCall['name']; ok: false; error: { code: string; message: string } }
 export const tutorProgressSchema = z.object({
   reference: studyReferenceSchema, questionIndex: z.number().int().min(0).max(1000).default(0),

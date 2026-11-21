@@ -13,7 +13,7 @@ import { readNovaLesson } from './novaLesson.js'
 import { banterOpening, isBanterBoundary, roastOpenings } from './novaBanter.js'
 import { getStudyContext, publicStudyContext, novaAccountRows, hasActiveExam } from './novaStudy.service.js'
 import { runNovaTool } from './novaTools.service.js'
-import { writingVersion, type NovaToolResult } from './novaStudy.js'
+import { readStudyCommand, writingVersion, type NovaToolResult } from './novaStudy.js'
 
 export async function loadAssistantRecords(userId: string, threadId?: string) {
   const [user, memories, owned, evidence] = await Promise.all([
@@ -53,12 +53,19 @@ export async function answerAssistant(userId: string, request: AssistantRequest,
     onReply?.(safe.reply)
     return { ...safe, languageState: resolved, savedMemories: [], persistenceWarnings: [], sources: [], meta: { modelRequests: 0, provider: 'none', model: 'language_guard', fallbackUsed: false, research: 'not_requested' } }
   }
+  const command = request.mode !== 'examiner' && request.studyReference ? readStudyCommand(learnerUtterance) : null
+  if (command) {
+    const result = await runNovaTool(userId, { id: `${request.turnId ?? Date.now()}:control`, name: 'control_study', args: { action: command } }, { reference: request.studyReference, pathname: request.pathname }, signal)
+    const reply = result.ok ? (language === 'en' ? 'I’ll use the controls for the current question.' : 'Joriy savol boshqaruvini ishga tushiraman.') : result.error.message
+    onReply?.(reply)
+    return { ...parseAssistantReply(JSON.stringify({ reply })), toolResults: [result], languageState: resolved, savedMemories: [], persistenceWarnings: [], sources: [], meta: { modelRequests: 0, provider: 'none', model: 'study_control', fallbackUsed: false, research: 'not_requested' } }
+  }
   const research = await researchForAssistant(userId, request.message, signal)
   let modelRequests = 0
   const generationInput = { userId, onModelRequest: () => { modelRequests++; diagnostics?.count('modelCalls') }, purpose: 'assistant_chat' as const, signal,
     systemPrompt: buildCoachPrompt(request, request.delivery),
     userMessage: JSON.stringify({ request: request.message || 'Explain the attached image.', generateTitle: request.generateTitle,
-      history: boundedHistory(request.history), context: assistantData(request, records, request.message), research,
+      history: boundedHistory(request.history), context: assistantData(request, records, request.message), research, studyPosition: request.studyProgress, browserActionReceipts: request.actionReceipts,
       learnerUtterance, study, writingDraft: request.writingDraft ? { text: request.writingDraft, version: writingVersion(request.writingDraft), provenance: 'client_draft' } : null, verifiedArithmetic: arithmeticFacts(request.message) }),
     images: request.images, maxOutputTokens: 6000,
     onText: onReply ? () => {} : undefined,

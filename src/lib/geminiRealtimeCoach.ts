@@ -1,4 +1,5 @@
 import { NovaDiagnostics } from './novaLearning'
+import { novaAudioOwner } from './novaAudioOwnership'
 import { NovaTurnGate } from './novaTurnGate'
 import { resolveNovaLanguage, inspectLanguage, languageViolation, languageClarification, latinUzbekTranscript } from './novaLanguage'
 import { NovaPlayback } from './novaPlayback'
@@ -66,7 +67,7 @@ export class GeminiRealtimeCoach {
   }
   private sendPcm(bytes: Uint8Array) { let text = ''; for (const byte of bytes) text += String.fromCharCode(byte); this.send({ type: 'audio', data: btoa(text) }) }
   private send(message: unknown) {
-    if (this.socket?.readyState !== WebSocket.OPEN) return
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return
     if (this.socket.bufferedAmount > 256000) { this.fail(new Error('Your connection is too slow for live voice. Please reconnect.')); return }
     this.socket.send(JSON.stringify(message))
   }
@@ -193,7 +194,7 @@ export class GeminiRealtimeCoach {
 
   private play(data: string, mimeType: string, responseId: string) {
     const audio = this.audio
-    if (!audio || this.interrupted) return
+    if (!audio || this.interrupted || novaAudioOwner()) return
     const rate = Number(/rate=(\d+)/.exec(mimeType)?.[1] ?? 24000)
     if (rate < 8000 || rate > 48000) throw new Error('Unsupported audio rate')
     const text = atob(data)

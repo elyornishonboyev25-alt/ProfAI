@@ -102,6 +102,25 @@ test('Nova speaks only Uzbek/English with legacy migration and code-switching st
   assert.equal(assistantRequestSchema.parse({ message: 'hi', language: 'ru' }).language, 'uz')
   assert.equal(parseAssistantReply(JSON.stringify({ toolCalls: [{ id: 'a', name: 'list_user_attempts', args: { skill: 'listening' } }] })).toolCalls.length, 1)
 })
+test('lesson commands use the current owned source, preserve exam guards and avoid model calls', async () => {
+  const { readStudyCommand } = await import('../dist/services/novaStudy.js')
+  assert.equal(readStudyCommand('Yana eshittir!'), 'replay')
+  assert.equal(readStudyCommand('oldingi savol'), 'previous_question')
+  assert.equal(readStudyCommand('The phrase means continue working'), null, 'A student answer is not a control command')
+  const { answerAssistant } = await import('../dist/services/assistant.service.js')
+  prisma.user.findUnique = async () => ({ fullName: 'Fixture learner', assessmentResults: [] })
+  prisma.aiMemory.findMany = async () => []; prisma.novaSkillEvidence.findMany = async () => []
+  rows = history('learner')
+  const ref = { skill: source.skill, testId: source.id, attemptId: 'attempt-one', questionId: q.id, mode: 'analyze' }
+  const result = await answerAssistant('learner', assistantRequestSchema.parse({ turnId: 'direct-control', message: 'yana eshittir', language: 'uz', studyReference: ref }))
+  assert.equal(result.meta.modelRequests, 0)
+  assert.equal(result.toolResults[0].effect.action, 'replay')
+  assert.deepEqual(result.toolResults[0].effect.reference, ref)
+  rows = [{ key: 'ielts_test_session_active', value: JSON.stringify({ isTestActive: true, testMode: 'simulation' }) }]
+  const blocked = await answerAssistant('learner', assistantRequestSchema.parse({ turnId: 'blocked-control', message: 'yana eshittir', studyReference: ref }))
+  assert.equal(blocked.meta.model, 'exam_guard'); assert.deepEqual(blocked.toolResults, [])
+  rows = []
+})
 test('shared assistant executes bounded real tool rounds before returning effects; failed tools cannot invent success', async t => {
   const { env } = await import('../dist/config/env.js'), { answerAssistant } = await import('../dist/services/assistant.service.js')
   const previous = { fetch: globalThis.fetch, provider: env.AI_CHAT_PROVIDER, key: env.OPENAI_API_KEY }

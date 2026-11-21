@@ -150,6 +150,8 @@ export async function evaluateWriting(
 }
 export type ChatAssistantOptions = {
   studyReference?: import('@/lib/novaStudy').StudyReference
+  studyProgress?: import('@/lib/novaStudy').TutorProgress
+  actionReceipts?: Array<{ id: string; status: 'applied' | 'failed' | 'awaiting_consent'; message: string }>
   writingDraft?: string
   vocabularyAutoSave?: boolean
   lastReliableLanguage?: 'uz'|'en'|'ru'
@@ -183,7 +185,7 @@ export async function chatWithAssistant(
   options: ChatAssistantOptions = {},
 ): Promise<GeminiChatResponse> {
   const payload = {
-    studyReference: options.studyReference, writingDraft: options.writingDraft, vocabularyAutoSave: options.vocabularyAutoSave,
+    studyReference: options.studyReference, studyProgress: options.studyProgress, actionReceipts: options.actionReceipts, writingDraft: options.writingDraft, vocabularyAutoSave: options.vocabularyAutoSave,
     turnId: options.turnId, lastReliableLanguage: options.lastReliableLanguage, interfaceLanguage: options.interfaceLanguage, lessonContext: options.lessonContext, coachPreferences: options.coachPreferences,
     message, history: history.slice(-24), pathname, workspace: options.workspace ?? 'general',
     language: options.responseLanguage ?? 'auto', mode: options.mode ?? 'coach', threadId: options.threadId,

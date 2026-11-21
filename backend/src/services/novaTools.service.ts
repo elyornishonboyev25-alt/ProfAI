@@ -1,13 +1,14 @@
 import { z } from 'zod'
 import { AiGenerationError } from './aiProvider.service.js'
 import { getStudyContext, publicStudyContext, novaAccountRows, novaCatalog, attemptsFromRows, hasActiveExam } from './novaStudy.service.js'
-import { novaSkill, studyReferenceSchema, toolCallSchema, validWritingAnchors, writingVersion, type NovaToolCall, type NovaToolResult, type StudyReference } from './novaStudy.js'
+import { novaSkill, studyReferenceSchema, studyControlSchema, toolCallSchema, validWritingAnchors, writingVersion, type NovaToolCall, type NovaToolResult, type StudyReference } from './novaStudy.js'
 
 const empty = z.object({}).strict()
 const questionArgs = studyReferenceSchema.omit({ selectedText: true })
 const pages = { dashboard: '/dashboard', listening: '/ielts/listening/tests', reading: '/ielts/reading/tests', speaking: '/ielts/speaking/tests', writing: '/ielts/writing/tests', sat: '/sat', vocabulary: '/vocabulary/my-words', results: '/profile', universities: '/admission/universities' } as const
 const vocabularyArgs = z.object({ term: z.string().trim().min(1).max(100), definition: z.string().trim().min(1).max(800), uzbek: z.string().trim().min(1).max(800), example: z.string().trim().min(1).max(800), synonym: z.string().max(200).default(''), context: z.enum(['reading', 'listening', 'writing', 'speaking', 'sat']), origin: z.string().max(240), sourceQuestionId: z.string().max(240).optional() }).strict()
 export const toolArgumentSchemas = {
+  control_study: z.object({ action: studyControlSchema }).strict(),
   get_page_context: empty, list_available_tests: z.object({ skill: novaSkill.optional(), query: z.string().max(120).optional() }).strict(),
   list_user_attempts: z.object({ skill: novaSkill.optional(), testId: z.string().max(240).optional() }).strict(),
   open_page: z.object({ page: z.enum(Object.keys(pages) as [keyof typeof pages, ...(keyof typeof pages)[]]) }).strict(),
@@ -40,6 +41,12 @@ export async function runNovaTool(userId: string, raw: unknown, environment: Env
     const attempts = attemptsFromRows(rows, userId)
     let data: unknown, effect: Extract<NovaToolResult, { ok: true }>['effect']
     switch (call.name) {
+      case 'control_study': {
+        if (!environment.reference) throw new AiGenerationError(409, 'STUDY_REQUIRED', 'Open an Analyze or Practice question first.')
+        const context = await getStudyContext(userId, environment.reference, environment.pathname)
+        effect = { type: 'study_control', action: args.action, reference: context.reference }
+        data = { status: 'awaiting_browser_action', action: args.action }; break
+      }
       case 'get_page_context': data = environment.reference ? publicStudyContext(await getStudyContext(userId, environment.reference, environment.pathname)) : { pathname: environment.pathname, selectedContext: null }; break
       case 'list_available_tests': data = (await novaCatalog()).filter(test => (!args.skill || args.skill === test.skill) && (!args.query || `${test.title} ${test.id}`.toLowerCase().includes(args.query.toLowerCase()))).slice(0, 60).map(({ questions, ...test }) => ({ ...test, questionCount: questions.length })); break
       case 'list_user_attempts': data = attempts.filter(a => (!args.skill || a.skill === args.skill) && (!args.testId || a.testId === args.testId)).slice(0, 40).map(({ answers, writing, transcript, speakingEvaluation, ...summary }) => summary); break
@@ -64,7 +71,7 @@ export async function runNovaTool(userId: string, raw: unknown, environment: Env
         // The catalog supplies source recordings, not invented sentence timestamps.
         const range = context.question.sourceRange
         data = { audioUrl: context.question.audioUrl, start: range?.start ?? 0, end: range?.end ?? context.question.duration, alignment: range ? 'source_cue' : 'unavailable', scope: range ? 'catalog_timestamp_range' : 'original_recording', provenance: range?.reference, message: range ? 'Existing catalog timestamp cue, not newly verified sentence alignment. Adjust boundaries if needed.' : 'Sentence alignment is not available. Select a range in the original recording.' }
-        if (call.name === 'play_listening_segment') effect = { type: 'play_segment', audioUrl: context.question.audioUrl, start: range?.start ?? 0, end: range?.end ?? context.question.duration, label: range ? 'Original recording — catalog cue' : 'Original recording — unaligned' }
+        if (call.name === 'play_listening_segment') effect = { type: 'play_segment', reference: context.reference, audioUrl: context.question.audioUrl, start: range?.start ?? 0, end: range?.end ?? context.question.duration, label: range ? 'Original recording — catalog cue' : 'Original recording — unaligned' }
         break
       }
       case 'get_speaking_question_set': {

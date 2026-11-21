@@ -6,9 +6,12 @@ import { apiClient } from '@/lib/apiClient'
 import type { AiVoiceState } from '@/store/aiAssistantStore'
 import type { GeminiChatResponse } from '@/services/geminiAI'
 import { openVoiceSession, releaseVoiceSession, maintainVoiceLease } from './voiceSessionLifecycle'
+import { novaAudioOwner, subscribeNovaAudio } from './novaAudioOwnership'
 
 export type VoiceContext = {
   studyReference?: import('@/lib/novaStudy').StudyReference
+  studyProgress?: import('@/lib/novaStudy').TutorProgress
+  actionReceipts?: Array<{ id: string; status: 'applied' | 'failed' | 'awaiting_consent'; message: string }>
   writingDraft?: string
   vocabularyAutoSave?: boolean
   pathname: string; workspace: 'general' | 'ielts' | 'sat' | 'english' | 'admission'; language: 'auto' | 'en' | 'uz' | 'ru'
@@ -96,7 +99,11 @@ export class RealtimeCoach {
   private pending = new Map<string, { id: string; responseId: string; text: string; interrupted: boolean }>()
   private completedResponses = new Set<string>()
   private seen = new Set<string>()
-  constructor(options: VoiceOptions) { this.options = options }
+  private releaseAudioSubscription: (() => void) | null = null
+  constructor(options: VoiceOptions) {
+    this.options = options
+    this.releaseAudioSubscription = subscribeNovaAudio(() => { if (this.audio) this.audio.muted = Boolean(novaAudioOwner()) })
+  }
 
   private send(event: unknown) {
     if (this.channel?.readyState === 'open') this.channel.send(JSON.stringify(event))
@@ -143,6 +150,7 @@ export class RealtimeCoach {
       peer.ontrack = (event) => {
         if (this.closed || !this.audio) return
         this.audio.srcObject = event.streams[0] ?? new MediaStream([event.track])
+        this.audio.muted = Boolean(novaAudioOwner())
         this.attachOutputMeter(this.audio.srcObject as MediaStream)
         void this.audio.play().catch(() => this.fail(new Error('Tap Retry to allow voice playback.')))
       }
@@ -454,6 +462,7 @@ export class RealtimeCoach {
   stop() {
     if (this.closed) return
     this.closed = true
+    this.releaseAudioSubscription?.(); this.releaseAudioSubscription = null
     window.clearTimeout(this.pttReleaseTimer); this.ptt = false
     window.removeEventListener('pagehide', this.onPageHide)
     const release = (cleanup: () => unknown) => { try { cleanup() } catch { /* A failed cleanup must not keep the microphone running. */ } }

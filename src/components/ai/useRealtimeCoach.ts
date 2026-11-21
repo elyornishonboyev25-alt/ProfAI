@@ -1,4 +1,5 @@
 import { currentNovaStudy, useNovaStudySession, observeNovaStudyPermission } from '@/services/ai/novaStudySession'
+import { novaAudioOwner, subscribeNovaAudio } from '@/lib/novaAudioOwnership'
 import {describeLessonContext} from '@/lib/novaLesson'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
@@ -31,6 +32,7 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
   const [caption, setCaption] = useState('')
   const [muted, setMuted] = useState(false)
   const studyReference = useNovaStudySession(state => state.progress?.reference)
+  const studyPosition = useNovaStudySession(state => state.progress)
   const autoVocabulary = useNovaStudySession(state => state.autoWords)
   const [retry, setRetry] = useState(0)
   const [reconnecting, setReconnecting] = useState(false)
@@ -192,19 +194,19 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
         studyContext: describeStudySnapshot(buildStudySnapshot(tutor.user!.id)).slice(0, 16000), screenContext: composeScreenContext('Explain this page', location.pathname).slice(0, 12000), siteKnowledge: describeRelevantSiteKnowledge('IELTS SAT English admissions tests').slice(0, 16000) }).catch(() => {})
     }, 600)
     return () => window.clearTimeout(timer)
-  }, [enabled, location.pathname, tutor.user?.id, tutor.activeWorkspace, tutor.coachPreferences, tutor.memories, language.selection, language.lastReliable, lessonContext, mode, studyReference, autoVocabulary])
+  }, [enabled, location.pathname, tutor.user?.id, tutor.activeWorkspace, tutor.coachPreferences, tutor.memories, language.selection, language.lastReliable, lessonContext, mode, studyReference, studyPosition, autoVocabulary])
 
   const toggleMute = useCallback(() => setMuted((current) => { connection.current?.mute(!current); return !current }), [])
   useEffect(() => {
-    let sourceOwns = false
     const interrupt = () => connection.current?.interrupt()
-    const ownership = (event: Event) => {
-      const value = (event as CustomEvent).detail
-      if (value === 'original') { sourceOwns = true; connection.current?.interrupt(); connection.current?.mute(true) }
-      else if (sourceOwns) { sourceOwns = false; connection.current?.mute(muted) }
+    const ownership = () => {
+      if (novaAudioOwner()) { connection.current?.interrupt(); connection.current?.mute(true) }
+      else connection.current?.mute(muted)
     }
-    window.addEventListener('nova:interrupt', interrupt); window.addEventListener('nova:audio-owner', ownership)
-    return () => { window.removeEventListener('nova:interrupt', interrupt); window.removeEventListener('nova:audio-owner', ownership); if (sourceOwns) connection.current?.mute(muted) }
+    ownership()
+    const unsubscribe = subscribeNovaAudio(ownership)
+    window.addEventListener('nova:interrupt', interrupt)
+    return () => { window.removeEventListener('nova:interrupt', interrupt); unsubscribe() }
   }, [muted])
   const interrupt = useCallback(() => connection.current?.interrupt(), [])
   const beginPushToTalk = useCallback(() => connection.current?.beginPushToTalk(), [])

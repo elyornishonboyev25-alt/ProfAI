@@ -497,7 +497,8 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
         }
 
         // Text matches each new message; voice retains its microphone/TTS language.
-        if (options.speak && replyVersion === coachAudioVersion() && ttsSupported && response.reply.trim()) {
+        const controlsAudio = response.toolResults?.some(result => result.ok && (result.effect?.type === 'play_segment' || result.effect?.type === 'study_control'))
+        if (options.speak && !controlsAudio && replyVersion === coachAudioVersion() && ttsSupported && response.reply.trim()) {
           speakCoachAudio(cleanForSpeech(response.reply), response.replyLanguage ?? voiceLang, {
             loading: (loading) => { if (loading) { voiceOutputVersionRef.current = coachAudioVersion(); stopLevelPulse(); setVoiceState('thinking') } },
             level: setVoiceLevel,

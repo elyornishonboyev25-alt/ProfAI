@@ -8,6 +8,7 @@ import { useAuthStore } from '@/store/authStore'
 import { apiClient } from '@/lib/apiClient'
 import { useAiAssistantStore } from '@/store/aiAssistantStore'
 import { useAiTutor } from './useAiTutor'
+import { usePushToTalk } from './usePushToTalk'
 import CoachMascot from './CoachMascot'
 import AiMessageContent from './AiMessageContent'
 import NovaLessonMessage from './NovaLessonMessage'
@@ -16,7 +17,7 @@ import NovaSpeakingPractice from './NovaSpeakingPractice'
 import ListeningDiagram from '@/components/ListeningDiagram'
 import { NovaSourceAudio } from '@/lib/novaSourceAudio'
 import { novaSkill, writingVersion, type StudyReference, type StudyTest, type StudyAttempt } from '@/lib/novaStudy'
-import { openNovaStudy, restoreNovaStudy, setStudyProgress, useNovaStudySession, acceptNovaPending, currentWritingDraft, applyNovaEffect, inferNovaStudy } from '@/services/ai/novaStudySession'
+import { openNovaStudy, restoreNovaStudy, setStudyProgress, useNovaStudySession, acceptNovaPending, currentWritingDraft, applyNovaEffect, inferNovaStudy, reportNovaAction } from '@/services/ai/novaStudySession'
 import './nova-study.css'
 
 type Context = { reference: StudyReference; test: { id: string; title: string; questionIds: string[] }; question: { id: string; number: number; text: string; type: string; instruction?: string; options?: unknown[]; passage?: string; audioUrl?: string; duration?: number; userAnswer?: unknown; sourceRange?: { start: number; end: number; reference: string }; visual?: { asset?: string; alt?: string; listening?: boolean; diagram?: string } }; attempt?: { writing?: string; transcript?: ExaminerTurn[]; completedAt: string; speakingEvaluation?: SpeakingEvaluation }; evidence?: { answer: unknown; explanation?: string; quotes: Array<{ quote: string }>; transcript?: string; alignment: string } }
@@ -36,6 +37,7 @@ export default function NovaStudyDock() {
   const state = useNovaStudySession(), navigate = useNavigate(), location = useLocation(), { language } = useCopy()
   const en = language === 'en', t = (uz: string, english: string) => en ? english : uz
   const tutor = useAiTutor('floating')
+  const ptt = usePushToTalk(state.open && !talkOpen && !exam, () => { window.dispatchEvent(new Event('nova:interrupt')); tutor.beginPushToTalk() }, tutor.endPushToTalk)
   const [catalog, setCatalog] = useState<Array<Omit<StudyTest, 'questions'>>>([])
   const [attempts, setAttempts] = useState<StudyAttempt[]>([])
   const [skill, setSkill] = useState<StudyReference['skill']>('listening')
@@ -70,10 +72,70 @@ export default function NovaStudyDock() {
     if (!reference || !state.open || exam) return
     const controller = new AbortController()
     apiClient.post<Context>('/ai/assistant/study/context', { reference, pathname: location.pathname, reveal: state.progress?.transcriptRevealed ?? false }, { signal: controller.signal })
-      .then(value => { if (version === requestVersion.current && !controller.signal.aborted) { setContext(value); setSkill(value.reference.skill); const segment = useNovaStudySession.getState().progress?.segment; setStart(segment?.start ?? value.question.sourceRange?.start ?? 0); setEnd(segment?.end ?? value.question.sourceRange?.end ?? 15); setRate(segment?.rate ?? 1) } })
+      .then(value => { if (version === requestVersion.current && !controller.signal.aborted) { setContext(value); setSkill(value.reference.skill); const current = useNovaStudySession.getState().progress; const segment = current?.segment; setStart(segment?.start ?? value.question.sourceRange?.start ?? 0); setEnd(segment?.end ?? value.question.sourceRange?.end ?? 15); setRate(segment?.rate ?? 1); if (current && JSON.stringify(current.reference) !== JSON.stringify(value.reference)) setStudyProgress({ ...current, reference: value.reference, questionIndex: value.test.questionIds.indexOf(value.question.id) }) } })
       .catch(error => { if (!controller.signal.aborted) setError(error instanceof Error ? error.message : 'Context unavailable') })
     return () => controller.abort()
   }, [signature, state.open, exam, user?.id])
+  useEffect(() => {
+    const action = state.action
+    if (!action || !state.open || !context || !state.progress || exam) return
+    const ref = action.effect.reference
+    if (ref && (ref.testId !== context.reference.testId || ref.skill !== context.reference.skill || ref.attemptId !== context.reference.attemptId || ref.mode !== context.reference.mode || ref.questionId && ref.questionId !== context.question.id)) return
+    const owner = user?.id, id = action.id
+    let cancelled = false
+    const report = (ok: boolean, message: string) => {
+      if (!cancelled && useAuthStore.getState().user?.id === owner && useNovaStudySession.getState().action?.id === id) reportNovaAction(id, ok ? 'applied' : 'failed', message)
+    }
+    const progress = useNovaStudySession.getState().progress!
+    const move = (delta: number) => {
+      const index = context.test.questionIds.indexOf(context.question.id) + delta, questionId = context.test.questionIds[index]
+      if (!questionId) { report(false, delta > 0 ? 'Bu testning oxirgi savoli. Bugungi so‘zlarni takrorlaymizmi?' : 'Bu testning birinchi savoli.'); return }
+      player.current?.stop()
+      setStudyProgress({ ...progress, reference: { ...context.reference, questionId }, questionIndex: index, step: 'understand', hint: 0, transcriptRevealed: false, segment: undefined })
+      report(true, 'Savol ochildi. Bu savol bizdan nimani so‘rayapti?')
+    }
+    const run = async () => {
+      if (action.effect.type === 'study_control') {
+        const command = action.effect.action
+        if (command === 'next_question' || command === 'previous_question') { move(command === 'next_question' ? 1 : -1); return }
+        if (command === 'pause') { player.current?.pause(); report(true, 'Audio to‘xtatildi.'); return }
+        if (command === 'continue' && !(audioState === 'paused' && !player.current?.atBoundary)) {
+          if (progress.step === 'reinforce') { move(1); return }
+          if (progress.step === 'evidence') { setStudyProgress({ ...progress, step: 'reinforce' }); report(true, 'Endi javobga qaramasdan asosiy fikrni va yangi so‘zlarni eslang.'); return }
+          if (progress.step !== 'understand' || !context.question.audioUrl) {
+            setStudyProgress({ ...progress, step: 'attempt' })
+            report(true, context.question.audioUrl ? 'Nima dedi? Avval o‘zingiz tushunganingizni ayting.' : 'Avval o‘zingiz qanday yechishingizni ayting.'); return
+          }
+        }
+        if (command === 'resume' || command === 'continue' && audioState === 'paused' && !player.current?.atBoundary) {
+          const ok = await player.current?.resume(); report(Boolean(ok), ok ? 'Audio davom ettirildi.' : 'Davom ettirish uchun avval audio oralig‘ini eshiting.'); return
+        }
+      }
+      if (!context.question.audioUrl) { report(false, 'Bu savolda original audio yo‘q. Keyingi savol buyrug‘idan foydalaning.'); return }
+      const selected = progress.segment ?? { start: context.question.sourceRange?.start ?? start, end: context.question.sourceRange?.end ?? end, rate }
+      const segment = { ...selected, end: selected.end ?? selected.start + 15 }
+      if (action.effect.type === 'play_segment') {
+        if (action.effect.audioUrl !== context.question.audioUrl) { report(false, 'Audio tanlangan savol manbasiga mos kelmadi.'); return }
+        segment.start = action.effect.start; segment.end = action.effect.end ?? segment.start + 15
+      } else {
+        const command = action.effect.action
+        // Without verified alignment these remain explicitly labelled manual ranges.
+        const length = Math.max(.5, segment.end - segment.start)
+        if (command === 'next_segment' || command === 'previous_segment') {
+          const next = command === 'next_segment' ? segment.end : Math.max(0, segment.start - length)
+          segment.start = next; segment.end = next + length
+        }
+        if (command === 'slower') segment.rate = Math.max(.5, segment.rate - .25)
+        if (command === 'normal_speed') segment.rate = 1
+      }
+      setStart(segment.start); setEnd(segment.end); setRate(segment.rate)
+      setStudyProgress({ ...progress, step: 'listen', segment })
+      const ok = await player.current?.play(context.question.audioUrl, segment.start, segment.end, segment.rate)
+      report(Boolean(ok), ok ? 'Original audio ijro etilmoqda. Gap chegaralari tasdiqlanmagan — tanlangan audio oralig‘i ishlatilmoqda.' : 'Audio ijro etilmadi. Qayta urinib ko‘ring.')
+    }
+    void run().catch(() => report(false, 'Boshqaruv bajarilmadi. Qayta urinib ko‘ring.'))
+    return () => { cancelled = true }
+  }, [state.action?.id, context, state.open, exam, user?.id])
   useEffect(() => {
     if (!state.open) { player.current?.stop(); return }
     panel.current?.focus()
@@ -134,7 +196,8 @@ export default function NovaStudyDock() {
         {state.annotations && <NovaWritingAnnotations text={state.draft || state.annotations.text} anchors={state.annotations.anchors} onFocus={(start, end) => { const editor = document.querySelector<HTMLTextAreaElement>('.writing-desk textarea'); if (editor && editor.value === state.annotations?.text) { editor.focus(); editor.setSelectionRange(start, end); editor.scrollIntoView({ block: 'center' }) } }}/ >}
         {latest && <div className="nova-study-reply" aria-live="polite"><AiMessageContent content={latest.content}/>{latest.lesson && <NovaLessonMessage message={latest} threadId={tutor.activeThreadId ?? ''} userId={user.id} onAttempt={text => ask(text)}/>}</div>}
       </div>
-      <form onSubmit={e => { e.preventDefault(); if (message.trim()) ask(message) }}><label className="sr-only" htmlFor="nova-study-message">{t('Nova uchun xabar', 'Message Nova')}</label><textarea id="nova-study-message" value={message} onChange={e => setMessage(e.target.value)} placeholder={t('Shuni tushuntir…', 'Explain this…')}/><button disabled={tutor.isSending || !message.trim()}>{t('Yuborish', 'Send')}</button><button type="button" aria-label="Talk to Nova" onClick={() => { player.current?.stop(); useAiAssistantStore.getState().openTalk() }}><Mic size={18}/></button></form>
+      <form onSubmit={e => { e.preventDefault(); if (message.trim()) ask(message) }}><label className="sr-only" htmlFor="nova-study-message">{t('Nova uchun xabar', 'Message Nova')}</label><textarea id="nova-study-message" value={message} onChange={e => setMessage(e.target.value)} placeholder={t('Shuni tushuntir…', 'Explain this…')}/><button disabled={tutor.isSending || !message.trim()}>{t('Yuborish', 'Send')}</button><button type="button" aria-label="Hold to talk to Nova" aria-pressed={ptt.held} style={{ touchAction: 'none' }} onPointerDown={event => { event.currentTarget.setPointerCapture(event.pointerId); ptt.press() }} onPointerUp={() => ptt.release()} onPointerCancel={() => ptt.release(true)} onLostPointerCapture={() => ptt.release(true)}><Mic size={18}/>{ptt.held ? t('Tinglayapman…', 'Listening…') : 'Space'}</button><button type="button" aria-label="Talk to Nova" onClick={() => { player.current?.stop(); useAiAssistantStore.getState().openTalk() }}>{t('Suhbat', 'Talk')}</button></form>
+      {tutor.voiceError && <p role="alert">{tutor.voiceError}</p>}
     </aside>}
   </>
 }

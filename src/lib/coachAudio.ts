@@ -3,6 +3,7 @@ import type { NovaPerformance } from './novaPersona'
 import { ExaminerPlayback } from './examinerPlayback'
 import { examinerAudio } from './speakingAudio'
 import type { SpeechLang } from './speech'
+import { acquireNovaAudio } from './novaAudioOwnership'
 
 type VoiceCallbacks = {
   loading: (value: boolean) => void
@@ -16,6 +17,7 @@ let playback: ExaminerPlayback | null = null
 let replay: (() => void) | null = null
 let sequence = 0
 let releasePreparedAudio: (() => void) | null = null
+let releaseOwnership: (() => void) | null = null
 
 export function unlockCoachAudio() {
   if (typeof Audio === 'undefined') return
@@ -25,6 +27,7 @@ export function unlockCoachAudio() {
 }
 
 export function cancelCoachAudio() {
+  releaseOwnership?.(); releaseOwnership = null
   sequence++
   replay = null
   releasePreparedAudio?.()
@@ -36,6 +39,9 @@ export function canRetryCoachAudio() { return replay !== null }
 export function coachAudioVersion() { return sequence }
 
 export function retryCoachAudio() {
+  if (!playback?.canResume && !replay) return
+  releaseOwnership?.(); releaseOwnership = null
+  releaseOwnership = acquireNovaAudio('coach', cancelCoachAudio)
   if (playback?.canResume) playback.resume()
   else replay?.()
 }
@@ -45,6 +51,7 @@ export function retryCoachAudio() {
 export function speakCoachAudio(text: string, language: SpeechLang, callbacks: VoiceCallbacks, performance?: NovaPerformance, segments?: DeliverySegment[]) {
   cancelCoachAudio()
   if (typeof Audio === 'undefined') { callbacks.failed(); return }
+  releaseOwnership = acquireNovaAudio('coach', cancelCoachAudio)
   playback ??= new ExaminerPlayback()
   const current = sequence
   let meterFrame = 0
@@ -118,11 +125,11 @@ export function speakCoachAudio(text: string, language: SpeechLang, callbacks: V
         stopMeter()
         index++
         if (index < parts.length) play()
-        else { replay = null; callbacks.ended() }
+        else { replay = null; releaseOwnership?.(); releaseOwnership = null; callbacks.ended() }
       },
-      failed: () => { if (current === sequence) { stopMeter(); callbacks.failed() } },
+      failed: () => { if (current === sequence) { stopMeter(); releaseOwnership?.(); releaseOwnership = null; callbacks.failed() } },
     }, false, { language, deviceFallback: false, audio: part.promise })
   }
   if (parts.length) play()
-  else callbacks.ended()
+  else { releaseOwnership?.(); releaseOwnership = null; callbacks.ended() }
 }

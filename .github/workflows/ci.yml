@@ -53,6 +53,9 @@ jobs:
       - name: Check Nova session stability and gateway errors
         run: node scripts/test-listening-parts-ui.mjs scripts/tests/nova-voice-stability.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/nova-api-errors.tsx
 
+      - name: Check Nova study consent and audio ownership
+        run: node scripts/test-listening-parts-ui.mjs scripts/tests/nova-study-ui.tsx
+
       - name: Check Nova learning notes, memory controls and audio-clock delivery
         run: node scripts/test-listening-parts-ui.mjs scripts/tests/nova-v3-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/nova-v2-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/nova-tts-segments.tsx && node scripts/measure-nova-regressions.mjs --assert
 

@@ -39,7 +39,7 @@ import{apiClient}from'./src/lib/apiClient';import{useAuthStore}from'./src/store/
 import{receiveNovaToolResults,openNovaStudy,currentNovaStudy}from'./src/services/ai/novaStudySession';import{getAllSavedWords}from'./src/utils/myVocabularyStore';import{usePushToTalk}from'./src/components/ai/usePushToTalk';
 const owner=${JSON.stringify(owner)};useAuthStore.setState({user:{id:owner,role:'USER',fullName:'Fixture'},accessToken:${JSON.stringify(token)},refreshToken:null,hydrated:true});useAiAssistantStore.setState({threadsLoaded:{['user:'+owner]:true}});accountStorageFor(owner).setItem('smarttest-reading-analysis-history-v1:'+owner,JSON.stringify([${JSON.stringify(entry)}]));
 const get=apiClient.get,post=apiClient.post;apiClient.get=async(path,options)=>path.startsWith('/ai/assistant/study/')?get(path,options):path==='/ai-workspace/threads'?{items:[]}:path==='/ai-workspace/memories'?{items:[]}:{};apiClient.post=async(path,body,options)=>path.startsWith('/ai/assistant/study/')?post(path,body,options):{};
-function Fixture(){const location=useLocation(),navigate=useNavigate(),[value,setValue]=useState(${JSON.stringify(text)}),ref=useRef(null);const ptt=usePushToTalk(true,()=>{window.dispatchEvent(new Event('nova:interrupt'));window.pttStarts=(window.pttStarts||0)+1},()=>{});window.applyResults=results=>receiveNovaToolResults(results,navigate);window.words=()=>getAllSavedWords();window.study=()=>currentNovaStudy();window.annotate=()=>window.dispatchEvent(new CustomEvent('nova:writing-annotations',{detail:{text:${JSON.stringify(text)},anchors:${JSON.stringify(annotations)}}}));window.setExam=value=>useAiAssistantStore.setState({isExamModeActive:value});return <><main><h1>IELTS source question</h1><p data-source-question>${question.text.replaceAll('<','&lt;')}</p><output data-path>{location.pathname}</output><div className="ielts-writing-workspace writing-desk"><div className="writing-response-pane"><NovaAnnotatedEditor id="student-writing" value={value} onChange={setValue} textareaRef={ref} placeholder="Your writing" describedBy="writing-description" fontSize={16}/></div></div><p id="writing-description">Your saved paragraph</p><button onClick={()=>navigate('/admission/universities')}>Go to universities</button><span data-held>{String(ptt.held)}</span></main><NovaStudyDock/></>};i18n.changeLanguage('uz').then(()=>createRoot(document.getElementById('root')).render(<MemoryRouter initialEntries={['/dashboard']}><Fixture/></MemoryRouter>));
+function Fixture(){const location=useLocation(),navigate=useNavigate(),[value,setValue]=useState(${JSON.stringify(text)}),ref=useRef(null);const ptt=usePushToTalk(false,()=>{window.dispatchEvent(new Event('nova:interrupt'));window.pttStarts=(window.pttStarts||0)+1},()=>{});window.applyResults=results=>receiveNovaToolResults(results,navigate);window.words=()=>getAllSavedWords();window.study=()=>currentNovaStudy();window.annotate=()=>window.dispatchEvent(new CustomEvent('nova:writing-annotations',{detail:{text:${JSON.stringify(text)},anchors:${JSON.stringify(annotations)}}}));window.setExam=value=>useAiAssistantStore.setState({isExamModeActive:value});return <><main><h1>IELTS source question</h1><p data-source-question>${question.text.replaceAll('<','&lt;')}</p><output data-path>{location.pathname}</output><div className="ielts-writing-workspace writing-desk"><div className="writing-response-pane"><NovaAnnotatedEditor id="student-writing" value={value} onChange={setValue} textareaRef={ref} placeholder="Your writing" describedBy="writing-description" fontSize={16}/></div></div><p id="writing-description">Your saved paragraph</p><button onClick={()=>navigate('/admission/universities')}>Go to universities</button><span data-held>{String(ptt.held)}</span></main><NovaStudyDock/></>};i18n.changeLanguage('uz').then(()=>createRoot(document.getElementById('root')).render(<MemoryRouter initialEntries={['/dashboard']}><Fixture/></MemoryRouter>));
 ` }, bundle: true, write: false, outdir: 'fixture', format: 'iife', tsconfig: 'tsconfig.json', define: { 'import.meta.env': '{}', 'process.env.NODE_ENV': '"production"' }, loader: { '.png': 'dataurl', '.jpg': 'dataurl', '.woff2': 'dataurl', '.woff': 'dataurl', '.ttf': 'dataurl' } })
 const js = fixture.outputFiles.find(f => f.path.endsWith('.js')).contents, css = fixture.outputFiles.find(f => f.path.endsWith('.css'))?.text ?? ''
 const server = createServer(async (req, res) => {
@@ -75,8 +75,25 @@ try {
   else await page.getByText('Bu manbada transcript mavjud emas.',{exact:true}).waitFor()
   await page.getByRole('button',{name:'Eshitish / qayta',exact:true}).click()
   await page.waitForFunction(()=>document.querySelector('.nova-source-player [role=status]')?.textContent==='playing',null,{timeout:15000})
-  await page.evaluate(()=>document.activeElement?.blur());await page.keyboard.down('Space');await page.keyboard.up('Space')
+  await page.evaluate(()=>document.activeElement?.blur());await page.keyboard.down('Space')
+  assert.equal(await page.getByRole('button',{name:'Hold to talk to Nova',exact:true}).getAttribute('aria-pressed'),'true')
+  await page.keyboard.up('Space')
+  assert.equal(await page.getByRole('button',{name:'Hold to talk to Nova',exact:true}).getAttribute('aria-pressed'),'false')
   await page.waitForFunction(()=>document.querySelector('.nova-source-player [role=status]')?.textContent==='idle')
+  const control = async (id,action) => {
+    const reference = (await page.evaluate(()=>window.study())).studyReference
+    const result = await runNovaTool(owner,{id,name:'control_study',args:{action}},{reference})
+    assert.equal(result.ok,true);await page.evaluate(result=>window.applyResults([result]),result)
+  }
+  await control('browser-next','next_question')
+  await page.waitForFunction(id=>window.study().studyReference.questionId===id,listening.questions[1].id)
+  await page.locator('.nova-study-question').getByText(listening.questions[1].text,{exact:true}).waitFor()
+  await control('browser-previous','previous_question')
+  await page.locator('.nova-study-question').getByText(question.text,{exact:true}).waitFor()
+  await control('browser-replay','replay')
+  await page.waitForFunction(()=>window.study().actionReceipts.some(r=>r.id==='browser-replay'&&r.status==='applied'))
+  await control('browser-pause','pause')
+  await page.waitForFunction(()=>document.querySelector('.nova-source-player [role=status]')?.textContent==='paused')
   const before = await page.evaluate(()=>window.study())
   await page.getByRole('button',{name:'Doska yopilsin',exact:true}).click();await page.getByRole('button',{name:'Nova',exact:true}).click()
   assert.equal((await page.evaluate(()=>window.study())).studyReference.attemptId,before.studyReference.attemptId)

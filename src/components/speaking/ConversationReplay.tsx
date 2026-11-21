@@ -6,6 +6,7 @@ import type { ExaminerTurn, SpeakingEvaluation } from '@/services/speakingAI'
 import { readTestAudio } from '@/utils/testAudioStorage'
 import { speak } from '@/lib/speech'
 import { combineSpeechRecordings } from '@/lib/speakingReplayAudio'
+import { acquireNovaAudio, ownNovaMedia } from '@/lib/novaAudioOwnership'
 
 type Clip = { role: 'examiner' | 'candidate'; text: string; blob: Blob | null; url: string | null }
 export default function ConversationReplay({ transcript, recording }: { transcript: ExaminerTurn[]; recording?: SpeakingEvaluation['recording'] }) {
@@ -20,11 +21,12 @@ export default function ConversationReplay({ transcript, recording }: { transcri
   const player = useRef<HTMLAudioElement | null>(null)
   const speech = useRef<(() => void) | null>(null)
   const version = useRef(0)
+  const release = useRef<(() => void) | null>(null)
   const exportRequest = useRef<AbortController | null>(null)
   const transcriptKey = JSON.stringify(transcript)
   const audioKey = recording?.audioKey
   const layout = recording?.layout
-  const stop = () => { version.current++; player.current?.pause(); speech.current?.(); speech.current = null; setPlaying(null) }
+  const stop = () => { version.current++; release.current?.(); release.current = null; player.current?.pause(); speech.current?.(); speech.current = null; setPlaying(null) }
   useEffect(() => {
     let disposed = false
     const urls: string[] = []
@@ -40,14 +42,15 @@ export default function ConversationReplay({ transcript, recording }: { transcri
       if (disposed && url) URL.revokeObjectURL(url)
       return { ...turn, blob, url }
     })).then(result => { if (!disposed) { setClips(result); setLoading(false) } })
-    return () => { disposed = true; version.current++; player.current?.pause(); speech.current?.(); exportRequest.current?.abort(); urls.forEach(url => URL.revokeObjectURL(url)) }
+    return () => { disposed = true; stop(); exportRequest.current?.abort(); urls.forEach(url => URL.revokeObjectURL(url)) }
   }, [owner, audioKey, layout, transcriptKey])
   const playFrom = async (start: number) => {
     stop(); setError('')
+    release.current = acquireNovaAudio('replay', stop)
     const token = version.current
     const playTurn = async (index: number): Promise<void> => {
       if (token !== version.current) return
-      if (index >= clips.length) { setPlaying(null); return }
+      if (index >= clips.length) { stop(); return }
       const clip = clips[index]
       setPlaying(index)
       const next = () => { if (token === version.current) void playTurn(index + 1) }
@@ -85,6 +88,6 @@ export default function ConversationReplay({ transcript, recording }: { transcri
     <p className="assessment-note mt-3">{t('Original recordings stay on the device used for the test. Missing examiner audio is read with a labelled device voice during replay; it is never included as a recording in the download.', 'Asl audiolar test topshirilgan qurilmada saqlanadi. Yetishmayotgan examiner audiosi qurilma ovozi bilan o‘qiladi va belgilab ko‘rsatiladi; u yozuv sifatida yuklanmaydi.', 'Оригиналы хранятся на устройстве прохождения теста. Отсутствующий голос экзаменатора озвучивается устройством с пометкой и не включается в загрузку как запись.')}</p>
     {loading && <p role="status" className="assessment-note">{t('Loading saved recordings…', 'Saqlangan audiolar ochilmoqda…', 'Загрузка записей…')}</p>}
     {error && <p role="alert" className="assessment-note text-red-700">{error}</p>}
-    {clips.map((clip, index) => <div key={index} className={`speaking-replay-turn ${playing === index ? 'is-playing' : ''}`}><small>{clip.role === 'examiner' ? t('Examiner', 'Examiner', 'Экзаменатор') : t('You', 'Siz', 'Вы')} · {clip.url ? t('Original recording', 'Asl audioyozuv', 'Оригинальная запись') : clip.role === 'examiner' ? t('Device voice reconstruction', 'Qurilma ovozi bilan qayta o‘qish', 'Озвучивание устройством') : t('Recording unavailable here', 'Bu yerda audio mavjud emas', 'Запись недоступна')}</small><p>{clip.text}</p>{clip.url && <audio controls preload="none" src={clip.url} onPlay={stop} aria-label={`${clip.role} ${index + 1}`} />}</div>)}
+    {clips.map((clip, index) => <div key={index} className={`speaking-replay-turn ${playing === index ? 'is-playing' : ''}`}><small>{clip.role === 'examiner' ? t('Examiner', 'Examiner', 'Экзаменатор') : t('You', 'Siz', 'Вы')} · {clip.url ? t('Original recording', 'Asl audioyozuv', 'Оригинальная запись') : clip.role === 'examiner' ? t('Device voice reconstruction', 'Qurilma ovozi bilan qayta o‘qish', 'Озвучивание устройством') : t('Recording unavailable here', 'Bu yerda audio mavjud emas', 'Запись недоступна')}</small><p>{clip.text}</p>{clip.url && <audio controls preload="none" src={clip.url} onPlay={event => { stop(); ownNovaMedia(event.currentTarget, 'replay') }} aria-label={`${clip.role} ${index + 1}`} />}</div>)}
   </div>
 }

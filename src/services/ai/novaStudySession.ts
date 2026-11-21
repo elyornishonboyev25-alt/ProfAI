@@ -9,15 +9,19 @@ import { getReadingAnalysisHistory } from '@/utils/readingAnalysisStorage'
 import { loadSATAttemptHistory } from '@/features/sat/attemptStorage'
 
 const KEY = 'nova:study-session:v1'
-type State = { owner: string; open: boolean; progress: TutorProgress | null; annotations: { text: string; anchors: WritingAnchor[] } | null; pending: Array<{ id: string; effect: NovaEffect }>; notice: string; draft: string; autoWords: boolean }
-export const useNovaStudySession = create<State>(() => ({ owner: '', open: false, progress: null, annotations: null, pending: [], notice: '', draft: '', autoWords: false }))
+type Receipt = { id: string; status: 'applied' | 'failed' | 'awaiting_consent'; message: string }
+type State = { owner: string; open: boolean; progress: TutorProgress | null; annotations: { text: string; anchors: WritingAnchor[] } | null; pending: Array<{ id: string; effect: NovaEffect }>; action: { id: string; effect: Extract<NovaEffect, { type: 'study_control' | 'play_segment' }> } | null; receipts: Receipt[]; notice: string; draft: string; autoWords: boolean }
+export const useNovaStudySession = create<State>(() => ({ owner: '', open: false, progress: null, annotations: null, pending: [], action: null, receipts: [], notice: '', draft: '', autoWords: false }))
+export function reportNovaAction(id: string, status: Receipt['status'], message: string) {
+  useNovaStudySession.setState(s => ({ receipts: [...s.receipts.filter(r => r.id !== id), { id, status, message }].slice(-20), notice: message, ...(s.action?.id === id ? { action: null } : {}) }))
+}
 const owner = () => useAuthStore.getState().user?.id ?? 'guest'
 export function restoreNovaStudy() {
   const id = owner()
   if (useNovaStudySession.getState().owner === id) return
   let progress: TutorProgress | null = null
   try { const parsed = tutorProgressSchema.safeParse(JSON.parse(accountStorageFor(id).getItem(KEY) ?? 'null')); if (parsed.success) progress = parsed.data } catch { /* Optional persisted lesson. */ }
-  useNovaStudySession.setState({ owner: id, progress, open: false, annotations: null, pending: [], draft: '', notice: '', autoWords: false })
+  useNovaStudySession.setState({ owner: id, progress, open: false, annotations: null, pending: [], action: null, receipts: [], draft: '', notice: '', autoWords: false })
 }
 export function setStudyProgress(progress: TutorProgress) {
   restoreNovaStudy()
@@ -33,14 +37,15 @@ export function openNovaStudy(reference?: StudyReference) {
     const previous = useNovaStudySession.getState().progress
     const sameLesson = previous?.reference.skill === reference.skill && previous.reference.testId === reference.testId && previous.reference.attemptId === reference.attemptId && previous.reference.mode === reference.mode
     if (!sameLesson) useNovaStudySession.setState({ autoWords: false })
-    setStudyProgress(tutorProgressSchema.parse({ reference, ...(sameLesson ? { words: previous.words, answers: previous.answers } : {}) }))
+    const sameQuestion = sameLesson && previous.reference.questionId === reference.questionId
+    setStudyProgress(tutorProgressSchema.parse({ ...(sameQuestion ? previous : sameLesson ? { words: previous.words, answers: previous.answers } : {}), reference }))
   }
   useNovaStudySession.setState({ open: true })
 }
 export function currentNovaStudy() {
   restoreNovaStudy()
   const state = useNovaStudySession.getState()
-  return { studyReference: state.progress?.reference, writingDraft: state.draft || undefined, vocabularyAutoSave: state.autoWords }
+  return { studyReference: state.progress?.reference, studyProgress: state.progress ?? undefined, actionReceipts: state.receipts, writingDraft: state.draft || undefined, vocabularyAutoSave: state.autoWords }
 }
 export function observeNovaStudyPermission(text: string) {
   restoreNovaStudy()
@@ -81,14 +86,22 @@ export function receiveNovaToolResults(results: NovaToolResult[] | undefined, na
     if (effect.type === 'vocabulary' && effect.confirmation || effect.type === 'navigate' && effect.confirmation) {
       useNovaStudySession.setState(state => ({ open: true, pending: [...state.pending, { id: result.id, effect }] })); continue
     }
-    applyNovaEffect(effect, navigate)
+    try { applyNovaEffect(effect, navigate, false, result.id) }
+    catch { applied.delete(key); reportNovaAction(result.id, 'failed', 'Amal bajarilmadi. Qayta urinib ko‘ring.') }
+    if (applied.size > 1000) applied.delete(applied.values().next().value!)
   }
 }
-export function applyNovaEffect(effect: NovaEffect, navigate: (path: string, options?: { state?: unknown }) => void, confirmed = false) {
+export function applyNovaEffect(effect: NovaEffect, navigate: (path: string, options?: { state?: unknown }) => void, confirmed = false, actionId: string = crypto.randomUUID()) {
+  if (effect.type === 'study_control' || effect.type === 'play_segment') {
+    const ref = effect.reference
+    const current = useNovaStudySession.getState().progress?.reference
+    if (ref && (ref.skill !== current?.skill || ref.testId !== current?.testId || ref.attemptId !== current?.attemptId || ref.questionId !== current?.questionId || ref.mode !== current?.mode)) openNovaStudy(ref)
+    useNovaStudySession.setState({ open: true, action: { id: actionId, effect } }); return
+  }
   const leavesPage = effect.type === 'navigate' || effect.type === 'study' && effect.reference.mode === 'analyze' && ['reading', 'listening', 'sat-math', 'sat-rw'].includes(effect.reference.skill)
   const draft = leavesPage ? currentWritingDraft() : ''
   if (draft.trim()) {
-    if (!confirmed) { useNovaStudySession.setState(state => ({ open: true, pending: [...state.pending, { id: crypto.randomUUID(), effect }] })); return }
+    if (!confirmed) { useNovaStudySession.setState(state => ({ open: true, pending: [...state.pending, { id: actionId, effect }] })); reportNovaAction(actionId, 'awaiting_consent', 'Draftni saqlab sahifani ochish uchun tasdiq kutilmoqda.'); return }
     accountStorageFor(owner()).setItem('nova:writing-navigation-backup:v1', JSON.stringify({ path: window.location.pathname, text: draft, savedAt: new Date().toISOString() }))
   }
   if (effect.type === 'vocabulary') {
@@ -109,9 +122,8 @@ export function applyNovaEffect(effect: NovaEffect, navigate: (path: string, opt
   } else if (effect.type === 'annotations') {
     useNovaStudySession.setState({ annotations: { text: effect.text, anchors: effect.anchors }, open: true })
     window.dispatchEvent(new CustomEvent('nova:writing-annotations', { detail: effect }))
-  } else if (effect.type === 'play_segment') {
-    window.dispatchEvent(new CustomEvent('nova:source-play', { detail: effect }))
   }
+  reportNovaAction(actionId, 'applied', effect.type === 'vocabulary' ? 'My Vocab’ga saqlandi.' : 'Amal bajarildi.')
 }
 export function acceptNovaPending(id: string, navigate: (path: string, options?: { state?: unknown }) => void) {
   restoreNovaStudy()
@@ -122,7 +134,8 @@ export function acceptNovaPending(id: string, navigate: (path: string, options?:
     addSavedWord({ ...word, preserveSense: true, source: 'ai', origins: [{ label: word.origin, path: window.location.pathname, questionId: word.sourceQuestionId }] })
     rememberWord(word.term)
     useNovaStudySession.setState({ notice: 'My Vocab’ga saqlandi.' })
-  } else { document.activeElement instanceof HTMLElement && document.activeElement.blur(); applyNovaEffect(pending.effect, navigate, true) }
+    reportNovaAction(id, 'applied', 'My Vocab’ga saqlandi.')
+  } else { document.activeElement instanceof HTMLElement && document.activeElement.blur(); applyNovaEffect(pending.effect, navigate, true, id) }
   useNovaStudySession.setState(state => ({ pending: state.pending.filter(item => item.id !== id) }))
 }
 export function novaStudyBlocked() { return useAiAssistantStore.getState().isExamModeActive }

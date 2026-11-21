@@ -1,3 +1,5 @@
+import { NovaPlayback } from './novaPlayback'
+import type { NovaPerformance } from './novaPersona'
 import { apiClient, publicApiUrl } from '@/lib/apiClient'
 import type { VoiceContext, VoiceOptions } from './realtimeCoach'
 import { openVoiceSession, releaseVoiceSession, maintainVoiceLease } from './voiceSessionLifecycle'
@@ -17,7 +19,12 @@ export class GeminiRealtimeCoach {
   private outputMeter: AnalyserNode | null = null
   private socket: WebSocket | null = null
   private controller = new AbortController()
-  private sources = new Set<AudioBufferSourceNode>()
+  private sources = new Map<AudioBufferSourceNode, string>()
+  private expressions = new NovaPlayback((value, id) => this.options.expression?.(value, id))
+  private playbackTimers = new Set<number>()
+  private outputs = new Map<string, { text: string; parts: Array<{ text: string; at: number }>; done: boolean; started: boolean }>()
+  private cancelledOutputs = new Set<string>()
+  private responseId = ''
   private session: Session | null = null
   private releaseLease: (() => void) | null = null
   private closed = false
@@ -28,14 +35,13 @@ export class GeminiRealtimeCoach {
   private readyTimer = 0
   private nextPlayback = 0
   private turn = 0
-  private outputText = ''
   private inputText = ''
   private inputId = 0
-  private generationDone = false
   private interrupted = false
-  private outputParts: Array<{ text: string; at: number }> = []
   private speed: number
   private outputStarted = 0
+  private firstAudioReported = false
+  private replyStarted: number | null = null
   private started = 0
   private lastContext = ''
   private contextSync = Promise.resolve()
@@ -148,7 +154,13 @@ export class GeminiRealtimeCoach {
     tick()
   }
 
-  private play(data: string, mimeType: string) {
+  private output(id: string) {
+    let output = this.outputs.get(id)
+    if (!output) { output = { text: '', parts: [], done: false, started: false }; this.outputs.set(id, output) }
+    return output
+  }
+
+  private play(data: string, mimeType: string, responseId: string) {
     const audio = this.audio
     if (!audio || this.interrupted) return
     const rate = Number(/rate=(\d+)/.exec(mimeType)?.[1] ?? 24000)
@@ -166,41 +178,84 @@ export class GeminiRealtimeCoach {
     source.connect(this.outputMeter!)
     const start = Math.max(audio.currentTime + .02, this.nextPlayback)
     this.nextPlayback = start + buffer.duration / this.speed
-    this.sources.add(source)
+    this.sources.set(source, responseId)
     source.onended = () => {
       this.sources.delete(source); source.disconnect()
-      if (!this.closed && !this.sources.size && this.generationDone) this.finishOutput(false)
+      if (!this.closed && ![...this.sources.values()].includes(responseId) && this.outputs.get(responseId)?.done) this.finishOutput(false, responseId)
     }
     if (!this.outputStarted) {
       this.outputStarted = performance.now()
-      this.options.performance?.({ stage: this.turn === 0 ? 'first_audio' : 'reply', durationMs: Math.round(this.outputStarted - this.started) })
+      if (!this.firstAudioReported) {
+        this.options.performance?.({ stage: 'first_audio', durationMs: Math.round(this.outputStarted - this.started) })
+        this.firstAudioReported = true
+      } else if (this.replyStarted !== null) {
+        this.options.performance?.({ stage: 'reply', durationMs: Math.round(this.outputStarted - this.replyStarted) })
+      }
+      this.replyStarted = null
     }
     window.clearTimeout(this.replyTimer)
-    this.options.state('speaking'); source.start(start)
+    const output = this.output(responseId)
+    if (!output.started) {
+      output.started = true
+      const timer = window.setTimeout(() => {
+        this.playbackTimers.delete(timer)
+        if (!this.closed && !this.cancelledOutputs.has(responseId)) { this.expressions.start(responseId); this.options.state('speaking') }
+      }, Math.max(0, (start - audio.currentTime) * 1000))
+      this.playbackTimers.add(timer)
+    }
+    source.start(start)
   }
 
   private commitInput() {
-    if (this.inputText.trim()) this.options.message('user', this.inputText.trim(), `gemini-input-${this.session?.id}-${this.inputId++}`)
+    if (this.inputText.trim()) {
+      this.options.message('user', this.inputText.trim(), `gemini-input-${this.session?.id}-${this.inputId++}`)
+      this.replyStarted ??= performance.now()
+    }
     this.inputText = ''
   }
-  private finishOutput(interrupted: boolean) {
+  private finishOutput(interrupted: boolean, responseId = this.responseId) {
+    const output = this.outputs.get(responseId)
+    if (!output) return
     const text = interrupted && this.audio
-      ? this.outputParts.filter(part => part.at <= this.audio!.currentTime + .08).map(part => part.text).join('')
-      : this.outputText
-    if (text.trim()) this.options.message('assistant', text.trim(), `gemini-output-${this.session?.id}-${this.turn}`, interrupted)
-    else if (interrupted && this.outputText) this.options.message('assistant', '', `gemini-output-${this.session?.id}-${this.turn}`, true)
-    this.turn++; this.outputText = ''; this.outputParts = []; this.generationDone = false; this.outputStarted = 0
-    this.options.caption(''); if (!this.closed) this.options.state('listening')
+      ? output.parts.filter(part => part.at <= this.audio!.currentTime + .08).map(part => part.text).join('')
+      : output.text
+    const performance = this.expressions.get(responseId)
+    if (text.trim()) this.options.message('assistant', text.trim(), responseId, interrupted, performance)
+    else if (interrupted && output.text) this.options.message('assistant', '', responseId, true)
+    this.outputs.delete(responseId); this.cancelledOutputs.add(responseId)
+    if (this.cancelledOutputs.size > 256) this.cancelledOutputs.delete(this.cancelledOutputs.values().next().value!)
+    this.expressions.finish(responseId)
+    this.turn++; this.outputStarted = 0
+    if (!this.sources.size) { this.options.caption(''); if (!this.closed) this.options.state('listening') }
   }
 
   private handle(message: any) {
     if (this.closed) return
     if (message.type === 'error') { this.fail(new VoiceStreamError(typeof message.message === 'string' ? message.message : 'Gemini Live could not connect.', typeof message.code === 'string' ? message.code : 'VOICE_PROVIDER_ERROR', message.retryable === true)); return }
     if (message.type === 'coach' && message.result?.reply) { this.options.coachResult(message.result, message.id); return }
+    if (message.type === 'expression' && typeof message.responseId === 'string') {
+      if (!this.interrupted && !this.cancelledOutputs.has(message.responseId)) {
+        const output = this.output(message.responseId)
+        if (output.started && this.expressions.get(message.responseId) && this.audio && this.nextPlayback > this.audio.currentTime) {
+          const timer = window.setTimeout(() => {
+            this.playbackTimers.delete(timer)
+            if (!this.closed && !this.cancelledOutputs.has(message.responseId)) this.expressions.cue(message.responseId, message.performance)
+          }, (this.nextPlayback - this.audio.currentTime) * 1000)
+          this.playbackTimers.add(timer)
+        } else this.expressions.cue(message.responseId, message.performance)
+      }
+      return
+    }
     const content = message.content
     if (message.type !== 'content' || !content) return
+    const responseId = typeof message.responseId === 'string' ? message.responseId : `gemini-output-${this.session?.id}-${this.turn}`
+    if (responseId !== this.responseId && !this.cancelledOutputs.has(responseId)) this.interrupted = false
+    this.responseId = responseId
     if (content.interrupted) {
-      this.clearPlayback(); this.finishOutput(true); this.interrupted = false
+      this.clearPlayback(); for (const id of this.outputs.keys()) this.finishOutput(true, id)
+      this.expressions.finish(responseId); this.cancelledOutputs.add(responseId); this.interrupted = false
+      if (!message.responseId) this.turn++ // Older gateways do not supply response IDs.
+      return
     }
     if (content.inputTranscription?.text) {
       this.inputText += content.inputTranscription.text
@@ -215,26 +270,30 @@ export class GeminiRealtimeCoach {
     if (content.modelTurn?.parts?.length || content.outputTranscription?.text) {
       this.commitInput()
     }
-    for (const part of content.modelTurn?.parts ?? []) if (part.inlineData?.data && /^audio\/pcm/.test(part.inlineData.mimeType ?? '')) this.play(part.inlineData.data, part.inlineData.mimeType)
+    if (this.cancelledOutputs.has(responseId)) return
+    for (const part of content.modelTurn?.parts ?? []) if (part.inlineData?.data && /^audio\/pcm/.test(part.inlineData.mimeType ?? '')) this.play(part.inlineData.data, part.inlineData.mimeType, responseId)
     if (content.outputTranscription?.text && !this.interrupted) {
       const text = content.outputTranscription.text
-      this.outputText += text
-      this.outputParts.push({ text, at: Math.max(this.audio?.currentTime ?? 0, this.nextPlayback - .2) })
-      this.options.caption(this.outputText)
-      this.options.preview?.('assistant', this.outputText, `gemini-output-${this.session?.id}-${this.turn}`)
+      const output = this.output(responseId)
+      output.text += text
+      output.parts.push({ text, at: Math.max(this.audio?.currentTime ?? 0, this.nextPlayback - .2) })
+      this.options.caption(output.text)
+      this.options.preview?.('assistant', output.text, responseId)
     }
     if (content.turnComplete) {
-      window.clearTimeout(this.replyTimer); this.commitInput(); this.generationDone = true; this.interrupted = false
-      if (!this.sources.size) this.finishOutput(false)
+      window.clearTimeout(this.replyTimer); this.commitInput(); this.output(responseId).done = true; this.interrupted = false
+      if (![...this.sources.values()].includes(responseId)) this.finishOutput(false, responseId)
     }
   }
 
   private clearPlayback() {
-    for (const source of this.sources) { source.onended = null; try { source.stop(); source.disconnect() } catch { /* Already ended. */ } }
+    for (const timer of this.playbackTimers) window.clearTimeout(timer)
+    this.playbackTimers.clear()
+    for (const source of this.sources.keys()) { source.onended = null; try { source.stop(); source.disconnect() } catch { /* Already ended. */ } }
     this.sources.clear(); this.nextPlayback = this.audio?.currentTime ?? 0
   }
   mute(muted: boolean) { this.muted = muted; this.stream?.getAudioTracks().forEach(track => { track.enabled = !muted }); this.send({ type: 'mute', muted }) }
-  interrupt() { this.clearPlayback(); this.finishOutput(true); this.interrupted = true; window.clearTimeout(this.replyTimer); this.send({ type: 'interrupt' }) }
+  interrupt() { this.clearPlayback(); for (const id of this.outputs.keys()) this.finishOutput(true, id); this.expressions.finish(this.responseId); this.interrupted = true; this.replyStarted = null; window.clearTimeout(this.replyTimer); this.send({ type: 'interrupt' }) }
   requestFeedback() { this.interrupt(); this.send({ type: 'feedback' }); this.options.state('thinking'); this.waitForReply() }
   setSpeechSpeed(speed: number) { if (Number.isFinite(speed)) this.speed = Math.max(.75, Math.min(1.35, speed)) }
   async updateContext(context: VoiceContext) {
@@ -256,7 +315,7 @@ export class GeminiRealtimeCoach {
     this.stream?.getTracks().forEach(track => { track.onended = null; safely(() => track.stop()) }); this.stream = null
     this.controller.abort(); window.clearTimeout(this.deadline); window.clearTimeout(this.replyTimer); window.clearTimeout(this.readyTimer); cancelAnimationFrame(this.frame)
     this.releaseLease?.(); this.releaseLease = null
-    this.clearPlayback(); safely(() => this.finishOutput(true)); safely(() => this.commitInput())
+    this.clearPlayback(); for (const id of this.outputs.keys()) safely(() => this.finishOutput(true, id)); this.expressions.reset(); safely(() => this.commitInput())
     if (this.socket) { this.socket.onclose = null; this.socket.onerror = null; this.socket.onmessage = null; safely(() => this.socket?.close()) }
     if (this.capture) { this.capture.port.onmessage = null; safely(() => this.capture?.disconnect()) }
     safely(() => this.input?.disconnect()); safely(() => this.silent?.disconnect()); safely(() => this.inputMeter?.disconnect()); safely(() => this.outputMeter?.disconnect())

@@ -3,9 +3,9 @@ import { waitForSpeakingRateLimit } from './speakingRateLimit'
 
 export type ExaminerVoice = 'marin' | 'cedar'
 
-export async function examinerAudio(text: string, voice: ExaminerVoice = 'marin', signal?: AbortSignal, language: 'en' | 'uz' | 'ru' = 'en', retryTransient = false): Promise<string> {
+export async function examinerAudio(text: string, voice: ExaminerVoice = 'marin', signal?: AbortSignal, language: 'en' | 'uz' | 'ru' = 'en', retryTransient = false, nova?: { performance?: import('./novaPersona').NovaPerformance }): Promise<string> {
   return withTimeout(signal, 45_000, async (bounded) => {
-    const generate = () => apiClient.post<{ audioBase64: string; mimeType?: string }>('/ai/speaking-audio/voice', { text, voice, ...(language !== 'en' ? { language } : {}) }, { signal: bounded })
+    const generate = () => apiClient.post<{ audioBase64: string; mimeType?: string }>('/ai/speaking-audio/voice', { text, voice, ...(language !== 'en' ? { language } : {}), ...(nova ? { purpose: 'nova', performance: nova.performance } : {}) }, { signal: bounded })
     const response = await generate().catch((error: unknown) => {
       // One retry covers a dropped request or transient gateway failure. Both
       // attempts share the deadline and cancellation; never retry auth errors.

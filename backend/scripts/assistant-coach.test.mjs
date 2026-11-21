@@ -137,6 +137,38 @@ test('audio grades use equal weights and reject invented answer evidence', () =>
   assert.throws(() => validateAudioAssessment(JSON.stringify({ ...result, evidence: [{ ...result.evidence[0], quote: 'invented sentence' }] }), history, [0]))
 })
 
+test('history API persists delivery metadata and scopes every read/write to its owner', async t => {
+  const originals = { transaction: prisma.$transaction, owned: prisma.aiConversationThread.findFirst, list: prisma.aiConversationThread.findMany }
+  const rows = []
+  prisma.aiConversationThread.findFirst = async ({ where }) => where.id === 'nova-private' && where.userId === 'nova-owner' ? { id: where.id } : null
+  prisma.aiConversationThread.findMany = async ({ where }) => where.userId === 'nova-owner' ? [{ id: 'nova-private', messages: rows }] : []
+  prisma.$transaction = async work => originals.transaction(tx => work({ ...tx,
+    aiConversationMessage: { create: async ({ data }) => { rows.push(data); return data } },
+    aiConversationThread: { update: async () => ({}) },
+  }))
+  const server = app.listen(0)
+  t.after(() => {
+    prisma.$transaction = originals.transaction; prisma.aiConversationThread.findFirst = originals.owned; prisma.aiConversationThread.findMany = originals.list
+    server.closeAllConnections(); server.close()
+  })
+  const base = `http://127.0.0.1:${server.address().port}/api/v1/ai-workspace`
+  const headers = owner => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${signAccessToken({ sub: owner, role: 'USER' })}` })
+  const metadata = { expression: 'supportive', delivery: 'voice', status: 'interrupted', performance: {
+    tone: 'supportive', expression: 'supportive', intensity: .3, gesture: 'none', delivery: { pace: 'slow', warmth: 'high', emphasis: 'light' },
+  } }
+  const body = JSON.stringify({ id: 'nova-message', role: 'assistant', content: 'One step at a time.', locale: 'en', metadata })
+  assert.equal((await fetch(`${base}/threads/nova-private/messages`, { method: 'POST', headers: headers('other-owner'), body })).status, 404)
+  assert.equal(rows.length, 0)
+  assert.equal((await fetch(`${base}/threads/nova-private/messages`, { method: 'POST', headers: headers('nova-owner'), body })).status, 201)
+  assert.deepEqual(rows[0].metadata, metadata)
+  const loaded = await (await fetch(`${base}/threads`, { headers: headers('nova-owner') })).json()
+  assert.deepEqual(loaded.items[0].messages[0].metadata, metadata)
+  assert.deepEqual((await (await fetch(`${base}/threads`, { headers: headers('other-owner') })).json()).items, [])
+  const invalid = JSON.stringify({ role: 'assistant', content: 'Invalid.', metadata: { ...metadata, performance: { ...metadata.performance, intensity: 4 } } })
+  assert.equal((await fetch(`${base}/threads/nova-private/messages`, { method: 'POST', headers: headers('nova-owner'), body: invalid })).status, 400)
+  assert.equal(rows.length, 1)
+})
+
 test('authenticated chat streams, keeps memory private and refuses foreign threads', async (t) => {
   const nativeFetch = globalThis.fetch
   const originals = { user: prisma.user.findUnique, memory: prisma.aiMemory.findMany, thread: prisma.aiConversationThread.findFirst, usage: prisma.aiUsageEvent.create }
@@ -270,7 +302,8 @@ test('voice uses protected SDP negotiation, executes shared coaching and hangs u
   assert.equal(sessionConfig.audio.output.speed, 1.1)
   assert.match(sessionConfig.instructions, /brisk, natural conversational pace/)
   assert.equal(sessionConfig.audio.input.turn_detection.interrupt_response, true)
-  assert.equal(sessionConfig.tools[0].name, 'ask_coach')
+  assert.ok(sessionConfig.tools.some(tool => tool.name === 'ask_coach'))
+  assert.ok(sessionConfig.tools.some(tool => tool.name === 'set_expression'))
   assert.equal((await post('/context', { id: call.id, context: { pathname: '/vocabulary', language: 'uz' } }, 'other-user')).status, 404)
   assert.equal((await post('/context', { id: call.id, context: { pathname: '/vocabulary', language: 'uz' } })).status, 204)
   const afterChange = memoryReads
@@ -300,6 +333,19 @@ test('voice uses protected SDP negotiation, executes shared coaching and hangs u
   socket.send(JSON.stringify({ type: 'response.done', response: { id: 'tool_response', status: 'completed' } }))
   for (let i = 0; i < 50 && !received.some((event) => event.type === 'response.create'); i++) await new Promise((resolve) => setTimeout(resolve, 10))
   assert.equal(received.filter((event) => event.type === 'response.create').length, 1, 'Fast tool output must resume speaking after response.done')
+  pauseMemory = new Promise(resolve => { releaseMemory = resolve })
+  const readsBeforeInterruptedTool = memoryReads
+  socket.send(JSON.stringify({ type: 'response.created', response: { id: 'cancelled_tool_response' } }))
+  socket.send(JSON.stringify({ type: 'response.function_call_arguments.done', response_id: 'cancelled_tool_response', name: 'ask_coach', call_id: 'cancelled_tool', arguments: JSON.stringify({ request: 'Explain this grammar again.' }) }))
+  for (let i = 0; i < 50 && memoryReads === readsBeforeInterruptedTool; i++) await new Promise(resolve => setTimeout(resolve, 5))
+  assert.ok(memoryReads > readsBeforeInterruptedTool)
+  socket.send(JSON.stringify({ type: 'conversation.item.created', item: { role: 'user', content: [{ type: 'input_text', text: '[Nova control] Stop this reply and wait for my next question.' }] } }))
+  socket.send(JSON.stringify({ type: 'response.done', response: { id: 'cancelled_tool_response', status: 'cancelled' } }))
+  await new Promise(resolve => setTimeout(resolve, 20))
+  pauseMemory = null; releaseMemory()
+  await new Promise(resolve => setTimeout(resolve, 70))
+  assert.equal(received.some(event => event.item?.call_id === 'cancelled_tool'), false, 'A late coaching result cannot escape after manual stop')
+  assert.equal(received.filter(event => event.type === 'response.create').length, 1, 'Cancelled tool work cannot restart the model')
   await post('/end', { id: call.id }, 'other-user'); assert.equal(ended, 0)
   await post('/end', { id: call.id }); assert.equal(ended, 1)
   const exam = await post('/connect', { sdp: 'v=0\r\ns=local-offer\r\n', context: { language: 'en', mode: 'examiner' } })

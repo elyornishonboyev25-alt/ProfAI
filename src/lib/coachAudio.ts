@@ -7,6 +7,7 @@ type VoiceCallbacks = {
   started: () => void
   ended: () => void
   failed: () => void
+  level?: (level: number) => void
 }
 
 let playback: ExaminerPlayback | null = null
@@ -17,6 +18,7 @@ let releasePreparedAudio: (() => void) | null = null
 export function unlockCoachAudio() {
   if (typeof Audio === 'undefined') return
   playback ??= new ExaminerPlayback()
+  playback.enableMeter()
   playback.unlock()
 }
 
@@ -38,11 +40,18 @@ export function retryCoachAudio() {
 
 /** Nova shares the Speaking mock's audio service, voice and mobile player.
  * Keep all text, but split long replies to fit the existing audio endpoint. */
-export function speakCoachAudio(text: string, language: SpeechLang, callbacks: VoiceCallbacks) {
+export function speakCoachAudio(text: string, language: SpeechLang, callbacks: VoiceCallbacks, performance?: import('./novaPersona').NovaPerformance) {
   cancelCoachAudio()
   if (typeof Audio === 'undefined') { callbacks.failed(); return }
   playback ??= new ExaminerPlayback()
   const current = sequence
+  let meterFrame = 0
+  const stopMeter = () => { cancelAnimationFrame(meterFrame); callbacks.level?.(0) }
+  const meter = () => {
+    if (current !== sequence) return
+    callbacks.level?.(playback?.sampleLevel() ?? 0)
+    meterFrame = requestAnimationFrame(meter)
+  }
   const parts: string[] = []
   let remaining = text.trim()
   // Prepare a shorter opening, then synthesize the next part while it plays.
@@ -61,6 +70,7 @@ export function speakCoachAudio(text: string, language: SpeechLang, callbacks: V
   const prepared = new Map<number, { promise: Promise<string>; url?: string; claimed: boolean }>()
   releasePreparedAudio = () => {
     controller.abort()
+    stopMeter()
     for (const part of prepared.values()) if (part.url && !part.claimed) URL.revokeObjectURL(part.url)
     prepared.clear()
   }
@@ -68,7 +78,7 @@ export function speakCoachAudio(text: string, language: SpeechLang, callbacks: V
     let entry = prepared.get(partIndex)
     if (!entry) {
       const part = { claimed: false } as { promise: Promise<string>; url?: string; claimed: boolean }
-      part.promise = examinerAudio(parts[partIndex], 'marin', controller.signal, language, true).then((url) => {
+      part.promise = examinerAudio(parts[partIndex], 'marin', controller.signal, language, true, { performance }).then((url) => {
         if (current !== sequence || controller.signal.aborted) { URL.revokeObjectURL(url); throw new DOMException('Cancelled', 'AbortError') }
         part.url = url
         return url
@@ -90,19 +100,21 @@ export function speakCoachAudio(text: string, language: SpeechLang, callbacks: V
     const part = prepare(index)
     part.claimed = true
     playback!.ask(parts[index], 'marin', 'female', {
-      loading: callbacks.loading,
+      loading: (value) => { if (current === sequence) callbacks.loading(value) },
       started: () => {
         if (current !== sequence) return
+        cancelAnimationFrame(meterFrame); meter()
         callbacks.started()
         if (index + 1 < parts.length) prepare(index + 1)
       },
       ended: () => {
         if (current !== sequence) return
+        stopMeter()
         index++
         if (index < parts.length) play()
         else { replay = null; callbacks.ended() }
       },
-      failed: () => { if (current === sequence) callbacks.failed() },
+      failed: () => { if (current === sequence) { stopMeter(); callbacks.failed() } },
     }, false, { language, deviceFallback: false, audio: part.promise })
   }
   if (parts.length) play()

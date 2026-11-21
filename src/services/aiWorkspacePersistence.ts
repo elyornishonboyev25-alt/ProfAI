@@ -1,3 +1,4 @@
+import { novaExpressionSchema, readNovaPerformance } from '@/lib/novaPersona'
 import { apiClient } from '@/lib/apiClient'
 import type { AiAssistantMessage, AiAssistantThread, AiMemoryItem } from '@/store/aiAssistantStore'
 import type { SpeechLang } from '@/lib/speech'
@@ -7,6 +8,7 @@ type ServerMessage = {
   role: 'user' | 'assistant'
   content: string
   locale: string
+  metadata?: { expression?: unknown; performance?: unknown; delivery?: unknown; status?: unknown } | null
   createdAt: string
 }
 
@@ -23,8 +25,12 @@ type ServerThread = {
 const toMessage = (message: ServerMessage): AiAssistantMessage => ({
   id: message.id,
   role: message.role,
-  content: message.content,
+  content: message.content.replace(/\s*\[Interrupted voice response\]$/, ''),
   createdAt: message.createdAt,
+  ...(novaExpressionSchema.safeParse(message.metadata?.expression).success ? { expression: novaExpressionSchema.parse(message.metadata?.expression) } : {}),
+  ...(readNovaPerformance(message.metadata?.performance) ? { performance: readNovaPerformance(message.metadata?.performance) } : {}),
+  ...(message.metadata?.delivery === 'voice' || message.metadata?.delivery === 'text' ? { delivery: message.metadata.delivery } : {}),
+  ...(message.metadata?.status === 'interrupted' ? { status: 'interrupted' as const } : {}),
   ...(message.content.endsWith('[Interrupted voice response]') ? { status: 'interrupted' as const, delivery: 'voice' as const } : {}),
 })
 
@@ -61,8 +67,9 @@ export const persistAiMessage = (threadId: string, message: AiAssistantMessage, 
   apiClient.post(`/ai-workspace/threads/${encodeURIComponent(threadId)}/messages`, {
     id: message.id,
     role: message.role,
-    content: message.content,
+    content: message.content.replace(/\s*\[Interrupted voice response\]$/, ''),
     locale: language,
+    metadata: { expression: message.expression, performance: message.performance, delivery: message.delivery, ...(message.status === 'interrupted' ? { status: 'interrupted' } : {}) },
   })
 
 export async function fetchAiMemories(): Promise<AiMemoryItem[]> {

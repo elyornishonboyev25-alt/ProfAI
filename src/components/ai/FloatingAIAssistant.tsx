@@ -1,4 +1,3 @@
-import UiText from '@/components/common/UiText'
 import { Suspense, useCallback, useEffect, useMemo } from 'react'
 import { useLocation } from 'react-router-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
@@ -119,7 +118,7 @@ export function FloatingAIAssistant() {
           }
           open()
         }}
-        aria-label={isOpen ? 'Close AI tutor' : 'Open Ivygoo tutor'}
+        aria-label={isOpen ? 'Close AI tutor' : 'Open Nova tutor'}
         whileHover={reduceMotion ? undefined : { y: -2, scale: 1.035 }}
         whileTap={{ scale: 0.96 }}
         transition={{ type: 'spring', stiffness: 330, damping: 22 }}
@@ -134,7 +133,7 @@ export function FloatingAIAssistant() {
             aria-hidden="true"
             className="pointer-events-none absolute bottom-full right-0 z-20 mb-2 whitespace-nowrap rounded-lg border border-slate-200/80 bg-slate-950/95 px-2.5 py-1.5 text-[11px] font-semibold tracking-wide text-white opacity-0 shadow-lg transition-all duration-150 group-hover:-translate-y-0.5 group-hover:opacity-100 group-focus-visible:-translate-y-0.5 group-focus-visible:opacity-100 dark:border-white/10"
           >
-            <UiText text={"Ivygoo tutor"} />
+            Nova
           </span>
         ) : null}
         {!isOpen ? (

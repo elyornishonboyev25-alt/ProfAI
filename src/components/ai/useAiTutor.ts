@@ -263,17 +263,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
     }
   }, [hasPremium, user])
 
-  // Smooth pseudo-amplitude that makes the orb pulse while listening/speaking.
-  const startLevelPulse = useCallback(() => {
-    if (levelTimerRef.current) return
-    let current = 0
-    levelTimerRef.current = window.setInterval(() => {
-      const target = 0.25 + Math.random() * 0.7
-      current += (target - current) * 0.4
-      setVoiceLevel(current)
-    }, 90)
-  }, [setVoiceLevel])
-
+  // Playback amplitude comes from the actual audio analyser.
   const stopLevelPulse = useCallback(() => {
     if (levelTimerRef.current) {
       window.clearInterval(levelTimerRef.current)
@@ -451,10 +441,10 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
           },
         })
         if (controller.signal.aborted || useAuthStore.getState().user?.id !== user?.id) return
-        updateStoredMessage(ownerKey, threadId, assistantMessage.id, { content: response.reply, expression: response.expression, status: undefined })
+        updateStoredMessage(ownerKey, threadId, assistantMessage.id, { content: response.reply, expression: response.expression, performance: response.performance, status: undefined })
         if (!threadId.startsWith('local-')) {
           // Preserve message order without holding up audio or the next turn.
-          void userPersistPromise.then(() => persistAiMessage(threadId, { ...assistantMessage, content: response.reply, status: undefined }, response.replyLanguage ?? voiceLang)).catch(() => null)
+          void userPersistPromise.then(() => persistAiMessage(threadId, { ...assistantMessage, content: response.reply, expression: response.expression, performance: response.performance, status: undefined }, response.replyLanguage ?? voiceLang)).catch(() => null)
         }
 
         if (firstTurn && response.title) void renameChat(threadId, response.title)
@@ -481,8 +471,13 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
         if (options.speak && replyVersion === coachAudioVersion() && ttsSupported && response.reply.trim()) {
           speakCoachAudio(cleanForSpeech(response.reply), response.replyLanguage ?? voiceLang, {
             loading: (loading) => { if (loading) { voiceOutputVersionRef.current = coachAudioVersion(); stopLevelPulse(); setVoiceState('thinking') } },
-            started: () => { setVoiceError(null); setVoiceState('speaking'); startLevelPulse() },
+            level: setVoiceLevel,
+            started: () => {
+              setVoiceError(null); setVoiceState('speaking')
+              if (response.performance) useAiAssistantStore.getState().setVoicePresentation({ owner: ownerKey, threadId, responseId: assistantMessage.id, performance: response.performance })
+            },
             ended: () => {
+              useAiAssistantStore.getState().setVoicePresentation(null)
               voiceOutputVersionRef.current = null
               stopLevelPulse()
               setVoiceState('idle')
@@ -492,7 +487,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
               setVoiceState('idle')
               setVoiceError(localized(uiLocale, 'Nova’s natural voice could not play. Retry audio to continue.', 'Не удалось воспроизвести естественный голос Новы. Повторите аудио, чтобы продолжить.', 'Novaning tabiiy ovozini eshittirib bo‘lmadi. Davom etish uchun audioni qayta yoqing.'))
             },
-          })
+          }, response.performance)
         } else if (!options.speak || replyVersion === coachAudioVersion()) {
           setVoiceState('idle')
         }
@@ -530,7 +525,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
       activeThreadId, createNewChat, draft, images, isSending, memories, messages, ownerKey, preferredName,
       location.pathname, user?.id,
       ttsSupported, setDraft, setError, setSending, setVoiceState, pushMessage, dispatchAction,
-      renameChat, startLevelPulse, stopLevelPulse, upsertStoredMemories, voiceLang, workspace, uiLocale, activeWorkspace, updateStoredMessage, removeStoredMessage, addThread,
+      renameChat, stopLevelPulse, upsertStoredMemories, voiceLang, workspace, uiLocale, activeWorkspace, updateStoredMessage, removeStoredMessage, addThread,
     ],
   )
 
@@ -541,6 +536,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
     recognition.abort()
     cancelSpeech()
     cancelCoachAudio()
+    useAiAssistantStore.getState().setVoicePresentation(null)
     stopLevelPulse()
     setVoiceState('idle')
     setVoiceError(null)
@@ -641,6 +637,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
   const stopSpeaking = useCallback(() => {
     cancelSpeech()
     cancelCoachAudio()
+    useAiAssistantStore.getState().setVoicePresentation(null)
     stopLevelPulse()
     setVoiceState('idle')
   }, [setVoiceState, stopLevelPulse])
@@ -652,6 +649,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
     stoppingVoiceRef.current = true
     cancelSpeech()
     cancelCoachAudio()
+    useAiAssistantStore.getState().setVoicePresentation(null)
     stopListeningMeter()
     stopLevelPulse()
     recognition.abort()

@@ -299,3 +299,15 @@
 .coach-voice-stage button:focus-visible{outline:2px solid #ae1536;outline-offset:4px}
 @media(min-width:900px) and (min-height:730px){.coach-voice-stage .coach-mascot{width:200px!important;height:200px!important}}
 @media(prefers-reduced-motion:reduce){.coach-mascot *{animation:none!important;transition:none!important}}
+
+/* Nova's response-scoped delivery; head/eyes/mouth remain vector geometry. */
+.coach-mascot--playful_angry .nova-brow { stroke:#ff8b9d; }
+.coach-mascot--supportive .nova-head>ellipse { opacity:.65; }
+.coach-mascot--happy .nova-smile { stroke-width:3.5px; }
+.coach-mascot--surprised .nova-brow { stroke:#ffc3d0; }
+.coach-mascot[data-gesture=nod] .nova-head { animation:nova-response-nod .65s ease-out 1; }
+@keyframes nova-response-nod { 0%,100% { translate:0 0; } 45% { translate:0 3px; } }
+@media(prefers-reduced-motion:reduce) {
+  .coach-mascot,.coach-mascot * { animation:none!important; transition:none!important; }
+  .coach-mascot .nova-head,.coach-mascot .nova-eyes { transform:none!important; }
+}

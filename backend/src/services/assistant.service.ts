@@ -1,3 +1,4 @@
+import { examPerformance } from './novaPersona.js'
 import { prisma } from '../lib/prisma.js'
 import { AiGenerationError, generateAiText } from './aiProvider.service.js'
 import { boundedHistory, buildCoachPrompt, parseAssistantReply, partialAssistantReply, type AssistantContext, type AssistantRequest } from './assistantPolicy.js'
@@ -17,7 +18,7 @@ export async function loadAssistantRecords(userId: string, threadId?: string) {
 }
 
 export function assistantData(context: AssistantContext, records: Awaited<ReturnType<typeof loadAssistantRecords>>) {
-  return { ...records, verifiedRecentResults: records.learner.assessmentResults ?? [], currentPage: context.pathname, workspace: context.workspace, studyProgress: context.studyContext, onScreen: context.screenContext, siteKnowledge: context.siteKnowledge }
+  return { ...records, coachPreferences: context.coachPreferences, verifiedRecentResults: records.learner.assessmentResults ?? [], currentPage: context.pathname, workspace: context.workspace, studyProgress: context.studyContext, onScreen: context.screenContext, siteKnowledge: context.siteKnowledge }
 }
 
 export async function answerAssistant(userId: string, request: AssistantRequest, signal?: AbortSignal, onReply?: (reply: string) => void) {
@@ -31,6 +32,7 @@ export async function answerAssistant(userId: string, request: AssistantRequest,
     onText: onReply ? (raw) => { const reply = partialAssistantReply(raw); if (reply) onReply(reply) } : undefined,
   })
   const answer = parseAssistantReply(generated.text)
+  if (request.mode === 'examiner') { answer.performance = examPerformance(); answer.expression = 'focused' }
   signal?.throwIfAborted()
   const savedMemories = answer.memoryUpdates.length ? await prisma.$transaction(answer.memoryUpdates.map((memory) => prisma.aiMemory.upsert({
     where: { userId_key: { userId, key: memory.key } }, update: { value: memory.value }, create: { userId, ...memory },

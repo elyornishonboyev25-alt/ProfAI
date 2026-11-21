@@ -7,6 +7,8 @@ import { AiGenerationError } from '../services/aiProvider.service.js'
 import { withStudyAccess } from '../services/billing.service.js'
 import { assessPronunciationPractice, pronunciationPracticeSchema } from '../services/pronunciationPractice.service.js'
 
+import { novaPerformanceSchema } from '../services/novaPersona.js'
+
 const router = Router()
 const voiceCache = new Map<string, { audio: VoiceAudio; expires: number }>()
 const voiceInFlight = new Map<string, Promise<VoiceAudio | null>>()
@@ -72,17 +74,19 @@ router.post('/assess', asyncHandler(async (req, res) => {
 }))
 
 router.post('/voice', asyncHandler(async (req, res) => {
-  const { text, voice, language } = z.object({
+  const { text, voice, language, purpose, performance } = z.object({
     text: z.string().trim().min(1).max(1500),
     voice: z.enum(['marin', 'cedar']).default('marin'),
     language: z.enum(['en', 'uz', 'ru']).default('en'),
+    purpose: z.enum(['examiner', 'nova']).default('examiner'),
+    performance: novaPerformanceSchema.optional(),
   }).strict().parse(req.body)
-  const cacheKey = JSON.stringify([req.user!.id, voice, language, text])
+  const cacheKey = JSON.stringify([req.user!.id, voice, language, text, purpose, performance])
   const cached = voiceCache.get(cacheKey)
   if (cached && cached.expires > Date.now()) return res.json(cached.audio)
   let pending = voiceInFlight.get(cacheKey)
   if (!pending) {
-    pending = generateExaminerAudio(text, voice, language).then((audio) => {
+    pending = generateExaminerAudio(text, voice, language, purpose === 'nova' ? { performance } : undefined).then((audio) => {
       if (audio) {
         if (voiceCache.size >= 24) voiceCache.delete(voiceCache.keys().next().value!)
         voiceCache.set(cacheKey, { audio, expires: Date.now() + 10 * 60_000 })

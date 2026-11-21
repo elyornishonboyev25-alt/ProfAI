@@ -10,6 +10,7 @@ import { composeScreenContext } from '@/services/ai/screenCapture'
 import { describeRelevantSiteKnowledge } from '@/services/ai/siteKnowledge'
 import type { AiTutorController } from './useAiTutor'
 import { useCopy } from '@/i18n/interface'
+import { readNovaPerformance, type NovaPerformance } from '@/lib/novaPersona'
 import { VoiceStreamError } from '@/lib/voiceStreamError'
 
 export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mode: 'coach' | 'examiner', provider: 'gemini' | 'openai' = 'openai') {
@@ -66,14 +67,14 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
       if (disposed) return
       let savingThread: Promise<boolean> | null = null
       let savingMessages = Promise.resolve()
-      const record = (role: 'user' | 'assistant', text: string, id: string, interrupted = false) => {
+      const record = (role: 'user' | 'assistant', text: string, id: string, interrupted = false, performance?: NovaPerformance) => {
         if (useAuthStore.getState().user?.id !== userId) return
         if (!text.trim()) {
           previews.delete(`voice-${id}`); drafts.delete(`voice-${id}`)
           useAiAssistantStore.getState().removeMessage(ownerKey, threadId, `voice-${id}`)
           return
         }
-        const message: AiAssistantMessage = { id: `voice-${id}`, role, content: text, createdAt: new Date().toISOString(), delivery: 'voice', ...(interrupted ? { status: 'interrupted' } : {}) }
+        const message: AiAssistantMessage = { id: `voice-${id}`, role, content: text, createdAt: new Date().toISOString(), delivery: 'voice', ...(performance ? { performance, expression: performance.expression } : {}), ...(interrupted ? { status: 'interrupted' } : {}) }
         previews.delete(message.id); drafts.delete(message.id)
         // Replace a live draft in place and explicitly clear its streaming flag.
         writeMessage(threadId, { ...message, status: interrupted ? 'interrupted' : undefined })
@@ -94,7 +95,7 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
         savingMessages = savingMessages.then(async () => {
           if (savingThread && !await savingThread) return
           if (useAuthStore.getState().user?.id !== userId || threadId.startsWith('local-')) return
-          await persistAiMessage(threadId, { ...message, content: interrupted ? `${text}\n\n[Interrupted voice response]` : text }, locale)
+          await persistAiMessage(threadId, message, locale)
         }).catch(() => {})
       }
       const thread = useAiAssistantStore.getState().threadsByOwner[ownerKey]?.find((item) => item.id === threadId)
@@ -109,10 +110,18 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
           siteKnowledge: describeRelevantSiteKnowledge('IELTS SAT English admissions tests').slice(0, 16000) },
         history: (thread?.messages ?? []).filter((message) => !message.status).slice(-24).map(({ role, content }) => ({ role, content })),
         state: (state) => {
+          if (useAuthStore.getState().user?.id !== userId) return
           useAiAssistantStore.getState().setVoiceState(state)
           if (!disposed && (state === 'speaking' || state === 'listening')) setReconnecting(false)
         },
-        level: (level) => useAiAssistantStore.getState().setVoiceLevel(level), caption: setCaption, message: record,
+        expression: (value, responseId) => {
+          if (disposed || useAuthStore.getState().user?.id !== userId) return
+          const state = useAiAssistantStore.getState()
+          const performance = readNovaPerformance(value)
+          if (performance) state.setVoicePresentation({ owner: ownerKey, threadId, responseId, performance })
+          else if (state.voicePresentation?.owner === ownerKey && state.voicePresentation.responseId === responseId) state.setVoicePresentation(null)
+        },
+        level: (level) => { if (useAuthStore.getState().user?.id === userId) useAiAssistantStore.getState().setVoiceLevel(level) }, caption: setCaption, message: record,
         preview: (role, text, id) => {
           if (disposed || useAuthStore.getState().user?.id !== userId || !text.trim()) return
           const message: AiAssistantMessage = { id: `voice-${id}`, role, content: text, createdAt: new Date().toISOString(), delivery: 'voice', status: 'streaming' }
@@ -127,7 +136,7 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
         },
         coachResult: (result, id) => {
           if (useAuthStore.getState().user?.id !== userId) return
-          record('assistant', result.reply, `coach-${id}`)
+          record('assistant', result.reply, `coach-${id}`, false, result.performance)
           latest.current.acceptCoachResult(result)
         },
         error: reportError,
@@ -138,6 +147,7 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
     void connect().catch((issue) => reportError(issue instanceof Error ? issue : new Error('Voice could not connect.')))
     return () => {
       disposed = true
+      if (useAiAssistantStore.getState().voicePresentation?.owner === ownerKey) useAiAssistantStore.getState().setVoicePresentation(null)
       window.clearTimeout(recovery.current.timer)
       window.clearTimeout(previewTimer)
       connection.current?.stop(); connection.current = null

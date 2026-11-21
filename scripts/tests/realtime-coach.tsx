@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { defaultNovaPerformance } from '@/lib/novaPersona'
 import { RealtimeCoach } from '@/lib/realtimeCoach'
 import { analyseTranscript, estimateBandsFromStats } from '@/lib/speakingScoring'
 import { evaluateSpeaking } from '@/services/speakingAI'
@@ -8,6 +9,7 @@ export async function run() {
   const originalFetch = globalThis.fetch
   const states: string[] = [], messages: any[] = [], captions: string[] = [], results: any[] = [], sent: any[] = []
   const previews: any[] = []
+  const expressions: any[] = []
   const measurements: Array<{ stage: string; durationMs: number }> = []
   const contexts: any[] = []
   let failContext = false
@@ -67,6 +69,7 @@ export async function run() {
     state: (value: string) => states.push(value), level: (value: number) => levels.push(value), caption: (value: string) => captions.push(value),
     message: (...args: any[]) => messages.push(args), preview: (...args: any[]) => previews.push(args), performance: (value: any) => measurements.push(value), coachResult: (...args: any[]) => results.push(args), error: (issue: Error) => assert.fail(issue.message) }
   try {
+    options.expression = (value, responseId) => expressions.push({ value, responseId })
     const voice = new RealtimeCoach(options)
     await voice.start()
     assert.deepEqual(measurements.map(value => value.stage), ['microphone', 'negotiation', 'connection'])
@@ -98,10 +101,16 @@ export async function run() {
     assert.equal(messages.length, 1, 'Duplicate transcript events are saved only once')
     emit({ type: 'conversation.item.input_audio_transcription.delta', item_id: 'u1', delta: 'late duplicate' })
     assert.equal(previews.length, 0, 'A late input delta cannot turn a finalized user message back into a draft')
+    const performance = defaultNovaPerformance('curious')
+    emit({ type: 'response.function_call_arguments.done', name: 'set_expression', response_id: 'expression-r1' })
+    for (const type of ['conversation.item.added', 'conversation.item.created']) emit({ type, item: { type: 'function_call_output', call_id: 'expression-1', output: JSON.stringify({ nova_expression: true, responseId: 'expression-r1', performance }) } })
+    assert.equal(expressions.length, 0, 'A queued expression cannot change the avatar before audio')
     emit({ type: 'response.created', response: { id: 'r1' } })
     emit({ type: 'output_audio_buffer.started', response_id: 'r1' })
+    assert.equal(expressions.at(-1).value.expression, 'curious')
     assert.equal(measurements.filter(value => value.stage === 'first_audio').length, 1)
     emit({ type: 'output_audio_buffer.started', response_id: 'r1' })
+    assert.equal(expressions.at(-1).value.expression, 'curious')
     assert.equal(measurements.filter(value => value.stage === 'first_audio').length, 1, 'Repeated audio events cannot duplicate latency measurements')
     currentPeer!.ontrack?.({ streams: [{ getTracks: () => [] }] })
     ;(nextFrame as FrameRequestCallback | null)?.(0)
@@ -121,6 +130,7 @@ export async function run() {
     emit({ type: 'output_audio_buffer.stopped', response_id: 'r1' })
     assert.equal(sent.at(-1).session.audio.output.speed, 1.25, 'The selected speed applies between turns without reconnecting')
     assert.equal(messages[1][1], 'Salom, boshlaymiz.')
+    assert.deepEqual(messages[1][4], performance, 'Realtime transcript saves the same performance as its audio')
     emit({ type: 'input_audio_buffer.speech_started' })
     emit({ type: 'input_audio_buffer.speech_stopped' })
     emit({ type: 'response.created', response: { id: 'r2' } })
@@ -142,6 +152,12 @@ export async function run() {
     voice.interrupt()
     assert.deepEqual(sent.slice(-2).map(event => event.type), ['response.cancel', 'output_audio_buffer.clear'], 'Stop cancels generation and clears queued WebRTC audio immediately')
     assert.equal(captions.at(-1), '')
+    const countBeforeLate = messages.length
+    emit({ type: 'response.created', response: { id: 'late-cancelled-tool-reply' } })
+    emit({ type: 'output_audio_buffer.started', response_id: 'late-cancelled-tool-reply' })
+    assert.equal(states.at(-1), 'listening', 'A late tool continuation cannot restart playback after manual stop')
+    assert.equal(messages.length, countBeforeLate)
+    voice.requestFeedback() // Explicit new input releases the stop gate.
     const result = { profai_coach_result: true, reply: 'Written feedback.', actions: [], memoryUpdates: [] }
     for (const type of ['conversation.item.added', 'conversation.item.created']) emit({ type, item: { type: 'function_call_output', id: 'tool-item', call_id: 'tool-1', output: JSON.stringify(result) } })
     assert.equal(results.length, 1, 'Mirrored tool results cannot duplicate a saved report')

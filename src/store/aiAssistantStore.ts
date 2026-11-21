@@ -18,7 +18,8 @@ export type AiAssistantMessage = {
   images?: string[]
   status?: 'streaming' | 'interrupted'
   delivery?: 'text' | 'voice'
-  expression?: 'warm' | 'delighted' | 'focused' | 'affectionate' | 'unimpressed'
+  expression?: import('@/lib/novaPersona').NovaExpression
+  performance?: import('@/lib/novaPersona').NovaPerformance
 }
 
 export type AiAssistantThread = {
@@ -56,6 +57,8 @@ type AiAssistantState = {
   reportSnapshot: AiReportResponse | null
   reportUpdatedAt: string | null
   talkOpen: boolean
+  voicePresentation: { owner: string; threadId: string; responseId: string; performance: import('@/lib/novaPersona').NovaPerformance } | null
+  setVoicePresentation: (presentation: AiAssistantState['voicePresentation']) => void
   voiceState: AiVoiceState
   voiceLevel: number
   voiceLang: SpeechLang
@@ -154,6 +157,8 @@ export const useAiAssistantStore = create<AiAssistantState>()(
       reportSnapshot: null,
       reportUpdatedAt: null,
       talkOpen: false,
+      voicePresentation: null,
+      setVoicePresentation: (voicePresentation) => set({ voicePresentation }),
       voiceState: 'idle',
       voiceLevel: 0,
       voiceLang: 'en',
@@ -195,6 +200,7 @@ export const useAiAssistantStore = create<AiAssistantState>()(
                 isExamModeActive: true,
                 isOpen: false,
                 talkOpen: false,
+                voicePresentation: null,
                 voiceState: 'idle',
                 voiceLevel: 0,
               }
@@ -271,6 +277,8 @@ export const useAiAssistantStore = create<AiAssistantState>()(
               : thread),
           },
           activeThreadIds: { ...state.activeThreadIds, [ownerKey]: state.activeThreadIds[ownerKey] === draftId ? savedThread.id : state.activeThreadIds[ownerKey] ?? null },
+          voicePresentation: state.voicePresentation?.owner === ownerKey && state.voicePresentation.threadId === draftId
+            ? { ...state.voicePresentation, threadId: savedThread.id } : state.voicePresentation,
         }
       }),
       pushMessage: (ownerKey, threadId, message) =>
@@ -392,6 +400,7 @@ export const useAiAssistantStore = create<AiAssistantState>()(
         talkOpen: false,
         isExamModeActive: false,
         pendingActions: [],
+        voicePresentation: null,
         voiceState: 'idle',
         voiceLevel: 0,
         threadsLoading: {},

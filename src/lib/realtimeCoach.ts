@@ -1,3 +1,5 @@
+import { NovaPlayback } from './novaPlayback'
+import type { NovaPerformance } from './novaPersona'
 import { apiClient } from '@/lib/apiClient'
 import type { AiVoiceState } from '@/store/aiAssistantStore'
 import type { GeminiChatResponse } from '@/services/geminiAI'
@@ -16,9 +18,10 @@ export type VoiceOptions = {
   state: (state: AiVoiceState) => void
   level: (level: number) => void
   caption: (text: string) => void
-  message: (role: 'user' | 'assistant', text: string, id: string, interrupted?: boolean) => void
+  message: (role: 'user' | 'assistant', text: string, id: string, interrupted?: boolean, performance?: NovaPerformance) => void
   /** Live display only; finalized messages are emitted separately after playback. */
   preview?: (role: 'user' | 'assistant', text: string, id: string) => void
+  expression?: (performance: NovaPerformance | null, responseId: string) => void
   performance?: (measurement: VoicePerformance) => void
   coachResult: (result: GeminiChatResponse, id: string) => void
   error: (error: Error) => void
@@ -33,6 +36,9 @@ function contextSignature(context: VoiceContext) {
 // One connection owns its microphone, playback, requests and event handlers.
 // No browser SpeechRecognition / speechSynthesis is involved in natural voice.
 export class RealtimeCoach {
+  private expressions = new NovaPlayback((value, id) => this.options.expression?.(value, id))
+  private upcomingPerformance: NovaPerformance | undefined
+  private expressionResponses = new Set<string>()
   private peer: RTCPeerConnection | null = null
   private channel: RTCDataChannel | null = null
   private stream: MediaStream | null = null
@@ -59,6 +65,7 @@ export class RealtimeCoach {
   private responding = false
   private pendingSpeechSpeed: number | null = null
   private activeResponseId = ''
+  private awaitingNewInput = false
   private interruptedResponses = new Set<string>()
   private inputCaptions = new Map<string, string>()
   private options: VoiceOptions
@@ -220,12 +227,15 @@ export class RealtimeCoach {
 
   private flush(responseId: string, interrupted = false) {
     // Transcript is committed only after playback finishes or is interrupted.
+    const finished = new Set<string>()
     for (const [key, value] of this.pending) {
       if (responseId && value.responseId !== responseId) continue
-      if (value.text.trim()) this.options.message('assistant', value.text.trim(), value.id, interrupted || value.interrupted)
+      if (value.text.trim()) this.options.message('assistant', value.text.trim(), value.id, interrupted || value.interrupted, this.expressions.get(value.responseId))
       this.pending.delete(key)
       this.seen.add(`assistant:${key}`)
+      finished.add(value.responseId)
     }
+    for (const id of finished) this.expressions.finish(id)
   }
 
   private handle(event: any) {
@@ -235,22 +245,36 @@ export class RealtimeCoach {
       if (['response_cancel_not_active', 'conversation_already_has_active_response'].includes(event.error?.code)) return
       this.fail(new Error('Voice could not complete this turn. Please retry.')); return
     }
+    if (type === 'response.function_call_arguments.done' && event.name === 'set_expression' && event.response_id) this.expressionResponses.add(event.response_id)
     if (type === 'input_audio_buffer.speech_started') {
+      for (const id of this.expressionResponses) this.interruptedResponses.add(id)
+      this.expressionResponses.clear()
+      this.upcomingPerformance = undefined
       this.firstReplyStarted = 0
       this.replyStarted = null
       window.clearTimeout(this.responseTimer)
       if (this.speaking || this.responding) {
         if (this.activeResponseId) this.interruptedResponses.add(this.activeResponseId)
         this.flush('', true)
+        this.expressions.finish(this.activeResponseId)
       }
       this.speaking = false; this.options.caption(''); this.options.state('listening')
+    }
+    if (type === 'input_audio_buffer.speech_stopped') this.awaitingNewInput = false
+    if (type === 'response.created' && this.awaitingNewInput) {
+      if (event.response?.id) this.interruptedResponses.add(event.response.id)
+      this.send({ type: 'response.cancel' }); return
     }
     if (type === 'input_audio_buffer.speech_stopped' || type === 'response.created') {
       if (type === 'input_audio_buffer.speech_stopped') this.replyStarted = performance.now()
       this.options.state('thinking')
       this.waitForResponse()
     }
-    if (type === 'response.created') { this.responding = true; this.activeResponseId = event.response?.id ?? '' }
+    if (type === 'response.created') {
+      this.responding = true; this.activeResponseId = event.response?.id ?? ''
+      if (this.upcomingPerformance) this.expressions.cue(this.activeResponseId, this.upcomingPerformance)
+      this.upcomingPerformance = undefined
+    }
     if (type === 'output_audio_buffer.started') {
       const id = event.response_id ?? this.activeResponseId
       if (this.interruptedResponses.has(id)) return
@@ -260,7 +284,7 @@ export class RealtimeCoach {
         if (this.firstReplyStarted) { this.measure('first_audio', this.firstReplyStarted); this.firstReplyStarted = 0 }
         if (this.replyStarted !== null) { this.measure('reply', this.replyStarted); this.replyStarted = null }
       }
-      window.clearTimeout(this.responseTimer); this.speaking = true; this.activeResponseId = id; this.options.state('speaking')
+      window.clearTimeout(this.responseTimer); this.speaking = true; this.activeResponseId = id; this.expressions.start(id); this.options.state('speaking')
     }
     if (type === 'output_audio_buffer.stopped' || type === 'output_audio_buffer.cleared') {
       this.completedResponses.add(event.response_id)
@@ -301,7 +325,14 @@ export class RealtimeCoach {
     if ((type === 'conversation.item.added' || type === 'conversation.item.created') && event.item?.type === 'function_call_output') {
       const key = `tool:${event.item.call_id}`
       if (this.seen.has(key)) return
+      if (this.awaitingNewInput) return
       const result = JSON.parse(event.item.output ?? '{}')
+      if (result.nova_expression && !this.interruptedResponses.has(result.responseId)) {
+        this.seen.add(key)
+        // Function calls normally finish in one response, then speech uses the next.
+        if (this.activeResponseId && this.activeResponseId !== result.responseId && !this.interruptedResponses.has(this.activeResponseId)) this.expressions.cue(this.activeResponseId, result.performance)
+        else this.upcomingPerformance = result.performance
+      }
       if (result.profai_coach_result && typeof result.reply === 'string') {
         this.seen.add(key); this.options.coachResult(result, event.item.id ?? event.item.call_id)
       }
@@ -344,15 +375,22 @@ export class RealtimeCoach {
     await this.contextSync
   }
   interrupt() {
+    this.awaitingNewInput = true
+    // Standard conversation input also informs the server-side tool owner.
+    this.send({ type: 'conversation.item.create', item: { type: 'message', role: 'user', content: [{ type: 'input_text', text: '[Nova control] Stop this reply and wait for my next question.' }] } })
+    for (const id of this.expressionResponses) this.interruptedResponses.add(id)
+    this.expressionResponses.clear()
     this.firstReplyStarted = 0; this.replyStarted = null
     window.clearTimeout(this.responseTimer)
     if (this.activeResponseId) this.interruptedResponses.add(this.activeResponseId)
+    this.upcomingPerformance = undefined
     if (this.responding) this.send({ type: 'response.cancel' })
     if (this.speaking) this.send({ type: 'output_audio_buffer.clear' })
-    this.flush('', true); this.speaking = false; this.options.caption(''); this.options.state('listening')
+    this.flush('', true); this.expressions.finish(this.activeResponseId); this.speaking = false; this.options.caption(''); this.options.state('listening')
   }
   requestFeedback() {
     this.interrupt()
+    this.awaitingNewInput = false
     this.send({ type: 'conversation.item.create', item: { type: 'message', role: 'user', content: [{ type: 'input_text', text: 'End this examiner practice and give written feedback on my actual answers. Use ask_coach. Do not invent a pronunciation band when the tool only receives text.' }] } })
     this.send({ type: 'response.create' })
   }
@@ -375,6 +413,7 @@ export class RealtimeCoach {
     release(() => this.audioContext?.close().catch(() => {}))
     if (this.sessionId) void releaseVoiceSession(this.sessionId)
     release(() => this.flush('', true))
+    this.expressions.reset()
     release(() => this.options.state('idle')); release(() => this.options.level(0))
   }
 }

@@ -1,3 +1,4 @@
+import { novaPerformanceParameters, readNovaPerformance, examPerformance } from './novaPersona.js'
 import { onAccountDeleted } from './accountLifecycle.js'
 import { createHash } from 'node:crypto'
 import WebSocket from 'ws'
@@ -95,7 +96,7 @@ async function startReservedVoiceCall(userId: string, sdp: string, context: Assi
     output_modalities: ['audio'], max_output_tokens: 900,
     audio: { input: { noise_reduction: { type: 'near_field' }, transcription: { model: 'gpt-4o-transcribe', prompt: 'Transcribe the speaker verbatim, preserving their original language, mixed-language words, fillers and errors. Do not translate or improve their speech.' },
       turn_detection: { type: 'semantic_vad', eagerness: context.mode === 'examiner' ? 'low' : 'high', create_response: true, interrupt_response: true } }, output: { voice: 'marin', speed: context.mode === 'examiner' ? 1 : 1.1 } },
-    tools: [{ type: 'function', name: 'ask_coach', description: 'Ask the shared tutor for accurate detailed coaching, current official research, a saved memory or an app action proposal. Returns a written answer plus actions for the learner to approve.',
+    tools: [{ type: 'function', name: 'set_expression', description: 'Choose the illustrative avatar delivery for your upcoming spoken reply.', parameters: novaPerformanceParameters }, { type: 'function', name: 'ask_coach', description: 'Ask the shared tutor for accurate detailed coaching, current official research, a saved memory or an app action proposal. Returns a written answer plus actions for the learner to approve.',
       parameters: { type: 'object', properties: { request: { type: 'string', description: 'The learner\'s actual request, including relevant wording.' } }, required: ['request'], additionalProperties: false } }],
     tool_choice: 'auto',
   }
@@ -122,6 +123,8 @@ async function startReservedVoiceCall(userId: string, sdp: string, context: Assi
   const handledTools = new Set<string>()
   let speechVersion = 0
   let responding = false
+  let activeResponseId = ''
+  const cancelledResponses = new Set<string>()
   const responseStarts = new Map<string, number>()
   let pendingToolVersion: number | null = null
   const observed = new Set<string>()
@@ -137,21 +140,36 @@ async function startReservedVoiceCall(userId: string, sdp: string, context: Assi
     try { event = JSON.parse(String(raw)) } catch { return }
     if (event.event_id && observed.has(event.event_id)) return
     if (event.event_id) { observed.add(event.event_id); if (observed.size > 500) observed.delete(observed.values().next().value!) }
-    if (event.type === 'input_audio_buffer.speech_started') { speechVersion++; pendingToolVersion = null }
-    if (event.type === 'response.created') { responding = true; if (event.response?.id) responseStarts.set(event.response.id, Date.now()) }
+    const manualStop = ['conversation.item.created', 'conversation.item.added'].includes(event.type) && event.item?.role === 'user' && event.item?.content?.some((part: any) => part.type === 'input_text' && part.text === '[Nova control] Stop this reply and wait for my next question.')
+    if (event.type === 'input_audio_buffer.speech_started' || manualStop) {
+      speechVersion++; pendingToolVersion = null
+      if (activeResponseId) cancelledResponses.add(activeResponseId)
+    }
+    if (event.type === 'response.function_call_arguments.done' && cancelledResponses.has(event.response_id)) return
+    if (event.type === 'response.created') { responding = true; activeResponseId = event.response?.id ?? ''; if (event.response?.id) responseStarts.set(event.response.id, Date.now()) }
     if (event.type === 'conversation.item.input_audio_transcription.completed' && event.transcript?.trim()) {
       call.history.push({ role: 'user', content: event.transcript }); call.history = boundedHistory(call.history)
     }
-    if (event.type === 'response.output_audio_transcript.done' && event.transcript?.trim()) {
+    if (event.type === 'response.output_audio_transcript.done' && event.transcript?.trim() && !cancelledResponses.has(event.response_id)) {
       call.history.push({ role: 'assistant', content: event.transcript }); call.history = boundedHistory(call.history)
     }
     if (event.type === 'response.done') {
-      responding = false
+      if (event.response?.status === 'cancelled') {
+        cancelledResponses.add(event.response.id); speechVersion++; pendingToolVersion = null
+      }
+      if (!event.response?.id || event.response.id === activeResponseId) responding = false
       continueAfterTool()
       const usage = event.response?.usage
       const responseStarted = responseStarts.get(event.response?.id) ?? Date.now()
       responseStarts.delete(event.response?.id)
       if (usage) void prisma.aiUsageEvent.create({ data: { userId, purpose: 'assistant_voice', provider: 'openai', model: env.AI_VOICE_MODEL, status: event.response?.status === 'failed' ? 'FAILED' : 'SUCCESS', requestChars: 0, responseChars: 0, inputTokens: usage.input_tokens, outputTokens: usage.output_tokens, latencyMs: Date.now() - responseStarted, fallbackUsed: false } }).catch(() => {})
+    }
+    if (event.type === 'response.function_call_arguments.done' && event.name === 'set_expression' && !handledTools.has(event.call_id)) {
+      handledTools.add(event.call_id)
+      let performance
+      try { performance = readNovaPerformance(JSON.parse(event.arguments)) } catch {}
+      send({ type: 'conversation.item.create', item: { type: 'function_call_output', call_id: event.call_id, output: JSON.stringify(performance ? { nova_expression: true, responseId: event.response_id, performance: call.context.mode === 'examiner' ? examPerformance() : performance } : { error: 'Invalid performance metadata.' }) } })
+      pendingToolVersion = speechVersion; continueAfterTool(); return
     }
     if (event.type !== 'response.function_call_arguments.done' || event.name !== 'ask_coach' || handledTools.has(event.call_id)) return
     handledTools.add(event.call_id)
@@ -162,8 +180,10 @@ async function startReservedVoiceCall(userId: string, sdp: string, context: Assi
         // Save complete written detail; the realtime model speaks a short summary.
         const request = assistantRequestSchema.parse({ ...call.context, message: argumentsValue.request, history: call.history, delivery: 'text' })
         const result = await answerAssistant(userId, request, abort.signal)
+        if (abort.signal.aborted || toolSpeechVersion !== speechVersion) return
         send({ type: 'conversation.item.create', item: { type: 'function_call_output', call_id: event.call_id, output: JSON.stringify({ profai_coach_result: true, ...result }) } })
       } catch {
+        if (abort.signal.aborted || toolSpeechVersion !== speechVersion) return
         send({ type: 'conversation.item.create', item: { type: 'function_call_output', call_id: event.call_id, output: JSON.stringify({ error: 'The coach is temporarily unavailable. Do not invent a result; ask the learner to retry.' }) } })
       }
       if (!abort.signal.aborted && toolSpeechVersion === speechVersion) {

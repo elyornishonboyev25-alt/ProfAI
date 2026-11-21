@@ -15,6 +15,31 @@ type PlaybackOptions = { language?: 'en' | 'uz' | 'ru'; deviceFallback?: boolean
 // response loses the user's playback permission on mobile browsers.
 export class ExaminerPlayback {
   private player = new Audio()
+  private meterContext: AudioContext | null = null
+  private meter: AnalyserNode | null = null
+  private meterSource: MediaElementAudioSourceNode | null = null
+  private meterBytes = new Uint8Array(512)
+
+  /** Opt-in for Nova; existing examiner playback does not create an audio graph. */
+  enableMeter(): void {
+    if (typeof AudioContext === 'undefined') return
+    try {
+      if (!this.meterContext) {
+        this.meterContext = new AudioContext()
+        this.meter = this.meterContext.createAnalyser(); this.meter.fftSize = 512
+        this.meterSource = this.meterContext.createMediaElementSource(this.player)
+        this.meterSource.connect(this.meter); this.meter.connect(this.meterContext.destination)
+      }
+      void this.meterContext.resume().catch(() => {})
+    } catch { /* Use a still mouth when metering is unavailable. */ }
+  }
+  sampleLevel(): number {
+    if (!this.meter || this.player.paused) return 0
+    this.meter.getByteTimeDomainData(this.meterBytes)
+    const rms = Math.sqrt(this.meterBytes.reduce((sum, byte) => sum + ((byte - 128) / 128) ** 2, 0) / this.meterBytes.length)
+    return Math.min(1, Math.max(0, (rms - .008) * 6))
+  }
+
   private sequence = 0
   private controller: AbortController | null = null
   private url: string | null = null

@@ -4,6 +4,14 @@ import { prisma } from '../lib/prisma.js'
 import { requireAuth } from '../middleware/auth.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 
+import { novaExpressionSchema, novaPerformanceSchema } from '../services/novaPersona.js'
+
+export const messageMetadataSchema = z.object({
+  expression: novaExpressionSchema.optional(),
+  performance: novaPerformanceSchema.optional(),
+  delivery: z.enum(['text', 'voice']).optional(),
+  status: z.literal('interrupted').optional(),
+}).strict()
 const router = Router()
 
 const threadIdSchema = z.object({ threadId: z.string().min(1).max(191) })
@@ -14,11 +22,12 @@ const createThreadSchema = z.object({
   contextMode: z.string().trim().min(1).max(40).default('general'),
 })
 const renameThreadSchema = z.object({ title: z.string().trim().min(1).max(80) })
-const createMessageSchema = z.object({
+export const createMessageSchema = z.object({
   id: z.string().min(1).max(191).optional(),
   role: z.enum(['user', 'assistant']),
   content: z.string().trim().min(1).max(12000),
   locale: z.enum(['en', 'uz', 'ru']).default('en'),
+  metadata: messageMetadataSchema.optional(),
 })
 const saveMemoriesSchema = z.object({
   memories: z
@@ -112,6 +121,7 @@ router.post(
           role: payload.role,
           content: payload.content,
           locale: payload.locale,
+          ...(payload.metadata ? { metadata: payload.metadata } : {}),
         },
       })
       await tx.aiConversationThread.update({

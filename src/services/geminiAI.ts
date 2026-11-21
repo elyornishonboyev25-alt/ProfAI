@@ -61,7 +61,8 @@ export interface GeminiChatAction {
 
 export interface GeminiChatResponse {
   reply: string
-  expression?: 'warm' | 'delighted' | 'focused' | 'affectionate' | 'unimpressed'
+  expression?: import('@/lib/novaPersona').NovaExpression
+  performance?: import('@/lib/novaPersona').NovaPerformance
   replyLanguage?: 'en' | 'uz' | 'ru'
   actions: GeminiChatAction[]
   title: string | null

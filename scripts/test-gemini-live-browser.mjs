@@ -16,10 +16,10 @@ const source = `
 import {GeminiRealtimeCoach} from './src/lib/geminiRealtimeCoach'; import {useAuthStore} from './src/store/authStore';
 window.RTCPeerConnection=undefined; window.SpeechRecognition=undefined; window.webkitSpeechRecognition=undefined;
 useAuthStore.setState({user:{id:'gemini-browser',role:'USER'},accessToken:'fixture-token',refreshToken:null});
-window.states=[];window.messages=[];window.previews=[];window.errors=[];window.levels=[];window.tracks=[];window.measurements=[];
+window.expressions=[];window.states=[];window.messages=[];window.previews=[];window.errors=[];window.levels=[];window.tracks=[];window.measurements=[];
 const getMedia=navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
 navigator.mediaDevices.getUserMedia=async(...args)=>{const stream=await getMedia(...args);window.tracks.push(...stream.getTracks());return stream};
-window.begin=()=>{window.voice=new GeminiRealtimeCoach({context:{pathname:'/ai-tutor',workspace:'english',language:'uz',mode:'coach',threadId:'owned',studyContext:'',screenContext:'',siteKnowledge:''},history:[{role:'user',content:'Call me Elyor.'}],speechSpeed:1.1,state:s=>window.states.push(s),level:l=>window.levels.push(l),caption:t=>{document.getElementById('caption').textContent=t},message:(...v)=>window.messages.push(v),preview:(...v)=>window.previews.push(v),coachResult:(...v)=>window.messages.push(['coach',...v]),error:e=>window.errors.push(e.message),performance:m=>window.measurements.push(m)});window.startPromise=window.voice.start()};
+window.begin=()=>{window.voice=new GeminiRealtimeCoach({context:{pathname:'/ai-tutor',workspace:'english',language:'uz',mode:'coach',threadId:'owned',studyContext:'',screenContext:'',siteKnowledge:''},history:[{role:'user',content:'Call me Elyor.'}],speechSpeed:1.1,expression:(value,id)=>window.expressions.push({value,id,at:performance.now()}),state:s=>window.states.push(s),level:l=>window.levels.push(l),caption:t=>{document.getElementById('caption').textContent=t},message:(...v)=>window.messages.push(v),preview:(...v)=>window.previews.push(v),coachResult:(...v)=>window.messages.push(['coach',...v]),error:e=>window.errors.push(e.message),performance:m=>window.measurements.push(m)});window.startPromise=window.voice.start()};
 document.getElementById('begin').onclick=window.begin;
 document.getElementById('stop').onclick=()=>window.voice.stop();
 `
@@ -58,9 +58,12 @@ function audio(seconds = .2) {
   for (let index = 0; index < data.length / 2; index++) data.writeInt16LE(Math.round(Math.sin(index / 24000 * Math.PI * 2 * 440) * 18000), index * 2)
   return data.toString('base64')
 }
-function say(socket, text, seconds = .2) {
-  socket.send(JSON.stringify({ type: 'content', content: { outputTranscription: { text }, modelTurn: { parts: [{ inlineData: { mimeType: 'audio/pcm;rate=24000', data: audio(seconds) } }] } } }))
-  socket.send(JSON.stringify({ type: 'content', content: { turnComplete: true } }))
+let replyNumber = 0
+function say(socket, text, seconds = .2, expression = 'warm') {
+  const responseId = `fixture-reply-${replyNumber++}`
+  socket.send(JSON.stringify({ type: 'expression', responseId, performance: { tone: expression === 'supportive' ? 'supportive' : 'warm', expression, intensity: .35, gesture: 'none', delivery: { pace: 'steady', warmth: 'medium', emphasis: 'light' } } }))
+  socket.send(JSON.stringify({ type: 'content', responseId, content: { outputTranscription: { text }, modelTurn: { parts: [{ inlineData: { mimeType: 'audio/pcm;rate=24000', data: audio(seconds) } }] } } }))
+  socket.send(JSON.stringify({ type: 'content', responseId, content: { turnComplete: true } }))
 }
 wss.on('connection', socket => {
   sockets.push(socket)
@@ -94,6 +97,16 @@ try {
   await page.waitForFunction(() => window.states.includes('speaking') && window.states.at(-1) === 'listening')
   assert.ok(await page.evaluate(() => window.levels.some(level => level > .05)), 'The mascot receives measured playback or microphone amplitude')
   assert.ok(received.some(event => event.type === 'audio'), 'Actual browser microphone samples reach the WebSocket')
+  say(sockets[0], 'The first queued answer.', .7, 'playful_angry')
+  say(sockets[0], 'The second queued answer.', .2, 'supportive')
+  await page.waitForFunction(() => window.messages.some(message => message[1] === 'The second queued answer.'))
+  const expressionTimes = await page.evaluate(() => ({
+    first: window.expressions.find(entry => entry.value?.expression === 'playful_angry')?.at,
+    second: window.expressions.find(entry => entry.value?.expression === 'supportive')?.at,
+    metadata: window.messages.find(message => message[1] === 'The second queued answer.')?.[4],
+  }))
+  assert.ok(expressionTimes.second - expressionTimes.first > 450, 'Queued expression waits for its own audio rather than changing the face on receipt')
+  assert.equal(expressionTimes.metadata.expression, 'supportive', 'The saved transcript carries the same delivery as playback')
   const beforeStall = received.filter(event => event.type === 'audio').length
   await page.evaluate(() => { const until = performance.now() + 2800; while (performance.now() < until) { /* Simulate a busy tab, while the audio thread keeps capturing. */ } })
   await page.waitForTimeout(150)

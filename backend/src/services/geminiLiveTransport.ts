@@ -1,11 +1,11 @@
 import WebSocket from 'ws'
 import { AiGenerationError } from './aiProvider.service.js'
 
-const endpoint = 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent'
+const endpoint = 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent'
 type OpenSocket = (url: string, options: WebSocket.ClientOptions) => WebSocket
 
 /** Exercise generation and PCM input, not just the provider's setup acknowledgement. */
-export function verifyGeminiLiveAudio(socket: WebSocket, signal: AbortSignal) {
+export function verifyGeminiLiveAudio(socket: WebSocket, signal: AbortSignal, initialHistory = false) {
   return new Promise<{ audioFrames: number; turns: number }>((resolve, reject) => {
     let audioFrames = 0, turns = 0, done = false
     const finish = (error?: Error) => {
@@ -19,11 +19,12 @@ export function verifyGeminiLiveAudio(socket: WebSocket, signal: AbortSignal) {
     const failed = () => finish(new Error('GEMINI_AUDIO_STREAM_ERROR'))
     const closed = (code: number) => finish(Object.assign(new Error('GEMINI_AUDIO_STREAM_CLOSED'), { providerCloseCode: code }))
     const aborted = () => finish(new Error('GEMINI_AUDIO_STREAM_TIMEOUT'))
-    const ask = (text: string) => socket.send(JSON.stringify({ clientContent: { turns: [{ role: 'user', parts: [{ text }] }], turnComplete: true } }))
+    const ask = (text: string) => socket.send(JSON.stringify(initialHistory ? { realtimeInput: { text } } : { clientContent: { turns: [{ role: 'user', parts: [{ text }] }], turnComplete: true } }))
     const message = (raw: WebSocket.RawData) => {
       try {
         const event = JSON.parse(String(raw))
         if (event.error) { finish(new Error('GEMINI_AUDIO_GENERATION_REJECTED')); return }
+        if (event.toolCall?.functionCalls) socket.send(JSON.stringify({ toolResponse: { functionResponses: event.toolCall.functionCalls.map((tool: any) => ({ id: tool.id, name: tool.name, response: tool.name === 'set_expression' ? { applied: true } : { error: 'Readiness check does not execute coaching.' } })) } }))
         for (const part of event.serverContent?.modelTurn?.parts ?? []) if (part.inlineData?.mimeType?.startsWith('audio/pcm') && part.inlineData.data) audioFrames++
         if (event.serverContent?.turnComplete) {
           turns++
@@ -39,7 +40,10 @@ export function verifyGeminiLiveAudio(socket: WebSocket, signal: AbortSignal) {
     socket.on('message', message); socket.once('close', closed); socket.once('error', failed)
     signal.addEventListener('abort', aborted, { once: true })
     if (signal.aborted) aborted()
-    else ask('For this connection check, say only: Hello. Do not use tools.')
+    else {
+      if (initialHistory) socket.send(JSON.stringify({ clientContent: { turnComplete: true } }))
+      ask('For this connection check, say only: Hello. Do not use tools.')
+    }
   })
 }
 

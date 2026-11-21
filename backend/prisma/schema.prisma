@@ -845,6 +845,7 @@ model AiConversationThread {
 }
 
 model AiConversationMessage {
+  metadata  Json?
   id        String               @id @default(cuid())
   threadId  String
   role      String

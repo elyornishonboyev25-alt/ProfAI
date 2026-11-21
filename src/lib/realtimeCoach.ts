@@ -1,4 +1,5 @@
 import { NovaDiagnostics, type NovaDiagnosticsSnapshot, type PerformanceCue } from './novaLearning'
+import { resolveNovaLanguage, inspectLanguage, languageViolation, languageClarification } from './novaLanguage'
 import { NovaPlayback } from './novaPlayback'
 import type { NovaPerformance } from './novaPersona'
 import { apiClient } from '@/lib/apiClient'
@@ -9,10 +10,12 @@ import { openVoiceSession, releaseVoiceSession, maintainVoiceLease } from './voi
 export type VoiceContext = {
   pathname: string; workspace: 'general' | 'ielts' | 'sat' | 'english' | 'admission'; language: 'auto' | 'en' | 'uz' | 'ru'
   mode: 'coach' | 'examiner'; threadId?: string; memoryRevision?: string; studyContext: string; screenContext: string; siteKnowledge: string
+  lastReliableLanguage?: 'uz' | 'en' | 'ru'; interfaceLanguage?: 'uz' | 'en' | 'ru'; inputControl?: 'server_vad' | 'hybrid'; lessonContext?: string
   coachPreferences?: import('@/services/ai/coachPreferences').CoachPreferences
 }
 export type VoicePerformance = { stage: 'microphone' | 'negotiation' | 'connection' | 'first_audio' | 'reply' | 'interruption_to_stop'; durationMs: number }
 export type VoiceOptions = {
+  lessonControl?: (action: 'continue' | 'restart' | 'pause') => void
   diagnostics?: (report: { sessionId: string; provider: 'gemini' | 'openai'; model: string; snapshot: NovaDiagnosticsSnapshot }) => void
   reconnectAttempt?: number
   speechSpeed?: number
@@ -39,6 +42,18 @@ function contextSignature(context: VoiceContext) {
 // One connection owns its microphone, playback, requests and event handlers.
 // No browser SpeechRecognition / speechSynthesis is involved in natural voice.
 export class RealtimeCoach {
+  private ptt = false
+  private pttHeard = false
+  private pttReleaseTimer = 0
+  private languageRecovery = false
+  private expectedLanguage() { const c = this.options.context; return c.mode === 'examiner' ? 'en' : c.language === 'auto' ? c.lastReliableLanguage ?? 'uz' : c.language }
+  private recoverLanguage() {
+    this.interrupt(); this.options.caption(languageClarification(this.expectedLanguage()))
+    if (this.languageRecovery) return
+    this.languageRecovery = true
+    this.send({ type: 'conversation.item.create', item: { type: 'message', role: 'user', content: [{ type: 'input_text', text: `Language control: use only ${this.expectedLanguage()}. Ask briefly to repeat unclear speech in Uzbek, English or Russian; do not translate or guess it.` }] } })
+    this.awaitingNewInput = false; this.send({ type: 'response.create' })
+  }
   private diagnostics = new NovaDiagnostics()
   private model = 'unknown'
   private expressions = new NovaPlayback((value, id) => this.options.expression?.(value, id))
@@ -206,11 +221,12 @@ export class RealtimeCoach {
       const tick = () => {
         if (this.closed) return
         const analyser = this.speaking ? this.outputAnalyser : this.inputAnalyser
-        if (!analyser || (!this.speaking && this.muted)) {
+        if (!analyser || (!this.speaking && this.muted && !this.ptt)) {
           smoothed = 0; this.options.level(0); this.raf = requestAnimationFrame(tick); return
         }
         analyser.getByteTimeDomainData(bytes)
         const rms = Math.sqrt(bytes.reduce((sum, byte) => sum + ((byte - 128) / 128) ** 2, 0) / bytes.length)
+        if (this.ptt && rms > .018) this.pttHeard = true
         const target = Math.min(1, Math.max(0, (rms - .008) * 6))
         smoothed += (target - smoothed) * (target > smoothed ? .7 : .4)
         this.options.level(smoothed)
@@ -255,6 +271,7 @@ export class RealtimeCoach {
     }
     if (type === 'response.function_call_arguments.done' && event.name === 'set_expression' && event.response_id) this.expressionResponses.add(event.response_id)
     if (type === 'input_audio_buffer.speech_started') {
+      if (this.ptt) this.pttHeard = true
       for (const id of this.expressionResponses) this.interruptedResponses.add(id)
       this.expressionResponses.clear()
       this.upcomingPerformance = undefined
@@ -313,6 +330,9 @@ export class RealtimeCoach {
       this.options.preview?.('user', caption, event.item_id)
     }
     if (type === 'conversation.item.input_audio_transcription.completed') {
+      const detected = resolveNovaLanguage(event.transcript ?? '', this.options.context.language, this.options.context.lastReliableLanguage ?? 'uz'); if(detected.observation.status === 'supported') {this.options.context.lastReliableLanguage = detected.language; this.options.context.language = detected.selection}
+      if (inspectLanguage(event.transcript ?? '').status === 'unsupported') { this.recoverLanguage(); return }
+      this.languageRecovery = false
       const key = `user:${event.item_id}`
       if (typeof event.transcript === 'string' && event.transcript.trim() && !this.seen.has(key)) {
         this.seen.add(key); this.options.caption(event.transcript)
@@ -326,6 +346,7 @@ export class RealtimeCoach {
       if (this.seen.has(`assistant:${key}`)) return
       const previous = this.pending.get(key)
       const value = { id: event.item_id, responseId: event.response_id ?? previous?.responseId ?? '', text: type.endsWith('.done') ? event.transcript ?? previous?.text ?? '' : (previous?.text ?? '') + (event.delta ?? ''), interrupted: false }
+      if (languageViolation(value.text, this.expectedLanguage())) { this.recoverLanguage(); return }
       this.pending.set(key, value); this.options.caption(value.text)
       this.options.preview?.('assistant', value.text, value.id)
       if (type.endsWith('.done') && this.completedResponses.has(value.responseId)) this.flush(value.responseId)
@@ -335,6 +356,7 @@ export class RealtimeCoach {
       if (this.seen.has(key)) return
       if (this.awaitingNewInput) return
       const result = JSON.parse(event.item.output ?? '{}')
+      if (result.nova_lesson_control && ['continue', 'restart', 'pause'].includes(result.action)) { this.seen.add(key); this.options.lessonControl?.(result.action) }
       if (result.nova_expression && !this.interruptedResponses.has(result.responseId)) {
         this.seen.add(key)
         // Function calls normally finish in one response, then speech uses the next.
@@ -366,6 +388,28 @@ export class RealtimeCoach {
     this.pendingSpeechSpeed = null
   }
   mute(muted: boolean) { this.muted = muted; this.stream?.getAudioTracks().forEach((track) => { track.enabled = !muted }) }
+  ask(text: string) { if (this.closed || !text.trim()) return; this.interrupt(); this.awaitingNewInput = false; this.options.message('user', text, crypto.randomUUID()); this.send({ type: 'conversation.item.create', item: { type: 'message', role: 'user', content: [{ type: 'input_text', text }] } }); this.send({ type: 'response.create' }) }
+  beginPushToTalk() {
+    if (this.ptt || this.closed) return
+    this.interrupt(); this.ptt = true; this.pttHeard = false
+    this.send({ type: 'session.update', session: { type: 'realtime', audio: { input: { turn_detection: null } } } })
+    this.send({ type: 'input_audio_buffer.clear' })
+    this.stream?.getAudioTracks().forEach(track => { track.enabled = true })
+    if (this.audio) this.audio.muted = true
+    this.options.state('listening')
+  }
+  endPushToTalk(cancel = false) {
+    if (!this.ptt) return
+    window.clearTimeout(this.pttReleaseTimer)
+    this.pttReleaseTimer = window.setTimeout(() => {
+      this.ptt = false
+      if (cancel || !this.pttHeard) this.send({ type: 'input_audio_buffer.clear' })
+      else { this.awaitingNewInput = false; this.send({ type: 'input_audio_buffer.commit' }); this.send({ type: 'response.create' }); this.options.state('thinking') }
+      this.stream?.getAudioTracks().forEach(track => { track.enabled = !this.muted })
+      this.send({ type: 'session.update', session: { type: 'realtime', audio: { input: { turn_detection: { type: 'semantic_vad', eagerness: this.options.context.mode === 'examiner' ? 'low' : 'medium', create_response: true, interrupt_response: true } } } } })
+      if (this.audio) this.audio.muted = false
+    }, cancel ? 0 : 220)
+  }
   async updateContext(context: VoiceContext) {
     // Once a local chat is saved, later page updates retain its server ID.
     this.options.context = { ...context, threadId: this.options.context.threadId ?? context.threadId }
@@ -407,6 +451,7 @@ export class RealtimeCoach {
   stop() {
     if (this.closed) return
     this.closed = true
+    window.clearTimeout(this.pttReleaseTimer); this.ptt = false
     window.removeEventListener('pagehide', this.onPageHide)
     const release = (cleanup: () => unknown) => { try { cleanup() } catch { /* A failed cleanup must not keep the microphone running. */ } }
     // Release hardware before chat callbacks, transport or playback cleanup.

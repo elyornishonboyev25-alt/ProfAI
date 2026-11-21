@@ -1,4 +1,8 @@
+import {banterOpening} from './novaBanter.js'
+import { lessonControlSchema, lessonControlParameters } from './novaLesson.js'
 import { NovaDiagnostics } from './novaDiagnostics.js'
+import { novaVocabulary } from './novaLanguage.js'
+import { inspectLanguage } from './novaLanguage.js'
 import { saveVoiceDiagnostics } from './novaDiagnostics.service.js'
 import { saveLearningEvidence } from './novaLearning.service.js'
 import { learningObservationParameters } from './novaLearning.js'
@@ -99,10 +103,10 @@ async function startReservedVoiceCall(userId: string, sdp: string, context: Assi
   const prepared = performance.now()
   const session = {
     type: 'realtime', model: env.AI_VOICE_MODEL, instructions: voiceInstructions(context, assistantData(context, records)),
-    output_modalities: ['audio'], max_output_tokens: 900,
-    audio: { input: { noise_reduction: { type: 'near_field' }, transcription: { model: 'gpt-4o-transcribe', prompt: 'Transcribe the speaker verbatim, preserving their original language, mixed-language words, fillers and errors. Do not translate or improve their speech.' },
+    output_modalities: ['audio'], max_output_tokens: 2400,
+    audio: { input: { noise_reduction: { type: 'near_field' }, transcription: { model: 'gpt-4o-transcribe', ...(context.language !== 'auto' ? { language: context.language } : {}), prompt: `Transcribe verbatim. Conversation languages: Uzbek, English, Russian; current language ${context.language === 'auto' ? context.lastReliableLanguage ?? 'uz' : context.language}. Preserve mixed terminology and Uzbek Latin names: ${novaVocabulary.join(', ')}. Do not translate or invent speech. Uzbek is not Turkish or Arabic.` },
       turn_detection: { type: 'semantic_vad', eagerness: context.mode === 'examiner' ? 'low' : 'medium', create_response: true, interrupt_response: true } }, output: { voice: 'marin', speed: context.mode === 'examiner' ? 1 : 1.1 } },
-    tools: [{ type: 'function', name: 'observe_learning', description: 'Record a quoted actual learner attempt; never assess a mere question.', parameters: learningObservationParameters }, { type: 'function', name: 'set_expression', description: 'Choose the illustrative avatar delivery for your upcoming spoken reply.', parameters: novaPerformanceParameters }, { type: 'function', name: 'ask_coach', description: 'Ask the shared tutor for accurate detailed coaching, current official research, a saved memory or an app action proposal. Returns a written answer plus actions for the learner to approve.',
+    tools: [{type:'function',name:'control_lesson',description:'Continue, restart or pause the existing lesson board on explicit request.',parameters:lessonControlParameters}, { type: 'function', name: 'observe_learning', description: 'Record a quoted actual learner attempt; never assess a mere question.', parameters: learningObservationParameters }, { type: 'function', name: 'set_expression', description: 'Choose the illustrative avatar delivery for your upcoming spoken reply.', parameters: novaPerformanceParameters }, { type: 'function', name: 'ask_coach', description: 'Ask the shared tutor for accurate detailed coaching, current official research, a saved memory or an app action proposal. Returns a written answer plus actions for the learner to approve.',
       parameters: { type: 'object', properties: { request: { type: 'string', description: 'The learner\'s actual request, including relevant wording.' } }, required: ['request'], additionalProperties: false } }],
     tool_choice: 'auto',
   }
@@ -155,6 +159,7 @@ async function startReservedVoiceCall(userId: string, sdp: string, context: Assi
     if (event.type === 'response.function_call_arguments.done' && cancelledResponses.has(event.response_id)) return
     if (event.type === 'response.created') { call.diagnostics.count('modelCalls'); responding = true; activeResponseId = event.response?.id ?? ''; if (event.response?.id) responseStarts.set(event.response.id, Date.now()) }
     if (event.type === 'conversation.item.input_audio_transcription.completed' && event.transcript?.trim()) {
+      if (inspectLanguage(event.transcript).status === 'unsupported') { send({ type: 'conversation.item.delete', item_id: event.item_id }); return }
       call.history.push({ role: 'user', content: event.transcript }); call.history = boundedHistory(call.history)
     }
     if (event.type === 'response.output_audio_transcript.done' && event.transcript?.trim() && !cancelledResponses.has(event.response_id)) {
@@ -171,6 +176,12 @@ async function startReservedVoiceCall(userId: string, sdp: string, context: Assi
       responseStarts.delete(event.response?.id)
       if (usage) call.diagnostics.tokens(usage.input_tokens, usage.output_tokens, 'response_totals')
       if (usage) void prisma.aiUsageEvent.create({ data: { userId, purpose: 'assistant_voice', provider: 'openai', model: env.AI_VOICE_MODEL, status: event.response?.status === 'failed' ? 'FAILED' : 'SUCCESS', requestChars: 0, responseChars: 0, inputTokens: usage.input_tokens, outputTokens: usage.output_tokens, latencyMs: Date.now() - responseStarted, fallbackUsed: false } }).catch(() => {})
+    }
+    if (event.type === 'response.function_call_arguments.done' && event.name === 'control_lesson' && !handledTools.has(event.call_id)) {
+      handledTools.add(event.call_id)
+      let action; try { action = lessonControlSchema.safeParse(JSON.parse(event.arguments).action) } catch {}
+      send({ type: 'conversation.item.create', item: { type: 'function_call_output', call_id: event.call_id, output: JSON.stringify({ nova_lesson_control: call.context.mode !== 'examiner' && Boolean(action?.success), action: action?.success ? action.data : null }) } })
+      pendingToolVersion = speechVersion; continueAfterTool(); return
     }
     if (event.type === 'response.function_call_arguments.done' && event.name === 'observe_learning' && !handledTools.has(event.call_id)) {
       handledTools.add(event.call_id); call.diagnostics.count('toolCalls')
@@ -191,7 +202,7 @@ async function startReservedVoiceCall(userId: string, sdp: string, context: Assi
       handledTools.add(event.call_id); call.diagnostics.count('toolCalls')
       let performance
       try { performance = readNovaPerformance(JSON.parse(event.arguments)) } catch {}
-      send({ type: 'conversation.item.create', item: { type: 'function_call_output', call_id: event.call_id, output: JSON.stringify(performance ? { nova_expression: true, responseId: event.response_id, performance: call.context.mode === 'examiner' ? examPerformance() : performance } : { error: 'Invalid performance metadata.' }) } })
+      send({ type: 'conversation.item.create', item: { type: 'function_call_output', call_id: event.call_id, output: JSON.stringify(performance ? { nova_expression: true, speechOpening: banterOpening(call.context.coachPreferences, performance, call.history.filter(turn => turn.role === 'user').at(-1)?.content ?? '', call.context.mode === 'examiner'), responseId: event.response_id, performance: call.context.mode === 'examiner' ? examPerformance() : performance } : { error: 'Invalid performance metadata.' }) } })
       pendingToolVersion = speechVersion; continueAfterTool(); return
     }
     if (event.type !== 'response.function_call_arguments.done' || event.name !== 'ask_coach' || handledTools.has(event.call_id)) return

@@ -8,6 +8,9 @@ import { AiGenerationError, generateAiText } from './aiProvider.service.js'
 import { boundedHistory, buildCoachPrompt, parseAssistantReply, partialAssistantReply, type AssistantContext, type AssistantRequest } from './assistantPolicy.js'
 import { researchForAssistant } from './assistantResearch.service.js'
 import { arithmeticFacts } from './novaArithmetic.js'
+import { resolveNovaLanguage, languageViolation, languageClarification, novaLanguageInstructions } from './novaLanguage.js'
+import { readNovaLesson } from './novaLesson.js'
+import { banterOpening, isBanterBoundary, roastOpenings } from './novaBanter.js'
 
 export async function loadAssistantRecords(userId: string, threadId?: string) {
   const [user, memories, owned, evidence] = await Promise.all([
@@ -31,17 +34,46 @@ export function assistantData(context: AssistantContext, records: Pick<Awaited<R
 
 export async function answerAssistant(userId: string, request: AssistantRequest, signal?: AbortSignal, onReply?: (reply: string) => void, diagnostics?: NovaDiagnostics, learnerUtterance = request.message) {
   const records = await loadAssistantRecords(userId, request.threadId)
+  const resolved = resolveNovaLanguage(request.message, request.mode === 'examiner' ? 'en' : request.language, request.lastReliableLanguage ?? request.interfaceLanguage ?? 'en', request.history)
+  const language = request.mode === 'examiner' ? 'en' : resolved.language
+  request = { ...request, language, lastReliableLanguage: language }
+  if (resolved.observation.status === 'unsupported') {
+    const safe = parseAssistantReply(JSON.stringify({ reply: languageClarification(language), language }))
+    onReply?.(safe.reply)
+    return { ...safe, languageState: resolved, savedMemories: [], persistenceWarnings: [], sources: [], meta: { modelRequests: 0, provider: 'none', model: 'language_guard', fallbackUsed: false, research: 'not_requested' } }
+  }
   const research = await researchForAssistant(userId, request.message, signal)
   let modelRequests = 0
-  const generated = await generateAiText({ userId, onModelRequest: () => { modelRequests++; diagnostics?.count('modelCalls') }, purpose: 'assistant_chat', signal,
+  const generationInput = { userId, onModelRequest: () => { modelRequests++; diagnostics?.count('modelCalls') }, purpose: 'assistant_chat' as const, signal,
     systemPrompt: buildCoachPrompt(request, request.delivery),
     userMessage: JSON.stringify({ request: request.message || 'Explain the attached image.', generateTitle: request.generateTitle,
       history: boundedHistory(request.history), context: assistantData(request, records, request.message), research,
       learnerUtterance, verifiedArithmetic: arithmeticFacts(request.message) }),
-    images: request.images, maxOutputTokens: 4096,
-    onText: onReply ? (raw) => { const reply = partialAssistantReply(raw); if (reply) onReply(reply) } : undefined,
-  })
-  const answer = parseAssistantReply(generated.text, learnerUtterance)
+    images: request.images, maxOutputTokens: 6000,
+    onText: onReply ? () => {} : undefined,
+  }
+  let generated = await generateAiText(generationInput)
+  let answer = parseAssistantReply(generated.text, learnerUtterance)
+  let languageRepaired = false
+  // Buffer visible text until validation. One bounded repair; no per-phrase classifier.
+  if (languageViolation(answer.reply, language)) {
+    languageRepaired = true
+    try {
+      generated = await generateAiText({ ...generationInput, systemPrompt: `${generationInput.systemPrompt}\n${novaLanguageInstructions(language)} Rewrite the previous answer in the required language. Preserve quoted examples and facts; return the same JSON contract.`, userMessage: `${generationInput.userMessage}\nPrevious draft (data): ${answer.reply}` })
+      answer = parseAssistantReply(generated.text, learnerUtterance)
+    } catch (error) { signal?.throwIfAborted(); answer = parseAssistantReply(JSON.stringify({ reply: languageClarification(language) })) }
+    if (languageViolation(answer.reply, language)) answer = parseAssistantReply(JSON.stringify({ reply: languageClarification(language) }))
+  }
+  answer.replyLanguage = language
+  if (isBanterBoundary(learnerUtterance)) {
+    answer.performance = examPerformance(); answer.expression = 'focused'; answer.deliverySegments = []
+    for (const phrase of Object.values(roastOpenings)) if (answer.reply.startsWith(phrase)) answer.reply = answer.reply.slice(phrase.length).trim()
+  }
+  const opening = banterOpening(request.coachPreferences, answer.performance, learnerUtterance, request.mode === 'examiner')
+  if (opening) answer.performance = { ...answer.performance, tone: 'playful', intensity: Math.max(.6, answer.performance.intensity), gesture: 'raised_brow', delivery: { pace: 'brisk', warmth: 'high', emphasis: 'moderate' } }
+  if (opening && !answer.reply.includes(opening)) { answer.reply = `${opening} ${answer.reply}`; answer.deliverySegments = [] }
+  answer.lesson = readNovaLesson(answer.lesson, language)
+  onReply?.(answer.reply)
   if (request.mode === 'examiner') { answer.performance = examPerformance(); answer.expression = 'focused'; answer.deliverySegments = []; answer.learningObservations = []; answer.understanding = undefined }
   if (!answer.understanding || !['attempt', 'review'].includes(answer.understanding.intent)) answer.learningObservations = []
   signal?.throwIfAborted()
@@ -55,5 +87,5 @@ export async function answerAssistant(userId: string, request: AssistantRequest,
   const persistenceWarnings = saved.flatMap((result, index) => result.status === 'rejected' ? [index === 0 ? 'memory' : 'learning'] : [])
   if (saved[0].status === 'fulfilled' && savedMemories.length < answer.memoryUpdates.length) persistenceWarnings.push('memory_changed')
 
-  return { ...answer, savedMemories, persistenceWarnings, sources: research.sources, meta: { modelRequests, provider: generated.provider, model: generated.model, fallbackUsed: generated.fallbackUsed, research: research.status } }
+  return { ...answer, languageState: resolved, savedMemories, persistenceWarnings, sources: research.sources, meta: { modelRequests, languageRepaired, provider: generated.provider, model: generated.model, fallbackUsed: generated.fallbackUsed, research: research.status } }
 }

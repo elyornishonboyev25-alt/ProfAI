@@ -9,7 +9,7 @@ const { JSDOM } = requireBackend('jsdom')
 
 async function main() {
   const directory = await mkdtemp(join(tmpdir(), 'profai-listening-parts-'))
-  const dom = new JSDOM('<div id="root"></div>', { url: 'http://localhost:5173', pretendToBeVisual: true })
+  const dom = new JSDOM('<!doctype html><div id="root"></div>', { url: 'http://localhost:5173', pretendToBeVisual: true })
   try {
     for (const key of ['window', 'document', 'HTMLElement', 'HTMLInputElement', 'HTMLMediaElement', 'Audio', 'Element', 'Node', 'CustomEvent', 'Event', 'SVGElement', 'getComputedStyle', 'AbortController', 'AbortSignal']) {
       globalThis[key] = dom.window[key]
@@ -30,7 +30,7 @@ async function main() {
     await build({
       entryPoints: [process.argv[2] ?? 'scripts/tests/listening-parts-ui.tsx'], bundle: true, platform: 'node', format: 'cjs',
       outfile, tsconfig: 'tsconfig.json', define: { 'import.meta.env': '{}' }, external: ['node:assert/strict'],
-      loader: { '.jpg': 'dataurl', '.png': 'dataurl' },
+      loader: { '.jpg': 'dataurl', '.png': 'dataurl', '.woff2': 'dataurl', '.woff': 'dataurl', '.ttf': 'dataurl' },
     })
     await createRequire(import.meta.url)(outfile).run()
   } finally {

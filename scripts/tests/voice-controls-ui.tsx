@@ -23,7 +23,14 @@ export async function run() {
     assert.ok(dialog.textContent?.includes('IELTS examiner'))
     assert.equal(dialog.querySelector('[aria-label="Speech speed"]'), null)
     assert.equal(dialog.querySelector('[aria-label="Language"]'), null)
+    const language = dialog.querySelector('select')!
+    assert.ok(language, 'Conversation language is an optional visible control')
+    assert.deepEqual([...language.options].map(option => option.value), ['auto', 'uz', 'en', 'ru'])
     for (const name of ['English', 'Uzbek', 'Russian', '0.9×', '1.1×', '1.25×']) assert.ok(![...dialog.querySelectorAll('button')].some(button => button.textContent === name), `${name} is not a voice setting`)
-    console.log('PASS: the real voice dialog retains exam/coach modes and exposes no language or speed controls')
+    const examiner = [...dialog.querySelectorAll('button')].find(button => button.textContent === 'IELTS examiner')!
+    await act(async () => examiner.click())
+    assert.equal(dialog.querySelector('select')!.disabled, true, 'Examiner mode keeps English fixed')
+    assert.equal(dialog.querySelector('select')!.value, 'en')
+    console.log('PASS: real voice dialog exposes optional uz/en/ru language and consent controls, preserves exam/coach modes and fixes examiner English')
   } finally { await act(async () => root.unmount()); apiClient.get = get; apiClient.post = post }
 }

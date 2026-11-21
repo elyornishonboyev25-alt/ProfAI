@@ -7,6 +7,7 @@
 // falls back to a synthetic pulse, so nothing ever breaks.
 
 export type MicMeter = {
+  stream?: MediaStream
   /** Current loudness, ~0 (silence) → ~1 (loud), already smoothed + scaled. */
   getLevel: () => number
   stop: () => void
@@ -55,5 +56,5 @@ export async function createMicMeter(): Promise<MicMeter> {
     return Math.min(1, rms * 3.2)
   }
 
-  return { getLevel, stop }
+  return { getLevel, stop, stream }
 }

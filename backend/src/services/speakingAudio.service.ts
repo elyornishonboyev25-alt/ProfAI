@@ -1,4 +1,5 @@
 import { env } from '../config/env.js'
+import { novaVocabulary, languageViolation, type NovaLanguage } from './novaLanguage.js'
 import { novaTtsInstructions, type NovaPerformance } from './novaPersona.js'
 
 export type VoiceAudio = { audioBase64: string; mimeType: 'audio/mpeg' | 'audio/wav' }
@@ -32,6 +33,7 @@ function pcmWave(bytes: Buffer, rate: number): Buffer {
 }
 
 export async function generateExaminerAudio(text: string, voice: 'marin' | 'cedar', language: 'en' | 'uz' | 'ru' = 'en', nova?: { performance?: NovaPerformance }): Promise<VoiceAudio | null> {
+  if (nova && languageViolation(text, language)) return null
   const budget = AbortSignal.timeout(38_000)
   const gender = voice === 'cedar' ? 'masculine adult male' : 'feminine adult female'
   const style = nova ? novaTtsInstructions(language, nova.performance) : language === 'en'
@@ -83,7 +85,8 @@ export async function generateExaminerAudio(text: string, voice: 'marin' | 'ceda
   return null
 }
 
-export async function transcribeSpeakingAudio(audioBase64: string, mimeType: string): Promise<string | null> {
+export async function transcribeSpeakingAudio(audioBase64: string, mimeType: string, nova?: { language: NovaLanguage | 'auto'; lastReliableLanguage?: NovaLanguage }): Promise<string | null> {
+  const prompt = nova ? `Transcribe verbatim, never translate or answer. Allowed conversation languages: Uzbek, English, Russian. Expected language: ${nova.language === 'auto' ? nova.lastReliableLanguage ?? 'uz' : nova.language}. Uzbek is NOT Turkish or Arabic. Preserve Uzbek names and apostrophes in Latin script. Mixed English study terminology is not a language switch. Vocabulary: ${novaVocabulary.join(', ')}. Silence, noise or unintelligible speech: empty text. Never invent words.` : transcriptionPrompt
   const budget = AbortSignal.timeout(65_000)
   const bytes = Buffer.from(audioBase64, 'base64')
   if (env.OPENAI_API_KEY.trim()) {
@@ -93,7 +96,8 @@ export async function transcribeSpeakingAudio(audioBase64: string, mimeType: str
       const form = new FormData()
       form.append('file', new Blob([bytes], { type: mimeType }), `answer.${mimeType.split('/')[1]}`)
       form.append('model', model); form.append('response_format', 'json')
-      form.append('prompt', transcriptionPrompt)
+      form.append('prompt', prompt)
+      if (nova && nova.language !== 'auto') form.append('language', nova.language)
       const text = await request(`${origin}/audio/transcriptions`, {
         method: 'POST', headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}` }, body: form,
       }, budget, async (response) => {
@@ -111,7 +115,7 @@ export async function transcribeSpeakingAudio(audioBase64: string, mimeType: str
       const text = await request(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
         method: 'POST', headers: { 'x-goog-api-key': key, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          systemInstruction: { parts: [{ text: `${transcriptionPrompt} Return JSON: {"text":"verbatim transcript"}.` }] },
+          systemInstruction: { parts: [{ text: `${prompt} Return JSON: {"text":"verbatim transcript"}.` }] },
           contents: [{ role: 'user', parts: [{ inlineData: { mimeType: geminiMimeType, data: audioBase64 } }] }],
           generationConfig: { temperature: 0, maxOutputTokens: 4096, responseMimeType: 'application/json' },
         }),

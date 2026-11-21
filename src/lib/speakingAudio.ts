@@ -28,7 +28,7 @@ async function withTimeout<T>(signal: AbortSignal | undefined, milliseconds: num
   finally { clearTimeout(timer); signal?.removeEventListener('abort', abort) }
 }
 
-export async function transcribeAnswer(blob: Blob, signal?: AbortSignal): Promise<string> {
+export async function transcribeAnswer(blob: Blob, signal?: AbortSignal, nova?: { language: 'auto' | 'en' | 'uz' | 'ru'; lastReliableLanguage?: 'en' | 'uz' | 'ru' }, expectedUserId?: string): Promise<string> {
   if (!blob.size) throw new Error('The recording is empty.')
   if (blob.size > 5_500_000) throw new Error('Recording is too large. Record a shorter answer.')
   const audioBase64 = await new Promise<string>((resolve, reject) => {
@@ -42,7 +42,7 @@ export async function transcribeAnswer(blob: Blob, signal?: AbortSignal): Promis
   return withTimeout(signal, 80_000, async (bounded) => {
     const transcribe = () => {
       bounded.throwIfAborted()
-      return apiClient.post<{ text: string }>('/ai/speaking-audio/transcribe', { audioBase64, mimeType }, { signal: bounded })
+      return apiClient.post<{ text: string }>('/ai/speaking-audio/transcribe', { audioBase64, mimeType, ...(nova ? { nova } : {}) }, { signal: bounded, expectedUserId })
     }
     const response = await transcribe().catch(async (error: unknown) => {
       // Recover once from a dropped connection or unavailable provider using

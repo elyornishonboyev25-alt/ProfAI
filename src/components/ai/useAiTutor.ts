@@ -1,3 +1,7 @@
+import {useNovaLanguage} from './useNovaLanguage'
+import {transcribeAnswer} from '@/lib/speakingAudio'
+import {inspectLanguage, languageClarification} from '@/lib/novaLanguage'
+import {readNovaLesson, describeLessonContext} from '@/lib/novaLesson'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -111,7 +115,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
   // Every registered learner has a text balance; Live AI checks its own plan.
   const hasPremium = Boolean(user)
   const ownerKey = user?.id ? `user:${user.id}` : 'guest'
-  const coachPreferences = DEFAULT_COACH_PREFERENCES
+  const coachPreferences = useAiAssistantStore(state => state.coachPreferencesByOwner[ownerKey]) ?? DEFAULT_COACH_PREFERENCES
 
   const chatThreads = useAiAssistantStore((s) => s.threadsByOwner[ownerKey] ?? EMPTY_THREADS)
   const activeThreadId = useAiAssistantStore((s) => s.activeThreadIds[ownerKey] ?? null)
@@ -120,6 +124,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
   const memories = useAiAssistantStore((s) => s.memoriesByOwner[ownerKey] ?? EMPTY_MEMORIES)
   const activeThread = chatThreads.find((thread) => thread.id === activeThreadId) ?? null
   const messages = activeThread?.messages ?? EMPTY_MESSAGES
+  const conversationLanguage = useNovaLanguage(ownerKey, activeThread?.clientId ?? activeThreadId ?? 'new', messages[messages.length - 1]?.language?.lastReliable ?? uiLocale, messages[messages.length - 1]?.language?.selection)
   const isSending = useAiAssistantStore((s) => s.isSending)
   const error = useAiAssistantStore((s) => s.error)
   const voiceState = useAiAssistantStore((s) => s.voiceState)
@@ -141,12 +146,12 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
   const removeStoredMemory = useAiAssistantStore((s) => s.removeMemory)
   const setVoiceState = useAiAssistantStore((s) => s.setVoiceState)
   const setVoiceLevel = useAiAssistantStore((s) => s.setVoiceLevel)
-  const voiceLang = useAiAssistantStore((s) => s.voiceLang)
+  const voiceLang = conversationLanguage.language
   const setStoredVoiceLang = useAiAssistantStore((s) => s.setVoiceLang)
 
   const [draft, setDraft] = useState('')
   const [images, setImages] = useState<string[]>([])
-  const [preferredLocale, setPreferredLocale] = useState<ChatLocale>('en')
+  const [preferredLocale, setPreferredLocale] = useState<SpeechLang>('en')
   const [preferredName, setPreferredName] = useState<string | null>(null)
   const [voiceError, setVoiceError] = useState<string | null>(null)
   const storedPendingActions = useAiAssistantStore((s) => s.pendingActions)
@@ -169,6 +174,9 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
   const levelTimerRef = useRef<number | null>(null)
   // Real microphone metering + hands-free silence detection.
   const meterRef = useRef<MicMeter | null>(null)
+  const recorderRef = useRef<MediaRecorder | null>(null)
+  const recordedRef = useRef<Blob[]>([])
+  const heldVoiceRef = useRef(false)
   const rafRef = useRef<number | null>(null)
   const autoStopRef = useRef<(() => void) | null>(null)
   const stoppingVoiceRef = useRef(false)
@@ -258,7 +266,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
       .get<AiPreferences>('/profile/ai-preferences')
       .then((prefs) => {
         if (!mounted) return
-        const locale = prefs.preferredLocale.toLowerCase().startsWith('uz') ? 'uz' : 'en'
+        const locale = prefs.preferredLocale.toLowerCase().startsWith('uz') ? 'uz' : prefs.preferredLocale.toLowerCase().startsWith('ru') ? 'ru' : 'en'
         setPreferredLocale(locale)
         if (prefs.preferredName) setPreferredName(prefs.preferredName)
       })
@@ -313,7 +321,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
           spoke = true
           lastLoud = Date.now()
         }
-        if (spoke && Date.now() - lastLoud > 1700) {
+        if (!heldVoiceRef.current && spoke && Date.now() - lastLoud > 1700) {
           autoStopRef.current?.()
           return
         }
@@ -416,7 +424,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
         .slice(-24)
         .map((m) => ({ role: m.role, content: m.content }))
 
-      const currentLocale: ChatLocale = voiceLang === 'uz' ? 'uz' : 'en'
+      const currentLocale: SpeechLang = voiceLang
       setPreferredLocale(currentLocale)
 
       const snapshot = buildStudySnapshot(user?.id ?? null)
@@ -427,7 +435,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
 
       try {
         const response = await chatWithAssistant(text, history, location.pathname, {
-          coachPreferences: DEFAULT_COACH_PREFERENCES,
+          coachPreferences,
           studyContext: describeStudySnapshot(snapshot),
           learnerName: preferredName,
           screenContext,
@@ -435,7 +443,9 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
           workspaceContext: `${workspace.title}: ${workspace.prompt}`,
           siteKnowledge,
           images: outImages,
-          responseLanguage: options.speak ? voiceLang : 'auto',
+          responseLanguage: conversationLanguage.observe(text).selection,
+          lastReliableLanguage: conversationLanguage.lastReliable, interfaceLanguage: uiLocale,
+          lessonContext: describeLessonContext(messages),
           memories: memories.map(({ key, value }) => ({ key, value })),
           generateTitle: firstTurn,
           workspace: activeWorkspace,
@@ -447,12 +457,14 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
           },
         })
         if (controller.signal.aborted || useAuthStore.getState().user?.id !== user?.id) return
-        updateStoredMessage(ownerKey, threadId, assistantMessage.id, { content: response.reply, expression: response.expression, performance: response.performance, understanding: response.understanding, deliverySegments: response.deliverySegments, status: undefined })
+        updateStoredMessage(ownerKey, threadId, assistantMessage.id, { content: response.reply, lesson: readNovaLesson(response.lesson), language: { selection: response.languageState?.selection ?? conversationLanguage.selection, response: response.replyLanguage ?? voiceLang, lastReliable: response.replyLanguage ?? voiceLang }, expression: response.expression, performance: response.performance, understanding: response.understanding, deliverySegments: response.deliverySegments, status: undefined })
         if (!threadId.startsWith('local-')) {
           // Preserve message order without holding up audio or the next turn.
-          void userPersistPromise.then(() => persistAiMessage(threadId, { ...assistantMessage, content: response.reply, expression: response.expression, performance: response.performance, understanding: response.understanding, deliverySegments: response.deliverySegments, status: undefined }, response.replyLanguage ?? voiceLang, user?.id)).catch(() => null)
+          void userPersistPromise.then(() => persistAiMessage(threadId, { ...assistantMessage, content: response.reply, expression: response.expression, performance: response.performance, lesson: readNovaLesson(response.lesson), language: {selection: response.languageState?.selection ?? conversationLanguage.selection, response: response.replyLanguage ?? voiceLang, lastReliable: response.replyLanguage ?? voiceLang}, understanding: response.understanding, deliverySegments: response.deliverySegments, status: undefined }, response.replyLanguage ?? voiceLang, user?.id)).catch(() => null)
         }
 
+        if (response.lessonControl) { const board = [...messages].reverse().find(message => message.lesson); if (board) window.dispatchEvent(new CustomEvent('nova:lesson-control', { detail: { target: 'chat:' + board.id, action: response.lessonControl } })) }
+        if (response.replyLanguage) conversationLanguage.observe(response.reply)
         if (firstTurn && response.title) void renameChat(threadId, response.title)
         if (response.persistenceWarnings?.length) setError(localized(uiLocale, 'The reply is ready, but some notes were not saved. Review your memory before retrying.', 'Ответ готов, но часть заметок не сохранена. Проверьте память перед повтором.', "Javob tayyor, lekin ayrim qaydlar saqlanmadi. Qayta urinishdan oldin xotirani tekshiring."))
         if (Array.isArray(response.savedMemories)) { if (response.savedMemories.length) upsertStoredMemories(ownerKey, response.savedMemories) }
@@ -532,7 +544,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
       activeThreadId, createNewChat, draft, images, isSending, memories, messages, ownerKey, preferredName,
       location.pathname, user?.id,
       ttsSupported, setDraft, setError, setSending, setVoiceState, pushMessage, dispatchAction,
-      renameChat, stopLevelPulse, upsertStoredMemories, voiceLang, workspace, uiLocale, activeWorkspace, updateStoredMessage, removeStoredMessage, addThread,
+      renameChat, stopLevelPulse, upsertStoredMemories, voiceLang, conversationLanguage.selection, conversationLanguage.lastReliable, conversationLanguage.observe, coachPreferences, workspace, uiLocale, activeWorkspace, updateStoredMessage, removeStoredMessage, addThread,
     ],
   )
 
@@ -547,12 +559,13 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
     stopLevelPulse()
     setVoiceState('idle')
     setVoiceError(null)
+    conversationLanguage.choose(language)
     setStoredVoiceLang(language)
-    setPreferredLocale(language === 'uz' ? 'uz' : 'en')
+    setPreferredLocale(language)
   }, [recognition.abort, setStoredVoiceLang, setVoiceState, stopLevelPulse, stopListeningMeter])
 
   // ── Voice control ──────────────────────────────────────────────────────────
-  const startVoice = useCallback(async () => {
+  const startVoice = useCallback(async (fromHold = false) => {
     if (!hasPremiumAccess(useAuthStore.getState().user)) {
       window.dispatchEvent(new CustomEvent('profai:premium-required', { detail: 'Live AI' }))
       return
@@ -568,7 +581,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
     setVoiceError(null)
     stoppingVoiceRef.current = false
     voiceTurnRef.current = true
-    if (!recognition.supported) {
+    if (!recognition.supported && typeof MediaRecorder === 'undefined') {
       setVoiceError(localized(uiLocale, 'Voice input requires Chrome or Edge with microphone access.', 'Для голосового ввода нужен Chrome или Edge с доступом к микрофону.', 'Ovozli kiritish uchun mikrofon ruxsati bilan Chrome yoki Edge kerak.'))
       voiceTurnRef.current = false
       return
@@ -577,6 +590,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
     // Request real microphone access first. This gives us a reliable permission/device
     // result instead of showing a listening animation while capture is actually blocked.
     const meterResult = await startListeningMeter()
+    if (fromHold && !heldVoiceRef.current) { stopListeningMeter(); return }
     if (run !== voiceRunRef.current || (!meterResult.ok && meterResult.cancelled)) return
     if (!meterResult.ok) {
       stopListeningMeter()
@@ -596,7 +610,11 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
     }
 
     setVoiceState('listening')
-    if (!recognition.start()) {
+    recordedRef.current = []
+    if (typeof MediaRecorder !== 'undefined' && meterRef.current?.stream) {
+      try { const chunks: Blob[] = []; recordedRef.current = chunks; const recorder = new MediaRecorder(meterRef.current.stream); recorderRef.current = recorder; recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data) }; recorder.start(250) } catch { recorderRef.current = null }
+    }
+    if (recognition.supported && !recognition.start() && !recorderRef.current) {
       voiceTurnRef.current = false
       stopListeningMeter()
       setVoiceState('idle')
@@ -607,12 +625,23 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
     if (stoppingVoiceRef.current) return
     const run = voiceRunRef.current
     stoppingVoiceRef.current = true
+    let recorded: Blob | null = null
+    const recorder = recorderRef.current; recorderRef.current = null
+    if (recorder && recorder.state !== 'inactive') {
+      recorded = await new Promise<Blob>(resolve => { recorder.onstop = () => resolve(new Blob(recordedRef.current, { type: recorder.mimeType })); recorder.stop() })
+    }
     stopListeningMeter()
     stopLevelPulse()
     setVoiceState('thinking')
     // Wait for SpeechRecognition.onend: Chrome emits the final phrase after stop().
-    const transcript = (await recognition.stop()).trim()
+    let transcript = (await recognition.stop()).trim()
+    if (run !== voiceRunRef.current || useAuthStore.getState().user?.id !== user?.id) return
+    if (recorded?.size) {
+      try { transcript = await transcribeAnswer(recorded, undefined, { language: conversationLanguage.selection, lastReliableLanguage: conversationLanguage.lastReliable }, user?.id) }
+      catch { /* Retain the browser's actual transcript if server ASR is unavailable. */ }
+    }
     if (run !== voiceRunRef.current) return
+    if (inspectLanguage(transcript).status === 'unsupported') { voiceTurnRef.current = false; setVoiceError(languageClarification(voiceLang)); setVoiceState('idle'); return }
     if (voiceTurnRef.current && transcript) {
       voiceTurnRef.current = false
       void send({ text: transcript, speak: true })
@@ -627,7 +656,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
   }, [uiLocale, recognition, send, setVoiceState, stopLevelPulse, stopListeningMeter])
 
   useEffect(() => {
-    if (!recognition.error) return
+    if (!recognition.error || recorderRef.current) return
     voiceRunRef.current++
     voiceTurnRef.current = false
     setVoiceError(localized(uiLocale, 'Voice recognition failed. Please try again.', 'Не удалось распознать речь. Повторите попытку.', 'Ovozni aniqlab bo‘lmadi. Qayta urinib ko‘ring.'))
@@ -650,6 +679,10 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
   }, [setVoiceState, stopLevelPulse])
 
   const cancelVoice = useCallback(() => {
+    heldVoiceRef.current = false
+    const recorder = recorderRef.current; recorderRef.current = null
+    if (recorder && recorder.state !== 'inactive') { recorder.ondataavailable = null; recorder.stop() }
+    recordedRef.current = []
     voiceRunRef.current++
     voiceTurnRef.current = false
     voiceOutputVersionRef.current = null
@@ -762,6 +795,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
   }, [cancelVoice, ownerKey, setPendingActions, setError])
 
   return {
+    conversationLanguage,
     user,
     hasPremium,
     chatThreads,
@@ -801,7 +835,9 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
     voiceLevel,
     voiceLang,
     setVoiceLang,
-    voiceSupported: recognition.supported,
+    voiceSupported: recognition.supported || typeof MediaRecorder !== 'undefined',
+    beginPushToTalk: () => { heldVoiceRef.current = true; cancelCoachAudio(); void startVoice(true) },
+    endPushToTalk: (cancel = false) => { heldVoiceRef.current = false; if (cancel) cancelVoice(); else window.setTimeout(() => void stopVoice(), 220) },
     voiceError: voiceError ? localizedNotices.get(voiceError)?.[uiLocale] ?? voiceError : null,
     canReplayVoice: canRetryCoachAudio(),
     retryVoiceReply: () => { setVoiceError(null); retryCoachAudio() },

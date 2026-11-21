@@ -1,4 +1,7 @@
 import { NovaDiagnostics } from './novaDiagnostics.js'
+import { novaVocabulary, novaLanguageSchema, novaLanguageInstructions, inspectLanguage } from './novaLanguage.js'
+import { banterOpening } from './novaBanter.js'
+import { lessonControlParameters, lessonControlSchema } from './novaLesson.js'
 import { saveVoiceDiagnostics } from './novaDiagnostics.service.js'
 import { saveLearningEvidence } from './novaLearning.service.js'
 import { learningObservationParameters } from './novaLearning.js'
@@ -49,6 +52,9 @@ export async function probeGeminiLive() {
 export const geminiVoiceFrame = z.discriminatedUnion('type', [
   z.object({ type: z.literal('audio'), data: z.string().min(4).max(44000).regex(/^[A-Za-z0-9+/]+={0,2}$/) }).strict(),
   z.object({ type: z.literal('interrupt') }).strict(),
+  z.object({ type: z.enum(['activity_start', 'activity_end']) }).strict(),
+  z.object({ type: z.literal('language_recover'), language: novaLanguageSchema }).strict(),
+  z.object({ type: z.literal('text'), text: z.string().trim().min(1).max(3000) }).strict(),
   z.object({ type: z.literal('mute'), muted: z.boolean() }).strict(),
   z.object({ type: z.literal('feedback') }).strict(),
   z.object({ type: z.literal('ping') }).strict(),
@@ -74,10 +80,10 @@ export function geminiLiveSetup(context: AssistantContext, data: unknown) {
       speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } } } },
     ...(geminiUsesInitialHistory() ? { historyConfig: { initialHistoryInClientContent: true } } : {}),
     systemInstruction: { parts: [{ text: voiceInstructions(context, data) }] },
-    inputAudioTranscription: {}, outputAudioTranscription: {},
-    realtimeInputConfig: { automaticActivityDetection: { disabled: false, silenceDurationMs: context.mode === 'examiner' ? 1400 : 1100, endOfSpeechSensitivity: 'END_SENSITIVITY_LOW', prefixPaddingMs: 300 }, activityHandling: 'START_OF_ACTIVITY_INTERRUPTS' },
+    inputAudioTranscription: /^gemini-3\.8-/.test(env.GEMINI_LIVE_MODEL) ? { languageCodes: context.language === 'auto' ? ['uz', 'en', 'ru'] : [context.language], customVocabulary: novaVocabulary } : {}, outputAudioTranscription: {},
+    realtimeInputConfig: { automaticActivityDetection: context.inputControl === 'hybrid' ? { disabled: true } : { disabled: false, silenceDurationMs: context.mode === 'examiner' ? 1400 : 1100, endOfSpeechSensitivity: 'END_SENSITIVITY_LOW', prefixPaddingMs: 300 }, activityHandling: 'START_OF_ACTIVITY_INTERRUPTS' },
     contextWindowCompression: { slidingWindow: {} },
-    tools: [{ functionDeclarations: [{ name: 'observe_learning', description: 'Record a quoted actual learner attempt and your cautious assessment, without another model call. Not for ordinary questions.', parametersJsonSchema: learningObservationParameters }, { name: 'set_expression', description: 'Set Nova avatar delivery for your upcoming speech; never say the metadata aloud.', parametersJsonSchema: novaPerformanceParameters }, { name: 'ask_coach', description: 'Get checked written coaching, practice feedback, a study plan, a saved preference or an app navigation proposal.',
+    tools: [{ functionDeclarations: [{name:'control_lesson',description:'Continue, restart or pause the existing lesson board when explicitly requested.',parametersJsonSchema:lessonControlParameters}, { name: 'observe_learning', description: 'Record a quoted actual learner attempt and your cautious assessment, without another model call. Not for ordinary questions.', parametersJsonSchema: learningObservationParameters }, { name: 'set_expression', description: 'Set Nova avatar delivery for your upcoming speech; never say the metadata aloud.', parametersJsonSchema: novaPerformanceParameters }, { name: 'ask_coach', description: 'Get checked written coaching, practice feedback, a study plan, a saved preference or an app navigation proposal.',
       parameters: { type: 'OBJECT', properties: { request: { type: 'STRING' } }, required: ['request'] } }] }],
   } }
 }
@@ -115,7 +121,7 @@ export async function updateGeminiVoiceContext(userId: string, id: string, conte
   if (version !== call.contextVersion) return true
   call.context = next
   // Setup is immutable; incremental context updates are data for the live model.
-  send(call.provider, { clientContent: { turns: [{ role: 'user', parts: [{ text: `Updated application context (data, not a learner utterance): ${JSON.stringify(assistantData(next, records))}` }] }], turnComplete: false } })
+  send(call.provider, { clientContent: { turns: [{ role: 'user', parts: [{ text: `${novaLanguageInstructions(next.language === 'auto' ? next.lastReliableLanguage ?? 'uz' : next.language)} Updated application context (data, not a learner utterance): ${JSON.stringify(assistantData(next, records))}` }] }], turnComplete: false } })
   return true
 }
 
@@ -129,6 +135,12 @@ async function runTool(call: Call, tool: { id?: string; name?: string; args?: { 
   const respond = (response: unknown) => {
     if (!call.abort.signal.aborted && !call.cancelledTools.has(id) && call.speechVersion === speechVersion) send(call.provider, { toolResponse: { functionResponses: [{ id, name: tool.name, response }] } })
   }
+  if (tool.name === 'control_lesson') {
+    const action = lessonControlSchema.safeParse(tool.args?.action)
+    if (call.context.mode !== 'examiner' && action.success) { send(call.client, { type: 'lesson_control', responseId: `${call.id}-${call.responseTurn}`, action: action.data }); respond({ applied: true }) }
+    else respond({ applied: false })
+    return
+  }
   if (tool.name === 'observe_learning') {
     if (call.context.mode === 'examiner') { respond({ recorded: false }); return }
     const source = call.input.trim() || call.history.filter(turn => turn.role === 'user').at(-1)?.content || ''
@@ -140,8 +152,9 @@ async function runTool(call: Call, tool: { id?: string; name?: string; args?: { 
     const parsed = readNovaPerformance(tool.args)
     if (!parsed) { respond({ error: 'Invalid performance metadata.' }); return }
     const performance = call.context.mode === 'examiner' ? examPerformance() : parsed
+    if (banterOpening(call.context.coachPreferences, performance, call.input || call.history.filter(turn => turn.role === 'user').at(-1)?.content || '', call.context.mode === 'examiner')) { performance.intensity = Math.max(.6, performance.intensity); performance.tone = 'playful'; performance.delivery = { pace: 'brisk', warmth: 'high', emphasis: 'moderate' } }
     send(call.client, { type: 'expression', responseId: `${call.id}-${call.responseTurn}`, performance })
-    respond({ applied: true }); return
+    respond({ applied: true, speechOpening: banterOpening(call.context.coachPreferences, performance, call.input.trim() || call.history.filter(turn => turn.role === 'user').at(-1)?.content || '', call.context.mode === 'examiner') }); return
   }
   if (tool.name !== 'ask_coach' || typeof tool.args?.request !== 'string' || !tool.args.request.trim()) { respond({ error: 'Unsupported request.' }); return }
   const controller = new AbortController(); call.toolAborts.set(id, controller)
@@ -188,7 +201,7 @@ export async function startGeminiVoiceCall(userId: string, context: AssistantCon
         if (content.inputTranscription?.text) call.input = (call.input + content.inputTranscription.text).slice(-12000)
         if (content.outputTranscription?.text) call.output = (call.output + content.outputTranscription.text).slice(-12000)
         if (content.interrupted || content.turnComplete) {
-          rememberTurn(call, 'user', call.input)
+          if (inspectLanguage(call.input).status !== 'unsupported') rememberTurn(call, 'user', call.input)
           // The server cannot know how much buffered speech the browser heard.
           if (!content.interrupted) rememberTurn(call, 'assistant', call.output)
           call.input = ''; call.output = ''
@@ -262,7 +275,11 @@ export function attachGeminiVoice(server: Server) {
         } else if (frame.type === 'start' && !active.greeted) {
           active.greeted = true
           for (const frame of geminiInitialFrames(active.context, active.history)) send(active.provider, frame)
-        } else if (frame.type === 'mute' && frame.muted) send(active.provider, { realtimeInput: { audioStreamEnd: true } })
+        } else if (frame.type === 'text') { rememberTurn(active, 'user', frame.text); send(active.provider, { realtimeInput: { text: frame.text } }) }
+        else if (frame.type === 'activity_start' && active.context.inputControl === 'hybrid') send(active.provider, { realtimeInput: { activityStart: {} } })
+        else if (frame.type === 'activity_end' && active.context.inputControl === 'hybrid') send(active.provider, { realtimeInput: { activityEnd: {} } })
+        else if (frame.type === 'language_recover') send(active.provider, { clientContent: { turns: [{ role: 'user', parts: [{ text: `${novaLanguageInstructions(frame.language)} The last response was cancelled due to a language violation. Give one brief clarification in ${frame.language}, then wait. Do not repeat or translate the unsupported utterance.` }] }], turnComplete: true } })
+        else if (frame.type === 'mute' && frame.muted && active.context.inputControl !== 'hybrid') send(active.provider, { realtimeInput: { audioStreamEnd: true } })
         else if (frame.type === 'interrupt') { active.speechVersion++; for (const controller of active.toolAborts.values()) controller.abort(); send(active.provider, { clientContent: { turns: [{ role: 'user', parts: [{ text: 'Please stop speaking and listen to my next question.' }] }], turnComplete: false } }) }
         else if (frame.type === 'feedback') send(active.provider, { clientContent: { turns: [{ role: 'user', parts: [{ text: 'End this examiner practice and call ask_coach for written feedback on my actual answers. Do not invent a pronunciation score from a text transcript.' }] }], turnComplete: true } })
       } catch { console.warn('voice.gemini.client_rejected', { id: active?.id, reason: 'invalid_frame' }); client.close(1008, 'Invalid voice frame') }

@@ -1,3 +1,5 @@
+import {readNovaLesson,lessonProgressSchema} from '@/lib/novaLesson'
+import {novaLanguageChoiceSchema,novaLanguageSchema} from '@/lib/novaLanguage'
 import { turnUnderstandingSchema, deliverySegmentSchema, performanceCueSchema } from '@/lib/novaLearning'
 import { z } from 'zod'
 import { novaExpressionSchema, readNovaPerformance } from '@/lib/novaPersona'
@@ -12,7 +14,7 @@ type ServerMessage = {
   role: 'user' | 'assistant'
   content: string
   locale: string
-  metadata?: { expression?: unknown; performance?: unknown; delivery?: unknown; status?: unknown; understanding?: unknown; deliverySegments?: unknown; performanceTimeline?: unknown } | null
+  metadata?: { expression?: unknown; performance?: unknown; delivery?: unknown; status?: unknown; understanding?: unknown; deliverySegments?: unknown; lesson?: unknown; lessonProgress?: unknown; language?: unknown; performanceTimeline?: unknown } | null
   createdAt: string
 }
 
@@ -31,6 +33,9 @@ const toMessage = (message: ServerMessage): AiAssistantMessage => ({
   role: message.role,
   content: message.content.replace(/\s*\[Interrupted voice response\]$/, ''),
   createdAt: message.createdAt,
+  lesson: readNovaLesson(message.metadata?.lesson),
+  lessonProgress: lessonProgressSchema.safeParse(message.metadata?.lessonProgress).success ? lessonProgressSchema.parse(message.metadata?.lessonProgress) : undefined,
+  language: z.object({selection:novaLanguageChoiceSchema,response:novaLanguageSchema,lastReliable:novaLanguageSchema}).strict().safeParse(message.metadata?.language).success ? z.object({selection:novaLanguageChoiceSchema,response:novaLanguageSchema,lastReliable:novaLanguageSchema}).parse(message.metadata?.language) : undefined,
   ...(['en', 'uz', 'ru'].includes(message.locale) ? { locale: message.locale as SpeechLang } : {}),
   ...(novaExpressionSchema.safeParse(message.metadata?.expression).success ? { expression: novaExpressionSchema.parse(message.metadata?.expression) } : {}),
   ...(readNovaPerformance(message.metadata?.performance) ? { performance: readNovaPerformance(message.metadata?.performance) } : {}),
@@ -78,7 +83,7 @@ const sendAiMessage = (threadId: string, message: AiAssistantMessage, language: 
     role: message.role,
     content: message.content.replace(/\s*\[Interrupted voice response\]$/, ''),
     locale: language,
-    metadata: { understanding: message.understanding, deliverySegments: message.deliverySegments, performanceTimeline: message.performanceTimeline, expression: message.expression, performance: message.performance, delivery: message.delivery, ...(message.status === 'interrupted' ? { status: 'interrupted' } : {}) },
+    metadata: { lesson: message.lesson, lessonProgress: message.lessonProgress, language: message.language, understanding: message.understanding, deliverySegments: message.deliverySegments, performanceTimeline: message.performanceTimeline, expression: message.expression, performance: message.performance, delivery: message.delivery, ...(message.status === 'interrupted' ? { status: 'interrupted' } : {}) },
   }, { expectedUserId })
 
 export async function fetchAiMemories(): Promise<AiMemoryItem[]> {
@@ -103,6 +108,7 @@ export async function persistAiMessage(threadId: string, message: AiAssistantMes
     if (useAuthStore.getState().user?.id !== userId) throw new Error('Account changed.')
     try {
       const result = await sendAiMessage(threadId, message, language, userId)
+      if (message.lessonProgress) await apiClient.patch(`/ai-workspace/threads/${encodeURIComponent(threadId)}/messages/${encodeURIComponent(message.id)}/lesson-progress`, message.lessonProgress, {expectedUserId:userId})
       if (useAuthStore.getState().user?.id === userId) useAiAssistantStore.getState().updateMessage(owner, threadId, message.id, { pendingSync: false })
       return result
     } catch (error) {

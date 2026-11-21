@@ -25,6 +25,9 @@ export type AiAssistantMessage = {
   understanding?: import('@/lib/novaLearning').TurnUnderstanding
   deliverySegments?: import('@/lib/novaLearning').DeliverySegment[]
   performanceTimeline?: import('@/lib/novaLearning').PerformanceCue[]
+  lesson?: import('@/lib/novaLesson').NovaLesson
+  lessonProgress?: import('@/lib/novaLesson').LessonProgress
+  language?: { selection: import('@/lib/novaLanguage').NovaLanguageChoice; response: SpeechLang; lastReliable: SpeechLang }
 }
 
 export type AiAssistantThread = {
@@ -55,6 +58,7 @@ export type AiMemoryItem = {
 export type AiVoiceState = 'idle' | 'listening' | 'thinking' | 'speaking'
 
 type AiAssistantState = {
+  conversationLanguages: Record<string, { selection: import('@/lib/novaLanguage').NovaLanguageChoice; lastReliable: SpeechLang }>
   isOpen: boolean
   isSending: boolean
   error: string | null
@@ -171,6 +175,7 @@ export const useAiAssistantStore = create<AiAssistantState>()(
       voiceState: 'idle',
       voiceLevel: 0,
       voiceLang: 'en',
+      conversationLanguages: {},
       activeWorkspace: 'general',
       coachPreferencesByOwner: {},
       setCoachPreferences: (owner, preferences) => set((state) => ({ coachPreferencesByOwner: {

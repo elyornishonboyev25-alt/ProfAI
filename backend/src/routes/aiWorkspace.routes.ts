@@ -1,4 +1,6 @@
 import { turnUnderstandingSchema, deliverySegmentSchema, performanceCueSchema } from '../services/novaLearning.js'
+import { lessonSchema, lessonProgressSchema, readNovaLesson } from '../services/novaLesson.js'
+import { novaLanguageChoiceSchema, novaLanguageSchema } from '../services/novaLanguage.js'
 import { editNovaMemory, MemoryConflict, InvalidMemory, saveNovaMemories } from '../services/novaMemory.service.js'
 import { loadSkillEvidence, summarizeSkillEvidence } from '../services/novaLearning.service.js'
 import { Router } from 'express'
@@ -10,6 +12,9 @@ import { asyncHandler } from '../utils/asyncHandler.js'
 import { novaExpressionSchema, novaPerformanceSchema } from '../services/novaPersona.js'
 
 export const messageMetadataSchema = z.object({
+  lesson: lessonSchema.refine(value => Boolean(readNovaLesson(value)), 'Invalid lesson graph, language or block identifiers').optional(),
+  lessonProgress: lessonProgressSchema.optional(),
+  language: z.object({ selection: novaLanguageChoiceSchema, response: novaLanguageSchema, lastReliable: novaLanguageSchema }).strict().optional(),
   understanding: turnUnderstandingSchema.optional(),
   deliverySegments: z.array(deliverySegmentSchema).max(4).optional(),
   performanceTimeline: z.array(performanceCueSchema).max(16).optional(),
@@ -19,6 +24,17 @@ export const messageMetadataSchema = z.object({
   status: z.literal('interrupted').optional(),
 }).strict()
 const router = Router()
+router.patch('/threads/:threadId/messages/:messageId/lesson-progress', requireAuth, asyncHandler(async (req, res) => {
+  const { threadId, messageId } = z.object({ threadId: z.string().min(1).max(191), messageId: z.string().min(1).max(191) }).parse(req.params)
+  const progress = lessonProgressSchema.parse(req.body)
+  const owned = await prisma.aiConversationThread.findFirst({ where: { id: threadId, userId: req.user!.id }, select: { id: true } })
+  if (!owned) return res.status(404).json({ message: 'Chat not found.' })
+  const message = await prisma.aiConversationMessage.findFirst({ where: { id: messageId, threadId } })
+  const metadata = message?.metadata && typeof message.metadata === 'object' && !Array.isArray(message.metadata) ? message.metadata : {}
+  if (!message || !lessonSchema.safeParse(metadata.lesson).success) return res.status(404).json({ message: 'Lesson not found.' })
+  await prisma.aiConversationMessage.update({ where: { id: messageId }, data: { metadata: { ...metadata, lessonProgress: progress } } })
+  return res.status(204).send()
+}))
 
 const threadIdSchema = z.object({ threadId: z.string().min(1).max(191) })
 const memoryIdSchema = z.object({ memoryId: z.string().min(1).max(191) })

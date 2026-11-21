@@ -60,6 +60,9 @@ export interface GeminiChatAction {
 }
 
 export interface GeminiChatResponse {
+  lessonControl?: 'continue'|'restart'|'pause'
+  lesson?: import('@/lib/novaLesson').NovaLesson
+  languageState?: {language: 'uz'|'en'|'ru';selection: 'auto'|'uz'|'en'|'ru'}
   reply: string
   expression?: import('@/lib/novaPersona').NovaExpression
   performance?: import('@/lib/novaPersona').NovaPerformance
@@ -145,6 +148,9 @@ export async function evaluateWriting(
   }
 }
 export type ChatAssistantOptions = {
+  lastReliableLanguage?: 'uz'|'en'|'ru'
+  interfaceLanguage?: 'uz'|'en'|'ru'
+  lessonContext?: string
   turnId?: string
   coachPreferences?: import('@/services/ai/coachPreferences').CoachPreferences
   workspace?: import('@/services/ai/workspaces').AiWorkspaceId
@@ -173,7 +179,7 @@ export async function chatWithAssistant(
   options: ChatAssistantOptions = {},
 ): Promise<GeminiChatResponse> {
   const payload = {
-    turnId: options.turnId, coachPreferences: options.coachPreferences,
+    turnId: options.turnId, lastReliableLanguage: options.lastReliableLanguage, interfaceLanguage: options.interfaceLanguage, lessonContext: options.lessonContext, coachPreferences: options.coachPreferences,
     message, history: history.slice(-24), pathname, workspace: options.workspace ?? 'general',
     language: options.responseLanguage ?? 'auto', mode: options.mode ?? 'coach', threadId: options.threadId,
     studyContext: (options.studyContext ?? '').slice(0, 16000), screenContext: (options.screenContext ?? '').slice(0, 12000),

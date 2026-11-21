@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { novaLanguageChoiceSchema, novaLanguageSchema, inspectLanguage, languageClarification, latinUzbekTranscript } from '../services/novaLanguage.js'
 import { z } from 'zod'
 import { generateExaminerAudio, transcribeSpeakingAudio, type VoiceAudio } from '../services/speakingAudio.service.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
@@ -101,14 +102,15 @@ router.post('/voice', asyncHandler(async (req, res) => {
 }))
 
 router.post('/transcribe', asyncHandler(async (req, res) => {
-  const { audioBase64, mimeType } = z.object({
+  const { audioBase64, mimeType, nova } = z.object({
+    nova: z.object({ language: novaLanguageChoiceSchema, lastReliableLanguage: novaLanguageSchema.optional() }).strict().optional(),
     audioBase64: z.string().min(100).max(7_500_000).regex(/^[A-Za-z0-9+/]+={0,2}$/),
     mimeType: z.enum(['audio/webm', 'audio/mp4', 'audio/ogg', 'audio/wav']),
   }).strict().parse(req.body)
   if (Buffer.from(audioBase64, 'base64').length > 5_500_000) return res.status(413).json({ message: 'Recording is too large.' })
-  const text = await transcribeSpeakingAudio(audioBase64, mimeType)
+  const text = await transcribeSpeakingAudio(audioBase64, mimeType, nova)
   if (text === null) return res.status(503).json({ message: 'Speech transcription is temporarily unavailable. Your recording can be retried.' })
-  return res.json({ text })
+  return res.json({ text: nova ? latinUzbekTranscript(text) : text, ...(nova ? { observation: inspectLanguage(text) } : {}) })
 }))
 
 export default router

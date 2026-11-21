@@ -1,3 +1,5 @@
+import NovaConversationControls from './NovaConversationControls'
+import NovaLessonMessage from './NovaLessonMessage'
 import NovaLearningNotes from './NovaLearningNotes'
 import { retryPendingAiMessages } from '@/services/aiWorkspacePersistence'
 import NovaMemoryCard from './NovaMemoryCard'
@@ -436,7 +438,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                   {user && <NovaLearningNotes key={user.id} userId={user.id} onPractice={setDraft} />}
                 </div>
               ) : (
-                <div className="coach-drawer-settings min-h-0 flex-1 overflow-y-auto p-4">
+                <div className="coach-drawer-settings min-h-0 flex-1 overflow-y-auto p-4"><NovaConversationControls tutor={tutor} />
                   <section className="coach-glass coach-focus-card">
                     <h2><AudioLines size={15}/>{studioText.focus}</h2>
                     <div className="coach-focus-list">{AI_WORKSPACES.map(({ id }) => {
@@ -608,7 +610,7 @@ export function AIChatWindow({ variant = 'floating', onClose }: AIChatWindowProp
                     ))}
                   </div>
                 ) : null}
-                {message.role === 'assistant' ? <><span className="coach-answer-author">Nova</span><AiMessageContent content={message.content} /></> : <p className="whitespace-pre-wrap">{message.content}</p>}
+                {message.role === 'assistant' ? <><span className="coach-answer-author">Nova</span><AiMessageContent content={message.content} />{message.lesson && activeThreadId && <NovaLessonMessage message={message} threadId={activeThreadId} userId={user?.id} onAttempt={text=>void tutor.send({text})}/>}</> : <p className="whitespace-pre-wrap">{message.content}</p>}
                 {message.role === 'assistant' && message.content ? <CopyButton text={message.content} /> : null}
                 {message.pendingSync && <p className="mt-2 text-xs opacity-80">{uiLanguage === 'uz' ? 'Shu qurilmada saqlangan.' : uiLanguage === 'ru' ? 'Сохранено на этом устройстве.' : 'Saved on this device.'} <button type="button" className="underline" onClick={() => void retryPendingAiMessages()}>{uiLanguage === 'uz' ? 'Qayta sinxronlash' : uiLanguage === 'ru' ? 'Синхронизировать' : 'Retry sync'}</button></p>}
                 {message.status === 'interrupted' ? <p className="mt-2 text-xs text-amber-700">{uiLanguage === 'uz' ? 'Javob to‘xtatildi' : uiLanguage === 'ru' ? 'Ответ остановлен' : <UiText text={"Response stopped"} />}</p> : null}

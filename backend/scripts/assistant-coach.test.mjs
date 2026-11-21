@@ -82,7 +82,7 @@ test('voice and text share grounding, language and honest assessment rules', () 
   const context = assistantContextSchema.parse({ language: 'uz', workspace: 'ielts' })
   assert.match(buildCoachPrompt(context), /natural Uzbek/)
   assert.match(buildCoachPrompt(context), /Never infer pronunciation from text/)
-  assert.match(buildCoachPrompt(context, 'voice'), /1-3 short sentences/)
+  assert.match(buildCoachPrompt(context, 'voice'), /sufficiently detailed for a full lesson/)
   assert.match(voiceInstructions({ ...context, mode: 'examiner' }, {}), /Never correct, praise, coach or score/)
   const history = Array.from({ length: 100 }, (_, i) => ({ role: 'user', content: String(i).padEnd(1000, '.') }))
   assert.equal(boundedHistory(history, 2500).length, 2)
@@ -103,7 +103,9 @@ test('automatic reply language follows every new question while exam English rem
     assert.equal(parseAssistantReply(JSON.stringify({ reply: 'Example', language })).replyLanguage, language)
   }
   assert.equal(parseAssistantReply(JSON.stringify({ reply: 'Legacy reply' })).replyLanguage, undefined)
-  assert.throws(() => parseAssistantReply(JSON.stringify({ reply: 'Invalid reply', language: 'invalid' })))
+  const invalidLanguage = parseAssistantReply(JSON.stringify({ reply: 'Useful reply', language: 'invalid' }))
+  assert.equal(invalidLanguage.replyLanguage, undefined)
+  assert.equal(invalidLanguage.reply, 'Useful reply', 'Invalid optional language metadata cannot discard useful text; the actual output guard validates prose')
 })
 
 test('history queries skip empty conversations before applying the account limit', async (t) => {

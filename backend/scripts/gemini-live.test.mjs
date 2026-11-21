@@ -59,7 +59,7 @@ test('Gemini-only deployments advertise native voice and keep Live separate from
   assert.equal(geminiInitialFrames(assistantContextSchema.parse({}), [], 'gemini-2.5-flash-native-audio-preview-12-2025').length, 1)
   assert.deepEqual(setup.generationConfig.responseModalities, ['AUDIO'])
   assert.equal(setup.generationConfig.speechConfig.voiceConfig.prebuiltVoiceConfig.voiceName, 'Kore')
-  assert.deepEqual(setup.inputAudioTranscription, {}); assert.deepEqual(setup.outputAudioTranscription, {})
+  assert.deepEqual(setup.inputAudioTranscription.languageCodes, ['uz']); assert.ok(setup.inputAudioTranscription.customVocabulary.includes('Toshkent')); assert.deepEqual(setup.outputAudioTranscription, {})
   assert.match(setup.systemInstruction.parts[0].text, /Never correct, praise, coach or score/)
   assert.ok(!JSON.stringify(setup).includes('fixture-server-secret'))
   for (const frame of [{ type: 'setup', key: 'unsafe' }, { type: 'audio', data: 'bad bytes!' }, { type: 'audio', data: 'AAAA', model: 'another-model' }]) assert.equal(geminiVoiceFrame.safeParse(frame).success, false)

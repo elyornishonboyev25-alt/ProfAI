@@ -1,3 +1,7 @@
+import NovaConversationControls from './NovaConversationControls'
+import NovaLessonMessage from './NovaLessonMessage'
+import {usePushToTalk} from './usePushToTalk'
+import {cancelCoachAudio} from '@/lib/coachAudio'
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Mic, MicOff, Minimize2, Square, X, RotateCcw, AudioLines } from 'lucide-react'
@@ -18,7 +22,7 @@ const EASE = [0.22, 1, 0.36, 1] as const
 // Immersive, full-screen "talk to Ivygoo" experience. Mounted once at the app root so
 // it can be docked and re-expanded. Closing or leaving the page ends capture.
 function StandardTalkOverlay({ tutor }: { tutor: AiTutorController }) {
-  const { c } = useCopy()
+  const { c, language: interfaceLanguage } = useCopy()
   const talkOpen = useAiAssistantStore((s) => s.talkOpen)
   const closeTalk = useAiAssistantStore((s) => s.closeTalk)
   const [docked, setDocked] = useState(false)
@@ -37,6 +41,7 @@ function StandardTalkOverlay({ tutor }: { tutor: AiTutorController }) {
   const endTalkRef = useRef(endTalk)
   endTalkRef.current = endTalk
   const cancelVoiceRef = useRef(cancelVoice)
+  const ptt = usePushToTalk(talkOpen && !docked, () => { window.dispatchEvent(new Event('nova:interrupt')); tutor.beginPushToTalk() }, tutor.endPushToTalk)
   cancelVoiceRef.current = cancelVoice
   useEffect(() => () => cancelVoiceRef.current(), [])
 
@@ -45,11 +50,11 @@ function StandardTalkOverlay({ tutor }: { tutor: AiTutorController }) {
     const previousOverflow = document.body.style.overflow
     const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null
     document.body.style.overflow = 'hidden'
-    dialog.current?.querySelector<HTMLButtonElement>('button')?.focus()
+    dialog.current?.focus()
     const key = (event: KeyboardEvent) => {
       if (event.key === 'Escape') endTalkRef.current()
       if (event.key !== 'Tab') return
-      const controls = [...(dialog.current?.querySelectorAll<HTMLElement>('button:not(:disabled), [tabindex="0"]') ?? [])]
+      const controls = [...(dialog.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex="0"]') ?? [])]
       const first = controls[0], last = controls[controls.length - 1]
       if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus() }
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus() }
@@ -195,6 +200,7 @@ function StandardTalkOverlay({ tutor }: { tutor: AiTutorController }) {
             )}
           </div>
 
+          <NovaConversationControls tutor={tutor}/><button className="mt-4 min-h-12 touch-none rounded-full border border-white/30 px-5 text-sm text-white" aria-pressed={ptt.held} onPointerDown={event=>{event.currentTarget.setPointerCapture(event.pointerId);ptt.press()}} onPointerUp={()=>ptt.release()} onPointerCancel={()=>ptt.release(true)} onLostPointerCapture={()=>ptt.release()}>{interfaceLanguage === 'uz' ? 'Space yoki shu tugmani bosib turib gapiring' : interfaceLanguage === 'ru' ? 'Удерживайте пробел или эту кнопку' : 'Hold Space or this button to speak'}</button>
           {/* Big mic */}
           {voiceSupported ? (
             <motion.button
@@ -249,6 +255,10 @@ export function TalkOverlay() {
   // Resolve the actual transport before opening a microphone or making a call.
   const live = useRealtimeCoach(tutor, talkOpen && canLive && !standard && available === true, mode, voiceProvider)
   const t = (en: string, uz: string, ru: string) => uiLanguage === 'uz' ? uz : uiLanguage === 'ru' ? ru : en
+  const lessonMessage = [...tutor.messages].reverse().find(message => message.lesson)
+  const lessonMuted = useRef(false)
+  const ptt = usePushToTalk(talkOpen && !docked && !standard && available === true && !live.error, () => { window.dispatchEvent(new Event('nova:interrupt')); cancelCoachAudio(); live.beginPushToTalk() }, cancel => { live.endPushToTalk(Boolean(cancel)); if (cancel) live.setMicrophoneMuted(true) })
+  const narrating = (playing: boolean) => { if (playing) { lessonMuted.current = live.muted; live.interrupt(); live.setMicrophoneMuted(true) } else live.setMicrophoneMuted(lessonMuted.current) }
 
   useEffect(() => {
     if (!talkOpen) { setStandard(false); setDocked(false); setAvailable(null); return }
@@ -276,11 +286,11 @@ export function TalkOverlay() {
     const previous = document.body.style.overflow
     const previousFocus = document.activeElement as HTMLElement | null
     document.body.style.overflow = 'hidden'
-    dialog.current?.querySelector<HTMLButtonElement>('button')?.focus()
+    dialog.current?.focus()
     const key = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setDocked(true)
       if (event.key === 'Tab') {
-        const buttons = dialog.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), summary, a[href], [tabindex="0"]')
+        const buttons = dialog.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), summary, a[href], [tabindex="0"]')
         if (!buttons?.length) return
         const first = buttons[0], last = buttons[buttons.length - 1]
         if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
@@ -308,7 +318,7 @@ export function TalkOverlay() {
     <button onClick={end} className="flex h-10 w-10 items-center justify-center rounded-full text-slate-500 hover:bg-red-50" aria-label={t('End voice', 'Suhbatni tugatish', 'Завершить разговор')}><X size={18} /></button>
   </div>
 
-  return <div ref={dialog} role="dialog" aria-modal="true" aria-label={uiCopy("Ivygoo voice")} className="coach-voice-stage fixed inset-0 z-[200] overflow-y-auto bg-slate-950 text-white">
+  return <div ref={dialog} tabIndex={-1} role="dialog" aria-modal="true" aria-label={uiCopy("Ivygoo voice")} className="coach-voice-stage fixed inset-0 z-[200] overflow-y-auto bg-slate-950 text-white">
     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(159,18,57,.28),transparent_65%)]" />
     <div className="relative mx-auto flex min-h-full max-w-3xl flex-col items-center px-5 pb-10 pt-5 text-center">
       <div className="flex w-full items-center justify-between gap-3">
@@ -318,8 +328,11 @@ export function TalkOverlay() {
       <div className="mb-7 mt-8 flex flex-wrap justify-center gap-2" role="group" aria-label={t('Conversation mode', 'Suhbat rejimi', 'Режим разговора')}>
         {(['coach', 'examiner'] as const).map((choice) => <button key={choice} onClick={() => setMode(choice)} aria-pressed={mode === choice} className={`min-h-11 rounded-full border px-5 text-sm font-semibold ${mode === choice ? 'border-white bg-white text-slate-950' : 'border-white/20 text-slate-300 hover:bg-white/10'}`}>{choice === 'coach' ? t('Personal coach', 'Shaxsiy murabbiy', 'Личный наставник') : t('IELTS examiner', 'IELTS imtihon oluvchi', 'Экзаменатор IELTS')}</button>)}
       </div>
+      <NovaConversationControls tutor={tutor} examiner={mode === 'examiner'} />
       <UsageBalance compact />
-      <CoachMascot expression={mode === 'examiner' ? 'focused' : undefined} state={tutor.voiceState} level={tutor.voiceLevel} size={240} />
+      <div className={lessonMessage && mode === 'coach' ? 'self-start flex items-center gap-3 mb-4' : ''}><CoachMascot activity={live.error ? 'error' : live.reconnecting ? 'reconnecting' : available !== true ? 'connecting' : 'ready'} expression={mode === 'examiner' ? 'focused' : undefined} state={tutor.voiceState} level={tutor.voiceLevel} size={lessonMessage && mode === 'coach' ? 76 : 240} />{lessonMessage && mode === 'coach' && <span className="text-left text-sm font-bold">Nova<span className="block text-xs font-normal text-slate-400">{status}</span></span>}</div>
+      {lessonMessage && mode === 'coach' && tutor.activeThreadId && <NovaLessonMessage message={lessonMessage} threadId={tutor.activeThreadId} userId={tutor.user?.id} surface="voice" onAttempt={text=>{window.dispatchEvent(new Event('nova:interrupt'));live.ask(text)}} onNarrating={narrating}/>}
+      {available === true && !live.error && <button type="button" onPointerDown={event => { event.currentTarget.setPointerCapture(event.pointerId); ptt.press() }} onPointerUp={() => ptt.release()} onPointerCancel={() => ptt.release(true)} onLostPointerCapture={() => ptt.release()} aria-pressed={ptt.held} className="mt-4 min-h-12 touch-none rounded-full border border-white/30 px-6 text-sm" aria-label={t('Hold to speak', 'Bosib turib gapiring', 'Удерживайте, чтобы говорить')}>{ptt.held ? t('Listening…', 'Tinglayapti…', 'Слушаю…') : t('Hold Space or this button to speak', 'Space yoki shu tugmani bosib turib gapiring', 'Удерживайте пробел или эту кнопку')}</button>}
       <h2 className="mt-6 text-2xl font-bold" aria-live="polite">{status}</h2>
       <p className="mt-2 max-w-lg text-sm leading-6 text-slate-400">{mode === 'coach' ? t('Speak naturally. You can interrupt me. Your conversation stays in your chat.', 'Bemalol gapiring. Gapimni bo‘lishingiz mumkin. Suhbat chat tarixida saqlanadi.', 'Говорите свободно. Вы можете перебить меня. Разговор сохраняется в чате.') : t('English speaking practice with feedback at the end. Open Speaking tests for a timed full mock.', 'Inglizcha Speaking mashqi; fikr-mulohaza yakunda beriladi. Vaqtli to‘liq mock uchun Speaking testlarini oching.', 'Практика Speaking на английском с обратной связью в конце. Полный тест с таймером доступен в Speaking tests.')}</p>
       <div className="mt-5 min-h-20 w-full max-w-xl">

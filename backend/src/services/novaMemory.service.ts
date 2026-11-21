@@ -2,9 +2,14 @@ import { prisma } from '../lib/prisma.js'
 import { z } from 'zod'
 
 export const memoryEntrySchema = z.object({ key: z.string().trim().regex(/^[a-z][a-z0-9_]{1,63}$/), value: z.string().trim().min(1).max(600) }).strict()
-const transient = /^(?:(?:current|temporary|reply)_)?(?:emotion|mood|expression|performance|anger|tone)$/
+const transient = /^(?:(?:current|temporary|reply)_)?(?:emotion|mood|expression|performance|anger|tone|space_pressed|ptt|speaking|listening|voice_state)$/
 export function safeMemory(entry: unknown) {
   const parsed = memoryEntrySchema.safeParse(entry)
+  if (parsed.success && /^(?:conversation_language|language_preference|preferred_language)$/.test(parsed.data.key)) {
+    const language = ({ uz: 'uz', uzbek: 'uz', "o'zbekcha": 'uz', 'o‘zbekcha': 'uz', en: 'en', english: 'en', inglizcha: 'en', ru: 'ru', russian: 'ru', ruscha: 'ru', русский: 'ru' } as Record<string, string>)[parsed.data.value.toLowerCase()]
+    if (!language) return null
+    parsed.data.value = language
+  }
   return parsed.success && !transient.test(parsed.data.key) && !/password|api.?key|token|secret|card_number/i.test(parsed.data.key)
     && !/(?:sk-[A-Za-z0-9_-]{12,}|AIza[A-Za-z0-9_-]{20,})/.test(parsed.data.value) ? parsed.data : null
 }

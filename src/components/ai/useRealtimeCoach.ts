@@ -1,3 +1,4 @@
+import {describeLessonContext} from '@/lib/novaLesson'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { RealtimeCoach } from '@/lib/realtimeCoach'
@@ -21,6 +22,7 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
   const location = useLocation()
   const { language: interfaceLanguage } = useCopy()
   const metadataLocale = interfaceLanguage === 'uz' ? 'uz' : interfaceLanguage === 'ru' ? 'ru' : 'en'
+  const language = tutor.conversationLanguage ?? { selection: 'auto' as const, lastReliable: metadataLocale, language: metadataLocale }
   const connection = useRef<RealtimeCoach | GeminiRealtimeCoach | null>(null)
   const latest = useRef(tutor); latest.current = tutor
   const [error, setError] = useState<string | null>(null)
@@ -43,7 +45,7 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
     let disposed = false
     const userId = tutor.user.id
     const ownerKey = `user:${userId}`
-    const locale = metadataLocale
+    const locale = language.language
     const previews = new Map<string, AiAssistantMessage>()
     const drafts = new Set<string>()
     let previewTimer = 0
@@ -71,14 +73,15 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
       if (disposed) return
       let savingThread: Promise<boolean> | null = null
       let savingMessages = Promise.resolve()
-      const record = (role: 'user' | 'assistant', text: string, id: string, interrupted = false, performance?: NovaPerformance, timeline?: PerformanceCue[]) => {
+      const record = (role: 'user' | 'assistant', text: string, id: string, interrupted = false, performance?: NovaPerformance, timeline?: PerformanceCue[], lesson?: import('@/lib/novaLesson').NovaLesson) => {
         if (useAuthStore.getState().user?.id !== userId) return
+        if (role === 'user') latest.current.conversationLanguage?.observe(text)
         if (!text.trim()) {
           previews.delete(`voice-${id}`); drafts.delete(`voice-${id}`)
           useAiAssistantStore.getState().removeMessage(ownerKey, threadId, `voice-${id}`)
           return
         }
-        const message: AiAssistantMessage = { id: `voice-${id}`, role, content: text, createdAt: new Date().toISOString(), delivery: 'voice', ...(timeline?.length ? { performanceTimeline: timeline } : {}), ...(performance ? { performance, expression: performance.expression } : {}), ...(interrupted ? { status: 'interrupted' } : {}) }
+        const message: AiAssistantMessage = { id: `voice-${id}`, role, content: text, createdAt: new Date().toISOString(), delivery: 'voice', language: {selection: latest.current.conversationLanguage?.selection ?? 'auto', response: latest.current.conversationLanguage?.language ?? locale, lastReliable: latest.current.conversationLanguage?.lastReliable ?? locale}, ...(lesson ? {lesson} : {}), ...(timeline?.length ? { performanceTimeline: timeline } : {}), ...(performance ? { performance, expression: performance.expression } : {}), ...(interrupted ? { status: 'interrupted' } : {}) }
         previews.delete(message.id); drafts.delete(message.id)
         // Replace a live draft in place and explicitly clear its streaming flag.
         writeMessage(threadId, { ...message, status: interrupted ? 'interrupted' : undefined })
@@ -90,7 +93,7 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
             if (useAuthStore.getState().user?.id !== userId) return false
             threadId = saved.id
             useAiAssistantStore.getState().syncThread(ownerKey, draftId, saved)
-            if (!disposed) void connection.current?.updateContext({ pathname: currentPath.current, workspace: latest.current.activeWorkspace, language: mode === 'examiner' ? 'en' : 'auto', mode,
+            if (!disposed) void connection.current?.updateContext({ pathname: currentPath.current, workspace: latest.current.activeWorkspace, language: mode === 'examiner' ? 'en' : language.selection, lastReliableLanguage: language.lastReliable, interfaceLanguage: metadataLocale, inputControl: 'hybrid', lessonContext: describeLessonContext(latest.current.messages), mode,
               threadId: saved.id, coachPreferences: latest.current.coachPreferences, memoryRevision: memoryRevision(latest.current.memories),
               studyContext: describeStudySnapshot(buildStudySnapshot(userId)).slice(0, 16000), screenContext: composeScreenContext('Explain this page', currentPath.current).slice(0, 12000), siteKnowledge: describeRelevantSiteKnowledge('IELTS SAT English admissions tests').slice(0, 16000) }).catch(() => {})
             return true
@@ -105,11 +108,16 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
       const thread = useAiAssistantStore.getState().threadsByOwner[ownerKey]?.find((item) => item.id === threadId)
       const VoiceConnection = provider === 'gemini' ? GeminiRealtimeCoach : RealtimeCoach
       const voice = new VoiceConnection({
+        lessonControl: action => {
+          if (disposed || useAuthStore.getState().user?.id !== userId) return
+          const lesson = [...latest.current.messages].reverse().find(message => message.lesson)
+          if (lesson) window.dispatchEvent(new CustomEvent('nova:lesson-control', { detail: { target: `voice:${lesson.id}`, action } }))
+        },
         speechSpeed: speedRef.current, reconnectAttempt: reconnecting || recovery.current.attempts > 0 ? 1 : 0,
         diagnostics: report => {
           if (useAuthStore.getState().user?.id === userId) void apiClient.post('/ai/voice/diagnostics', report).catch(() => {})
         },
-        context: { pathname: currentPath.current, workspace: tutor.activeWorkspace, language: mode === 'examiner' ? 'en' : 'auto', mode,
+        context: { pathname: currentPath.current, workspace: tutor.activeWorkspace, language: mode === 'examiner' ? 'en' : language.selection, lastReliableLanguage: language.lastReliable, interfaceLanguage: metadataLocale, inputControl: 'hybrid', mode,
           coachPreferences: tutor.coachPreferences, memoryRevision: memoryRevision(tutor.memories),
           threadId: threadId.startsWith('local-') ? undefined : threadId,
           studyContext: describeStudySnapshot(buildStudySnapshot(userId)).slice(0, 16000),
@@ -143,7 +151,8 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
         },
         coachResult: (result, id) => {
           if (useAuthStore.getState().user?.id !== userId) return
-          record('assistant', result.reply, `coach-${id}`, false, result.performance)
+          record('assistant', result.reply, `coach-${id}`, false, result.performance, undefined, result.lesson)
+          if (result.lesson) useAiAssistantStore.getState().updateMessage(ownerKey, threadId, `voice-coach-${id}`, { lesson: result.lesson, language: { selection: language.selection, response: result.replyLanguage ?? language.language, lastReliable: language.lastReliable } })
           latest.current.acceptCoachResult(result)
         },
         error: reportError,
@@ -166,20 +175,24 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
     }
     // The session survives route and spoken-language changes. Mode and account
     // changes deliberately create a new session with matching instructions.
-  }, [enabled, supported, tutor.hasPremium, tutor.user?.id, conversationKey, tutor.threadsLoaded, mode, provider, retry])
+  }, [enabled, supported, tutor.hasPremium, tutor.user?.id, conversationKey, tutor.threadsLoaded, mode, provider, retry, language.selection])
 
   useEffect(() => {
     if (!enabled || !tutor.user) return
     const timer = window.setTimeout(() => {
-      void connection.current?.updateContext({ pathname: location.pathname, workspace: tutor.activeWorkspace, language: mode === 'examiner' ? 'en' : 'auto', mode,
+      void connection.current?.updateContext({ pathname: location.pathname, workspace: tutor.activeWorkspace, language: mode === 'examiner' ? 'en' : language.selection, lastReliableLanguage: language.lastReliable, interfaceLanguage: metadataLocale, inputControl: 'hybrid', mode,
         coachPreferences: tutor.coachPreferences, memoryRevision: memoryRevision(tutor.memories),
         studyContext: describeStudySnapshot(buildStudySnapshot(tutor.user!.id)).slice(0, 16000), screenContext: composeScreenContext('Explain this page', location.pathname).slice(0, 12000), siteKnowledge: describeRelevantSiteKnowledge('IELTS SAT English admissions tests').slice(0, 16000) }).catch(() => {})
     }, 600)
     return () => window.clearTimeout(timer)
-  }, [enabled, location.pathname, tutor.user?.id, tutor.activeWorkspace, tutor.coachPreferences, tutor.memories, mode])
+  }, [enabled, location.pathname, tutor.user?.id, tutor.activeWorkspace, tutor.coachPreferences, tutor.memories, language.selection, language.lastReliable, tutor.messages, mode])
 
   const toggleMute = useCallback(() => setMuted((current) => { connection.current?.mute(!current); return !current }), [])
   const interrupt = useCallback(() => connection.current?.interrupt(), [])
+  const beginPushToTalk = useCallback(() => connection.current?.beginPushToTalk(), [])
+  const endPushToTalk = useCallback((cancel = false) => connection.current?.endPushToTalk(cancel), [])
+  const setMicrophoneMuted = useCallback((value: boolean) => { connection.current?.mute(value); setMuted(value) }, [])
+  const ask = useCallback((text: string) => connection.current?.ask(text), [])
   const reconnect = useCallback(() => { recovery.current.attempts = 0; window.clearTimeout(recovery.current.timer); setReconnecting(true); setRetry(current => current + 1) }, [])
   const stop = useCallback(() => { window.clearTimeout(recovery.current.timer); setReconnecting(false); connection.current?.stop() }, [])
   const requestFeedback = useCallback(() => connection.current?.requestFeedback(), [])
@@ -189,5 +202,5 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
     setSpeechSpeedState(bounded)
     connection.current?.setSpeechSpeed(bounded)
   }, [])
-  return { error, reconnecting, caption, muted, supported, toggleMute, interrupt, reconnect, stop, requestFeedback, speechSpeed, setSpeechSpeed }
+  return { ask, beginPushToTalk, endPushToTalk, setMicrophoneMuted, error, reconnecting, caption, muted, supported, toggleMute, interrupt, reconnect, stop, requestFeedback, speechSpeed, setSpeechSpeed }
 }

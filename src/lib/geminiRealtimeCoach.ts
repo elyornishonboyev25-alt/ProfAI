@@ -1,4 +1,6 @@
 import { NovaDiagnostics } from './novaLearning'
+import { NovaTurnGate } from './novaTurnGate'
+import { resolveNovaLanguage, inspectLanguage, languageViolation, languageClarification, latinUzbekTranscript } from './novaLanguage'
 import { NovaPlayback } from './novaPlayback'
 import type { NovaPerformance } from './novaPersona'
 import { apiClient, publicApiUrl } from '@/lib/apiClient'
@@ -10,6 +12,17 @@ type Session = { id: string; ticket: string; expiresAt: string; streamPath: stri
 
 /** PCM over a server-owned Gemini Live connection; credentials never enter the browser. */
 export class GeminiRealtimeCoach {
+  private languageRecovery = false
+  private pttPriorMuted: boolean | null = null
+  private pttEndTimer = 0
+  private turnGate: NovaTurnGate
+  private expectedLanguage() { const c = this.options.context; return c.mode === 'examiner' ? 'en' : c.language === 'auto' ? c.lastReliableLanguage ?? 'uz' : c.language }
+  private recoverLanguage() {
+    this.interrupt(); this.options.caption(languageClarification(this.expectedLanguage()))
+    this.cancelledOutputs.add(this.responseId); this.interrupted = false
+    if (this.languageRecovery) return
+    this.languageRecovery = true; this.send({ type: 'language_recover', language: this.expectedLanguage() })
+  }
   private diagnostics = new NovaDiagnostics()
   private options: VoiceOptions
   private stream: MediaStream | null = null
@@ -47,7 +60,11 @@ export class GeminiRealtimeCoach {
   private contextSync = Promise.resolve()
   private pageHide = () => this.stop()
 
-  constructor(options: VoiceOptions) { this.options = options; this.speed = options.speechSpeed ?? 1.1 }
+  constructor(options: VoiceOptions) {
+    this.options = options; this.speed = options.speechSpeed ?? 1.1
+    this.turnGate = new NovaTurnGate({ start: () => { this.interrupted = false; this.send({ type: 'activity_start' }); this.options.state('listening') }, audio: bytes => this.sendPcm(bytes), end: () => { this.send({ type: 'activity_end' }); this.waitForReply() } }, options.context.mode === 'examiner' ? 1400 : 1100)
+  }
+  private sendPcm(bytes: Uint8Array) { let text = ''; for (const byte of bytes) text += String.fromCharCode(byte); this.send({ type: 'audio', data: btoa(text) }) }
   private send(message: unknown) {
     if (this.socket?.readyState !== WebSocket.OPEN) return
     if (this.socket.bufferedAmount > 256000) { this.fail(new Error('Your connection is too slow for live voice. Please reconnect.')); return }
@@ -124,9 +141,8 @@ export class GeminiRealtimeCoach {
         const frame = event.data
         if (frame?.pcm && this.audio && this.audio.currentTime - frame.capturedAt > .35) return
         const bytes = new Uint8Array(frame?.pcm ?? frame)
-        let text = ''
-        for (const byte of bytes) text += String.fromCharCode(byte)
-        this.send({ type: 'audio', data: btoa(text) })
+        if (this.options.context.inputControl === 'hybrid') this.turnGate.push(bytes)
+        else this.sendPcm(bytes)
       }
       this.diagnostics.sample('connection', performance.now() - this.started, 'browser_clock')
       this.options.performance?.({ stage: 'connection', durationMs: Math.round(performance.now() - this.started) })
@@ -213,7 +229,10 @@ export class GeminiRealtimeCoach {
 
   private commitInput() {
     if (this.inputText.trim()) {
-      this.options.message('user', this.inputText.trim(), `gemini-input-${this.session?.id}-${this.inputId++}`)
+      const detected = resolveNovaLanguage(this.inputText, this.options.context.language, this.options.context.lastReliableLanguage ?? 'uz'); if(detected.observation.status === 'supported') {this.options.context.lastReliableLanguage = detected.language; this.options.context.language = detected.selection}
+      if (inspectLanguage(this.inputText).status === 'unsupported') { this.inputText = ''; this.recoverLanguage(); return }
+      this.languageRecovery = false
+      this.options.message('user', latinUzbekTranscript(this.inputText.trim()), `gemini-input-${this.session?.id}-${this.inputId++}`)
       this.replyStarted ??= performance.now()
     }
     this.inputText = ''
@@ -238,6 +257,7 @@ export class GeminiRealtimeCoach {
   private handle(message: any) {
     if (this.closed) return
     if (message.type === 'error') { this.fail(new VoiceStreamError(typeof message.message === 'string' ? message.message : 'Gemini Live could not connect.', typeof message.code === 'string' ? message.code : 'VOICE_PROVIDER_ERROR', message.retryable === true)); return }
+    if (message.type === 'lesson_control' && !this.cancelledOutputs.has(message.responseId) && ['continue', 'restart', 'pause'].includes(message.action)) { this.options.lessonControl?.(message.action); return }
     if (message.type === 'coach' && message.result?.reply) { this.options.coachResult(message.result, message.id); return }
     if (message.type === 'expression' && typeof message.responseId === 'string') {
       if (!this.cancelledOutputs.has(message.responseId)) {
@@ -271,15 +291,16 @@ export class GeminiRealtimeCoach {
       this.commitInput()
     }
     if (this.cancelledOutputs.has(responseId)) return
-    for (const part of content.modelTurn?.parts ?? []) if (part.inlineData?.data && /^audio\/pcm/.test(part.inlineData.mimeType ?? '')) this.play(part.inlineData.data, part.inlineData.mimeType, responseId)
     if (content.outputTranscription?.text && !this.interrupted) {
       const text = content.outputTranscription.text
       const output = this.output(responseId)
       output.text += text
+      if (languageViolation(output.text, this.expectedLanguage())) { this.recoverLanguage(); return }
       output.parts.push({ text, at: Math.max(this.audio?.currentTime ?? 0, this.nextPlayback - .2) })
       this.options.caption(output.text)
       this.options.preview?.('assistant', output.text, responseId)
     }
+    for (const part of content.modelTurn?.parts ?? []) if (part.inlineData?.data && /^audio\/pcm/.test(part.inlineData.mimeType ?? '')) this.play(part.inlineData.data, part.inlineData.mimeType, responseId)
     if (content.turnComplete) {
       window.clearTimeout(this.replyTimer); this.commitInput(); this.output(responseId).done = true; this.interrupted = false
       if (![...this.sources.values()].includes(responseId)) this.finishOutput(false, responseId)
@@ -291,6 +312,9 @@ export class GeminiRealtimeCoach {
     this.sources.clear(); this.nextPlayback = this.audio?.currentTime ?? 0
   }
   mute(muted: boolean) { this.muted = muted; this.stream?.getAudioTracks().forEach(track => { track.enabled = !muted }); this.send({ type: 'mute', muted }) }
+  ask(text: string) { if (this.closed || !text.trim()) return; this.interrupt(); this.interrupted = false; this.options.message('user', text, crypto.randomUUID()); this.send({ type: 'text', text }); this.waitForReply() }
+  beginPushToTalk() { if (this.closed || this.pttPriorMuted !== null) return; window.clearTimeout(this.pttEndTimer); this.pttPriorMuted = this.muted; this.muted = false; this.interrupt(); this.turnGate.hold(); this.stream?.getAudioTracks().forEach(track => { track.enabled = true }); this.options.state('listening') }
+  endPushToTalk(cancel = false) { if (this.pttPriorMuted === null) return; if (cancel) { this.muted = true; this.stream?.getAudioTracks().forEach(track => {track.enabled = false}); this.pttPriorMuted = true; this.turnGate.finish(); this.turnGate.cancel(); this.interrupt() } else this.turnGate.release(); this.pttEndTimer = window.setTimeout(() => { if (this.closed) return; this.turnGate.finish(); this.muted = this.pttPriorMuted ?? this.muted; this.pttPriorMuted = null; this.stream?.getAudioTracks().forEach(track => { track.enabled = !this.muted }) }, cancel ? 0 : 350) }
   interrupt() { const started = performance.now(); this.clearPlayback(); for (const id of this.outputs.keys()) this.finishOutput(true, id); this.expressions.finish(this.responseId); this.interrupted = true; this.replyStarted = null; window.clearTimeout(this.replyTimer); this.send({ type: 'interrupt' }); this.diagnostics.sample('interruption_to_stop', performance.now() - started, 'browser_clock') }
   requestFeedback() { this.interrupt(); this.send({ type: 'feedback' }); this.options.state('thinking'); this.waitForReply() }
   setSpeechSpeed(speed: number) { if (Number.isFinite(speed)) this.speed = Math.max(.75, Math.min(1.35, speed)) }
@@ -308,6 +332,8 @@ export class GeminiRealtimeCoach {
   stop() {
     if (this.closed) return
     this.closed = true
+    this.turnGate.cancel()
+    window.clearTimeout(this.pttEndTimer)
     window.removeEventListener('pagehide', this.pageHide)
     const safely = (callback: () => unknown) => { try { callback() } catch { /* Continue releasing hardware. */ } }
     this.stream?.getTracks().forEach(track => { track.onended = null; safely(() => track.stop()) }); this.stream = null

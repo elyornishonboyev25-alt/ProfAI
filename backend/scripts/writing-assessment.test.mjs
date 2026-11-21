@@ -45,8 +45,9 @@ test('the same personality and teaching approach reach text and voice; examinati
     const personality = coachPersonality(context)
     assert.ok(buildCoachPrompt(context).includes(personality))
     assert.ok(voiceInstructions(context, {}).includes(personality))
-    assert.match(personality, /Wait for the learner/)
-    assert.match(personality, /Never direct profanity/)
+    assert.match(personality, /wait for an attempt before giving the solution, unless the learner asks for the answer/i)
+    assert.match(personality, /Strong language additionally requires an explicit preference allowing it and known adult eligibility/)
+    assert.match(personality, /Ordinary criticism, insults or praise of ChatGPT are NOT consent/)
   }
   const exam = assistantContextSchema.parse({ mode: 'examiner', coachPreferences: { style: 'playful', playfulLanguage: true } })
   assert.match(coachPersonality(exam), /No jokes, banter, coaching, praise or swearing/)
@@ -126,8 +127,8 @@ test('automatic adaptation reaches text and voice, ignores legacy manual setting
   assert.match(buildCoachPrompt(context), /AUTOMATIC ADAPTATION/)
   assert.match(buildCoachPrompt(context), /No manual style/)
   assert.equal(coachPersonality(context), coachPersonality(assistantContextSchema.parse({ coachPreferences: { style: 'strict', lessonMode: 'plan' } })))
-  assert.match(buildCoachPrompt(context), /asalim/)
-  assert.match(voiceInstructions(context, {}), /asalim/)
+  assert.match(buildCoachPrompt(context), /Affection: an explicit request or a clear affectionate address/)
+  assert.match(voiceInstructions(context, {}), /Affection: an explicit request or a clear affectionate address/)
   assert.match(coachPersonality(assistantContextSchema.parse({ ...context, mode: 'examiner' })), /No jokes/)
 })
 
@@ -136,8 +137,8 @@ test('the assistant chooses an illustrative expression with its reply without a 
   assert.equal(reply.expression, 'focused')
   assert.equal(reply.reply, 'Try that again using a clear example.')
   const prompt = buildCoachPrompt(assistantContextSchema.parse({}))
-  assert.match(prompt, /Never ask the learner to choose a mode/)
-  assert.match(prompt, /new request takes priority over an earlier tone/)
+  assert.match(prompt, /Do not ask the learner to select a personality/)
+  assert.match(prompt, /New explicit instructions override older preferences/)
 })
 
 test('an unchanged corrected text retains the same band without a redundant model request', async (t) => {

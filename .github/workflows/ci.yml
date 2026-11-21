@@ -90,8 +90,8 @@ jobs:
         run: npm run build
         working-directory: backend
 
-      - name: Check live voice protocol, generation readiness and session recovery
-        run: node --test scripts/gemini-live.test.mjs scripts/voice-allowance.test.mjs ../scripts/tests/nova-pcm-capture.test.mjs
+      - name: Check Nova persona, live voice protocol and session recovery
+        run: node --test scripts/nova-persona.test.mjs scripts/assistant-coach.test.mjs scripts/speaking-audio.test.mjs scripts/gemini-live.test.mjs scripts/voice-allowance.test.mjs ../scripts/tests/nova-pcm-capture.test.mjs
         working-directory: backend
 
       - name: Check durable Writing assessment jobs

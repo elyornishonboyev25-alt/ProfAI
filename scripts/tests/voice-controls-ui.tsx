@@ -19,18 +19,16 @@ export async function run() {
     await i18n.changeLanguage('en')
     await act(async () => { useAiAssistantStore.getState().openTalk(); root.render(<MemoryRouter><TalkOverlay /></MemoryRouter>) })
     const dialog = document.querySelector('[role="dialog"]')!
-    assert.ok(dialog?.textContent?.includes('Personal coach'), 'The real voice dialog is rendered')
-    assert.ok(dialog.textContent?.includes('IELTS examiner'))
+    assert.ok(dialog, 'The real voice dialog is rendered')
+    assert.ok(!dialog.textContent?.includes('Personal coach'))
+    assert.ok(!dialog.textContent?.includes('IELTS examiner'))
+    assert.equal(dialog.querySelector('[aria-label="Conversation mode"]'), null)
     assert.equal(dialog.querySelector('[aria-label="Speech speed"]'), null)
     assert.equal(dialog.querySelector('[aria-label="Language"]'), null)
-    const language = dialog.querySelector('select')!
-    assert.ok(language, 'Conversation language is an optional visible control')
-    assert.deepEqual([...language.options].map(option => option.value), ['auto', 'uz', 'en', 'ru'])
+    assert.equal(dialog.querySelector('select'), null, 'Voice opens directly without language or comeback selectors')
     for (const name of ['English', 'Uzbek', 'Russian', '0.9×', '1.1×', '1.25×']) assert.ok(![...dialog.querySelectorAll('button')].some(button => button.textContent === name), `${name} is not a voice setting`)
-    const examiner = [...dialog.querySelectorAll('button')].find(button => button.textContent === 'IELTS examiner')!
-    await act(async () => examiner.click())
-    assert.equal(dialog.querySelector('select')!.disabled, true, 'Examiner mode keeps English fixed')
-    assert.equal(dialog.querySelector('select')!.value, 'en')
-    console.log('PASS: real voice dialog exposes optional uz/en/ru language and consent controls, preserves exam/coach modes and fixes examiner English')
+    assert.ok(dialog.textContent?.includes('Return to chat'), 'Conversation navigation remains available')
+    assert.ok(dialog.querySelector('button[aria-label="End voice"]'), 'The voice dialog can still be closed')
+    console.log('PASS: voice opens without mode/language/comeback controls and retains its navigation')
   } finally { await act(async () => root.unmount()); apiClient.get = get; apiClient.post = post }
 }

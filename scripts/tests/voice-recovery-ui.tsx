@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 import { MemoryRouter } from 'react-router-dom'
 import { GeminiRealtimeCoach } from '@/lib/geminiRealtimeCoach'
 import { VoiceStreamError, voiceSocketClosed } from '@/lib/voiceStreamError'
+import { ApiError } from '@/lib/apiClient'
 import { useRealtimeCoach } from '@/components/ai/useRealtimeCoach'
 import { useAuthStore } from '@/store/authStore'
 import type { AiTutorController } from '@/components/ai/useAiTutor'
@@ -55,6 +56,20 @@ export async function run() {
     await act(async () => root.render(<MemoryRouter><Harness enabled={false} /></MemoryRouter>))
     await wait(1150)
     assert.equal(sessions.length, 5, 'Closing voice cancels a pending reconnect')
+    await act(async () => root.render(<MemoryRouter><Harness /></MemoryRouter>))
+    const beforeGateway = sessions.length
+    await act(async () => sessions.at(-1).options.error(new ApiError('Temporary gateway failure', 502, 'HTTP_SERVICE_UNAVAILABLE')))
+    assert.equal(controls!.reconnecting, true)
+    await wait(1150)
+    assert.equal(sessions.length, beforeGateway + 1, 'A failed reconnect can recover from a temporary HTTP gateway failure')
+    for (const failure of [new ApiError('Wait before retrying', 429, 'HTTP_RATE_LIMIT'), new ApiError('Provider quota unavailable', 503, 'GEMINI_QUOTA_UNAVAILABLE'), new ApiError('Sign in', 401)]) {
+      await act(async () => controls!.reconnect())
+      const count = sessions.length
+      await act(async () => sessions.at(-1).options.error(failure))
+      await wait(1150)
+      assert.equal(sessions.length, count, 'Rate limits, provider quotas and authentication require user action')
+      assert.equal(controls!.error, failure.message)
+    }
     console.log('PASS: temporary disconnects recover automatically; retries are bounded, explicit rejections remain visible, and closing cancels recovery')
   } finally { await act(async () => root.unmount()); Object.assign(prototype, originals) }
 }

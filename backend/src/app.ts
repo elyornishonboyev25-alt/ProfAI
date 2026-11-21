@@ -8,7 +8,7 @@ import { miniAppDocument } from './middleware/miniAppDocument.js'
 import morgan from 'morgan'
 import cookieParser from 'cookie-parser'
 import { env, isProduction } from './config/env.js'
-import { aiRateLimit, apiRateLimit, speakingAssessmentRateLimit, speakingMediaRateLimit } from './middleware/rateLimit.js'
+import { aiRateLimit, apiRateLimit, speakingAssessmentRateLimit, speakingMediaRateLimit, voiceRequestRateLimit } from './middleware/rateLimit.js'
 import { requireAuth } from './middleware/auth.js'
 import { enforceStudyAccess } from './middleware/studyAccess.js'
 import { errorHandler, notFoundHandler } from './middleware/error.js'
@@ -83,7 +83,7 @@ app.use('/api/v1/ai/speaking-audio', requireAuth, enforceStudyAccess,
 app.use('/api/v1/ai/assistant', requireAuth, enforceStudyAccess, aiRateLimit, express.json({ limit: '6mb' }), assistantRoutes)
 app.use('/api/v1/ai/voice', requireAuth,
   (req, res, next) => ['/end', '/heartbeat'].includes(req.path) ? next() : enforceStudyAccess(req, res, next),
-  (req, res, next) => (['/end', '/heartbeat'].includes(req.path) ? apiRateLimit : aiRateLimit)(req, res, next),
+  voiceRequestRateLimit,
   express.json({ limit: '384kb' }), realtimeCoachRoutes)
 
 // Authenticate and bound voice uploads before accepting the larger JSON body.

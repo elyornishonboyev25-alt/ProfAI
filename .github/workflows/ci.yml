@@ -50,6 +50,9 @@ jobs:
       - name: Check live voice controls and automatic recovery
         run: node scripts/test-listening-parts-ui.mjs scripts/tests/voice-controls-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/voice-recovery-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/realtime-coach-streaming.tsx
 
+      - name: Check Nova session stability and gateway errors
+        run: node scripts/test-listening-parts-ui.mjs scripts/tests/nova-voice-stability.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/nova-api-errors.tsx
+
       - name: Check Nova learning notes, memory controls and audio-clock delivery
         run: node scripts/test-listening-parts-ui.mjs scripts/tests/nova-v3-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/nova-v2-ui.tsx && node scripts/test-listening-parts-ui.mjs scripts/tests/nova-tts-segments.tsx && node scripts/measure-nova-regressions.mjs --assert
 
@@ -94,7 +97,7 @@ jobs:
         working-directory: backend
 
       - name: Check Nova persona, live voice protocol and session recovery
-        run: node --test scripts/nova-persona.test.mjs scripts/nova-v3.test.mjs scripts/nova-v2.test.mjs scripts/assistant-coach.test.mjs scripts/speaking-audio.test.mjs scripts/gemini-live.test.mjs scripts/voice-allowance.test.mjs ../scripts/tests/nova-pcm-capture.test.mjs
+        run: node --test scripts/nova-voice-reliability.test.mjs scripts/nova-persona.test.mjs scripts/nova-v3.test.mjs scripts/nova-v2.test.mjs scripts/assistant-coach.test.mjs scripts/speaking-audio.test.mjs scripts/gemini-live.test.mjs scripts/voice-allowance.test.mjs ../scripts/tests/nova-pcm-capture.test.mjs
         working-directory: backend
 
       - name: Check durable Writing assessment jobs

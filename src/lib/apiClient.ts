@@ -146,7 +146,24 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   }
 
   if (!response.ok) {
-    const payload = await response.json().catch(() => ({ message: 'Unexpected API error.' }))
+    // Edge/proxy failures can contain HTML, plain text, null or an empty body.
+    // Preserve the HTTP cause without displaying that untrusted body as UI text.
+    const raw = await response.json().catch(() => null)
+    const payload = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {}
+    const retryHeader = response.headers.get('Retry-After')
+    const retryDelay = retryHeader === null ? NaN : /^\d+(\.\d+)?$/.test(retryHeader)
+      ? Number(retryHeader) * 1000 : Date.parse(retryHeader) - Date.now()
+    const details = payload.details && typeof payload.details === 'object' && !Array.isArray(payload.details) ? payload.details : {}
+    if (Number.isFinite(retryDelay) && retryDelay >= 0 && details.retryAfterMs === undefined) details.retryAfterMs = Math.ceil(retryDelay)
+    const limited = response.status === 429
+    const unavailable = [502, 503, 504].includes(response.status)
+    payload.message = typeof payload.message === 'string' && payload.message.trim() ? payload.message
+      : limited ? 'Too many requests. Please wait a moment before retrying.'
+      : unavailable ? 'The AI service is temporarily unavailable. Your conversation is saved. Please retry.'
+      : `API request failed (HTTP ${response.status}). Please try again.`
+    payload.code = typeof payload.code === 'string' ? payload.code
+      : limited ? 'HTTP_RATE_LIMIT' : unavailable ? 'HTTP_SERVICE_UNAVAILABLE' : 'HTTP_REQUEST_FAILED'
+    payload.details = details
     if (auth && owner && payload.code === 'ACCOUNT_IN_USE') useAccountUsageStore.getState().setUsage(owner, 'blocked', 0, payload.details)
     // A sign-in refused for device reasons explains itself in a dedicated dialog.
     if (!auth && path.startsWith('/auth/') && path !== '/auth/refresh' && DEVICE_ACCESS_CODES.has(payload.code)) {

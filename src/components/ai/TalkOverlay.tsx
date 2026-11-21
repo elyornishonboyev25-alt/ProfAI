@@ -1,4 +1,3 @@
-import NovaConversationControls from './NovaConversationControls'
 import NovaLessonMessage from './NovaLessonMessage'
 import {usePushToTalk} from './usePushToTalk'
 import {cancelCoachAudio} from '@/lib/coachAudio'
@@ -200,7 +199,7 @@ function StandardTalkOverlay({ tutor }: { tutor: AiTutorController }) {
             )}
           </div>
 
-          <NovaConversationControls tutor={tutor}/><button className="mt-4 min-h-12 touch-none rounded-full border border-white/30 px-5 text-sm text-white" aria-pressed={ptt.held} onPointerDown={event=>{event.currentTarget.setPointerCapture(event.pointerId);ptt.press()}} onPointerUp={()=>ptt.release()} onPointerCancel={()=>ptt.release(true)} onLostPointerCapture={()=>ptt.release()}>{interfaceLanguage === 'uz' ? 'Space yoki shu tugmani bosib turib gapiring' : interfaceLanguage === 'ru' ? 'Удерживайте пробел или эту кнопку' : 'Hold Space or this button to speak'}</button>
+          <button className="mt-4 min-h-12 touch-none rounded-full border border-white/30 px-5 text-sm text-white" aria-pressed={ptt.held} onPointerDown={event=>{event.currentTarget.setPointerCapture(event.pointerId);ptt.press()}} onPointerUp={()=>ptt.release()} onPointerCancel={()=>ptt.release(true)} onLostPointerCapture={()=>ptt.release()}>{interfaceLanguage === 'uz' ? 'Space yoki shu tugmani bosib turib gapiring' : interfaceLanguage === 'ru' ? 'Удерживайте пробел или эту кнопку' : 'Hold Space or this button to speak'}</button>
           {/* Big mic */}
           {voiceSupported ? (
             <motion.button
@@ -244,7 +243,7 @@ export function TalkOverlay() {
   const talkOpen = useAiAssistantStore((s) => s.talkOpen)
   const closeTalk = useAiAssistantStore((s) => s.closeTalk)
   const [standard, setStandard] = useState(false)
-  const [mode, setMode] = useState<'coach' | 'examiner'>('coach')
+  const [mode] = useState<'coach' | 'examiner'>('coach')
   const [docked, setDocked] = useState(false)
   const [available, setAvailable] = useState<boolean | null>(null)
   const [voiceProvider, setVoiceProvider] = useState<'gemini' | 'openai'>('gemini')
@@ -325,10 +324,6 @@ export function TalkOverlay() {
         <span className="text-sm font-bold">Nova · Ivygoo <span className="ml-1 text-slate-400">{t('Voice', 'Ovozli suhbat', 'Голосовой чат')}</span></span>
         <div className="flex gap-2"><button onClick={() => setDocked(true)} className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 hover:bg-white/10" aria-label={t('Minimize', 'Kichraytirish', 'Свернуть')}><Minimize2 size={18} /></button><button onClick={end} className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 hover:bg-white/10" aria-label={t('End voice', 'Suhbatni tugatish', 'Завершить разговор')}><X size={20} /></button></div>
       </div>
-      <div className="mb-7 mt-8 flex flex-wrap justify-center gap-2" role="group" aria-label={t('Conversation mode', 'Suhbat rejimi', 'Режим разговора')}>
-        {(['coach', 'examiner'] as const).map((choice) => <button key={choice} onClick={() => setMode(choice)} aria-pressed={mode === choice} className={`min-h-11 rounded-full border px-5 text-sm font-semibold ${mode === choice ? 'border-white bg-white text-slate-950' : 'border-white/20 text-slate-300 hover:bg-white/10'}`}>{choice === 'coach' ? t('Personal coach', 'Shaxsiy murabbiy', 'Личный наставник') : t('IELTS examiner', 'IELTS imtihon oluvchi', 'Экзаменатор IELTS')}</button>)}
-      </div>
-      <NovaConversationControls tutor={tutor} examiner={mode === 'examiner'} />
       <UsageBalance compact />
       <div className={lessonMessage && mode === 'coach' ? 'self-start flex items-center gap-3 mb-4' : ''}><CoachMascot activity={live.error ? 'error' : live.reconnecting ? 'reconnecting' : available !== true ? 'connecting' : 'ready'} expression={mode === 'examiner' ? 'focused' : undefined} state={tutor.voiceState} level={tutor.voiceLevel} size={lessonMessage && mode === 'coach' ? 76 : 240} />{lessonMessage && mode === 'coach' && <span className="text-left text-sm font-bold">Nova<span className="block text-xs font-normal text-slate-400">{status}</span></span>}</div>
       {lessonMessage && mode === 'coach' && tutor.activeThreadId && <NovaLessonMessage message={lessonMessage} threadId={tutor.activeThreadId} userId={tutor.user?.id} surface="voice" onAttempt={text=>{window.dispatchEvent(new Event('nova:interrupt'));live.ask(text)}} onNarrating={narrating}/>}

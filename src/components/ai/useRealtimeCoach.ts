@@ -12,7 +12,7 @@ import { describeRelevantSiteKnowledge } from '@/services/ai/siteKnowledge'
 import type { AiTutorController } from './useAiTutor'
 import { useCopy } from '@/i18n/interface'
 import type { PerformanceCue } from '@/lib/novaLearning'
-import { apiClient } from '@/lib/apiClient'
+import { apiClient, ApiError } from '@/lib/apiClient'
 import { readNovaPerformance, type NovaPerformance } from '@/lib/novaPersona'
 import { VoiceStreamError } from '@/lib/voiceStreamError'
 
@@ -23,6 +23,7 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
   const { language: interfaceLanguage } = useCopy()
   const metadataLocale = interfaceLanguage === 'uz' ? 'uz' : interfaceLanguage === 'ru' ? 'ru' : 'en'
   const language = tutor.conversationLanguage ?? { selection: 'auto' as const, lastReliable: metadataLocale, language: metadataLocale }
+  const lessonContext = describeLessonContext(tutor.messages ?? [])
   const connection = useRef<RealtimeCoach | GeminiRealtimeCoach | null>(null)
   const latest = useRef(tutor); latest.current = tutor
   const [error, setError] = useState<string | null>(null)
@@ -53,7 +54,10 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
       if (disposed) return
       const now = Date.now(), current = recovery.current
       if (now - current.since > 60000) { current.attempts = 0; current.since = now }
-      if (issue instanceof VoiceStreamError && issue.retryable && current.attempts < 2) {
+      const retryable = issue instanceof VoiceStreamError ? issue.retryable
+        : issue instanceof ApiError && [502, 503, 504].includes(issue.status) &&
+          (!issue.code || ['HTTP_SERVICE_UNAVAILABLE', 'GEMINI_LIVE_CONNECTION_FAILED'].includes(issue.code))
+      if (retryable && current.attempts < 2) {
         current.attempts++
         setError(null); setReconnecting(true)
         window.clearTimeout(current.timer)
@@ -117,7 +121,7 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
         diagnostics: report => {
           if (useAuthStore.getState().user?.id === userId) void apiClient.post('/ai/voice/diagnostics', report).catch(() => {})
         },
-        context: { pathname: currentPath.current, workspace: tutor.activeWorkspace, language: mode === 'examiner' ? 'en' : language.selection, lastReliableLanguage: language.lastReliable, interfaceLanguage: metadataLocale, inputControl: 'hybrid', mode,
+        context: { pathname: currentPath.current, workspace: tutor.activeWorkspace, language: mode === 'examiner' ? 'en' : language.selection, lastReliableLanguage: language.lastReliable, interfaceLanguage: metadataLocale, inputControl: 'hybrid', lessonContext, mode,
           coachPreferences: tutor.coachPreferences, memoryRevision: memoryRevision(tutor.memories),
           threadId: threadId.startsWith('local-') ? undefined : threadId,
           studyContext: describeStudySnapshot(buildStudySnapshot(userId)).slice(0, 16000),
@@ -180,12 +184,12 @@ export function useRealtimeCoach(tutor: AiTutorController, enabled: boolean, mod
   useEffect(() => {
     if (!enabled || !tutor.user) return
     const timer = window.setTimeout(() => {
-      void connection.current?.updateContext({ pathname: location.pathname, workspace: tutor.activeWorkspace, language: mode === 'examiner' ? 'en' : language.selection, lastReliableLanguage: language.lastReliable, interfaceLanguage: metadataLocale, inputControl: 'hybrid', mode,
+      void connection.current?.updateContext({ pathname: location.pathname, workspace: tutor.activeWorkspace, language: mode === 'examiner' ? 'en' : language.selection, lastReliableLanguage: language.lastReliable, interfaceLanguage: metadataLocale, inputControl: 'hybrid', lessonContext, mode,
         coachPreferences: tutor.coachPreferences, memoryRevision: memoryRevision(tutor.memories),
         studyContext: describeStudySnapshot(buildStudySnapshot(tutor.user!.id)).slice(0, 16000), screenContext: composeScreenContext('Explain this page', location.pathname).slice(0, 12000), siteKnowledge: describeRelevantSiteKnowledge('IELTS SAT English admissions tests').slice(0, 16000) }).catch(() => {})
     }, 600)
     return () => window.clearTimeout(timer)
-  }, [enabled, location.pathname, tutor.user?.id, tutor.activeWorkspace, tutor.coachPreferences, tutor.memories, language.selection, language.lastReliable, tutor.messages, mode])
+  }, [enabled, location.pathname, tutor.user?.id, tutor.activeWorkspace, tutor.coachPreferences, tutor.memories, language.selection, language.lastReliable, lessonContext, mode])
 
   const toggleMute = useCallback(() => setMuted((current) => { connection.current?.mute(!current); return !current }), [])
   const interrupt = useCallback(() => connection.current?.interrupt(), [])

@@ -73,7 +73,7 @@ export class GeminiRealtimeCoach {
   private fail(error: Error) { if (!this.closed) { this.diagnostics.count('errors'); this.options.error(error); this.stop() } }
   private waitForReply() {
     window.clearTimeout(this.replyTimer)
-    this.replyTimer = window.setTimeout(() => this.fail(new Error('Gemini Live did not reply in time. Please retry.')), 45000)
+    this.replyTimer = window.setTimeout(() => this.fail(new VoiceStreamError('Gemini Live did not reply in time. Reconnecting your saved conversation.', 'VOICE_REPLY_TIMEOUT', true)), 45000)
   }
 
   async start() {

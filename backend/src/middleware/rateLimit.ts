@@ -1,4 +1,5 @@
 import rateLimit, { type AugmentedRequest, type RateLimitExceededEventHandler } from 'express-rate-limit'
+import type { RequestHandler } from 'express'
 import { env } from '../config/env.js'
 
 function speakingLimitHandler(code: string, message: string): RateLimitExceededEventHandler {
@@ -30,8 +31,22 @@ export const aiRateLimit = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => req.user!.id,
-  message: { message: 'AI request limit reached. Please wait a moment and try again.' },
+  handler: speakingLimitHandler('AI_RATE_LIMIT', 'AI request limit reached. Please wait a moment and try again.'),
 })
+
+// Session maintenance does not generate AI output. Keep it independent of
+// account-data traffic and chat generation so a busy page cannot kill a call.
+const voiceControlRateLimit = rateLimit({
+  windowMs: 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: req => req.user!.id,
+  handler: speakingLimitHandler('VOICE_CONTROL_RATE_LIMIT', 'Voice controls are busy. Please wait a moment and retry.'),
+})
+const voiceControlPaths = new Set(['/end', '/heartbeat', '/context', '/capabilities', '/diagnostics'])
+export const voiceRequestRateLimit: RequestHandler = (req, res, next) =>
+  (voiceControlPaths.has(req.path) ? voiceControlRateLimit : aiRateLimit)(req, res, next)
 
 // Voice playback and transcription are part of each Speaking turn. They must
 // not spend the same request allowance as the final assessment or AI chat.

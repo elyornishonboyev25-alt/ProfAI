@@ -124,7 +124,8 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
   const memories = useAiAssistantStore((s) => s.memoriesByOwner[ownerKey] ?? EMPTY_MEMORIES)
   const activeThread = chatThreads.find((thread) => thread.id === activeThreadId) ?? null
   const messages = activeThread?.messages ?? EMPTY_MESSAGES
-  const conversationLanguage = useNovaLanguage(ownerKey, activeThread?.clientId ?? activeThreadId ?? 'new', messages[messages.length - 1]?.language?.lastReliable ?? uiLocale, messages[messages.length - 1]?.language?.selection)
+  const latestLanguage = [...messages].reverse().find(message => message.language)?.language
+  const conversationLanguage = useNovaLanguage(ownerKey, activeThread?.clientId ?? activeThreadId ?? 'new', latestLanguage?.lastReliable ?? uiLocale, latestLanguage?.selection)
   const isSending = useAiAssistantStore((s) => s.isSending)
   const error = useAiAssistantStore((s) => s.error)
   const voiceState = useAiAssistantStore((s) => s.voiceState)
@@ -274,7 +275,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
     return () => {
       mounted = false
     }
-  }, [hasPremium, user])
+  }, [hasPremium, user?.id])
 
   // Playback amplitude comes from the actual audio analyser.
   const stopLevelPulse = useCallback(() => {

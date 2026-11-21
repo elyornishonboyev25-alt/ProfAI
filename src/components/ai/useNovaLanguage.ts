@@ -18,6 +18,6 @@ export function useNovaLanguage(owner: string, scope: string, initial: NovaLangu
     const result = resolveNovaLanguage(text, novaLanguageChoiceSchema.safeParse(current?.selection).success ? current!.selection : restoredSelection ?? 'auto', novaLanguageSchema.safeParse(current?.lastReliable).success ? current!.lastReliable : initial)
     if (result.observation.status === 'supported') useAiAssistantStore.setState(state => ({ conversationLanguages: { ...state.conversationLanguages, [key]: { selection: result.selection, lastReliable: result.language } } }))
     return result
-  }, [key, initial])
+  }, [key, owner, initial, restoredSelection])
   return { selection, lastReliable, language: selection === 'auto' ? lastReliable : selection, choose, observe }
 }

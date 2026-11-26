@@ -1,4 +1,5 @@
 import { useEffect, useId, useState, type CSSProperties } from 'react'
+import { motion } from 'framer-motion'
 import type { AiVoiceState } from '@/store/aiAssistantStore'
 import './coach-studio.css'
 import { useCoachPerformance, type CoachExpression } from './useCoachExpression'
@@ -55,7 +56,7 @@ export default function CoachMascot({ state = 'idle', level = 0, size = 160, cla
           <g className="nova-arm nova-arm-right"><path d="M155 170 Q174 170 176 187 Q175 197 160 193" fill={`url(#${id}-metal)`} stroke="#bac0ca" strokeWidth="1.5"/></g>
           <ellipse cx="98" cy="207" rx="18" ry="9" fill={`url(#${id}-metal)`} stroke="#c1c6ce"/>
           <ellipse cx="142" cy="207" rx="18" ry="9" fill={`url(#${id}-metal)`} stroke="#c1c6ce"/>
-          <g className="nova-head" style={{ transform: reducedMotion ? undefined : `rotate(${(state === 'listening' ? -3 : state === 'thinking' ? 4 : performance.gesture === 'tilt' || expression === 'curious' ? -6 : expression === 'playful_angry' ? 3 : 0) * intensity}deg)`, transformOrigin: '120px 120px' }}>
+          <motion.g className="nova-head" initial={false} animate={{ rotate: reducedMotion ? 0 : (state === 'listening' ? -3 : state === 'thinking' ? 4 : performance.gesture === 'tilt' || expression === 'curious' ? -6 : expression === 'playful_angry' ? 3 : 0) * intensity }} transition={{ type: 'spring', stiffness: 230, damping: 22 }} style={{ transformOrigin: '120px 120px' }}>
             <g className="nova-ear nova-ear-left"><path d="M58 79 L49 27 Q48 19 56 24 L92 62Z" fill={`url(#${id}-metal)`} stroke="#b8bec8" strokeWidth="1.5"/><path d="M61 62 L57 37 L77 62Z" fill={`url(#${id}-red)`}/></g>
             <g className="nova-ear nova-ear-right"><path d="M182 79 L191 27 Q192 19 184 24 L148 62Z" fill={`url(#${id}-metal)`} stroke="#b8bec8" strokeWidth="1.5"/><path d="M179 62 L183 37 L163 62Z" fill={`url(#${id}-red)`}/></g>
             <rect x="39" y="88" width="17" height="45" rx="8" fill={`url(#${id}-red)`}/><rect x="184" y="88" width="17" height="45" rx="8" fill={`url(#${id}-red)`}/>
@@ -64,15 +65,15 @@ export default function CoachMascot({ state = 'idle', level = 0, size = 160, cla
             <rect x="59" y="76" width="122" height="73" rx="30" fill={`url(#${id}-glass)`} stroke="#a5a8b4"/>
             <path d="M72 89 Q104 79 152 86" fill="none" stroke="#fff" strokeWidth="2" opacity=".1"/>
             <g className="nova-eyes" style={{ transform: `translate(${look.x + (state === 'thinking' ? 2 : 0)}px, ${look.y + (state === 'thinking' ? -2 : 0)}px)` }}>
-              <g className="nova-blink"><rect x="79" y={110 - eyeHeight / 2} width="17" height={eyeHeight} rx="8.5" fill="#fbf4f5"/><rect x="144" y={110 - eyeHeight / 2} width="17" height={eyeHeight} rx="8.5" fill="#fbf4f5"/>
+              <g className="nova-blink">{[79, 144].map(x => <motion.rect key={x} x={x} initial={false} animate={{ y: 110 - eyeHeight / 2, height: eyeHeight }} transition={{ duration: reducedMotion ? 0 : .22 }} width="17" rx="8.5" fill="#fbf4f5"/>)}
               <circle cx="90" cy="104" r="3" fill="#fff"/><circle cx="155" cy="104" r="3" fill="#fff"/></g>
-              <path className="nova-brow" d={brow} fill="none" stroke="#fa6d82" strokeWidth="2.5" strokeLinecap="round"/>
+              <motion.path className="nova-brow" initial={false} animate={{ d: brow }} transition={{ duration: reducedMotion ? 0 : .24 }} fill="none" stroke="#fa6d82" strokeWidth="2.5" strokeLinecap="round"/>
             </g>
             <ellipse cx="73" cy="127" rx="8" ry="3" fill="#e24a62" opacity=".45"/><ellipse cx="167" cy="127" rx="8" ry="3" fill="#e24a62" opacity=".45"/>
             {state === 'speaking' ? <g><ellipse className="nova-mouth" data-mouth-open={mouth.toFixed(2)} cx="120" cy="130" rx={8 + amplitude * 4} ry={mouth} fill="#faeff1"/><ellipse cx="120" cy={130 + mouth * .45} rx={5 + amplitude * 2} ry={mouth * .33} fill="#eb6379"/></g>
               : <path className="nova-smile" d={expression === 'neutral' || expression === 'unimpressed' || expression === 'focused' ? 'M111 132 L129 132' : expression === 'playful_angry' ? 'M109 132 Q119 126 131 130' : expression === 'thinking' ? 'M112 132 L127 130' : expression === 'surprised' ? 'M115 126 Q120 120 125 126 Q130 138 120 138 Q110 138 115 126' : expression === 'delighted' ? 'M105 125 Q120 148 135 125' : expression === 'happy' ? 'M109 128 Q120 140 131 128' : 'M110 128 Q120 138 130 128'} fill="none" stroke="#fdf2f4" strokeWidth="3" strokeLinecap="round"/>}
             <path d="M116 58 L120 52 L124 58" fill={`url(#${id}-red)`}/>
-          </g>
+          </motion.g>
         </g>
         {state === 'thinking' || expression === 'thinking' ? <g className="nova-thought"><circle cx="197" cy="54" r="4" fill="#cf1834"/><circle cx="209" cy="43" r="3" fill="#cf1834" opacity=".5"/><circle cx="217" cy="31" r="2" fill="#cf1834" opacity=".3"/></g> : null}
         {expression === 'delighted' && <path className="nova-celebration" d="M200 63 L203 71 L211 74 L203 77 L200 85 L197 77 L189 74 L197 71Z" fill="#eb6379"/>}

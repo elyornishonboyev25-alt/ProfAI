@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { resolve, sep, extname } from 'node:path'
 import { build } from 'esbuild'
 process.env.NODE_ENV = 'test'
+process.env.AI_RATE_LIMIT_MAX = '120'
 process.env.DATABASE_URL = 'postgresql://fixture:fixture@127.0.0.1:1/nova_browser_fixture'
 process.env.ACCESS_TOKEN_SECRET = 'nova-browser-fixture-access-secret'
 process.env.REFRESH_TOKEN_SECRET = 'nova-browser-fixture-refresh-secret'
@@ -40,7 +41,7 @@ import NovaStudyDock from'./src/components/ai/NovaStudyDock';import NovaLessonBo
 import{apiClient}from'./src/lib/apiClient';import{useAuthStore}from'./src/store/authStore';import{useAiAssistantStore}from'./src/store/aiAssistantStore';import{accountStorageFor}from'./src/utils/accountStorage';
 import{receiveNovaToolResults,openNovaStudy,currentNovaStudy}from'./src/services/ai/novaStudySession';import{getAllSavedWords}from'./src/utils/myVocabularyStore';import{usePushToTalk}from'./src/components/ai/usePushToTalk';
 const owner=${JSON.stringify(owner)};useAuthStore.setState({user:{id:owner,role:'USER',fullName:'Fixture'},accessToken:${JSON.stringify(token)},refreshToken:null,hydrated:true});useAiAssistantStore.setState({threadsLoaded:{['user:'+owner]:true}});accountStorageFor(owner).setItem('smarttest-reading-analysis-history-v1:'+owner,JSON.stringify([${JSON.stringify(entry)}]));
-const get=apiClient.get,post=apiClient.post;apiClient.get=async(path,options)=>path.startsWith('/ai/assistant/study/')?get(path,options):path==='/ai-workspace/threads'?{items:[]}:path==='/ai-workspace/memories'?{items:[]}:{};apiClient.post=async(path,body,options)=>path.startsWith('/ai/assistant/study/')?post(path,body,options):{};
+const get=apiClient.get,post=apiClient.post;apiClient.get=async(path,options)=>path.startsWith('/ai/assistant/study/')?get(path,options):path==='/ai-workspace/threads'?{items:[]}:path==='/ai-workspace/memories'?{items:[]}:{};apiClient.post=async(path,body,options)=>path.startsWith('/ai/assistant/study/')?post(path,body,options):{};apiClient.postStream=async(path,body)=>{window.selectedRequest=body;return new Response('event: done\\ndata: '+JSON.stringify({reply:'Tanlangan matnni birga tushunamiz.'})+'\\n\\n')};
 function Fixture(){const location=useLocation(),navigate=useNavigate(),[value,setValue]=useState(${JSON.stringify(text)}),ref=useRef(null);const ptt=usePushToTalk(false,()=>{window.dispatchEvent(new Event('nova:interrupt'));window.pttStarts=(window.pttStarts||0)+1},()=>{});window.applyResults=results=>receiveNovaToolResults(results,navigate);window.words=()=>getAllSavedWords();window.study=()=>currentNovaStudy();window.annotate=()=>window.dispatchEvent(new CustomEvent('nova:writing-annotations',{detail:{text:${JSON.stringify(text)},anchors:${JSON.stringify(annotations)}}}));window.setExam=value=>useAiAssistantStore.setState({isExamModeActive:value});return <><main><h1>IELTS source question</h1><p data-source-question>${question.text.replaceAll('<','&lt;')}</p><output data-path>{location.pathname}</output><div className="ielts-writing-workspace writing-desk"><div className="writing-response-pane"><NovaAnnotatedEditor id="student-writing" value={value} onChange={setValue} textareaRef={ref} placeholder="Your writing" describedBy="writing-description" fontSize={16}/></div></div><p id="writing-description">Your saved paragraph</p><button onClick={()=>navigate('/admission/universities')}>Go to universities</button><span data-held>{String(ptt.held)}</span></main><NovaStudyDock/></>};i18n.changeLanguage('uz').then(()=>createRoot(document.getElementById('root')).render(<MemoryRouter initialEntries={['/dashboard']}><Fixture/></MemoryRouter>));
 ` }, bundle: true, write: false, outdir: 'fixture', format: 'iife', tsconfig: 'tsconfig.json', define: { 'import.meta.env': '{}', 'process.env.NODE_ENV': '"production"' }, loader: { '.png': 'dataurl', '.jpg': 'dataurl', '.woff2': 'dataurl', '.woff': 'dataurl', '.ttf': 'dataurl' } })
 const js = fixture.outputFiles.find(f => f.path.endsWith('.js')).contents, css = fixture.outputFiles.find(f => f.path.endsWith('.css'))?.text ?? ''
@@ -128,23 +129,55 @@ try {
   await selects.nth(0).selectOption('speaking');await selects.nth(2).selectOption(speaking.id)
   await page.getByRole('region',{name:'Speaking qayta urinish'}).waitFor();assert.ok((await page.locator('.nova-study-question').innerText()).includes(speaking.questions[0].text))
   await page.getByRole('button',{name:'Doska yopilsin',exact:true}).click()
+  await page.locator('.nova-study-dock').waitFor({state:'detached'})
   await page.evaluate(()=>window.annotate());await page.locator('.nova-editor-mark--grammar').waitFor()
   const editor=page.locator('#student-writing');await editor.focus();await editor.press('Control+End');await page.keyboard.insertText(' ')
-  assert.equal(await page.locator('.nova-editor-mark').count(),0)
+  assert.equal(await page.locator('.nova-editor-mark').count(),1,'Appending outside an annotated span preserves it')
   await editor.press('Control+z');await page.locator('.nova-editor-mark--grammar').waitFor()
-  await editor.press('Control+Shift+z');assert.equal(await page.locator('.nova-editor-mark').count(),0)
+  await editor.press('Control+Shift+z');assert.equal(await page.locator('.nova-editor-mark').count(),1)
+  await editor.press('Control+Home');await page.keyboard.insertText('Today: ')
+  assert.equal(await page.locator('.nova-editor-mark').innerText(),'has','Prefix edits keep the exact quote')
+  const mark=page.locator('.nova-editor-mark');const markBox=await mark.boundingBox()
+  await page.mouse.move(markBox.x+markBox.width/2,markBox.y+markBox.height/2);await page.getByRole('tooltip').waitFor()
+  assert.ok((await page.getByRole('tooltip').innerText()).includes('Try have.'))
+  await editor.press('Control+z');assert.equal(await page.locator('.nova-editor-mark').innerText(),'has')
   await editor.fill('😊 O‘zbekcha: I have a plan.');assert.equal(await page.locator('.nova-editor-mark').count(),0)
+  await page.emulateMedia({reducedMotion:'no-preference'})
   await page.getByRole('button',{name:'Nova',exact:true}).click();await page.setViewportSize({width:390,height:844})
+  await page.locator('.nova-sheet-grip').waitFor()
+  const grip=await page.locator('.nova-sheet-grip').boundingBox()
+  await page.mouse.move(grip.x+grip.width/2,grip.y+grip.height/2);await page.mouse.down();await page.mouse.move(grip.x+grip.width/2,grip.y+160,{steps:12});await page.mouse.up()
+  await page.locator('.nova-study-dock').waitFor({state:'detached'})
+  await page.evaluate(()=>{window.motionFrames=[];let previous;const frame=now=>{if(previous!==undefined)window.motionFrames.push(now-previous);previous=now;if(window.motionFrames.length<32)requestAnimationFrame(frame)};requestAnimationFrame(frame)})
+  await page.getByRole('button',{name:'Nova',exact:true}).click();await page.locator('.nova-study-dock').waitFor()
+  await page.waitForFunction(()=>window.motionFrames.length===32)
+  const frames=await page.evaluate(()=>window.motionFrames.slice().sort((a,b)=>a-b))
+  assert.ok(frames[16]<=34,'The opening animation keeps a responsive browser frame cadence')
+  await page.waitForFunction(()=>getComputedStyle(document.querySelector('.nova-study-dock')).opacity==='1')
+  console.log('Motion: median frame '+frames[16].toFixed(1)+'ms, max '+frames[31].toFixed(1)+'ms during mobile opening')
   await mkdir('output/playwright/nova-study',{recursive:true});await page.screenshot({path:'output/playwright/nova-study/mobile.png',fullPage:true})
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth))
-  await page.setViewportSize({width:1366,height:900});await page.locator('.nova-study-setup summary').click();await selects.nth(0).selectOption('sat-math');await selects.nth(2).selectOption(sat.id)
+  await page.setViewportSize({width:1366,height:900});
+  await page.waitForFunction(()=>document.body.classList.contains('nova-study-open'))
+  const sourceBox=await page.locator('[data-source-question]').boundingBox(),dockBox=await page.locator('.nova-study-dock').boundingBox()
+  assert.ok(sourceBox.x+sourceBox.width<=dockBox.x,'Desktop source stays beside the glass board')
+  await page.locator('.nova-study-setup summary').click();await selects.nth(0).selectOption('sat-math');await selects.nth(2).selectOption(sat.id)
   await page.locator('.nova-study-question').waitFor()
   await page.waitForFunction(()=>[...document.querySelectorAll('.nova-study-visual')].every(img=>img.complete&&img.naturalWidth>0))
   await page.screenshot({path:'output/playwright/nova-study/desktop.png',fullPage:true})
+  await page.getByRole('button',{name:'Doska yopilsin',exact:true}).click();await page.locator('.nova-study-dock').waitFor({state:'detached'})
+  await page.evaluate(()=>{const range=document.createRange();range.selectNodeContents(document.querySelector('[data-source-question]'));const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);document.dispatchEvent(new MouseEvent('mouseup',{bubbles:true}))})
+  await page.getByRole('button',{name:'Shuni tushuntir',exact:true}).click()
+  await page.locator('.nova-context-quote').waitFor()
+  assert.ok((await page.locator('.nova-context-quote').innerText()).includes(question.text))
+  await page.waitForFunction(()=>window.selectedRequest?.message)
+  assert.ok((await page.evaluate(()=>window.selectedRequest.message)).includes(question.text),'Selected source is sent through the actual tutor request')
+  await page.waitForFunction(()=>getComputedStyle(document.querySelector('.nova-study-dock')).opacity==='1')
+  assert.ok(await page.evaluate(()=>document.activeElement.closest('.nova-study-dock')!==null),'Opening focuses the non-modal board')
   activeExam=true
   const blocked=await page.evaluate(async({token,ref})=>{const r=await fetch('/api/v1/ai/assistant/study/context',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({reference:ref,reveal:true})});return{status:r.status,body:await r.json()}},{token,ref:{skill:'listening',testId:listening.id,attemptId:entry.attemptKey,mode:'practice'}})
   assert.equal(blocked.status,409);assert.equal(blocked.body.code,'ACTIVE_EXAM')
-  await page.evaluate(()=>window.setExam(true));assert.equal(await page.locator('.nova-study-dock').count(),0)
+  await page.evaluate(()=>window.setExam(true));await page.locator('.nova-study-dock').waitFor({state:'detached'});assert.equal(await page.locator('.nova-study-dock').count(),0)
   assert.deepEqual(errors,[])
-  console.log('PASS browser: real authenticated study API + repository source, owned Analyze route, separate Practice/Speaking bank, original MP3 replay and Space cancellation, progressive transcript, real My Vocab save/replay dedup, Unicode editor stale-anchor removal, mobile layout, restored lesson and backend exam rejection. Fixtures: auth/account rows; no live model or microphone-quality claim.')
+  console.log('PASS browser: real authenticated study API + repository source, owned Analyze route, separate Practice/Speaking bank, original MP3 replay and Space cancellation, progressive transcript, real My Vocab save/replay dedup, Unicode span rebasing, native undo/redo, glass tooltip, mobile swipe dismissal, animated board and desktop split layout, restored lesson and backend exam rejection. Fixtures: auth/account rows; no live model or microphone-quality claim.')
 } finally {await browser?.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve))}

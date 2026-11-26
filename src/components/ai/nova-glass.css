@@ -1,0 +1,41 @@
+/* Nova uses the university profile's silver material, with a readable paper layer. */
+.nova-study-dock.nova-glass,.nova-lesson{--nova-ink:var(--silver-ink,#20242c);--nova-muted:var(--silver-muted,#58616e);--nova-red:var(--silver-red,#c9243b);--nova-line:rgba(119,128,143,.22);color:var(--nova-ink);background:linear-gradient(132deg,rgba(255,255,255,.94),rgba(238,240,244,.9) 48%,rgba(218,223,232,.86));border:1px solid rgba(255,255,255,.92);box-shadow:0 24px 70px rgba(39,46,60,.16),inset 0 1px 0 #fff,inset 0 -1px 0 rgba(110,121,139,.14);backdrop-filter:blur(20px) saturate(120%);-webkit-backdrop-filter:blur(20px) saturate(120%)}
+.nova-study-dock.nova-glass{isolation:isolate;overflow:hidden}
+.nova-study-dock.nova-glass>header{flex:none;background:linear-gradient(135deg,#ffffffb8,#e7eaf080);border-color:var(--nova-line)}
+.nova-study-dock.nova-glass>header strong{font-size:18px;letter-spacing:-.03em}
+.nova-study-dock.nova-glass>header p{color:var(--nova-muted);font-size:12px;max-width:29ch}
+.nova-study-dock.nova-glass button,.nova-study-launch,.nova-selection-action{background:var(--silver-control,linear-gradient(135deg,#ffffffdd,#dde2e9bb));border-color:rgba(125,134,150,.3);color:var(--nova-ink,#20242c);box-shadow:inset 0 1px 0 #fff,0 2px 4px #27303c08;transition:background-color .16s,border-color .16s,box-shadow .16s}
+.nova-study-dock.nova-glass button:hover,.nova-selection-action:hover{border-color:#c9243b70;box-shadow:inset 0 1px 0 #fff,0 3px 10px #a91c3112}
+.nova-study-dock.nova-glass :focus-visible,.nova-selection-action:focus-visible{outline:3px solid #c9243b;outline-offset:3px}
+.nova-study-dock.nova-glass .nova-study-steps button{position:relative;flex:1;justify-content:center;font-size:11px;padding:8px 5px;border-radius:12px}
+.nova-study-dock.nova-glass .nova-study-steps button[aria-current=step],.nova-study-dock.nova-glass>form>button:first-of-type{background:var(--silver-crimson,linear-gradient(125deg,#a91c31,#d62c43));border-color:#b3243a;color:white;box-shadow:0 4px 12px #a11c3026,inset 0 1px #ffffff50}
+.nova-study-dock.nova-glass .nova-study-actions button[aria-current=step]{border-color:#c9243b80;background:#f8e9ec;color:#982337}
+.nova-study-dock.nova-glass .nova-study-auto-save input[type=checkbox]{accent-color:#c9243b}
+.nova-study-scroll{flex:1;scrollbar-width:thin;scrollbar-color:#abb2bf transparent;scroll-padding-block:18px}
+.nova-study-dock.nova-glass select,.nova-study-dock.nova-glass textarea,.nova-study-dock.nova-glass input{border-color:#919baa66;background:#ffffffba;color:var(--nova-ink);box-shadow:inset 0 1px 3px #27303c06}
+.nova-study-dock.nova-glass>form{flex:none;flex-wrap:wrap;background:#f6f7f9c9;box-shadow:0 -8px 24px #27303c05;border-color:var(--nova-line)}
+.nova-study-dock.nova-glass>form textarea{flex:1 0 100%;max-height:100px;resize:none;min-height:52px}
+.nova-study-dock.nova-glass>form button{min-height:40px;justify-content:center}
+.nova-study-dock.nova-glass>form button[aria-pressed=true]{color:#a91c31;border-color:#c9243b;background:#f9e8ec}
+.nova-source-player,.nova-study-consent{background:linear-gradient(145deg,#ffffffb3,#e8ebf17a);border-color:var(--nova-line);box-shadow:inset 0 1px #fff}
+.nova-study-evidence blockquote,.nova-context-quote{border-left:3px solid var(--nova-red);background:linear-gradient(100deg,#c9243b0c,#ffffff60);padding:12px 14px;border-radius:0 12px 12px 0;margin:8px 0;color:var(--nova-ink)}
+.nova-context-quote strong{font-size:11px;color:#a12439;font-weight:650}.nova-context-quote p{max-height:140px;overflow:auto;white-space:pre-wrap;margin:5px 0 0}
+.nova-study-source h2{letter-spacing:-.025em}.nova-study-question{border-color:var(--nova-red);background:#ffffff50;border-radius:0 12px 12px 0}
+.nova-sheet-grip{display:none}
+.nova-selection-action{position:fixed;z-index:145;display:flex;align-items:center;gap:7px;max-width:190px;padding:10px 14px;border:1px solid #ffffffed;border-radius:14px;backdrop-filter:blur(16px);font-family:inherit;font-size:13px;font-weight:600;line-height:1.4;box-shadow:0 8px 28px #27303c26;cursor:pointer}
+.nova-lesson{backdrop-filter:none;-webkit-backdrop-filter:none;background:linear-gradient(135deg,#ffffffdf,#eef0f4dd);border-radius:20px;box-shadow:0 10px 30px #27303c0a,inset 0 1px #fff}
+.nova-lesson-header{padding:22px 22px 16px}.nova-lesson-header h2{font-size:clamp(21px,2.2vw,28px);letter-spacing:-.035em}.nova-lesson-header p{text-transform:none;letter-spacing:0;color:#a12439;font-size:12px}
+.nova-lesson-controls{padding:12px 22px}.nova-lesson-controls small{font-family:inherit;letter-spacing:0}.nova-lesson-blocks{padding:0 22px 20px}
+.nova-lesson-block{position:relative;min-width:0;transition:background .22s,box-shadow .22s}
+.nova-lesson-block[data-active=true]{background:linear-gradient(90deg,#c9243b09,transparent);box-shadow:-3px 0 #c9243b65}
+.nova-lesson-block[data-speaking=true]{background:linear-gradient(90deg,#c9243b12,#ffffff40);box-shadow:-3px 0 #c9243b}
+.nova-lesson li[data-active-step=true]{background:#c9243b0e;border-radius:8px;box-shadow:-3px 0 #c9243b;transition:background .18s}
+.nova-lesson mark{background:#c9243b12;color:#8d1c30;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.nova-formula{background:linear-gradient(135deg,#ffffffe6,#eff1f680);border-color:#c5cbd48c;border-left-color:#c9243b;box-shadow:inset 0 1px #fff}
+.nova-lesson dl>div{padding:6px 10px;background:#ffffff70;border:1px solid #ffffffb8;border-radius:8px}
+.nova-lesson ol{margin:12px 0;padding-left:24px}.nova-lesson li{padding:4px 0 4px 8px}.nova-lesson figure{margin:12px 0}
+.nova-vocab-cards{display:flex;gap:8px;overflow-x:auto;padding:3px 1px 8px;scroll-snap-type:x proximity}.nova-vocab-cards>button{min-width:140px;max-width:220px;flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-start;white-space:normal;text-align:left;scroll-snap-align:start;padding:12px}.nova-vocab-cards strong{font-size:15px;color:#a12439}.nova-vocab-cards small{font-size:12px;font-weight:400;color:#58616e}
+@media(min-width:1100px){body.nova-study-open{padding-right:440px}.nova-study-dock.nova-glass{width:416px;top:12px;bottom:12px;right:12px}}
+@media(max-width:1099px){.nova-study-dock.nova-glass{left:0;right:0;bottom:0;top:auto;width:100%;height:min(72dvh,720px);border-radius:26px 26px 0 0}.nova-sheet-grip{display:flex;justify-content:center;flex:none;touch-action:none;cursor:grab;padding:12px 0 10px}.nova-sheet-grip .nova-sheet-handle{display:block;width:40px;height:4px;border-radius:6px;background:#969dab}.nova-study-dock.nova-glass>header{padding-top:4px}.nova-study-scroll{padding:14px 16px}.nova-study-dock.nova-glass>form{padding-bottom:max(12px,env(safe-area-inset-bottom))}}
+@media(max-width:480px){.nova-lesson-header{padding:18px 16px 14px}.nova-lesson-controls{padding:10px 16px}.nova-lesson-blocks{padding:0 16px 18px}.nova-study-dock.nova-glass .nova-lesson-header h2{font-size:21px}}
+@media(prefers-reduced-motion:reduce){.nova-study-dock.nova-glass *,.nova-lesson *,.nova-selection-action{scroll-behavior:auto!important;transition:none!important;animation:none!important}}

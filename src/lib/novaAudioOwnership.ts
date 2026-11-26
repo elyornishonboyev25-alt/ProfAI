@@ -5,14 +5,12 @@ const listeners = new Set<() => void>()
 const publish = () => { for (const listener of listeners) listener() }
 export function novaAudioOwner() { return active?.owner ?? null }
 export function subscribeNovaAudio(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener) } }
-/** Detach the previous lease before cancellation: late callbacks cannot release its successor. */
+/** Install the successor token before cancellation so late and reentrant releases stay safe. */
 export function acquireNovaAudio(owner: NovaAudioOwner, cancel: () => void) {
   const previous = active
-  active = null
-  previous?.cancel()
   const token = Symbol(owner)
   active = { owner, token, cancel }
-  publish()
+  try { previous?.cancel() } finally { publish() }
   return () => { if (active?.token === token) { active = null; publish() } }
 }
 export function interruptNovaAudio() {

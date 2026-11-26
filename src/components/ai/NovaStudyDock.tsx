@@ -1,7 +1,10 @@
 import SpeakingReviewWorkbench from '@/components/speaking/SpeakingReviewWorkbench'
 import type { SpeakingEvaluation, ExaminerTurn } from '@/services/speakingAI'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import NovaStudySurface from './NovaStudySurface'
+import { useNovaSelection } from './useNovaSelection'
 import { BookOpen, X, Play, Pause, RotateCcw, Mic } from 'lucide-react'
 import { useCopy } from '@/i18n/interface'
 import { useAuthStore } from '@/store/authStore'
@@ -19,6 +22,7 @@ import { NovaSourceAudio } from '@/lib/novaSourceAudio'
 import { novaSkill, writingVersion, type StudyReference, type StudyTest, type StudyAttempt } from '@/lib/novaStudy'
 import { openNovaStudy, restoreNovaStudy, setStudyProgress, useNovaStudySession, acceptNovaPending, dismissNovaPending, currentWritingDraft, applyNovaEffect, inferNovaStudy, reportNovaAction } from '@/services/ai/novaStudySession'
 import './nova-study.css'
+import { getAllSavedWords } from '@/utils/myVocabularyStore'
 
 type Context = { reference: StudyReference; test: { id: string; title: string; questionIds: string[] }; question: { id: string; number: number; text: string; type: string; instruction?: string; options?: unknown[]; passage?: string; audioUrl?: string; duration?: number; userAnswer?: unknown; sourceRange?: { start: number; end: number; reference: string }; visual?: { asset?: string; alt?: string; listening?: boolean; diagram?: string } }; attempt?: { questionStatuses?: Record<string, 'correct' | 'incorrect' | 'skipped'>; writing?: string; transcript?: ExaminerTurn[]; completedAt: string; speakingEvaluation?: SpeakingEvaluation }; evidence?: { answer: unknown; explanation?: string; quotes: Array<{ quote: string }>; transcript?: string; alignment: string } }
 
@@ -37,21 +41,20 @@ export default function NovaStudyDock() {
   const state = useNovaStudySession(), navigate = useNavigate(), location = useLocation(), { language } = useCopy()
   const en = language === 'en', t = (uz: string, english: string) => en ? english : uz
   const tutor = useAiTutor('floating')
-  const ptt = usePushToTalk(state.open && !talkOpen && !exam, () => { window.dispatchEvent(new Event('nova:interrupt')); tutor.beginPushToTalk() }, tutor.endPushToTalk)
+  const reduced = useReducedMotion()
+  const selection = useNovaSelection(location.pathname)
+  const ptt = usePushToTalk(state.open && !talkOpen && !exam, tutor.beginPushToTalk, tutor.endPushToTalk)
   const [catalog, setCatalog] = useState<Array<Omit<StudyTest, 'questions'>>>([])
   const [attempts, setAttempts] = useState<StudyAttempt[]>([])
   const [skill, setSkill] = useState<StudyReference['skill']>('listening')
   const [context, setContext] = useState<Context | null>(null), [error, setError] = useState('')
   const [answer, setAnswer] = useState(''), [message, setMessage] = useState('')
   const [audioState, setAudioState] = useState('idle'), [start, setStart] = useState(0), [end, setEnd] = useState(15), [rate, setRate] = useState(1)
-  const player = useRef<NovaSourceAudio | null>(null), requestVersion = useRef(0), panel = useRef<HTMLElement>(null)
+  const player = useRef<NovaSourceAudio | null>(null), requestVersion = useRef(0), panel = useRef<HTMLDivElement>(null)
+  const savedWords = useMemo(() => state.progress?.words.length ? getAllSavedWords().filter(word => state.progress!.words.includes(word.term)) : [], [state.progress?.words, user?.id])
   const reference = state.progress?.reference
   const signature = JSON.stringify(reference)
   useEffect(() => { restoreNovaStudy(); return () => player.current?.stop() }, [user?.id])
-  useEffect(() => {
-    if (state.open) document.body.classList.add('nova-study-open')
-    return () => document.body.classList.remove('nova-study-open')
-  }, [state.open])
   useEffect(() => {
     const interrupt = (event: Event) => { if ((event as CustomEvent).detail?.source !== 'original') player.current?.stop() }
     const play = (event: Event) => { const d = (event as CustomEvent).detail; if (d && context?.question.audioUrl === d.audioUrl) void player.current?.play(d.audioUrl, d.start, d.end) }
@@ -138,8 +141,7 @@ export default function NovaStudyDock() {
   }, [state.action?.id, context, state.open, exam, user?.id])
   useEffect(() => {
     if (!state.open) { player.current?.stop(); return }
-    panel.current?.focus()
-    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') useNovaStudySession.setState({ open: false }) }
+    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') { window.dispatchEvent(new Event('nova:interrupt')); useNovaStudySession.setState({ open: false }) } }
     window.addEventListener('keydown', escape); return () => window.removeEventListener('keydown', escape)
   }, [state.open])
   useEffect(() => {
@@ -163,13 +165,15 @@ export default function NovaStudyDock() {
     const segment = { start: Math.max(0, offset), end: Math.max(offset + .5, until), rate }
     setStudyProgress({ ...progress, step: 'listen', segment }); void player.current?.play(context.question.audioUrl, segment.start, segment.end, rate)
   }
-  const ask = (text: string) => { player.current?.stop(); void tutor.send({ text }); setMessage('') }
+  const ask = (text: string) => { player.current?.stop(); const selected = selection.context || selection.text || reference?.selectedText; void tutor.send({ text: selected ? `${text}\n\n${t('Tanlangan matn', 'Selected text')}:\n${selected}` : text }); setMessage('') }
   const latest = [...tutor.messages].reverse().find(m => m.role === 'assistant')
   return <>
-    {!state.open && !talkOpen && <button type="button" className="nova-study-launch" onClick={() => { const reference = inferNovaStudy(location.pathname, location.state); const selectedText = window.getSelection()?.toString().trim().slice(0, 2400); openNovaStudy(reference ? { ...reference, selectedText } : undefined) }}><BookOpen size={18}/>Nova</button>}
-    {state.open && <aside ref={panel} tabIndex={-1} className="nova-study-dock" aria-label={t('Nova dars doskasi', 'Nova study board')}>
-      <header><CoachMascot size={44} state={tutor.voiceState}/><div><strong>Nova</strong><p>{t('Birga tushunamiz, keyin o‘zingiz urinib ko‘rasiz.', 'Work through it, then try it yourself.')}</p></div><button type="button" aria-label={t('Doska yopilsin', 'Close study board')} onClick={() => useNovaStudySession.setState({ open: false })}><X size={20}/></button></header>
-      <div className="nova-study-scroll">
+    {!state.open && !talkOpen && <button type="button" className="nova-study-launch" onClick={() => { const reference = inferNovaStudy(location.pathname, location.state); const selectedText = selection.text || window.getSelection()?.toString().trim().slice(0, 2400); if (selectedText) selection.commit(selectedText); openNovaStudy(reference ? { ...reference, selectedText } : undefined) }}><BookOpen size={18}/>Nova</button>}
+    <AnimatePresence>{selection.text && !talkOpen && <motion.button key="selection" type="button" className="nova-selection-action" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ left: selection.position.x, top: selection.position.y }} onPointerDown={event => event.preventDefault()} onClick={() => { const text = selection.commit(); const ref = inferNovaStudy(location.pathname, location.state) ?? reference; openNovaStudy(ref ? { ...ref, selectedText: text } : undefined); player.current?.stop(); void tutor.send({ text: `${t('Shuni tushuntir', 'Explain this')}:\n${text}` }) }}><BookOpen size={15}/>{t('Shuni tushuntir', 'Explain this')}</motion.button>}</AnimatePresence>
+    <NovaStudySurface open={state.open} onClose={() => { window.dispatchEvent(new Event('nova:interrupt')); useNovaStudySession.setState({ open: false }) }} label={t('Nova dars doskasi', 'Nova study board')}>
+      <header><CoachMascot size={44} state={tutor.voiceState} level={tutor.voiceLevel}/><div><strong>Nova</strong><p>{t('Birga tushunamiz, keyin o‘zingiz urinib ko‘rasiz.', 'Work through it, then try it yourself.')}</p></div><button type="button" aria-label={t('Doska yopilsin', 'Close study board')} onClick={() => { window.dispatchEvent(new Event('nova:interrupt')); useNovaStudySession.setState({ open: false }) }}><X size={20}/></button></header>
+      <div className="nova-study-scroll" ref={panel}>
+        <AnimatePresence mode="wait">{(selection.context || reference?.selectedText) && <motion.blockquote className="nova-context-quote" key={selection.context || reference?.selectedText} initial={reduced ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}><strong>{t('Tanlangan matn', 'Selected text')}</strong><p>{selection.context || reference?.selectedText}</p></motion.blockquote>}</AnimatePresence>
         <details className="nova-study-setup" open={!context}><summary>{t('Test va yo‘nalish', 'Test and skill')}</summary>
         <label>{t('Yo‘nalish', 'Skill')}<select value={skill} onChange={e => setSkill(novaSkill.parse(e.target.value))}>{novaSkill.options.map(s => <option key={s} value={s}>{({ listening: 'IELTS Listening', reading: 'IELTS Reading', writing: 'IELTS Writing', speaking: 'IELTS Speaking', 'sat-math': 'SAT Math', 'sat-rw': 'SAT Reading and Writing', vocabulary: 'My Vocab' })[s]}</option>)}</select></label>
         <label>{t('Yakunlangan attempt — Analyze', 'Completed attempt — Analyze')}<select value={reference?.attemptId ?? ''} onChange={e => { const a = attempts.find(a => a.id === e.target.value && a.skill === skill); if (a) choose({ skill, testId: a.testId, attemptId: a.id, mode: 'analyze' }) }}><option value="">{t('Attempt tanlang', 'Choose an attempt')}</option>{attempts.filter(a => a.skill === skill && a.completed).map(a => <option value={a.id} key={a.id}>{a.title} · {a.completedAt.slice(0, 16)} · {a.id.slice(-8)}</option>)}</select></label>
@@ -177,6 +181,7 @@ export default function NovaStudyDock() {
         </details>
         <label className="nova-study-auto-save"><span><input type="checkbox" checked={state.autoWords} onChange={event => useNovaStudySession.setState({ autoWords: event.target.checked })}/>{t(' Shu darsdagi qiyin so‘zlarni avtomatik saqlashga ruxsat', ' Allow automatic saves of difficult words in this lesson')}</span></label>
         {progress && progress.words.length > 0 && <button onClick={() => navigate(`/vocabulary/my-words/${['reading', 'listening', 'writing', 'speaking'].includes(progress.reference.skill) ? progress.reference.skill : 'sat'}/flashcards`)}>{t('Bugungi so‘zlarni takrorlash', 'Review today’s words')} ({progress.words.length})</button>}
+        {progress && progress.words.length > 0 && <div className="nova-vocab-cards" aria-label={t('Dars lug\u2018ati', 'Lesson vocabulary')}>{savedWords.map((word, i) => <motion.button type="button" key={word.id} initial={reduced ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: reduced ? 0 : Math.min(i * .05, .25) }} onClick={() => ask(`${t('Shu so\u2018zni kontekstda tushuntir', 'Explain this word in context')}: ${word.term}\n${word.example}`)}><strong>{word.term}</strong><small>{word.definition}</small></motion.button>)}</div>}
         {error && <p role="alert">{error}</p>}{state.notice && <p role="status">{state.notice}</p>}
         {state.pending.map(item => <div key={item.id} className="nova-study-consent"><p>{item.effect.type === 'vocabulary' ? `${item.effect.word.term} — My Vocab’ga qo‘shilsinmi?` : t('Draftni saqlab, sahifani ochish?', 'Save the draft and open the page?')}</p><button onClick={() => acceptNovaPending(item.id, navigate)}>{t('Ruxsat berish', 'Allow')}</button><button onClick={() => dismissNovaPending(item.id)}>{t('Bekor qilish', 'Dismiss')}</button></div>)}
         {context && progress && <>
@@ -192,7 +197,7 @@ export default function NovaStudyDock() {
           {context.question.audioUrl && <section className="nova-source-player" aria-label="Original audio"><strong>{t('Original audio', 'Original audio')}</strong><p>{t('Gapma-gap alignment yo‘q. Oraliqni original yozuvdan tanlang.', 'Sentence alignment unavailable. Select a range in the original recording.')}</p><div><label>{t('Boshlanish (s)', 'Start (s)')}<input type="number" min="0" value={start} onChange={e => setStart(Math.max(0, Number(e.target.value)))}/></label><label>{t('Tugash (s)', 'End (s)')}<input type="number" min={start + .5} value={end} onChange={e => setEnd(Number(e.target.value))}/></label><label>{t('Tezlik', 'Speed')}<select value={rate} onChange={e => { setRate(Number(e.target.value)); player.current?.setRate(Number(e.target.value)) }}><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1">1×</option><option value="1.25">1.25×</option></select></label></div><div><button onClick={() => play()}><Play size={16}/>{t('Eshitish / qayta', 'Play / replay')}</button><button aria-label="Pause source" onClick={() => player.current?.pause()}><Pause size={16}/></button><button onClick={() => void player.current?.resume()}>{t('Davom', 'Resume')}</button><button aria-label="Listen three seconds earlier" onClick={() => play(Math.max(0, start - 3))}><RotateCcw size={16}/>-3s</button><button onClick={() => { const length = end - start; setStart(end); setEnd(end + length); play(end, end + length) }}>{t('Keyingi oraliq', 'Next range')}</button></div><p role="status">{audioState === 'error' ? t('Original audio yuklanmadi. Qayta urining.', 'Source audio failed to load. Retry.') : audioState}</p></section>}
           <label>{progress.step === 'listen' ? t('Nima dedi?', 'What did you hear?') : t('Sizning urinishingiz', 'Your attempt')}<textarea value={progress.answers[context.question.id] ?? answer} onChange={e => { setAnswer(e.target.value); setStudyProgress({ ...progress, answers: { ...progress.answers, [context.question.id]: e.target.value }, step: 'attempt' }) }}/></label>
           <div className="nova-study-actions"><button onClick={() => ask(`${t('Javobimni tekshir. Avval dalilsiz talaffuz baholama.', 'Check my answer. Do not infer pronunciation from text.')}\n${progress.answers[context.question.id] ?? answer}`)}>{t('Nova tekshirsin', 'Ask Nova to check')}</button><button onClick={() => { setStudyProgress({ ...progress, hint: Math.min(4, progress.hint + 1), step: 'hint' }); ask(`${t('Bosqichli ishora ber. Javobni darhol ochma.', 'Give a progressive hint without revealing the answer.')} ${progress.hint + 1}/4`) }}>{t('Ishora', 'Hint')} {progress.hint}/4</button><button onClick={() => { void reveal(); ask(t('To‘liq tushuntir. Haqiqiy javob dalilini tool bilan ol.', 'Explain fully. Retrieve the actual answer evidence with the tool.')) }}>{t('To‘liq izoh', 'Full explanation')}</button></div>
-          {context.evidence && <section className="nova-study-evidence"><h3>{t('Manbadagi dalil', 'Source evidence')}</h3><p>{t('Javob', 'Answer')}: {String(context.evidence.answer)}</p>{context.evidence.explanation && <p>{context.evidence.explanation}</p>}{context.evidence.quotes.map((q, i) => <blockquote key={i}>{q.quote}</blockquote>)}{context.evidence.transcript ? <details open><summary>Transcript</summary><p>{context.evidence.transcript}</p></details> : context.question.audioUrl && <p>{t('Bu manbada transcript mavjud emas.', 'No transcript is available for this source.')}</p>}</section>}
+          {context.evidence && <motion.section className="nova-study-evidence" key={context.question.id} initial={reduced ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .28 }}><h3>{t('Manbadagi dalil', 'Source evidence')}</h3><p>{t('Javob', 'Answer')}: {String(context.evidence.answer)}</p>{context.evidence.explanation && <p>{context.evidence.explanation}</p>}{context.evidence.quotes.map((q, i) => <motion.blockquote key={i} initial={reduced ? false : { opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: reduced ? 0 : i * .07 }}>{q.quote}</motion.blockquote>)}{context.evidence.transcript ? <details open><summary>Transcript</summary><p>{context.evidence.transcript}</p></details> : context.question.audioUrl && <p>{t('Bu manbada transcript mavjud emas.', 'No transcript is available for this source.')}</p>}</motion.section>}
           {context.attempt?.writing && <NovaWritingAnnotations text={context.attempt.writing} anchors={state.annotations?.anchors ?? []}/>}
         </>}
         <button type="button" onClick={() => { const text = currentWritingDraft(); if (!text) { setError(t('Writing paragrafini avval tanlang.', 'Select a writing paragraph first.')); return }; useNovaStudySession.setState({ draft: text }); ask(`${t('Haqiqiy Writing paragrafimni ko‘r. Span uchun aniq versiya va offset ishlat.', 'Review my actual writing paragraph. Use the exact version and offsets for annotations.')} ${writingVersion(text)}`) }}>{t('Writing paragrafimni ko‘r', 'Review my writing paragraph')}</button>
@@ -201,6 +206,6 @@ export default function NovaStudyDock() {
       </div>
       <form onSubmit={e => { e.preventDefault(); if (message.trim()) ask(message) }}><label className="sr-only" htmlFor="nova-study-message">{t('Nova uchun xabar', 'Message Nova')}</label><textarea id="nova-study-message" value={message} onChange={e => setMessage(e.target.value)} placeholder={t('Shuni tushuntir…', 'Explain this…')}/><button disabled={tutor.isSending || !message.trim()}>{t('Yuborish', 'Send')}</button><button type="button" aria-label="Hold to talk to Nova" aria-pressed={ptt.held} style={{ touchAction: 'none' }} onPointerDown={event => { event.currentTarget.setPointerCapture(event.pointerId); ptt.press() }} onPointerUp={() => ptt.release()} onPointerCancel={() => ptt.release(true)} onLostPointerCapture={() => ptt.release(true)}><Mic size={18}/>{ptt.held ? t('Tinglayapman…', 'Listening…') : 'Space'}</button><button type="button" aria-label="Talk to Nova" onClick={() => { player.current?.stop(); useAiAssistantStore.getState().openTalk() }}>{t('Suhbat', 'Talk')}</button></form>
       {tutor.voiceError && <p role="alert">{tutor.voiceError}</p>}
-    </aside>}
+    </NovaStudySurface>
   </>
 }

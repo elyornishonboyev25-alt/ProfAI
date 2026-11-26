@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict'
 import { useAuthStore } from '@/store/authStore'
 import { getAllSavedWords } from '@/utils/myVocabularyStore'
-import { useNovaStudySession, restoreNovaStudy, openNovaStudy, receiveNovaToolResults, acceptNovaPending, observeNovaStudyPermission, currentNovaStudy } from '@/services/ai/novaStudySession'
+import { useNovaStudySession, restoreNovaStudy, openNovaStudy, receiveNovaToolResults, acceptNovaPending, dismissNovaPending, observeNovaStudyPermission, currentNovaStudy, novaStudyScope } from '@/services/ai/novaStudySession'
+import { useAiAssistantStore } from '@/store/aiAssistantStore'
 import type { NovaToolResult } from '@/lib/novaStudy'
 import { acquireNovaAudio, novaAudioOwner, interruptNovaAudio, subscribeNovaAudio } from '@/lib/novaAudioOwnership'
 
@@ -38,10 +39,26 @@ export async function run() {
   openNovaStudy({ skill: 'reading', testId: 'source', questionId: 'q1', mode: 'practice' })
   observeNovaStudyPermission('Bilmagan so‘zlarimni avtomatik qo‘sh')
   assert.equal(currentNovaStudy().vocabularyAutoSave, true)
+  observeNovaStudyPermission('Avtomatik qo‘shma')
+  assert.equal(currentNovaStudy().vocabularyAutoSave, false, 'Negative Uzbek instruction revokes consent')
+  observeNovaStudyPermission('Save new words automatically')
+  assert.equal(currentNovaStudy().vocabularyAutoSave, true)
   openNovaStudy({ skill: 'reading', testId: 'source', questionId: 'q2', mode: 'practice' })
   assert.equal(currentNovaStudy().vocabularyAutoSave, true, 'Consent remains within one lesson')
   openNovaStudy({ skill: 'listening', testId: 'other', mode: 'practice' })
   assert.equal(currentNovaStudy().vocabularyAutoSave, false, 'A new lesson requires its own automatic-save consent')
+  receiveNovaToolResults([result('dismiss-receipt', true)], navigate)
+  dismissNovaPending('dismiss-receipt')
+  assert.equal(currentNovaStudy().actionReceipts.find(r => r.id === 'dismiss-receipt')?.status, 'cancelled')
+  const scope = novaStudyScope(), before = getAllSavedWords().length
+  openNovaStudy({ skill: 'reading', testId: 'new-lesson', mode: 'practice' })
+  receiveNovaToolResults([result('stale-result', false, 'Stale sense')], navigate, scope)
+  assert.equal(getAllSavedWords().length, before, 'Late effects from an older lesson cannot modify the new lesson')
+  useAiAssistantStore.setState({ isExamModeActive: true })
+  receiveNovaToolResults([result('exam-late-result', false, 'Exam sense')], navigate)
+  assert.equal(getAllSavedWords().length, before, 'Entering an exam cancels in-flight coaching effects')
+  assert.equal(currentNovaStudy().actionReceipts.find(r => r.id === 'exam-late-result')?.status, 'cancelled')
+  useAiAssistantStore.setState({ isExamModeActive: false })
   receiveNovaToolResults([result('pending-old-owner', true)], navigate)
   useAuthStore.setState({ user: { id: 'other-learner' } as any })
   acceptNovaPending('pending-old-owner', navigate)

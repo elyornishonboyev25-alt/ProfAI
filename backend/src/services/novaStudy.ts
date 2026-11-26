@@ -55,7 +55,7 @@ export function parseNovaToolCalls(raw: unknown): NovaToolCall[] {
 }
 export type StudyQuestion = { id: string; number: number; text: string; type: string; sectionId: string; instruction?: string; options?: unknown[]; answer: unknown; explanation?: string; evidence?: Array<{ quote: string; paragraphLabel?: string }>; passage?: string; audioUrl?: string; transcript?: string; duration?: number; visual?: unknown; sourceRange?: { start: number; end: number; provenance: 'catalog_cue'; reference: string } }
 export type StudyTest = { id: string; title: string; skill: z.infer<typeof novaSkill>; route: string; questions: StudyQuestion[]; premium?: boolean }
-export type StudyAttempt = { id: string; testId: string; skill: StudyTest['skill']; title: string; completedAt: string; completed: boolean; answers: Record<string, unknown>; provenance: 'account_sync'; writing?: string; transcript?: unknown[]; recordingKey?: string; speakingEvaluation?: unknown }
+export type StudyAttempt = { id: string; testId: string; skill: StudyTest['skill']; title: string; completedAt: string; completed: boolean; answers: Record<string, unknown>; provenance: 'account_sync'; questionStatuses?: Record<string, 'correct' | 'incorrect' | 'skipped'>; writing?: string; transcript?: unknown[]; recordingKey?: string; speakingEvaluation?: unknown }
 export type NovaEffect =
   | { type: 'study_control'; action: StudyControl; reference: StudyReference }
   | { type: 'navigate'; path: string; state?: Record<string, unknown>; confirmation: boolean }
@@ -68,7 +68,7 @@ export const tutorProgressSchema = z.object({
   reference: studyReferenceSchema, questionIndex: z.number().int().min(0).max(1000).default(0),
   step: z.enum(['understand', 'listen', 'attempt', 'hint', 'evidence', 'reinforce']).default('understand'),
   hint: z.number().int().min(0).max(4).default(0), transcriptRevealed: z.boolean().default(false),
-  segment: z.object({ start: z.number().min(0), end: z.number().positive().optional(), rate: z.number().min(.5).max(1.5).default(1) }).optional(),
+  segment: z.object({ start: z.number().finite().min(0), end: z.number().finite().positive().optional(), rate: z.number().min(.5).max(1.5).default(1) }).refine(segment => segment.end === undefined || segment.end > segment.start, 'Audio end must follow start').optional(),
   answers: z.record(z.string().max(5000)).default({}), words: z.array(z.string().max(100)).max(100).default([]),
 }).strict()
 export type TutorProgress = z.infer<typeof tutorProgressSchema>

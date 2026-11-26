@@ -18,7 +18,7 @@ export const coachPreferencesSchema = z.object({
 export const assistantContextSchema = z.object({
   studyReference: studyReferenceSchema.optional(),
   studyProgress: tutorProgressSchema.optional(),
-  actionReceipts: z.array(z.object({ id: z.string().max(240), status: z.enum(['applied', 'failed', 'awaiting_consent']), message: z.string().max(1000) }).strict()).max(20).default([]),
+  actionReceipts: z.array(z.object({ id: z.string().max(240), status: z.enum(['applied', 'failed', 'awaiting_consent', 'cancelled']), message: z.string().max(1000) }).strict()).max(20).default([]),
   writingDraft: z.string().max(16000).optional(),
   vocabularyAutoSave: z.boolean().default(false),
   pathname: z.string().max(240).default('/ai-tutor'),

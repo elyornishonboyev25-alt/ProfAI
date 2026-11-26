@@ -151,7 +151,7 @@ export async function evaluateWriting(
 export type ChatAssistantOptions = {
   studyReference?: import('@/lib/novaStudy').StudyReference
   studyProgress?: import('@/lib/novaStudy').TutorProgress
-  actionReceipts?: Array<{ id: string; status: 'applied' | 'failed' | 'awaiting_consent'; message: string }>
+  actionReceipts?: Array<{ id: string; status: 'applied' | 'failed' | 'awaiting_consent' | 'cancelled'; message: string }>
   writingDraft?: string
   vocabularyAutoSave?: boolean
   lastReliableLanguage?: 'uz'|'en'|'ru'

@@ -11,3 +11,10 @@
 @media(min-width:1100px){body.nova-study-open{padding-right:440px}}
 
 .nova-study-visual{display:block;max-width:100%;height:auto;background:white;border-radius:8px}.nova-study-dock audio{max-width:100%;width:100%}
+
+.nova-study-setup{border-bottom:1px solid #dce3eb;padding-bottom:10px}
+.nova-study-setup>summary{cursor:pointer;font-size:13px;font-weight:650;color:#334b68;padding:3px 0}
+.nova-study-setup>label{margin-top:12px}
+.nova-study-auto-save>span{display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.nova-study-dock .nova-study-auto-save input[type=checkbox]{width:16px;height:16px;flex:none;margin:1px 0 0;accent-color:#253b58}
+.nova-study-actions button[aria-current=step]{border-color:#253b58;background:#e8eef7;color:#253b58}

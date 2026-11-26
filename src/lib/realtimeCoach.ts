@@ -11,7 +11,7 @@ import { novaAudioOwner, subscribeNovaAudio } from './novaAudioOwnership'
 export type VoiceContext = {
   studyReference?: import('@/lib/novaStudy').StudyReference
   studyProgress?: import('@/lib/novaStudy').TutorProgress
-  actionReceipts?: Array<{ id: string; status: 'applied' | 'failed' | 'awaiting_consent'; message: string }>
+  actionReceipts?: Array<{ id: string; status: 'applied' | 'failed' | 'awaiting_consent' | 'cancelled'; message: string }>
   writingDraft?: string
   vocabularyAutoSave?: boolean
   pathname: string; workspace: 'general' | 'ielts' | 'sat' | 'english' | 'admission'; language: 'auto' | 'en' | 'uz' | 'ru'

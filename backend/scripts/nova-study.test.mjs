@@ -50,6 +50,17 @@ test('Practice reads source without mutating original result; page/exam cannot r
   assert.equal(result.attempt, undefined); assert.equal(JSON.stringify(rows), before)
   for (const mode of ['page', 'exam']) await assert.rejects(getStudyContext('learner', { ...ref, mode }))
 })
+
+test('mistake coaching uses saved per-question outcomes without inventing missing history or answer keys', async () => {
+  const data = JSON.parse(history('learner')[0].value)
+  data[0].questionResults = [{ questionId: q.id, status: 'incorrect', correctAnswer: 'client key must not become evidence' }, { questionId: 'foreign-q', status: 'incorrect' }, { questionId: 'bad-status', status: 'guessed' }]
+  rows = [{ key: history('learner')[0].key, value: JSON.stringify(data) }]
+  const context = await getStudyContext('learner', ref)
+  assert.deepEqual(context.attempt.questionStatuses, { [q.id]: 'incorrect' })
+  assert.deepEqual(context.evidence.answer, q.answer)
+  rows = history('learner')
+  assert.deepEqual((await getStudyContext('learner', ref)).attempt.questionStatuses, {}, 'No saved outcomes means unknown, not all correct')
+})
 test('server rejects all answer tools during a synced active timed test, including fabricated practice mode', async () => {
   rows = [...history('learner'), { key: 'ielts_test_session_current', value: JSON.stringify({ isTestActive: true, testMode: 'simulation' }) }]
   assert.equal(hasActiveExam(rows), true)
@@ -83,6 +94,43 @@ test('vocabulary save is a proposal until browser success, explicit term consent
   assert.equal(two.data.status, 'awaiting_browser_save')
   assert.deepEqual(await runNovaTool('learner', { id: 'vocab-one', name: 'save_vocabulary', args: word }), one)
 })
+
+test('replayed evidence rechecks active exams and current ownership instead of returning cached answers', async () => {
+  rows = history('learner')
+  const call = { id: 'replay-evidence-authorization', name: 'get_answer_evidence', args: ref }
+  assert.equal((await runNovaTool('learner', call)).ok, true)
+  rows.push({ key: 'ielts_test_session_late', value: JSON.stringify({ isTestActive: true, testMode: 'simulation' }) })
+  assert.equal((await runNovaTool('learner', call)).error.code, 'ACTIVE_EXAM')
+  rows = []
+  assert.equal((await runNovaTool('learner', call)).error.code, 'ATTEMPT_NOT_FOUND')
+})
+
+test('negative save requests override auto-save consent and never propose vocabulary writes', async () => {
+  const { explicitVocabularyConsent, vocabularyAutoConsent } = await import('../dist/services/novaConsent.js')
+  rows = []
+  const word = { term: 'bank', definition: 'Land beside a river', uzbek: 'Daryo qirg‘og‘i', example: 'We sat on the bank.', context: 'reading', origin: 'Source passage' }
+  for (const [i, message] of ["Don't save bank", 'Do not automatically add bank', 'bank so‘zini qo‘shma', 'bank so‘zini avtomatik saqlama'].entries()) {
+    assert.equal(explicitVocabularyConsent(message, word.term), false)
+    assert.equal(vocabularyAutoConsent(message), false)
+    const result = await runNovaTool('learner', { id: `negative-save-${i}`, name: 'save_vocabulary', args: word }, { learnerMessage: message, vocabularyAutoSave: true })
+    assert.equal(result.ok, false); assert.equal(result.error.code, 'VOCABULARY_SAVE_DECLINED'); assert.equal(result.effect, undefined)
+  }
+  assert.equal(explicitVocabularyConsent('Save banking', 'bank'), false)
+  assert.equal(explicitVocabularyConsent('bank so‘zini saqla', 'bank'), true)
+  assert.equal(vocabularyAutoConsent('Save my difficult words automatically'), true)
+})
+
+test('SAT analysis chooses the actual requested section and asks when a shared attempt ID is ambiguous', async () => {
+  const sat = catalog.find(t => t.skill === 'sat-math')
+  rows = [{ key: 'profai:sat:attempt-history:v1', value: JSON.stringify([{ savedAt: Date.now(), attempt: { attemptId: 'sat-both-sections', testId: sat.id, status: 'submitted', answers: {} } }]) }]
+  const call = { id: 'sat-ambiguous', name: 'open_attempt_analysis', args: { attemptId: 'sat-both-sections' } }
+  assert.equal((await runNovaTool('learner', call)).error.code, 'ATTEMPT_SKILL_REQUIRED')
+  const explicit = await runNovaTool('learner', { ...call, id: 'sat-rw-explicit', args: { ...call.args, skill: 'sat-rw' } })
+  assert.equal(explicit.ok, true); assert.equal(explicit.effect.reference.skill, 'sat-rw')
+  const current = await runNovaTool('learner', { ...call, id: 'sat-rw-context' }, { reference: { skill: 'sat-rw', mode: 'practice', testId: sat.id } })
+  assert.equal(current.effect.reference.skill, 'sat-rw')
+  rows = []
+})
 test('writing anchors survive Unicode, reject stale edits and never change student text', async () => {
   rows = []
   const text = '😊 O‘zbekcha: I has a plan.', start = text.indexOf('has'), annotations = [{ id: 'grammar-one', version: writingVersion(text), start, end: start + 3, quote: 'has', kind: 'grammar', message: 'Check subject–verb agreement.', hint: 'I …' }]
@@ -96,6 +144,8 @@ test('writing anchors survive Unicode, reject stale edits and never change stude
 test('Nova speaks only Uzbek/English with legacy migration and code-switching stability', () => {
   assert.equal(novaLanguageSchema.parse('ru'), 'uz')
   assert.equal(resolveNovaLanguage('Menga Present Simple haqida tushuntir', 'auto', 'en').language, 'uz')
+  assert.equal(resolveNovaLanguage('Menga is are the ishlatilishini tushuntir', 'auto', 'en').language, 'uz')
+  assert.equal(resolveNovaLanguage('Present Simple ni tushuntir', 'auto', 'en').language, 'uz')
   for (const text of ['ha', 'yo‘q', 'davom et', 'okay']) assert.equal(resolveNovaLanguage(text, 'auto', 'uz').language, 'uz')
   assert.equal(inspectLanguage('Теперь говори по-русски').status, 'unsupported')
   assert.equal(resolveNovaLanguage('Endi inglizcha tushuntir', 'uz', 'uz').language, 'en')

@@ -1,4 +1,4 @@
-import { currentNovaStudy, receiveNovaToolResults, observeNovaStudyPermission } from '@/services/ai/novaStudySession'
+import { currentNovaStudy, receiveNovaToolResults, observeNovaStudyPermission, novaStudyScope } from '@/services/ai/novaStudySession'
 import {useNovaLanguage} from './useNovaLanguage'
 import {transcribeAnswer} from '@/lib/speakingAudio'
 import {inspectLanguage, languageClarification} from '@/lib/novaLanguage'
@@ -392,6 +392,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
     async (options: SendOptions = {}) => {
       const text = (options.text ?? draft).trim()
       observeNovaStudyPermission(text)
+      const studyScope = novaStudyScope()
       const outImages = options.images ?? images
       if ((!text && outImages.length === 0) || useAiAssistantStore.getState().isSending) return
       setSending(true)
@@ -466,7 +467,7 @@ export function useAiTutor(surface: 'workspace' | 'floating' | 'talk' = 'workspa
           },
         })
         if (controller.signal.aborted || useAuthStore.getState().user?.id !== user?.id) return
-        receiveNovaToolResults(response.toolResults, navigate)
+        receiveNovaToolResults(response.toolResults, navigate, studyScope)
         updateStoredMessage(ownerKey, threadId, assistantMessage.id, { content: response.reply, lesson: readNovaLesson(response.lesson), language: { selection: response.languageState?.selection ?? conversationLanguage.selection, response: response.replyLanguage ?? voiceLang, lastReliable: response.replyLanguage ?? voiceLang }, expression: response.expression, performance: response.performance, understanding: response.understanding, deliverySegments: response.deliverySegments, status: undefined })
         if (!threadId.startsWith('local-')) {
           // Preserve message order without holding up audio or the next turn.

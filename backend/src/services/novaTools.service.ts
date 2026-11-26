@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { AiGenerationError } from './aiProvider.service.js'
+import { explicitVocabularyConsent, refusesVocabularySave } from './novaConsent.js'
 import { getStudyContext, publicStudyContext, novaAccountRows, novaCatalog, attemptsFromRows, hasActiveExam } from './novaStudy.service.js'
 import { novaSkill, studyReferenceSchema, studyControlSchema, toolCallSchema, validWritingAnchors, writingVersion, type NovaToolCall, type NovaToolResult, type StudyReference } from './novaStudy.js'
 
@@ -12,7 +13,7 @@ export const toolArgumentSchemas = {
   get_page_context: empty, list_available_tests: z.object({ skill: novaSkill.optional(), query: z.string().max(120).optional() }).strict(),
   list_user_attempts: z.object({ skill: novaSkill.optional(), testId: z.string().max(240).optional() }).strict(),
   open_page: z.object({ page: z.enum(Object.keys(pages) as [keyof typeof pages, ...(keyof typeof pages)[]]) }).strict(),
-  open_attempt_analysis: z.object({ attemptId: z.string().min(1).max(240) }).strict(),
+  open_attempt_analysis: z.object({ attemptId: z.string().min(1).max(240), skill: novaSkill.optional() }).strict(),
   start_practice: z.object({ skill: novaSkill, testId: z.string().min(1).max(240) }).strict(),
   get_question_context: questionArgs, get_answer_evidence: questionArgs, get_listening_segment: questionArgs, play_listening_segment: questionArgs,
   get_speaking_question_set: z.object({ testId: z.string().min(1).max(240) }).strict(),
@@ -29,7 +30,8 @@ export async function runNovaTool(userId: string, raw: unknown, environment: Env
   const old = finished.get(key)
   if (old && old.expires > Date.now()) {
     if (old.fingerprint !== fingerprint) return { id: call.id, name: call.name, ok: false, error: { code: 'TOOL_ID_REUSED', message: 'Use a new call ID for different arguments or context.' } }
-    return old.result
+    // Re-execute read/proposal tools so cached evidence cannot outlive ownership
+    // or a newly started exam. Browser effect IDs still prevent repeated saves.
   }
   let result: NovaToolResult
   try {
@@ -52,7 +54,10 @@ export async function runNovaTool(userId: string, raw: unknown, environment: Env
       case 'list_user_attempts': data = attempts.filter(a => (!args.skill || a.skill === args.skill) && (!args.testId || a.testId === args.testId)).slice(0, 40).map(({ answers, writing, transcript, speakingEvaluation, ...summary }) => summary); break
       case 'open_page': effect = { type: 'navigate', path: pages[args.page as keyof typeof pages], confirmation: false }; data = { status: 'ready_to_open' }; break
       case 'open_attempt_analysis': {
-        const a = attempts.find(a => a.id === args.attemptId)
+        const matches = attempts.filter(a => a.id === args.attemptId)
+        const requestedSkill = args.skill ?? (matches.some(a => a.skill === environment.reference?.skill) ? environment.reference?.skill : undefined)
+        if (!requestedSkill && matches.length > 1) throw new AiGenerationError(409, 'ATTEMPT_SKILL_REQUIRED', 'Choose SAT Math or SAT Reading and Writing for this attempt.')
+        const a = matches.find(a => !requestedSkill || a.skill === requestedSkill)
         if (!a) throw new AiGenerationError(404, 'ATTEMPT_NOT_FOUND', 'Attempt not found in your synced history.')
         const reference: StudyReference = { skill: a.skill, testId: a.testId, attemptId: a.id, mode: 'analyze' }
         await getStudyContext(userId, reference, environment.pathname)
@@ -86,8 +91,8 @@ export async function runNovaTool(userId: string, raw: unknown, environment: Env
       }
       case 'save_vocabulary': {
         const word = vocabularyArgs.parse(args)
-        const explicit = /(?:qo[‘’'ʻ]?sh|saqla|add|save)/i.test(environment.learnerMessage ?? '') && (environment.learnerMessage ?? '').toLowerCase().includes(word.term.toLowerCase())
-        const allowed = explicit || environment.vocabularyAutoSave === true
+        if (refusesVocabularySave(environment.learnerMessage ?? '')) throw new AiGenerationError(409, 'VOCABULARY_SAVE_DECLINED', 'The learner declined saving vocabulary. No save was proposed.')
+        const allowed = explicitVocabularyConsent(environment.learnerMessage ?? '', word.term) || environment.vocabularyAutoSave === true
         effect = { type: 'vocabulary', word, confirmation: !allowed }; data = { status: allowed ? 'awaiting_browser_save' : 'awaiting_browser_consent_and_save' }; break
       }
       case 'start_vocabulary_review': effect = { type: 'navigate', path: `/vocabulary/my-words/${args.context}/flashcards`, confirmation: false }; data = { status: 'ready_to_open' }; break

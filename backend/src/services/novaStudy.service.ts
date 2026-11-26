@@ -29,8 +29,12 @@ export function attemptsFromRows(rows: AccountRow[], userId: string): StudyAttem
     if (row.key === `smarttest-reading-analysis-history-v1:${userId}` && Array.isArray(data)) for (const entry of data) {
       if (!entry?.attemptKey || !entry?.testId || !entry?.resultPayload) continue
       const skill = /listening/i.test(`${entry.testId} ${entry.testTitle}`) ? 'listening' : 'reading'
+      const questionStatuses: NonNullable<StudyAttempt['questionStatuses']> = {}
+      if (Array.isArray(entry.questionResults)) for (const result of entry.questionResults) {
+        if (typeof result?.questionId === 'string' && ['correct', 'incorrect', 'skipped'].includes(result.status)) questionStatuses[result.questionId] = result.status
+      }
       // isPartial describes a completed subset of a paper, not an ongoing attempt.
-      found.push({ id: entry.attemptKey, testId: entry.testId, skill, title: entry.testTitle, completedAt: entry.savedAt, completed: true, answers: entry.resultPayload.answers ?? {}, provenance: 'account_sync' })
+      found.push({ id: entry.attemptKey, testId: entry.testId, skill, title: entry.testTitle, completedAt: entry.savedAt, completed: true, answers: entry.resultPayload.answers ?? {}, questionStatuses, provenance: 'account_sync' })
     }
     if (row.key === `smarttest-writing-analysis-v1:${userId}` && Array.isArray(data)) for (const entry of data) {
       if (!entry?.attemptKey || typeof entry.studentResponse !== 'string') continue
@@ -92,7 +96,7 @@ export async function getStudyContext(userId: string, input: unknown, pathname =
   if (!question) throw new AiGenerationError(404, 'QUESTION_NOT_FOUND', 'This question does not belong to the selected source test.')
   const { answer, explanation, evidence, transcript, ...publicQuestion } = question
   return { reference: { ...reference, testId: test.id, questionId: question.id }, test: { id: test.id, title: test.title, skill: test.skill, route: test.route, questionIds: test.questions.map(q => q.id) },
-    attempt: attempt ? { id: attempt.id, completedAt: attempt.completedAt, answers: attempt.answers, provenance: attempt.provenance, writing: attempt.writing, transcript: attempt.transcript, speakingEvaluation: attempt.speakingEvaluation } : undefined,
+    attempt: attempt ? { id: attempt.id, completedAt: attempt.completedAt, answers: attempt.answers, questionStatuses: attempt.questionStatuses ? Object.fromEntries(Object.entries(attempt.questionStatuses).filter(([id]) => test.questions.some(q => q.id === id))) : undefined, provenance: attempt.provenance, writing: attempt.writing, transcript: attempt.transcript, speakingEvaluation: attempt.speakingEvaluation } : undefined,
     question: { ...publicQuestion, userAnswer: attempt?.answers[question.id] },
     // Kept separate so progressive disclosure can omit it on the initial fetch.
     evidence: { answer, explanation, quotes: evidence ?? [], transcript, alignment: 'unavailable' as const },

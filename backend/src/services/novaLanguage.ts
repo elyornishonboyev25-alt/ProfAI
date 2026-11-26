@@ -43,6 +43,8 @@ export function inspectLanguage(text: string): LanguageObservation {
   const ru = value.match(/(?:^|[^\p{L}])(?:это|как|почему|что|мне|меня|объясни\p{L}*|покажи|пожалуйста|понятно|нужно|давай|теперь|можно|спасибо)(?=$|[^\p{L}])/giu)?.length ?? 0
   const top = [...counts.filter(([lang]) => lang !== 'ru'), ['ru', ru] as const].sort((a, b) => b[1] - a[1])
   if (ru >= 1 && /[а-яё]/i.test(value)) return { language: 'unknown', status: 'unsupported', basis: 'lexical', detectedCode: 'rus' }
+  // An English grammar example (is/are/the/...) is not the learner's request.
+  if (/\b(?:tushuntir\w*|o'rgat\w*|ko'rsat\w*)\b/i.test(value) && !/\b(?:explain|teach|show|what|why|how)\b/i.test(value)) return { language: 'uz', status: 'supported', basis: 'lexical' }
   if (top[0][1] >= 2 && top[0][1] > top[1][1]) return { language: top[0][0], status: 'supported', basis: 'lexical' }
   if ((value.match(/\b(?:bir|şimdi|lütfen|için|nasıl|bana|anlat|değil|istiyorum|merhaba)\b/giu)?.length ?? 0) >= 2 && !counts.find(([lang, n]) => lang === 'uz' && n >= 2)) return { language: 'unknown', status: 'unsupported', basis: 'lexical', detectedCode: 'tur' }
   if (letters.length >= 80) {

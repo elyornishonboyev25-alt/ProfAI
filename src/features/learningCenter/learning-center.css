@@ -129,3 +129,53 @@
   .learning-center :is(.lc-panel,.lc-metric-card,.lc-modal,.lc-join-card,.lc-portal-class-card,.lc-portal-create-card,.lc-portal-guide,.lc-portal-hero,.lc-section-nav,.lc-workspace-banner,.lc-podium,.lc-portal-search) { border: 1px solid CanvasText; }
   .learning-center :is(.lc-section-link.is-active,.lc-leader-segment button.is-active) { outline: 2px solid Highlight; }
 }
+
+/* Dense directory on desktop; the same accessible rows become cards on mobile. */
+.lc-directory-table-wrap { overflow-x: auto; }
+.lc-directory-table { width: 100%; table-layout: fixed; border-collapse: collapse; text-align: left; }
+.lc-directory-table th { padding: 14px 16px; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: #657084; background: rgba(238,242,247,.65); }
+.lc-directory-table th:first-child { width: 19%; }
+.lc-directory-table th:nth-child(2) { width: 22%; }
+.lc-directory-table th:nth-child(3) { width: 11%; }
+.lc-directory-table th:nth-child(4) { width: 14%; }
+.lc-directory-table th:nth-child(5) { width: 9%; }
+.lc-directory-table th:nth-child(6) { width: 13%; }
+.lc-directory-table th:last-child { width: 12%; }
+.lc-directory-table td { padding: 20px 16px; vertical-align: top; border-top: 1px solid rgba(148,163,184,.19); overflow-wrap: anywhere; }
+.lc-directory-table tbody tr:hover { background: rgba(255,255,255,.55); }
+.lc-mobile-label { display: none; }
+.lc-directory-footer { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 20px; border-top: 1px solid rgba(148,163,184,.2); }
+.lc-exam-tag { display: inline-block; color: #a8263b; font-size: 10px; font-weight: 800; letter-spacing: .04em; }
+.lc-exam-scores { display: grid; gap: 10px; }
+.lc-exam-scores strong { font-size: 16px; color: #182335; }
+.lc-result-score { display: flex; flex-wrap: wrap; align-items: baseline; gap: 5px; font-variant-numeric: tabular-nums; }
+.lc-result-score strong { font-size: 21px; font-weight: 800; color: #182335; }
+.lc-result-score > span { font-size: 11px; color: #657084; }
+.lc-result-score small { flex-basis: 100%; color: #92621b; font-size: 10px; }
+.lc-result-pending { display: inline-flex; padding: 5px 8px; border: 1px solid #e6cc9c; border-radius: 8px; background: #fff9ed; color: #825917; font-size: 11px; font-weight: 650; line-height: 1.5; }
+.lc-result-history { display: grid; gap: 0; }
+.lc-result-history article { display: flex; align-items: center; gap: 16px; padding: 16px 0; border-bottom: 1px solid rgba(148,163,184,.2); }
+.lc-result-history article:last-child { border-bottom: 0; }
+.lc-result-history .lc-result-score { justify-content: flex-end; }
+.lc-exam-summary { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,22rem),1fr)); gap: 16px; }
+.lc-score-details { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(148,163,184,.2); }
+.lc-score-details dt { color: #657084; font-size: 11px; }
+.lc-score-details dd { margin-top: 5px; font-size: 16px; font-weight: 750; color: #182335; }
+@media (max-width: 1199px) {
+  .lc-directory-table, .lc-directory-table tbody { display: block; }
+  .lc-directory-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .lc-directory-table tbody { padding: 16px; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+  .lc-directory-table tr { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); padding: 18px; border: 1px solid rgba(148,163,184,.25); border-radius: 18px; background: rgba(255,255,255,.4); gap: 18px 14px; }
+  .lc-directory-table td { padding: 0; border: 0; min-width: 0; }
+  .lc-directory-table .lc-directory-identity, .lc-directory-table td:nth-child(2), .lc-directory-table .lc-directory-action { grid-column: 1 / -1; }
+  .lc-directory-table .lc-directory-action { border-top: 1px solid rgba(148,163,184,.2); padding-top: 8px; }
+  .lc-mobile-label { display: block; margin-bottom: 6px; color: #657084; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+}
+@media (max-width: 639px) {
+  .lc-directory-table tbody { grid-template-columns: minmax(0,1fr); padding: 12px; }
+  .lc-exam-summary { grid-template-columns: minmax(0,1fr); }
+  .lc-result-history article { align-items: flex-start; gap: 10px; }
+  .lc-score-details { gap: 10px; }
+}
+
+.lc-directory-action a { white-space: nowrap; }

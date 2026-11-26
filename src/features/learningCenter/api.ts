@@ -23,15 +23,18 @@ export const learningCenterApi = {
   join: (code: string) => apiClient.post<{ workspace: CenterWorkspace }>(`/learning-centers/join/${encodeURIComponent(code)}`),
   overview: (slug: string, days = 90) =>
     apiClient.get<CenterOverview>(`/learning-centers/${encodeURIComponent(slug)}/overview?days=${days}`),
-  students: (slug: string, query: { search?: string; groupId?: string; exam?: string; status?: string; days?: number } = {}) => {
+  students: (slug: string, query: { search?: string; groupId?: string; exam?: string; status?: string; days?: number; page?: number; pageSize?: number } = {}) => {
     const params = new URLSearchParams()
     if (query.search) params.set('search', query.search)
     if (query.groupId) params.set('groupId', query.groupId)
     if (query.exam) params.set('exam', query.exam)
     if (query.status) params.set('status', query.status)
-    if (query.days) params.set('days', String(query.days))
-    return apiClient.get<{ students: CenterStudent[] }>(`/learning-centers/${encodeURIComponent(slug)}/students?${params}`)
+    if (query.days !== undefined) params.set('days', String(query.days))
+    if (query.page) params.set('page', String(query.page))
+    if (query.pageSize) params.set('pageSize', String(query.pageSize))
+    return apiClient.get<{ students: CenterStudent[]; pagination?: { page: number; pageSize: number; total: number; pages: number } }>(`/learning-centers/${encodeURIComponent(slug)}/students?${params}`)
   },
+  studentOptions: (slug: string) => apiClient.get<{ students: Array<{ id: string; fullName: string }> }>(`/learning-centers/${encodeURIComponent(slug)}/students?compact=1`),
   student: (slug: string, studentId: string) =>
     apiClient.get<StudentDetail>(`/learning-centers/${encodeURIComponent(slug)}/students/${encodeURIComponent(studentId)}`),
   addNote: (slug: string, studentId: string, note: string) =>
@@ -41,6 +44,7 @@ export const learningCenterApi = {
       `/learning-centers/${encodeURIComponent(slug)}/students/${encodeURIComponent(studentId)}/ai-analysis`,
     ),
   groups: (slug: string) => apiClient.get<{ groups: CenterGroup[] }>(`/learning-centers/${encodeURIComponent(slug)}/groups`),
+  groupOptions: (slug: string) => apiClient.get<{ groups: Array<{ id: string; name: string; examTrack: CenterExamTrack }> }>(`/learning-centers/${encodeURIComponent(slug)}/groups?compact=1`),
   createGroup: (slug: string, input: { name: string; examTrack: CenterExamTrack; teacherId?: string; targetScore?: string; schedule?: string }) =>
     apiClient.post(`/learning-centers/${encodeURIComponent(slug)}/groups`, input),
   team: (slug: string) => apiClient.get<{ team: TeamMember[] }>(`/learning-centers/${encodeURIComponent(slug)}/team`),

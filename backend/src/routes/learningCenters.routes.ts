@@ -22,6 +22,8 @@ import { invalidateSkillAnalyticsCache } from '../services/analytics.service.js'
 import {
   average,
   buildDataDrivenInsight,
+  classifyResult,
+  isScored,
   normalizeTestAttempt,
   progressGrowth,
   round,
@@ -127,10 +129,19 @@ const listQuerySchema = z.object({
   groupId: z.string().trim().max(191).optional(),
   exam: z.enum(['IELTS', 'SAT', 'BOTH']).optional(),
   status: z.enum(['ON_TRACK', 'WATCH', 'NEEDS_ATTENTION']).optional(),
-  days: z.coerce.number().int().min(7).max(365).default(90),
+  days: z.coerce.number().int().min(0).max(365).default(0),
+  compact: z.enum(['1']).optional(),
+  page: z.coerce.number().int().min(1).max(100000).optional(),
+  pageSize: z.coerce.number().int().min(10).max(100).default(25),
 })
 
 type CenterAccess = Awaited<ReturnType<typeof findCenterAccess>>
+
+function centerAverage(students: StudentProgressSummary[], exam: 'IELTS' | 'SAT') {
+  const scores = students.filter(student => (exam === 'SAT' ? student.currentSatSource : student.currentIeltsSource) !== 'PROFILE')
+    .map(student => exam === 'SAT' ? student.currentSat : student.currentIelts).filter((score): score is number => score !== null)
+  return scores.length ? round(average(scores), exam === 'SAT' ? 0 : 1) : null
+}
 
 function slugify(value: string) {
   return value
@@ -206,10 +217,13 @@ async function studentScope(access: NonNullable<CenterAccess>) {
   return [...new Set(members.map((entry) => entry.member.userId))]
 }
 
-async function loadStudentIdentities(centerId: string, studentIds: string[]) {
+async function loadStudentIdentities(centerId: string, studentIds: string[], options: { where?: Prisma.UserWhereInput; skip?: number; take?: number } = {}) {
   if (!studentIds.length) return []
   return prisma.user.findMany({
+    ...options,
+    orderBy: [{ fullName: 'asc' }, { id: 'asc' }],
     where: {
+      ...options.where,
       id: { in: studentIds },
       learningCenterMemberships: {
         some: { centerId, role: LearningCenterRole.STUDENT, status: LearningCenterMemberStatus.ACTIVE },
@@ -218,8 +232,14 @@ async function loadStudentIdentities(centerId: string, studentIds: string[]) {
     select: {
       id: true,
       fullName: true,
+      email: true,
       nickname: true,
       avatarUrl: true,
+      googleAvatarUrl: true,
+      learningCenterMemberships: {
+        where: { centerId, role: LearningCenterRole.STUDENT, status: LearningCenterMemberStatus.ACTIVE },
+        select: { joinedAt: true, groups: { where: { group: { archivedAt: null } }, select: { group: { select: { id: true, name: true } } } } },
+      },
       currentStreak: true,
       profile: {
         select: {
@@ -250,22 +270,35 @@ async function loadResults(studentIds: string[], since?: Date) {
         finalScore: true,
         percentage: true,
         timeSpentSec: true,
+        totalQuestions: true,
+        correctAnswers: true,
         completedAt: true,
-        test: { select: { title: true, category: true, subjects: true } },
+        test: { select: { title: true, category: true, subjects: true, description: true } },
       },
     }),
     prisma.assessmentResult.findMany({
       where: { userId: { in: studentIds }, ...(since ? { completedAt: { gte: since } } : {}) },
       orderBy: { completedAt: 'asc' },
+      select: { id: true, userId: true, sourceKey: true, examType: true, skill: true, title: true,
+        score: true, maxScore: true, accuracy: true, durationSec: true, completedAt: true, breakdown: true },
     }),
     prisma.speakingSession.findMany({
       where: { userId: { in: studentIds }, ...(since ? { createdAt: { gte: since } } : {}) },
       orderBy: { createdAt: 'asc' },
+      select: { id: true, userId: true, createdAt: true, modeLabel: true, overallBand: true,
+        durationSec: true, fluencyBand: true, lexicalBand: true, grammarBand: true, pronunciationBand: true },
     }),
   ])
 
   for (const attempt of attempts) byStudent.get(attempt.userId)?.push(normalizeTestAttempt(attempt))
+  // Old full Reading/Listening saves can also exist in AssessmentResult.
+  // Only an exact original test identity and timestamp proves duplication.
+  const syncedPapers = new Set(attempts.flatMap(attempt => {
+    const identity = attempt.test.description?.match(/^Synced IELTS (Reading|Listening) attempt \((.+)\)$/)
+    return identity ? [`${attempt.userId}:ielts-${identity[1].toLowerCase()}-${identity[2]}-${attempt.completedAt.toISOString()}`] : []
+  }))
   for (const result of assessments) {
+    if (syncedPapers.has(`${result.userId}:${result.sourceKey}`) && (result.breakdown as { partial?: boolean } | null)?.partial !== true) continue
     byStudent.get(result.userId)?.push({
       id: result.id,
       examType: result.examType,
@@ -295,7 +328,13 @@ async function loadResults(studentIds: string[], since?: Date) {
   const assessmentKeys = new Set(assessments.map((result) => `${result.userId}:${result.sourceKey}`))
   for (const session of speakingSessions) {
     const sources = speakingSources.get(`${session.userId}:${session.createdAt.toISOString()}`)
-    if (sources?.length === 1 && assessmentKeys.has(`${session.userId}:${sources[0]}`)) continue
+    if (sources?.length === 1 && assessmentKeys.has(`${session.userId}:${sources[0]}`)) {
+      const assessment = assessments.find(result => result.userId === session.userId && result.sourceKey === sources[0])!
+      const stored = byStudent.get(session.userId)?.find(result => result.source === 'ASSESSMENT_RESULT' && result.id === assessment.id)
+      if (stored && isScored(stored)) continue
+      // A verified server session replaces an ungraded duplicate placeholder.
+      byStudent.set(session.userId, (byStudent.get(session.userId) ?? []).filter(result => result !== stored))
+    }
     byStudent.get(session.userId)?.push({
       id: session.id,
       examType: TestCategory.IELTS,
@@ -315,7 +354,7 @@ async function loadResults(studentIds: string[], since?: Date) {
       },
     })
   }
-  for (const points of byStudent.values()) points.sort((a, b) => a.completedAt.getTime() - b.completedAt.getTime())
+  for (const [id, points] of byStudent) byStudent.set(id, points.map(classifyResult).sort((a, b) => a.completedAt.getTime() - b.completedAt.getTime()))
   return byStudent
 }
 
@@ -336,7 +375,7 @@ async function loadAssignmentStats(centerId: string, studentIds: string[]) {
   return map
 }
 
-async function loadStudentSummaries(access: NonNullable<CenterAccess>, days = 90, groupId?: string) {
+async function loadStudentSummaries(access: NonNullable<CenterAccess>, days = 0, groupId?: string) {
   let ids = await studentScope(access)
   if (groupId) {
     const groupMembers = await prisma.learningCenterGroupMember.findMany({
@@ -352,7 +391,7 @@ async function loadStudentSummaries(access: NonNullable<CenterAccess>, days = 90
     loadAssignmentStats(access.centerId, ids),
   ])
   const summaries = students.map((student) => summarizeStudent(
-    student as CenterStudentIdentity,
+    { ...student, avatarUrl: student.avatarUrl ?? student.googleAvatarUrl } as CenterStudentIdentity,
     results.get(student.id) ?? [],
     assignmentStats.get(student.id),
   ))
@@ -637,7 +676,7 @@ router.get(
         avatarUrl: group.teacher.avatarUrl,
         groupName: group.name,
         students: groupStudents.length,
-        averageScore: round(average(groupStudents.map((student) => student.averageScore))),
+        averageScore: round(average(groupStudents.filter(student => student.scoredAttempts > 0).map((student) => student.averageScore))),
         improving: groupStudents.filter((student) => student.improvement > 0).length,
       }]
     })
@@ -657,8 +696,8 @@ router.get(
         ieltsStudents: ieltsStudents.length,
         activeTeachers: teacherCount,
         groups: groupCount,
-        averageSat: Math.round(average(satStudents.map((student) => student.currentSat).filter((score): score is number => score !== null))),
-        averageIelts: round(average(ieltsStudents.map((student) => student.currentIelts).filter((score): score is number => score !== null))),
+        averageSat: centerAverage(satStudents, 'SAT'),
+        averageIelts: centerAverage(ieltsStudents, 'IELTS'),
         assignmentsCompleted: submissions.length ? round((completed / submissions.length) * 100) : 0,
         studentsImproving: summaries.length ? round((summaries.filter((student) => student.improvement > 0).length / summaries.length) * 100) : 0,
       },
@@ -685,16 +724,63 @@ router.get(
     const access = await requireCenterAccess(res, req.params.slug, req.user!.id)
     if (!access) return
     const query = req.query as unknown as z.infer<typeof listQuerySchema>
-    const { summaries } = await loadStudentSummaries(access, query.days, query.groupId)
-    const search = query.search?.toLowerCase()
-    const filtered = summaries.filter((student) => {
-      if (search && !`${student.fullName} ${student.nickname ?? ''}`.toLowerCase().includes(search)) return false
-      if (query.exam === 'BOTH' && student.targetExam !== 'BOTH') return false
-      if (query.exam && query.exam !== 'BOTH' && student.targetExam !== query.exam && student.targetExam !== 'BOTH') return false
-      if (query.status && student.status !== query.status) return false
-      return true
+    let ids = await studentScope(access)
+    if (query.groupId) {
+      const members = await prisma.learningCenterGroupMember.findMany({
+        where: { groupId: query.groupId, group: { centerId: access.centerId, archivedAt: null }, member: { userId: { in: ids } } },
+        select: { member: { select: { userId: true } } },
+      })
+      ids = members.map(entry => entry.member.userId)
+    }
+    const participation = (exam: 'IELTS' | 'SAT'): Prisma.UserWhereInput => ({ OR: [
+      { profile: { targetExam: { in: [exam, 'BOTH'] } } },
+      { attempts: { some: { test: { category: exam } } } },
+      { assessmentResults: { some: { examType: exam } } },
+      ...(exam === 'IELTS' ? [{ speakingSessions: { some: {} } }] : []),
+    ] })
+    const where: Prisma.UserWhereInput = {
+      ...(query.search ? { OR: [
+        { fullName: { contains: query.search, mode: 'insensitive' } },
+        { nickname: { contains: query.search.replace(/^@/, ''), mode: 'insensitive' } },
+        ...(STAFF_ROLES.includes(access.role) ? [{ email: { contains: query.search, mode: 'insensitive' as const } }] : []),
+      ] } : {}),
+      ...(query.exam ? { AND: query.exam === 'BOTH' ? [participation('IELTS'), participation('SAT')] : [participation(query.exam)] } : {}),
+    }
+    // Ordinary directory pages load histories for only the visible learners.
+    // Status is derived from history; evaluate it in bounded batches before paging.
+    const paged = query.page !== undefined
+    const countWhere: Prisma.UserWhereInput = { ...where, id: { in: ids }, learningCenterMemberships: { some: {
+      centerId: access.centerId, role: LearningCenterRole.STUDENT, status: LearningCenterMemberStatus.ACTIVE,
+    } } }
+    if (query.compact === '1') {
+      const students = ids.length ? await prisma.user.findMany({ where: countWhere, orderBy: [{ fullName: 'asc' }, { id: 'asc' }], select: { id: true, fullName: true } }) : []
+      return res.json({ students })
+    }
+    const total = query.status ? 0 : ids.length ? await prisma.user.count({ where: countWhere }) : 0
+    const page = paged && !query.status ? Math.min(query.page!, Math.max(1, Math.ceil(total / query.pageSize))) : query.page ?? 1
+    const students = await loadStudentIdentities(access.centerId, ids, {
+      where, ...(paged && !query.status ? { skip: (page - 1) * query.pageSize, take: query.pageSize } : {}),
     })
-    return res.json({ students: filtered })
+    const since = query.days ? new Date(Date.now() - query.days * 86_400_000) : undefined
+    const summaries: Array<StudentProgressSummary & { email?: string | null; groups: Array<{ id: string; name: string }>; joinedAt: string | null }> = []
+    for (let index = 0; index < students.length; index += 100) {
+      const batch = students.slice(index, index + 100)
+      const batchIds = batch.map(student => student.id)
+      const [results, assignments] = await Promise.all([loadResults(batchIds, since), loadAssignmentStats(access.centerId, batchIds)])
+      for (const student of batch) {
+        const summary = summarizeStudent({ ...student, avatarUrl: student.avatarUrl ?? student.googleAvatarUrl }, results.get(student.id) ?? [], assignments.get(student.id))
+        if (query.status && summary.status !== query.status) continue
+        const membership = student.learningCenterMemberships?.[0]
+        summaries.push({ ...summary,
+          ...(STAFF_ROLES.includes(access.role) ? { email: student.email } : {}),
+          groups: membership?.groups.map(entry => entry.group) ?? [], joinedAt: membership?.joinedAt.toISOString() ?? null,
+        })
+      }
+    }
+    const filteredTotal = query.status ? summaries.length : total
+    const finalPage = Math.min(page, Math.max(1, Math.ceil(filteredTotal / query.pageSize)))
+    return res.json({ students: paged && query.status ? summaries.slice((finalPage - 1) * query.pageSize, finalPage * query.pageSize) : summaries,
+      pagination: { page: finalPage, pageSize: query.pageSize, total: filteredTotal, pages: Math.max(1, Math.ceil(filteredTotal / query.pageSize)) } })
   }),
 )
 
@@ -711,7 +797,7 @@ router.get(
       loadResults([req.params.studentId]),
       loadAssignmentStats(access.centerId, [req.params.studentId]),
       prisma.learningCenterGroup.findMany({
-        where: { centerId: access.centerId, members: { some: { member: { userId: req.params.studentId } } } },
+        where: { centerId: access.centerId, archivedAt: null, members: { some: { member: { userId: req.params.studentId } } } },
         select: { id: true, name: true, examTrack: true, teacher: { select: { id: true, fullName: true } } },
       }),
       prisma.learningCenterAssignmentSubmission.findMany({
@@ -731,11 +817,11 @@ router.get(
     const student = students[0]
     if (!student) return res.status(404).json({ message: 'Student not found.' })
     const results = resultMap.get(student.id) ?? []
-    const summary = summarizeStudent(student as CenterStudentIdentity, results, assignmentStats.get(student.id))
+    const summary = summarizeStudent({ ...student, avatarUrl: student.avatarUrl ?? student.googleAvatarUrl } as CenterStudentIdentity, results, assignmentStats.get(student.id))
     return res.json({
-      student: summary,
+      student: { ...summary, joinedAt: student.learningCenterMemberships?.[0]?.joinedAt.toISOString() ?? null, ...(STAFF_ROLES.includes(access.role) ? { email: student.email } : {}) },
       groups,
-      results: [...results].reverse().map((result) => ({ ...result, completedAt: result.completedAt.toISOString() })),
+      results: [...results].reverse().map(({ breakdown: _breakdown, ...result }) => ({ ...result, completedAt: result.completedAt.toISOString() })),
       insight: buildDataDrivenInsight(summary, results),
       assignments: assignments.map((submission) => ({
         id: submission.id,
@@ -805,14 +891,14 @@ router.post(
     const student = students[0]
     if (!student) return res.status(404).json({ message: 'Student not found.' })
     const results = resultMap.get(student.id) ?? []
-    const summary = summarizeStudent(student as CenterStudentIdentity, results, assignmentStats.get(student.id))
+    const summary = summarizeStudent({ ...student, avatarUrl: student.avatarUrl ?? student.googleAvatarUrl } as CenterStudentIdentity, results, assignmentStats.get(student.id))
     const fallback = buildDataDrivenInsight(summary, results)
     try {
       const generated = await generateAiText({
         userId: req.user!.id,
         purpose: 'center_performance_analysis',
-        systemPrompt: 'You are Ivygoo Learning Center intelligence. Return strict JSON with headline, summary, priorities (2-4 short strings), and tone (positive, neutral, warning). Base every claim only on supplied metrics. Never diagnose personality or invent topics.',
-        userMessage: JSON.stringify({ student: { ...summary, id: undefined, fullName: 'Student' }, recentResults: results.slice(-12) }),
+        systemPrompt: 'You are Ivygoo Learning Center intelligence. Return strict JSON with headline, summary, priorities (2-4 short strings), and tone (positive, neutral, warning). Base every claim only on supplied metrics. Never diagnose personality or invent topics. IELTS and SAT are different scales. Profile values and combined section estimates are not full mock results. Unverified or pending submissions have no measured score.',
+        userMessage: JSON.stringify({ student: { ...summary, id: undefined, fullName: 'Student' }, recentResults: results.filter(isScored).slice(-12).map(({ breakdown: _breakdown, ...result }) => result) }),
         maxOutputTokens: 520,
       })
       const parsed = z.object({
@@ -840,6 +926,10 @@ router.get(
       ...(access.role === LearningCenterRole.TEACHER ? { teacherId: access.userId } : {}),
       ...(access.role === LearningCenterRole.STUDENT ? { members: { some: { memberId: access.id } } } : {}),
     }
+    if (req.query.compact === '1') {
+      const groups = await prisma.learningCenterGroup.findMany({ where, orderBy: { name: 'asc' }, select: { id: true, name: true, examTrack: true } })
+      return res.json({ groups })
+    }
     const groups = await prisma.learningCenterGroup.findMany({
       where,
       orderBy: { name: 'asc' },
@@ -854,10 +944,10 @@ router.get(
     const allIds = [...new Set(groups.flatMap((group) => group.members.map((entry) => entry.member.userId)))]
     const [students, resultMap, assignmentStats] = await Promise.all([
       loadStudentIdentities(access.centerId, allIds),
-      loadResults(allIds, new Date(Date.now() - 90 * 86_400_000)),
+      loadResults(allIds),
       loadAssignmentStats(access.centerId, allIds),
     ])
-    const summaryMap = new Map(students.map((student) => [student.id, summarizeStudent(student as CenterStudentIdentity, resultMap.get(student.id) ?? [], assignmentStats.get(student.id))]))
+    const summaryMap = new Map(students.map((student) => [student.id, summarizeStudent({ ...student, avatarUrl: student.avatarUrl ?? student.googleAvatarUrl } as CenterStudentIdentity, resultMap.get(student.id) ?? [], assignmentStats.get(student.id))]))
     return res.json({
       groups: groups.map((group) => {
         const memberSummaries = group.members.map((entry) => summaryMap.get(entry.member.userId)).filter((entry): entry is StudentProgressSummary => Boolean(entry))
@@ -871,9 +961,9 @@ router.get(
           students: access.role === LearningCenterRole.STUDENT ? memberSummaries.filter((student) => student.id === access.userId) : memberSummaries,
           studentCount: memberSummaries.length,
           assignmentCount: group._count.assignments,
-          averageSat: Math.round(average(memberSummaries.map((student) => student.currentSat).filter((value): value is number => value !== null))),
-          averageIelts: round(average(memberSummaries.map((student) => student.currentIelts).filter((value): value is number => value !== null))),
-          averageScore: round(average(memberSummaries.map((student) => student.averageScore))),
+          averageSat: centerAverage(memberSummaries, 'SAT'),
+          averageIelts: centerAverage(memberSummaries, 'IELTS'),
+          averageScore: round(average(memberSummaries.filter(student => student.scoredAttempts > 0).map((student) => student.averageScore))),
           improving: memberSummaries.filter((student) => student.improvement > 0).length,
           needsAttention: memberSummaries.filter((student) => student.status === 'NEEDS_ATTENTION').length,
         }
@@ -1233,13 +1323,13 @@ router.get(
         fullName: student.fullName,
         nickname: student.nickname,
         avatarUrl: student.avatarUrl,
-        score: exam === 'SAT' ? student.currentSat : student.currentIelts,
+        score: exam === 'SAT' ? student.currentSatSource === 'PROFILE' ? null : student.currentSat : student.currentIeltsSource === 'PROFILE' ? null : student.currentIelts,
         highest: exam === 'SAT' ? student.highestSat : student.highestIelts,
         improvement: (() => {
-          const points = (results.get(student.id) ?? []).filter((result) => result.examType === exam)
+          const points = (results.get(student.id) ?? []).filter((result) => result.examType === exam && isScored(result))
           return progressGrowth(points)
         })(),
-        attempts: (results.get(student.id) ?? []).filter((result) => result.examType === exam).length,
+        attempts: (results.get(student.id) ?? []).filter((result) => result.examType === exam && isScored(result)).length,
         currentStreak: student.currentStreak,
       }))
       .filter((row) => row.score !== null && row.attempts > 0)

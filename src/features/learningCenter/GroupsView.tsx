@@ -31,8 +31,9 @@ export default function GroupsView({ slug, canManage }: { slug: string; canManag
               </div>
               <h2 className="mt-5 text-xl font-bold tracking-[-.03em] text-slate-950">{group.name}</h2>
               <div className="mt-2 flex flex-wrap gap-3 text-[11px] font-semibold text-slate-500"><span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" />{group.studentCount} <UiText text={"students"} /></span><span className="flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5" />{group.schedule || <UiText text={"Schedule not set"} />}</span></div>
-              <div className="mt-5 grid grid-cols-3 gap-2">
-                <MiniMetric label={group.examTrack === 'IELTS' ? 'Avg IELTS' : group.examTrack === 'SAT' ? 'Avg SAT' : 'Avg score'} value={group.examTrack === 'IELTS' ? group.averageIelts || '—' : group.examTrack === 'SAT' ? group.averageSat || '—' : `${group.averageScore}%`} />
+              <div className={`mt-5 grid gap-2 ${group.examTrack === 'BOTH' ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'}`}>
+                {group.examTrack !== 'SAT' && <MiniMetric label="Avg IELTS" value={group.averageIelts?.toFixed(1) ?? '—'} />}
+                {group.examTrack !== 'IELTS' && <MiniMetric label="Avg SAT" value={group.averageSat ?? '—'} />}
                 <MiniMetric label={uiCopy("Improving")} value={group.improving} tone="good" />
                 <MiniMetric label={uiCopy("Attention")} value={group.needsAttention} tone={group.needsAttention ? 'bad' : 'default'} />
               </div>

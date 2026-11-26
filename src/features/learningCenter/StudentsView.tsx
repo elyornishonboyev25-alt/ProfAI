@@ -1,58 +1,90 @@
 import { useCopy } from '@/i18n/interface'
 import UiText from '@/components/common/UiText'
-import { useMemo, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
-import { ArrowRight, Search, UserPlus, Users } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link, useLocation, useSearchParams } from 'react-router-dom'
+import { ArrowRight, ChevronLeft, ChevronRight, RefreshCw, Search, UserPlus, Users } from 'lucide-react'
 import { useAsyncData } from '@/hooks/useAsyncData'
 import { learningCenterApi } from './api'
-import { Avatar, CenterPageHeading, CenterPanel, CenterSkeleton, EmptyState, ErrorState, inputClass, InvitationLink, Modal, primaryButton, secondaryButton, StatusBadge, Trend } from './components'
+import { Avatar, CenterPageHeading, CenterPanel, CenterSkeleton, EmptyState, ErrorState, inputClass, InvitationLink, Modal, primaryButton, secondaryButton, StatusBadge } from './components'
+import { ExamScores, ResultDate, ResultScore, skillLabel } from './resultPresentation'
 
 export default function StudentsView({ slug, canManage }: { slug: string; canManage: boolean }) {
   const { c: uiCopy } = useCopy()
+  const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
-  const [search, setSearch] = useState('')
-  const [exam, setExam] = useState('')
+  const search = searchParams.get('search') ?? ''
+  const [draftSearch, setDraftSearch] = useState(search)
+  const exam = searchParams.get('exam') ?? ''
   const status = searchParams.get('status') ?? ''
   const groupId = searchParams.get('groupId') ?? ''
-  function setFilter(key: string, value: string) {
-    setSearchParams((previous) => { const next = new URLSearchParams(previous); if (value) next.set(key, value); else next.delete(key); return next })
-  }
-  const setStatus = (value: string) => setFilter('status', value)
-  const setGroupId = (value: string) => setFilter('groupId', value)
+  const page = Math.max(1, Number(searchParams.get('page')) || 1)
+  const pageSize = [25, 50, 100].includes(Number(searchParams.get('pageSize'))) ? Number(searchParams.get('pageSize')) : 25
   const [inviteOpen, setInviteOpen] = useState(false)
+  const setFilter = useCallback((key: string, value: string) => {
+    setSearchParams(previous => {
+      const next = new URLSearchParams(previous)
+      if (value) next.set(key, value); else next.delete(key)
+      if (key !== 'page') next.delete('page')
+      return next
+    }, { replace: key === 'search' })
+  }, [setSearchParams])
+  useEffect(() => { setDraftSearch(search) }, [search])
+  useEffect(() => {
+    if (draftSearch === search) return
+    const timer = window.setTimeout(() => setFilter('search', draftSearch.trim()), 300)
+    return () => window.clearTimeout(timer)
+  }, [draftSearch, search, setFilter])
   const { data, loading, error, refetch } = useAsyncData(
-    () => learningCenterApi.students(slug, { search, exam, status, groupId, days: 180 }),
-    [slug, search, exam, status, groupId],
+    () => learningCenterApi.students(slug, { search, exam, status, groupId, days: 0, page, pageSize }),
+    [slug, search, exam, status, groupId, page, pageSize],
   )
-  const groups = useAsyncData(() => learningCenterApi.groups(slug), [slug])
+  const groups = useAsyncData(() => learningCenterApi.groupOptions(slug), [slug])
+  const pagination = data?.pagination ?? { total: data?.students.length ?? 0, page: 1, pages: 1, pageSize }
+  const from = location.pathname + location.search
+  const filtered = Boolean(search || exam || status || groupId)
 
   return (
-    <div className="space-y-6">
-      <CenterPageHeading eyebrow="Learner progress" title={uiCopy("Students")} description={uiCopy("Scores, targets and assignments for each learner. Growth is measured in percentage points (pp).")} action={canManage ? <button type="button" onClick={() => setInviteOpen(true)} className={primaryButton}><UserPlus className="h-4 w-4" /> <UiText text={"Add student"} /></button> : undefined} />
-
-      <CenterPanel className="p-3 sm:p-4">
-        <div className="grid gap-2 md:grid-cols-[minmax(14rem,1fr)_repeat(3,minmax(9rem,.45fr))]">
-          <label className="relative"><Search className="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" /><input type="search" value={search} onChange={(event) => setSearch(event.target.value)} aria-label={uiCopy("Search students")} placeholder={uiCopy("Search students...")} className={`${inputClass} pl-10`} /></label>
-          <select aria-label={uiCopy("Filter exam")} value={exam} onChange={(event) => setExam(event.target.value)} className={inputClass}><option value=""><UiText text={"All exams"} /></option><option value="SAT">SAT</option><option value="IELTS">IELTS</option><option value="BOTH"><UiText text={"Both tracks"} /></option></select>
-          <select aria-label={uiCopy("Filter group")} value={groupId} onChange={(event) => setGroupId(event.target.value)} className={inputClass}><option value=""><UiText text={"All groups"} /></option>{groups.data?.groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}</select>
-          <select aria-label={uiCopy("Filter status")} value={status} onChange={(event) => setStatus(event.target.value)} className={inputClass}><option value=""><UiText text={"All signals"} /></option><option value="ON_TRACK"><UiText text={"On track"} /></option><option value="WATCH"><UiText text={"Watch"} /></option><option value="NEEDS_ATTENTION"><UiText text={"Needs attention"} /></option></select>
+    <div className="lc-directory space-y-5">
+      <CenterPageHeading eyebrow="Learner progress" title={uiCopy('Students')} description={uiCopy('See each learner’s latest test, score and next step. IELTS and SAT stay on their own scales.')} action={canManage ? <button type="button" onClick={() => setInviteOpen(true)} className={primaryButton}><UserPlus className="h-4 w-4" /><UiText text="Add student" /></button> : undefined} />
+      <CenterPanel className="p-4">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(15rem,1.6fr)_repeat(3,minmax(9rem,1fr))]">
+          <label className="relative"><span className="sr-only"><UiText text="Search students" /></span><Search className="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" /><input type="search" maxLength={120} value={draftSearch} onChange={event => setDraftSearch(event.target.value)} aria-label={uiCopy('Search students')} placeholder={uiCopy('Search name, nickname or email')} className={`${inputClass} pl-10`} /></label>
+          <select aria-label={uiCopy('Filter exam')} value={exam} onChange={event => setFilter('exam', event.target.value)} className={inputClass}><option value=""><UiText text="All exams" /></option><option value="IELTS">IELTS</option><option value="SAT">SAT</option><option value="BOTH"><UiText text="Both tracks" /></option></select>
+          <select aria-label={uiCopy('Filter group')} value={groupId} onChange={event => setFilter('groupId', event.target.value)} className={inputClass}><option value=""><UiText text="All groups" /></option>{groups.data?.groups.map(group => <option key={group.id} value={group.id}>{group.name}</option>)}</select>
+          <select aria-label={uiCopy('Filter status')} value={status} onChange={event => setFilter('status', event.target.value)} className={inputClass}><option value=""><UiText text="All signals" /></option><option value="ON_TRACK"><UiText text="On track" /></option><option value="WATCH"><UiText text="Watch" /></option><option value="NEEDS_ATTENTION"><UiText text="Needs attention" /></option></select>
         </div>
+        {groups.error && <p role="alert" className="mt-3 text-xs text-red-700"><UiText text="Groups could not be loaded." /> <button type="button" onClick={() => void groups.refetch()} className="font-bold underline"><UiText text="Try again" /></button></p>}
+        {filtered && <button type="button" className="mt-3 text-xs font-bold text-red-700 underline" onClick={() => { setDraftSearch(''); setSearchParams({}) }}><UiText text="Reset filters" /></button>}
       </CenterPanel>
-
-      {loading && !data ? <CenterSkeleton blocks={8} /> : error ? <ErrorState message={error} onRetry={() => void refetch()} /> : data?.students.length ? <>
-        <div className="flex items-center justify-between gap-3"><div className="flex items-center gap-2"><Users className="h-5 w-5 text-red-700" /><h2 className="font-bold text-slate-950"><UiText text={"Student directory"} /></h2></div><span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-500">{data.students.length} <UiText text={"learners"} /></span></div>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{data.students.map((student) => <Link key={student.id} to={`/learning-center/${slug}/students/${student.id}`} className="group block rounded-[1.75rem] focus-visible:outline-red-600" aria-label={uiCopy("Open {{value1}}'s progress", { value1: String(student.fullName) })}><CenterPanel className="h-full p-5 transition hover:-translate-y-1 hover:border-red-200 hover:shadow-lg"><div className="flex items-start justify-between gap-3"><Avatar name={student.fullName} url={student.avatarUrl} size="lg" /><StatusBadge status={student.status} /></div><h3 className="mt-4 break-words text-lg font-bold text-slate-950">{student.fullName}</h3><p className="mt-1 text-xs font-semibold text-slate-500">{student.nickname ? `@${student.nickname}` : <UiText text={"{{value1}} tests completed"} values={{ value1: String(student.attempts) }} />}</p><div className="mt-5 grid grid-cols-2 gap-3 rounded-2xl bg-slate-50 p-3"><div><p className="text-[10px] font-bold uppercase tracking-wider text-slate-400"><UiText text={"Current score"} /></p><div className="mt-1"><Score student={student} /></div></div><div><p className="text-[10px] font-bold uppercase tracking-wider text-slate-400"><UiText text={"Target"} /></p><p className="mt-2 text-sm font-bold text-slate-700">{student.targetSat ? `SAT ${student.targetSat}` : student.targetIelts ? `IELTS ${student.targetIelts}` : student.targetScore ?? <UiText text={"Not set"} />}</p></div></div><div className="mt-4 flex items-center justify-between gap-2"><span className="text-[10px] font-bold uppercase tracking-wider text-slate-400"><UiText text={"Growth"} /></span><Trend value={student.improvement} /></div><div className="mt-4"><div className="flex justify-between text-[10px] font-bold text-slate-500"><span><UiText text={"Assignment completion"} /></span><span>{student.completionRate}%</span></div><div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-gradient-to-r from-red-700 to-red-400" style={{ width: `${student.completionRate}%` }} /></div></div><div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4 text-xs font-semibold text-slate-500"><span>{student.attempts} <UiText text={"tests ·"} /> {student.currentStreak} <UiText text={"day streak"} /></span><ArrowRight className="h-4 w-4 text-red-700 transition group-hover:translate-x-1" /></div></CenterPanel></Link>)}</div>
-      </> : <CenterPanel><EmptyState title={uiCopy("No students match these filters")} description={uiCopy("Adjust filters or add a learner using their Ivygoo account email or an invitation link.")} action={canManage ? <button type="button" onClick={() => setInviteOpen(true)} className={primaryButton}><UiText text={"Add first student"} /></button> : undefined} /></CenterPanel>}
-
+      {loading && !data ? <CenterSkeleton blocks={4} /> : error ? <ErrorState message={error} onRetry={() => void refetch()} /> : <CenterPanel>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/60 px-5 py-4">
+          <div className="flex items-center gap-2"><Users className="h-5 w-5 text-red-700" /><h2 className="font-bold text-slate-950"><UiText text="Student directory" /></h2><span className="rounded-full bg-white/80 px-2.5 py-1 text-xs font-bold text-slate-600">{pagination.total}</span></div>
+          <button type="button" disabled={loading} className={secondaryButton} onClick={() => void refetch()}><RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} /><UiText text="Refresh" /></button>
+        </div>
+        {data?.students.length ? <>
+          <div className="lc-directory-table-wrap"><table className="lc-directory-table">
+            <caption className="sr-only"><UiText text="Student directory" /></caption>
+            <thead><tr>{['Student', 'Latest test', 'Latest result', 'Exam scores', 'Assignments', 'Activity', 'Progress'].map(label => <th key={label} scope="col"><UiText text={label} /></th>)}</tr></thead>
+            <tbody>{data.students.map(student => <tr key={student.id}>
+              <td className="lc-directory-identity"><Link to={`/learning-center/${slug}/students/${student.id}`} state={{ from }} className="flex min-w-0 items-center gap-3"><Avatar name={student.fullName} url={student.avatarUrl} /><div className="min-w-0"><strong className="block break-words text-sm text-slate-950">{student.fullName}</strong><span className="mt-1 block break-all text-xs text-slate-500">{student.nickname ? `@${student.nickname}` : student.email}</span>{student.nickname && student.email && <span className="mt-1 block break-all text-[11px] text-slate-500">{student.email}</span>}</div></Link>{student.groups?.length ? <p className="mt-2 text-[11px] text-slate-500">{student.groups.map(group => group.name).join(' · ')}</p> : null}</td>
+              <td><span className="lc-mobile-label"><UiText text="Latest test" /></span>{student.latestResult ? <div><p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-red-700">{student.latestResult.examType} · {skillLabel(student.latestResult.skill)}</p><p className="break-words text-xs font-semibold leading-5 text-slate-800">{student.latestResult.title}</p><p className="mt-1 text-[11px] text-slate-500"><ResultDate date={student.latestResult.completedAt} /></p></div> : <span className="text-xs text-slate-500"><UiText text="No test results yet." /></span>}</td>
+              <td><span className="lc-mobile-label"><UiText text="Latest result" /></span>{student.latestResult ? <ResultScore result={student.latestResult} /> : <span className="text-slate-400">—</span>}</td>
+              <td><span className="lc-mobile-label"><UiText text="Exam scores" /></span><ExamScores student={student} /></td>
+              <td><span className="lc-mobile-label"><UiText text="Assignments" /></span>{student.assignmentTotal ? <div><strong className="text-sm text-slate-800">{student.assignmentsCompleted ?? 0} / {student.assignmentTotal}</strong><div className="mt-2 h-1.5 w-20 max-w-full overflow-hidden rounded-full bg-slate-200"><div className="h-full rounded-full bg-red-600" style={{ width: `${student.completionRate}%` }} /></div></div> : <span className="text-xs text-slate-500"><UiText text="No assignments" /></span>}</td>
+              <td><span className="lc-mobile-label"><UiText text="Activity" /></span><StatusBadge status={student.status} />{student.activityNote && <p className="mt-2 text-[11px] text-slate-500"><UiText text={student.activityNote} /></p>}<p className="mt-2 text-[11px] text-slate-500"><UiText text="{{count}} saved attempts" values={{ count: student.attempts }} /></p>{student.pendingAttempts ? <p className="mt-1 text-[11px] font-semibold text-amber-700"><UiText text="{{count}} without verified scores" values={{ count: student.pendingAttempts }} /></p> : null}</td>
+              <td className="lc-directory-action"><Link to={`/learning-center/${slug}/students/${student.id}`} state={{ from }} aria-label={uiCopy("Open {{value1}}'s progress", { value1: student.fullName })} className="inline-flex min-h-10 items-center gap-1.5 text-xs font-bold text-red-700"><UiText text="View progress" /><ArrowRight className="h-4 w-4" /></Link></td>
+            </tr>)}</tbody>
+          </table></div>
+          <div className="lc-directory-footer">
+            <p role="status" className="text-xs font-semibold text-slate-500"><UiText text="{{start}}–{{end}} of {{total}} students" values={{ start: (pagination.page - 1) * pagination.pageSize + 1, end: Math.min(pagination.page * pagination.pageSize, pagination.total), total: pagination.total }} /></p>
+            <div className="flex flex-wrap items-center gap-2"><select aria-label={uiCopy('Students per page')} value={pageSize} onChange={event => setFilter('pageSize', event.target.value)} className={`${inputClass} !w-auto !text-xs`}>{[25, 50, 100].map(size => <option key={size} value={size}>{uiCopy('{{count}} per page', { count: size })}</option>)}</select><button type="button" aria-label={uiCopy('Previous page')} disabled={loading || pagination.page <= 1} className={secondaryButton} onClick={() => setFilter('page', String(pagination.page - 1))}><ChevronLeft className="h-4 w-4" /></button><span className="px-1 text-xs font-bold text-slate-600">{pagination.page} / {pagination.pages}</span><button type="button" aria-label={uiCopy('Next page')} disabled={loading || pagination.page >= pagination.pages} className={secondaryButton} onClick={() => setFilter('page', String(pagination.page + 1))}><ChevronRight className="h-4 w-4" /></button></div>
+          </div>
+        </> : <EmptyState title={uiCopy('No students match these filters')} description={uiCopy('Adjust filters or add a learner using their Ivygoo account email or an invitation link.')} />}
+      </CenterPanel>}
+      <p className="px-1 text-xs leading-5 text-slate-500"><UiText text="Only verified scores affect progress. Profile scores, section estimates and practice percentages are labelled separately." /></p>
       {inviteOpen && <InviteStudentModal open={inviteOpen} onClose={() => setInviteOpen(false)} slug={slug} groups={groups.data?.groups ?? []} onDone={() => { setInviteOpen(false); void refetch() }} />}
     </div>
   )
-}
-
-function Score({ student }: { student: NonNullable<Awaited<ReturnType<typeof learningCenterApi.students>>>['students'][number] }) {
-  if (student.currentSat) return <div><p className="text-lg font-bold text-slate-950">{student.currentSat}</p><p className="text-[10px] font-bold uppercase tracking-wider text-red-700">SAT</p></div>
-  if (student.currentIelts) return <div><p className="text-lg font-bold text-slate-950">{student.currentIelts.toFixed(1)}</p><p className="text-[10px] font-bold uppercase tracking-wider text-red-500">IELTS</p></div>
-  return <span className="text-xs font-bold text-slate-400"><UiText text={"Baseline pending"} /></span>
 }
 
 function InviteStudentModal({ open, onClose, slug, groups, onDone }: { open: boolean; onClose: () => void; slug: string; groups: Array<{ id: string; name: string }>; onDone: () => void }) {

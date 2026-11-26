@@ -28,6 +28,20 @@ export type CenterStudent = {
   currentIelts: number | null
   highestIelts: number | null
   targetIelts: number | null
+  email?: string | null
+  groups?: Array<{ id: string; name: string }>
+  joinedAt?: string | null
+  scoredAttempts?: number
+  pendingAttempts?: number
+  assignmentTotal?: number
+  assignmentsCompleted?: number
+  highestSatSource?: 'TEST' | 'COMBINED_SECTIONS' | 'PROFILE' | null
+  highestIeltsSource?: 'TEST' | 'FOUR_SKILLS' | 'PROFILE' | null
+  activityNote?: string
+  currentSatSource?: 'TEST' | 'COMBINED_SECTIONS' | 'PROFILE' | null
+  currentIeltsSource?: 'TEST' | 'FOUR_SKILLS' | 'PROFILE' | null
+  ieltsSkillCount?: number
+  latestResult?: LearningResult | null
   attempts: number
   averageScore: number
   improvement: number
@@ -52,8 +66,8 @@ export type CenterOverview = {
     ieltsStudents: number
     activeTeachers: number
     groups: number
-    averageSat: number
-    averageIelts: number
+    averageSat: number | null
+    averageIelts: number | null
     assignmentsCompleted: number
     studentsImproving: number
   }
@@ -83,8 +97,8 @@ export type CenterGroup = {
   students: CenterStudent[]
   studentCount: number
   assignmentCount: number
-  averageSat: number
-  averageIelts: number
+  averageSat: number | null
+  averageIelts: number | null
   averageScore: number
   improving: number
   needsAttention: number
@@ -134,9 +148,13 @@ export type LearningResult = {
   score: number
   maxScore: number
   accuracy: number | null
+  correctAnswers?: number | null
+  totalQuestions?: number | null
   durationSec: number
   completedAt: string
   source: 'TEST_ATTEMPT' | 'ASSESSMENT_RESULT' | 'SPEAKING_SESSION'
+  scoreStatus?: 'SCORED' | 'PENDING' | 'UNVERIFIED'
+  scoreKind?: 'BAND' | 'SCALED' | 'PERCENT' | 'ESTIMATED'
   breakdown?: Record<string, unknown>
 }
 

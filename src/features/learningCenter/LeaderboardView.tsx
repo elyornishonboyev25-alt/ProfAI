@@ -15,7 +15,7 @@ export default function LeaderboardView({ slug }: { slug: string }) {
   const [exam, setExam] = useState<Exam>('SAT')
   const [metric, setMetric] = useState<Metric>('SCORE')
   const [groupId, setGroupId] = useState('')
-  const groups = useAsyncData(() => learningCenterApi.groups(slug), [slug])
+  const groups = useAsyncData(() => learningCenterApi.groupOptions(slug), [slug])
   const { data, loading, error, refetch } = useAsyncData(
     () => learningCenterApi.leaderboard(slug, exam, metric, groupId || undefined),
     [slug, exam, metric, groupId],

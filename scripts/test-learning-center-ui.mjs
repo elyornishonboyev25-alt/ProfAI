@@ -16,7 +16,7 @@ const notificationsOnly = process.argv.includes('--notifications-only')
 const directory = await mkdtemp(join(tmpdir(), 'profai-center-browser-'))
 const bundle = await build({ entryPoints: ['scripts/tests/learning-center-ui.tsx'], bundle: true, write: false, outdir: directory, format: 'iife', tsconfig: 'tsconfig.json', loader: { '.jpg': 'dataurl' }, define: { 'process.env.NODE_ENV': '"development"', 'import.meta.env': '{}' }, plugins: [{ name: 'test-copy', setup(builder) {
   builder.onResolve({ filter: /^@\/i18n\/interface$/ }, () => ({ path: 'copy', namespace: 'test-copy' }))
-  builder.onLoad({ filter: /.*/, namespace: 'test-copy' }, () => ({ contents: 'export const useCopy = () => ({ c: text => text })' }))
+  builder.onLoad({ filter: /.*/, namespace: 'test-copy' }, () => ({ contents: String.raw`export const useCopy = () => ({ c: (text, values = {}) => text.replace(/\{\{\s*([^{}]+?)\s*\}\}/g, (match, key) => String(values[key] ?? match)), language: 'en' })` }))
 } }] })
 const css = await postcss([tailwind()]).process(await readFile('src/index.css', 'utf8'), { from: 'src/index.css' })
 const script = bundle.outputFiles.find(file => file.path.endsWith('.js')).text
@@ -24,7 +24,7 @@ const centerCss = bundle.outputFiles.find(file => file.path.endsWith('.css')).te
 const server = createServer((req, res) => {
   if (req.url === '/fixture.js') { res.setHeader('Content-Type', 'text/javascript'); res.end(script) }
   else if (req.url === '/fixture.css') { res.setHeader('Content-Type', 'text/css'); res.end(css.css + centerCss) }
-  else { res.setHeader('Content-Type', 'text/html'); res.end('<meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><div id="root"></div><script src="/fixture.js"></script>') }
+  else { res.setHeader('Content-Type', 'text/html'); res.end('<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/fixture.css"><div id="root"></div><script src="/fixture.js"></script>') }
 })
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve))
 const browser = spawn(process.env.CENTER_TEST_BROWSER || 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', ['--headless=new', '--no-sandbox', '--disable-gpu', '--no-first-run', '--no-default-browser-check', '--remote-debugging-port=0', '--user-data-dir=' + directory, 'about:blank'], { windowsHide: true, stdio: 'ignore' })
@@ -195,7 +195,7 @@ try {
   await evaluate(`window.syncIelts('listening', { title: 'Listening fixture', duration: 30 }, { testId: 'fixture-1', date: '2026-10-04T10:00:00.000Z', score: 7.5, correctAnswers: 32, totalQuestions: 40, timeSpent: 1800 }, 'listening-assignment')`)
   assert.equal(await evaluate(`window.calls.find(c => c.action === 'objective-result').input.assignmentId`), 'listening-assignment')
   assert.equal(await evaluate(`window.calls.find(c => c.action === 'objective-result').input.path`), '/tests/listening-sync')
-  assert.equal(await evaluate(`localStorage.getItem('smarttest-listening-sync:owner:fixture-1-2026-10-04T10:00:00.000Z')`), 'ok')
+  assert.equal(await evaluate(`window.accountValue('smarttest-listening-sync:owner:fixture-1-2026-10-04T10:00:00.000Z')`), 'ok')
   await evaluate(`window.syncIelts('reading', { title: 'Reading practice' }, { testId: 'fixture-2', date: '2026-10-04T10:00:00.000Z', score: 0, correctAnswers: 6, totalQuestions: 10, timeSpent: 600, isPartial: true }, 'full-reading-assignment')`)
   assert.equal(await evaluate(`window.calls.filter(c => c.action === 'result').at(-1).input.assignmentId`), undefined, 'A partial section cannot finish a full assignment')
   assert.equal(await evaluate(`window.calls.filter(c => c.action === 'result').at(-1).input.maxScore`), 100)
@@ -220,6 +220,52 @@ try {
   await select('[aria-label="Filter exam"]', 'SAT')
   await select('[aria-label="Filter status"]', 'WATCH')
   await until(`window.calls.some(c => c.action === 'students' && c.query?.search === 'Learner' && c.query?.exam === 'SAT' && c.query?.status === 'WATCH')`)
+  // Large rosters keep URL state and show every learner through server pages.
+  await go('/copy')
+  await evaluate(`window.paginateStudents = true; window.studentRows = Array.from({ length: 83 }, (_, index) => ({ ...window.learner, id: index === 0 ? 'owner' : 'student-' + index, fullName: 'Learner ' + String(index).padStart(3, '0'), targetExam: 'BOTH', currentIelts: 7, currentIeltsSource: 'FOUR_SKILLS', currentSatSource: 'TEST', latestResult: { id: 'result-' + index, examType: index % 2 ? 'SAT' : 'IELTS', skill: index % 2 ? 'SAT_MATH' : 'IELTS_READING', title: index % 2 ? 'SAT Math Test 2' : 'IELTS Reading Full Test 1', score: index % 2 ? 640 : 7.5, maxScore: index % 2 ? 800 : 9, scoreStatus: index === 2 ? 'PENDING' : 'SCORED', completedAt: '2026-11-20T10:30:00Z', durationSec: 1800, accuracy: 80, source: 'ASSESSMENT_RESULT' }, groups: [{ id: 'group-a', name: 'SAT Advanced' }], assignmentTotal: 4, assignmentsCompleted: 2 }))`)
+  await go('/learning-center/oxford/students?exam=BOTH&groupId=group-a')
+  await until(`document.querySelectorAll('.lc-directory-table tbody tr').length === 25`)
+  assert.equal(await evaluate(`document.querySelector('.lc-directory-table tbody').textContent.includes('IELTS Reading Full Test 1')`), true)
+  assert.equal(await evaluate(`document.querySelector('.lc-directory-table tbody').textContent.includes('Awaiting assessment')`), true)
+  assert.equal(await evaluate(`document.body.textContent.includes('Four-skill estimate') && document.body.textContent.includes('SAT Math Test 2')`), true)
+  await screenshot('directory-large-desktop')
+  await evaluate(`document.querySelector('[aria-label="Next page"]').click()`)
+  await until(`window.route.includes('page=2') && document.querySelector('.lc-directory-table tbody').textContent.includes('Learner 025')`)
+  await evaluate(`document.querySelector('[aria-label="Previous page"]').click()`)
+  await until(`document.querySelector('.lc-directory-table tbody').textContent.includes('Learner 000')`)
+  await evaluate(`document.querySelector('.lc-directory-table tbody a').click()`)
+  await until(`window.route === '/learning-center/oxford/students/owner'`)
+  await click('Back to students')
+  await until(`window.route.includes('exam=BOTH') && window.route.includes('groupId=group-a')`)
+  await go('/copy')
+  await evaluate(`window.resultRows = [
+    { id: 'new-writing', examType: 'IELTS', skill: 'IELTS_WRITING', title: 'Writing pending', score: 0, maxScore: 9, scoreStatus: 'PENDING', completedAt: '2026-11-21T10:00:00Z', durationSec: 0, accuracy: null, source: 'ASSESSMENT_RESULT' },
+    { id: 'reading-2', examType: 'IELTS', skill: 'IELTS_READING', title: 'Reading recent', score: 7.5, maxScore: 9, scoreStatus: 'SCORED', completedAt: '2026-11-20T10:00:00Z', durationSec: 1800, accuracy: 80, source: 'ASSESSMENT_RESULT' },
+    { id: 'sat-1', examType: 'SAT', skill: 'SAT_MATH', title: 'SAT Math Test 2', score: 640, maxScore: 800, scoreStatus: 'SCORED', completedAt: '2026-11-19T10:00:00Z', durationSec: 1800, accuracy: 70, source: 'ASSESSMENT_RESULT' },
+    { id: 'reading-1', examType: 'IELTS', skill: 'IELTS_READING', title: 'Reading baseline', score: 6.5, maxScore: 9, scoreStatus: 'SCORED', completedAt: '2026-11-18T10:00:00Z', durationSec: 1800, accuracy: 65, source: 'ASSESSMENT_RESULT' },
+    ...Array.from({ length: 30 }, (_, index) => ({ id: 'legacy-' + index, examType: 'IELTS', skill: 'IELTS_WRITING', title: 'Legacy writing ' + index, score: 0, maxScore: 9, scoreStatus: 'UNVERIFIED', completedAt: '2026-10-01T10:00:00Z', durationSec: 0, accuracy: null, source: 'ASSESSMENT_RESULT' }))
+  ]; Object.assign(window.learner, { targetExam: 'BOTH', currentIelts: 7, targetIelts: 8, highestIelts: 7, currentIeltsSource: 'FOUR_SKILLS', currentSatSource: 'TEST', latestResult: window.resultRows[0], attempts: 34, scoredAttempts: 3, pendingAttempts: 31 }); window.paginateStudents = false; window.studentRows = [window.learner]`)
+  await go('/learning-center/oxford/students/owner')
+  await until(`document.querySelectorAll('.recharts-line-dots circle').length === 2`)
+  assert.equal(await evaluate(`document.querySelector('[aria-label="Filter progress by skill"]').options.length`), 2, 'Pending and unverified Writing scores never enter chart series')
+  await select('[aria-label="Filter progress by skill"]', 'SAT:SAT_MATH:800:SCALED')
+  await until(`document.querySelectorAll('.recharts-line-dots circle').length === 1`)
+  await select('[aria-label="Filter progress by skill"]', 'IELTS:IELTS_READING:9:BAND')
+  await until(`document.querySelectorAll('.recharts-line-dots circle').length === 2`)
+  assert.equal(await evaluate(`document.querySelectorAll('.lc-result-history article').length`), 10)
+  assert.equal(await evaluate(`document.body.textContent.includes('Four-skill estimate') && document.body.textContent.includes('Awaiting assessment')`), true)
+  await click('Next')
+  assert.equal(await evaluate(`document.querySelectorAll('.lc-result-history article').length`), 10)
+  await input('[aria-label="Search test history"]', 'SAT Math')
+  await until(`document.querySelectorAll('.lc-result-history article').length === 1`)
+  assert.equal(await evaluate(`document.querySelector('.lc-result-history').textContent.includes('640')`), true)
+  await input('[aria-label="Search test history"]', '')
+  for (const width of [320, 390, 768, 1440]) {
+    await resize(width, 1000)
+    assert.equal(await evaluate('document.documentElement.scrollWidth <= window.innerWidth'), true, `Populated result history fits ${width}px`)
+    if ([390, 1440].includes(width)) await screenshot('student-scores-' + width)
+  }
+  await resize(1440, 1000)
   await go('/learning-center/oxford/students/owner')
   await click('Refresh AI')
   await until(`document.body.textContent.includes('Analysis refreshed')`)
@@ -313,7 +359,6 @@ try {
   await until(`window.route === '/login'`)
   assert.equal(await evaluate('window.routeState.from.pathname'), '/learning-center')
   await go('/learning-center/join/ABC123')
-  await click('Sign In')
   await until(`window.route === '/login'`)
   assert.equal(await evaluate('window.routeState.from.pathname'), '/learning-center/join/ABC123')
   }

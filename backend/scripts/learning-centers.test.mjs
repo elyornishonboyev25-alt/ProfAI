@@ -14,7 +14,7 @@ const { default: testsRouter } = await import('../dist/routes/tests.routes.js')
 const { default: dashboardRouter } = await import('../dist/routes/dashboard.routes.js')
 const { prisma } = await import('../dist/lib/prisma.js')
 const { fixtureAccessToken: signAccessToken, installSessionFixtures } = await import('./helpers/authSessions.mjs')
-const { summarizeStudent, normalizeTestAttempt } = await import('../dist/services/learningCenterAnalytics.service.js')
+const { summarizeStudent, normalizeTestAttempt, classifyResult, buildDataDrivenInsight } = await import('../dist/services/learningCenterAnalytics.service.js')
 
 const center = { id: 'center', name: 'Academy', slug: 'academy', city: 'Tashkent', logoUrl: null, coverUrl: null, createdById: 'owner', _count: { members: 4, groups: 1 } }
 const identity = { id: 'learner', fullName: 'Test Learner', nickname: 'learner', avatarUrl: null, currentStreak: 3, profile: { targetExam: 'SAT', targetSatScore: 1450 } }
@@ -64,6 +64,7 @@ const defaults = {
   'premiumGrant.findUnique': () => null,
   'billingSubscription.findMany': () => [],
   'freeTrial.findUnique': () => null,
+  'user.count': () => 1,
   'user.findMany': ({ where }) => where.id.in.includes('learner') ? [identity] : [],
   'testAttempt.findMany': () => [],
   'testAttempt.findFirst': () => ({ id: 'existing-attempt' }),
@@ -100,7 +101,7 @@ before(async () => {
   app.use('/centers', router)
   app.use('/tests', testsRouter)
   app.use('/dashboard', dashboardRouter)
-  app.use((error, _req, res, _next) => res.status(500).json({ message: error.message }))
+  app.use((error, _req, res, next) => { void next; res.status(500).json({ message: error.message }) })
   server = await new Promise(resolve => { const listening = app.listen(0, '127.0.0.1', () => resolve(listening)) })
   base = `http://127.0.0.1:${server.address().port}/centers`
 })
@@ -305,4 +306,139 @@ test('leaderboard ranks best score and real improvement, and validates filters',
   const rows = (await (await request('/academy/leaderboard?exam=SAT&metric=IMPROVEMENT')).json()).rows
   assert.equal(rows[0].highest, 1400); assert.equal(rows[0].improvement, 25); assert.equal(rows[0].rank, 1)
   assert.equal((await request('/academy/leaderboard?exam=INVALID')).status, 400)
+})
+
+
+test('pending and unverified zero placeholders do not change measured progress, while graded zero remains a score', () => {
+  const reading = point(7, 'IELTS_READING', 0)
+  const pending = { ...point(0, 'IELTS_WRITING', 1), breakdown: { assessmentStatus: 'pending' } }
+  const legacy = point(0, 'IELTS_WRITING', 2)
+  const graded = { ...point(0, 'IELTS_WRITING', 3), breakdown: { taskAchievement: 0, wordCount: 0 } }
+  assert.equal(classifyResult(pending).scoreStatus, 'PENDING')
+  assert.equal(classifyResult(legacy).scoreStatus, 'UNVERIFIED')
+  assert.equal(classifyResult(graded).scoreStatus, 'SCORED')
+  const summary = summarizeStudent(identity, [reading, pending, legacy])
+  assert.equal(summary.attempts, 3); assert.equal(summary.scoredAttempts, 1); assert.equal(summary.pendingAttempts, 2)
+  assert.equal(summary.latestResult.scoreStatus, 'UNVERIFIED'); assert.equal(summary.improvement, 0)
+  assert.equal(summary.skills.length, 1)
+  assert.equal(buildDataDrivenInsight(summary, [reading, pending, legacy]).headline, 'A baseline is recorded')
+  assert.equal(summarizeStudent(identity, [reading, pending, legacy, graded]).skills.find(skill => skill.label === 'IELTS Writing').score, 0)
+})
+test('IELTS overall needs four skills, rounds to half bands and tracks highest comparable overall', () => {
+  const student = { ...identity, profile: { targetExam: 'IELTS' } }
+  const results = ['IELTS_READING', 'IELTS_LISTENING', 'IELTS_WRITING', 'IELTS_SPEAKING'].map((skill, index) => point([7, 7, 6, 6.5][index], skill, index))
+  const partial = summarizeStudent(student, results.slice(0, 3))
+  assert.equal(partial.currentIelts, null); assert.equal(partial.highestIelts, null); assert.equal(partial.ieltsSkillCount, 3)
+  const full = summarizeStudent(student, results)
+  assert.equal(full.currentIelts, 6.5); assert.equal(full.highestIelts, 6.5); assert.equal(full.currentIeltsSource, 'FOUR_SKILLS')
+  const next = summarizeStudent(student, [...results, point(4, 'IELTS_READING', 4)])
+  assert.equal(next.currentIelts, 6); assert.equal(next.highestIelts, 6.5)
+  assert.equal(next.latestResult.skill, 'IELTS_READING')
+})
+test('partial percentages and scaled results use separate skill rows and growth windows', () => {
+  const results = [{ ...point(100, 'IELTS_READING', 0), maxScore: 100 }, point(6, 'IELTS_READING', 1)]
+  const summary = summarizeStudent(identity, results)
+  assert.equal(summary.improvement, 0); assert.equal(summary.skills.length, 2)
+  assert.equal(classifyResult({ ...results[0], breakdown: { total: 40, correct: 30, partial: false } }).score, 7)
+  assert.equal(classifyResult({ ...results[0], breakdown: { total: 13, correct: 13, partial: true } }).maxScore, 100)
+})
+test('Reading and Listening bands follow recorded raw answer counts and SAT estimates are labelled', () => {
+  const attempt = { id: 'attempt', finalScore: 100, percentage: 75, totalQuestions: 40, correctAnswers: 30, timeSpentSec: 1800, completedAt: new Date(), test: { title: 'IELTS Reading', category: 'IELTS', subjects: ['Reading'] } }
+  assert.equal(normalizeTestAttempt(attempt).score, 7)
+  assert.equal(normalizeTestAttempt({ ...attempt, correctAnswers: 0, percentage: 0 }).score, 0)
+  assert.equal(normalizeTestAttempt({ ...attempt, totalQuestions: 13, correctAnswers: 10 }).maxScore, 100)
+  const estimated = normalizeTestAttempt({ ...attempt, test: { title: 'SAT Math', category: 'SAT', subjects: ['Math'] } })
+  assert.equal(estimated.scoreKind, 'ESTIMATED'); assert.equal(summarizeStudent(identity, [estimated]).currentSat, null)
+})
+test('newer SAT sections update the combined estimate without losing highest full-test score', () => {
+  const summary = summarizeStudent(identity, [point(1400, 'SAT_OVERALL', 0), { ...point(600, 'SAT_MATH', 1), maxScore: 800 }, { ...point(650, 'SAT_READING_WRITING', 2), maxScore: 800 }])
+  assert.equal(summary.currentSat, 1250); assert.equal(summary.currentSatSource, 'COMBINED_SECTIONS'); assert.equal(summary.highestSat, 1400)
+  const profile = summarizeStudent({ ...identity, profile: { currentSatScore: 1500, targetExam: 'SAT' } }, [])
+  assert.equal(profile.currentSatSource, 'PROFILE'); assert.equal(profile.latestResult, null)
+})
+test('directory pagination reads histories for only its page, with stable ordering and no historical cutoff', async () => {
+  const learners = Array.from({ length: 130 }, (_, index) => ({ ...identity, id: `learner-${String(index).padStart(3, '0')}`, fullName: `Learner ${String(index).padStart(3, '0')}`, email: `learner${index}@example.test` }))
+  overrides.set('learningCenterMember.findMany', () => learners.map(student => ({ userId: student.id })))
+  overrides.set('user.count', () => learners.length)
+  overrides.set('user.findMany', ({ skip = 0, take }) => learners.slice(skip, take ? skip + take : undefined))
+  overrides.set('assessmentResult.findMany', ({ where }) => where.userId.in.map(userId => ({ ...point(1300), userId, completedAt: new Date('2024-01-01') })))
+  const response = await request('/academy/students?page=2&pageSize=25')
+  assert.equal(response.status, 200)
+  const directory = await response.json()
+  assert.deepEqual(directory.pagination, { page: 2, pageSize: 25, total: 130, pages: 6 })
+  assert.equal(directory.students.length, 25); assert.equal(directory.students[0].id, 'learner-025')
+  assert.equal(directory.students[0].latestResult.score, 1300); assert.equal(directory.students[0].email, 'learner25@example.test')
+  for (const call of calls.filter(call => ['testAttempt.findMany', 'assessmentResult.findMany', 'speakingSession.findMany'].includes(call.key))) {
+    assert.equal(call.args.where.userId.in.length, 25); assert.equal(call.args.where.completedAt, undefined)
+  }
+  const identityQuery = calls.find(call => call.key === 'user.findMany').args
+  assert.deepEqual(identityQuery.orderBy, [{ fullName: 'asc' }, { id: 'asc' }]); assert.equal(identityQuery.skip, 25)
+  assert.equal((await request('/academy/students?page=0')).status, 400)
+  assert.equal((await request('/academy/students?pageSize=1000')).status, 400)
+})
+test('status pagination filters before paging and public students never receive emails', async () => {
+  overrides.set('assessmentResult.findMany', () => [{ ...point(1300), userId: 'learner' }])
+  overrides.set('user.findMany', () => [{ ...identity, email: 'private@example.test' }])
+  const directory = await (await request('/academy/students?page=1&status=ON_TRACK')).json()
+  assert.equal(directory.pagination.total, 1); assert.equal(directory.students[0].status, 'ON_TRACK')
+  const empty = await (await request('/academy/students?page=1&status=WATCH')).json()
+  assert.equal(empty.pagination.total, 0); assert.deepEqual(empty.students, [])
+  const own = await (await request('/academy/students?page=1', 'GET', undefined, 'learner')).json()
+  assert.equal(Object.hasOwn(own.students[0], 'email'), false)
+  const detail = await (await request('/academy/students/learner', 'GET', undefined, 'learner')).json()
+  assert.equal(Object.hasOwn(detail.student, 'email'), false)
+})
+test('compact group filters skip all student histories and speaking queries exclude transcripts', async () => {
+  assert.equal((await request('/academy/groups?compact=1')).status, 200)
+  assert.equal(calls.some(call => call.key === 'testAttempt.findMany'), false)
+  await request('/academy/students/learner')
+  assert.equal(calls.find(call => call.key === 'speakingSession.findMany').args.select.transcript, undefined)
+})
+
+test('highest SAT combined estimate survives later lower section results', () => {
+  const results = [{ ...point(750, 'SAT_MATH', 0), maxScore: 800 }, { ...point(750, 'SAT_READING_WRITING', 1), maxScore: 800 }, { ...point(500, 'SAT_MATH', 2), maxScore: 800 }]
+  const summary = summarizeStudent(identity, results)
+  assert.equal(summary.currentSat, 1250); assert.equal(summary.highestSat, 1500)
+  assert.equal(summary.highestSatSource, 'COMBINED_SECTIONS')
+})
+test('profile scores cannot enter the leaderboard using practice-only attempts', async () => {
+  overrides.set('user.findMany', () => [{ ...identity, profile: { currentSatScore: 1600, targetExam: 'SAT' } }])
+  overrides.set('assessmentResult.findMany', () => [{ ...point(80), maxScore: 100, userId: 'learner' }])
+  const leaderboard = await (await request('/academy/leaderboard?exam=SAT')).json()
+  assert.deepEqual(leaderboard.rows, [])
+})
+
+test('full Reading and Listening results deduplicate only exact original identities', async () => {
+  const completedAt = new Date('2026-11-20T10:00:00Z')
+  overrides.set('testAttempt.findMany', () => [{ id: 'original-attempt', userId: 'learner', completedAt, percentage: 80, finalScore: 80, totalQuestions: 40, correctAnswers: 32, timeSpentSec: 1800, test: { title: 'Reading', category: 'IELTS', subjects: ['Reading'], description: 'Synced IELTS Reading attempt (paper-1)' } }])
+  overrides.set('assessmentResult.findMany', () => [{ ...point(7.5, 'IELTS_READING'), userId: 'learner', sourceKey: `ielts-reading-paper-1-${completedAt.toISOString()}`, completedAt }])
+  const detail = await (await request('/academy/students/learner')).json()
+  assert.equal(detail.results.length, 1); assert.equal(detail.results[0].correctAnswers, 32); assert.equal(detail.results[0].totalQuestions, 40)
+  overrides.set('assessmentResult.findMany', () => [{ ...point(7.5, 'IELTS_READING'), userId: 'learner', sourceKey: `ielts-reading-paper-2-${completedAt.toISOString()}`, completedAt }])
+  const separate = await (await request('/academy/students/learner')).json()
+  assert.equal(separate.results.length, 2, 'Different original papers must not be merged')
+})
+test('assignment recipient lookup reads names without loading histories', async () => {
+  const response = await request('/academy/students?compact=1')
+  assert.equal(response.status, 200)
+  assert.equal(calls.some(call => call.key === 'testAttempt.findMany'), false)
+  assert.deepEqual(calls.find(call => call.key === 'user.findMany').args.select, { id: true, fullName: true })
+})
+
+test('a verified server Speaking session replaces an ungraded duplicate placeholder', async () => {
+  const time = new Date()
+  overrides.set('assessmentResult.findMany', () => [{ ...point(0, 'IELTS_SPEAKING'), userId: 'learner', sourceKey: 'speaking-local-id', completedAt: time, breakdown: { assessmentStatus: 'pending' } }])
+  overrides.set('speakingSession.findMany', () => [{ id: 'server-session', userId: 'learner', createdAt: time, modeLabel: 'Speaking mock', overallBand: 7, durationSec: 900 }])
+  overrides.set('xpEvent.findMany', () => [{ userId: 'learner', earnedAt: time, eventKey: 'SPEAKING:local-id' }])
+  const detail = await (await request('/academy/students/learner')).json()
+  assert.equal(detail.results.length, 1); assert.equal(detail.results[0].score, 7); assert.equal(detail.student.scoredAttempts, 1)
+})
+test('missing data remains distinct from zero in class averages and track selection', async () => {
+  assert.equal(summarizeStudent({ ...identity, profile: null }, []).targetExam, 'UNSET')
+  const empty = await (await request('/academy/overview')).json()
+  assert.equal(empty.metrics.averageIelts, null); assert.equal(empty.metrics.averageSat, null)
+  overrides.set('assessmentResult.findMany', () => ['IELTS_READING', 'IELTS_LISTENING', 'IELTS_WRITING', 'IELTS_SPEAKING'].map((skill, index) => ({ ...point(0, skill, index), userId: 'learner', breakdown: { assessmentStatus: 'graded' } })))
+  const zero = await (await request('/academy/overview')).json()
+  assert.equal(zero.metrics.averageIelts, 0)
+  assert.equal(classifyResult(point(0, 'SAT_OVERALL')).scoreStatus, 'UNVERIFIED')
 })

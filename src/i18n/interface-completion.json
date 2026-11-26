@@ -1,4 +1,232 @@
 {
+  "Normalized average": {
+    "uz": "Shkalaga nisbatan o‘rtacha natija",
+    "ru": "Нормализованное среднее"
+  },
+  "Exam not set": {
+    "uz": "Imtihon tanlanmagan",
+    "ru": "Экзамен не выбран"
+  },
+  "Time not recorded": {
+    "uz": "Vaqt qayd etilmagan",
+    "ru": "Время не записано"
+  },
+  "Show less": {
+    "uz": "Kamroq ko‘rsatish",
+    "ru": "Показать меньше"
+  },
+  "Show all assignments": {
+    "uz": "Barcha topshiriqlarni ko‘rsatish",
+    "ru": "Показать все задания"
+  },
+  "No recorded tests": {
+    "uz": "Hali test qayd etilmagan",
+    "ru": "Тесты ещё не записаны"
+  },
+  "No verified scores yet": {
+    "uz": "Hali tasdiqlangan ball yo‘q",
+    "ru": "Подтверждённых оценок пока нет"
+  },
+  "No test in 14+ days": {
+    "uz": "14 kundan ortiq test bajarmagan",
+    "ru": "Нет тестов более 14 дней"
+  },
+  "No test in 7+ days": {
+    "uz": "7 kundan ortiq test bajarmagan",
+    "ru": "Нет тестов более 7 дней"
+  },
+  "Scores declined in comparable tests": {
+    "uz": "Bir xil testlardagi ballar pasaygan",
+    "ru": "Баллы в сопоставимых тестах снизились"
+  },
+  "Recent scores are lower": {
+    "uz": "Oxirgi ballar pasaygan",
+    "ru": "Последние баллы стали ниже"
+  },
+  "Recent test activity": {
+    "uz": "Yaqinda test bajargan",
+    "ru": "Недавно пройден тест"
+  },
+  "Latest test": {
+    "uz": "Oxirgi test",
+    "ru": "Последний тест"
+  },
+  "Assessment activity": {
+    "uz": "Testlar faolligi",
+    "ru": "Активность тестирования"
+  },
+  "{{count}} verified scores": {
+    "uz": "{{count}} ta baholangan natija",
+    "ru": "Оценённых результатов: {{count}}"
+  },
+  "{{count}} without verified scores": {
+    "uz": "{{count}} ta natijaning bahosi tasdiqlanmagan",
+    "ru": "Без подтверждённой оценки: {{count}}"
+  },
+  "No assignments": {
+    "uz": "Topshiriqlar berilmagan",
+    "ru": "Заданий нет"
+  },
+  "Profile score": {
+    "uz": "Profilda kiritilgan ball",
+    "ru": "Балл из профиля"
+  },
+  "Combined sections": {
+    "uz": "Alohida bo‘limlar yig‘indisi",
+    "ru": "Сумма отдельных разделов"
+  },
+  "Four-skill estimate": {
+    "uz": "4 bo‘lim asosidagi taxminiy ball",
+    "ru": "Оценка по четырём навыкам"
+  },
+  "Overall not available": {
+    "uz": "Umumiy ball hali mavjud emas",
+    "ru": "Общий балл пока недоступен"
+  },
+  "{{count}} of 4 skills recorded": {
+    "uz": "4 bo‘limdan {{count}} tasi baholangan",
+    "ru": "Оценено навыков: {{count}} из 4"
+  },
+  "Estimated": {
+    "uz": "Taxminiy",
+    "ru": "Приблизительно"
+  },
+  "Verified results from one section and one score scale. Unverified scores are excluded.": {
+    "uz": "Bir xil bo‘lim va ball shkalasidagi baholangan natijalar. Tasdiqlanmagan ballar hisobga olinmaydi.",
+    "ru": "Оценённые результаты одного раздела в одной шкале. Неподтверждённые баллы исключены."
+  },
+  "Showing {{shown}} of {{total}} comparable results": {
+    "uz": "{{total}} ta solishtiriladigan natijadan {{shown}} tasi ko‘rsatilgan",
+    "ru": "Показано {{shown}} из {{total}} сопоставимых результатов"
+  },
+  "Practice percentage": {
+    "uz": "Mashq natijasi, foizda",
+    "ru": "Процент за практику"
+  },
+  "Baseline": {
+    "uz": "Boshlang‘ich natija",
+    "ru": "Исходный результат"
+  },
+  "Search test history": {
+    "uz": "Testlar tarixidan qidirish",
+    "ru": "Поиск в истории тестов"
+  },
+  "Search tests...": {
+    "uz": "Testlarni qidirish...",
+    "ru": "Поиск тестов..."
+  },
+  "Filter result exam": {
+    "uz": "Natijalarni imtihon bo‘yicha filtrlash",
+    "ru": "Фильтр результатов по экзамену"
+  },
+  "Untimed": {
+    "uz": "Vaqt qayd etilmagan",
+    "ru": "Время не записано"
+  },
+  "See each learner’s latest test, score and next step. IELTS and SAT stay on their own scales.": {
+    "uz": "Har bir o‘quvchining oxirgi testi, bali va keyingi qadamini kuzating. IELTS va SAT natijalari o‘z shkalasida ko‘rsatiladi.",
+    "ru": "Последний тест, балл и следующий шаг каждого ученика. Результаты IELTS и SAT показаны в своих шкалах."
+  },
+  "Search name, nickname or email": {
+    "uz": "Ism, taxallus yoki email bo‘yicha qidirish",
+    "ru": "Поиск по имени, нику или почте"
+  },
+  "Groups could not be loaded.": {
+    "uz": "Guruhlarni yuklab bo‘lmadi.",
+    "ru": "Не удалось загрузить группы."
+  },
+  "Exam scores": {
+    "uz": "Imtihon ballari",
+    "ru": "Баллы экзаменов"
+  },
+  "{{count}} saved attempts": {
+    "uz": "{{count}} ta saqlangan urinish",
+    "ru": "Сохранённых попыток: {{count}}"
+  },
+  "View progress": {
+    "uz": "Batafsil ko‘rish",
+    "ru": "Подробнее"
+  },
+  "{{start}}–{{end}} of {{total}} students": {
+    "uz": "{{total}} o‘quvchidan {{start}}–{{end}}",
+    "ru": "Ученики {{start}}–{{end}} из {{total}}"
+  },
+  "Students per page": {
+    "uz": "Sahifadagi o‘quvchilar soni",
+    "ru": "Учеников на странице"
+  },
+  "{{count}} per page": {
+    "uz": "Sahifada {{count}} ta",
+    "ru": "По {{count}} на странице"
+  },
+  "Only verified scores affect progress. Profile scores, section estimates and practice percentages are labelled separately.": {
+    "uz": "O‘sish faqat baholangan natijalar asosida hisoblanadi. Profildagi ballar, bo‘limlar asosidagi taxminlar va mashq foizlari alohida belgilangan.",
+    "ru": "Прогресс рассчитывается по оценённым результатам. Баллы из профиля, оценки по разделам и проценты за практику помечены отдельно."
+  },
+  "Awaiting assessment": {
+    "uz": "Baholash kutilmoqda",
+    "ru": "Ожидает оценки"
+  },
+  "Score unverified": {
+    "uz": "Ball tasdiqlanmagan",
+    "ru": "Балл не подтверждён"
+  },
+  "Progress": {
+    "uz": "O‘sish",
+    "ru": "Прогресс"
+  },
+  "More performance data is needed": {
+    "uz": "Tahlil uchun ko‘proq natija kerak",
+    "ru": "Нужно больше результатов"
+  },
+  "A baseline is recorded": {
+    "uz": "Boshlang‘ich natija saqlangan",
+    "ru": "Исходный результат сохранён"
+  },
+  "Saved submissions need verified scores before progress can be measured.": {
+    "uz": "O‘sishni hisoblash uchun saqlangan ishlarning baholari tasdiqlanishi kerak.",
+    "ru": "Для измерения прогресса сохранённым работам нужны подтверждённые оценки."
+  },
+  "Assign a diagnostic IELTS or SAT test to establish this student’s baseline.": {
+    "uz": "O‘quvchining boshlang‘ich darajasini aniqlash uchun IELTS yoki SAT diagnostik testini bering.",
+    "ru": "Назначьте диагностический тест IELTS или SAT, чтобы определить исходный уровень."
+  },
+  "Repeat the same exam section on the same score scale to measure growth. A single result cannot establish a trend.": {
+    "uz": "O‘sishni aniqlash uchun bir xil bo‘limni bir xil ball shkalasida yana bajaring. Bitta natija o‘sishni aniqlash uchun yetarli emas.",
+    "ru": "Для измерения прогресса повторите тот же раздел в той же шкале. Одного результата недостаточно для определения тенденции."
+  },
+  "Complete a full diagnostic test": {
+    "uz": "To‘liq diagnostik testni bajaring",
+    "ru": "Пройдите полный диагностический тест"
+  },
+  "Set a target score and exam date": {
+    "uz": "Maqsadli ball va imtihon sanasini belgilang",
+    "ru": "Укажите целевой балл и дату экзамена"
+  },
+  "Complete one timed practice and review every error": {
+    "uz": "Bitta mashqni vaqt bilan bajaring va barcha xatolarni tahlil qiling",
+    "ru": "Выполните практику на время и разберите каждую ошибку"
+  },
+  "Focus the next 7 days on {{skill}}": {
+    "uz": "Keyingi 7 kun {{skill}} bo‘limiga e’tibor qarating",
+    "ru": "В ближайшие 7 дней сосредоточьтесь на {{skill}}"
+  },
+  "Growth is {{growth}} percentage points across comparable sections. IELTS and SAT scores are kept on their own scales; unverified scores are excluded.": {
+    "uz": "Solishtiriladigan bo‘limlar bo‘yicha o‘sish: {{growth}} foiz punkti. IELTS va SAT o‘z shkalasida hisoblanadi; tasdiqlanmagan ballar kiritilmaydi.",
+    "ru": "Изменение по сопоставимым разделам: {{growth}} процентных пункта. IELTS и SAT остаются в своих шкалах; неподтверждённые баллы исключены."
+  },
+  "Momentum is building": {
+    "uz": "Natijalar yaxshilanmoqda",
+    "ru": "Результаты улучшаются"
+  },
+  "Early intervention recommended": {
+    "uz": "Qo‘shimcha yordam tavsiya etiladi",
+    "ru": "Рекомендуется дополнительная помощь"
+  },
+  "Performance is stable": {
+    "uz": "Natijalar barqaror",
+    "ru": "Результаты стабильны"
+  },
   "Start speaking now": {
     "uz": "Hozir gapirishni boshlash",
     "ru": "Начать говорить сейчас"

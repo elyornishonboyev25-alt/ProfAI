@@ -19,8 +19,8 @@ export default function AssignmentsView({ slug, canManage }: { slug: string; can
   const [opening, setOpening] = useState(false)
   const [filter, setFilter] = useState('ALL')
   const { data, loading, error, refetch } = useAsyncData(() => learningCenterApi.assignments(slug), [slug])
-  const groups = useAsyncData(() => learningCenterApi.groups(slug), [slug])
-  const students = useAsyncData(() => learningCenterApi.students(slug), [slug])
+  const groups = useAsyncData(() => learningCenterApi.groupOptions(slug), [slug])
+  const students = useAsyncData(() => learningCenterApi.studentOptions(slug), [slug])
   const assignments = data?.assignments.filter((assignment) => {
     if (filter === 'ALL') return true
     if (filter === 'OVERDUE') return assignment.pipeline.overdue > 0

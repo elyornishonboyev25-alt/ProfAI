@@ -13,6 +13,7 @@ import ClassAssignmentContext from '../../src/features/learningCenter/ClassAssig
 import { syncIeltsClassResult } from '../../src/features/learningCenter/ieltsResultSync'
 import { apiClient } from '../../src/lib/apiClient'
 import NotificationsBell from '../../src/components/layout/NotificationsBell'
+import { accountStorageFor } from '../../src/utils/accountStorage'
 import { useBillingStore } from '../../src/features/billing/store'
 
 const test = window as any
@@ -24,6 +25,8 @@ test.assignmentRows = []
 test.groupRows = []
 test.teamRows = []
 test.studentRows = []
+test.resultRows = []
+test.paginateStudents = false
 test.leaderboardRows = []
 test.failAction = false
 test.notifications = [
@@ -43,20 +46,29 @@ test.studentAssignments = []
 test.notes = []
 test.action = (action: string, input: unknown) => { if (test.failAction) throw new Error('Please retry this action'); test.calls.push({ action, input }) }
 test.syncIelts = syncIeltsClassResult
+test.accountValue = (key: string) => accountStorageFor('owner').getItem(key)
 learningCenterApi.syncResult = async input => { test.action('result', input); return {} }
 ;(apiClient as any).post = async (path: string, input: unknown) => { test.action('objective-result', { path, ...(input as object) }); return {} }
 test.workspace = workspace
 test.guest = () => useAuthStore.setState({ user: null })
-useAuthStore.setState({ user: { id: 'owner', fullName: 'Alex Teacher', onboardingCompleted: true, canCreateClass: true } as any, hydrated: true })
+useAuthStore.setState({ user: { id: 'owner', fullName: 'Alex Teacher', onboardingCompleted: true, canCreateClass: true } as any, accessToken: 'classes-fixture-access', refreshToken: 'classes-fixture-refresh', hydrated: true })
 useBillingStore.setState({ wallet, userId: 'owner' })
 learningCenterApi.workspaces = async () => { if (test.failWorkspaces) throw new Error('Workspace service unavailable'); return { workspaces: [workspace] } }
 learningCenterApi.createWorkspace = async (input) => { test.calls.push({ action: 'create', input }); return { workspace } }
 learningCenterApi.groups = async () => ({ groups: test.groupRows })
+learningCenterApi.groupOptions = async () => ({ groups: test.groupRows.map((group: any) => ({ id: group.id, name: group.name, examTrack: group.examTrack })) })
 learningCenterApi.createGroup = async (_slug, input) => { test.action('group', input); return {} }
 learningCenterApi.team = async () => ({ team: test.teamRows })
 learningCenterApi.updateMemberRole = async (_slug, id, role) => { test.action('role', { id, role }); test.teamRows.find((row: any) => row.id === id).role = role; return {} }
-learningCenterApi.students = async (_slug, query) => { test.calls.push({ action: 'students', query }); return { students: test.studentRows } }
-learningCenterApi.student = async () => ({ student: learner, groups: [], results: [], insight: { headline: 'Keep progressing', summary: 'Your results are improving.', tone: 'positive', priorities: ['Practice math', 'Review mistakes'] }, assignments: test.studentAssignments, notes: test.notes })
+learningCenterApi.students = async (_slug, query) => {
+  test.calls.push({ action: 'students', query })
+  if (!test.paginateStudents) return { students: test.studentRows }
+  const size = query?.pageSize ?? 25
+  const page = query?.page ?? 1
+  return { students: test.studentRows.slice((page - 1) * size, page * size), pagination: { page, pageSize: size, total: test.studentRows.length, pages: Math.ceil(test.studentRows.length / size) } }
+}
+learningCenterApi.studentOptions = async () => ({ students: test.studentRows.map((student: any) => ({ id: student.id, fullName: student.fullName })) })
+learningCenterApi.student = async () => ({ student: learner, groups: [], results: test.resultRows, insight: { headline: 'Keep progressing', summary: 'Your results are improving.', tone: 'positive', priorities: ['Practice math', 'Review mistakes'] }, assignments: test.studentAssignments, notes: test.notes })
 learningCenterApi.analyzeStudent = async () => { test.action('analysis', {}); return { insight: { headline: 'Analysis refreshed', summary: 'Focus on math.', priorities: ['Practice', 'Review'], tone: 'positive' }, engine: 'data-analysis', model: null, fallbackUsed: true } }
 learningCenterApi.addNote = async (_slug, _student, note) => { test.action('note', note); test.notes.push({ id: 'note', note, createdAt: new Date().toISOString(), author: { id: 'teacher', fullName: 'Teacher', avatarUrl: null } }); return {} }
 learningCenterApi.updateWorkspace = async (_slug, input) => { test.action('settings', input); Object.assign(workspace, input); return { workspace } }

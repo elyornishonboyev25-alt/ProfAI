@@ -52,8 +52,8 @@ export default function OverviewView({ slug }: { slug: string }) {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard label={uiCopy("Total students")} value={data.metrics.totalStudents} note={`${data.metrics.satStudents} SAT · ${data.metrics.ieltsStudents} IELTS`} icon={Users} accent="blue" />
-        <MetricCard label={uiCopy("Average SAT")} value={data.metrics.averageSat || '—'} note="Current center average" icon={GraduationCap} accent="violet" />
-        <MetricCard label={uiCopy("Average IELTS")} value={data.metrics.averageIelts || '—'} note="Across active IELTS learners" icon={BookOpenCheck} accent="red" />
+        <MetricCard label={uiCopy("Average SAT")} value={data.metrics.averageSat ?? '—'} note="Current center average" icon={GraduationCap} accent="violet" />
+        <MetricCard label={uiCopy("Average IELTS")} value={data.metrics.averageIelts?.toFixed(1) ?? '—'} note="Across active IELTS learners" icon={BookOpenCheck} accent="red" />
         <MetricCard label={uiCopy("Students improving")} value={`${data.metrics.studentsImproving}%`} note={`${data.metrics.activeTeachers} active teachers`} icon={TrendingUp} accent="emerald" />
       </div>
 
@@ -112,7 +112,7 @@ export default function OverviewView({ slug }: { slug: string }) {
             {data.teacherPerformance.map((teacher) => (
               <article key={`${teacher.id}-${teacher.groupName}`} className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
                 <div className="flex items-center gap-3"><Avatar name={teacher.fullName} url={teacher.avatarUrl} /><div className="min-w-0"><p className="truncate text-sm font-bold text-slate-900">{teacher.fullName}</p><p className="truncate text-xs font-semibold text-slate-500">{teacher.groupName}</p></div></div>
-                <div className="mt-4 flex items-end justify-between"><div><p className="text-[10px] font-bold uppercase tracking-wider text-slate-400"><UiText text={"Group score"} /></p><p className="text-xl font-bold text-slate-950">{teacher.averageScore}%</p></div><p className="text-xs font-bold text-emerald-600">{teacher.improving}/{teacher.students} <UiText text={"improving"} /></p></div>
+                <div className="mt-4 flex items-end justify-between"><div><p className="text-[10px] font-bold uppercase tracking-wider text-slate-400"><UiText text="Normalized average" /></p><p className="text-xl font-bold text-slate-950">{teacher.averageScore}%</p></div><p className="text-xs font-bold text-emerald-600">{teacher.improving}/{teacher.students} <UiText text={"improving"} /></p></div>
               </article>
             ))}
           </div>
@@ -134,7 +134,7 @@ function StudentList({ title, eyebrow, students, icon, empty, onOpen }: { title:
         {students.length ? students.map((student) => (
           <button key={student.id} type="button" onClick={() => onOpen(student.id)} className="group flex w-full items-center gap-3 py-3 text-left">
             <Avatar name={student.fullName} url={student.avatarUrl} />
-            <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="truncate text-sm font-bold text-slate-900">{student.fullName}</p><StatusBadge status={student.status} /></div><p className="mt-0.5 text-[11px] font-semibold text-slate-400">{student.attempts} <UiText text={"attempts ·"} /> {student.currentSat ? `SAT ${student.currentSat}` : student.currentIelts ? `IELTS ${student.currentIelts}` : <UiText text={"Baseline pending"} />}</p></div>
+            <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="truncate text-sm font-bold text-slate-900">{student.fullName}</p><StatusBadge status={student.status} /></div><p className="mt-0.5 text-[11px] font-semibold text-slate-400">{student.attempts} <UiText text={"attempts ·"} /> {[student.currentIelts !== null ? `IELTS ${student.currentIelts.toFixed(1)}` : '', student.currentSat !== null ? `SAT ${student.currentSat}` : ''].filter(Boolean).join(' · ') || <UiText text="Baseline pending" />}</p></div>
             <Trend value={student.improvement} compact />
             <ArrowRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-1 group-hover:text-red-700" />
           </button>

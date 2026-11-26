@@ -150,6 +150,11 @@ export type LearningResult = {
   accuracy: number | null
   correctAnswers?: number | null
   totalQuestions?: number | null
+  incorrectAnswers?: number | null
+  skippedAnswers?: number | null
+  partial?: boolean
+  testId?: string | null
+  parts?: Array<{ partNumber: number; sectionTitle: string; totalQuestions: number; correctAnswers: number; incorrectAnswers: number; skippedAnswers: number }>
   durationSec: number
   completedAt: string
   source: 'TEST_ATTEMPT' | 'ASSESSMENT_RESULT' | 'SPEAKING_SESSION'

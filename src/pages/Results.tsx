@@ -1,3 +1,4 @@
+import { ieltsResultDetails } from '@/features/learningCenter/ieltsResultDetails'
 import { useCopy } from '@/i18n/interface'
 import { accountStorageFor } from '@/utils/accountStorage'
 import UiText from '@/components/common/UiText'
@@ -265,6 +266,7 @@ function ResultsContent() {
           finalScore: analysis.summary.accuracy,
           difficulty: 'HARD',
           isPartial: false,
+          breakdown: ieltsResultDetails(test, result, analysis.sectionSummaries),
           subjects: isListeningModule
             ? ['IELTS Listening', 'Listening', 'Audio', 'Comprehension']
             : ['IELTS Reading', 'Reading', 'Passage', 'Comprehension'],

@@ -67,6 +67,7 @@ const defaults = {
   'user.count': () => 1,
   'user.findMany': ({ where }) => where.id.in.includes('learner') ? [identity] : [],
   'testAttempt.findMany': () => [],
+  'testAttempt.updateMany': () => ({ count: 1 }),
   'testAttempt.findFirst': () => ({ id: 'existing-attempt' }),
   'test.upsert': () => ({ id: 'test', durationSec: 3600, difficulty: 'HARD', xpReward: 100 }),
   'assessmentResult.findMany': () => [],
@@ -441,4 +442,91 @@ test('missing data remains distinct from zero in class averages and track select
   const zero = await (await request('/academy/overview')).json()
   assert.equal(zero.metrics.averageIelts, 0)
   assert.equal(classifyResult(point(0, 'SAT_OVERALL')).scoreStatus, 'UNVERIFIED')
+})
+
+
+const listeningDetails = () => ({ version: 1, testId: 'listening-paper', partial: false, correct: 32, total: 40, incorrect: 6, skipped: 2, bandScore: 7.5,
+  sectionSummaries: [ [8,1,1], [7,3,0], [9,1,0], [8,1,1] ].map(([correctAnswers, incorrectAnswers, skippedAnswers], index) => ({ partNumber: index + 1, sectionTitle: `Part ${index + 1}`, totalQuestions: 10, correctAnswers, incorrectAnswers, skippedAnswers })) })
+const objectiveSyncBody = details => ({ externalAttemptKey: 'objective-parts-retry', externalTestId: details.testId, title: 'Listening paper', completedAt: new Date().toISOString(), totalQuestions: details.total, correctAnswers: details.correct, timeSpentSec: 1800, durationSec: 3600, breakdown: details })
+async function objectiveRequest(kind, body) {
+  return fetch(base.replace('/centers', `/tests/${kind}-sync`), { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + signAccessToken({ sub: 'learner', role: 'USER' }) }, body: JSON.stringify(body) })
+}
+test('Listening retries repair part details on the original attempt without creating a test or awarding XP again', async () => {
+  const details = listeningDetails()
+  const body = objectiveSyncBody(details)
+  for (let index = 0; index < 2; index++) {
+    const response = await objectiveRequest('listening', body)
+    assert.equal(response.status, 200, await response.clone().text())
+    assert.equal((await response.json()).classBreakdownSaved, true)
+  }
+  const update = calls.find(call => call.key === 'testAttempt.updateMany').args
+  assert.deepEqual(update.where, { id: 'existing-attempt', userId: 'learner' })
+  assert.deepEqual(update.data.breakdown, details)
+  assert.equal(calls.filter(call => call.key === 'testAttempt.create').length, 0)
+})
+test('objective sync rejects fabricated bands, repeated parts, mixed skill parts and mismatched totals', async () => {
+  const details = listeningDetails()
+  for (const bad of [
+    { ...details, bandScore: 9 },
+    { ...details, total: 39 },
+    { ...details, sectionSummaries: details.sectionSummaries.map(part => ({ ...part, partNumber: 1 })) },
+    { ...details, sectionSummaries: details.sectionSummaries.map(part => ({ ...part, incorrectAnswers: 99 })) },
+  ]) assert.equal((await objectiveRequest('listening', objectiveSyncBody(bad))).status, 400)
+  assert.equal((await objectiveRequest('reading', objectiveSyncBody(details))).status, 400)
+  assert.equal((await objectiveRequest('listening', { ...objectiveSyncBody(details), correctAnswers: 31 })).status, 400)
+  assert.equal(calls.some(call => call.key === 'testAttempt.updateMany'), false)
+})
+test('student detail returns safe per-part counts and the recorded band on the original Listening result', async () => {
+  const details = listeningDetails()
+  overrides.set('testAttempt.findMany', () => [{ id: 'attempt-with-parts', userId: 'learner', percentage: 80, finalScore: 80, totalQuestions: 40, correctAnswers: 32, timeSpentSec: 1800, completedAt: new Date(), breakdown: { ...details, answers: { private: 'not part of the class response' } }, test: { title: 'IELTS Listening Full Test 1', category: 'IELTS', subjects: ['Listening'] } }])
+  const detail = await (await request('/academy/students/learner')).json()
+  const result = detail.results[0]
+  assert.equal(result.score, 7.5); assert.equal(result.maxScore, 9); assert.equal(result.partial, false)
+  assert.equal(result.parts.length, 4); assert.equal(result.parts[0].correctAnswers, 8)
+  assert.equal(result.incorrectAnswers, 6); assert.equal(result.skippedAnswers, 2)
+  assert.equal(Object.hasOwn(result, 'breakdown'), false)
+  assert.equal(result.parts[3].skippedAnswers, 1)
+  assert.equal(detail.student.attempts, 1)
+})
+test('all-wrong and unanswered full papers keep distinct recorded bands and partial practices cannot become overall scores', () => {
+  const attempt = { id: 'attempt', percentage: 0, finalScore: 0, totalQuestions: 40, correctAnswers: 0, timeSpentSec: 1800, completedAt: new Date(), test: { title: 'IELTS Reading', category: 'IELTS', subjects: ['Reading'] } }
+  assert.equal(normalizeTestAttempt({ ...attempt, breakdown: { partial: false, bandScore: 2 } }).score, 2)
+  assert.equal(normalizeTestAttempt({ ...attempt, breakdown: { partial: false, bandScore: 0 } }).score, 0)
+  const practice = classifyResult(normalizeTestAttempt({ ...attempt, totalQuestions: 13 }))
+  assert.equal(practice.partial, true); assert.equal(practice.correctAnswers, 0); assert.equal(practice.totalQuestions, 13)
+  assert.equal(summarizeStudent({ ...identity, profile: null }, [practice]).currentIelts, null)
+})
+
+test('recovered part details enrich the original 13-question attempt without duplicating it', async () => {
+  const time = new Date('2026-11-26T18:00:00Z')
+  overrides.set('testAttempt.findMany', () => [{ id: 'original-practice', userId: 'learner', completedAt: time, percentage: 0, finalScore: 0, totalQuestions: 13, correctAnswers: 0, timeSpentSec: 600, test: { title: 'IELTS Reading Full Test 1', category: 'IELTS', subjects: ['Reading'], description: 'Synced IELTS Reading attempt (paper-1)' } }])
+  overrides.set('assessmentResult.findMany', () => [{ ...point(0, 'IELTS_READING'), userId: 'learner', maxScore: 100, completedAt: time, sourceKey: `ielts-reading-paper-1-${time.toISOString()}`, breakdown: { testId: 'paper-1', partial: true, total: 13, correct: 0, sectionSummaries: [{ partNumber: 2, sectionTitle: 'Passage 2', totalQuestions: 13, correctAnswers: 0, incorrectAnswers: 10, skippedAnswers: 3 }] } }])
+  const detail = await (await request('/academy/students/learner')).json()
+  assert.equal(detail.student.attempts, 1); assert.equal(detail.results.length, 1)
+  assert.equal(detail.results[0].id, 'original-practice'); assert.equal(detail.results[0].parts[0].partNumber, 2)
+  assert.equal(detail.results[0].incorrectAnswers, 10); assert.equal(detail.results[0].skippedAnswers, 3)
+  assert.equal(detail.results[0].partial, true)
+})
+
+test('new Reading and Listening submissions persist part details and retry without a second attempt', async () => {
+  const created = []
+  let saved = null
+  overrides.set('user.findUnique', () => ({ id: 'learner', role: 'USER', email: 'learner@example.test', xp: 0, level: 1, currentStreak: 0, longestStreak: 0, lastActiveDate: null, profile: { timezone: 'Asia/Tashkent' } }))
+  overrides.set('user.update', ({ data }) => ({ id: 'learner', ...data }))
+  overrides.set('dailyActivity.findUnique', () => null)
+  overrides.set('dailyActivity.create', ({ data }) => ({ id: 'activity', ...data }))
+  overrides.set('testAttempt.findFirst', () => saved)
+  overrides.set('testAttempt.create', ({ data }) => { created.push(data); saved = { id: 'fresh-attempt', ...data }; return saved })
+  for (const kind of ['listening', 'reading']) {
+    saved = null
+    const details = kind === 'listening' ? listeningDetails() : { ...listeningDetails(), testId: 'reading-paper', sectionSummaries: [[10,2,1],[10,3,0],[12,1,1]].map(([correctAnswers, incorrectAnswers, skippedAnswers], index) => ({ partNumber: index + 1, sectionTitle: `Passage ${index + 1}`, totalQuestions: [13,13,14][index], correctAnswers, incorrectAnswers, skippedAnswers })) }
+    const before = created.length
+    const first = await objectiveRequest(kind, objectiveSyncBody(details))
+    assert.equal(first.status, 201, await first.clone().text())
+    assert.equal((await first.json()).classBreakdownSaved, true)
+    assert.deepEqual(created.at(-1).breakdown, details)
+    const retry = await objectiveRequest(kind, objectiveSyncBody(details))
+    assert.equal(retry.status, 200, await retry.clone().text())
+    assert.equal(created.length, before + 1)
+  }
 })

@@ -1105,6 +1105,7 @@ model TestAttempt {
   levelBefore        Int
   levelAfter         Int
   streakAtCompletion Int
+  breakdown          Json?
   answers            AttemptAnswer[]
   user               User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   test               Test            @relation(fields: [testId], references: [id], onDelete: Cascade)

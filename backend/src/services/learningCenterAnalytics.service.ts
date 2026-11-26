@@ -1,4 +1,5 @@
 import type { TestCategory } from '@prisma/client'
+import { objectiveParts } from './ieltsObjectiveDetails.service.js'
 import { ieltsBandForCorrect } from './ieltsStanding.service.js'
 
 export type LearningResultPoint = {
@@ -11,6 +12,11 @@ export type LearningResultPoint = {
   accuracy: number | null
   correctAnswers?: number | null
   totalQuestions?: number | null
+  incorrectAnswers?: number | null
+  skippedAnswers?: number | null
+  partial?: boolean
+  parts?: ReturnType<typeof objectiveParts>
+  testId?: string | null
   durationSec: number
   completedAt: Date
   source: 'TEST_ATTEMPT' | 'ASSESSMENT_RESULT' | 'SPEAKING_SESSION'
@@ -122,20 +128,22 @@ export function normalizeTestAttempt(attempt: {
   timeSpentSec: number
   totalQuestions?: number
   correctAnswers?: number
+  breakdown?: unknown
   completedAt: Date
-  test: { title: string; category: TestCategory; subjects: string[] }
+  test: { title: string; category: TestCategory; subjects: string[]; description?: string | null }
 }): LearningResultPoint {
+  const details = attempt.breakdown && typeof attempt.breakdown === 'object' ? attempt.breakdown as Record<string, unknown> : {}
   const skill = inferAttemptSkill(attempt.test.category, attempt.test.subjects, attempt.test.title)
   const score = attempt.test.category === 'SAT'
     ? skill === 'SAT_OVERALL' ? percentToSatScore(attempt.percentage) : Math.round((200 + Math.max(0, Math.min(100, attempt.percentage)) * 6) / 10) * 10
     : ieltsBandForCorrect(attempt.correctAnswers ?? Math.round(attempt.percentage * 40 / 100))
-  const partial = attempt.test.category === 'IELTS' && (!['IELTS_READING', 'IELTS_LISTENING'].includes(skill) || attempt.totalQuestions !== undefined && attempt.totalQuestions !== 40)
+  const partial = attempt.test.category === 'IELTS' && (!['IELTS_READING', 'IELTS_LISTENING'].includes(skill) || attempt.totalQuestions !== undefined && attempt.totalQuestions !== 40 || details.partial === true)
   return {
     id: attempt.id,
     examType: attempt.test.category,
     skill,
     title: attempt.test.title,
-    score: partial ? round(attempt.percentage) : score,
+    score: partial ? round(attempt.percentage) : typeof details.bandScore === 'number' && attempt.test.category === 'IELTS' ? details.bandScore : score,
     maxScore: partial ? 100 : attempt.test.category === 'SAT' ? skill === 'SAT_OVERALL' ? 1600 : 800 : 9,
     accuracy: round(attempt.percentage),
     durationSec: attempt.timeSpentSec,
@@ -143,7 +151,7 @@ export function normalizeTestAttempt(attempt: {
     source: 'TEST_ATTEMPT',
     scoreStatus: 'SCORED',
     scoreKind: partial ? 'PERCENT' : attempt.test.category === 'SAT' ? 'ESTIMATED' : 'BAND',
-    breakdown: { correct: attempt.correctAnswers, total: attempt.totalQuestions },
+    breakdown: { ...details, testId: details.testId ?? attempt.test.description?.match(/^Synced IELTS (?:Reading|Listening) attempt \((.+)\)$/)?.[1], partial, correct: attempt.correctAnswers, total: attempt.totalQuestions },
   }
 }
 
@@ -157,6 +165,10 @@ export function classifyResult(result: LearningResultPoint): LearningResultPoint
     && result.maxScore === 100 && detail.partial === false && detail.total === 40 && typeof detail.correct === 'number') {
     result = { ...result, score: ieltsBandForCorrect(detail.correct), maxScore: 9, scoreKind: 'BAND' }
   }
+  const total = result.totalQuestions ?? (typeof detail.total === 'number' ? detail.total : null)
+  const correct = result.correctAnswers ?? (typeof detail.correct === 'number' ? detail.correct : null)
+  const parts = objectiveParts(detail, total, correct)
+  const objective = result.examType === 'IELTS' && ['IELTS_READING', 'IELTS_LISTENING'].includes(result.skill)
   const pending = detail.assessmentStatus === 'pending' || detail.status === 'pending' || detail.pending === true
   const writingCriteria = ['taskAchievement', 'coherenceCohesion', 'lexicalResource', 'grammaticalRange']
   const speakingCriteria = ['fluency', 'lexical', 'grammar', 'pronunciation']
@@ -167,8 +179,13 @@ export function classifyResult(result: LearningResultPoint): LearningResultPoint
     || result.examType === 'SAT' && (result.maxScore === 800 && result.score < 200 || result.maxScore === 1600 && result.score < 400)
   return {
     ...result,
-    correctAnswers: result.correctAnswers ?? (typeof detail.correct === 'number' ? detail.correct : null),
-    totalQuestions: result.totalQuestions ?? (typeof detail.total === 'number' ? detail.total : null),
+    correctAnswers: correct,
+    totalQuestions: total,
+    testId: result.testId ?? (typeof detail.testId === 'string' ? detail.testId : null),
+    partial: result.partial ?? (objective ? detail.partial === true || result.maxScore === 100 : false),
+    parts: parts.length ? parts : result.parts ?? [],
+    incorrectAnswers: parts.length ? parts.reduce((sum, part) => sum + part.incorrectAnswers, 0) : result.incorrectAnswers ?? null,
+    skippedAnswers: parts.length ? parts.reduce((sum, part) => sum + part.skippedAnswers, 0) : result.skippedAnswers ?? null,
     scoreStatus: result.scoreStatus ?? (pending ? 'PENDING' : unverified ? 'UNVERIFIED' : 'SCORED'),
     scoreKind: result.scoreKind ?? (result.maxScore === 100 ? 'PERCENT' : result.examType === 'IELTS' ? 'BAND' : 'SCALED'),
   }
@@ -180,7 +197,9 @@ export function isScored(result: LearningResultPoint) {
 }
 
 export function resultSeriesKey(result: LearningResultPoint) {
-  return `${result.examType}:${result.skill}:${result.maxScore}:${classifyResult(result).scoreKind}`
+  const point = classifyResult(result)
+  const partKey = point.maxScore === 100 ? `:${point.totalQuestions ?? '%'}:${(point.parts ?? []).map(part => part.partNumber).join(',')}` : ''
+  return `${point.examType}:${point.skill}:${point.maxScore}:${point.scoreKind}${partKey}`
 }
 
 export function progressGrowth(results: LearningResultPoint[]) {
@@ -277,7 +296,7 @@ export function summarizeStudent(
     assignmentTotal: assignmentStats?.total ?? 0, assignmentsCompleted: assignmentStats?.completed ?? 0,
     latestResult: last ? { id: last.id, examType: last.examType, skill: last.skill, title: last.title,
       score: last.score, maxScore: last.maxScore, scoreStatus: last.scoreStatus, scoreKind: last.scoreKind,
-      accuracy: last.accuracy, correctAnswers: last.correctAnswers, totalQuestions: last.totalQuestions, durationSec: last.durationSec, source: last.source, completedAt: last.completedAt.toISOString() } : null,
+      partial: last.partial, parts: last.parts, testId: last.testId, incorrectAnswers: last.incorrectAnswers, skippedAnswers: last.skippedAnswers, accuracy: last.accuracy, correctAnswers: last.correctAnswers, totalQuestions: last.totalQuestions, durationSec: last.durationSec, source: last.source, completedAt: last.completedAt.toISOString() } : null,
     averageScore: round(average(sorted.map(result => result.score / result.maxScore * 100))), improvement,
     completionRate: assignmentStats?.total ? round(assignmentStats.completed / assignmentStats.total * 100) : 0,
     lastActiveAt: lastActive?.toISOString() ?? null, status, skills,

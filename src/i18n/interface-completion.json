@@ -1,4 +1,40 @@
 {
+  "Progress and teacher insights": {
+    "uz": "O‘sish grafigi va o‘qituvchi tahlili",
+    "ru": "График прогресса и рекомендации"
+  },
+  "Practice accuracy": {
+    "uz": "Mashq aniqligi",
+    "ru": "Точность практики"
+  },
+  "Passage": {
+    "uz": "Matn",
+    "ru": "Текст"
+  },
+  "Test history": {
+    "uz": "Testlar tarixi",
+    "ru": "История тестов"
+  },
+  "Part practice": {
+    "uz": "Part mashqi",
+    "ru": "Практика раздела"
+  },
+  "Hide part results": {
+    "uz": "Partlar natijalarini yashirish",
+    "ru": "Скрыть результаты разделов"
+  },
+  "Show part results": {
+    "uz": "Partlar natijalarini ko‘rish",
+    "ru": "Показать результаты разделов"
+  },
+  "Part results": {
+    "uz": "Partlar natijalari",
+    "ru": "Результаты разделов"
+  },
+  "Part breakdown was not recorded for this attempt.": {
+    "uz": "Bu urinish uchun partlar tafsiloti saqlanmagan.",
+    "ru": "Для этой попытки результаты по разделам не сохранены."
+  },
   "Normalized average": {
     "uz": "Shkalaga nisbatan o‘rtacha natija",
     "ru": "Нормализованное среднее"

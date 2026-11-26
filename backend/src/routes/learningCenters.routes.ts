@@ -272,6 +272,7 @@ async function loadResults(studentIds: string[], since?: Date) {
         timeSpentSec: true,
         totalQuestions: true,
         correctAnswers: true,
+        breakdown: true,
         completedAt: true,
         test: { select: { title: true, category: true, subjects: true, description: true } },
       },
@@ -290,15 +291,21 @@ async function loadResults(studentIds: string[], since?: Date) {
     }),
   ])
 
-  for (const attempt of attempts) byStudent.get(attempt.userId)?.push(normalizeTestAttempt(attempt))
-  // Old full Reading/Listening saves can also exist in AssessmentResult.
-  // Only an exact original test identity and timestamp proves duplication.
-  const syncedPapers = new Set(attempts.flatMap(attempt => {
+  const assessmentBySource = new Map(assessments.map(result => [`${result.userId}:${result.sourceKey}`, result]))
+  const consumed = new Set<string>()
+  for (const attempt of attempts) {
     const identity = attempt.test.description?.match(/^Synced IELTS (Reading|Listening) attempt \((.+)\)$/)
-    return identity ? [`${attempt.userId}:ielts-${identity[1].toLowerCase()}-${identity[2]}-${attempt.completedAt.toISOString()}`] : []
-  }))
+    const candidate = identity ? assessmentBySource.get(`${attempt.userId}:ielts-${identity[1].toLowerCase()}-${identity[2]}-${attempt.completedAt.toISOString()}`) : undefined
+    const saved = candidate?.breakdown as Record<string, unknown> | null | undefined
+    // Repair metadata on the same historical attempt instead of counting a
+    // recovered partial submission as a second completed test.
+    const sameCounts = saved?.correct === attempt.correctAnswers && saved?.total === attempt.totalQuestions
+    if (candidate && (saved?.partial !== true || sameCounts)) consumed.add(candidate.id)
+    const breakdown = sameCounts ? { ...saved, ...(attempt.breakdown && typeof attempt.breakdown === 'object' ? attempt.breakdown as Record<string, unknown> : {}) } : attempt.breakdown
+    byStudent.get(attempt.userId)?.push(normalizeTestAttempt({ ...attempt, breakdown }))
+  }
   for (const result of assessments) {
-    if (syncedPapers.has(`${result.userId}:${result.sourceKey}`) && (result.breakdown as { partial?: boolean } | null)?.partial !== true) continue
+    if (consumed.has(result.id)) continue
     byStudent.get(result.userId)?.push({
       id: result.id,
       examType: result.examType,

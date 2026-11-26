@@ -179,3 +179,27 @@
 }
 
 .lc-directory-action a { white-space: nowrap; }
+
+.lc-result-history article.lc-attempt { display: block; padding: 22px 0; }
+.lc-attempt-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.lc-attempt-score { max-width: 40%; flex-shrink: 0; text-align: right; }
+.lc-attempt-kind { padding: 3px 7px; border-radius: 6px; color: #5b677b; background: rgba(228,233,242,.7); font-size: 10px; font-weight: 600; }
+.lc-parts-toggle { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; color: #a62b3d; font-size: 12px; font-weight: 700; }
+.lc-parts-table-wrap { margin-top: 14px; overflow-x: auto; border: 1px solid rgba(148,163,184,.25); border-radius: 12px; background: rgba(255,255,255,.4); }
+.lc-parts-table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; font-variant-numeric: tabular-nums; }
+.lc-parts-table :is(th,td) { padding: 11px 10px; border-bottom: 1px solid rgba(148,163,184,.18); }
+.lc-parts-table thead th { background: rgba(229,234,241,.5); color: #657084; font-size: 10px; font-weight: 700; }
+.lc-parts-table th:first-child { text-align: left; width: 38%; }
+.lc-parts-table tbody th { color: #26354a; }
+.lc-part-name { display: block; margin-top: 3px; font-size: 10px; font-weight: 500; color: #657084; overflow-wrap: anywhere; }
+.lc-parts-table .lc-mark-correct { color: #087443; font-weight: 750; }
+.lc-parts-table .lc-mark-incorrect { color: #b42b40; font-weight: 750; }
+.lc-parts-table tfoot { background: rgba(238,242,247,.6); font-weight: 750; color: #26354a; }
+.lc-parts-table tfoot :is(th,td) { border-bottom: 0; }
+@media (max-width: 639px) {
+  .lc-attempt-heading { gap: 10px; }
+  .lc-parts-table :is(th,td) { padding: 10px 6px; }
+  .lc-parts-table thead th { font-size: 9px; }
+  .lc-parts-table th:first-child { width: 24%; }
+  .lc-part-name { font-size: 9px; }
+}

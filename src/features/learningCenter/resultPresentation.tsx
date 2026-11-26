@@ -2,8 +2,13 @@ import UiText from '@/components/common/UiText'
 import { useCopy } from '@/i18n/interface'
 import type { CenterStudent, LearningResult } from './types'
 
+export function isPractice(result: LearningResult) {
+  return result.maxScore === 100 || result.partial === true
+}
+
 export function seriesKey(result: LearningResult) {
-  return `${result.examType}:${result.skill}:${result.maxScore}:${result.scoreKind ?? (result.maxScore === 100 ? 'PERCENT' : result.examType === 'IELTS' ? 'BAND' : 'SCALED')}`
+  const partKey = isPractice(result) ? `:${result.totalQuestions ?? '%'}:${(result.parts ?? []).map(part => part.partNumber).join(',')}` : ''
+  return `${result.examType}:${result.skill}:${result.maxScore}:${result.scoreKind ?? (result.maxScore === 100 ? 'PERCENT' : result.examType === 'IELTS' ? 'BAND' : 'SCALED')}${partKey}`
 }
 
 export function isMeasured(result: LearningResult) {
@@ -18,9 +23,12 @@ export function nativeScore(result: Pick<LearningResult, 'score' | 'maxScore' | 
   return result.examType === 'IELTS' && result.maxScore === 9 ? result.score.toFixed(1) : String(result.score)
 }
 
-export function ResultScore({ result }: { result: LearningResult }) {
+export function ResultScore({ result, showPracticeLabel = true }: { result: LearningResult; showPracticeLabel?: boolean }) {
   if (!isMeasured(result)) return <span className="lc-result-pending"><UiText text={result.scoreStatus === 'PENDING' ? 'Awaiting assessment' : 'Score unverified'} /></span>
-  return <div className="lc-result-score"><strong>{nativeScore(result)}</strong><span>/ {result.maxScore}{result.maxScore === 100 ? '%' : ''}</span>{typeof result.correctAnswers === 'number' && result.totalQuestions ? <small className="!text-slate-500">{result.correctAnswers} / {result.totalQuestions} <UiText text="correct" /></small> : null}{result.scoreKind === 'ESTIMATED' && <small><UiText text="Estimated" /></small>}</div>
+  const hasCounts = typeof result.correctAnswers === 'number' && typeof result.totalQuestions === 'number' && result.totalQuestions > 0
+  if (isPractice(result) && hasCounts) return <div className="lc-result-score"><strong>{result.correctAnswers}</strong><span>/ {result.totalQuestions} <UiText text="correct" /></span>{showPracticeLabel && <small className="!text-slate-500"><UiText text="Part practice" /></small>}</div>
+  if (result.maxScore === 100) return <div className="lc-result-score"><strong>{result.score}%</strong><small className="!text-slate-500"><UiText text="Practice accuracy" /></small></div>
+  return <div className="lc-result-score"><strong>{nativeScore(result)}</strong><span>{result.examType === 'IELTS' && result.maxScore === 9 ? <><UiText text="IELTS band" /> / 9</> : <>/ {result.maxScore}</>}</span>{hasCounts && <small className="!text-slate-500">{result.correctAnswers} / {result.totalQuestions} <UiText text="correct" /></small>}{result.scoreKind === 'ESTIMATED' && <small><UiText text="Estimated" /></small>}</div>
 }
 
 export function ResultDate({ date, time = true }: { date: string; time?: boolean }) {

@@ -241,15 +241,27 @@ try {
   await until(`window.route.includes('exam=BOTH') && window.route.includes('groupId=group-a')`)
   await go('/copy')
   await evaluate(`window.resultRows = [
+    { id: 'listening-parts', examType: 'IELTS', skill: 'IELTS_LISTENING', title: 'IELTS Listening Full Test 1', score: 7.5, maxScore: 9, scoreStatus: 'SCORED', correctAnswers: 32, totalQuestions: 40, completedAt: '2026-11-22T10:00:00Z', durationSec: 1800, accuracy: 80, source: 'TEST_ATTEMPT', parts: [[8,1,1],[7,3,0],[9,1,0],[8,1,1]].map(([correctAnswers, incorrectAnswers, skippedAnswers], index) => ({ partNumber: index + 1, sectionTitle: 'Listening part ' + (index + 1), correctAnswers, incorrectAnswers, skippedAnswers, totalQuestions: 10 })) },
+    { id: 'reading-part', examType: 'IELTS', skill: 'IELTS_READING', title: 'IELTS Reading Full Test 1', score: 0, maxScore: 100, partial: true, scoreStatus: 'SCORED', correctAnswers: 0, totalQuestions: 13, completedAt: '2026-11-21T11:00:00Z', durationSec: 600, accuracy: 0, source: 'ASSESSMENT_RESULT', parts: [{ partNumber: 2, sectionTitle: 'The second passage', correctAnswers: 0, incorrectAnswers: 10, skippedAnswers: 3, totalQuestions: 13 }] },
     { id: 'new-writing', examType: 'IELTS', skill: 'IELTS_WRITING', title: 'Writing pending', score: 0, maxScore: 9, scoreStatus: 'PENDING', completedAt: '2026-11-21T10:00:00Z', durationSec: 0, accuracy: null, source: 'ASSESSMENT_RESULT' },
     { id: 'reading-2', examType: 'IELTS', skill: 'IELTS_READING', title: 'Reading recent', score: 7.5, maxScore: 9, scoreStatus: 'SCORED', completedAt: '2026-11-20T10:00:00Z', durationSec: 1800, accuracy: 80, source: 'ASSESSMENT_RESULT' },
     { id: 'sat-1', examType: 'SAT', skill: 'SAT_MATH', title: 'SAT Math Test 2', score: 640, maxScore: 800, scoreStatus: 'SCORED', completedAt: '2026-11-19T10:00:00Z', durationSec: 1800, accuracy: 70, source: 'ASSESSMENT_RESULT' },
     { id: 'reading-1', examType: 'IELTS', skill: 'IELTS_READING', title: 'Reading baseline', score: 6.5, maxScore: 9, scoreStatus: 'SCORED', completedAt: '2026-11-18T10:00:00Z', durationSec: 1800, accuracy: 65, source: 'ASSESSMENT_RESULT' },
     ...Array.from({ length: 30 }, (_, index) => ({ id: 'legacy-' + index, examType: 'IELTS', skill: 'IELTS_WRITING', title: 'Legacy writing ' + index, score: 0, maxScore: 9, scoreStatus: 'UNVERIFIED', completedAt: '2026-10-01T10:00:00Z', durationSec: 0, accuracy: null, source: 'ASSESSMENT_RESULT' }))
-  ]; Object.assign(window.learner, { targetExam: 'BOTH', currentIelts: 7, targetIelts: 8, highestIelts: 7, currentIeltsSource: 'FOUR_SKILLS', currentSatSource: 'TEST', latestResult: window.resultRows[0], attempts: 34, scoredAttempts: 3, pendingAttempts: 31 }); window.paginateStudents = false; window.useLegacyStudentApi = false; window.studentRows = [window.learner]`)
+  ]; Object.assign(window.learner, { targetExam: 'BOTH', currentIelts: 7, targetIelts: 8, highestIelts: 7, currentIeltsSource: 'FOUR_SKILLS', currentSatSource: 'TEST', latestResult: window.resultRows[0], attempts: 36, scoredAttempts: 5, pendingAttempts: 31 }); window.paginateStudents = false; window.useLegacyStudentApi = false; window.studentRows = [window.learner]`)
   await go('/learning-center/oxford/students/owner')
+  await until(`document.querySelectorAll('.lc-parts-table tbody tr').length === 5`)
+  assert.equal(await evaluate(`document.querySelector('.lc-parts-table').textContent.includes('Unanswered')`), true)
+  assert.equal(await evaluate(`document.body.textContent.includes('/ 100%')`), false, 'Part practice does not masquerade as an IELTS score out of 100')
+  assert.equal(await evaluate(`document.querySelectorAll('.recharts-line-dots circle').length`), 0, 'Optional graphs and generic analysis do not crowd the test history')
+  assert.equal(await evaluate(`document.querySelectorAll('.lc-parts-table')[1].textContent.includes('10')`), true, 'The recorded wrong and skipped counts remain visible')
+  await click('Progress and teacher insights')
+  await select('[aria-label="Filter progress by skill"]', 'IELTS:IELTS_READING:9:BAND')
   await until(`document.querySelectorAll('.recharts-line-dots circle').length === 2`)
-  assert.equal(await evaluate(`document.querySelector('[aria-label="Filter progress by skill"]').options.length`), 2, 'Pending and unverified Writing scores never enter chart series')
+  assert.equal(await evaluate(`document.querySelector('[aria-label="Filter progress by skill"]').options.length`), 4, 'Pending and unverified Writing scores never enter chart series')
+  await select('[aria-label="Filter progress by skill"]', 'IELTS:IELTS_READING:100:PERCENT:13:2')
+  await until(`document.querySelectorAll('.recharts-line-dots circle').length === 1`)
+  assert.equal(await evaluate(`document.querySelector('[aria-label="Filter progress by skill"]').selectedOptions[0].textContent.includes('Correct answers / 13')`), true, 'Reading practice uses actual answer counts on the chart')
   await select('[aria-label="Filter progress by skill"]', 'SAT:SAT_MATH:800:SCALED')
   await until(`document.querySelectorAll('.recharts-line-dots circle').length === 1`)
   await select('[aria-label="Filter progress by skill"]', 'IELTS:IELTS_READING:9:BAND')
@@ -269,6 +281,7 @@ try {
   }
   await resize(1440, 1000)
   await go('/learning-center/oxford/students/owner')
+  await evaluate(`(() => { const button = document.querySelector('[aria-controls="lc-student-insights"]'); if (button.getAttribute('aria-expanded') === 'false') button.click(); })()`)
   await click('Refresh AI')
   await until(`document.body.textContent.includes('Analysis refreshed')`)
   await evaluate(`(() => { const element = document.querySelector('textarea'); Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(element, '  Coaching observation  '); element.dispatchEvent(new Event('input', { bubbles: true })); })()`)

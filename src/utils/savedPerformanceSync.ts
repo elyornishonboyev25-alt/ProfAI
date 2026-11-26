@@ -5,6 +5,7 @@ import { getReadingAnalysisHistory } from './readingAnalysisStorage'
 import { getWritingAnalysisHistory } from './writingAnalysisStorage'
 import { resolveIeltsTestById } from './ieltsTestCatalog'
 import { learningCenterApi } from '@/features/learningCenter/api'
+import { ieltsDetailsSyncKey, ieltsResultDetails } from '@/features/learningCenter/ieltsResultDetails'
 import { syncIeltsClassResult } from '@/features/learningCenter/ieltsResultSync'
 import { syncSavedSATAttemptResults } from '@/features/sat/resultSync'
 
@@ -22,13 +23,15 @@ export function syncSavedPerformance(userId: string): Promise<void> {
     const storage = accountStorageFor(userId)
     for (const entry of getReadingAnalysisHistory(userId)) {
       if (!current()) return
-      if (entry.isPartial || entry.resultPayload.leaderboardEligible === false) continue
+      if (entry.resultPayload.leaderboardEligible === false) continue
       const test = resolveIeltsTestById(entry.testId, entry.resultPayload)
       if (!test) continue
       const type = test.module === 'Listening' ? 'listening' : 'reading'
       const key = `smarttest-${type}-sync:${userId}:${entry.attemptKey}`
-      if (storage.getItem(key) === 'ok') continue
-      await syncIeltsClassResult(type, test, entry.resultPayload).catch(() => {})
+      const details = ieltsResultDetails(test, entry.resultPayload, entry.sectionSummaries)
+      const detailsSaved = !details || storage.getItem(ieltsDetailsSyncKey(type, entry.resultPayload)) === JSON.stringify(details)
+      if (storage.getItem(key) === 'ok' && detailsSaved) continue
+      await syncIeltsClassResult(type, test, entry.resultPayload, undefined, entry.sectionSummaries).catch(() => {})
     }
     const inputs: Parameters<typeof learningCenterApi.syncResult>[0][] = []
     for (const entry of getWritingAnalysisHistory(userId)) {

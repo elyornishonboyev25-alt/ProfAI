@@ -15,6 +15,8 @@ import { invalidateLeaderboardCache } from '../services/leaderboard.service.js'
 import { invalidateSkillAnalyticsCache } from '../services/analytics.service.js'
 import { invalidateAiCoachCache, precomputeAiCoachReport } from '../services/aiCoach.service.js'
 
+import { ieltsObjectiveDetailsSchema, validateObjectiveDetails } from '../services/ieltsObjectiveDetails.service.js'
+
 const router = Router()
 
 async function completeClassSync(userId: string, assignmentId: string | undefined, client: Pick<Prisma.TransactionClient, 'learningCenterAssignmentSubmission'> = prisma) {
@@ -62,7 +64,8 @@ const readingSyncSchema = z.object({
   difficulty: z.nativeEnum(Difficulty).default(Difficulty.HARD),
   isPartial: z.boolean().default(false),
   subjects: z.array(z.string().min(2).max(60)).min(1).max(12).optional(),
-})
+  breakdown: ieltsObjectiveDetailsSchema.optional(),
+}).superRefine((payload, context) => validateObjectiveDetails(payload, context, 3))
 const listeningSyncSchema = z.object({
   assignmentId: z.string().min(1).max(191).optional(),
   externalAttemptKey: z.string().min(6).max(180),
@@ -78,7 +81,8 @@ const listeningSyncSchema = z.object({
   difficulty: z.nativeEnum(Difficulty).default(Difficulty.HARD),
   isPartial: z.boolean().default(false),
   subjects: z.array(z.string().min(2).max(60)).min(1).max(12).optional(),
-})
+  breakdown: ieltsObjectiveDetailsSchema.optional(),
+}).superRefine((payload, context) => validateObjectiveDetails(payload, context, 4))
 
 const createTestSchema = z.object({
   slug: z.string().min(3).max(120),
@@ -394,11 +398,13 @@ router.post(
     })
 
     if (existingAttempt) {
+      if (payload.breakdown) await prisma.testAttempt.updateMany({ where: { id: existingAttempt.id, userId }, data: { breakdown: payload.breakdown as Prisma.InputJsonValue } })
       await completeClassSync(userId, payload.assignmentId)
       return res.status(200).json({
         synced: true,
         duplicate: true,
         attemptId: existingAttempt.id,
+        classBreakdownSaved: Boolean(payload.breakdown),
       })
     }
 
@@ -422,8 +428,9 @@ router.post(
         select: { id: true },
       })
       if (duplicate) {
+        if (payload.breakdown) await tx.testAttempt.updateMany({ where: { id: duplicate.id, userId }, data: { breakdown: payload.breakdown as Prisma.InputJsonValue } })
         await completeClassSync(userId, payload.assignmentId, tx)
-        return { attemptId: duplicate.id, duplicate: true, xpEarned: 0 }
+        return { attemptId: duplicate.id, duplicate: true, xpEarned: 0, classBreakdownSaved: Boolean(payload.breakdown) }
       }
 
       const user = await tx.user.findUnique({
@@ -475,6 +482,7 @@ router.post(
           timeSpentSec: payload.timeSpentSec,
           totalQuestions: payload.totalQuestions,
           correctAnswers: payload.correctAnswers,
+          breakdown: payload.breakdown as Prisma.InputJsonValue | undefined,
           rawScore,
           weightedScore,
           percentage,
@@ -560,6 +568,7 @@ router.post(
       await completeClassSync(userId, payload.assignmentId, tx)
       return {
         attemptId: attempt.id,
+        classBreakdownSaved: Boolean(payload.breakdown),
         xpEarned,
         currentStreak: streak.currentStreak,
         levelAfter: levelTransition.levelAfter,
@@ -671,11 +680,13 @@ router.post(
     })
 
     if (existingAttempt) {
+      if (payload.breakdown) await prisma.testAttempt.updateMany({ where: { id: existingAttempt.id, userId }, data: { breakdown: payload.breakdown as Prisma.InputJsonValue } })
       await completeClassSync(userId, payload.assignmentId)
       return res.status(200).json({
         synced: true,
         duplicate: true,
         attemptId: existingAttempt.id,
+        classBreakdownSaved: Boolean(payload.breakdown),
       })
     }
 
@@ -698,8 +709,9 @@ router.post(
         select: { id: true },
       })
       if (duplicate) {
+        if (payload.breakdown) await tx.testAttempt.updateMany({ where: { id: duplicate.id, userId }, data: { breakdown: payload.breakdown as Prisma.InputJsonValue } })
         await completeClassSync(userId, payload.assignmentId, tx)
-        return { attemptId: duplicate.id, duplicate: true, xpEarned: 0 }
+        return { attemptId: duplicate.id, duplicate: true, xpEarned: 0, classBreakdownSaved: Boolean(payload.breakdown) }
       }
 
       const user = await tx.user.findUnique({
@@ -751,6 +763,7 @@ router.post(
           timeSpentSec: payload.timeSpentSec,
           totalQuestions: payload.totalQuestions,
           correctAnswers: payload.correctAnswers,
+          breakdown: payload.breakdown as Prisma.InputJsonValue | undefined,
           rawScore,
           weightedScore: percentage,
           percentage,
@@ -836,6 +849,7 @@ router.post(
       await completeClassSync(userId, payload.assignmentId, tx)
       return {
         attemptId: attempt.id,
+        classBreakdownSaved: Boolean(payload.breakdown),
         xpEarned,
         currentStreak: streak.currentStreak,
         levelAfter: levelTransition.levelAfter,

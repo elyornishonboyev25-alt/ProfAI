@@ -17,7 +17,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install frontend dependencies
@@ -81,7 +81,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: backend/package-lock.json
 
@@ -106,6 +106,9 @@ jobs:
       - name: Check durable Writing assessment jobs
         run: node --test scripts/writing-assessment.test.mjs scripts/writing-submission.test.mjs
         working-directory: backend
+
+      - name: Check API deployment file copies and isolated runtime
+        run: node --test scripts/tests/backend-deploy.test.mjs
 
       - name: Check Nova source tools, account ownership and exam integrity
         run: node --test scripts/nova-study.test.mjs

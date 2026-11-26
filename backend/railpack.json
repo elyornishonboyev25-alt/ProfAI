@@ -1,10 +1,18 @@
 {
   "$schema": "https://schema.railpack.com",
+  "packages": { "node": "22" },
   "steps": {
-    "install": { "commands": ["npm ci --prefix backend"] }
+    "install": {
+      "commands": [
+        { "src": "backend/package.json", "dest": "backend/package.json" },
+        { "src": "backend/package-lock.json", "dest": "backend/package-lock.json" },
+        { "src": "backend/prisma", "dest": "backend/prisma" },
+        "npm ci --prefix backend --include=dev"
+      ]
+    }
   },
   "deploy": {
-    "aptPackages": ["ffmpeg"],
+    "aptPackages": ["...", "ffmpeg"],
     "inputs": [
       { "step": "packages:mise", "include": ["/mise/shims", "/mise/installs", "/usr/local/bin/mise", "/etc/mise/config.toml", "/root/.local/state/mise"] },
       { "step": "build", "include": ["/app/backend/dist", "/app/backend/package.json", "/app/backend/prisma", "/app/backend/node_modules", "/app/public/audio"] }

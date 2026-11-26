@@ -101,3 +101,13 @@ test('retry scheduling distinguishes permanent setup problems from overload and 
   assert.ok(retry.delayMs >= 62_500)
   assert.equal(writingRetry(new AiGenerationError(503, 'AI_NOT_CONFIGURED', 'Missing key'), 1).status, 'WAITING_CONFIGURATION')
 })
+
+test('configuration and zero-quota retries honor a longer provider cooldown', () => {
+  for (const code of ['GEMINI_QUOTA_UNAVAILABLE', 'GEMINI_403', 'OPENAI_402']) {
+    const retry = writingRetry(new AiGenerationError(503, code, 'Unavailable', 3_600_000), 1407)
+    assert.equal(retry.status, 'WAITING_CONFIGURATION')
+    assert.ok(retry.delayMs >= 3_600_000, code)
+    assert.ok(retry.delayMs <= 3_601_000, code)
+  }
+  assert.ok(writingRetry(new AiGenerationError(503, 'AI_NOT_CONFIGURED', 'Missing key'), 1).delayMs >= 300_000)
+})

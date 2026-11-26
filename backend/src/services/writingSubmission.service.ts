@@ -17,7 +17,7 @@ export function writingRetry(error: unknown, attempts: number) {
   const configuration = ['AI_NOT_CONFIGURED', 'GEMINI_QUOTA_UNAVAILABLE', 'GEMINI_400', 'GEMINI_401', 'GEMINI_403', 'GEMINI_404', 'OPENAI_401', 'OPENAI_402', 'OPENAI_403', 'HF_401', 'HF_402', 'HF_403'].includes(code)
   const wait = Math.min(900_000, 5000 * 2 ** Math.min(attempts - 1, 8))
   const retryAfter = error instanceof AiGenerationError ? error.retryAfterMs : 0
-  return { code, status: configuration ? 'WAITING_CONFIGURATION' : 'QUEUED', delayMs: (configuration ? 300_000 : Math.max(wait, retryAfter)) + Math.round(Math.random() * 1000) }
+  return { code, status: configuration ? 'WAITING_CONFIGURATION' : 'QUEUED', delayMs: Math.max(configuration ? 300_000 : wait, retryAfter) + Math.round(Math.random() * 1000) }
 }
 
 export function publicWritingSubmission(row: WritingSubmission) {

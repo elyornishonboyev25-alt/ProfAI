@@ -2,7 +2,7 @@
   "$schema": "https://railway.com/railway.schema.json",
   "build": {
     "builder": "RAILPACK",
-    "buildCommand": "npm ci --prefix backend && npm --prefix backend run build",
+    "buildCommand": "npm --prefix backend run build",
     "watchPatterns": ["/backend/**", "/scripts/build-nova-catalog.mjs", "/scripts/lib/novaCatalogSource.ts", "/src/data/**", "/src/features/sat/**", "/tsconfig.json"]
   },
   "deploy": {

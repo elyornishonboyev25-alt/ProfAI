@@ -27,6 +27,8 @@ test.teamRows = []
 test.studentRows = []
 test.resultRows = []
 test.paginateStudents = false
+test.useLegacyStudentApi = false
+test.legacyStudentRequests = []
 test.leaderboardRows = []
 test.failAction = false
 test.notifications = [
@@ -34,6 +36,12 @@ test.notifications = [
   { id: 'assignment-update', type: 'SYSTEM', title: 'New class assignment: IELTS Full Mock', message: 'Your next IELTS assignment is ready. Complete the full mock before the next lesson.', metadata: { kind: 'CLASS_ASSIGNMENT', centerSlug: 'oxford', examTrack: 'IELTS' }, readAt: null, createdAt: new Date().toISOString() },
 ]
 ;(apiClient as any).get = async (path: string) => {
+  if (test.useLegacyStudentApi && path.includes('/students?')) {
+    const query = new URL(path, window.location.origin).searchParams
+    test.legacyStudentRequests.push(path)
+    if (query.has('days') && Number(query.get('days')) < 7) throw new Error('Invalid query parameters.')
+    return { students: test.studentRows }
+  }
   if (path === '/billing/account') return wallet
   if (path === '/dashboard/notifications') return { notifications: test.notifications, unreadCount: test.notifications.filter((item: any) => !item.readAt).length }
   if (path === '/profile/badges') return { badges: [] }
@@ -60,8 +68,10 @@ learningCenterApi.groupOptions = async () => ({ groups: test.groupRows.map((grou
 learningCenterApi.createGroup = async (_slug, input) => { test.action('group', input); return {} }
 learningCenterApi.team = async () => ({ team: test.teamRows })
 learningCenterApi.updateMemberRole = async (_slug, id, role) => { test.action('role', { id, role }); test.teamRows.find((row: any) => row.id === id).role = role; return {} }
+const actualStudentsApi = learningCenterApi.students
 learningCenterApi.students = async (_slug, query) => {
   test.calls.push({ action: 'students', query })
+  if (test.useLegacyStudentApi) return actualStudentsApi(_slug, query)
   if (!test.paginateStudents) return { students: test.studentRows }
   const size = query?.pageSize ?? 25
   const page = query?.page ?? 1

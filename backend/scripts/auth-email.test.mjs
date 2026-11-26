@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import crypto from 'node:crypto'
-import { after, beforeEach, test } from 'node:test'
+import { after, afterEach, beforeEach, test } from 'node:test'
 import express from 'express'
 import { OAuth2Client } from 'google-auth-library'
 
@@ -18,6 +18,7 @@ let users = []
 let sent = []
 let tokens = []
 let sessions = []
+let launchGifts = []
 let telegramLinkedUserId = null
 let providerFails = false
 let revoked = false
@@ -84,6 +85,11 @@ globalThis.prisma = {
   premiumGrant: { findUnique: async () => null },
   billingSubscription: { findMany: async () => [] },
   freeTrial: { findUnique: async () => null },
+  launchGift: {
+    findUnique: async ({ where }) => launchGifts.find(gift => gift.userId === where.userId) ?? null,
+    aggregate: async () => ({ _max: { rank: null } }),
+    create: async ({ data }) => { launchGifts.push(data); return data },
+  },
   $queryRaw: async () => [],
   $transaction: async (queries) => typeof queries === 'function' ? queries(globalThis.prisma) : Promise.all(queries),
 }
@@ -115,12 +121,13 @@ async function request(purpose = 'SIGN_IN') {
 }
 const deliveredCode = () => sent.at(-1).subject.match(/^\d{6}/)[0]
 beforeEach(() => {
-  codes = []; users = []; sent = []; tokens = []; sessions = []; revoked = false; providerFails = false
+  codes = []; users = []; sent = []; tokens = []; sessions = []; launchGifts = []; revoked = false; providerFails = false
   telegramLinkedUserId = null
   env.RESEND_API_KEY = 'test-email-provider-key'
   authRateLimit.resetKey('127.0.0.1')
   googleIdentity = { email: 'learner@gmail.com', email_verified: true, name: 'Learner', picture: 'https://example.com/avatar.png' }
 })
+afterEach(() => assert.equal(launchGifts.length, 0, 'Registration and sign-in never reserve automatic Premium gifts'))
 after(async () => { globalThis.fetch = realFetch; OAuth2Client.prototype.verifyIdToken = realVerifyGoogle; await new Promise((resolve) => server.close(resolve)) })
 
 function telegramData({ id = 12345, age = 0, rawUser } = {}) {

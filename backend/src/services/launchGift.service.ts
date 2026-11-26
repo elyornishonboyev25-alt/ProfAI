@@ -5,11 +5,11 @@ import { accountOverview, lockBilling } from './billing.service.js'
 import { ensureReferralCode } from './referral.service.js'
 import { recordPremiumEvent } from './premiumHistory.service.js'
 
-/** The first 300 accounts receive one month of Pro ($6), $1,800 in total. */
+/** Historical launch campaign; existing gifts remain valid, but issuance has ended. */
 export const LAUNCH_GIFT_CAPACITY = 300
 export const LAUNCH_GIFT_MONTHS = 1
 export const LAUNCH_GIFT_VALUE_USD = 6
-// Includes eight manually granted gifts after the original 200; resume at 209.
+// Includes eight manually granted gifts after the original 200.
 const LAUNCH_GIFT_ISSUED_BASELINE = 208
 
 export async function launchGiftStats() {
@@ -20,29 +20,8 @@ export async function launchGiftStats() {
   // Accounts that existed before the launch are all included, even beyond the cap.
   const capacity = Math.max(LAUNCH_GIFT_CAPACITY, top._max.rank ?? 0)
   const issued = Math.max(LAUNCH_GIFT_ISSUED_BASELINE, reserved, top._max.rank ?? 0)
-  return { capacity, issued, remaining: Math.max(0, LAUNCH_GIFT_CAPACITY - issued), valueUsd: LAUNCH_GIFT_VALUE_USD, months: LAUNCH_GIFT_MONTHS }
-}
-
-/** Reserves the next place for an account created after the launch, while places remain. */
-async function reserve(userId: string) {
-  return prisma.$transaction(async tx => {
-    await tx.$queryRaw`SELECT 1::int AS locked FROM pg_advisory_xact_lock(hashtextextended('launch-gift', 0))`
-    const existing = await tx.launchGift.findUnique({ where: { userId } })
-    if (existing) return existing
-    const top = await tx.launchGift.aggregate({ _max: { rank: true } })
-    const rank = Math.max(LAUNCH_GIFT_ISSUED_BASELINE, top._max.rank ?? 0) + 1
-    if (rank > LAUNCH_GIFT_CAPACITY) return null
-    return tx.launchGift.create({ data: { userId, rank } })
-  })
-}
-
-/**
- * Numbers a new account at sign-up, so places follow registration order (the
- * accounts that existed at launch hold 1..N). Sign-up never fails because of it;
- * a missed reservation is retried when the gift is first shown.
- */
-export async function reserveLaunchGiftAtSignup(userId: string) {
-  await reserve(userId).catch(error => console.error('Launch gift reservation failed:', error))
+  // A zero remaining count also hides the guest invitation in existing clients.
+  return { capacity, issued, remaining: 0, valueUsd: LAUNCH_GIFT_VALUE_USD, months: LAUNCH_GIFT_MONTHS }
 }
 
 async function describe(gift: LaunchGift | null, userId: string) {
@@ -54,7 +33,7 @@ async function describe(gift: LaunchGift | null, userId: string) {
 }
 
 export async function launchGiftFor(userId: string) {
-  const gift = await prisma.launchGift.findUnique({ where: { userId } }) ?? await reserve(userId)
+  const gift = await prisma.launchGift.findUnique({ where: { userId } })
   return describe(gift, userId)
 }
 
@@ -63,7 +42,8 @@ export async function launchGiftFor(userId: string) {
  * an existing plan is extended rather than overlapped. Claiming twice is a no-op.
  */
 export async function claimLaunchGift(userId: string) {
-  const reserved = await prisma.launchGift.findUnique({ where: { userId } }) ?? await reserve(userId)
+  // Honor previously reserved gifts without creating eligibility for new accounts.
+  const reserved = await prisma.launchGift.findUnique({ where: { userId } })
   if (!reserved) return describe(null, userId)
   const gift = await prisma.$transaction(async tx => {
     await lockBilling(tx, userId)

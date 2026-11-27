@@ -236,6 +236,20 @@ async function main() {
   await assert.rejects(a.apiClient.post('/results', { result: 'old' }, { expectedUserId: 'learner' }), /Account changed/)
   assert.equal(sent, false, 'A delayed mutation may not be sent using the next account token')
 
+  // Stale rewards, token refreshes and another tab must never reduce a saved
+  // streak. The protection stays scoped to one account.
+  a.useAuthStore.getState().clearSession()
+  a.useAuthStore.getState().setSession({ ...session('streak'), user: { id: 'learner', role: 'USER', currentStreak: 37 } })
+  a.useAuthStore.getState().updateUserProgress({ currentStreak: 2 })
+  assert.equal(a.useAuthStore.getState().user.currentStreak, 37)
+  a.useAuthStore.getState().updateUserProgress({ currentStreak: 38 })
+  a.useAuthStore.getState().setSession({ ...session('streak-refreshed'), user: { id: 'learner', role: 'USER', currentStreak: 2 } })
+  assert.equal(a.useAuthStore.getState().user.currentStreak, 38)
+  a.useAuthStore.setState(state => ({ user: { ...state.user, currentStreak: 1 } }))
+  assert.equal(a.useAuthStore.getState().user.currentStreak, 38)
+  a.useAuthStore.getState().setSession({ ...session('different'), user: { id: 'different', role: 'USER', currentStreak: 1 } })
+  assert.equal(a.useAuthStore.getState().user.currentStreak, 1)
+
   // Worker activation must clean stale assets without navigating any open page.
   let activate
   let navigated = false

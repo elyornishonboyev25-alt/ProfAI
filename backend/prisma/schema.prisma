@@ -136,6 +136,7 @@ model User {
   refreshTokens                       RefreshToken[]
   authSessions                        AuthSession[]
   dailyActivities                     DailyActivity[]
+  streakRestoration                   LearningStreakRestoration?
   leaderboardStates                   LeaderboardState[]
   tasks                               UserTask[]
   focusPlans                          FocusPlan[]
@@ -1131,6 +1132,15 @@ model AttemptAnswer {
   @@unique([attemptId, questionId])
   @@index([attemptId])
   @@index([questionId])
+}
+
+model LearningStreakRestoration {
+  userId          String   @id
+  previousCurrent Int
+  previousLongest Int
+  restoredStreak  Int
+  restoredAt      DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model DailyActivity {

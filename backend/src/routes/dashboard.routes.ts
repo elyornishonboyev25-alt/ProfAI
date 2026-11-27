@@ -5,7 +5,7 @@ import { requireAuth } from '../middleware/auth.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { addUtcDays } from '../utils/date.js'
 import { generateLeaderboard } from '../services/leaderboard.service.js'
-import { getLearningStreakSnapshot, resolveLearnerTimeZone } from '../services/activityStreak.service.js'
+import { dailyLoginDayKey, getLearningStreakSnapshot, resolveLearnerTimeZone } from '../services/activityStreak.service.js'
 import { localDateKey } from '../services/xpRewards.service.js'
 import { loadPerformanceAttempts, summarizePerformance } from '../services/performanceHistory.service.js'
 
@@ -120,8 +120,8 @@ router.get(
     const weeklyAttempts = attempts.filter((attempt) => attempt.completedAt >= broadWindowStart && attempt.completedAt < broadWindowEnd)
     const [weeklyXpEvents] = await Promise.all([
       prisma.xpEvent.findMany({
-        where: { userId, earnedAt: { gte: broadWindowStart, lt: broadWindowEnd }, amount: { gt: 0 } },
-        select: { earnedAt: true, source: true, metadata: true },
+        where: { userId, earnedAt: { gte: broadWindowStart, lt: broadWindowEnd }, OR: [{ amount: { gt: 0 } }, { source: 'STREAK_DAY' }] },
+        select: { earnedAt: true, source: true, eventKey: true, metadata: true },
       }),
     ])
 
@@ -138,7 +138,7 @@ router.get(
     }
 
     for (const event of weeklyXpEvents) {
-      const key = localDateKey(event.earnedAt, timeZone)
+      const key = dailyLoginDayKey(event.eventKey) ?? localDateKey(event.earnedAt, timeZone)
       if (!sevenDays.includes(key)) continue
       const previous = activityMap.get(key) ?? { testsCompleted: 0, questionsAnswered: 0, studyTimeSec: 0 }
       const metadata = event.metadata && typeof event.metadata === 'object' && !Array.isArray(event.metadata)
@@ -152,7 +152,7 @@ router.get(
 
     const weeklyProgress = sevenDays.map((key) => {
       const activity = activityMap.get(key)
-      const hasXpActivity = weeklyXpEvents.some((event) => localDateKey(event.earnedAt, timeZone) === key)
+      const hasXpActivity = weeklyXpEvents.some((event) => (dailyLoginDayKey(event.eventKey) ?? localDateKey(event.earnedAt, timeZone)) === key)
 
       return {
         date: `${key}T00:00:00.000Z`,

@@ -70,6 +70,9 @@ jobs:
       - name: Build frontend
         run: npm run build
 
+      - name: Check saved streaks and interrupted visit recovery
+        run: node scripts/test-auth-session.mjs && node scripts/test-listening-parts-ui.mjs scripts/tests/learning-heartbeat-ui.tsx
+
       - name: Check release build validation gate and isolated web runtime
         run: npm run test:release-build && node --test scripts/tests/web-deploy.test.mjs
 
@@ -109,6 +112,9 @@ jobs:
 
       - name: Check API deployment file copies and isolated runtime
         run: node --test scripts/tests/backend-deploy.test.mjs
+
+      - name: Check saved streak restoration and daily visit recovery
+        run: node --test backend/scripts/learning-streak.test.mjs backend/scripts/streak-migration.test.mjs
 
       - name: Check Nova source tools, account ownership and exam integrity
         run: node --test scripts/nova-study.test.mjs

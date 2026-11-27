@@ -1,4 +1,12 @@
 {
+  "Your streak is saved. Active days add to it; missed days never reset it.": {
+    "uz": "Streakingiz saqlanadi. Har bir faol kun unga qo‘shiladi, o‘tkazib yuborilgan kunlar uni kamaytirmaydi.",
+    "ru": "Ваш стрик сохранён. Каждый активный день добавляется к нему, пропущенные дни его не сбрасывают."
+  },
+  "Your streak is saved. Practice today to add another day.": {
+    "uz": "Streakingiz saqlangan. Yana bir kun qo‘shish uchun bugun mashq qiling.",
+    "ru": "Ваш стрик сохранён. Занимайтесь сегодня, чтобы добавить ещё один день."
+  },
   "Progress and teacher insights": {
     "uz": "O‘sish grafigi va o‘qituvchi tahlili",
     "ru": "График прогресса и рекомендации"

@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from 'express'
 import { verifyAccessToken } from '../utils/jwt.js'
 import { prisma } from '../lib/prisma.js'
 import { acquireSessionUsage, deviceSignals } from '../services/authActivity.service.js'
+import { recordLearningVisit } from '../services/activityStreak.service.js'
 
 export async function requireAuth(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization
@@ -19,7 +20,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   }
 
   try {
-    const user = await prisma.user.findUnique({ where: { id: payload.sub }, select: { id: true, role: true } })
+    const user = await prisma.user.findUnique({ where: { id: payload.sub }, select: { id: true, role: true, profile: { select: { timezone: true } } } })
     if (!user) {
       return res.status(401).json({ message: 'This account no longer exists. Create a new account to continue.', code: 'ACCOUNT_DELETED' })
     }
@@ -34,6 +35,13 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     req.user = {
       id: user.id,
       role: user.role,
+    }
+    if (req.get('X-Device-Activity') !== 'idle') {
+      // An ordinary signed-in page request saves the day even if the separate
+      // reward heartbeat is interrupted. Failed writes remain retryable.
+      await recordLearningVisit(prisma, user.id, user.profile?.timezone).catch(() => {
+        console.warn('Learning day save deferred; the next active request will retry.')
+      })
     }
     return next()
   } catch (error) {

@@ -13,7 +13,7 @@ import { generateAiCoachReport, isAiCoachProviderError } from '../services/aiCoa
 import { generateAiChatResponse } from '../services/aiChat.service.js'
 import { assessSpeakingText } from '../services/speakingAssessment.service.js'
 import { env } from '../config/env.js'
-import { getLearningStreakSnapshot, resolveLearnerTimeZone } from '../services/activityStreak.service.js'
+import { dailyLoginDayKey, getLearningStreakSnapshot, resolveLearnerTimeZone } from '../services/activityStreak.service.js'
 import {
   awardActivityXp,
   localDateKey,
@@ -454,8 +454,8 @@ router.get(
     const weeklyAttempts = attempts.filter((attempt) => attempt.completedAt >= broadWindowStart && attempt.completedAt < broadWindowEnd)
     const [xpEventRows] = await Promise.all([
       prisma.xpEvent.findMany({
-        where: { userId, earnedAt: { gte: broadWindowStart, lt: broadWindowEnd }, amount: { gt: 0 } },
-        select: { earnedAt: true, amount: true },
+        where: { userId, earnedAt: { gte: broadWindowStart, lt: broadWindowEnd }, OR: [{ amount: { gt: 0 } }, { source: 'STREAK_DAY' }] },
+        select: { earnedAt: true, amount: true, eventKey: true },
       }),
     ])
 
@@ -472,7 +472,7 @@ router.get(
     })
     const xpEventMap = new Map<string, number>()
     xpEventRows.forEach((event) => {
-      const key = localDateKey(event.earnedAt, timeZone)
+      const key = dailyLoginDayKey(event.eventKey) ?? localDateKey(event.earnedAt, timeZone)
       if (!days.includes(key)) return
       xpEventMap.set(key, (xpEventMap.get(key) ?? 0) + event.amount)
     })
@@ -486,7 +486,7 @@ router.get(
         testsCompleted: row?.testsCompleted ?? 0,
         questionsAnswered: row?.questionsAnswered ?? 0,
         xpEarned: (row?.xpEarned ?? 0) + (xpEventMap.get(key) ?? 0),
-        active: Boolean((row?.testsCompleted ?? 0) > 0 || (xpEventMap.get(key) ?? 0) > 0),
+        active: Boolean((row?.testsCompleted ?? 0) > 0 || xpEventMap.has(key)),
       }
     })
 

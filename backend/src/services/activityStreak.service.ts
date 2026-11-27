@@ -30,8 +30,6 @@ export function resolveLearnerTimeZone(timeZone?: string | null) {
   return normalized === 'UTC' && timeZone !== 'UTC' ? DEFAULT_LEARNER_TIME_ZONE : normalized
 }
 
-const DAILY_LOGIN_KEY = /^DAILY_LOGIN:(\d{4}-\d{2}-\d{2})$/
-
 /**
  * A daily-login reward key stores the calendar date the learner's own device
  * reported when they opened the app. It is the most faithful record of
@@ -39,7 +37,7 @@ const DAILY_LOGIN_KEY = /^DAILY_LOGIN:(\d{4}-\d{2}-\d{2})$/
  * stored timestamp, so it always counts towards the streak.
  */
 export function dailyLoginDayKey(eventKey?: string | null) {
-  const match = eventKey ? DAILY_LOGIN_KEY.exec(eventKey) : null
+  const match = eventKey ? /^(?:DAILY_LOGIN|STREAK_DAY):(\d{4}-\d{2}-\d{2})$/.exec(eventKey) : null
   if (!match) return null
   const [year, month, day] = match[1].split('-').map(Number)
   const parsed = new Date(Date.UTC(year, month - 1, day))
@@ -108,7 +106,7 @@ export async function getLearningStreakSnapshot(
   now = new Date(),
   additionalActivityDates: Date[] = [],
 ) {
-  const [attempts, speakingSessions, xpEvents] = await Promise.all([
+  const [attempts, speakingSessions, xpEvents, saved] = await Promise.all([
     client.testAttempt.findMany({
       where: { userId },
       select: { completedAt: true },
@@ -126,9 +124,10 @@ export async function getLearningStreakSnapshot(
       select: { earnedAt: true, eventKey: true },
       orderBy: { earnedAt: 'asc' },
     }),
+    client.user.findUnique({ where: { id: userId }, select: { currentStreak: true, longestStreak: true } }),
   ])
 
-  return calculateLearningStreak(
+  const consecutive = calculateLearningStreak(
     [
       ...attempts.map((attempt) => attempt.completedAt),
       ...speakingSessions.map((session) => session.createdAt),
@@ -142,4 +141,26 @@ export async function getLearningStreakSnapshot(
       return key ? [key] : []
     }),
   )
+  // A streak is saved progress. Calendar gaps affect only the separate
+  // consecutive count; they can never erase an earned or restored streak.
+  const protectedStreak = Math.max(saved?.currentStreak ?? 0, saved?.longestStreak ?? 0, consecutive.longestStreak)
+  return { ...consecutive, consecutiveStreak: consecutive.currentStreak, currentStreak: protectedStreak, longestStreak: protectedStreak }
+}
+
+// The unique ledger key and database trigger commit the day and its increment
+// together. No client counter, local storage value or date is trusted.
+const confirmedDays = new Map<string, number>()
+export async function recordLearningVisit(client: LearningActivityClient, userId: string, timeZone?: string | null, now = new Date()) {
+  const day = dateKey(now, resolveLearnerTimeZone(timeZone))
+  const cacheKey = `${userId}:${day}`
+  if ((confirmedDays.get(cacheKey) ?? 0) > now.getTime()) return
+  await client.xpEvent.createMany({
+    data: [{ userId, source: 'STREAK_DAY', eventKey: `STREAK_DAY:${day}`, amount: 0, earnedAt: now }],
+    skipDuplicates: true,
+  })
+  if (confirmedDays.size >= 5000) {
+    for (const [key, expires] of confirmedDays) if (expires <= now.getTime()) confirmedDays.delete(key)
+    if (confirmedDays.size >= 5000) confirmedDays.clear()
+  }
+  confirmedDays.set(cacheKey, now.getTime() + 60_000)
 }

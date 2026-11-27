@@ -5,6 +5,14 @@ import { isPremiumUser } from '@/utils/premiumAccess'
 import { claimPendingReferral } from '@/utils/referralCapture'
 import { useAccountUsageStore } from '@/store/accountUsageStore'
 
+function protectStreak(incoming: AuthUser | null, current: AuthUser | null) {
+  if (!incoming || incoming.id !== current?.id) return incoming
+  const before = current?.currentStreak
+  const after = incoming.currentStreak
+  if (!Number.isFinite(before) && !Number.isFinite(after)) return incoming
+  return { ...incoming, currentStreak: Math.max(Number.isFinite(before) ? before! : 0, Number.isFinite(after) ? after : 0) }
+}
+
 // Safari can expose localStorage while temporarily throwing on access (private
 // browsing, storage pressure, or a damaged value). Zustand otherwise skips its
 // hydration callback and the application waits on the loading screen forever.
@@ -61,13 +69,17 @@ export const useAuthStore = create<AuthState>()(
           const saved = readStoredSession()
           if (current && saved && (saved.accessToken !== current.accessToken || saved.refreshToken !== current.refreshToken)) {
             if (saved.user?.id !== current.user?.id || !saved.accessToken) useAccountUsageStore.getState().resetUsage()
-            rawSet(saved)
+            rawSet({ ...saved, user: protectStreak(saved.user, current.user) })
             // A queued update belongs to the account that initiated it.
             if (saved.user?.id !== current.user?.id) return
           }
         }
-        if (replace === true) write(partial as AuthState, true)
-        else write(partial, false)
+        const protectedUpdate = (state: AuthState) => {
+          const patch = typeof partial === 'function' ? partial(state) : partial
+          return patch && 'user' in patch ? { ...patch, user: protectStreak(patch.user ?? null, state.user) } : patch
+        }
+        if (replace === true) write(protectedUpdate as (state: AuthState) => AuthState, true)
+        else write(protectedUpdate, false)
       }) as typeof rawSet
       const set = guard(rawSet)
       api.setState = guard(api.setState)

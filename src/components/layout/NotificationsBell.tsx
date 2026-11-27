@@ -326,7 +326,7 @@ export default function NotificationsBell() {
                 </div>
                 <p className="mt-1 text-[12px] leading-5 text-white/90">
                   {streak > 0 && !todayActive
-                    ? <UiText text={"Practice today to keep it alive!"} />
+                    ? <UiText text={"Your streak is saved. Practice today to add another day."} />
                     : streak > 0
                       ? <UiText text={"Today is done — see you tomorrow."} />
                       : <UiText text={"One session a day builds the habit."} />}

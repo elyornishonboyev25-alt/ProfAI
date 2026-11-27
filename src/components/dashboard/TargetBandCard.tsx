@@ -54,7 +54,7 @@ export default function TargetBandCard({ metrics, weeklyProgress }: TargetBandCa
   }, [user])
 
   const progress = Math.max(0, Math.min(100, metrics.averageScore ?? 0))
-  const streak = Math.max(0, metrics.currentStreak ?? 0)
+  const streak = Math.max(0, metrics.currentStreak ?? 0, user?.currentStreak ?? 0)
 
   return (
     <motion.section
@@ -77,7 +77,7 @@ export default function TargetBandCard({ metrics, weeklyProgress }: TargetBandCa
           </p>
           <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">{targetLabel ?? 'IELTS 7.5'}</h2>
           <p className="mt-1.5 max-w-md text-sm font-medium text-blue-50/90">
-            <UiText text={"Keep your streak alive — every practice session moves this ring forward."} />
+            <UiText text={"Your streak is saved. Active days add to it; missed days never reset it."} />
           </p>
 
           {/* 7-day streak strip */}

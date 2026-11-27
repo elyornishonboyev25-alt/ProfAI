@@ -247,7 +247,7 @@ export default function Dashboard() {
             </div>
             <span className="dashboard-streak hidden sm:inline-flex" title={uiCopy("Current streak")}>
               <Flame className="h-5 w-5 fill-current" />
-              <strong>{overview.metrics.currentStreak}</strong>
+              <strong>{Math.max(overview.metrics.currentStreak, user?.currentStreak ?? 0)}</strong>
             </span>
           </div>
 

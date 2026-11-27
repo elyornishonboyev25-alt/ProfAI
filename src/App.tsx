@@ -31,6 +31,7 @@ import { XpNotification } from '@/components/common/XpNotification'
 import { ErrorBoundary } from '@/components/common/ErrorBoundary'
 import WordLookupLayer from '@/components/vocab/WordLookupLayer'
 import { sendHeartbeat } from '@/lib/speakingApi'
+import { startLearningHeartbeat } from '@/lib/learningHeartbeat'
 import { recordXpActivity, type XpActivitySource } from '@/lib/xpApi'
 import { useAiAssistantStore } from '@/store/aiAssistantStore'
 import { useAuthStore, type AuthState } from '@/store/authStore'
@@ -386,16 +387,10 @@ function App() {
   // Presence heartbeat — keeps "online now" / "last seen" accurate for the community.
   useEffect(() => {
     if (!user) return
-    const heartbeat = (recalculateStreak = false) => {
-      void sendHeartbeat(recalculateStreak).then((reward) => {
-        if (reward) updateUserProgress({ xp: reward.totalXp, level: reward.level, currentStreak: reward.currentStreak })
-      })
-    }
-    heartbeat(true)
-    const id = window.setInterval(() => {
-      if (!document.hidden) heartbeat()
-    }, 60000)
-    return () => window.clearInterval(id)
+    return startLearningHeartbeat(sendHeartbeat, reward => {
+      if (useAuthStore.getState().user?.id !== user.id) return
+      updateUserProgress({ xp: reward.totalXp, level: reward.level, currentStreak: reward.currentStreak })
+    })
   }, [updateUserProgress, user?.id])
 
   // Persisted auth hydrates asynchronously. Rendering a route before that

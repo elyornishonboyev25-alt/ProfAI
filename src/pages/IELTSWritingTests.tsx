@@ -1,7 +1,8 @@
 import { useDeferredValue, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
-import CompactIeltsCatalog, { type CompactIeltsTestRow } from '@/components/catalog/CompactIeltsCatalog'
+import CompactIeltsCatalog from '@/components/catalog/TestLibraryCatalog'
+import type { CompactIeltsTestRow } from '@/components/catalog/CompactIeltsCatalog'
 import { getWritingFullTestCatalog } from '@/data/writingTestData'
 import { useAuthStore, type AuthState } from '@/store/authStore'
 import { getWritingAnalysisHistory } from '@/utils/writingAnalysisStorage'

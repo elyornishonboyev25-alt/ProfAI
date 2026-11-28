@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 180" fill="none" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="surface" x1="650" y1="20" x2="780" y2="185" gradientUnits="userSpaceOnUse"><stop stop-color="#b9cbe4" stop-opacity=".02"/><stop offset=".5" stop-color="#a8bedc" stop-opacity=".35"/><stop offset=".62" stop-color="#fff" stop-opacity=".86"/><stop offset=".7" stop-color="#c5d5ec" stop-opacity=".3"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <linearGradient id="edge"><stop stop-color="#fff" stop-opacity="0"/><stop offset=".6" stop-color="#fff" stop-opacity=".92"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+  </defs>
+  <path d="M390 180C655 171 642 26 842-14h350C902 5 958 119 770 180Z" fill="url(#surface)"/>
+  <path d="M460 184C688 144 662 55 846 0M580 188C790 161 764 47 984-10" stroke="url(#edge)" stroke-width="2"/>
+</svg>

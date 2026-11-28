@@ -18,9 +18,9 @@ import { assistantContextSchema, assistantRequestSchema, boundedHistory, type As
 import { answerAssistant, assistantData, loadAssistantRecords } from './assistant.service.js'
 import { reserveVoiceTime, settleVoiceTime, requireVoiceReservation, onVoiceReservationReplaced } from './voiceAllowance.service.js'
 import { voiceInstructions } from './voiceInstructions.js'
-import { geminiLiveKeys, naturalVoiceProvider } from './voiceProvider.js'
+import { geminiLiveKeys } from './voiceProvider.js'
 import { onAccountDeleted } from './accountLifecycle.js'
-import { openGeminiLive, verifyGeminiLiveAudio } from './geminiLiveTransport.js'
+import { openGeminiLive } from './geminiLiveTransport.js'
 
 type History = Array<{ role: 'user' | 'assistant'; content: string }>
 type Call = {
@@ -36,20 +36,6 @@ const calls = new Map<string, Call>()
 const digest = (value: string) => createHash('sha256').update(value).digest('hex')
 export const GEMINI_VOICE_PATH = '/ws/ai-coach'
 
-/** A deployment smoke check uses the same endpoint and model as real calls. */
-export async function probeGeminiLive() {
-  if (naturalVoiceProvider() !== 'gemini') return
-  const started = Date.now()
-  let socket: WebSocket | undefined
-  try {
-    const signal = AbortSignal.timeout(20000)
-    socket = await openGeminiLive(geminiLiveSetup(assistantContextSchema.parse({ language: 'en' }), {}), geminiLiveKeys(), signal)
-    const audio = await verifyGeminiLiveAudio(socket, signal, geminiUsesInitialHistory())
-    console.info('voice.gemini.readiness', { ready: true, stage: 'audio', model: env.GEMINI_LIVE_MODEL, ...audio, durationMs: Date.now() - started })
-  } catch (error) {
-    console.error('voice.gemini.readiness', { ready: false, model: env.GEMINI_LIVE_MODEL, code: error instanceof Error && error.message.startsWith('GEMINI_AUDIO_') ? error.message : 'GEMINI_LIVE_CONNECTION_FAILED', ...error && typeof error === 'object' && 'providerCloseCode' in error ? { providerCloseCode: error.providerCloseCode } : {} })
-  } finally { socket?.on('error', () => {}); socket?.close() }
-}
 export const geminiVoiceFrame = z.discriminatedUnion('type', [
   z.object({ type: z.literal('audio'), data: z.string().min(4).max(44000).regex(/^[A-Za-z0-9+/]+={0,2}$/) }).strict(),
   z.object({ type: z.literal('interrupt') }).strict(),

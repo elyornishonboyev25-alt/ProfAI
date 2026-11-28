@@ -20,3 +20,20 @@ Thumbs.db
 .cache/sat-vocabulary/
 src/data/satVocabulary.generated.json
 src/data/satVocabulary.generated.json.*.tmp
+
+# Local QA output, browser captures and temporary Git worktrees.
+/output/
+/outputs/
+/artifacts/
+/work/
+/.playwright-cli/
+/.cache/
+
+# Machine-specific editor and agent settings.
+/.claude/settings.local.json
+/.vscode/settings.json
+
+# One-off downloaded bundles and old TypeScript diagnostic reports.
+/tmp_*.js
+/ts_debug.txt
+/ts_errors*.txt
